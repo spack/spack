@@ -49,7 +49,7 @@ class Grackle(Package):
         }
 
         template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__),
+            inspect.getmodule(self.parent.__file__),
             'Make.mach.template'
         )
         makefile = join_path(

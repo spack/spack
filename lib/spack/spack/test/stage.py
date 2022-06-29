@@ -124,7 +124,7 @@ def check_expand_archive(stage, stage_name, expected_file_list):
         else:
             assert False
 
-        assert os.path.isfile(fn)
+        assert fn.is_file()
         with open(fn) as _file:
             _file.read() == contents
 
@@ -144,12 +144,12 @@ def check_destroy(stage, stage_name):
     stage_path = get_stage_path(stage, stage_name)
 
     # check that the stage dir/link was removed.
-    assert not os.path.exists(stage_path)
+    assert not stage_path.exists()
 
     # tmp stage needs to remove tmp dir too.
     if not stage.managed_by_spack:
         target = os.path.realpath(stage_path)
-        assert not os.path.exists(target)
+        assert not target.exists()
 
 
 def check_setup(stage, stage_name, archive):
@@ -157,12 +157,12 @@ def check_setup(stage, stage_name, archive):
     stage_path = get_stage_path(stage, stage_name)
 
     # Ensure stage was created in the spack stage directory
-    assert os.path.isdir(stage_path)
+    assert stage_path.is_dir()
 
     # Make sure it points to a valid directory
     target = os.path.realpath(stage_path)
-    assert os.path.isdir(target)
-    assert not os.path.islink(target)
+    assert target.is_dir()
+    assert not target.is_symlink()
 
     # Make sure the directory is in the place we asked it to
     # be (see setUp, tearDown, and use_tmp)
@@ -361,7 +361,7 @@ def check_stage_dir_perms(prefix, path):
     assert path.startswith(prefix)
 
     user = getpass.getuser()
-    prefix_status = os.stat(prefix)
+    prefix_status = prefix.stat()
     uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
@@ -373,7 +373,7 @@ def check_stage_dir_perms(prefix, path):
                                                         user)
 
     for p in group_paths:
-        p_status = os.stat(os.path.join(prefix, p))
+        p_status = os.path.join(prefix, p).stat()
         assert p_status.st_gid == prefix_status.st_gid
         assert p_status.st_mode == prefix_status.st_mode
 
@@ -383,7 +383,7 @@ def check_stage_dir_perms(prefix, path):
         user_paths.insert(0, user_node)
 
     for p in user_paths:
-        p_status = os.stat(os.path.join(prefix, p))
+        p_status = os.path.join(prefix, p).stat()
         assert uid == p_status.st_uid
         assert p_status.st_mode & stat.S_IRWXU == stat.S_IRWXU
 
@@ -421,7 +421,7 @@ class TestStage(object):
         with Stage(test_noexpand_fetcher) as stage:
             stage.fetch()
             stage.expand_archive()
-            assert os.path.exists(stage.archive_file)
+            assert stage.archive_file.exists()
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_noexpand_resource(
@@ -445,8 +445,8 @@ class TestStage(object):
         composite_stage.expand_archive()
         assert composite_stage.expanded  # Archive is expanded
 
-        assert os.path.exists(
-            os.path.join(composite_stage.source_path, resource_dst_name))
+        assert
+            os.path.join(composite_stage.source_path, resource_dst_name).exists()
 
     @pytest.mark.disable_clean_stage_check
     def test_composite_stage_with_expand_resource(
@@ -464,7 +464,7 @@ class TestStage(object):
         for fname in mock_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-dir', fname)
-            assert os.path.exists(file_path)
+            assert file_path.exists()
 
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
@@ -490,7 +490,7 @@ class TestStage(object):
         for fname in mock_resource.files:
             file_path = os.path.join(
                 root_stage.source_path, 'resource-expand', fname)
-            assert os.path.exists(file_path)
+            assert file_path.exists()
 
         # Perform a little cleanup
         shutil.rmtree(root_stage.path)
@@ -620,7 +620,7 @@ class TestStage(object):
         with stage:
             pass
         path = get_stage_path(stage, self.stage_name)
-        assert os.path.isdir(path)
+        assert path.is_dir()
 
     @pytest.mark.disable_clean_stage_check
     def test_no_keep_with_exceptions(self, mock_stage_archive):
@@ -635,7 +635,7 @@ class TestStage(object):
 
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
-            assert os.path.isdir(path)
+            assert path.is_dir()
 
     @pytest.mark.disable_clean_stage_check
     def test_keep_exceptions(self, mock_stage_archive):
@@ -650,7 +650,7 @@ class TestStage(object):
 
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
-            assert os.path.isdir(path)
+            assert path.is_dir()
 
     def test_source_path_available(self, mock_stage_archive):
         """Ensure source path available but does not exist on instantiation."""
@@ -660,7 +660,7 @@ class TestStage(object):
         source_path = stage.source_path
         assert source_path
         assert source_path.endswith(spack.stage._source_path_subdir)
-        assert not os.path.exists(source_path)
+        assert not source_path.exists()
 
     @pytest.mark.skipif(sys.platform == 'win32',
                         reason="Not supported on Windows (yet)")
@@ -674,7 +674,7 @@ class TestStage(object):
         # Ensure the tmpdir path is returned since the user should have access
         path = spack.stage._first_accessible_path(files)
         assert path == name
-        assert os.path.isdir(path)
+        assert path.is_dir()
         check_stage_dir_perms(str(tmpdir), path)
 
         # Ensure an existing path is returned
@@ -706,9 +706,9 @@ class TestStage(object):
             if getpass.getuser() in str(test_path).split(os.sep):
                 # Simply ensure directory created if tmpdir includes user
                 spack.stage.create_stage_root(test_path)
-                assert os.path.exists(test_path)
+                assert test_path.exists()
 
-                p_stat = os.stat(test_path)
+                p_stat = test_path.stat()
                 assert p_stat.st_mode & stat.S_IRWXU == stat.S_IRWXU
             else:
                 # Ensure an OS Error is raised on created, non-user directory
@@ -756,13 +756,13 @@ class TestStage(object):
         #  with monkeypatch.context() as m:
         #      m.setattr(os, 'stat', _stat)
         #      spack.stage.create_stage_root(user_path)
-        #      assert os.stat(user_path).st_uid != os.getuid()
+        #      assert user_path).st_uid != os.getuid(.stat()
         monkeypatch.setattr(os, 'stat', _stat)
         spack.stage.create_stage_root(user_path)
 
         # The following check depends on the patched os.stat as a poor
         # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != getuid()
+        assert user_path).st_uid != getuid(.stat()
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""
@@ -830,9 +830,9 @@ class TestStage(object):
             spack.stage.purge()
 
             if purged:
-                assert not os.path.exists(test_path)
+                assert not test_path.exists()
             else:
-                assert os.path.exists(test_path)
+                assert test_path.exists()
                 shutil.rmtree(test_path)
 
     def test_stage_constructor_no_fetcher(self):
@@ -882,7 +882,7 @@ class TestStage(object):
 
         stage.destroy()  # A no-op
         assert stage.path == path  # Ensure can still access attributes
-        assert os.path.exists(stage.source_path)  # Ensure path still exists
+        assert stage.source_path.exists()  # Ensure path still exists
 
     def test_diystage_preserve_file(self, tmpdir):
         """Ensure DIYStage preserves an existing file."""
@@ -893,13 +893,13 @@ class TestStage(object):
         # Instantiate the DIYStage and ensure the above file is unchanged.
         path = str(tmpdir)
         stage = DIYStage(path)
-        assert os.path.isdir(path)
-        assert os.path.isfile(str(fn))
+        assert path.is_dir()
+        assert str(fn.is_file())
 
         stage.create()  # Only sets the flag value
 
         readmefn = str(fn)
-        assert os.path.isfile(readmefn)
+        assert readmefn.is_file()
         with open(readmefn) as _file:
             _file.read() == _readme_contents
 
@@ -919,7 +919,7 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     stage.create()
 
     # Ensure the stage path is "converted" to a directory
-    assert os.path.isdir(stage.path)
+    assert stage.path.is_dir()
 
 
 @pytest.mark.skipif(sys.platform == 'win32',

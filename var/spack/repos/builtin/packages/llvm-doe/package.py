@@ -419,9 +419,9 @@ class LlvmDoe(CMakePackage, CudaPackage):
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ['clang', 'apple-clang']:
             for lld in 'ld.lld-{0}'.format(self.compiler.version.version[0]), 'ld.lld':
-                bin = os.path.join(os.path.dirname(self.compiler.cc), lld)
+                bin = os.path.join(self.compiler.cc.parent, lld)
                 sym = os.path.join(self.stage.path, 'ld.lld')
-                if os.path.exists(bin) and not os.path.exists(sym):
+                if bin.exists() and not sym.exists():
                     mkdirp(self.stage.path)
                     os.symlink(bin, sym)
             env.prepend_path('PATH', self.stage.path)

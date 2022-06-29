@@ -22,7 +22,7 @@ class Alglib(MakefilePackage):
 
     def edit(self, spec, prefix):
         # this package has no build system!
-        make_file_src = join_path(os.path.dirname(self.module.__file__),
+        make_file_src = join_path(self.module.__file__.parent,
                                   'Makefile')
         make_file = join_path(self.stage.source_path, 'src', 'Makefile')
         copy(make_file_src, make_file)

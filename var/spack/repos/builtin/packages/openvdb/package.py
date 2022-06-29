@@ -85,6 +85,6 @@ class Openvdb(CMakePackage):
             pyver = 'python{0}'.format(spec['python'].package.version.up_to(2))
 
             src = prefix.lib.join(pyver).join(pyso)
-            if not os.path.isfile(src):
+            if not src.is_file():
                 src = prefix.lib64.join(pyver).join(pyso)
             os.rename(src, os.path.join(python_platlib, pyso))

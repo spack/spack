@@ -56,8 +56,8 @@ def test_write_and_remove_cache_file(file_cache):
     file_cache.remove('test.yaml')
 
     # After removal both the file and the lock file should not exist
-    assert not os.path.exists(file_cache.cache_path('test.yaml'))
-    assert not os.path.exists(file_cache._lock_path('test.yaml'))
+    assert not file_cache.cache_path('test.yaml'.exists())
+    assert not file_cache._lock_path('test.yaml'.exists())
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -70,17 +70,17 @@ def test_cache_init_entry_fails(file_cache):
 
     # Ensure directory causes exception
     with pytest.raises(CacheError, match='not a file'):
-        file_cache.init_entry(os.path.dirname(relpath))
+        file_cache.init_entry(relpath.parent)
 
     # Ensure non-readable file causes exception
-    os.chmod(cachefile, 0o200)
+    cachefile.chmod(0o200)
     with pytest.raises(CacheError, match='Cannot access cache file'):
         file_cache.init_entry(relpath)
 
     # Ensure read-only parent causes exception
     relpath = fs.join_path('test-dir', 'another-file.txxt')
     cachefile = file_cache.cache_path(relpath)
-    os.chmod(os.path.dirname(cachefile), 0o400)
+    cachefile.parent.chmod(0o400)
     with pytest.raises(CacheError, match='Cannot access cache dir'):
         file_cache.init_entry(relpath)
 
@@ -90,7 +90,7 @@ def test_cache_write_readonly_cache_fails(file_cache):
     filename = 'read-only-file.txt'
     path = file_cache.cache_path(filename)
     fs.touch(path)
-    os.chmod(path, 0o400)
+    path.chmod(0o400)
 
     with pytest.raises(CacheError, match='Insufficient permissions to write'):
         file_cache.write_transaction(filename)

@@ -129,7 +129,7 @@ class FoamExtend(Package):
         """
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
-        if os.path.isfile(bashrc):
+        if bashrc.is_file():
             # post-install: source the installed bashrc
             try:
                 mods = EnvironmentModifications.from_sourcing_file(
@@ -176,7 +176,7 @@ class FoamExtend(Package):
         if minimal:
             # pre-build or minimal environment
             tty.info('foam-extend minimal env {0}'.format(self.prefix))
-            env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
+            env.set('FOAM_INST_DIR', self.projectdir.parent),
             env.set('FOAM_PROJECT_DIR', self.projectdir)
             env.set('WM_PROJECT_DIR', self.projectdir)
             for d in ['wmake', self.archbin]:  # bin added automatically
@@ -356,11 +356,11 @@ class FoamExtend(Package):
 
         # Fairly ugly since intermediate targets are scattered inside sources
         appdir = 'applications'
-        projdir = os.path.basename(self.projectdir)
+        projdir = self.projectdir.name
         mkdirp(self.projectdir, join_path(self.projectdir, appdir))
         # Filtering: bashrc, cshrc
         edits = {
-            'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
+            'WM_PROJECT_INST_DIR': self.projectdir.parent,
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
 
@@ -372,7 +372,7 @@ class FoamExtend(Package):
 
         files = [
             f for f in glob.glob("*")
-            if os.path.isfile(f) and not ignored.search(f)
+            if f.is_file() and not ignored.search(f)
         ]
         for f in files:
             install(f, self.projectdir)
@@ -391,7 +391,7 @@ class FoamExtend(Package):
 
             foam_arch_str = str(self.foam_arch)
             # Ignore intermediate targets
-            ignore = lambda p: os.path.basename(p) == foam_arch_str
+            ignore = lambda p: p.name == foam_arch_str
 
             for d in ['src', 'tutorials']:
                 install_tree(

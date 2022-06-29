@@ -79,16 +79,16 @@ class LuaImplPackage(MakefilePackage):
             return
 
         with working_dir(self.prefix.bin):
-            if not os.path.exists(self.prefix.bin.lua):
+            if not self.prefix.bin.lua.exists():
                 luajits = find(self.prefix.bin, "luajit*")
                 assert len(luajits) >= 1
                 luajit = luajits[0]
-                if os.path.islink(luajit):
+                if luajit.is_symlink():
                     luajit = os.readlink(luajit)
                 symlink(luajit, "lua")
 
         with working_dir(self.prefix.include):
-            if not os.path.exists(self.prefix.include.lua):
+            if not self.prefix.include.lua.exists():
                 luajit_include_subdirs = glob.glob(
                     os.path.join(self.prefix.include, "luajit*")
                 )
@@ -103,7 +103,7 @@ class LuaImplPackage(MakefilePackage):
                 real_lib = next(
                     lib
                     for lib in luajit_libnames
-                    if os.path.isfile(lib) and not os.path.islink(lib)
+                    if lib.is_file() and not lib.is_symlink()
                 )
                 symlink(real_lib, "liblua" + ext)
 
@@ -131,7 +131,7 @@ class LuaImplPackage(MakefilePackage):
         lua_patterns = []
         lua_cpatterns = []
         for p in lua_paths:
-            if os.path.isdir(p):
+            if p.is_dir():
                 self.append_paths(lua_patterns, lua_cpatterns, p)
 
         # Always add this package's paths

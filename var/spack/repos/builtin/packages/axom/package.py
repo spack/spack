@@ -188,10 +188,10 @@ class Axom(CachedCMakePackage, CudaPackage):
            and ("gfortran" in self.compiler.fc)
            and ("clang" in self.compiler.cxx)):
             libdir = pjoin(os.path.dirname(
-                           os.path.dirname(self.compiler.cxx)), "lib")
+                           self.compiler.cxx.parent), "lib")
             flags = ""
             for _libpath in [libdir, libdir + "64"]:
-                if os.path.exists(_libpath):
+                if _libpath.exists():
                     flags += " -Wl,-rpath,{0}".format(_libpath)
             description = ("Adds a missing libstdc++ rpath")
             if flags:
@@ -257,7 +257,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
             # Grab lib directory for the current fortran compiler
             libdir = pjoin(os.path.dirname(
-                           os.path.dirname(self.compiler.fc)),
+                           self.compiler.fc.parent),
                            "lib")
             description = ("Adds a missing rpath for libraries "
                            "associated with the fortran compiler")
@@ -293,7 +293,7 @@ class Axom(CachedCMakePackage, CudaPackage):
                 for root in _roots:
                     for subdir in _subdirs:
                         _curr_path = pjoin(root, subdir)
-                        if os.path.exists(_curr_path):
+                        if _curr_path.exists():
                             _existing_paths.append(_curr_path)
                 if _existing_paths:
                     entries.append(cmake_cache_string(

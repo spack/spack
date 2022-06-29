@@ -37,8 +37,8 @@ def edit_package(name, repo_path, namespace):
     path = repo.filename_for_package_name(name)
 
     spec = Spec(name)
-    if os.path.exists(path):
-        if not os.path.isfile(path):
+    if path.exists():
+        if not path.is_file():
             tty.die("Something is wrong. '{0}' is not a file!".format(path))
         if not os.access(path, os.R_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
@@ -102,7 +102,7 @@ def edit(parser, args):
                 name = spack.cmd.python_name(name)
 
             path = os.path.join(path, name)
-            if not os.path.exists(path):
+            if not path.exists():
                 files = glob.glob(path + '*')
                 blacklist = ['.pyc', '~']  # blacklist binaries and backups
                 files = list(filter(
@@ -111,7 +111,7 @@ def edit(parser, args):
                     m = 'Multiple files exist with the name {0}.'.format(name)
                     m += ' Please specify a suffix. Files are:\n\n'
                     for f in files:
-                        m += '        ' + os.path.basename(f) + '\n'
+                        m += '        ' + f.name + '\n'
                     tty.die(m)
                 if not files:
                     tty.die("No file for '{0}' was found in {1}".format(name,

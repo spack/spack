@@ -55,10 +55,10 @@ class Pgi(Package):
     def url_for_version(self, version):
         if int(str(version.up_to(1))) <= 17:
             return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
-                os.getcwd(), version.up_to(1), version.joined)
+                Path.cwd(), version.up_to(1), version.joined)
         else:
             return "file://{0}/pgilinux-20{1}-{2}-x86-64.tar.gz".format(
-                os.getcwd(), version.up_to(1), version.joined)
+                Path.cwd(), version.up_to(1), version.joined)
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

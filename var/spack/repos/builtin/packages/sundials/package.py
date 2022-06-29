@@ -676,7 +676,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             with open(filepath, 'w') as out_file:
                 cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
                 out_file.write('{0}\n'.format(cmake_bin))
-        elif os.path.isfile(filepath):
+        elif filepath.is_file():
             with open(filepath, 'r') as in_file:
                 return in_file.read().strip()
 
@@ -694,7 +694,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             return
 
         for smoke_test in self._smoke_tests:
-            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            work_dir = join_path(self._smoke_tests_path, smoke_test[0].parent)
             with working_dir(work_dir):
                 if smoke_test[3]:  # use cmake
                     self.run_test(exe=cmake_bin, options=['.'])
@@ -708,7 +708,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     def clean_smoke_tests(self):
         for smoke_test in self._smoke_tests:
-            work_dir = join_path(self._smoke_tests_path, os.path.dirname(smoke_test[0]))
+            work_dir = join_path(self._smoke_tests_path, smoke_test[0].parent)
             with working_dir(work_dir):
                 self.run_test(exe='make', options=['clean'])
 

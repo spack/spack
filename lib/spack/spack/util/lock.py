@@ -61,7 +61,7 @@ def check_lock_safety(path):
     path for testing.
     """
     if os.access(path, os.W_OK):
-        stat_result = os.stat(path)
+        stat_result = path.stat()
         uid, gid = stat_result.st_uid, stat_result.st_gid
         mode = stat_result[stat.ST_MODE]
 

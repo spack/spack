@@ -533,7 +533,7 @@ def get_change_revisions():
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
     git_dir = os.path.join(spack.paths.prefix, '.git')
-    if os.path.exists(git_dir) and os.path.isdir(git_dir):
+    if git_dir.exists() and git_dir.is_dir():
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
         # TODO: when merging the topic branch into the base, it will
@@ -777,17 +777,17 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
-        proj_dir = os.environ.get('CI_PROJECT_DIR', os.getcwd())
+        proj_dir = os.environ.get('CI_PROJECT_DIR', Path.cwd())
         pipeline_artifacts_dir = os.path.join(proj_dir, 'jobs_scratch_dir')
 
-    pipeline_artifacts_dir = os.path.abspath(pipeline_artifacts_dir)
+    pipeline_artifacts_dir = pipeline_artifacts_dir.resolve()
     concrete_env_dir = os.path.join(
         pipeline_artifacts_dir, 'concrete_environment')
 
     # Now that we've added the mirrors we know about, they should be properly
     # reflected in the environment manifest file, so copy that into the
     # concrete environment directory, along with the spack.lock file.
-    if not os.path.exists(concrete_env_dir):
+    if not concrete_env_dir.exists():
         os.makedirs(concrete_env_dir)
     shutil.copyfile(env.manifest_path,
                     os.path.join(concrete_env_dir, 'spack.yaml'))
@@ -1675,7 +1675,7 @@ def download_and_extract_artifacts(url, work_dir):
 
     artifacts_zip_path = os.path.join(work_dir, 'artifacts.zip')
 
-    if not os.path.exists(work_dir):
+    if not work_dir.exists():
         os.makedirs(work_dir)
 
     with open(artifacts_zip_path, 'wb') as out_file:
@@ -1685,14 +1685,14 @@ def download_and_extract_artifacts(url, work_dir):
     zip_file.extractall(work_dir)
     zip_file.close()
 
-    os.remove(artifacts_zip_path)
+    artifacts_zip_path.unlink()
 
 
 def get_spack_info():
     """ If spack is running from a git repo, return the most recent git log
         entry, otherwise, return a string containing the spack version. """
     git_path = os.path.join(spack.paths.prefix, ".git")
-    if os.path.exists(git_path):
+    if git_path.exists():
         git = exe.which("git")
         if git:
             with fs.working_dir(spack.paths.prefix):
@@ -1729,7 +1729,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     print('merge_commit: {0}'.format(merge_commit))
 
     dot_git_path = os.path.join(spack.paths.prefix, ".git")
-    if not os.path.exists(dot_git_path):
+    if not dot_git_path.exists():
         tty.error('Unable to find the path to your local spack clone')
         return False
 
@@ -1812,7 +1812,7 @@ def reproduce_ci_job(url, work_dir):
     download_and_extract_artifacts(url, work_dir)
 
     lock_file = fs.find(work_dir, 'spack.lock')[0]
-    concrete_env_dir = os.path.dirname(lock_file)
+    concrete_env_dir = lock_file.parent
 
     tty.debug('Concrete environment directory: {0}'.format(
         concrete_env_dir))
@@ -1840,8 +1840,8 @@ def reproduce_ci_job(url, work_dir):
 
     # Find the install script in the unzipped artifacts and make it executable
     install_script = fs.find(work_dir, 'install.sh')[0]
-    st = os.stat(install_script)
-    os.chmod(install_script, st.st_mode | stat.S_IEXEC)
+    st = install_script.stat()
+    install_script.chmod(st.st_mode | stat.S_IEXEC)
 
     # Find the repro details file.  This just includes some values we wrote
     # during `spack ci rebuild` to make reproduction easier.  E.g. the job
@@ -1852,7 +1852,7 @@ def reproduce_ci_job(url, work_dir):
     with open(repro_file) as fd:
         repro_details = json.load(fd)
 
-    repro_dir = os.path.dirname(repro_file)
+    repro_dir = repro_file.parent
     rel_repro_dir = repro_dir.replace(work_dir, '').lstrip(os.path.sep)
 
     # Find the spack info text file that should contain the git log

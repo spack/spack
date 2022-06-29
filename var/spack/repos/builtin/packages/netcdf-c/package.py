@@ -135,7 +135,7 @@ class NetcdfC(AutotoolsPackage):
 
     @when('@4.6.3:')
     def autoreconf(self, spec, prefix):
-        if not os.path.exists(self.configure_abs_path):
+        if not self.configure_abs_path.exists():
             Executable('./bootstrap')()
 
     def configure_args(self):

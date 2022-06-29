@@ -42,14 +42,14 @@ def link_tree(stage):
 
 
 def check_file_link(filename, expected_target):
-    assert os.path.isfile(filename)
+    assert filename.is_file()
     assert islink(filename)
     assert (os.path.abspath(os.path.realpath(filename)) ==
             os.path.abspath(expected_target))
 
 
 def check_dir(filename):
-    assert os.path.isdir(filename)
+    assert filename.is_dir()
 
 
 def test_merge_to_new_directory(stage, link_tree):
@@ -64,17 +64,17 @@ def test_merge_to_new_directory(stage, link_tree):
         check_file_link('dest/c/d/6',   'source/c/d/6')
         check_file_link('dest/c/d/e/7', 'source/c/d/e/7')
 
-        assert os.path.isabs(os.readlink('dest/1'))
-        assert os.path.isabs(os.readlink('dest/a/b/2'))
-        assert os.path.isabs(os.readlink('dest/a/b/3'))
-        assert os.path.isabs(os.readlink('dest/c/4'))
-        assert os.path.isabs(os.readlink('dest/c/d/5'))
-        assert os.path.isabs(os.readlink('dest/c/d/6'))
-        assert os.path.isabs(os.readlink('dest/c/d/e/7'))
+        assert os.readlink('dest/1'.is_absolute())
+        assert os.readlink('dest/a/b/2'.is_absolute())
+        assert os.readlink('dest/a/b/3'.is_absolute())
+        assert os.readlink('dest/c/4'.is_absolute())
+        assert os.readlink('dest/c/d/5'.is_absolute())
+        assert os.readlink('dest/c/d/6'.is_absolute())
+        assert os.readlink('dest/c/d/e/7'.is_absolute())
 
         link_tree.unmerge('dest')
 
-        assert not os.path.exists('dest')
+        assert not 'dest'.exists()
 
 
 def test_merge_to_new_directory_relative(stage, link_tree):
@@ -89,17 +89,17 @@ def test_merge_to_new_directory_relative(stage, link_tree):
         check_file_link('dest/c/d/6',   'source/c/d/6')
         check_file_link('dest/c/d/e/7', 'source/c/d/e/7')
 
-        assert not os.path.isabs(os.readlink('dest/1'))
-        assert not os.path.isabs(os.readlink('dest/a/b/2'))
-        assert not os.path.isabs(os.readlink('dest/a/b/3'))
-        assert not os.path.isabs(os.readlink('dest/c/4'))
-        assert not os.path.isabs(os.readlink('dest/c/d/5'))
-        assert not os.path.isabs(os.readlink('dest/c/d/6'))
-        assert not os.path.isabs(os.readlink('dest/c/d/e/7'))
+        assert not os.readlink('dest/1'.is_absolute())
+        assert not os.readlink('dest/a/b/2'.is_absolute())
+        assert not os.readlink('dest/a/b/3'.is_absolute())
+        assert not os.readlink('dest/c/4'.is_absolute())
+        assert not os.readlink('dest/c/d/5'.is_absolute())
+        assert not os.readlink('dest/c/d/6'.is_absolute())
+        assert not os.readlink('dest/c/d/e/7'.is_absolute())
 
         link_tree.unmerge('dest')
 
-        assert not os.path.exists('dest')
+        assert not 'dest'.exists()
 
 
 def test_merge_to_existing_directory(stage, link_tree):
@@ -118,21 +118,21 @@ def test_merge_to_existing_directory(stage, link_tree):
         check_file_link('dest/c/d/6',   'source/c/d/6')
         check_file_link('dest/c/d/e/7', 'source/c/d/e/7')
 
-        assert os.path.isfile('dest/x')
-        assert os.path.isfile('dest/a/b/y')
+        assert 'dest/x'.is_file()
+        assert 'dest/a/b/y'.is_file()
 
         link_tree.unmerge('dest')
 
-        assert os.path.isfile('dest/x')
-        assert os.path.isfile('dest/a/b/y')
+        assert 'dest/x'.is_file()
+        assert 'dest/a/b/y'.is_file()
 
-        assert not os.path.isfile('dest/1')
-        assert not os.path.isfile('dest/a/b/2')
-        assert not os.path.isfile('dest/a/b/3')
-        assert not os.path.isfile('dest/c/4')
-        assert not os.path.isfile('dest/c/d/5')
-        assert not os.path.isfile('dest/c/d/6')
-        assert not os.path.isfile('dest/c/d/e/7')
+        assert not 'dest/1'.is_file()
+        assert not 'dest/a/b/2'.is_file()
+        assert not 'dest/a/b/3'.is_file()
+        assert not 'dest/c/4'.is_file()
+        assert not 'dest/c/d/5'.is_file()
+        assert not 'dest/c/d/6'.is_file()
+        assert not 'dest/c/d/e/7'.is_file()
 
 
 def test_merge_with_empty_directories(stage, link_tree):
@@ -143,16 +143,16 @@ def test_merge_with_empty_directories(stage, link_tree):
         link_tree.merge('dest')
         link_tree.unmerge('dest')
 
-        assert not os.path.exists('dest/1')
-        assert not os.path.exists('dest/a/b/2')
-        assert not os.path.exists('dest/a/b/3')
-        assert not os.path.exists('dest/c/4')
-        assert not os.path.exists('dest/c/d/5')
-        assert not os.path.exists('dest/c/d/6')
-        assert not os.path.exists('dest/c/d/e/7')
+        assert not 'dest/1'.exists()
+        assert not 'dest/a/b/2'.exists()
+        assert not 'dest/a/b/3'.exists()
+        assert not 'dest/c/4'.exists()
+        assert not 'dest/c/d/5'.exists()
+        assert not 'dest/c/d/6'.exists()
+        assert not 'dest/c/d/e/7'.exists()
 
-        assert os.path.isdir('dest/a/b/h')
-        assert os.path.isdir('dest/f/g')
+        assert 'dest/a/b/h'.is_dir()
+        assert 'dest/f/g'.is_dir()
 
 
 def test_ignore(stage, link_tree):
@@ -163,12 +163,12 @@ def test_ignore(stage, link_tree):
         link_tree.merge('dest', ignore=lambda x: x == '.spec')
         link_tree.unmerge('dest', ignore=lambda x: x == '.spec')
 
-        assert not os.path.exists('dest/1')
-        assert not os.path.exists('dest/a')
-        assert not os.path.exists('dest/c')
+        assert not 'dest/1'.exists()
+        assert not 'dest/a'.exists()
+        assert not 'dest/c'.exists()
 
-        assert os.path.isfile('source/.spec')
-        assert os.path.isfile('dest/.spec')
+        assert 'source/.spec'.is_file()
+        assert 'dest/.spec'.is_file()
 
 
 def test_source_merge_visitor_does_not_follow_symlinked_dirs_at_depth(tmpdir):

@@ -194,7 +194,7 @@ class Openblas(MakefilePackage):
         """
         # Read available openblas targets
         targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
-        if os.path.exists(targetlist_name):
+        if targetlist_name.exists():
             with open(targetlist_name) as f:
                 available_targets = self._read_targets(f)
         else:
@@ -402,9 +402,9 @@ class Openblas(MakefilePackage):
         # Openblas may pass its own test but still fail to compile Lapack
         # symbols. To make sure we get working Blas and Lapack, do a small
         # test.
-        source_file = join_path(os.path.dirname(self.module.__file__),
+        source_file = join_path(self.module.__file__.parent,
                                 'test_cblas_dgemm.c')
-        blessed_file = join_path(os.path.dirname(self.module.__file__),
+        blessed_file = join_path(self.module.__file__.parent,
                                  'test_cblas_dgemm.output')
 
         include_flags = spec['openblas'].headers.cpp_flags

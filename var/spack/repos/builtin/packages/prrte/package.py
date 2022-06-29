@@ -36,7 +36,7 @@ class Prrte(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if self.configure_abs_path.exists():
             return
         with working_dir(self.configure_directory):
             perl = spec['perl'].command

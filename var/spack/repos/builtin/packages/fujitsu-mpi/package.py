@@ -33,7 +33,7 @@ class FujitsuMpi(Package):
     @property
     def headers(self):
         hdrs = find_headers('mpi', self.prefix.include, recursive=True)
-        hdrs.directories = os.path.dirname(hdrs[0])
+        hdrs.directories = hdrs[0].parent
         return hdrs or None
 
     @property

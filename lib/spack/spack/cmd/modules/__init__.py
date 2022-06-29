@@ -6,7 +6,6 @@
 """Implementation details of the ``spack module`` command."""
 
 import collections
-import os.path
 import shutil
 import sys
 
@@ -235,8 +234,8 @@ def rm(module_type, specs, args):
     check_module_set_name(args.module_set_name)
 
     module_cls = spack.modules.module_types[module_type]
-    module_exist = lambda x: os.path.exists(
-        module_cls(x, args.module_set_name).layout.filename)
+    module_exist = lambda x:
+        module_cls(x, args.module_set_name).layout.filename.exists()
 
     specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
@@ -258,7 +257,7 @@ def rm(module_type, specs, args):
 
     # Remove the module files
     for s in modules:
-        s.remove()
+        s.unlink()
 
 
 def refresh(module_type, specs, args):
@@ -321,7 +320,7 @@ def refresh(module_type, specs, args):
 
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
-    if os.path.isdir(module_type_root) and args.delete_tree:
+    if module_type_root.is_dir() and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
 

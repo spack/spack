@@ -146,7 +146,7 @@ class Mvapich2(AutotoolsPackage):
         def get_spack_compiler_spec(path):
             spack_compilers = spack.compilers.find_compilers([path])
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if spack_compiler.cc.parent == path:
                     return spack_compiler.spec
             return None
         results = []
@@ -230,7 +230,7 @@ class Mvapich2(AutotoolsPackage):
             match = re.search(r'CC: (\S+)', output)
             if match:
                 comp_spec = get_spack_compiler_spec(
-                    os.path.dirname(match.group(1)))
+                    match.group(1.parent))
                 if comp_spec:
                     variants += " %" + str(comp_spec)
             results.append(variants)

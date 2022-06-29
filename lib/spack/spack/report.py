@@ -281,7 +281,7 @@ class collect_info(object):
                              .format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
-    def __call__(self, type, dir=os.getcwd()):
+    def __call__(self, type, dir=Path.cwd()):
         self.type = type
         self.dir = dir
         return self

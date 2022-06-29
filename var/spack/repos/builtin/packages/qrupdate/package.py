@@ -64,7 +64,7 @@ class Qrupdate(MakefilePackage, SourceforgePackage):
 
     def install(self, spec, prefix):
         # "INSTALL" confuses "make install" on case-insensitive filesystems:
-        if os.path.isfile("INSTALL"):
+        if "INSTALL".is_file():
             os.remove("INSTALL")
 
         # Create lib folder:

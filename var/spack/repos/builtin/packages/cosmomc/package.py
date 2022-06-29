@@ -141,7 +141,7 @@ class Cosmomc(Package):
         if '+python' in spec:
             entries += ['python']
         for entry in entries:
-            if os.path.isfile(entry):
+            if entry.is_file():
                 install(entry, root)
             else:
                 install_tree(entry, join_path(root, entry))

@@ -27,7 +27,7 @@ class Pilon(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "pilon.sh")
+        script_sh = join_path(__file__.parent, "pilon.sh")
         script = prefix.bin.pilon
         install(script_sh, script)
         set_executable(script)

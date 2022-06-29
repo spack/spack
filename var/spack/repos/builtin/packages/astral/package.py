@@ -31,7 +31,7 @@ class Astral(Package):
         jar_file = 'astral.{v}.jar'.format(v=self.version)
         install(jar_file, prefix.tools)
 
-        script_sh = join_path(os.path.dirname(__file__), "astral.sh")
+        script_sh = join_path(__file__.parent, "astral.sh")
         script = prefix.bin.astral
         install(script_sh, script)
         set_executable(script)

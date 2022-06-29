@@ -86,7 +86,7 @@ class Pmix(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         """Only needed when building from git checkout"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if self.configure_abs_path.exists():
             return
         # Else bootstrap with autotools
         perl = which('perl')

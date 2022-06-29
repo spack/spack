@@ -385,11 +385,11 @@ def set_wrapper_variables(pkg, env):
     env_paths = []
     compiler_specific = os.path.join(
         spack.paths.build_env_path,
-        os.path.dirname(pkg.compiler.link_paths['cc']))
+        pkg.compiler.link_paths['cc'].parent)
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
-        if os.path.isdir(ci):
+        if ci.is_dir():
             env_paths.append(ci)
 
     tty.debug("Adding compiler bin/ paths: " + " ".join(env_paths))
@@ -437,7 +437,7 @@ def set_wrapper_variables(pkg, env):
             for default_lib_dir in ['lib', 'lib64']:
                 default_lib_prefix = os.path.join(
                     dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
+                if default_lib_prefix.is_dir():
                     dep_link_dirs.append(default_lib_prefix)
 
             _prepend_all(link_dirs, dep_link_dirs)
@@ -635,7 +635,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     # TODO: Compiler arguments should not be hardcoded but provided by
     #       the different compiler classes.
     if 'linux' in arch or 'cray' in arch:
-        soname = os.path.basename(shared_lib)
+        soname = shared_lib.name
 
         if compat_version:
             soname += '.{0}'.format(compat_version)
@@ -679,7 +679,7 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     compiler_args.extend(['-o', shared_lib])
 
     # Create symlinks for version and compat_version
-    shared_lib_link = os.path.basename(shared_lib)
+    shared_lib_link = shared_lib.name
 
     if version or compat_version:
         symlink(shared_lib_link, shared_lib_base)
@@ -704,9 +704,9 @@ def get_rpaths(pkg):
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
     deps = get_rpath_deps(pkg)
     rpaths.extend(d.prefix.lib for d in deps
-                  if os.path.isdir(d.prefix.lib))
+                  if d.prefix.lib.is_dir())
     rpaths.extend(d.prefix.lib64 for d in deps
-                  if os.path.isdir(d.prefix.lib64))
+                  if d.prefix.lib64.is_dir())
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
@@ -869,7 +869,7 @@ def _make_runnable(pkg, env):
 
     for dirname in ['bin', 'bin64']:
         bin_dir = os.path.join(prefix, dirname)
-        if os.path.isdir(bin_dir):
+        if bin_dir.is_dir():
             env.prepend_path('PATH', bin_dir)
 
 
@@ -966,7 +966,7 @@ def modifications_from_dependencies(
 
             for directory in ('lib', 'lib64', 'share'):
                 pcdir = os.path.join(prefix, directory, 'pkgconfig')
-                if os.path.isdir(pcdir):
+                if pcdir.is_dir():
                     env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
         if dep in exe_deps and not is_system_path(dep.prefix):
@@ -1330,7 +1330,7 @@ class ChildError(InstallError):
         out = StringIO()
         out.write(self._long_message if self._long_message else '')
 
-        have_log = self.log_name and os.path.exists(self.log_name)
+        have_log = self.log_name and self.log_name.exists()
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show

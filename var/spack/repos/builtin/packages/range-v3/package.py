@@ -164,7 +164,7 @@ class RangeV3(CMakePackage):
             shutil.rmtree('CMakeFiles')
             for f in ('cmake_install.cmake', 'CTestTestfile.cmake',
                       'Makefile', 'CMakeLists.txt'):
-                if os.path.exists(f):
+                if f.exists():
                     os.remove(f)
 
     @run_after('install')

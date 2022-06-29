@@ -23,18 +23,18 @@ def compute_hash(path):
 def create_manifest_entry(path):
     data = {}
 
-    if os.path.exists(path):
-        stat = os.stat(path)
+    if path.exists():
+        stat = path.stat()
 
         data['mode'] = stat.st_mode
         data['owner'] = stat.st_uid
         data['group'] = stat.st_gid
 
-        if os.path.islink(path):
+        if path.is_symlink():
             data['type'] = 'link'
             data['dest'] = os.readlink(path)
 
-        elif os.path.isdir(path):
+        elif path.is_dir():
             data['type'] = 'dir'
 
         else:
@@ -51,7 +51,7 @@ def write_manifest(spec):
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 
-    if not os.path.exists(manifest_file):
+    if not manifest_file.exists():
         tty.debug("Writing manifest file: No manifest from binary")
 
         manifest = {}
@@ -74,7 +74,7 @@ def check_entry(path, data):
         res.add_error(path, 'added')
         return res
 
-    stat = os.stat(path)
+    stat = path.stat()
 
     # Check for all entries
     if stat.st_mode != data['mode']:
@@ -85,14 +85,14 @@ def check_entry(path, data):
         res.add_error(path, 'group')
 
     # Check for symlink targets  and listed as symlink
-    if os.path.islink(path):
+    if path.is_symlink():
         if data['type'] != 'link':
             res.add_error(path, 'type')
         if os.readlink(path) != data.get('dest', ''):
             res.add_error(path, 'link')
 
     # Check directories are listed as directory
-    elif os.path.isdir(path):
+    elif path.is_dir():
         if data['type'] != 'dir':
             res.add_error(path, 'type')
 
@@ -112,20 +112,20 @@ def check_entry(path, data):
 
 
 def check_file_manifest(filename):
-    dirname = os.path.dirname(filename)
+    dirname = filename.parent
 
     results = VerificationResults()
     while spack.store.layout.metadata_dir not in os.listdir(dirname):
         if dirname == os.path.sep:
             results.add_error(filename, 'not owned by any package')
             return results
-        dirname = os.path.dirname(dirname)
+        dirname = dirname.parent
 
     manifest_file = os.path.join(dirname,
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 
-    if not os.path.exists(manifest_file):
+    if not manifest_file.exists():
         results.add_error(filename, "manifest missing")
         return results
 
@@ -151,7 +151,7 @@ def check_spec_manifest(spec):
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 
-    if not os.path.exists(manifest_file):
+    if not manifest_file.exists():
         results.add_error(prefix, "manifest missing")
         return results
 
@@ -173,11 +173,11 @@ def check_spec_manifest(spec):
         ext_file = view.extensions_layout.extension_file_path(spec)
 
     def is_extension_artifact(p):
-        if os.path.islink(p):
+        if p.is_symlink():
             if any(os.readlink(p).startswith(e.prefix) for e in active_exts):
                 # This file is linked in by an extension. Belongs to extension
                 return True
-        elif os.path.isdir(p) and p not in manifest:
+        elif p.is_dir() and p not in manifest:
             if all(is_extension_artifact(os.path.join(p, f))
                    for f in os.listdir(p)):
                 return True

@@ -53,7 +53,7 @@ class Archer(CMakePackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'test', 'parallel')
 
-        if not os.path.exists(test_dir):
+        if not test_dir.exists():
             print('Skipping archer test')
             return
 

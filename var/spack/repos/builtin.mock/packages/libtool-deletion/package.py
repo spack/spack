@@ -19,7 +19,7 @@ class LibtoolDeletion(AutotoolsPackage):
         mkdirp(self.stage.source_path)
 
     def autoreconf(self, spec, prefix):
-        mkdirp(os.path.dirname(self.configure_abs_path))
+        mkdirp(self.configure_abs_path.parent)
         touch(self.configure_abs_path)
 
     def configure(self, spec, prefix):
@@ -29,7 +29,7 @@ class LibtoolDeletion(AutotoolsPackage):
         pass
 
     def install(self, spec, prefix):
-        mkdirp(os.path.dirname(self.libtool_archive_file))
+        mkdirp(self.libtool_archive_file.parent)
         touch(self.libtool_archive_file)
 
     @property

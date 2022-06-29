@@ -111,7 +111,7 @@ class Extrae(AutotoolsPackage):
         if '+cupti' in self.spec:
             cupti_h = find_headers('cupti', spec['cuda'].prefix,
                                    recursive=True)
-            cupti_dir = os.path.dirname(os.path.dirname(cupti_h[0]))
+            cupti_dir = os.path.dirname(cupti_h[0].parent)
 
         args += (["--with-cupti=%s" % cupti_dir]
                  if '+cupti' in self.spec else

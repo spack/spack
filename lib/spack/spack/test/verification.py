@@ -28,7 +28,7 @@ def test_link_manifest_entry(tmpdir):
     file = str(tmpdir.join('file'))
     open(file, 'a').close()
     link = str(tmpdir.join('link'))
-    os.symlink(file, link)
+    link.symlink_to(file)
 
     data = spack.verify.create_manifest_entry(link)
     assert data['type'] == 'link'
@@ -49,8 +49,8 @@ def test_link_manifest_entry(tmpdir):
 
     file2 = str(tmpdir.join('file2'))
     open(file2, 'a').close()
-    os.remove(link)
-    os.symlink(file2, link)
+    link.unlink()
+    link.symlink_to(file2)
 
     results = spack.verify.check_entry(link, data)
     assert results.has_errors()
@@ -112,7 +112,7 @@ def test_file_manifest_entry(tmpdir):
     results = spack.verify.check_entry(file, data)
 
     expected = ['size', 'hash']
-    mtime = os.stat(file).st_mtime
+    mtime = file.stat().st_mtime
     if mtime != data['time']:
         expected.append('mtime')
 
@@ -130,7 +130,7 @@ def test_check_chmod_manifest_entry(tmpdir):
 
     data = spack.verify.create_manifest_entry(file)
 
-    os.chmod(file, data['mode'] - 1)
+    file.chmod(data['mode'] - 1)
 
     results = spack.verify.check_entry(file, data)
     assert results.has_errors()
@@ -170,7 +170,7 @@ def test_check_prefix_manifest(tmpdir):
     results = spack.verify.check_spec_manifest(spec)
     assert not results.has_errors()
 
-    os.remove(link)
+    link.unlink()
     malware = os.path.join(metadata_dir, 'hiddenmalware')
     with open(malware, 'w') as f:
         f.write("Foul evil deeds")
@@ -225,7 +225,7 @@ def test_single_file_verification(tmpdir):
     results = spack.verify.check_file_manifest(filepath)
 
     expected = ['hash']
-    mtime = os.stat(filepath).st_mtime
+    mtime = filepath.stat().st_mtime
     if mtime != data['time']:
         expected.append('mtime')
 

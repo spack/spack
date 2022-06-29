@@ -357,7 +357,7 @@ def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     assert exitcode == 0
 
     # assert log was created
-    assert os.path.exists(log_path)
+    assert log_path.exists()
 
 
 def synchronized_logger(**kwargs):
@@ -377,7 +377,7 @@ def synchronized_logger(**kwargs):
     write_lock = kwargs["write_lock"]
     v_lock = kwargs["v_lock"]
 
-    sys.stderr.write(os.getcwd() + "\n")
+    sys.stderr.write(Path.cwd() + "\n")
     with log.log_output(log_path) as logger:
         with logger.force_echo():
             print("forced output")
@@ -487,7 +487,7 @@ def test_foreground_background_output(
     output = out.strip().split("\n")
 
     # also get lines of log file
-    assert os.path.exists(log_path)
+    assert log_path.exists()
     with open(log_path) as logfile:
         log_data = logfile.read().strip().split("\n")
 

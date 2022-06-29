@@ -132,7 +132,7 @@ class Graphviz(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         # We need to generate 'configure' when checking out sources from git
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if self.configure_abs_path.exists():
             return
         # Else bootstrap (disabling auto-configure with NOCONFIG)
         bash = which('bash')

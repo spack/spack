@@ -71,7 +71,7 @@ class Lorene(MakefilePackage):
             ('@LIB_PGPLOT@', pgplot_libdirs + " " + pgplot_libs),
         ]
         local_settings_template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__),
+            inspect.getmodule(self.parent.__file__),
             'local_settings.template'
         )
         local_settings = join_path(

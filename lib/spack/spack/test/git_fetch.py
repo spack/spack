@@ -125,20 +125,20 @@ def test_fetch(type_of_test,
             assert h('HEAD') == h(t.revision)
 
             file_path = os.path.join(pkg.stage.source_path, t.file)
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
-            os.unlink(file_path)
-            assert not os.path.isfile(file_path)
+            file_path.unlink()
+            assert not file_path.is_file()
 
             untracked_file = 'foobarbaz'
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert untracked_file.is_file()
             pkg.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not untracked_file.is_file()
 
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
             assert h('HEAD') == h(t.revision)
 
@@ -225,7 +225,7 @@ def test_debug_fetch(
     with pkg.stage:
         with spack.config.override('config:debug', True):
             pkg.do_fetch()
-            assert os.path.isdir(pkg.stage.source_path)
+            assert pkg.stage.source_path.is_dir()
 
 
 def test_git_extra_fetch(tmpdir):
@@ -321,9 +321,9 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
                                      'third_party/submodule{0}/r0_file_{0}'
                                      .format(submodule_count))
             if submodules:
-                assert os.path.isfile(file_path)
+                assert file_path.is_file()
             else:
-                assert not os.path.isfile(file_path)
+                assert not file_path.is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -351,10 +351,10 @@ def test_gitsubmodules_callable(
     with working_dir(pkg.stage.source_path):
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule0/r0_file_0')
-        assert os.path.isfile(file_path)
+        assert file_path.is_file()
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule1/r0_file_1')
-        assert not os.path.isfile(file_path)
+        assert not file_path.is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -380,7 +380,7 @@ def test_gitsubmodules_delete(
     with working_dir(pkg.stage.source_path):
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule0')
-        assert not os.path.isdir(file_path)
+        assert not file_path.is_dir()
         file_path = os.path.join(pkg.stage.source_path,
                                  'third_party/submodule1')
-        assert not os.path.isdir(file_path)
+        assert not file_path.is_dir()

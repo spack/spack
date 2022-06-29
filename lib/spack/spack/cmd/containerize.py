@@ -39,9 +39,9 @@ def containerize(parser, args):
         llnl.util.tty.msg(msg)
         return
 
-    config_dir = args.env_dir or os.getcwd()
+    config_dir = args.env_dir or Path.cwd()
     config_file = os.path.abspath(os.path.join(config_dir, 'spack.yaml'))
-    if not os.path.exists(config_file):
+    if not config_file.exists():
         msg = 'file not found: {0}'
         raise ValueError(msg.format(config_file))
 

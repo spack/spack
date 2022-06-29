@@ -54,7 +54,7 @@ class Qucs(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')
-        if os.path.exists('bootstrap'):
+        if 'bootstrap'.exists():
             sh('./bootstrap')
         else:
             sh('./autogen.sh')

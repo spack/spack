@@ -33,7 +33,7 @@ def modulefile_content(request):
         with open(filename) as f:
             content = f.readlines()
             content = ''.join(content).split('\n')
-        generator.remove()
+        generator.unlink()
         return content
 
     return _impl

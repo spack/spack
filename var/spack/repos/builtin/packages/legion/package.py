@@ -114,7 +114,7 @@ class Legion(CMakePackage, ROCmPackage):
         if value == 'none':
             return True
 
-        if not os.path.isdir(value):
+        if not value.is_dir():
             print("gasnet_root:", value, "-- no such directory.")
             return False
         else:
@@ -391,7 +391,7 @@ class Legion(CMakePackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir,
                              'examples', 'local_function_tasks')
 
-        if not os.path.exists(test_dir):
+        if not test_dir.exists():
             print('Skipping local_function_tasks test')
             return
 

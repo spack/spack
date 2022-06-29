@@ -27,7 +27,7 @@ class Pgdspider(Package):
         jar_file = 'PGDSpider{0}-cli.jar'.format(self.version.up_to(1))
         install(jar_file, prefix.bin)
 
-        script_sh = join_path(os.path.dirname(__file__), "pgdspider.sh")
+        script_sh = join_path(__file__.parent, "pgdspider.sh")
         script = prefix.bin.pgdspider
         install(script_sh, script)
         set_executable(script)

@@ -81,15 +81,15 @@ def test_remove_and_add(database, module_type):
     rm_cli_args = ['rm', '-y', 'mpileaks']
     module_files = _module_files(module_type, 'mpileaks')
     for item in module_files:
-        assert os.path.exists(item)
+        assert item.exists()
 
     module(module_type, *rm_cli_args)
     for item in module_files:
-        assert not os.path.exists(item)
+        assert not item.exists()
 
     module(module_type, 'refresh', '-y', 'mpileaks')
     for item in module_files:
-        assert os.path.exists(item)
+        assert item.exists()
 
 
 @pytest.mark.db
@@ -212,20 +212,20 @@ def test_setdefault_command(
 
     # Assert initial directory state: no link and all module files present
     link_name = os.path.join(
-        os.path.dirname(writers[preferred].layout.filename),
+        writers[preferred].layout.filename.parent,
         'default'
     )
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert not os.path.exists(link_name)
+        assert writers[k].layout.filename.exists()
+    assert not link_name.exists()
 
     # Set the default to be the other spec
     module('lmod', 'setdefault', other_spec)
 
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert os.path.exists(link_name) and os.path.islink(link_name)
+        assert writers[k].layout.filename.exists()
+    assert link_name.exists() and link_name.is_symlink()
     assert os.path.realpath(link_name) == writers[other_spec].layout.filename
 
     # Reset the default to be the preferred spec
@@ -233,6 +233,6 @@ def test_setdefault_command(
 
     # Check that a link named 'default' exists, and points to the right file
     for k in preferred, other_spec:
-        assert os.path.exists(writers[k].layout.filename)
-    assert os.path.exists(link_name) and os.path.islink(link_name)
+        assert writers[k].layout.filename.exists()
+    assert link_name.exists() and link_name.is_symlink()
     assert os.path.realpath(link_name) == writers[preferred].layout.filename

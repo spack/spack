@@ -183,7 +183,7 @@ def test_install_env_variables(
     spec = Spec('libdwarf')
     spec.concretize()
     install('libdwarf')
-    assert os.path.isfile(spec.package.install_env_path)
+    assert spec.package.install_env_path.is_file()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -216,7 +216,7 @@ def test_install_overwrite(
                             spack.store.layout.manifest_file_name)
     ignores = [manifest, spec.package.times_log_path]
 
-    assert os.path.exists(spec.prefix)
+    assert spec.prefix.exists()
     expected_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
 
     # Modify the first installation to be sure the content is not the same
@@ -230,7 +230,7 @@ def test_install_overwrite(
 
     install('--overwrite', '-y', 'libdwarf')
 
-    assert os.path.exists(spec.prefix)
+    assert spec.prefix.exists()
     assert fs.hash_directory(spec.prefix, ignore=ignores) == expected_md5
     assert fs.hash_directory(spec.prefix, ignore=ignores) != bad_md5
 
@@ -242,10 +242,10 @@ def test_install_overwrite_not_installed(
     spec = Spec('libdwarf')
     spec.concretize()
 
-    assert not os.path.exists(spec.prefix)
+    assert not spec.prefix.exists()
 
     install('--overwrite', '-y', 'libdwarf')
-    assert os.path.exists(spec.prefix)
+    assert spec.prefix.exists()
 
 
 def test_install_commit(
@@ -296,7 +296,7 @@ def test_install_overwrite_multiple(
 
     ld_ignores = [ld_manifest, libdwarf.package.times_log_path]
 
-    assert os.path.exists(libdwarf.prefix)
+    assert libdwarf.prefix.exists()
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
                                               ignore=ld_ignores)
 
@@ -305,7 +305,7 @@ def test_install_overwrite_multiple(
                                spack.store.layout.manifest_file_name)
 
     cm_ignores = [cm_manifest, cmake.package.times_log_path]
-    assert os.path.exists(cmake.prefix)
+    assert cmake.prefix.exists()
     expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
 
     # Modify the first installation to be sure the content is not the same
@@ -322,8 +322,8 @@ def test_install_overwrite_multiple(
     assert bad_cmake_md5 != expected_cmake_md5
 
     install('--overwrite', '-y', 'libdwarf', 'cmake')
-    assert os.path.exists(libdwarf.prefix)
-    assert os.path.exists(cmake.prefix)
+    assert libdwarf.prefix.exists()
+    assert cmake.prefix.exists()
 
     ld_hash = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
     cm_hash = fs.hash_directory(cmake.prefix, ignore=cm_ignores)
@@ -505,10 +505,10 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
     config_log = os.path.join(archive_dir,
                               mock_archive.expanded_archive_basedir,
                               'config.log')
-    assert os.path.exists(config_log)
+    assert config_log.exists()
 
     errors_txt = os.path.join(archive_dir, 'errors.txt')
-    assert os.path.exists(errors_txt)
+    assert errors_txt.exists()
 
 
 @pytest.mark.disable_clean_stage_check
@@ -707,8 +707,8 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
 
     install('--only', 'dependencies', 'dependent-install')
 
-    assert os.path.exists(dep.prefix)
-    assert not os.path.exists(root.prefix)
+    assert dep.prefix.exists()
+    assert not root.prefix.exists()
 
 
 def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
@@ -728,11 +728,11 @@ def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
     root = Spec('dependent-install').concretized()
 
     install('--only', 'dependencies', 'dependent-install')
-    assert os.path.exists(dep.prefix)
-    assert not os.path.exists(root.prefix)
+    assert dep.prefix.exists()
+    assert not root.prefix.exists()
 
     install('--only', 'package', 'dependent-install')
-    assert os.path.exists(root.prefix)
+    assert root.prefix.exists()
 
 
 @pytest.mark.regression('12002')
@@ -746,8 +746,8 @@ def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
 
         install('-v', '--only', 'dependencies', 'dependent-install')
 
-        assert os.path.exists(dep.prefix)
-        assert not os.path.exists(root.prefix)
+        assert dep.prefix.exists()
+        assert not root.prefix.exists()
 
 
 @pytest.mark.regression('12002')
@@ -765,9 +765,9 @@ def test_install_only_dependencies_of_all_in_env(
         install('--only', 'dependencies')
 
         for root in roots:
-            assert not os.path.exists(root.prefix)
+            assert not root.prefix.exists()
             for dep in root.traverse(root=False):
-                assert os.path.exists(dep.prefix)
+                assert dep.prefix.exists()
 
 
 def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
@@ -1022,7 +1022,7 @@ def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
         test_dep = Spec('test-dependency').concretized()
         add('depb')
         install('--test', 'all')
-        assert os.path.exists(test_dep.prefix)
+        assert test_dep.prefix.exists()
 
 
 def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
@@ -1032,7 +1032,7 @@ def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
         test_dep = Spec('test-dependency').concretized()
         add('depb')
         install('--test', 'root')
-        assert not os.path.exists(test_dep.prefix)
+        assert not test_dep.prefix.exists()
 
 
 def test_install_empty_env(tmpdir, mock_packages, mock_fetch,

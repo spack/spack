@@ -28,7 +28,7 @@ class VisitSilo(CMakePackage):
     maintainers = ['cyrush', 'cessenat']
 
     # Here we provide a local file that contains only the plugin in a flat directory
-    version('local', url='file://{0}/visit-Silo.tgz'.format(os.getcwd()))
+    version('local', url='file://{0}/visit-Silo.tgz'.format(Path.cwd()))
     # Below we copy the VisIt paths:
     version('develop', branch='develop')
     version('3.1.4', sha256='be20d9acf56f0599e3c511709f48d8d3b232a57425f69d2bd1e2df1eccb84c93')
@@ -71,7 +71,7 @@ class VisitSilo(CMakePackage):
         args = ['-v', str(visit.version), '-clobber', '-public', self.extname + '.xml']
         with working_dir(self.root_cmakelists_dir):
             # Regenerate the public cmake files
-            if os.path.exists("CMakeLists.txt"):
+            if "CMakeLists.txt".exists():
                 os.unlink('CMakeLists.txt')
             which("xml2cmake")(*args)
             # spack extension activate : alter VISIT_PLUGIN_DIR ;

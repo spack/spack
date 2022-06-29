@@ -49,11 +49,11 @@ class Xlf(Package):
     def determine_variants(cls, exes, version_str):
         variants = collections.defaultdict(dict)
         for exe in exes:
-            if os.path.basename(exe) == 'xlf':
+            if exe.name == 'xlf':
                 variants['~r']['fortran'] = exe
                 continue
 
-            if os.path.basename(exe) == 'xlf_r':
+            if exe.name == 'xlf_r':
                 variants['+r']['fortran'] = exe
                 continue
 

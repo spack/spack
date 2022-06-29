@@ -167,7 +167,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
             with open(filepath, 'w') as out_file:
                 cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
                 out_file.write('{0}\n'.format(cmake_bin))
-        elif os.path.isfile(filepath):
+        elif filepath.is_file():
             with open(filepath, 'r') as in_file:
                 return in_file.read().strip()
 

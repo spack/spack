@@ -165,9 +165,9 @@ class Hip(CMakePackage):
             # We assume self.spec.prefix is /opt/rocm-x.y.z/hip and rocm has a
             # default installation with everything installed under
             # /opt/rocm-x.y.z
-            rocm_prefix = Prefix(os.path.dirname(self.spec.prefix))
+            rocm_prefix = Prefix(self.spec.prefix.parent)
 
-            if not os.path.isdir(rocm_prefix):
+            if not rocm_prefix.is_dir():
                 msg = "Could not determine prefix for other rocm components\n"
                 msg += "Either report a bug at github.com/spack/spack or "
                 msg += "manually edit rocm_prefix in the package file as "

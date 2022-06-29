@@ -72,17 +72,17 @@ def make_installer(parser, args):
             git_verbosity = "/" + args.git_verbosity
 
         if spack_source:
-            if not os.path.exists(spack_source):
+            if not spack_source.exists():
                 print("%s does not exist" % spack_source)
                 return
             else:
-                if not os.path.isabs(spack_source):
+                if not spack_source.is_absolute():
                     spack_source = posixpath.abspath(spack_source)
                 spack_source = convert_to_posix_path(spack_source)
 
         spack_version = args.spack_version
 
-        here = os.path.dirname(os.path.abspath(__file__))
+        here = os.path.abspath(__file__.parent)
         source_dir = os.path.join(here, "installer")
         posix_root = convert_to_posix_path(spack.paths.spack_root)
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")

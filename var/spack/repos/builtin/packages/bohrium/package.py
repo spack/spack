@@ -134,7 +134,7 @@ class Bohrium(CMakePackage, CudaPackage):
             "-DJUPYTER_EXECUTABLE=FALSE",
             #
             # Force the configuration file to appear at a sensible place
-            "-DFORCE_CONFIG_PATH=" + os.path.dirname(self.config_file),
+            "-DFORCE_CONFIG_PATH=" + self.config_file.parent,
             #
             # Vector engine managers
             "-DVEM_NODE=" + str("+node" in spec),
@@ -255,13 +255,13 @@ class Bohrium(CMakePackage, CudaPackage):
                      "-L", self.prefix.lib, "-lbh", "-lbhxx"]
 
         # Compile C++ test program
-        file_cxxadd = join_path(os.path.dirname(self.module.__file__),
+        file_cxxadd = join_path(self.module.__file__.parent,
                                 "cxxadd.cpp")
         cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
         test_cxxadd = Executable("./test_cxxadd")
 
         # Build python test commandline
-        file_pyadd = join_path(os.path.dirname(self.module.__file__),
+        file_pyadd = join_path(self.module.__file__.parent,
                                "pyadd.py")
         test_pyadd = Executable(spec['python'].command.path + " " + file_pyadd)
 

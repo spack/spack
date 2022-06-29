@@ -382,17 +382,17 @@ def style(parser, args):
         tty.die("spack style requires Python 3.6 or later.")
 
     # save initial working directory for relativizing paths later
-    args.initial_working_dir = os.getcwd()
+    args.initial_working_dir = Path.cwd()
 
     # ensure that the config files we need actually exist in the spack prefix.
     # assertions b/c users should not ever see these errors -- they're checked in CI.
-    assert os.path.isfile(os.path.join(spack.paths.prefix, "pyproject.toml"))
-    assert os.path.isfile(os.path.join(spack.paths.prefix, ".flake8"))
+    assert os.path.join(spack.paths.prefix, "pyproject.toml".is_file())
+    assert os.path.join(spack.paths.prefix, ".flake8".is_file())
 
     # validate spack root if the user provided one
     args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
     spack_script = os.path.join(args.root, "bin", "spack")
-    if not os.path.exists(spack_script):
+    if not spack_script.exists():
         tty.die(
             "This does not look like a valid spack root.",
             "No such file: '%s'" % spack_script

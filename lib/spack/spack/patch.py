@@ -93,7 +93,7 @@ class Patch(object):
         assert self.path, (
             "Path for patch not set in apply: %s" % self.path_or_url)
 
-        if not os.path.isfile(self.path):
+        if not self.path.is_file():
             raise NoSuchPatchError("No such patch: %s" % self.path)
 
         apply_patch(stage, self.path, self.level, self.working_dir)
@@ -145,9 +145,9 @@ class FilePatch(Patch):
 
             # Cannot use pkg.package_dir because it's a property and we have
             # classes, not instances.
-            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+            pkg_dir = os.path.abspath(cls.module.__file__.parent)
             path = os.path.join(pkg_dir, self.relative_path)
-            if os.path.exists(path):
+            if path.exists():
                 abs_path = path
                 break
 
@@ -228,7 +228,7 @@ class UrlPatch(Patch):
 
         self.path = os.path.join(root, files.pop())
 
-        if not os.path.isfile(self.path):
+        if not self.path.is_file():
             raise NoSuchPatchError(
                 "Archive %s contains no patch file!" % self.url)
 
@@ -256,7 +256,7 @@ class UrlPatch(Patch):
 
         # The same package can have multiple patches with the same name but
         # with different contents, therefore apply a subset of the hash.
-        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
+        name = '{0}-{1}'.format(self.url.name, fetch_digest[:7])
 
         per_package_ref = os.path.join(self.owner.split('.')[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports

@@ -542,7 +542,7 @@ def test_config_revert(packages_yaml_v015):
     config('update', '-y', 'packages')
 
     # Check that the backup file exists, compute its md5 sum
-    assert os.path.exists(bkp_file)
+    assert bkp_file.exists()
     md5bkp = fs.md5sum(bkp_file)
 
     config('revert', '-y', 'packages')
@@ -550,7 +550,7 @@ def test_config_revert(packages_yaml_v015):
     # Check that the backup file does not exist anymore and
     # that the md5 sum of the configuration file is the same
     # as that of the old backup file
-    assert not os.path.exists(bkp_file)
+    assert not bkp_file.exists()
     assert md5bkp == fs.md5sum(cfg_file)
 
 

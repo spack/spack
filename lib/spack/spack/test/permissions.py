@@ -21,12 +21,12 @@ def test_chmod_real_entries_ignores_suid_sgid(tmpdir):
     path = str(tmpdir.join('file').ensure())
     mode = stat.S_ISUID | stat.S_ISGID | stat.S_ISVTX
     os.chmod(path, mode)
-    mode = os.stat(path).st_mode  # adds a high bit we aren't concerned with
+    mode = path.stat().st_mode  # adds a high bit we aren't concerned with
 
     perms = stat.S_IRWXU
     set_permissions(path, perms)
 
-    assert os.stat(path).st_mode == mode | perms & ~stat.S_IXUSR
+    assert path.stat().st_mode == mode | perms & ~stat.S_IXUSR
 
 
 def test_chmod_rejects_group_writable_suid(tmpdir):

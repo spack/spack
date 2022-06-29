@@ -94,18 +94,18 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         swiglib = swig('-swiglib', output=str).strip()
 
         # Check that the lib dir exists
-        if not os.path.isdir(swiglib):
+        if not swiglib.is_dir():
             msg = "SWIG library does not exist at '{0}'".format(swiglib)
             self.test_failures.append([None, msg])
 
         # Check for existence of other critical SWIG library files
         swigfile = join_path(swiglib, 'swig.swg')
-        if not os.path.exists(swigfile):
+        if not swigfile.exists():
             msg = "SWIG runtime does not exist at '{0}'".format(swigfile)
             self.test_failures.append([None, msg])
         if 'fortran' in str(self.version):
             swigfile = join_path(swiglib, 'fortran', 'fortran.swg')
-            if not os.path.exists(swigfile):
+            if not swigfile.exists():
                 msg = "SWIG+Fortran runtime does not exist at '{0}'".format(
                     swigfile)
                 self.test_failures.append([None, msg])

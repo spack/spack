@@ -35,7 +35,7 @@ class Supernova(Package):
     depends_on('bcl2fastq2')
 
     def url_for_version(self, version):
-        return "file://{0}/supernova-{1}.tar.gz".format(os.getcwd(), version)
+        return "file://{0}/supernova-{1}.tar.gz".format(Path.cwd(), version)
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix)
@@ -44,7 +44,7 @@ class Supernova(Package):
         rm = which('rm')
 
         # remove the broken symlinks
-        if os.path.isdir("anaconda-cs/2.2.0-anaconda-cs-c7/lib"):
+        if "anaconda-cs/2.2.0-anaconda-cs-c7/lib".is_dir():
             rm('anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtcl.so',
                'anaconda-cs/2.2.0-anaconda-cs-c7/lib/libtk.so')
 

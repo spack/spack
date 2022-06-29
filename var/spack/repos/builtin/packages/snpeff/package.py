@@ -28,7 +28,7 @@ class Snpeff(Package, SourceforgePackage):
         scripts = ['snpEff', 'SnpSift']
 
         for script in scripts:
-            script_sh = join_path(os.path.dirname(__file__), script + ".sh")
+            script_sh = join_path(__file__.parent, script + ".sh")
             script_path = join_path(prefix.bin, script)
             install(script_sh, script_path)
             set_executable(script_path)

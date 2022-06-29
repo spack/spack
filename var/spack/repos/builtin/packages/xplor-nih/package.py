@@ -25,7 +25,7 @@ class XplorNih(Package):
     depends_on('python', type=('build', 'run'))
 
     def url_for_version(self, version):
-        return "file://{0}/xplor-nih-{1}-Linux_x86_64.tar.gz".format(os.getcwd(), version)
+        return "file://{0}/xplor-nih-{1}-Linux_x86_64.tar.gz".format(Path.cwd(), version)
 
     def install(self, spec, prefix):
         install_tree(self.stage.source_path, prefix.bin)

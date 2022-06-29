@@ -741,10 +741,10 @@ def is_mixed_toolchain(compiler):
     Args:
         compiler (spack.compiler.Compiler): a valid compiler object
     """
-    cc = os.path.basename(compiler.cc or '')
-    cxx = os.path.basename(compiler.cxx or '')
-    f77 = os.path.basename(compiler.f77 or '')
-    fc = os.path.basename(compiler.fc or '')
+    cc = compiler.cc or ''.name
+    cxx = compiler.cxx or ''.name
+    f77 = compiler.f77 or ''.name
+    fc = compiler.fc or ''.name
 
     toolchains = set()
     for compiler_cls in all_compiler_types():

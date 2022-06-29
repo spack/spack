@@ -54,19 +54,19 @@ class SpectrumMpi(BundlePackage):
 
         def get_spack_compiler_spec(compilers_found):
             # check using cc for now, as everyone should have that defined.
-            path = os.path.dirname(compilers_found['cc'])
+            path = compilers_found['cc'].parent
             spack_compilers = spack.compilers.find_compilers([path])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if os.path.dirname(spack_compiler.cc) == path:
+                if spack_compiler.cc.parent == path:
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
 
         results = []
         for exe in exes:
-            dirname = os.path.dirname(exe)
+            dirname = exe.parent
             siblings = os.listdir(dirname)
             compilers_found = {}
             for compiler_suite in compiler_suites.values():

@@ -98,7 +98,7 @@ class Itensor(MakefilePackage):
         # 5.prefix
         filter_file(
             r'^PREFIX.+',
-            'PREFIX={0}'.format(os.getcwd()),
+            'PREFIX={0}'.format(Path.cwd()),
             mf
         )
 

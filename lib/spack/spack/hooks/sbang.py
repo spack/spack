@@ -117,11 +117,11 @@ def filter_shebang(path):
             return False
 
         # Store the file permissions, the patched version needs the same.
-        saved_mode = os.stat(path).st_mode
+        saved_mode = path.stat().st_mode
 
         # Change non-writable files to be writable if needed.
         if not os.access(path, os.W_OK):
-            os.chmod(path, saved_mode | stat.S_IWUSR)
+            path.chmod(saved_mode | stat.S_IWUSR)
 
         # No need to delete since we'll move it and overwrite the original.
         patched = tempfile.NamedTemporaryFile('wb', delete=False)
@@ -153,7 +153,7 @@ def filter_shebang(path):
 
     # Overwrite original file with patched file, and keep the original mode
     shutil.move(patched.name, path)
-    os.chmod(path, saved_mode)
+    path.chmod(saved_mode)
     return True
 
 
@@ -190,12 +190,12 @@ def install_sbang():
     """
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(
+    if sbang_path.exists() and filecmp.cmp(
             spack.paths.sbang_script, sbang_path):
         return
 
     # make $install_tree/bin
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = sbang_path.parent
     fs.mkdirp(sbang_bin_dir)
 
     # get permissions for bin dir from configuration files
@@ -205,31 +205,31 @@ def install_sbang():
     )
 
     if group_name:
-        os.chmod(sbang_bin_dir, config_mode)   # Use package directory permissions
+        sbang_bin_dir.chmod(config_mode)   # Use package directory permissions
     else:
         fs.set_install_permissions(sbang_bin_dir)
 
     # set group on sbang_bin_dir if not already set (only if set in configuration)
-    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
+    if group_name and grp.getgrgid(sbang_bin_dir).st_gid.stat().gr_name != group_name:
         os.chown(
             sbang_bin_dir,
-            os.stat(sbang_bin_dir).st_uid,
+            sbang_bin_dir.stat().st_uid,
             grp.getgrnam(group_name).gr_gid
         )
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
+        sbang_path.parent,
+        ".%s.tmp" % sbang_path.name,
     )
     shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
 
     # set permissions on `sbang` (including group if set in configuration)
-    os.chmod(sbang_tmp_path, config_mode)
+    sbang_tmp_path.chmod(config_mode)
     if group_name:
         os.chown(
             sbang_tmp_path,
-            os.stat(sbang_tmp_path).st_uid,
+            sbang_tmp_path.stat().st_uid,
             grp.getgrnam(group_name).gr_gid
         )
 

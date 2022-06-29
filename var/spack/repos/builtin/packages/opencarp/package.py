@@ -58,9 +58,9 @@ class Opencarp(CMakePackage):
         # If carputils has been installed, a new settings file
         # with right executable paths is generated
         if '+carputils' in self.spec:
-            settings_prefix = os.path.expanduser(join_path('~', '.config', 'carputils'))
+            settings_prefix = join_path('~', '.config', 'carputils').expanduser()
             settings_file = join_path(settings_prefix, 'settings.yaml')
-            if os.path.exists(settings_file):
+            if settings_file.exists():
                 print('Backup the existing settings.yaml...')
                 os.rename(settings_file,
                           join_path(

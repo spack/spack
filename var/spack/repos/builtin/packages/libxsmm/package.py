@@ -118,7 +118,7 @@ class Libxsmm(MakefilePackage):
         mkdirp('lib/pkgconfig')
         for pcfile in glob('lib/*.pc'):
             os.rename(pcfile, os.path.join('lib/pkgconfig',
-                                           os.path.basename(pcfile)))
+                                           pcfile.name))
 
         # always install libraries
         install_tree('lib', prefix.lib)

@@ -94,7 +94,7 @@ class Libfuse(MesonPackage):
     def meson(self, spec, prefix):
         ar_args = ['-ivf']
         for dep in self.spec.dependencies(deptype='build'):
-            if os.path.exists(dep.prefix.share.aclocal):
+            if dep.prefix.share.aclocal.exists():
                 ar_args.extend(['-I', dep.prefix.share.aclocal])
         autoreconf(*ar_args)
 

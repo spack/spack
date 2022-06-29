@@ -22,7 +22,7 @@ class Qbank(Package):
     # but it was developed at Pacific Northwest National Laboratory
     # by Scott Jackson <Scott.Jackson@pnl.gov>
     homepage = "https://www.pnnl.gov/"
-    url      = "file://{0}/qbank-2.10.4.tar.gz".format(os.getcwd())
+    url      = "file://{0}/qbank-2.10.4.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('2.10.4', '0820587353e63d32ddb49689dd4289e7')

@@ -19,7 +19,7 @@ class FindExternals1(AutotoolsPackage):
     @classmethod
     def determine_spec_details(cls, prefix, exes_in_prefix):
         exe_to_path = dict(
-            (os.path.basename(p), p) for p in exes_in_prefix
+            (p.name, p) for p in exes_in_prefix
         )
         exes = [x for x in exe_to_path.keys() if 'find-externals1-exe' in x]
         if not exes:

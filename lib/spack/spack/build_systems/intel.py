@@ -956,7 +956,7 @@ class IntelPackage(PackageBase):
         # Ensure that the directory containing the compiler wrappers is in the
         # PATH. Spack packages add `prefix.bin` to their dependents' paths,
         # but because of the intel directory hierarchy that is insufficient.
-        env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
+        env.prepend_path('PATH', wrapper_vars['MPICC'].parent)
 
         for key, value in wrapper_vars.items():
             env.set(key, value)
@@ -1155,7 +1155,7 @@ class IntelPackage(PackageBase):
         # populated beyond its templated explanatory comments, proffer it to
         # the installer instead:
         f = self.global_license_file
-        if os.path.isfile(f):
+        if f.is_file():
             # The file will have been created upon self.license_required AND
             # self.license_files having been populated, so the "if" is usually
             # true by the time the present function runs; ../hooks/licensing.py
@@ -1264,7 +1264,7 @@ class IntelPackage(PackageBase):
         # Sometimes the installer exits with an error but doesn't pass a
         # non-zero exit code to spack. Check for the existence of a 'bin'
         # directory to catch this error condition.
-        if not os.path.exists(self.prefix.bin):
+        if not self.prefix.bin.exists():
             raise InstallError('The installer has failed to install anything.')
 
     @run_after('install')
@@ -1278,7 +1278,7 @@ class IntelPackage(PackageBase):
 
         for compiler_name in 'icc icpc ifort'.split():
             f = os.path.join(compilers_bin_dir, compiler_name)
-            if not os.path.isfile(f):
+            if not f.is_file():
                 raise InstallError(
                     'Cannot find compiler command to configure rpath:\n\t' + f)
 
@@ -1296,7 +1296,7 @@ class IntelPackage(PackageBase):
 
             for compiler_name in 'icc icpc ifort'.split():
                 f = os.path.join(compilers_bin_dir, compiler_name)
-                if not os.path.isfile(f):
+                if not f.is_file():
                     raise InstallError(
                         'Cannot find compiler command to configure '
                         'auto_dispatch:\n\t' + f)
@@ -1332,7 +1332,7 @@ class IntelPackage(PackageBase):
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
         f = os.path.join(self.normalize_path('ism'), 'uninstall.sh')
-        if os.path.isfile(f):
+        if f.is_file():
             tty.warn('Uninstalling "Intel Software Improvement Program"'
                      'component')
             uninstall = Executable(f)
@@ -1341,7 +1341,7 @@ class IntelPackage(PackageBase):
         # TODO? also try
         #   ~/intel/ism/uninstall --silent
 
-        debug_print(os.getcwd())
+        debug_print(Path.cwd())
         return
 
     @property

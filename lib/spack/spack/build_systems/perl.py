@@ -62,10 +62,10 @@ class PerlPackage(PackageBase):
 
         :raise RuntimeError: if neither Makefile.PL or Build.PL exist
         """
-        if os.path.isfile('Makefile.PL'):
+        if 'Makefile.PL'.is_file():
             self.build_method = 'Makefile.PL'
             self.build_executable = inspect.getmodule(self).make
-        elif os.path.isfile('Build.PL'):
+        elif 'Build.PL'.is_file():
             self.build_method = 'Build.PL'
             self.build_executable = Executable(
                 os.path.join(self.stage.source_path, 'Build'))

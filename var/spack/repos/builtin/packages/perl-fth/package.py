@@ -92,7 +92,7 @@ class PerlFth(Package):
         with working_dir('bin'):
             for exe in checks:
                 fic = exe + '.pl'
-                if os.path.exists(fic):
+                if fic.exists():
                     dos2unix = which('dos2unix')
                     dos2unix(fic)
                     fthfile = FileFilter(fic)
@@ -113,11 +113,11 @@ class PerlFth(Package):
 
         # Remove obsolete ftagshtml files, if they exist:
         with working_dir('bin'):
-            if os.path.exists("ftagshtml"):
+            if "ftagshtml".exists():
                 os.remove("ftagshtml")
-            if os.path.exists("tata.pl"):
+            if "tata.pl".exists():
                 os.remove("tata.pl")
-            if os.path.exists("truc.pl"):
+            if "truc.pl".exists():
                 os.remove("truc.pl")
 
         # Install the full directory structure

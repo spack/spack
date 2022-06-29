@@ -58,7 +58,7 @@ class Expect(AutotoolsPackage):
         target = join_path(self.prefix.lib, 'expect*', 'libexpect*')
         target = glob.glob(target)[0]
 
-        link_name = os.path.basename(target)
+        link_name = target.name
         link_name = join_path(self.prefix.lib, link_name)
 
         symlink(target, link_name)

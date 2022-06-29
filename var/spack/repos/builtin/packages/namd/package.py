@@ -17,7 +17,7 @@ class Namd(MakefilePackage, CudaPackage):
     high-performance simulation of large biomolecular systems."""
 
     homepage = "https://www.ks.uiuc.edu/Research/namd/"
-    url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
+    url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(Path.cwd())
     git      = "https://charm.cs.illinois.edu/gerrit/namd.git"
     manual_download = True
 
@@ -160,11 +160,11 @@ class Namd(MakefilePackage, CudaPackage):
                     'avx512' in spec.target and \
                     spec.target >= 'skylake_avx512':
                 if spec.version >= Version("2.15") and \
-                        os.path.exists("Linux-AVX512-icc.arch"):
+                        "Linux-AVX512-icc.arch".exists():
                     tty.info("Building binaries with AVX512-tile optimization")
                     copy("Linux-AVX512-icc.arch", arch_filename)
                 elif spec.version >= Version("2.14") and \
-                        os.path.exists("Linux-SKX-icc.arch"):
+                        "Linux-SKX-icc.arch".exists():
                     tty.info("Building binaries with Skylake-X"
                              "AVX512 optimization")
                     copy("Linux-SKX-icc.arch", arch_filename)

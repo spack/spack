@@ -164,14 +164,14 @@ def simmodsuite_releases():
 
 def simmetrix_makecomponenturl(name):
     """only supporting the linux libraries"""
-    prefix = "file://{0}/".format(os.getcwd())
+    prefix = "file://{0}/".format(Path.cwd())
     suffix = "-" + "linux64.tgz"
     return prefix + name + suffix
 
 
 def simmetrix_makedocurl(name):
     """doc zip files are not os/arch specific"""
-    prefix = "file://{0}/".format(os.getcwd())
+    prefix = "file://{0}/".format(Path.cwd())
     suffix = '.zip'
     return prefix + name + suffix
 

@@ -226,7 +226,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def test(self):
         """Perform stand-alone checks on the installed package."""
         if self.spec.satisfies('@:1') or \
-                not os.path.isdir(self.prefix.bin):
+                not self.prefix.bin.is_dir():
             tty.info('Skipping: checks not installed in bin for v{0}'.
                      format(self.version))
             return

@@ -104,7 +104,7 @@ def _run_analyzer(name, package, tmpdir):
 
     # The output file should exist
     output_file = out.strip('\n').split(' ')[-1].strip()
-    assert os.path.exists(output_file)
+    assert output_file.exists()
     return output_file
 
 
@@ -121,7 +121,7 @@ def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_confi
 
     basenames = set()
     for key, attrs in content.items():
-        basenames.add(os.path.basename(key))
+        basenames.add(key.name)
 
     # Check for a few expected files
     for key in ['.spack', 'libdwarf', 'packages', 'repo.yaml', 'repos']:
@@ -144,8 +144,8 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     # The analyzer should return no result if the output file does not exist.
     spec = Spec('libdwarf').concretized()
     env_file = os.path.join(spec.package.prefix, '.spack', 'spack-build-env.txt')
-    assert os.path.exists(env_file)
-    os.remove(env_file)
+    assert env_file.exists()
+    env_file.unlink()
     analyzer = spack.analyzers.get_analyzer("environment_variables")
     analyzer_dir = tmpdir.join('analyzers')
     result = analyzer(spec, analyzer_dir).run()

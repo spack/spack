@@ -24,7 +24,7 @@ class Haploview(Package):
         jar_file = 'Haploview{v}.jar'.format(v=self.version)
         install(jar_file, prefix.bin)
 
-        script_sh = join_path(os.path.dirname(__file__), "haploview.sh")
+        script_sh = join_path(__file__.parent, "haploview.sh")
         script = prefix.bin.haploview
         install(script_sh, script)
         set_executable(script)

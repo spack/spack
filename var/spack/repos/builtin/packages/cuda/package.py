@@ -200,7 +200,7 @@ class Cuda(Package):
         env.set('CUDA_HOME', self.prefix)
 
     def install(self, spec, prefix):
-        if os.path.exists('/tmp/cuda-installer.log'):
+        if '/tmp/cuda-installer.log'.exists():
             try:
                 os.remove('/tmp/cuda-installer.log')
             except OSError:

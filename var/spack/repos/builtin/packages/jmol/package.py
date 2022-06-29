@@ -25,7 +25,7 @@ class Jmol(Package):
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
-        if os.path.exists('jmol-{0}'.format(self.version)):
+        if 'jmol-{0}'.format(self.version.exists()):
             # tar ball contains subdir with different versions
             install_tree('jmol-{0}'.format(self.version), prefix)
         else:

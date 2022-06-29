@@ -70,7 +70,7 @@ class Pexsi(MakefilePackage):
         substitutions.append(('@FLDFLAGS', fldflags.lstrip()))
 
         template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__),
+            inspect.getmodule(self.parent.__file__),
             'make.inc'
         )
         makefile = join_path(

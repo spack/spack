@@ -9,6 +9,8 @@ import shutil
 import sys
 from itertools import product
 
+from pathlib import Path
+
 from spack.util.executable import CommandNotFoundError, which
 
 # Supported archive extensions.
@@ -71,8 +73,8 @@ def _untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    _, ext = os.path.splitext(archive_file)
-    outfile = os.path.basename(archive_file.strip(ext))
+    ext = archive_file.suffix
+    outfile = archive_file.strip(ext).name
     uncompress_required = 'Z' in ext
     lzma_required = 'xz' in ext
     lzma_needed_and_not_available = not lzma_support() and lzma_required
@@ -96,10 +98,10 @@ def _bunzip2(archive_file):
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
-    _, ext = os.path.splitext(archive_file)
-    compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
-    working_dir = os.getcwd()
+    ext = archive_file.suffix
+    compressed_file_name = archive_file.name
+    decompressed_file = archive_file.strip(ext).name
+    working_dir = Path.cwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
     if bz2_support():
@@ -125,10 +127,9 @@ def _gunzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
+    decompressed_file = archive_file.name
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
     if gzip_support():
         import gzip
         f_in = gzip.open(archive_file, "rb")
@@ -140,12 +141,12 @@ def _gunzip(archive_file):
 
 
 def _system_gunzip(archive_file):
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+    ext = archive_file.suffix
+    decompressed_file = archive_file.strip(ext.name)
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
+    compressed_file = archive_file.name
+    copy_path = working_dir / compressed_file
     shutil.copy(archive_file, copy_path)
     gzip = which("gzip")
     gzip.add_default_arg("-d")
@@ -162,7 +163,7 @@ def _unzip(archive_file):
         archive_file (str): absolute path of the file to be decompressed
     """
 
-    destination_abspath = os.getcwd()
+    destination_abspath = Path.cwd()
     exe = 'unzip'
     arg = '-q'
     if is_windows:
@@ -189,9 +190,9 @@ def _lzma_decomp(archive_file):
     on Unix and 7z on Windows"""
     if lzma_support():
         import lzma  # novermin
-        _, ext = os.path.splitext(archive_file)
-        decompressed_file = os.path.basename(archive_file.strip(ext))
-        archive_out = os.path.join(os.getcwd(), decompressed_file)
+        ext = archive_file.suffix
+        decompressed_file = archive_file.strip(ext.name)
+        archive_out = Path.cwd() / decompressed_file
         with open(archive_out, 'wb') as ar:
             with lzma.open(archive_file) as lar:
                 ar.write(lar.read())
@@ -208,12 +209,12 @@ def _xz(archive_file):
     """
     if is_windows:
         raise RuntimeError('XZ tool unavailable on Windows')
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
-    working_dir = os.getcwd()
-    destination_abspath = os.path.join(working_dir, decompressed_file)
-    compressed_file = os.path.basename(archive_file)
-    copy_path = os.path.join(working_dir, compressed_file)
+    ext = archive_file.suffix
+    decompressed_file = archive_file.strip(ext.name)
+    working_dir = Path.cwd()
+    destination_abspath = working_dir / decompressed_file
+    compressed_file = archive_file.name
+    copy_path = working_dir / compressed_file
     shutil.copy(archive_file, copy_path)
     xz = which('xz', required=True)
     xz.add_default_arg('-d')
@@ -235,8 +236,8 @@ def _7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    _, ext = os.path.splitext(archive_file)
-    outfile = os.path.basename(archive_file.strip(ext))
+    ext = archive_file.suffix
+    outfile = archive_file.strip(ext.name)
     _7z = which('7z')
     if not _7z:
         raise CommandNotFoundError("7z unavailable,\
@@ -303,7 +304,7 @@ def extension(path):
 
     # Strip sourceforge suffix.
     if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        path = os.path.dirname(path)
+        path = path.parent
 
     for t in ALLOWED_ARCHIVE_TYPES:
         suffix = r'\.%s$' % t

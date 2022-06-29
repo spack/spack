@@ -118,19 +118,19 @@ class Oommf(Package):
         """
         if "oommf.tcl" in os.listdir():
             print(
-                "Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)"
+                "Found 'oommf.tcl' in " + Path.cwd() + " (looks like source from NIST)"
             )
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
                 "Found 'oommf.tcl' in "
-                + os.getcwd()
+                + Path.cwd()
                 + "/oommf "
                 + "(looks like source from Github)"
             )
             return "oommf"
         else:
-            raise ValueError("Cannot find 'oommf.tcl' in " + os.getcwd())
+            raise ValueError("Cannot find 'oommf.tcl' in " + Path.cwd())
 
     def get_oommf_path(self, prefix):
         """Given the prefix, return the full path of the OOMMF installation

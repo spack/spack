@@ -51,7 +51,7 @@ class SingularityBase(MakefilePackage):
     # its home within GOPATH.
     def do_stage(self, mirror_only=False):
         super(SingularityBase, self).do_stage(mirror_only)
-        if not os.path.exists(self.singularity_gopath_dir):
+        if not self.singularity_gopath_dir.exists():
             # Move the expanded source to its destination
             tty.debug("Moving {0} to {1}".format(
                 self.stage.source_path, self.singularity_gopath_dir))

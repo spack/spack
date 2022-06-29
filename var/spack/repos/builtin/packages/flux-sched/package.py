@@ -112,7 +112,7 @@ class FluxSched(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         self.setup()
-        if os.path.exists(self.configure_abs_path):
+        if self.configure_abs_path.exists():
             return
         # make sure configure doesn't get confused by the staging symlink
         with working_dir(self.configure_directory):

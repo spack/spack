@@ -196,7 +196,7 @@ def _reset(args):
         # If we are outside of an env scope delete the bootstrap.yaml file
         bootstrap_yaml = os.path.join(scope.path, 'bootstrap.yaml')
         backup_file = bootstrap_yaml + '.bkp'
-        if os.path.exists(bootstrap_yaml):
+        if bootstrap_yaml.exists():
             shutil.move(bootstrap_yaml, backup_file)
 
 
@@ -331,13 +331,13 @@ def _add(args):
 
     # Check that the metadata file exists
     metadata_dir = spack.util.path.canonicalize_path(args.metadata_dir)
-    if not os.path.exists(metadata_dir) or not os.path.isdir(metadata_dir):
+    if not metadata_dir.exists() or not metadata_dir.is_dir():
         raise RuntimeError(
             'the directory "{0}" does not exist'.format(args.metadata_dir)
         )
 
     file = os.path.join(metadata_dir, 'metadata.yaml')
-    if not os.path.exists(file):
+    if not file.exists():
         raise RuntimeError('the file "{0}" does not exist'.format(file))
 
     # Insert the new source as the highest priority one
@@ -412,10 +412,10 @@ def _mirror(args):
         metadata_yaml = os.path.join(
             args.root_dir, metadata_rel_dir, 'metadata.yaml'
         )
-        llnl.util.filesystem.mkdirp(os.path.dirname(metadata_yaml))
+        llnl.util.filesystem.mkdirp(metadata_yaml.parent)
         with open(metadata_yaml, mode='w') as f:
             spack.util.spack_yaml.dump(metadata, stream=f)
-        return os.path.dirname(metadata_yaml), metadata_rel_dir
+        return metadata_yaml.parent, metadata_rel_dir
 
     instructions = ('\nTo register the mirror on the platform where it\'s supposed '
                     'to be used, move "{0}" to its final location and run the '

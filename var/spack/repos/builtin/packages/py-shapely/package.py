@@ -48,9 +48,9 @@ class PyShapely(PythonPackage):
     def patch(self):
         # Python 3.7 changed the thread storage API, precompiled *.c files
         # need to be re-cythonized
-        if os.path.exists('shapely/speedups/_speedups.c'):
+        if 'shapely/speedups/_speedups.c'.exists():
             os.remove('shapely/speedups/_speedups.c')
-        if os.path.exists('shapely/vectorized/_vectorized.c'):
+        if 'shapely/vectorized/_vectorized.c'.exists():
             os.remove('shapely/vectorized/_vectorized.c')
 
     def setup_build_environment(self, env):

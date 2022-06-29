@@ -591,7 +591,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             # Parts of STRUMPACK use fortran, so we need to link with the
             # fortran library and also the MPI fortran library:
             if '~shared' in strumpack:
-                if os.path.basename(env['FC']) == 'gfortran':
+                if env['FC'].name == 'gfortran':
                     gfortran = Executable(env['FC'])
                     libext = 'dylib' if sys.platform == 'darwin' else 'so'
                     libfile = os.path.abspath(gfortran(

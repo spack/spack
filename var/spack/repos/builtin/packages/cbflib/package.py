@@ -25,7 +25,7 @@ class Cbflib(MakefilePackage):
 
     def setup_build_environment(self, env):
         ce = Executable(self.compiler.cc)
-        ce('-E', join_path(os.path.dirname(__file__), "checkint.c"),
+        ce('-E', join_path(__file__.parent, "checkint.c"),
            output=str, error=str, fail_on_error=False)
         if ce.returncode != 0:
             env.set('CBF_DONT_USE_LONG_LONG', '1')

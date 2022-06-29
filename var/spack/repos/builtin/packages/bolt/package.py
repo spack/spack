@@ -62,7 +62,7 @@ class Bolt(CMakePackage):
         exe = 'sample_nested'
         source_file = 'sample_nested.c'
 
-        if not os.path.isfile(join_path(test_dir, source_file)):
+        if not join_path(test_dir, source_file.is_file()):
             tty.warn('Skipping bolt test:'
                      '{0} does not exist'.format(source_file))
             return

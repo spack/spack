@@ -205,8 +205,8 @@ class OpenfoamOrg(Package):
         """
         # Note that this particular OpenFOAM requires absolute directories
         # to build correctly!
-        parent   = os.path.dirname(self.stage.source_path)
-        original = os.path.basename(self.stage.source_path)
+        parent   = self.stage.source_path.parent
+        original = self.stage.source_path.name
         target   = 'OpenFOAM-{0}'.format(self.version)
         # Could also grep through etc/bashrc for WM_PROJECT_VERSION
         with working_dir(parent):
@@ -322,10 +322,10 @@ class OpenfoamOrg(Package):
     def install(self, spec, prefix):
         """Install under the projectdir"""
         mkdirp(self.projectdir)
-        projdir = os.path.basename(self.projectdir)
+        projdir = self.projectdir.name
         # Filtering: bashrc, cshrc
         edits = {
-            'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
+            'WM_PROJECT_INST_DIR': self.projectdir.parent,
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
 
@@ -337,7 +337,7 @@ class OpenfoamOrg(Package):
 
         files = [
             f for f in glob.glob("*")
-            if os.path.isfile(f) and not ignored.search(f)
+            if f.is_file() and not ignored.search(f)
         ]
         for f in files:
             install(f, self.projectdir)
@@ -350,7 +350,7 @@ class OpenfoamOrg(Package):
             dirs.extend(['applications', 'src', 'tutorials'])
 
         for d in dirs:
-            if os.path.isdir(d):
+            if d.is_dir():
                 install_tree(
                     d,
                     join_path(self.projectdir, d),
@@ -390,16 +390,16 @@ class OpenfoamOrg(Package):
 
         # ln -s platforms/linux64GccXXX/lib lib
         with working_dir(self.projectdir):
-            if os.path.isdir(self.archlib):
+            if self.archlib.is_dir():
                 os.symlink(self.archlib, 'lib')
 
         # (cd bin && ln -s ../platforms/linux64GccXXX/bin/* .)
         with working_dir(join_path(self.projectdir, 'bin')):
             for f in [
                 f for f in glob.glob(join_path('..', self.archbin, "*"))
-                if os.path.isfile(f)
+                if f.is_file()
             ]:
-                os.symlink(f, os.path.basename(f))
+                os.symlink(f, f.name)
 
 
 # -----------------------------------------------------------------------------

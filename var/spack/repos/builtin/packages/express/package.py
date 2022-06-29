@@ -35,7 +35,7 @@ class Express(CMakePackage):
         with working_dir('src'):
             files = glob.iglob('*.*')
             for file in files:
-                if os.path.isfile(file):
+                if file.is_file():
                     edit = FileFilter(file)
                     edit.filter('#include <api', '#include <%s' % self.spec[
                                 'bamtools'].prefix.include.bamtools.api)

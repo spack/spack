@@ -100,7 +100,7 @@ def hello_world(tmpdir):
         gcc = spack.util.executable.which('gcc')
         executable = source.dirpath('main.x')
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if os.path.isabs(x) else os.path.join('$ORIGIN', x)
+        rpaths = [x if x.is_absolute() else os.path.join('$ORIGIN', x)
                   for x in rpaths]
         rpath_str = ':'.join(rpaths)
         opts = [
@@ -254,7 +254,7 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
 
 
 @pytest.mark.parametrize('start_path,relative_paths,expected', [
-    # $ORIGIN will be replaced with os.path.dirname('usr/bin/test')
+    # $ORIGIN will be replaced with 'usr/bin/test'.parent
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],

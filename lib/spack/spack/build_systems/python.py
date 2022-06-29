@@ -202,7 +202,7 @@ class PythonPackage(PackageBase):
            __init__.py files for packages in the same namespace.
         """
         conflicts = list(dst for src, dst in merge_map.items()
-                         if os.path.exists(dst))
+                         if dst.exists())
 
         if conflicts and self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
@@ -225,11 +225,11 @@ class PythonPackage(PackageBase):
             self.spec
         ))
         for src, dst in merge_map.items():
-            if os.path.exists(dst):
+            if dst.exists():
                 continue
             elif global_view or not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst)
-            elif not os.path.islink(src):
+            elif not src.is_symlink():
                 shutil.copy2(src, dst)
                 is_script = is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
@@ -269,6 +269,6 @@ class PythonPackage(PackageBase):
             if global_view or not path_contains_subdirectory(src, bin_dir):
                 to_remove.append(dst)
             else:
-                os.remove(dst)
+                dst.unlink()
 
         view.remove_files(to_remove)

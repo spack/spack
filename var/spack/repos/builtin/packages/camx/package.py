@@ -50,7 +50,7 @@ class Camx(MakefilePackage):
         #  It should be set to a value of at least:          396
         with working_dir('Includes'):
             duplicate = 'camx.prm'
-            os.remove(duplicate)
+            duplicate.unlink()
             orig = 'camx.prm.v{0}'.format(self.spec.version)
             prm = FileFilter(orig)
             prm.filter(r'MXCELLS = [^)]+', 'MXCELLS = 400 ')
@@ -112,7 +112,7 @@ parlib :
     def build_targets(self):
         # Set compiler.
         omp = ['', 'omp'][self.spec.satisfies('threads=openmp')]
-        compiler = os.path.basename(env['FC']) + omp
+        compiler = env['FC'].name + omp
         args = ['COMPILER={0}'.format(compiler)]
         # Set MPI.
         if '+mpi' in self.spec:

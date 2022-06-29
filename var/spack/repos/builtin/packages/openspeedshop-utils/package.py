@@ -268,7 +268,7 @@ class OpenspeedshopUtils(CMakePackage):
             root=self.spec['openspeedshop-utils'].prefix,
             shared=True, recursive=True)
         env.prepend_path('LD_LIBRARY_PATH',
-                         os.path.dirname(oss_libdir.joined()))
+                         oss_libdir.joined(.parent))
 
         env.set('OPENSS_RAWDATA_DIR', '.')
 

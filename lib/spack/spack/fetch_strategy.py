@@ -400,9 +400,9 @@ class URLFetchStrategy(FetchStrategy):
         except spack.util.web.SpackWebError as e:
             # clean up archive on failure.
             if self.archive_file:
-                os.remove(self.archive_file)
-            if save_file and os.path.exists(save_file):
-                os.remove(save_file)
+                self.archive_file.unlink()
+            if save_file and save_file.exists():
+                save_file.unlink()
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
 
@@ -469,10 +469,10 @@ class URLFetchStrategy(FetchStrategy):
         if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
-                os.remove(self.archive_file)
+                self.archive_file.unlink()
 
-            if partial_file and os.path.exists(partial_file):
-                os.remove(partial_file)
+            if partial_file and partial_file.exists():
+                partial_file.unlink()
 
             if curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
@@ -518,7 +518,7 @@ class URLFetchStrategy(FetchStrategy):
             if not self.stage.expanded:
                 mkdirp(self.stage.source_path)
             dest = os.path.join(self.stage.source_path,
-                                os.path.basename(self.archive_file))
+                                self.archive_file.name)
             shutil.move(self.archive_file, dest)
             return
 
@@ -608,13 +608,13 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         path = re.sub(reg_str, '', self.url)
 
         # check whether the cache file exists.
-        if not os.path.isfile(path):
+        if not path.is_file():
             raise NoCacheError('No cache of %s' % path)
 
         # remove old symlink if one is there.
         filename = self.stage.save_filename
-        if os.path.exists(filename):
-            os.remove(filename)
+        if filename.exists():
+            filename.unlink()
 
         # Symlink to local cached archive.
         symlink(path, filename)
@@ -625,7 +625,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             try:
                 self.check()
             except ChecksumError:
-                os.remove(self.archive_file)
+                self.archive_file.unlink()
                 raise
 
         # Notify the user how we fetched.
@@ -691,7 +691,7 @@ class VCSFetchStrategy(FetchStrategy):
                     tar('-czf', destination, self.stage.srcdir)
             else:
                 tar('-czf', destination,
-                    os.path.basename(self.stage.source_path))
+                    self.stage.source_path.name)
 
     def __str__(self):
         return "VCS: %s" % self.url
@@ -746,7 +746,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             except OSError:
                 pass
             env = dict(os.environ)
-            env['GOPATH'] = os.path.join(os.getcwd(), 'go')
+            env['GOPATH'] = os.path.join(Path.cwd(), 'go')
             self.go('get', '-v', '-d', self.url, env=env)
 
     def archive(self, destination):
@@ -1129,8 +1129,8 @@ class CvsFetchStrategy(VCSFetchStrategy):
             for line in status.split('\n'):
                 if re.match(r'^[?]', line):
                     path = line[2:].strip()
-                    if os.path.isfile(path):
-                        os.unlink(path)
+                    if path.is_file():
+                        path.unlink()
 
     def archive(self, destination):
         super(CvsFetchStrategy, self).archive(destination, exclude='CVS')
@@ -1221,9 +1221,9 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 if not re.match('^[I?]', line):
                     continue
                 path = line[8:].strip()
-                if os.path.isfile(path):
-                    os.unlink(path)
-                elif os.path.isdir(path):
+                if path.is_file():
+                    path.unlink()
+                elif path.is_dir():
                     shutil.rmtree(path, ignore_errors=True)
 
     def archive(self, destination):
@@ -1379,7 +1379,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         tty.debug('Fetching {0}'.format(self.url))
 
-        basename = os.path.basename(parsed_url.path)
+        basename = parsed_url.path.name
 
         with working_dir(self.stage.path):
             _, headers, stream = spack.util.web.read_from_url(self.url)
@@ -1428,7 +1428,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         tty.debug('Fetching {0}'.format(self.url))
 
-        basename = os.path.basename(parsed_url.path)
+        basename = parsed_url.path.name
 
         with working_dir(self.stage.path):
             _, headers, stream = web_util.read_from_url(self.url)
@@ -1694,7 +1694,7 @@ def from_list_url(pkg):
 class FsCache(object):
 
     def __init__(self, root):
-        self.root = os.path.abspath(root)
+        self.root = root.resolve()
 
     def store(self, fetcher, relative_dest):
         # skip fetchers that aren't cachable
@@ -1706,7 +1706,7 @@ class FsCache(object):
             return
 
         dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
+        mkdirp(dst.parent)
         fetcher.archive(dst)
 
     def fetcher(self, target_path, digest, **kwargs):

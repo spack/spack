@@ -111,7 +111,7 @@ def _spec_is_valid(spec):
 
 def is_executable(file_path):
     """Return True if the path passed as argument is that of an executable"""
-    return os.path.isfile(file_path) and os.access(file_path, os.X_OK)
+    return file_path.is_file() and os.access(file_path, os.X_OK)
 
 
 def _convert_to_iterable(single_val_or_multiple):
@@ -141,7 +141,7 @@ def executable_prefix(executable_dir):
     # Given a prefix where an executable is found, assuming that prefix
     # contains /bin/, strip off the 'bin' directory to get a Spack-compatible
     # prefix
-    assert os.path.isdir(executable_dir)
+    assert executable_dir.is_dir()
 
     components = executable_dir.split(os.sep)
     if 'bin' not in components:
@@ -160,7 +160,7 @@ def library_prefix(library_dir):
     # Given a prefix where an library is found, assuming that prefix
     # contains /lib/ or /lib64/, strip off the 'lib' or 'lib64' directory
     # to get a Spack-compatible prefix
-    assert os.path.isdir(library_dir)
+    assert library_dir.is_dir()
 
     components = library_dir.split(os.sep)
     if 'lib64' in components:

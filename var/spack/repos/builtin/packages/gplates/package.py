@@ -17,7 +17,7 @@ class Gplates(CMakePackage):
     """
 
     homepage = 'https://www.gplates.org'
-    url = 'file://{}/gplates_2.3.0_src.zip'.format(os.getcwd())
+    url = 'file://{}/gplates_2.3.0_src.zip'.format(Path.cwd())
     manual_download = True
 
     version('2.3.0', sha256='7d4be9d524d1fcbb6a81de29bd1d4b13133082db23f0808965c5efe30e9538ab')

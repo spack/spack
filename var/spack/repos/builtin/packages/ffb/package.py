@@ -12,7 +12,7 @@ class Ffb(MakefilePackage):
     """Computational Fluid Dynamics Software for aeroacoustics"""
 
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/dl/index.php"
-    url      = "file://{0}/FrontFlow_blue.8.1.tar.gz".format(os.getcwd())
+    url      = "file://{0}/FrontFlow_blue.8.1.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('8.1', sha256='1ad008c909152b6c27668bafbad820da3e6ec3309c7e858ddb785f0a3d6e43ae')
@@ -48,7 +48,7 @@ class Ffb(MakefilePackage):
             return (flags, None, flags)
 
     def edit(self, spec, prefix):
-        workdir = os.getcwd()
+        workdir = Path.cwd()
         cflags = env['CFLAGS']
         cxxflags = env['CXXFLAGS']
         fflags = env['FFLAGS']
@@ -86,7 +86,7 @@ class Ffb(MakefilePackage):
             m.write('setenv LES3DHOME {0}\n'.format(workdir))
             m.write('cd {0}\n'.format(dd_mpi_dir))
             m.write('make lib FCOM={0}\n'.format(spec['mpi'].mpifc))
-        os.chmod(makeall, 0o755)
+        makeall.chmod(0o755)
 
         makeall = join_path('.',  'Makeall.les')
         les3d_dir = join_path('util', 'les3d.mpi')
@@ -113,7 +113,7 @@ class Ffb(MakefilePackage):
                 editfile = join_path(d, 'FILES')
                 m = FileFilter(editfile)
                 m.filter(r'-lmpi_f77', '')
-        os.chmod(makeall, 0o755)
+        makeall.chmod(0o755)
 
         editfile = join_path('lib', 'src', 'Makeall')
         m = FileFilter(editfile)

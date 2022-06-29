@@ -64,7 +64,7 @@ class Flex(AutotoolsPackage):
         results = []
         for exe in exes:
             variants = ''
-            path = os.path.dirname(exe)
+            path = exe.parent
             if 'lex' in os.listdir(path):
                 variants += "+lex"
             else:
@@ -112,7 +112,7 @@ class Flex(AutotoolsPackage):
                      (self.prefix.lib64, 'libfl.a', 'libl.a'),
                      (self.prefix.lib64, 'libfl.' + dso, 'libl.' + dso)):
 
-                if os.path.isdir(dir):
+                if dir.is_dir():
                     with working_dir(dir):
-                        if (os.path.isfile(flex) and not os.path.lexists(lex)):
+                        if (flex.is_file() and not os.path.lexists(lex)):
                             symlink(flex, lex)

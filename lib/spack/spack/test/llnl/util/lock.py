@@ -128,30 +128,30 @@ def make_readable(*paths):
     # bits are ignored."
     for path in paths:
         if not is_windows:
-            mode = 0o555 if os.path.isdir(path) else 0o444
+            mode = 0o555 if path.is_dir() else 0o444
         else:
             mode = stat.S_IREAD
-        os.chmod(path, mode)
+        path.chmod(mode)
 
 
 def make_writable(*paths):
     for path in paths:
         if not is_windows:
-            mode = 0o755 if os.path.isdir(path) else 0o744
+            mode = 0o755 if path.is_dir() else 0o744
         else:
             mode = stat.S_IWRITE
-        os.chmod(path, mode)
+        path.chmod(mode)
 
 
 @contextmanager
 def read_only(*paths):
-    modes = [os.stat(p).st_mode for p in paths]
+    modes = [p.stat().st_mode for p in paths]
     make_readable(*paths)
 
     yield
 
     for path, mode in zip(paths, modes):
-        os.chmod(path, mode)
+        path.chmod(mode)
 
 
 @pytest.fixture(scope='session', params=locations)
@@ -166,7 +166,7 @@ def lock_test_directory(request):
 @pytest.fixture(scope='session')
 def lock_dir(lock_test_directory):
     parent = next((p for p in glob.glob(lock_test_directory)
-                   if os.path.exists(p) and os.access(p, os.W_OK)), None)
+                   if p.exists() and os.access(p, os.W_OK)), None)
     if not parent:
         # Skip filesystems that don't exist or aren't writable
         pytest.skip("requires filesystem: '%s'" % lock_test_directory)
@@ -206,9 +206,9 @@ def private_lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if lock_file.exists():
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        lock_file.unlink()
 
 
 @pytest.fixture
@@ -218,9 +218,9 @@ def lock_path(lock_dir):
 
     yield lock_file
 
-    if os.path.exists(lock_file):
+    if lock_file.exists():
         make_writable(lock_dir, lock_file)
-        os.unlink(lock_file)
+        lock_file.unlink()
 
 
 def test_poll_interval_generator():

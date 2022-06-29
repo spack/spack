@@ -181,7 +181,7 @@ def push_to_url(
 
     remote_file_path = url_util.local_file_path(remote_url)
     if remote_file_path is not None:
-        mkdirp(os.path.dirname(remote_file_path))
+        mkdirp(remote_file_path.parent)
         if keep_original:
             shutil.copy(local_file_path, remote_file_path)
         else:
@@ -194,7 +194,7 @@ def push_to_url(
                     # metadata), and then delete the original.  This operation
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
-                    os.remove(local_file_path)
+                    local_file_path.unlink()
                 else:
                     raise
 
@@ -212,13 +212,13 @@ def push_to_url(
                        remote_path, ExtraArgs=extra_args)
 
         if not keep_original:
-            os.remove(local_file_path)
+            local_file_path.unlink()
 
     elif remote_url.scheme == 'gs':
         gcs = gcs_util.GCSBlob(remote_url)
         gcs.upload_to_blob(local_file_path)
         if not keep_original:
-            os.remove(local_file_path)
+            local_file_path.unlink()
 
     else:
         raise NotImplementedError(
@@ -230,7 +230,7 @@ def url_exists(url):
     url = url_util.parse(url)
     local_path = url_util.local_file_path(url)
     if local_path:
-        return os.path.exists(local_path)
+        return local_path.exists()
 
     if url.scheme == 's3':
         # Check for URL specific connection information
@@ -275,7 +275,7 @@ def remove_url(url, recursive=False):
         if recursive:
             shutil.rmtree(local_path)
         else:
-            os.remove(local_path)
+            local_path.unlink()
         return
 
     if url.scheme == 's3':
@@ -388,7 +388,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_local_prefix(local_path))
         return [subpath for subpath in os.listdir(local_path)
-                if os.path.isfile(os.path.join(local_path, subpath))]
+                if os.path.join(local_path, subpath.is_file())]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
@@ -631,7 +631,7 @@ def find_versions_of_archive(
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        url_regex = url_regex.name
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:

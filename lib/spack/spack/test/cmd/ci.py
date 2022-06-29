@@ -750,7 +750,7 @@ spack:
                 env.concretize()
                 env.write()
 
-            if not os.path.exists(env_dir.strpath):
+            if not env_dir.strpath.exists():
                 os.makedirs(env_dir.strpath)
 
             shutil.copyfile(env.manifest_path,
@@ -1107,7 +1107,7 @@ spack:
                         validate(json_object, specfile_schema)
 
             logs_dir = working_dir.join('logs_dir')
-            if not os.path.exists(logs_dir.strpath):
+            if not logs_dir.strpath.exists():
                 os.makedirs(logs_dir.strpath)
 
             ci.copy_stage_logs_to_artifacts(concrete_spec, logs_dir.strpath)
@@ -1121,7 +1121,7 @@ spack:
             ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
 
             dl_dir = working_dir.join('download_dir')
-            if not os.path.exists(dl_dir.strpath):
+            if not dl_dir.strpath.exists():
                 os.makedirs(dl_dir.strpath)
             buildcache_cmd('download', '--spec-file', json_path, '--path',
                            dl_dir.strpath)
@@ -1853,7 +1853,7 @@ spack:
                 env.concretize()
                 env.write()
 
-            if not os.path.exists(working_dir.strpath):
+            if not working_dir.strpath.exists():
                 os.makedirs(working_dir.strpath)
 
             shutil.copyfile(env.manifest_path,

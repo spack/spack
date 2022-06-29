@@ -271,7 +271,7 @@ class Ncl(Package):
     @staticmethod
     def delete_files(*filenames):
         for filename in filenames:
-            if os.path.exists(filename):
+            if filename.exists():
                 try:
                     os.remove(filename)
                 except OSError as e:

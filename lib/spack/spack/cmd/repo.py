@@ -78,11 +78,11 @@ def repo_add(args):
     canon_path = spack.util.path.canonicalize_path(path)
 
     # check if the path exists
-    if not os.path.exists(canon_path):
+    if not canon_path.exists():
         tty.die("No such file or directory: %s" % path)
 
     # Make sure the path is a directory.
-    if not os.path.isdir(canon_path):
+    if not canon_path.is_dir():
         tty.die("Not a Spack repository: %s" % path)
 
     # Make sure it's actually a spack repository by constructing it.
@@ -111,7 +111,7 @@ def repo_remove(args):
     for repo_path in repos:
         repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
-            repos.remove(repo_path)
+            reprepo_path.unlink()
             spack.config.set('repos', repos, args.scope)
             tty.msg("Removed repository %s" % repo_path)
             return
@@ -121,7 +121,7 @@ def repo_remove(args):
         try:
             repo = spack.repo.Repo(path)
             if repo.namespace == namespace_or_path:
-                repos.remove(path)
+                reppath.unlink()
                 spack.config.set('repos', repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'."
                         % (repo.root, repo.namespace))

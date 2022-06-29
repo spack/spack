@@ -521,7 +521,7 @@ def create(path, specs, skip_unstable_versions=False):
         for s in specs]
 
     # Get the absolute path of the root before we start jumping around.
-    if not os.path.isdir(mirror_root):
+    if not mirror_root.is_dir():
         try:
             mkdirp(mirror_root)
         except OSError as e:

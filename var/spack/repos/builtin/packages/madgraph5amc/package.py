@@ -94,7 +94,7 @@ class Madgraph5amc(MakefilePackage):
             make(parallel=False)
 
         if '+atlas' in spec:
-            if os.path.exists(join_path('bin', 'compile.py')):
+            if join_path('bin', 'compile.py'.exists()):
                 compile_py = Executable(join_path('bin', 'compile.py'))
             else:
                 compile_py = Executable(join_path('bin', '.compile.py'))
@@ -109,7 +109,7 @@ class Madgraph5amc(MakefilePackage):
             install(filename, join_path(prefix, filename))
 
         for p in os.listdir(self.stage.source_path):
-            if os.path.isdir(p):
+            if p.is_dir():
                 installdir(p)
             else:
                 if p != 'doc.tgz':

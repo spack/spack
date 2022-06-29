@@ -14,7 +14,7 @@ class StarCcmPlus(Package):
     """STAR-CCM+ (Computational Continuum Mechanics) CFD solver."""
 
     homepage = "https://mdx.plm.automation.siemens.com/star-ccm-plus"
-    url      = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(os.getcwd())
+    url      = "file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('16.06.008_01', sha256='64577ec0e9a98d971114e68c4eec05bb746e061dfbf77b8d8919583c796c9e4b')

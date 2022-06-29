@@ -123,8 +123,8 @@ class Elemental(CMakePackage):
 
         if self.spec.satisfies('%intel'):
             ifort = env['SPACK_F77']
-            intel_bin = os.path.dirname(ifort)
-            intel_root = os.path.dirname(intel_bin)
+            intel_bin = ifort.parent
+            intel_root = intel_bin.parent
             libfortran = find_libraries('libifcoremt',
                                         root=intel_root, recursive=True)
         elif self.spec.satisfies('%gcc'):
@@ -135,8 +135,8 @@ class Elemental(CMakePackage):
                                             output=str).strip())
         elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
             xl_fort = env['SPACK_F77']
-            xl_bin = os.path.dirname(xl_fort)
-            xl_root = os.path.dirname(xl_bin)
+            xl_bin = xl_fort.parent
+            xl_root = xl_bin.parent
             libfortran = find_libraries('libxlf90_r',
                                         root=xl_root, recursive=True)
         else:

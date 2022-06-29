@@ -26,7 +26,7 @@ class Gapfiller(Package):
 
     def url_for_version(self, version):
         return "file://{0}/39GapFiller_v{1}_linux-x86_64.tar.gz".format(
-            os.getcwd(),
+            Path.cwd(),
             version.dashed
         )
 

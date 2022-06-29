@@ -58,7 +58,7 @@ class Mumax(MakefilePackage, CudaPackage):
 
     def do_stage(self, mirror_only=False):
         super(Mumax, self).do_stage(mirror_only)
-        if not os.path.exists(self.mumax_gopath_dir):
+        if not self.mumax_gopath_dir.exists():
             # Need to move source to $GOPATH and then symlink the original
             # stage directory
             shutil.move(self.stage.source_path, self.mumax_gopath_dir)

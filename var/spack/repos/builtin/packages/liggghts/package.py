@@ -39,7 +39,7 @@ class Liggghts(MakefilePackage):
         # Makefile.user_default.
         makefile_default = os.path.join('src', 'MAKE', 'Makefile.user_default')
         makefile_user = os.path.join('src', 'MAKE', 'Makefile.user')
-        os.symlink(os.path.basename(makefile_default), makefile_user)
+        os.symlink(makefile_default.name, makefile_user)
         makefile = FileFilter(makefile_user)
         makefile_auto = FileFilter(
             os.path.join('src', 'MAKE', 'Makefile.auto'))

@@ -55,7 +55,7 @@ def test_single_file_verify_cmd(tmpdir):
     results = verify('-f', filepath, fail_on_error=False)
 
     expected = ['hash']
-    mtime = os.stat(filepath).st_mtime
+    mtime = filepath.stat().st_mtime
     if mtime != data['time']:
         expected.append('mtime')
 

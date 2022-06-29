@@ -39,7 +39,7 @@ class Gurobi(Package):
     depends_on('python@2.7,3.6:')
 
     def url_for_version(self, version):
-        return "file://{0}/gurobi{1}_linux64.tar.gz".format(os.getcwd(), version)
+        return "file://{0}/gurobi{1}_linux64.tar.gz".format(Path.cwd(), version)
 
     def patch(self):
         # Strip out existing PYTHONPATH as the presence of that will generally

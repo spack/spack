@@ -59,12 +59,12 @@ def test_reset_in_file_scopes(mutable_config, scopes):
         bootstrap_yaml = os.path.join(
             scope_path, 'bootstrap.yaml'
         )
-        assert os.path.exists(bootstrap_yaml)
+        assert bootstrap_yaml.exists()
         bootstrap_yaml_files.append(bootstrap_yaml)
 
     _bootstrap('reset', '-y')
     for bootstrap_yaml in bootstrap_yaml_files:
-        assert not os.path.exists(bootstrap_yaml)
+        assert not bootstrap_yaml.exists()
 
 
 def test_reset_in_environment(mutable_mock_env_path, mutable_config):
@@ -81,7 +81,7 @@ def test_reset_in_environment(mutable_mock_env_path, mutable_config):
 
     # Check that reset didn't delete the entire file
     spack_yaml = os.path.join(current_environment.path, 'spack.yaml')
-    assert os.path.exists(spack_yaml)
+    assert spack_yaml.exists()
 
 
 def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
@@ -89,21 +89,21 @@ def test_reset_in_file_scopes_overwrites_backup_files(mutable_config):
     _bootstrap('disable', '--scope=site')
     scope_path = spack.config.config.scopes['site'].path
     bootstrap_yaml = os.path.join(scope_path, 'bootstrap.yaml')
-    assert os.path.exists(bootstrap_yaml)
+    assert bootstrap_yaml.exists()
 
     # Reset the bootstrap configuration
     _bootstrap('reset', '-y')
     backup_file = bootstrap_yaml + '.bkp'
-    assert not os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert not bootstrap_yaml.exists()
+    assert backup_file.exists()
 
     # Iterate another time
     _bootstrap('disable', '--scope=site')
-    assert os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert bootstrap_yaml.exists()
+    assert backup_file.exists()
     _bootstrap('reset', '-y')
-    assert not os.path.exists(bootstrap_yaml)
-    assert os.path.exists(backup_file)
+    assert not bootstrap_yaml.exists()
+    assert backup_file.exists()
 
 
 def test_list_sources(capsys):

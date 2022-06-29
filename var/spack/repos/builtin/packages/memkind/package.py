@@ -50,11 +50,11 @@ class Memkind(AutotoolsPackage):
 
     @run_before('autoreconf')
     def build_jemalloc(self):
-        if os.path.exists('build_jemalloc.sh'):
+        if 'build_jemalloc.sh'.exists():
             bash = which('bash')
             bash('./build_jemalloc.sh')
 
     def autoreconf(self, spec, prefix):
-        if os.path.exists('autogen.sh'):
+        if 'autogen.sh'.exists():
             bash = which('bash')
             bash('./autogen.sh')

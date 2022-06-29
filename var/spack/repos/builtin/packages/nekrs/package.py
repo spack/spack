@@ -122,7 +122,7 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
                 filter_file(r'mpirun -np', 'srun -n', 'nrspre')
                 filter_file(r'mpirun -np', 'srun -n', 'nrsbmpi')
 
-        makenrs = Executable(os.path.join(os.getcwd(), "makenrs"))
+        makenrs = Executable(os.path.join(Path.cwd(), "makenrs"))
 
         makenrs.add_default_env("NEKRS_INSTALL_DIR", prefix)
         makenrs.add_default_env("NEKRS_CC", spec['mpi'].mpicc)

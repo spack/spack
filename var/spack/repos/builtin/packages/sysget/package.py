@@ -20,9 +20,9 @@ class Sysget(MakefilePackage):
     version('2.1', sha256='0590aaae10494ca76c6749264925feb0e40b6e4b3822a8a4d148761addcb66c1')
 
     def edit(self, spec, prefix):
-        if os.path.exists('Makefile'):
+        if 'Makefile'.exists():
             makefile = FileFilter('Makefile')
-        elif os.path.exists('makefile'):
+        elif 'makefile'.exists():
             makefile = FileFilter('makefile')
 
         makefile.filter(r'/usr/local/bin', self.prefix.bin)

@@ -38,7 +38,7 @@ class Maker(Package):
     version('2.31.10', sha256='d3979af9710d61754a3b53f6682d0e2052c6c3f36be6f2df2286d2587406f07d')
 
     def url_for_version(self, version):
-        return "file://{0}/maker-{1}.tgz".format(os.getcwd(), version)
+        return "file://{0}/maker-{1}.tgz".format(Path.cwd(), version)
 
     variant('mpi', default=True, description='Build with MPI support')
 

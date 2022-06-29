@@ -220,14 +220,14 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             # Link configuration file
             sys_conf = join_path(directory, 'openssl.cnf')
             pkg_conf = join_path(pkg_dir, 'openssl.cnf')
-            if os.path.exists(sys_conf) and not os.path.exists(pkg_conf):
+            if sys_conf.exists() and not pkg_conf.exists():
                 os.symlink(sys_conf, pkg_conf)
 
             sys_cert = join_path(directory, 'cert.pem')
             pkg_cert = join_path(pkg_dir, 'cert.pem')
             # If a bundle exists, use it. This is the preferred way on Fedora,
             # where the certs directory does not work.
-            if os.path.exists(sys_cert) and not os.path.exists(pkg_cert):
+            if sys_cert.exists() and not pkg_cert.exists():
                 os.symlink(sys_cert, pkg_cert)
 
             sys_certs = join_path(directory, 'certs')
@@ -235,8 +235,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             # If the certs directory exists, symlink it into the package.
             # We symlink the whole directory instead of all files because
             # the directory contents might change without Spack noticing.
-            if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
-                if os.path.isdir(pkg_certs):
+            if sys_certs.is_dir() and not pkg_certs.is_symlink():
+                if pkg_certs.is_dir():
                     os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
 
@@ -251,7 +251,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         mozilla_pem = self.spec['ca-certificates-mozilla'].pem_path
         pkg_cert = join_path(pkg_dir, 'cert.pem')
 
-        if not os.path.exists(pkg_cert):
+        if not pkg_cert.exists():
             os.symlink(mozilla_pem, pkg_cert)
 
     def patch(self):

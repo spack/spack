@@ -16,7 +16,7 @@ class Srilm(MakefilePackage):
        and machine translation."""
 
     homepage = "http://www.speech.sri.com/projects/srilm/"
-    url      = "file://{0}/srilm-1.7.3.tar.gz".format(os.getcwd())
+    url      = "file://{0}/srilm-1.7.3.tar.gz".format(Path.cwd())
     manual_download = True
 
     maintainers = ['RemiLacroix-IDRIS']

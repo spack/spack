@@ -155,7 +155,7 @@ class MesonPackage(PackageBase):
 
     def meson(self, spec, prefix):
         """Runs ``meson`` in the build directory"""
-        options = [os.path.abspath(self.root_mesonlists_dir)]
+        options = [self.root_mesonlists_dir.resolve()]
         options += self.std_meson_args
         options += self.meson_args()
         with working_dir(self.build_directory, create=True):

@@ -73,7 +73,7 @@ class PpopenApplBem(MakefilePackage):
         for d in self.src_directories:
             for f in find(d, '*.out'):
                 copy(f, prefix.bin)
-            install_src = join_path(prefix.src, os.path.basename(d))
+            install_src = join_path(prefix.src, d.name)
             mkdir(install_src)
             install_tree(d, install_src)
             with working_dir(install_src):

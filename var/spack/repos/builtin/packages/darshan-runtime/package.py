@@ -139,7 +139,7 @@ class DarshanRuntime(AutotoolsPackage):
         with working_dir(testdir, create=True):
             if '+mpi' in self.spec:
                 # compile a test program
-                logname = join_path(os.getcwd(), "test.darshan")
+                logname = join_path(Path.cwd(), "test.darshan")
                 fname = join_path(self.test_suite.current_test_cache_dir,
                                   join_path(self.basepath, 'mpi-io-test.c'))
                 cc = Executable(self.spec['mpi'].mpicc)
@@ -172,8 +172,8 @@ class DarshanRuntime(AutotoolsPackage):
 
                 # verify existence of log and size is > 0
                 tty.msg("Test for existince of log:")
-                if os.path.exists(logname):
-                    sr = os.stat(logname)
+                if logname.exists():
+                    sr = logname.stat()
                     print("PASSED")
                     tty.msg("Test for size of log:")
                     if not sr.st_size > 0:

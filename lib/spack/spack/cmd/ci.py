@@ -111,7 +111,7 @@ variable SPACK_CONCRETE_ENVIRONMENT_PATH.""")
                                       help=ci_reproduce.__doc__)
     reproduce.add_argument('job_url', help='Url of job artifacts bundle')
     reproduce.add_argument('--working-dir', help="Where to unpack artifacts",
-                           default=os.path.join(os.getcwd(), 'ci_reproduction'))
+                           default=os.path.join(Path.cwd(), 'ci_reproduction'))
 
     reproduce.set_defaults(func=ci_reproduce)
 
@@ -138,8 +138,8 @@ def ci_generate(args):
         output_file = os.path.abspath(".gitlab-ci.yml")
     else:
         output_file_path = os.path.abspath(output_file)
-        gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
+        gen_ci_dir = output_file_path.parent
+        if not gen_ci_dir.exists():
             os.makedirs(gen_ci_dir)
 
     # Generate the jobs
@@ -150,8 +150,8 @@ def ci_generate(args):
         remote_mirror_override=buildcache_destination)
 
     if copy_yaml_to:
-        copy_to_dir = os.path.dirname(copy_yaml_to)
-        if not os.path.exists(copy_to_dir):
+        copy_to_dir = copy_yaml_to.parent
+        if not copy_to_dir.exists():
             os.makedirs(copy_to_dir)
         shutil.copyfile(output_file, copy_yaml_to)
 
@@ -302,13 +302,13 @@ def ci_rebuild(args):
     # need to clean out the artifacts we may have got from upstream jobs.
 
     cdash_report_dir = os.path.join(pipeline_artifacts_dir, 'cdash_report')
-    if os.path.exists(cdash_report_dir):
+    if cdash_report_dir.exists():
         shutil.rmtree(cdash_report_dir)
 
-    if os.path.exists(job_log_dir):
+    if job_log_dir.exists():
         shutil.rmtree(job_log_dir)
 
-    if os.path.exists(repro_dir):
+    if repro_dir.exists():
         shutil.rmtree(repro_dir)
 
     # Now that we removed them if they existed, create the directories we
@@ -331,7 +331,7 @@ def ci_rebuild(args):
     for dir_to_list in target_dirs:
         for file_name in os.listdir(dir_to_list):
             src_file = os.path.join(dir_to_list, file_name)
-            if os.path.isfile(src_file):
+            if src_file.is_file():
                 dst_file = os.path.join(repro_dir, file_name)
                 shutil.copyfile(src_file, dst_file)
 

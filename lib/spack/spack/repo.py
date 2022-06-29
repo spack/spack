@@ -420,7 +420,7 @@ def add_package_to_git_stage(packages):
 
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
-        if not os.path.isfile(filename):
+        if not filename.is_file():
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
@@ -449,7 +449,7 @@ def is_package_file(filename):
     packagebase_filename_noext = os.path.splitext(
         inspect.getfile(spack.package_base.PackageBase))[0]
     return (filename_noext != packagebase_filename_noext and
-            os.path.basename(filename_noext) == 'package')
+            filename_noext.name == 'package')
 
 
 class SpackNamespace(types.ModuleType):
@@ -531,7 +531,7 @@ class FastPackageChecker(Mapping):
 
             # Use stat here to avoid lots of calls to the filesystem.
             try:
-                sinfo = os.stat(pkg_file)
+                sinfo = pkg_file.stat()
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     # No package.py file here.
@@ -815,7 +815,7 @@ class RepoPath(object):
     def remove(self, repo):
         """Remove a repo from the search path."""
         if repo in self.repos:
-            self.repos.remove(repo)
+            self.reprepo.unlink()
 
     def get_repo(self, namespace, default=NOT_PROVIDED):
         """Get a repository by namespace.
@@ -1025,11 +1025,11 @@ class Repo(object):
 
         # Validate repository layout.
         self.config_file = os.path.join(self.root, repo_config_name)
-        check(os.path.isfile(self.config_file),
+        check(self.config_file.is_file(),
               "No %s found in '%s'" % (repo_config_name, root))
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
-        check(os.path.isdir(self.packages_path),
+        check(self.packages_path.is_dir(),
               "No directory '%s' found in '%s'" % (packages_dir_name, root))
 
         # Read configuration and validate namespace
@@ -1153,7 +1153,7 @@ class Repo(object):
                 spec.package.patches.values()):
 
             if patch.path:
-                if os.path.exists(patch.path):
+                if patch.path.exists():
                     fs.install(patch.path, path)
                 else:
                     tty.warn("Patch file did not exist: %s" % patch.path)
@@ -1269,7 +1269,7 @@ class Repo(object):
 
         # if not, check for the package.py file
         path = self.filename_for_package_name(pkg_name)
-        return os.path.exists(path)
+        return path.exists()
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -1323,18 +1323,18 @@ def create_repo(root, namespace=None):
     """
     root = spack.util.path.canonicalize_path(root)
     if not namespace:
-        namespace = os.path.basename(root)
+        namespace = root.name
 
     if not re.match(r'\w[\.\w-]*', namespace):
         raise InvalidNamespaceError(
             "'%s' is not a valid namespace." % namespace)
 
     existed = False
-    if os.path.exists(root):
-        if os.path.isfile(root):
+    if root.exists():
+        if root.is_file():
             raise BadRepoError('File %s already exists and is not a directory'
                                % root)
-        elif os.path.isdir(root):
+        elif root.is_dir():
             if not os.access(root, os.R_OK | os.W_OK):
                 raise BadRepoError(
                     'Cannot create new repo in %s: cannot access directory.'
@@ -1346,7 +1346,7 @@ def create_repo(root, namespace=None):
         existed = True
 
     full_path = os.path.realpath(root)
-    parent = os.path.dirname(full_path)
+    parent = full_path.parent
     if not os.access(parent, os.R_OK | os.W_OK):
         raise BadRepoError(
             "Cannot create repository in %s: can't access parent!" % root)
@@ -1376,7 +1376,7 @@ def create_repo(root, namespace=None):
 
 def create_or_construct(path, namespace=None):
     """Create a repository, or just return a Repo if it already exists."""
-    if not os.path.exists(path):
+    if not path.exists():
         fs.mkdirp(path)
         create_repo(path, namespace)
     return Repo(path)

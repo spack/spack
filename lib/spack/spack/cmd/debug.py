@@ -41,7 +41,7 @@ def _debug_tarball_suffix():
         return 'nobranch-nogit-%s' % suffix
 
     with working_dir(spack.paths.prefix):
-        if not os.path.isdir('.git'):
+        if not '.git'.is_dir():
             return 'nobranch.nogit.%s' % suffix
 
         # Get symbolic branch name and strip any special chars (mainly '/')
@@ -64,14 +64,14 @@ def create_db_tarball(args):
     tarball_name = "spack-db.%s.tar.gz" % _debug_tarball_suffix()
     tarball_path = os.path.abspath(tarball_name)
 
-    base = os.path.basename(str(spack.store.root))
+    base = str(spack.store.root.name)
     transform_args = []
     if 'GNU' in tar('--version', output=str):
         transform_args = ['--transform', 's/^%s/%s/' % (base, tarball_name)]
     else:
         transform_args = ['-s', '/^%s/%s/' % (base, tarball_name)]
 
-    wd = os.path.dirname(str(spack.store.root))
+    wd = str(spack.store.root.parent)
     with working_dir(wd):
         files = [spack.store.db._index_path]
         files += glob('%s/*/*/*/.spack/spec.json' % base)

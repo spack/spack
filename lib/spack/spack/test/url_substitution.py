@@ -31,8 +31,8 @@ import spack.url
     ('https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2', '2.2',
      'https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.2.tar.bz2'),
     # No separator between the name and version of the package
-    ('file://{0}/turbolinux702.tar.gz'.format(os.getcwd()), '703',
-     'file://{0}/turbolinux703.tar.gz'.format(os.getcwd())),
+    ('file://{0}/turbolinux702.tar.gz'.format(Path.cwd()), '703',
+     'file://{0}/turbolinux703.tar.gz'.format(Path.cwd())),
 
     ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true', '2.0.7',
      'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true'),

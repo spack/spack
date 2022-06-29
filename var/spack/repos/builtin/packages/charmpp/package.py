@@ -265,11 +265,11 @@ class Charmpp(Package):
         # not, then we need to query the compiler vendor from Spack
         # here.
         options = [
-            os.path.basename(self.compiler.cc)
+            self.compiler.cc.name
         ]
 
         if '@:6.8.2 %aocc' not in spec:
-            options.append(os.path.basename(self.compiler.fc))
+            options.append(self.compiler.fc.name)
 
         options.append("-j%d" % make_jobs)
         options.append("--destination=%s" % builddir)
@@ -340,27 +340,27 @@ class Charmpp(Package):
         for dirpath, dirnames, filenames in os.walk(builddir):
             for filename in filenames:
                 filepath = join_path(dirpath, filename)
-                if os.path.islink(filepath):
+                if filepath.is_symlink():
                     tmppath = filepath + ".tmp"
                     # Skip dangling symbolic links
                     try:
                         copy(filepath, tmppath)
-                        os.remove(filepath)
+                        filepath.unlink()
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):
                         pass
 
         tmp_path = join_path(builddir, "tmp")
-        if not os.path.islink(tmp_path):
+        if not tmp_path.is_symlink():
             shutil.rmtree(tmp_path)
 
         if self.spec.satisfies('@6.9.99'):
             # A broken 'doc' link in the prefix can break the build.
             # Remove it and replace it if it is broken.
             try:
-                os.stat(prefix.doc)
+                prefix.doc.stat()
             except OSError:
-                os.remove(prefix.doc)
+                prefix.doc.unlink()
                 mkdirp(prefix.doc)
 
     @run_after('install')

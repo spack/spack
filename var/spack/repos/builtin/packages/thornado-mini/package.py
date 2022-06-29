@@ -29,7 +29,7 @@ class ThornadoMini(MakefilePackage):
 
     def edit(self, spec, prefix):
         os.environ['THORNADO_MACHINE'] = 'mymachine'
-        os.environ['THORNADO_DIR'] = os.getcwd()
+        os.environ['THORNADO_DIR'] = Path.cwd()
 
         file = open('Makefile', 'w')
 

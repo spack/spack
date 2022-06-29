@@ -79,7 +79,7 @@ class CbtfArgonavisGui(QMakePackage):
         # The implementor of qtgraph has set up the library and include
         # paths in a non-conventional way.  We reflect that here.
         # What library suffix should be used based on library existence
-        if os.path.isdir(self.spec['qtgraph'].prefix.lib64):
+        if self.spec['qtgraph'].prefix.lib64.is_dir():
             qtgraph_lib_dir = self.spec['qtgraph'].prefix.lib64
         else:
             qtgraph_lib_dir = self.spec['qtgraph'].prefix.lib

@@ -57,7 +57,7 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root, skip_unstable_versions):
-        self.root = os.path.abspath(root)
+        self.root = root.resolve()
         self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
@@ -66,7 +66,7 @@ class MirrorCache(object):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
         dst = os.path.join(self.root, relative_dest)
-        mkdirp(os.path.dirname(dst))
+        mkdirp(dst.parent)
         fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
@@ -77,15 +77,15 @@ class MirrorCache(object):
         storage_path = os.path.join(self.root, mirror_ref.storage_path)
         relative_dst = os.path.relpath(
             storage_path,
-            start=os.path.dirname(cosmetic_path))
+            start=cosmetic_path.parent)
 
-        if not os.path.exists(cosmetic_path):
+        if not cosmetic_path.exists():
             if os.path.lexists(cosmetic_path):
                 # In this case the link itself exists but it is broken: remove
                 # it and recreate it (in order to fix any symlinks broken prior
                 # to https://github.com/spack/spack/pull/13908)
-                os.unlink(cosmetic_path)
-            mkdirp(os.path.dirname(cosmetic_path))
+                cosmetic_path.unlink()
+            mkdirp(cosmetic_path.parent)
             symlink(relative_dst, cosmetic_path)
 
 

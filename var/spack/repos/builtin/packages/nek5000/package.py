@@ -48,8 +48,8 @@ class Nek5000(Package):
     @run_after('install')
     def test_install(self):
         with working_dir('short_tests/eddy'):
-            f_size = join_path(os.getcwd(), 'SIZE')
-            f_size_legacy = join_path(os.getcwd(), 'SIZE.legacy')
+            f_size = join_path(Path.cwd(), 'SIZE')
+            f_size_legacy = join_path(Path.cwd(), 'SIZE.legacy')
             if not os.access(f_size, os.F_OK):
                 if os.access(f_size_legacy, os.F_OK):
                     copyfile(f_size_legacy, f_size)
@@ -57,7 +57,7 @@ class Nek5000(Package):
                     raise RuntimeError('Can not find {0}'.format(f_size))
 
             os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
-            if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
+            if not join_path(os.getcwd(.is_file(), 'nek5000')):
                 msg = 'Cannot build example: short_tests/eddy.'
                 raise RuntimeError(msg)
 

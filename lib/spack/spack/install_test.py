@@ -49,12 +49,12 @@ def get_test_stage_dir():
 
 def get_all_test_suites():
     stage_root = get_test_stage_dir()
-    if not os.path.isdir(stage_root):
+    if not stage_root.is_dir():
         return []
 
     def valid_stage(d):
         dirpath = os.path.join(stage_root, d)
-        return (os.path.isdir(dirpath) and
+        return (dirpath.is_dir() and
                 test_suite_filename in os.listdir(dirpath))
 
     candidates = [
@@ -156,7 +156,7 @@ class TestSuite(object):
 
                 # setup per-test directory in the stage dir
                 test_dir = self.test_dir_for_spec(spec)
-                if os.path.exists(test_dir):
+                if test_dir.exists():
                     shutil.rmtree(test_dir)
                 fs.mkdirp(test_dir)
 
@@ -169,7 +169,7 @@ class TestSuite(object):
 
                 # Log test status based on whether any non-pass-only test
                 # functions were called
-                tested = os.path.exists(self.tested_file_for_spec(spec))
+                tested = self.tested_file_for_spec(spec.exists())
                 if tested:
                     status = 'PASSED'
                 else:
@@ -205,7 +205,7 @@ class TestSuite(object):
             raise TestSuiteFailure(self.fails)
 
     def ensure_stage(self):
-        if not os.path.exists(self.stage):
+        if not self.stage.exists():
             fs.mkdirp(self.stage)
 
     @property
@@ -284,7 +284,7 @@ class TestSuite(object):
             spack.repo.path.dump_provenance(spec, repo_cache_path)
             for vspec in spec.package.virtuals_provided:
                 repo_cache_path = self.stage.repo.join(vspec.name)
-                if not os.path.exists(repo_cache_path):
+                if not repo_cache_path.exists():
                     try:
                         spack.repo.path.dump_provenance(vspec, repo_cache_path)
                     except spack.repo.UnknownPackageError:
@@ -311,7 +311,7 @@ class TestSuite(object):
             with open(filename, 'r') as f:
                 data = sjson.load(f)
                 test_suite = TestSuite.from_dict(data)
-                content_hash = os.path.basename(os.path.dirname(filename))
+                content_hash = filename.name.parent
                 test_suite._hash = content_hash
                 return test_suite
         except Exception as e:

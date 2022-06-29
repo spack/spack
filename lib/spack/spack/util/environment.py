@@ -683,7 +683,7 @@ class EnvironmentModifications(object):
         tty.debug("EnvironmentModifications.from_sourcing_file: {0}"
                   .format(filename))
         # Check if the file actually exists
-        if not os.path.isfile(filename):
+        if not filename.is_file():
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
@@ -945,7 +945,7 @@ def inspect_path(root, inspections, exclude=None):
     for relative_path, variables in inspections.items():
         expected = os.path.join(root, relative_path)
 
-        if os.path.isdir(expected) and not exclude(expected):
+        if expected.is_dir() and not exclude(expected):
             for variable in variables:
                 env.prepend_path(variable, expected)
 

@@ -18,7 +18,7 @@ class Tmhmm(Package):
        https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.cbs.dtu.dk/cgi-bin/nph-sw_request?tmhmm"
-    url      = "file://{0}/tmhmm-2.0c.Linux.tar.gz".format(os.getcwd())
+    url      = "file://{0}/tmhmm-2.0c.Linux.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('2.0c', '359db0c4ecf84d1ade5786abe844d54e')

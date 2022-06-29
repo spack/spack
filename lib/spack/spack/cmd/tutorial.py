@@ -61,7 +61,7 @@ def tutorial(parser, args):
     rm_cmds = ["rm -f %s" % f for f in rm_configs]
     tty.msg("Reverting compiler and repository configuration", *rm_cmds)
     for path in rm_configs:
-        if os.path.exists(path):
+        if path.exists():
             shutil.rmtree(path, ignore_errors=True)
 
     tty.msg("Ensuring that the tutorial binary mirror is configured:",

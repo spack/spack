@@ -52,7 +52,7 @@ def get_compiler_version_output(compiler_path, *args, **kwargs):
     # This ensures that we memoize compiler output by *absolute path*,
     # not just executable name. If we don't do this, and the path changes
     # (e.g., during testing), we can get incorrect results.
-    if not os.path.isabs(compiler_path):
+    if not compiler_path.is_absolute():
         compiler_path = spack.util.executable.which_string(
             compiler_path, required=True)
 
@@ -149,7 +149,7 @@ def _parse_link_paths(string):
     implicit_link_dirs = list()
     visited = set()
     for link_dir in raw_link_dirs:
-        normalized_path = os.path.abspath(link_dir)
+        normalized_path = link_dir.resolve()
         if normalized_path not in visited:
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
@@ -171,7 +171,7 @@ def _parse_non_system_link_dirs(string):
 
     # Remove directories that do not exist. Some versions of the Cray compiler
     # report nonexistent directories
-    link_dirs = [d for d in link_dirs if os.path.isdir(d)]
+    link_dirs = [d for d in link_dirs if d.is_dir()]
 
     # Return set of directories containing needed compiler libs, minus
     # system paths. Note that 'filter_system_paths' only checks for an
@@ -322,11 +322,11 @@ class Compiler(object):
         """
         def accessible_exe(exe):
             # compilers may contain executable names (on Cray or user edited)
-            if not os.path.isabs(exe):
+            if not exe.is_absolute():
                 exe = spack.util.executable.which_string(exe)
                 if not exe:
                     return False
-            return os.path.isfile(exe) and os.access(exe, os.X_OK)
+            return exe.is_file() and os.access(exe, os.X_OK)
 
         # setup environment before verifying in case we have executable names
         # instead of absolute paths

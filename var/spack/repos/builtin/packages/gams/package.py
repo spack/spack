@@ -19,7 +19,7 @@ class Gams(Package):
     version('27.2', '4f3f3484a4389661e0522a4cfe0289fd', expand=False)
 
     def url_for_version(self, version):
-        return "file://{0}/linux_x64_64_sfx.exe".format(os.getcwd())
+        return "file://{0}/linux_x64_64_sfx.exe".format(Path.cwd())
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(
@@ -34,6 +34,6 @@ class Gams(Package):
                                .format(self.version)),
                      join_path(self.prefix, 'gams{0}_linux_x64_64_sfx'
                                .format(self.version)))
-        install('{0}/gamslice.txt'.format(os.getcwd()),
+        install('{0}/gamslice.txt'.format(Path.cwd()),
                 join_path(self.prefix, 'gams{0}_linux_x64_64_sfx'
                           .format(self.version), 'gamslice.txt'))

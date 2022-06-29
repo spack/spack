@@ -30,5 +30,5 @@ class PyPycairo(PythonPackage):
     def post_install(self):
         src = self.prefix.lib + '/pkgconfig/py3cairo.pc'
         dst = self.prefix.lib + '/pkgconfig/pycairo.pc'
-        if os.path.exists(src) and not os.path.exists(dst):
+        if src.exists() and not dst.exists():
             copy(src, dst)

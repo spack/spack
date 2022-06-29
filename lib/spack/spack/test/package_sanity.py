@@ -245,7 +245,7 @@ def test_prs_update_old_api():
     failing = []
     for file in changed_package_files:
         if 'builtin.mock' not in file:  # don't restrict packages for tests
-            name = os.path.basename(os.path.dirname(file))
+            name = file.name.parent
             pkg = spack.repo.get(name)
 
             failed = (hasattr(pkg, 'setup_environment') or

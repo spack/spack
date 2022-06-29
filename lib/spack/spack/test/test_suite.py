@@ -38,7 +38,7 @@ def test_test_ensure_stage(mock_test_stage):
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
 
-    assert os.path.isdir(test_suite.stage)
+    assert test_suite.stage.is_dir()
     assert mock_test_stage in test_suite.stage
 
 
@@ -87,8 +87,8 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     # so we can ensure the files were copied.
     test_suite(remove_directory=False)
 
-    assert os.path.exists(cached_filename)
-    assert os.path.exists(data_filename)
+    assert cached_filename.exists()
+    assert data_filename.exists()
 
 
 @pytest.mark.parametrize('arguments,status,msg', [
@@ -98,7 +98,7 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
 def test_test_external(mock_packages, install_mockery, mock_test_stage,
                        arguments, status, msg):
     def ensure_results(filename, expected):
-        assert os.path.exists(filename)
+        assert filename.exists()
         with open(filename, 'r') as fd:
             lines = fd.readlines()
             have = False

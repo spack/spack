@@ -100,7 +100,7 @@ class OpenFileTracker(object):
 
         try:
             # see whether we've seen this inode/pid before
-            stat = os.stat(path)
+            stat = path.stat()
             key = (stat.st_ino, pid)
             open_file = self._descriptors.get(key)
 
@@ -109,7 +109,7 @@ class OpenFileTracker(object):
                 raise
 
             # path does not exist -- fail if we won't be able to create it
-            parent = os.path.dirname(path) or '.'
+            parent = path.parent or '.'
             if not os.access(parent, os.W_OK):
                 raise CantCreateLockError(path)
 
@@ -138,7 +138,7 @@ class OpenFileTracker(object):
     def release_fh(self, path):
         """Release a filehandle, only closing it if there are no more references."""
         try:
-            inode = os.stat(path).st_ino
+            inode = path.stat().st_ino
         except OSError as e:
             if e.errno != errno.ENOENT:  # only handle file not found
                 raise
@@ -374,7 +374,7 @@ class Lock(object):
         return False
 
     def _ensure_parent_directory(self):
-        parent = os.path.dirname(self.path)
+        parent = self.path.parent
 
         # relative paths to lockfiles in the current directory have no parent
         if not parent:
@@ -384,7 +384,7 @@ class Lock(object):
             os.makedirs(parent)
         except OSError as e:
             # makedirs can fail when diretory already exists.
-            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or
+            if not (e.errno == errno.EEXIST and parent.is_dir() or
                     e.errno == errno.EISDIR):
                 raise
         return parent
@@ -620,7 +620,7 @@ class Lock(object):
 
     def cleanup(self):
         if self._reads == 0 and self._writes == 0:
-            os.unlink(self.path)
+            self.path.unlink()
         else:
             raise LockError("Attempting to cleanup active lock.")
 

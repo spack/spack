@@ -27,7 +27,7 @@ class Mark(Package):
             expand=False)
 
     def url_for_version(self, version):
-        return "file://{0}/mark".format(os.getcwd())
+        return "file://{0}/mark".format(Path.cwd())
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

@@ -34,7 +34,7 @@ class Trimmomatic(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "trimmomatic.sh")
+        script_sh = join_path(__file__.parent, "trimmomatic.sh")
         script = prefix.bin.trimmomatic
         install(script_sh, script)
         set_executable(script)

@@ -66,20 +66,20 @@ def test_fetch(
                 assert get_date() <= test.date
 
             file_path = os.path.join(pkg.stage.source_path, test.file)
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
-            os.unlink(file_path)
-            assert not os.path.isfile(file_path)
+            file_path.unlink()
+            assert not file_path.is_file()
 
             untracked_file = 'foobarbaz'
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert untracked_file.is_file()
             pkg.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not untracked_file.is_file()
 
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
 
 def test_cvs_extra_fetch(tmpdir):

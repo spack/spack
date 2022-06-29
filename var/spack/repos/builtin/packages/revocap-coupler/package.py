@@ -14,7 +14,7 @@ class RevocapCoupler(AutotoolsPackage):
        a part of functions of ADVENTURE_Solid ver.1.1 module"""
 
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/dl/index.php"
-    url      = "file://{0}/REVOCAP_Coupler-2.1.tar.gz".format(os.getcwd())
+    url      = "file://{0}/REVOCAP_Coupler-2.1.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('2.1', sha256='9e7612d5c508ccdce23bff9ccbf62aeb635877bc2276cdc05c109de40f609f49')

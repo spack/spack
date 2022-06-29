@@ -172,7 +172,7 @@ class Glib(Package):
             args.append('--disable-libmount')
         if self.spec.satisfies('@2.53.4:'):
             args.append('--with-python={0}'.format(
-                os.path.basename(self.spec['python'].command.path))
+                self.spec['python'].command.path.name)
             )
         if 'libc' in self.spec:
             args.append('--with-libiconv=maybe')
@@ -229,7 +229,7 @@ class Glib(Package):
 
         filter_file('^#!/usr/bin/env @PYTHON@',
                     '#!/usr/bin/env {0}'.format(
-                        os.path.basename(self.spec['python'].command.path)),
+                        self.spec['python'].command.path.name),
                     *files)
 
     @run_before('install')
@@ -249,7 +249,7 @@ class Glib(Package):
             filter_file(
                 '^#!/usr/bin/python',
                 '#!/usr/bin/env {0}'.format(
-                    os.path.basename(self.spec['python'].command.path)),
+                    self.spec['python'].command.path.name),
                 dtrace_copy
             )
 
@@ -266,7 +266,7 @@ class Glib(Package):
         # to rebuild files as filter_file updates the timestamps)
         if self.spec.satisfies('@2.53.4:'):
             pattern = '^#!/usr/bin/env {0}'.format(
-                os.path.basename(self.spec['python'].command.path))
+                self.spec['python'].command.path.name)
             repl = '#!{0}'.format(self.spec['python'].command.path)
             files = ['glib-genmarshal', 'glib-mkenums']
         else:

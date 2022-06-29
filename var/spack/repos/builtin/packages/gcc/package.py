@@ -363,7 +363,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # On systems like Ubuntu we might get multiple executables
             # with the string "gcc" in them. See:
             # https://helpmanual.io/packages/apt/gcc/
-            basename = os.path.basename(exe)
+            basename = exe.name
             substring_to_be_filtered = [
                 'c99-gcc',
                 'c89-gcc',
@@ -377,7 +377,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Filter out links in favor of real executables on
             # all systems but Cray
             host_platform = str(spack.platforms.host())
-            if os.path.islink(exe) and host_platform != 'cray':
+            if exe.is_symlink() and host_platform != 'cray':
                 continue
 
             result.append(exe)
@@ -415,7 +415,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     def determine_variants(cls, exes, version_str):
         languages, compilers = set(), {}
         for exe in exes:
-            basename = os.path.basename(exe)
+            basename = exe.name
             if 'g++' in basename:
                 languages.add('c++')
                 compilers['cxx'] = exe
@@ -495,7 +495,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
         if 'yosemite' in spec.architecture:
-            if os.path.isfile('/usr/include/dispatch/object.h'):
+            if '/usr/include/dispatch/object.h'.is_file():
                 new_dispatch_dir = join_path(prefix, 'include', 'dispatch')
                 mkdirp(new_dispatch_dir)
                 new_header = join_path(new_dispatch_dir, 'object.h')
@@ -834,7 +834,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # Get the contents of the installed binary directory
         bin_path = self.spec.prefix.bin
 
-        if not os.path.isdir(bin_path):
+        if not bin_path.is_dir():
             return
 
         bin_contents = os.listdir(bin_path)
@@ -849,7 +849,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
                     continue
 
                 abspath = os.path.join(bin_path, filename)
-                if os.path.islink(abspath):
+                if abspath.is_symlink():
                     continue
 
                 # Set the proper environment variable

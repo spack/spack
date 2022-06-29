@@ -9,12 +9,13 @@ import shlex
 import subprocess
 import sys
 
+from pathlib import Path, PosixPath
 from six import string_types, text_type
 
 import llnl.util.tty as tty
 
 import spack.error
-from spack.util.path import Path, format_os_path, path_to_os_path, system_path_filter
+
 
 __all__ = ['Executable', 'which', 'ProcessError']
 
@@ -24,10 +25,9 @@ class Executable(object):
 
     def __init__(self, name):
         # necesary here for the shlex call to succeed
-        name = format_os_path(name, mode=Path.unix)
-        self.exe = shlex.split(str(name))
+        self.exe = shlex.split(str(PosixPath(name)))
         # filter back to platform dependent path
-        self.exe = path_to_os_path(*self.exe)
+        self.exe = Path(*self.exe)
         self.default_env = {}
         from spack.util.environment import EnvironmentModifications  # no cycle
         self.default_envmod = EnvironmentModifications()
@@ -36,12 +36,10 @@ class Executable(object):
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
-    @system_path_filter
     def add_default_arg(self, arg):
         """Add a default argument to the command."""
         self.exe.append(arg)
 
-    @system_path_filter
     def add_default_env(self, key, value):
         """Set an environment variable when the command is run.
 
@@ -71,7 +69,7 @@ class Executable(object):
         Returns:
             str: The basename of the executable
         """
-        return os.path.basename(self.path)
+        return self.path.name
 
     @property
     def path(self):
@@ -275,14 +273,13 @@ class Executable(object):
         return ' '.join(self.exe)
 
 
-@system_path_filter
 def which_string(*args, **kwargs):
     """Like ``which()``, but return a string instead of an ``Executable``."""
     path = kwargs.get('path', os.environ.get('PATH', ''))
     required = kwargs.get('required', False)
 
     if isinstance(path, string_types):
-        path = path.split(os.pathsep)
+        path = Path(path)
 
     for name in args:
         win_candidates = []
@@ -293,14 +290,13 @@ def which_string(*args, **kwargs):
 
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
-                exe = os.path.abspath(candidate_name)
-                if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                exe = candidate_name.resolve()
+                if exe.is_file() and os.access(exe, os.X_OK):
                     return exe
             else:
-                for directory in path:
-                    directory = path_to_os_path(directory).pop()
+                for directory in path.parents:
                     exe = os.path.join(directory, candidate_name)
-                    if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                    if exe.is_file() and os.access(exe, os.X_OK):
                         return exe
 
     if required:

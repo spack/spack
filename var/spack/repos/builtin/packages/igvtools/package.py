@@ -27,7 +27,7 @@ class Igvtools(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "igvtools.sh")
+        script_sh = join_path(__file__.parent, "igvtools.sh")
         script = prefix.bin.igvtools
         install(script_sh, script)
         set_executable(script)

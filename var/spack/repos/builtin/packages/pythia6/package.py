@@ -124,7 +124,7 @@ class Pythia6(CMakePackage):
     }
 
     for docurl, checksum in iteritems(docs):
-        doc = os.path.basename(urlparse(docurl).path)
+        doc = urlparse(docurl.name.path)
         resource(name=doc,
                  url=docurl,
                  sha256=checksum,
@@ -143,7 +143,7 @@ class Pythia6(CMakePackage):
         # Use our provided CMakeLists.txt. The Makefile provided with
         # the source is GCC (gfortran) specific, and would have required
         # additional patching for the +root variant.
-        llnl.util.filesystem.copy(os.path.join(os.path.dirname(__file__),
+        llnl.util.filesystem.copy(os.path.join(__file__.parent,
                                                'CMakeLists.txt'),
                                   self.stage.source_path)
         # Apply the variant value at the relevant place in the source.

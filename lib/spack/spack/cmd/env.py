@@ -122,8 +122,8 @@ def env_activate(args):
     # Temporary environment
     if args.temp:
         env = create_temp_env_directory()
-        env_path = os.path.abspath(env)
-        short_name = os.path.basename(env_path)
+        env_path = env.resolve()
+        short_name = env_path.name
         ev.Environment(env).write(regenerate=False)
 
     # Named environment
@@ -133,8 +133,8 @@ def env_activate(args):
 
     # Environment directory
     elif ev.is_env_dir(env_name_or_dir):
-        env_path = os.path.abspath(env_name_or_dir)
-        short_name = os.path.basename(env_path)
+        env_path = env_name_or_dir.resolve()
+        short_name = env_path.name
 
     else:
         tty.die("No such environment: '%s'" % env_name_or_dir)
@@ -403,7 +403,7 @@ def env_status_setup_parser(subparser):
 def env_status(args):
     env = ev.active_environment()
     if env:
-        if env.path == os.getcwd():
+        if env.path == Path.cwd():
             tty.msg('Using %s in current directory: %s'
                     % (ev.manifest_name, env.path))
         else:
@@ -503,10 +503,10 @@ def env_revert(args):
 
     # Check that both the spack.yaml and the backup exist, the inform user
     # on what is going to happen and ask for confirmation
-    if not os.path.exists(manifest_file):
+    if not manifest_file.exists():
         msg = 'cannot fine the manifest file of the environment [file={0}]'
         tty.die(msg.format(manifest_file))
-    if not os.path.exists(backup_file):
+    if not backup_file.exists():
         msg = 'cannot find the old manifest file to be restored [file={0}]'
         tty.die(msg.format(backup_file))
 
@@ -521,7 +521,7 @@ def env_revert(args):
         tty.die('Operation aborted.')
 
     shutil.copy(backup_file, manifest_file)
-    os.remove(backup_file)
+    backup_file.unlink()
     msg = 'Environment "{0}" reverted to old state'
     tty.msg(msg.format(manifest_file))
 
@@ -563,7 +563,7 @@ def env_depfile(args):
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
         # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
         # supposed to be included
-        if name in ('all', 'fetch-all', 'clean') and os.path.isabs(target_prefix):
+        if name in ('all', 'fetch-all', 'clean') and target_prefix.is_absolute():
             return name
         else:
             return os.path.join(target_prefix, name)

@@ -137,7 +137,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     def patch(self):
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
-        os.chmod('lib/perlbug.t', 0o644)
+        Path('lib/perlbug.t').chmod(0o644)
         filter_file('!/$B/', '! (/(?:$B|PATH)/)', 'lib/perlbug.t')
 
     @classmethod
@@ -167,7 +167,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                     variants += '+threads'
                 else:
                     variants += '~threads'
-            path = os.path.dirname(exe)
+            path = exe.parent
             if 'cpanm' in os.listdir(path):
                 variants += '+cpanm'
             else:
@@ -183,8 +183,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         super(Perl, self).do_stage(mirror_only)
         # Add write permissions on file to be patched
         filename = join_path(self.stage.source_path, 'pp.c')
-        perm = os.stat(filename).st_mode
-        os.chmod(filename, perm | 0o200)
+        perm = filename.stat().st_mode
+        filename.chmod(perm | 0o200)
 
     @property
     def nmake_arguments(self):
@@ -300,7 +300,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         for f in os.listdir(os.path.join(self.prefix.bin, win_install_path)):
             lnk_path = os.path.join(self.prefix.bin, f)
             src_path = os.path.join(win_install_path, f)
-            if not os.path.exists(lnk_path):
+            if not lnk_path.exists():
                 symlink(src_path, lnk_path)
 
     @run_after('install')
@@ -405,7 +405,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
-        d = os.path.dirname(config_dot_pm)
+        d = config_dot_pm.parent
         config_heavy = join_path(d, 'Config_heavy.pl')
 
         with self.make_briefly_writable(config_heavy):
@@ -425,10 +425,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     @contextmanager
     def make_briefly_writable(self, path):
         """Temporarily make a file writable, then reset"""
-        perm = os.stat(path).st_mode
-        os.chmod(path, perm | 0o200)
+        perm = path.stat().st_mode
+        path.chmod(perm | 0o200)
         yield
-        os.chmod(path, perm)
+        path.chmod(perm)
 
     # ========================================================================
     # Handle specifics of activating and deactivating perl modules.
@@ -484,7 +484,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 ext = '.exe'
             path = os.path.join(self.prefix.bin, '{0}{1}{2}'.format(
                 self.spec.name, ver, ext))
-            if os.path.exists(path):
+            if path.exists():
                 return Executable(path)
         else:
             msg = 'Unable to locate {0} command in {1}'

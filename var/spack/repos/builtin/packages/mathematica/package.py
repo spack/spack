@@ -19,7 +19,7 @@ class Mathematica(Package):
        https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.wolfram.com/mathematica/"
-    url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
+    url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(Path.cwd())
     manual_download = True
 
     version('12.2.0',
@@ -51,7 +51,7 @@ class Mathematica(Package):
         # This is what most people would use on a cluster but the installer
         # does not symlink it
         ws_link_path = os.path.join(prefix.bin, 'wolframscript')
-        if not os.path.exists(ws_link_path):
+        if not ws_link_path.exists():
             ln = which('ln')
             ws_path = os.path.join(prefix, 'Executables', 'wolframscript')
             ln('-s', ws_path, ws_link_path)

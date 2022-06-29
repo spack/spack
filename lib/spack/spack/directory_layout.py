@@ -157,14 +157,14 @@ class DirectoryLayout(object):
         yaml_path = os.path.join(
             self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
-        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
+        if yaml_path.exists() and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
             try:
-                os.remove(yaml_path)
+                yaml_path.unlink()
             except OSError as err:
                 tty.debug('Could not remove deprecated {0}'.format(yaml_path))
                 tty.debug(err)
-        elif os.path.exists(yaml_path):
+        elif yaml_path.exists():
             return yaml_path
         return json_path
 
@@ -192,14 +192,14 @@ class DirectoryLayout(object):
                                  self.deprecated_dir, deprecated_spec.dag_hash()
                                  + '_' + self.spec_file_name)
 
-        if (os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path)):
+        if (yaml_path.exists() and fs.can_write_to_dir(yaml_path)):
             self.write_spec(deprecated_spec, json_path)
             try:
-                os.remove(yaml_path)
+                yaml_path.unlink()
             except (IOError, OSError) as err:
                 tty.debug('Could not remove deprecated {0}'.format(yaml_path))
                 tty.debug(err)
-        elif os.path.exists(yaml_path):
+        elif yaml_path.exists():
             return yaml_path
 
         return json_path
@@ -248,11 +248,11 @@ class DirectoryLayout(object):
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
-        if not os.path.isdir(path):
+        if not path.is_dir():
             raise InconsistentInstallDirectoryError(
                 "Install prefix {0} does not exist.".format(path))
 
-        if not os.path.isfile(spec_file_path):
+        if not spec_file_path.is_file():
             raise InconsistentInstallDirectoryError(
                 'Install prefix exists but contains no spec.json:',
                 "  " + path)
@@ -263,7 +263,7 @@ class DirectoryLayout(object):
                 'Spec file in %s does not match hash!' % spec_file_path)
 
     def all_specs(self):
-        if not os.path.isdir(self.root):
+        if not self.root.is_dir():
             return []
 
         specs = []
@@ -281,7 +281,7 @@ class DirectoryLayout(object):
         return specs
 
     def all_deprecated_specs(self):
-        if not os.path.isdir(self.root):
+        if not self.root.is_dir():
             return []
 
         deprecated_specs = set()
@@ -293,7 +293,7 @@ class DirectoryLayout(object):
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             get_depr_spec_file = lambda x: os.path.join(
-                os.path.dirname(os.path.dirname(x)), self.spec_file_name)
+                os.path.dirname(x.parent), self.spec_file_name)
             deprecated_specs |= set((self.read_spec(s),
                                      self.read_spec(get_depr_spec_file(s)))
                                     for s in spec_files)
@@ -339,24 +339,24 @@ class DirectoryLayout(object):
             kwargs = {}  # the default value for ignore_errors is false
 
         if deprecated:
-            if os.path.exists(path):
+            if path.exists():
                 try:
                     metapath = self.deprecated_file_path(spec)
-                    os.unlink(path)
-                    os.remove(metapath)
+                    path.unlink()
+                    metapath.unlink()
                 except OSError as e:
                     raise six.raise_from(RemoveFailedError(spec, path, e), e)
-        elif os.path.exists(path):
+        elif path.exists():
             try:
                 shutil.rmtree(path, **kwargs)
             except OSError as e:
                 raise six.raise_from(RemoveFailedError(spec, path, e), e)
 
-        path = os.path.dirname(path)
+        path = path.parent
         while path != self.root:
-            if os.path.isdir(path):
+            if path.is_dir():
                 try:
-                    os.rmdir(path)
+                    path.rmdir()
                 except OSError as e:
                     if e.errno == errno.ENOENT:
                         # already deleted, continue with parent
@@ -366,7 +366,7 @@ class DirectoryLayout(object):
                         return
                     else:
                         raise e
-            path = os.path.dirname(path)
+            path = path.parent
 
 
 class ExtensionsLayout(object):
@@ -503,7 +503,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
         if spec not in self._extension_maps:
             path = self.extension_file_path(spec)
-            if not os.path.exists(path):
+            if not path.exists():
                 self._extension_maps[spec] = {}
 
             else:
@@ -536,7 +536,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
         if not extensions:
             # Remove the empty extensions file
-            os.remove(path)
+            path.unlink()
             return
 
         # Create a temp file in the same directory as the actual file.

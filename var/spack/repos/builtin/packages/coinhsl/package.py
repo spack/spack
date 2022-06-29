@@ -24,7 +24,7 @@ class Coinhsl(AutotoolsPackage):
     # NOTE(oxberry1@llnl.gov): an HTTPS version of the URL below does not
     # exist
     homepage = "https://www.hsl.rl.ac.uk/ipopt/"
-    url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
+    url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(Path.cwd())
     manual_download = True
 
     # CoinHSL has a few versions that vary with respect to stability/features

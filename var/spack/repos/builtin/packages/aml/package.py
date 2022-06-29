@@ -42,7 +42,7 @@ class Aml(AutotoolsPackage):
 
         test_dir = join_path(self.test_suite.current_test_cache_dir, 'tests', 'area')
 
-        if not os.path.exists(test_dir):
+        if not test_dir.exists():
             print('Skipping aml test')
             return
 

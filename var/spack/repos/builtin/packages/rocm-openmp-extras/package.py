@@ -352,13 +352,13 @@ class RocmOpenmpExtras(Package):
         # flang1 and flang2 symlink needed for build of flang-runtime
         # libdevice symlink to rocm-openmp-extras for runtime
         # libdebug symlink to rocm-openmp-extras for runtime
-        if (os.path.islink((os.path.join(bin_dir, 'flang1')))):
+        if ((os.path.join(bin_dir, 'flang1'.is_symlink()))):
             os.unlink(os.path.join(bin_dir, 'flang1'))
-        if (os.path.islink((os.path.join(bin_dir, 'flang2')))):
+        if ((os.path.join(bin_dir, 'flang2'.is_symlink()))):
             os.unlink(os.path.join(bin_dir, 'flang2'))
-        if (os.path.islink((os.path.join(lib_dir, 'libdevice')))):
+        if ((os.path.join(lib_dir, 'libdevice'.is_symlink()))):
             os.unlink(os.path.join(lib_dir, 'libdevice'))
-        if (os.path.islink((os.path.join(llvm_prefix, 'lib-debug')))):
+        if ((os.path.join(llvm_prefix, 'lib-debug'.is_symlink()))):
             os.unlink(os.path.join(llvm_prefix, 'lib-debug'))
 
         os.symlink(os.path.join(omp_bin_dir, 'flang1'),

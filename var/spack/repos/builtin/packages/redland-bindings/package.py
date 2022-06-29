@@ -28,7 +28,7 @@ class RedlandBindings(AutotoolsPackage):
         plib = self.spec['python'].prefix.lib
         plib64 = self.spec['python'].prefix.lib64
         mybase = self.prefix.lib
-        if os.path.isdir(plib64) and not os.path.isdir(plib):
+        if plib64.is_dir() and not plib.is_dir():
             mybase = self.prefix.lib64
         pver = 'python{0}'.format(self.spec['python'].version.up_to(2))
         myplib = join_path(mybase, pver, 'site-packages')

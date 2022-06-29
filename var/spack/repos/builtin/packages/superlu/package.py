@@ -205,7 +205,7 @@ class Superlu(CMakePackage):
                              self.examples_src_dir)
         exe = 'superlu'
 
-        if not os.path.isfile(join_path(test_dir, '{0}.c'.format(exe))):
+        if not join_path(test_dir, '{0}.c'.format(exe.is_file())):
             tty.warn('Skipping superlu test:'
                      'missing file {0}.c'.format(exe))
             return

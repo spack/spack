@@ -93,7 +93,7 @@ class Faiss(AutotoolsPackage, CudaPackage):
         if '+tests' not in self.spec:
             return
 
-        if not os.path.isdir(self.prefix.bin):
+        if not self.prefix.bin.is_dir():
             os.makedirs(self.prefix.bin)
 
         def _prefix_and_install(file):

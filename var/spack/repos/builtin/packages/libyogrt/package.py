@@ -82,7 +82,7 @@ class Libyogrt(AutotoolsPackage):
         etcpath = os.path.join(prefix, "etc")
 
         # create subdirectory to hold yogrt.conf file
-        if not os.path.isdir(etcpath):
+        if not etcpath.is_dir():
             mode = 0o755
             os.mkdir(etcpath, mode)
 

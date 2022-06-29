@@ -95,7 +95,7 @@ class Esmf(MakefilePackage):
 
         # The environment variable ESMF_DIR must be set to the full pathname
         # of the top level ESMF directory before building the framework.
-        os.environ['ESMF_DIR'] = os.getcwd()
+        os.environ['ESMF_DIR'] = Path.cwd()
 
         # This variable specifies the prefix of the installation path used
         # with the install target.

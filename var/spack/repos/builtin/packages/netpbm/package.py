@@ -129,7 +129,7 @@ class Netpbm(MakefilePackage):
 
         if '+all' in spec:
             flex = join_path(spec['flex'].prefix.bin, 'flex')
-            if os.path.exists(flex):
+            if flex.exists():
                 config.append('LEX = {0}'.format(flex))
 
         config.append('TIFFLIB={0}'.format(
@@ -195,16 +195,16 @@ class Netpbm(MakefilePackage):
             install_tree("misc", prefix.lib)
             install_tree("include", prefix.include)
             install_tree(join_path("include", "netpbm"), prefix.include)
-            if os.path.exists('man'):
+            if 'man'.exists():
                 install_tree("man", prefix.man)
             # As a default a static lib is also created.
             # We could put that as an option
             staticlib = join_path('staticlink', 'libnetpbm.a')
-            if os.path.exists(staticlib):
+            if staticlib.exists():
                 install(staticlib, prefix.lib)
             else:
                 staticlib = join_path('link', 'libnetpbm.a')
-                if os.path.exists(staticlib):
+                if staticlib.exists():
                     install(staticlib, prefix.lib)
         # Make the .pc as done by installnetpbm.pl
         src = join_path('buildtools', 'pkgconfig_template')

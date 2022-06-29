@@ -109,7 +109,7 @@ class Jdk(Package):
 
         prefix = self.prefix
         java_home = prefix.libexec.java_home
-        if os.path.exists(java_home):
+        if java_home.exists():
             java_home = Executable(java_home)
             version = str(self.version.up_to(2))
             prefix = java_home('--version', version, output=str).strip()

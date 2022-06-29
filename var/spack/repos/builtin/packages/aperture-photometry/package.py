@@ -25,7 +25,7 @@ class AperturePhotometry(Package):
         mkdirp(prefix.bin)
         install('APT.jar', prefix.bin)
         java = join_path(self.spec['java'].prefix, 'bin', 'java')
-        script_sh = join_path(os.path.dirname(__file__), "APT.sh")
+        script_sh = join_path(__file__.parent, "APT.sh")
         script = join_path(prefix.bin, "apt")
         install(script_sh, script)
         set_executable(script)

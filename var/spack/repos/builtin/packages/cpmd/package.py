@@ -16,7 +16,7 @@ class Cpmd(MakefilePackage):
     manually, and run Spack"""
 
     homepage = "https://www.cpmd.org/wordpress/"
-    basedir = os.getcwd()
+    basedir = Path.cwd()
     url = "file://{0}/cpmd-v4.3.tar.gz".format(basedir)
     manual_download = True
 

@@ -291,10 +291,10 @@ class Cudnn(Package):
         if 'target=ppc64le: platform=linux' in spec:
             target_lib = os.path.join(prefix, 'targets',
                                       'ppc64le-linux', 'lib')
-            if os.path.isdir(target_lib) and not os.path.isdir(prefix.lib):
+            if target_lib.is_dir() and not prefix.lib.is_dir():
                 symlink(target_lib, prefix.lib)
             target_include = os.path.join(prefix, 'targets',
                                           'ppc64le-linux', 'include')
-            if os.path.isdir(target_include) \
-               and not os.path.isdir(prefix.include):
+            if target_include.is_dir() \
+               and not prefix.include.is_dir():
                 symlink(target_include, prefix.include)

@@ -60,7 +60,7 @@ class AoclSparse(CMakePackage):
         args = [
             "../..",
             "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
-            "-DCMAKE_CXX_COMPILER={0}".format(os.path.basename(spack_cxx))
+            "-DCMAKE_CXX_COMPILER={0}".format(spack_cxx.name)
         ]
 
         if spec.variants['build_type'].value == 'Debug':

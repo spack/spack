@@ -22,7 +22,7 @@ class VisitFfp(CMakePackage):
     maintainers = ['cyrush', 'cessenat']
 
     # Here we provide a local file that contains only the plugin in a flat directory
-    version('local', url='file://{0}/visit-ffp.tgz'.format(os.getcwd()))
+    version('local', url='file://{0}/visit-ffp.tgz'.format(Path.cwd()))
     # Below we copy the VisIt paths, ffp first shipment is with VisIt 3
     version('develop', branch='develop')
     version('3.2.0', sha256='7328fd8592f9aaf17bf79ffcffd7eaec77773926b0843d9053f39c2190dbe1c0')
@@ -60,7 +60,7 @@ class VisitFfp(CMakePackage):
         args = ['-v', str(visit.version), '-clobber', '-public', self.extname + '.xml']
         with working_dir(self.root_cmakelists_dir):
             # Regenerate the public cmake files
-            if os.path.exists("CMakeLists.txt"):
+            if "CMakeLists.txt".exists():
                 os.unlink('CMakeLists.txt')
             which("xml2cmake")(*args)
             # spack extension activate : alter VISIT_PLUGIN_DIR ;

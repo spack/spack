@@ -33,7 +33,7 @@ class Dsdp(MakefilePackage):
 
         # STEP 1: Set DSDPROOT.
         make_include.filter('^#DSDPROOT.*=.*',
-                            'DSDPROOT = {0}'.format(os.getcwd()))
+                            'DSDPROOT = {0}'.format(Path.cwd()))
 
         # STEP 2: Set the name of the C compiler.
         make_include.filter('^CC.*=.*', 'CC = {0}'.format(spack_cc))

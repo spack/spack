@@ -18,7 +18,7 @@ class Targetp(Package):
        https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.cbs.dtu.dk/services/TargetP/"
-    url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
+    url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('1.1b', '80233d0056e11abfd22a4ce73d1808c6')

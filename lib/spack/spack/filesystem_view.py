@@ -58,7 +58,7 @@ def view_symlink(src, dst, **kwargs):
 def view_hardlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.link(src, dst)
+    dst.hardlink_to(src)
 
 
 def view_copy(src, dst, view, spec=None):
@@ -107,7 +107,7 @@ def view_copy(src, dst, view, spec=None):
                 prefixes=prefix_to_projection
             )
         try:
-            stat = os.stat(src)
+            stat = src.stat()
             os.chown(dst, stat.st_uid, stat.st_gid)
         except OSError:
             tty.debug('Can\'t change the permissions for %s' % dst)
@@ -291,7 +291,7 @@ class YamlFilesystemView(FilesystemView):
         if not self.projections:
             # Read projections file from view
             self.projections = self.read_projections()
-        elif not os.path.exists(self.projections_path):
+        elif not self.projections_path.exists():
             # Write projections file to new view
             self.write_projections()
         else:
@@ -308,12 +308,12 @@ class YamlFilesystemView(FilesystemView):
 
     def write_projections(self):
         if self.projections:
-            mkdirp(os.path.dirname(self.projections_path))
+            mkdirp(self.projections_path.parent)
             with open(self.projections_path, 'w') as f:
                 f.write(s_yaml.dump_config({'projections': self.projections}))
 
     def read_projections(self):
-        if os.path.exists(self.projections_path):
+        if self.projections_path.exists():
             with open(self.projections_path, 'r') as f:
                 projections_data = s_yaml.load(f)
                 spack.config.validate(projections_data,
@@ -484,7 +484,7 @@ class YamlFilesystemView(FilesystemView):
             # metadata directory.
             if len([s for s in specs if needs_file(s, file)]) <= 1:
                 tty.debug("Removing file " + file)
-                os.remove(file)
+                file.unlink()
 
     def check_added(self, spec):
         assert spec.concrete
@@ -608,7 +608,7 @@ class YamlFilesystemView(FilesystemView):
 
         specs = []
         for md_dir in md_dirs:
-            if os.path.exists(md_dir):
+            if md_dir.exists():
                 for name_dir in os.listdir(md_dir):
                     filename = os.path.join(md_dir, name_dir,
                                             spack.store.layout.spec_file_name)
@@ -725,7 +725,7 @@ class YamlFilesystemView(FilesystemView):
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)
-        assert os.path.exists(path)
+        assert path.exists()
         shutil.rmtree(path)
 
     def _check_no_ext_conflicts(self, spec):
@@ -766,7 +766,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Ignore spack meta data folder.
         def skip_list(file):
-            return os.path.basename(file) == spack.store.layout.metadata_dir
+            return file.name == spack.store.layout.metadata_dir
 
         visitor = SourceMergeVisitor(ignore=skip_list)
 

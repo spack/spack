@@ -86,7 +86,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
     pkg = spack.repo.get('trivial-pkg-with-valid-hash')
-    local_url_basename = os.path.basename(pkg.url)
+    local_url_basename = pkg.url.name
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, 'w') as f:
         f.write(pkg.hashed_content)
@@ -254,7 +254,7 @@ def test_mirror_destroy(install_mockery_mutable_config,
     # Destroy mirror by name
     mirror('destroy', '-m', 'atest')
 
-    assert(not os.path.exists(mirror_dir.strpath))
+    assert(not mirror_dir.strpath.exists())
 
     buildcache('create', '-u', '-a', '-f', '-d', mirror_dir.strpath, spec_name)
 
@@ -264,7 +264,7 @@ def test_mirror_destroy(install_mockery_mutable_config,
     # Destroy mirror by url
     mirror('destroy', '--mirror-url', mirror_url)
 
-    assert(not os.path.exists(mirror_dir.strpath))
+    assert(not mirror_dir.strpath.exists())
 
     uninstall('-y', spec_name)
     mirror('remove', 'atest')

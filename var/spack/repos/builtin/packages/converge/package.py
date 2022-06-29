@@ -208,11 +208,11 @@ class Converge(Package):
 
         with working_dir(prefix.bin):
             # Create generic symlinks to all executables
-            if not os.path.exists('converge'):
+            if not 'converge'.exists():
                 os.symlink(converge, 'converge')
-            if not os.path.exists('post_convert'):
+            if not 'post_convert'.exists():
                 os.symlink(post_convert, 'post_convert')
-            if not os.path.exists('make_surface'):
+            if not 'make_surface'.exists():
                 os.symlink(make_surface, 'make_surface')
 
     def setup_run_environment(self, env):

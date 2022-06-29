@@ -392,8 +392,8 @@ class CDash(Reporter):
         self.finalize_report()
 
     def initialize_report(self, directory_name):
-        if not os.path.exists(directory_name):
-            os.mkdir(directory_name)
+        if not directory_name.exists():
+            directory_name.mkdir()
         report_data = {}
         report_data['buildname'] = self.buildname
         report_data['buildstamp'] = self.buildstamp

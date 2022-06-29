@@ -58,7 +58,7 @@ class GaussianView(Package):
 
     def url_for_version(self, version):
         return "file://{0}/gv{1}-linux-x86_64.tbz".format(
-            os.getcwd(),
+            Path.cwd(),
             version.up_to(2).joined)
 
     def install(self, spec, prefix):

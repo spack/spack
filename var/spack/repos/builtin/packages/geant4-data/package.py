@@ -149,4 +149,4 @@ class Geant4Data(BundlePackage):
         with working_dir(self.datadir, create=True):
             for s in spec.dependencies():
                 for d in glob.glob('{0}/data/*'.format(s.prefix.share)):
-                    os.symlink(d, os.path.basename(d))
+                    os.symlink(d, d.name)

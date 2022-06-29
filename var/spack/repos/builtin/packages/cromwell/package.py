@@ -27,7 +27,7 @@ class Cromwell(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "cromwell.sh")
+        script_sh = join_path(__file__.parent, "cromwell.sh")
         script = prefix.bin.cromwell
         install(script_sh, script)
         set_executable(script)

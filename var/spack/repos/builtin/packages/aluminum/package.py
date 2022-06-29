@@ -108,8 +108,8 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):
             clang = self.compiler.cc
-            clang_bin = os.path.dirname(clang)
-            clang_root = os.path.dirname(clang_bin)
+            clang_bin = clang.parent
+            clang_root = clang_bin.parent
             args.extend([
                 '-DOpenMP_DIR={0}'.format(clang_root)])
 

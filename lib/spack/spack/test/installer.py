@@ -434,7 +434,7 @@ def test_fake_install(install_mockery):
 
     pkg = spec.package
     inst._do_fake_install(pkg)
-    assert os.path.isdir(pkg.prefix.lib)
+    assert pkg.prefix.lib.is_dir()
 
 
 def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
@@ -475,7 +475,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
 
     repo = mock_packages.repos[0]
     dest_pkg = repo.filename_for_package_name(spec_name)
-    assert os.path.isfile(dest_pkg)
+    assert dest_pkg.is_file()
 
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
@@ -544,8 +544,8 @@ def test_clear_failures_success(install_mockery):
     assert len(os.listdir(spack.store.db._failure_dir)) == 0
 
     # Ensure the core directory and failure lock file still exist
-    assert os.path.isdir(spack.store.db._failure_dir)
-    assert os.path.isfile(spack.store.db.prefix_fail_path)
+    assert spack.store.db._failure_dir.is_dir()
+    assert spack.store.db.prefix_fail_path.is_file()
 
 
 def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
@@ -1211,7 +1211,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     # Make sure the package is not marked uninstalled and the original dir
     # is back.
     assert not fake_db.called
-    assert os.path.exists(installed_file)
+    assert installed_file.exists()
 
 
 def test_overwrite_install_backup_failure(temporary_store, config, mock_packages,
@@ -1226,7 +1226,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
             # Remove the backup directory, which is at the same level as the prefix,
             # starting with .backup
             backup_glob = os.path.join(
-                os.path.dirname(os.path.normpath(task.pkg.prefix)),
+                os.path.normpath(task.pkg.prefix.parent),
                 '.backup*'
             )
             for backup in glob.iglob(backup_glob):

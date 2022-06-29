@@ -188,8 +188,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
         # Add support for OpenMP with external (Brew) clang
         if spec.satisfies('%clang +openmp platform=darwin'):
             clang = self.compiler.cc
-            clang_bin = os.path.dirname(clang)
-            clang_root = os.path.dirname(clang_bin)
+            clang_bin = clang.parent
+            clang_root = clang_bin.parent
             args.extend([
                 '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
                 '-DOpenMP_CXX_LIB_NAMES=libomp',

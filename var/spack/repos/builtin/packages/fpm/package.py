@@ -57,8 +57,8 @@ class Fpm(Package):
 
         # Perform `chmod +x ./install.sh`
         script_path = './install.sh'
-        st = os.stat(script_path)
-        os.chmod(script_path, st.st_mode | stat.S_IXUSR)
+        st = script_path.stat()
+        script_path.chmod(st.st_mode | stat.S_IXUSR)
 
         script = Executable(script_path)
         script(*self.install_args())

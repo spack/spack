@@ -22,7 +22,7 @@ class Sigcpp(CMakePackage):
 
     @run_after('install')
     def drop_doc(self):
-        if self.spec.satisfies('~doc') and os.path.isdir(prefix.share):
+        if self.spec.satisfies('~doc') and prefix.share.is_dir():
             shutil.rmtree(prefix.share)
 
     @run_after('install')

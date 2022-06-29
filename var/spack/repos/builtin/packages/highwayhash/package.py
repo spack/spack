@@ -26,12 +26,12 @@ class Highwayhash(MakefilePackage):
         mkdirp(prefix.include)
 
         # The following are CPU and compiler flag specific
-        if(os.path.exists('libhighwayhash.a')):
+        if('libhighwayhash.a'.exists()):
             mkdirp(prefix.lib)
             install('libhighwayhash.a', prefix.lib)
-        if(os.path.exists('highwayhash_test')):
+        if('highwayhash_test'.exists()):
             install('highwayhash_test', prefix.bin)
-        if(os.path.exists('benchmark')):
+        if('benchmark'.exists()):
             install('benchmark', prefix.bin)
 
         # Always installed

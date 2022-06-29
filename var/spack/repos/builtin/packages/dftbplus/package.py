@@ -72,7 +72,7 @@ class Dftbplus(MakefilePackage):
 
         And the last thing we do here is to set the installdir
         """
-        dircwd = os.getcwd()
+        dircwd = Path.cwd()
         makefile = FileFilter("makefile")
         makefile.filter("ROOT := .*", "ROOT := {0}".format(dircwd))
 

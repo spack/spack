@@ -156,7 +156,7 @@ class Rivet(AutotoolsPackage):
     @run_before('configure')
     def copy_gsl_m4(self):
         if self.spec.satisfies('@2.6.2:'):
-            copy(join_path(os.path.dirname(__file__), 'gsl.m4'), 'm4/gsl.m4')
+            copy(join_path(__file__.parent, 'gsl.m4'), 'm4/gsl.m4')
 
     @property
     def force_autoreconf(self):

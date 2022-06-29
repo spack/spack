@@ -108,11 +108,11 @@ class Openloops(Package):
                     f.write('-mcmodel=medium\n')
 
         if self.spec.satisfies('@:1 processes=lcg.coll'):
-            copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')
+            copy(join_path(__file__.parent, 'sft1.coll'), 'lcg.coll')
         elif self.spec.satisfies('@2:2.1.2 processes=lcg.coll'):
-            copy(join_path(os.path.dirname(__file__), 'sft2.coll'), 'lcg.coll')
+            copy(join_path(__file__.parent, 'sft2.coll'), 'lcg.coll')
         elif self.spec.satisfies('@2.1.2:2 processes=lcg.coll'):
-            copy(join_path(os.path.dirname(__file__), 'sft3.coll'), 'lcg.coll')
+            copy(join_path(__file__.parent, 'sft3.coll'), 'lcg.coll')
 
     def setup_build_environment(self, env):
         # Make sure that calling openloops picks up the scons that is shipped

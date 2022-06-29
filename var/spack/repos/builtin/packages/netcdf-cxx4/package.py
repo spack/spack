@@ -134,7 +134,7 @@ class NetcdfCxx4(AutotoolsPackage):
 
         with working_dir(self.build_directory):
             fname = 'VERSION'
-            if os.path.exists(fname):
+            if fname.exists():
                 os.rename(fname, '{0}.txt'.format(fname))
 
     def check(self):

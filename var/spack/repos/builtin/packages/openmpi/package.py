@@ -521,7 +521,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             match = re.search(r'\bC compiler absolute: (\S+)', output)
             if match:
                 compiler_spec = get_spack_compiler_spec(
-                    os.path.dirname(match.group(1)))
+                    match.group(1.parent))
                 if compiler_spec:
                     variants.append("%" + str(compiler_spec))
             results.append(' '.join(variants))
@@ -841,7 +841,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             files.extend(find(self.spec.prefix.lib.pkgconfig,
                               ['ompi-{0}.pc'.format(t) for t in lang_tokens]))
 
-            x = FileFilter(*[f for f in files if not os.path.islink(f)])
+            x = FileFilter(*[f for f in files if not f.is_symlink()])
 
             # Replace self.compiler.cc_rpath_arg, which have been added as
             # '--with-wrapper-ldflags', with rpath_arg in the respective
@@ -863,7 +863,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     @run_after('install')
     def filter_pc_files(self):
         files = find(self.spec.prefix.lib.pkgconfig, '*.pc')
-        x = FileFilter(*[f for f in files if not os.path.islink(f)])
+        x = FileFilter(*[f for f in files if not f.is_symlink()])
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
         x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
@@ -889,7 +889,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                         self.prefix.bin.shmemrun,
                         self.prefix.bin.oshrun
                         ]
-            script_stub = join_path(os.path.dirname(__file__),
+            script_stub = join_path(__file__.parent,
                                     "nolegacylaunchers.sh")
             for exe in exe_list:
                 try:
@@ -1059,7 +1059,7 @@ def get_spack_compiler_spec(path):
     # check if the compiler actually matches the one we want
     for spack_compiler in spack_compilers:
         if (spack_compiler.cc and
-                os.path.dirname(spack_compiler.cc) == path):
+                spack_compiler.cc.parent == path):
             actual_compiler = spack_compiler
             break
     return actual_compiler.spec if actual_compiler else None

@@ -64,20 +64,20 @@ def test_fetch(
             assert h() == t.revision
 
             file_path = os.path.join(pkg.stage.source_path, t.file)
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
-            os.unlink(file_path)
-            assert not os.path.isfile(file_path)
+            file_path.unlink()
+            assert not file_path.is_file()
 
             untracked_file = 'foobarbaz'
             touch(untracked_file)
-            assert os.path.isfile(untracked_file)
+            assert untracked_file.is_file()
             pkg.do_restage()
-            assert not os.path.isfile(untracked_file)
+            assert not untracked_file.is_file()
 
-            assert os.path.isdir(pkg.stage.source_path)
-            assert os.path.isfile(file_path)
+            assert pkg.stage.source_path.is_dir()
+            assert file_path.is_file()
 
             assert h() == t.revision
 

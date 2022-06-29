@@ -69,7 +69,7 @@ def add_extra_files(foam_pkg, common, local, **kwargs):
     """
     outdir = foam_pkg.stage.source_path
 
-    indir  = join_path(os.path.dirname(__file__), 'common')
+    indir  = join_path(__file__.parent, 'common')
     for f in common:
         tty.info('Added file {0}'.format(f))
         install(join_path(indir, f), join_path(outdir, f))
@@ -162,7 +162,7 @@ def rewrite_environ_files(environ, **kwargs):
          cshell[=None]   If set, the name of the C-shell file to rewrite.
     """
     rcfile = kwargs.get('posix', None)
-    if rcfile and os.path.isfile(rcfile):
+    if rcfile and rcfile.is_file():
         for k, v in environ.items():
             regex = r'^(\s*export\s+{0})=.*$'.format(k)
             if not v:
@@ -174,7 +174,7 @@ def rewrite_environ_files(environ, **kwargs):
             filter_file(regex, replace, rcfile, backup=False)
 
     rcfile = kwargs.get('cshell', None)
-    if rcfile and os.path.isfile(rcfile):
+    if rcfile and rcfile.is_file():
         for k, v in environ.items():
             regex = r'^(\s*setenv\s+{0})\s+.*$'.format(k)
             if not v:
@@ -202,10 +202,10 @@ def pkglib(package, pre=None):
     Optional parameter 'pre' to provide alternative prefix
     """
     libdir = package.prefix.lib64
-    if not os.path.isdir(libdir):
+    if not libdir.is_dir():
         libdir = package.prefix.lib
     if pre:
-        return join_path(pre, os.path.basename(libdir))
+        return join_path(pre, libdir.name)
     else:
         return libdir
 
@@ -227,9 +227,9 @@ def mplib_content(spec, pre=None):
         libname = 'mpich'
 
     if pre:
-        bin = join_path(pre, os.path.basename(bin))
-        inc = join_path(pre, os.path.basename(inc))
-        lib = join_path(pre, os.path.basename(lib))
+        bin = join_path(pre, bin.name)
+        inc = join_path(pre, inc.name)
+        lib = join_path(pre, lib.name)
     else:
         pre = mpi_spec.prefix
 
@@ -430,7 +430,7 @@ class Openfoam(Package):
 
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
-        if os.path.isfile(bashrc):
+        if bashrc.is_file():
             # post-install: source the installed bashrc
             try:
                 mods = EnvironmentModifications.from_sourcing_file(
@@ -524,7 +524,7 @@ class Openfoam(Package):
 
         # Prior to 1812, required OpenFOAM-v{VER} directory when sourcing
         projdir = "OpenFOAM-v{0}".format(self.version)
-        if not os.path.exists(join_path(self.stage.path, projdir)):
+        if not join_path(self.stage.path, projdir.exists()):
             tty.info('Added directory link {0}'.format(projdir))
             os.symlink(
                 os.path.relpath(
@@ -551,7 +551,7 @@ class Openfoam(Package):
         # PATH, LD_LIBRARY_PATH.
         for rcdir in ['config.sh', 'config.csh']:
             rcfile = join_path('etc', rcdir, 'settings')
-            if os.path.isfile(rcfile):
+            if rcfile.is_file():
                 filter_file(
                     'WM_PROJECT_INST_DIR/',
                     'WM_PROJECT_DIR/',
@@ -564,7 +564,7 @@ class Openfoam(Package):
         """
         # Set 'trapFpe 0' in etc/controlDict
         controlDict = 'etc/controlDict'
-        if os.path.exists(controlDict):
+        if controlDict.exists():
             filter_file(r'trapFpe\s+\d+\s*;', 'trapFpe 0;',
                         controlDict, backup=False)
 
@@ -593,14 +593,14 @@ class Openfoam(Package):
         dst = arch_rules + 'Fujitsu'  # self.compiler
         self.configure_trapFpe_off()  # LLVM may falsely trigger FPE
 
-        if os.path.exists(dst):
+        if dst.exists():
             return
 
         # Handle rules/<ARCH><COMP> or rules/<ARCH>/<COMP>
-        if not os.path.exists(src):
+        if not src.exists():
             src = join_path(arch_rules, 'Clang')
             dst = join_path(arch_rules, 'Fujitsu')  # self.compiler
-            if os.path.exists(dst):
+            if dst.exists():
                 return
 
         tty.info('Add Fujitsu wmake rules')
@@ -787,11 +787,11 @@ class Openfoam(Package):
         directory where WM_PROJECT_DIR was installed.
         """
         mkdirp(self.projectdir)
-        projdir = os.path.basename(self.projectdir)
+        projdir = self.projectdir.name
 
         # Filtering: bashrc, cshrc
         edits = {
-            'WM_PROJECT_INST_DIR': os.path.dirname(self.projectdir),
+            'WM_PROJECT_INST_DIR': self.projectdir.parent,
             'WM_PROJECT_DIR': join_path('$WM_PROJECT_INST_DIR', projdir),
         }
         etc_dir = join_path(self.projectdir, 'etc')
@@ -812,7 +812,7 @@ class Openfoam(Package):
 
         files = [
             f for f in glob.glob("*")
-            if os.path.isfile(f) and not ignored.search(f)
+            if f.is_file() and not ignored.search(f)
         ]
         for f in files:
             install(f, self.projectdir)
@@ -825,7 +825,7 @@ class Openfoam(Package):
             dirs.extend(['applications', 'src', 'tutorials'])
 
         for d in dirs:
-            if os.path.isdir(d):
+            if d.is_dir():
                 install_tree(
                     d,
                     join_path(self.projectdir, d),
@@ -861,16 +861,16 @@ class Openfoam(Package):
 
         # ln -s platforms/linux64GccXXX/lib lib
         with working_dir(self.projectdir):
-            if os.path.isdir(self.archlib):
+            if self.archlib.is_dir():
                 os.symlink(self.archlib, 'lib')
 
         # (cd bin && ln -s ../platforms/linux64GccXXX/bin/* .)
         with working_dir(join_path(self.projectdir, 'bin')):
             for f in [
                 f for f in glob.glob(join_path('..', self.archbin, "*"))
-                if os.path.isfile(f)
+                if f.is_file()
             ]:
-                os.symlink(f, os.path.basename(f))
+                os.symlink(f, f.name)
 
 
 # -----------------------------------------------------------------------------
@@ -1001,7 +1001,7 @@ class OpenfoamArch(object):
 
         arch_dir = os.path.join(rules_dir, self.arch)
         comp_rules = arch_dir + self.compiler
-        if os.path.isdir(comp_rules):
+        if comp_rules.is_dir():
             return comp_rules
         else:
             return os.path.join(arch_dir, self.compiler)
@@ -1012,7 +1012,7 @@ class OpenfoamArch(object):
         # Insist on a wmake rule for this architecture/compiler combination
         rule_dir = self._rule_directory(projdir)
 
-        if not os.path.isdir(rule_dir):
+        if not rule_dir.is_dir():
             raise InstallError(
                 'No wmake rule for {0} {1}'.format(self.arch, self.compiler))
         return True

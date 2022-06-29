@@ -31,7 +31,7 @@ class Trf(AutotoolsPackage):
     version('4.07b',
             sha256='a3a760c7b74c9603fbc08d95e8fa696c00f35a2f179b0bd63b2b13757ad3b471',
             expand=False,
-            url='file://{0}/trf407b.linux64'.format(os.getcwd()),
+            url='file://{0}/trf407b.linux64'.format(Path.cwd()),
             deprecated=True)
 
     @when('@4.07b')

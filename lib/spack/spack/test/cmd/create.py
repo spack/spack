@@ -83,7 +83,7 @@ def test_create_template(parser, mock_test_repo, args, name, expected):
     spack.cmd.create.create(parser, constr_args)
 
     filename = repo.filename_for_package_name(name)
-    assert os.path.exists(filename)
+    assert filename.exists()
 
     with open(filename, 'r') as package_file:
         content = ' '.join(package_file.readlines())

@@ -112,7 +112,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         # set SLEPC_DIR for installation
         # Note that one should set the current (temporary) directory instead
         # its symlink in spack/stage/ !
-        os.environ['SLEPC_DIR'] = os.getcwd()
+        os.environ['SLEPC_DIR'] = Path.cwd()
 
         if self.spec.satisfies('%cce'):
             filter_file('          flags = l',
@@ -171,7 +171,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         """Run stand alone test: hello"""
         test_dir = self.test_suite.current_test_data_dir
 
-        if not os.path.exists(test_dir):
+        if not test_dir.exists():
             print('Skipping slepc test')
             return
 

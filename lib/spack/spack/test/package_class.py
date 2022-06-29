@@ -170,11 +170,11 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     emsg_dir = 'Expected {0} to be a directory'
     emsg_file = 'Expected {0} to be a file'
     for s in srcs:
-        assert os.path.exists(s), 'Expected {0} to exist'.format(s)
+        assert s.exists(), 'Expected {0} to exist'.format(s)
         if os.path.splitext(s)[1]:
-            assert os.path.isfile(s), emsg_file.format(s)
+            assert s.is_file(), emsg_file.format(s)
         else:
-            assert os.path.isdir(s), emsg_dir.format(s)
+            assert s.is_dir(), emsg_dir.format(s)
 
     pkg.cache_extra_test_sources(extras)
 
@@ -185,13 +185,13 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
     msg = 'Expected {0} to{1} exist'
     for pd in poss_dests:
         if pd in exp_dests:
-            assert os.path.exists(pd), msg.format(pd, '')
+            assert pd.exists(), msg.format(pd, '')
             if os.path.splitext(pd)[1]:
-                assert os.path.isfile(pd), emsg_file.format(pd)
+                assert pd.is_file(), emsg_file.format(pd)
             else:
-                assert os.path.isdir(pd), emsg_dir.format(pd)
+                assert pd.is_dir(), emsg_dir.format(pd)
         else:
-            assert not os.path.exists(pd), msg.format(pd, ' not')
+            assert not pd.exists(), msg.format(pd, ' not')
 
     # Perform a little cleanup
-    shutil.rmtree(os.path.dirname(source_path))
+    shutil.rmtree(source_path.parent)

@@ -45,10 +45,10 @@ def develop(parser, args):
         # download all dev specs
         for name, entry in env.dev_specs.items():
             path = entry.get('path', name)
-            abspath = path if os.path.isabs(path) else os.path.join(
+            abspath = path if path.is_absolute() else os.path.join(
                 env.path, path)
 
-            if os.path.exists(abspath):
+            if abspath.exists():
                 msg = "Skipping developer download of %s" % entry['spec']
                 msg += " because its path already exists."
                 tty.msg(msg)
@@ -75,18 +75,18 @@ def develop(parser, args):
 
     # get absolute path to check
     abspath = path
-    if not os.path.isabs(abspath):
+    if not abspath.is_absolute():
         abspath = os.path.join(env.path, path)
 
     # clone default: only if the path doesn't exist
     clone = args.clone
     if clone is None:
-        clone = not os.path.exists(abspath)
+        clone = not abspath.exists()
 
-    if not clone and not os.path.exists(abspath):
+    if not clone and not abspath.exists():
         raise SpackError("Provided path %s does not exist" % abspath)
 
-    if clone and os.path.exists(abspath):
+    if clone and abspath.exists():
         if args.force:
             shutil.rmtree(abspath)
         else:

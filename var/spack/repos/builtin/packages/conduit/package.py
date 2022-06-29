@@ -279,7 +279,7 @@ class Conduit(CMakePackage):
             http://software.llnl.gov/conduit/building.html
         """
         spec = self.spec
-        if not os.path.isdir(spec.prefix):
+        if not spec.prefix.is_dir():
             os.mkdir(spec.prefix)
 
         #######################
@@ -371,10 +371,10 @@ class Conduit(CMakePackage):
            and ("gfortran" in f_compiler)
            and ("clang" in cpp_compiler)):
             libdir = os.path.join(os.path.dirname(
-                                  os.path.dirname(f_compiler)), "lib")
+                                  f_compiler.parent), "lib")
             flags = ""
             for _libpath in [libdir, libdir + "64"]:
-                if os.path.exists(_libpath):
+                if _libpath.exists():
                     flags += " -Wl,-rpath,{0}".format(_libpath)
             description = ("Adds a missing libstdc++ rpath")
             if flags:
@@ -410,7 +410,7 @@ class Conduit(CMakePackage):
                                                 flags))
                     # Grab lib directory for the current fortran compiler
                     libdir = os.path.join(os.path.dirname(
-                                          os.path.dirname(f_compiler)), "lib")
+                                          f_compiler.parent), "lib")
                     rpaths = "-Wl,-rpath,{0} -Wl,-rpath,{0}64".format(libdir)
 
                     flags  = "${BLT_EXE_LINKER_FLAGS} -lstdc++ " + rpaths
@@ -489,7 +489,7 @@ class Conduit(CMakePackage):
                                             mpifc_path))
 
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-            if os.path.isfile(mpiexe_bin):
+            if mpiexe_bin.is_file():
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
                 if self.spec["cmake"].satisfies('@3.10:'):
@@ -583,5 +583,5 @@ class Conduit(CMakePackage):
         cfg.write("##################################\n")
         cfg.close()
 
-        host_cfg_fname = os.path.abspath(host_cfg_fname)
+        host_cfg_fname = host_cfg_fname.resolve()
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)

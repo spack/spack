@@ -54,7 +54,7 @@ class Latex2html(AutotoolsPackage):
         # hard set the bins location once for all:
         for p in ['gs', 'ps2pdf']:
             exe = join_path(spec['ghostscript'].prefix.bin, p)
-            if os.path.exists(exe):
+            if exe.exists():
                 args.append('--with-{0}={1}'.format(p, exe))
         pnms = ['pnmcrop', 'pnmflip', 'ppmquant', 'pnmfile', 'pnmcat', 'pbmmake',
                 'ppmtogif', 'pnmtopng', 'ppmtojpeg', 'pnmcut', 'pnmpad', 'pnmrotate',
@@ -62,7 +62,7 @@ class Latex2html(AutotoolsPackage):
                 'anytopnm', 'bmptoppm', 'pcxtoppm', 'sgitopnm', 'xbmtopbm', 'xwdtopnm']
         for p in pnms:
             exe = join_path(spec['netpbm'].prefix.bin, p)
-            if os.path.exists(exe):
+            if exe.exists():
                 args.append('--with-{0}={1}'.format(p, exe))
 
         # PR #24102 at https://github.com/spack/spack/pull/24102
@@ -72,7 +72,7 @@ class Latex2html(AutotoolsPackage):
                 'lualatex', 'dvilualatex', 'kpsewhich', 'mktexlsr']
         for p in lats:
             exe = join_path(spec['texlive'].prefix.bin, self.tex_arch(), p)
-            if os.path.exists(exe):
+            if exe.exists():
                 args.append('--with-{0}={1}'.format(p, exe))
             else:
                 # This should be the only needed code if texlive where
@@ -83,7 +83,7 @@ class Latex2html(AutotoolsPackage):
         if '+svg' in spec:
             p = 'pdftocairo'
             exe = join_path(spec['poppler'].prefix.bin, p)
-            if os.path.exists(exe):
+            if exe.exists():
                 args.append('--with-{0}={1}'.format(p, exe))
             else:
                 exe = which(p)

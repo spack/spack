@@ -305,7 +305,7 @@ class Python(Package):
 
         variants = ''
         for exe in exes:
-            if os.path.basename(exe) == 'python':
+            if exe.name == 'python':
                 variants += '+pythoncmd'
                 break
         else:
@@ -346,7 +346,7 @@ class Python(Package):
             # The ensurepip module is always available, but won't work if built with
             # --without-ensurepip. A more reliable check to see if the package was built
             # with --with-ensurepip is to check for the presence of a pip executable.
-            if glob.glob(os.path.join(os.path.dirname(exes[0]), 'pip*')):
+            if glob.glob(os.path.join(exes[0].parent, 'pip*')):
                 variants += '+ensurepip'
             else:
                 variants += '~ensurepip'
@@ -536,7 +536,7 @@ class Python(Package):
         shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
         os.makedirs(prefix.DLLs)
         for lib in shared_libraries:
-            file_name = os.path.basename(lib)
+            file_name = lib.name
             if file_name.endswith(".exe") or\
                 (file_name.endswith(".dll") and "python" in file_name)\
                 or "vcruntime" in file_name:
@@ -746,7 +746,7 @@ class Python(Package):
         dst = os.path.join(prefix.lib,
                            'python{0}'.format(self.version.up_to(2)),
                            'lib-dynload')
-        if os.path.isdir(src) and not os.path.isdir(dst):
+        if src.is_dir() and not dst.is_dir():
             mkdirp(dst)
             for f in os.listdir(src):
                 os.symlink(os.path.join(src, f),
@@ -762,7 +762,7 @@ class Python(Package):
     def install_python_gdb(self):
         # https://devguide.python.org/gdb/
         src = os.path.join('Tools', 'gdb', 'libpython.py')
-        if os.path.exists(src):
+        if src.exists():
             install(src, self.command.path + '-gdb.py')
 
     @run_after('install')
@@ -879,7 +879,7 @@ class Python(Package):
                 path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
             else:
                 path = os.path.join(self.prefix, 'python{0}.exe'.format(ver))
-            if os.path.exists(path):
+            if path.exists():
                 return Executable(path)
 
         else:
@@ -1037,7 +1037,7 @@ config.update(get_paths())
 
         # Get the active Xcode environment's Framework location.
         macos_developerdir = os.environ.get('DEVELOPER_DIR')
-        if macos_developerdir and os.path.exists(macos_developerdir):
+        if macos_developerdir and macos_developerdir.exists():
             macos_developerdir = os.path.join(
                 macos_developerdir, 'Library', 'Frameworks')
         else:
@@ -1049,7 +1049,7 @@ config.update(get_paths())
         directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
         for directory in directories:
             path = os.path.join(directory, library)
-            if os.path.exists(path):
+            if path.exists():
                 return LibraryList(path)
 
     @property
@@ -1089,7 +1089,7 @@ config.update(get_paths())
         directory = self.config_vars['include']
         config_h = self.config_vars['config_h_filename']
 
-        if os.path.exists(config_h):
+        if config_h.exists():
             headers = HeaderList(config_h)
         else:
             headers = find_headers('pyconfig', directory)
@@ -1099,7 +1099,7 @@ config.update(get_paths())
                 msg = 'Unable to locate {} headers in {}'
                 raise spack.error.NoHeadersError(msg.format(self.name, directory))
 
-        headers.directories = [os.path.dirname(config_h)]
+        headers.directories = [config_h.parent]
         return headers
 
     # https://docs.python.org/3/library/sysconfig.html#installation-paths
@@ -1197,7 +1197,7 @@ config.update(get_paths())
         # of a Spack built python. See issue #7128
         env.set('PYTHONHOME', self.home)
 
-        path = os.path.dirname(self.command.path)
+        path = self.command.path.parent
         if not is_system_path(path):
             env.prepend_path('PATH', path)
 
@@ -1345,7 +1345,7 @@ config.update(get_paths())
         for ext in sorted(exts.values()):
             easy_pth = join_path(ext.prefix, self.easy_install_file)
 
-            if not os.path.isfile(easy_pth):
+            if not easy_pth.is_file():
                 continue
 
             with open(easy_pth) as f:
@@ -1368,7 +1368,7 @@ config.update(get_paths())
         main_pth = join_path(prefix, self.easy_install_file)
 
         if not paths:
-            if os.path.isfile(main_pth):
+            if main_pth.is_file():
                 os.remove(main_pth)
 
         else:
@@ -1417,7 +1417,7 @@ config.update(get_paths())
         for src, dst in merge_map.items():
             if not path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
-            elif not os.path.islink(src):
+            elif not src.is_symlink():
                 copy(src, dst)
                 if is_nonsymlink_exe_with_shebang(src):
                     filter_file(

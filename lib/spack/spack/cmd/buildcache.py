@@ -550,7 +550,7 @@ def copy_fn(args):
     specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
 
     # Make sure directory structure exists before attempting to copy
-    os.makedirs(os.path.dirname(tarball_dest_path))
+    os.makedirs(tarball_dest_path.parent)
 
     # Now copy the specfile and tarball files to the destination mirror
     tty.msg('Copying {0}'.format(tarball_rel_path))
@@ -661,7 +661,7 @@ def sync_fn(args):
 
             stage = Stage(src_url,
                           name="temporary_file",
-                          path=os.path.dirname(local_path),
+                          path=local_path.parent,
                           keep=True)
 
             try:

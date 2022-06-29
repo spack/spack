@@ -59,7 +59,7 @@ class Lapackpp(CMakePackage):
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
-        if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
+        if join_path(self.build_directory, 'test', 'tester'.is_file()):
             with working_dir(self.build_directory):
                 make('check')
         else:

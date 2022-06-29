@@ -65,8 +65,8 @@ def test_buildcache(mock_archive, tmpdir):
 echo $PATH"""
     f.write(body)
     f.close()
-    st = os.stat(patchelfscr)
-    os.chmod(patchelfscr, st.st_mode | stat.S_IEXEC)
+    st = patchelfscr.stat()
+    patchelfscr.chmod(st.st_mode | stat.S_IEXEC)
 
     # Install the test package
     spec = Spec('trivial-install-test-package')

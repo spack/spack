@@ -71,10 +71,10 @@ class Pdt(AutotoolsPackage):
         # Link arch-specific directories into prefix
         for dir in os.listdir(self.prefix):
             path = join_path(self.prefix, dir)
-            if not os.path.isdir(path) or os.path.islink(path):
+            if not path.is_dir() or path.is_symlink():
                 continue
             for d in ('bin', 'lib'):
                 src = join_path(path, d)
                 dst = join_path(self.prefix, d)
-                if os.path.isdir(src) and not os.path.exists(dst):
+                if src.is_dir() and not dst.exists():
                     os.symlink(join_path(dir, d), dst)

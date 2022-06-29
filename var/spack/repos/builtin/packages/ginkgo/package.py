@@ -99,7 +99,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             except UnsupportedCompilerFlag:
                 raise InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
-        cxx_is_dpcpp = os.path.basename(self.compiler.cxx) == "dpcpp"
+        cxx_is_dpcpp = self.compiler.cxx.name == "dpcpp"
         if self.spec.satisfies('+oneapi') and not cxx_is_dpcpp:
             raise InstallError("Ginkgo's oneAPI backend requires the" +
                                "DPC++ compiler as main CXX compiler.")

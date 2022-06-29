@@ -11,6 +11,8 @@ dependencies.
 """
 import os
 
+from pathlib import Path
+
 import llnl.util.filesystem
 
 #: This file lives in $prefix/lib/spack/spack/__file__
@@ -85,8 +87,8 @@ gpg_path           = os.path.join(opt_path, "spack", "gpg")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CACHE_PATH')
-                              or "~%s.spack" % os.sep)
+    return (os.getenv('SPACK_USER_CACHE_PATH')
+                              or "~%s.spack" % os.sep).expanduser()
 
 
 user_cache_path = _get_user_cache_path()
@@ -121,14 +123,14 @@ default_misc_cache_path = os.path.join(user_cache_path, 'cache')
 
 # User configuration and caches in $HOME/.spack
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv('SPACK_USER_CONFIG_PATH') or
-                              "~%s.spack" % os.sep)
+    return Path(os.getenv('SPACK_USER_CONFIG_PATH') or
+                              "~%s.spack" % os.sep).expanduser()
 
 
 # Configuration in /etc/spack on the system
 def _get_system_config_path():
-    return os.path.expanduser(os.getenv('SPACK_SYSTEM_CONFIG_PATH') or
-                              os.sep + os.path.join('etc', 'spack'))
+    return Path(os.getenv('SPACK_SYSTEM_CONFIG_PATH') or
+                              os.sep + os.path.join('etc', 'spack')).expanduser()
 
 
 #: User configuration location

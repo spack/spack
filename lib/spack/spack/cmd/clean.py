@@ -78,7 +78,7 @@ def clean(parser, args):
         spack.stage.purge()
         # Temp directory where buildcaches are extracted
         extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
-        if os.path.exists(extract_tmp):
+        if extract_tmp.exists():
             tty.debug('Removing {0}'.format(extract_tmp))
             shutil.rmtree(extract_tmp)
     if args.downloads:
@@ -101,7 +101,7 @@ def clean(parser, args):
                     if f.endswith('.pyc') or f.endswith('.pyo'):
                         fname = os.path.join(root, f)
                         tty.debug('Removing {0}'.format(fname))
-                        os.remove(fname)
+                        fname.unlink()
                 for d in dirs:
                     if d == '__pycache__':
                         dname = os.path.join(root, d)

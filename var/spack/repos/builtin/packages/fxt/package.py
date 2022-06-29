@@ -43,8 +43,8 @@ class Fxt(AutotoolsPackage):
                         '#define FXT_MAX_PARAMS 16', 'tools/fxt.h')
 
     def autoreconf(self, spec, prefix):
-        if not os.path.isfile("./configure"):
-            if os.path.isfile("./autogen.sh"):
+        if not "./configure".is_file():
+            if "./autogen.sh".is_file():
                 subprocess.call(['libtoolize', '--copy', '--force'], shell=False)
                 subprocess.check_call("./autogen.sh")
             else:

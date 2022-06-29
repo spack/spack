@@ -17,7 +17,7 @@ class Idl(Package):
 
     homepage = "https://www.harrisgeospatial.com/Software-Technology/IDL"
     manual_download = True
-    url = "file://{0}/idl8.7-linux.tar.gz".format(os.getcwd())
+    url = "file://{0}/idl8.7-linux.tar.gz".format(Path.cwd())
 
     maintainers = ['francinelapid']
 

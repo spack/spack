@@ -391,7 +391,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     # relative paths without source information are relative to cwd
     assert spack_path.canonicalize_path(
         os.path.join('foo', 'bar', 'baz')
-    ) == os.path.abspath(os.path.join('foo', 'bar', 'baz'))
+    ) == os.path.join('foo', 'bar', 'baz').resolve()
 
     # relative paths with source information are relative to the file
     spack.config.set(
@@ -1229,7 +1229,7 @@ def test_user_config_path_is_overridable(working_env):
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ['SPACK_USER_CONFIG_PATH'] = ''
-    assert os.path.expanduser("~%s.spack" % os.sep) == \
+    assert Path("~%s.spack" % os.sep).parent == \
         spack.paths._get_user_config_path()
 
 
@@ -1264,5 +1264,5 @@ def test_user_cache_path_is_overridable(working_env):
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ['SPACK_USER_CACHE_PATH'] = ''
-    assert os.path.expanduser("~%s.spack" % os.sep) == \
+    assert Path("~%s.spack" % os.sep).parent == \
         spack.paths._get_user_cache_path()

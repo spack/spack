@@ -58,7 +58,7 @@ class PpopenApplFem(MakefilePackage):
         for d in ['ppohFEM', 'app_flow', 'app_heat', 'app_struct']:
             with working_dir(d):
                 for install_dir in ['bin', 'lib', 'include']:
-                    if os.path.isdir(install_dir):
+                    if install_dir.is_dir():
                         install_tree(
                             install_dir,
                             join_path(prefix, install_dir)

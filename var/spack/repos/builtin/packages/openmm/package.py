@@ -48,4 +48,4 @@ class Openmm(CMakePackage, CudaPackage):
             env.set('OPENMM_CUDA_COMPILER',
                     self.spec['cuda'].prefix.bin.nvcc)
             env.prepend_path('PATH',
-                             os.path.dirname(self.compiler.cc))
+                             self.compiler.cc.parent)

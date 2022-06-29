@@ -949,11 +949,11 @@ def create(parser, args):
     # Create a directory for the new package
     repo = get_repository(args, name)
     pkg_path = repo.filename_for_package_name(package.name)
-    if os.path.exists(pkg_path) and not args.force:
+    if pkg_path.exists() and not args.force:
         tty.die('{0} already exists.'.format(pkg_path),
                 '  Try running `spack create --force` to overwrite it.')
     else:
-        mkdirp(os.path.dirname(pkg_path))
+        mkdirp(pkg_path.parent)
 
     # Write the new package file
     package.write(pkg_path)

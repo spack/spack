@@ -23,7 +23,7 @@ class Bref3(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = os.path.basename(self.stage.archive_file)
+        jar_file = self.stage.archive_file.name
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,
@@ -34,7 +34,7 @@ class Bref3(Package):
         else:
             script = prefix.bin.bref
 
-        script_sh = join_path(os.path.dirname(__file__), "bref.sh")
+        script_sh = join_path(__file__.parent, "bref.sh")
         install(script_sh, script)
         set_executable(script)
 

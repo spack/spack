@@ -33,5 +33,5 @@ class Kraken2(Package):
         mkdirp(prefix.bin)
         files = glob.iglob('*')
         for file in files:
-            if os.path.isfile(file):
+            if file.is_file():
                 install(file, prefix.bin)

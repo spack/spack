@@ -36,7 +36,7 @@ class RocmSmi(MakefilePackage):
         filter_file(
             '^#!/usr/bin/python3',
             '#!/usr/bin/env {0}'.format(
-                os.path.basename(self.spec['python'].command.path)),
+                self.spec['python'].command.path.name),
             'rocm_smi.py'
         )
         mkdir(prefix.bin)

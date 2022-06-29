@@ -43,8 +43,8 @@ class Nekcem(Package):
         nekcem_test = join_path(self.prefix.bin, 'NekCEM', 'tests', '2dboxpec')
         with working_dir(nekcem_test):
             makenek = Executable(join_path(self.prefix.bin, 'makenek'))
-            makenek(os.path.basename(nekcem_test))
-            if not os.path.isfile('nekcem'):
+            makenek(nekcem_test.name)
+            if not 'nekcem'.is_file():
                 msg = 'Cannot build example: %s' % nekcem_test
                 raise RuntimeError(msg)
 

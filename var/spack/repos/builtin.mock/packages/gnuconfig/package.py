@@ -31,5 +31,5 @@ class Gnuconfig(Package):
             f.write("#!/bin/sh\necho gnuconfig version of config.guess")
 
         # Make executable
-        os.chmod(config_sub, 0o775)
-        os.chmod(config_guess, 0o775)
+        config_sub.chmod(0o775)
+        config_guess.chmod(0o775)

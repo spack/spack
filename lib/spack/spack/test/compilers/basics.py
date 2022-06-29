@@ -883,7 +883,7 @@ fi
     mock_executable('xcode-select', """
 echo "/Library/Developer"
 """)
-    bin_dir = os.path.dirname(xcrun)
+    bin_dir = xcrun.parent
     monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
 
     def noop(*args, **kwargs):
@@ -892,7 +892,7 @@ echo "/Library/Developer"
     real_listdir = os.listdir
 
     def _listdir(path):
-        if not os.path.exists(path):
+        if not path.exists():
             return []
         return real_listdir(path)
 
@@ -932,7 +932,7 @@ def test_xcode_not_available(
     mock_executable('xcode-select', """
     echo "{0}"
     """.format(xcode_select_output))
-    bin_dir = os.path.dirname(xcrun)
+    bin_dir = xcrun.parent
     monkeypatch.setenv('PATH', bin_dir, prepend=os.pathsep)
     # Prepare compiler
     apple_clang_cls = spack.compilers.class_for_compiler_name('apple-clang')

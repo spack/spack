@@ -192,14 +192,14 @@ environment variables:
         spack.package_base.PackageBase, 'do_test', args.log_format, args)
     if not reporter.filename:
         if args.log_file:
-            if os.path.isabs(args.log_file):
+            if args.log_file.is_absolute():
                 log_file = args.log_file
             else:
-                log_dir = os.getcwd()
+                log_dir = Path.cwd()
                 log_file = os.path.join(log_dir, args.log_file)
         else:
             log_file = os.path.join(
-                os.getcwd(),
+                Path.cwd(),
                 'test-%s' % test_suite.name)
         reporter.filename = log_file
     reporter.specs = specs_to_test
@@ -264,7 +264,7 @@ def test_find(args):  # TODO: merge with status (noargs)
             return f.match(t)
         test_suites = [t for t in test_suites
                        if any(match(t.alias, f) for f in filters) and
-                       os.path.isdir(t.stage)]
+                       t.stage.is_dir()]
 
     names = [t.name for t in test_suites]
 
@@ -324,7 +324,7 @@ def _report_suite_results(test_suite, args, constraints):
     if not test_specs:
         return
 
-    if os.path.exists(test_suite.results_file):
+    if test_suite.results_file.exists():
         results_desc = 'Failing results' if args.failed else 'Results'
         matching = ", spec matching '{0}'".format(' '.join(constraints)) \
             if constraints else ''
@@ -357,7 +357,7 @@ def _report_suite_results(test_suite, args, constraints):
                 if args.logs:
                     spec = test_specs[pkg_id]
                     log_file = test_suite.log_file_for_spec(spec)
-                    if os.path.isfile(log_file):
+                    if log_file.is_file():
                         with open(log_file, 'r') as f:
                             msg += '\n{0}'.format(''.join(f.readlines()))
                 tty.msg(msg)

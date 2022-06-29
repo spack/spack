@@ -129,7 +129,7 @@ class FluxCore(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         self.setup()
-        if not os.path.exists('configure'):
+        if not 'configure'.exists():
             # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')

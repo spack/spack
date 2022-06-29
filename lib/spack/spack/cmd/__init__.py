@@ -525,15 +525,15 @@ def spack_is_git_repo():
 
 def is_git_repo(path):
     dotgit_path = join_path(path, '.git')
-    if os.path.isdir(dotgit_path):
+    if dotgit_path.is_dir():
         # we are in a regular git repo
         return True
-    if os.path.isfile(dotgit_path):
+    if dotgit_path.is_file():
         # we might be in a git worktree
         try:
             with open(dotgit_path, "rb") as f:
                 dotgit_content = yaml.load(f)
-            return os.path.isdir(dotgit_content.get("gitdir", dotgit_path))
+            return dotgit_content.get("gitdir", dotgit_path.is_dir())
         except MarkedYAMLError:
             pass
     return False
@@ -562,7 +562,7 @@ def extant_file(f):
     """
     Argparse type for files that exist.
     """
-    if not os.path.isfile(f):
+    if not f.is_file():
         raise argparse.ArgumentTypeError('%s does not exist' % f)
     return f
 

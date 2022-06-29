@@ -126,8 +126,8 @@ class Hpcc(MakefilePackage):
                     mklroot, 'lib', 'intel64', 'libfftw2x_cdft_DOUBLE_ilp64.a')
                 libfftw2xc = join_path(
                     mklroot, 'lib', 'intel64', 'libfftw2xc_double_intel.a')
-                if not (os.path.exists(libfftw2x_cdft) and
-                        os.path.exists(libfftw2xc)):
+                if not (libfftw2x_cdft.exists() and
+                        libfftw2xc.exists()):
                     raise InstallError(
                         "HPCC need fftw2 interface, "
                         "here are brief notes how to make one:\n"
@@ -175,7 +175,7 @@ class Hpcc(MakefilePackage):
         copy('_hpccinf.txt', 'hpccinf.txt')
         # run test
         run = Executable(
-            join_path(os.path.dirname(self.spec['mpi'].mpicc), 'mpirun'))
+            join_path(self.spec['mpi'].mpicc.parent, 'mpirun'))
         run('-np', '4', './hpcc')
         # check output
         hpccoutf = open('hpccoutf.txt', 'rt').read()
@@ -187,7 +187,7 @@ class Hpcc(MakefilePackage):
         with working_dir(self.prefix.share.hpcc):
             # run test
             run = Executable(
-                join_path(os.path.dirname(self.spec['mpi'].mpicc), 'mpirun'))
+                join_path(self.spec['mpi'].mpicc.parent, 'mpirun'))
             run('-np', '4', self.prefix.bin.hpcc)
             # check output
             hpccoutf = open('hpccoutf.txt', 'rt').read()

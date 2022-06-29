@@ -23,7 +23,7 @@ class Tinyxml(CMakePackage):
         return url.format(version.dotted, version.underscored)
 
     def patch(self):
-        copy(join_path(os.path.dirname(__file__),
+        copy(join_path(__file__.parent,
              "CMakeLists.txt"), "CMakeLists.txt")
 
     def cmake_args(self):

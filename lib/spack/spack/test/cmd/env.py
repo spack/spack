@@ -53,13 +53,13 @@ sep = os.sep
 
 def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
-    assert os.path.exists(str(viewdir.join('.spack', 'mpileaks')))
-    assert os.path.exists(str(viewdir.join('.spack', 'libdwarf')))
+    assert str(viewdir.join('.spack', 'mpileaks'.exists()))
+    assert str(viewdir.join('.spack', 'libdwarf'.exists()))
 
 
 def check_viewdir_removal(viewdir):
     """Check that the uninstall/removal worked."""
-    assert (not os.path.exists(str(viewdir.join('.spack'))) or
+    assert (not str(viewdir.join('.spack'.exists())) or
             os.listdir(str(viewdir.join('.spack'))) == ['projections.yaml'])
 
 
@@ -262,14 +262,14 @@ def test_env_definition_symlink(install_mockery, mock_fetch, tmpdir):
     e.add('mpileaks')
 
     os.rename(e.manifest_path, filepath)
-    os.symlink(filepath, filepath_mid)
-    os.symlink(filepath_mid, e.manifest_path)
+    filepath_mid.symlink_to(filepath)
+    e.manifest_path.symlink_to(filepath_mid)
 
     e.concretize()
     e.write()
 
-    assert os.path.islink(e.manifest_path)
-    assert os.path.islink(filepath_mid)
+    assert e.manifest_path.is_symlink()
+    assert filepath_mid.is_symlink()
 
 
 def test_env_install_two_specs_same_dep(
@@ -383,7 +383,7 @@ def test_environment_status(capsys, tmpdir):
 
         with ev.Environment('local_dir'):
             with capsys.disabled():
-                assert os.path.join(os.getcwd(), 'local_dir') in env('status')
+                assert os.path.join(Path.cwd(), 'local_dir') in env('status')
 
             e = ev.Environment('myproject')
             e.write()
@@ -764,7 +764,7 @@ env:
     e = ev.read('test')
 
     config_real_path = substitute_path_variables(config_var_path)
-    fs.mkdirp(os.path.dirname(config_real_path))
+    fs.mkdirp(config_real_path.parent)
     with open(config_real_path, 'w') as f:
         f.write("""\
 packages:
@@ -882,7 +882,7 @@ def test_env_loads(install_mockery, mock_fetch):
     e = ev.read('test')
 
     loads_file = os.path.join(e.path, 'loads')
-    assert os.path.exists(loads_file)
+    assert loads_file.exists()
 
     with open(loads_file) as f:
         contents = f.read()
@@ -905,7 +905,7 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
         for dep in spec.traverse():
             stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, dep.name,
                                                  dep.version, dep.dag_hash())
-            assert os.path.isdir(os.path.join(root, stage_name))
+            assert os.path.join(root, stage_name.is_dir())
 
     check_stage('mpileaks')
     check_stage('zmpi')
@@ -1115,8 +1115,8 @@ def test_env_view_succeeds_symlinked_dir_file(
         add('view-dir-dir')
         install()
         x_dir = os.path.join(str(view_dir), 'bin', 'x')
-        assert os.path.exists(os.path.join(x_dir, 'file_in_dir'))
-        assert os.path.exists(os.path.join(x_dir, 'file_in_symlinked_dir'))
+        assert os.path.join(x_dir, 'file_in_dir'.exists())
+        assert os.path.join(x_dir, 'file_in_symlinked_dir'.exists())
 
 
 def test_env_without_view_install(
@@ -1157,7 +1157,7 @@ env:
     e = ev.read('test')
 
     # Check that metadata folder for this spec exists
-    assert os.path.isdir(os.path.join(e.default_view.view()._root,
+    assert os.path.join(e.default_view.view(.is_dir()._root,
                          '.spack', 'mpileaks'))
 
 
@@ -1168,7 +1168,7 @@ def test_env_updates_view_install_package(
     with ev.read('test'):
         install('--fake', 'mpileaks')
 
-    assert os.path.exists(str(view_dir.join('.spack/mpileaks')))
+    assert str(view_dir.join('.spack/mpileaks'.exists()))
 
 
 def test_env_updates_view_add_concretize(
@@ -1955,12 +1955,12 @@ spack:
 
     # make sure transitive run type deps are in the view
     for pkg in ('dtrun1', 'dtrun3'):
-        assert os.path.exists(os.path.join(viewdir, pkg))
+        assert os.path.join(viewdir, pkg.exists())
 
     # and non-run-type deps are not.
     for pkg in ('dtlink1', 'dtlink2', 'dtlink3', 'dtlink4', 'dtlink5'
                 'dtbuild1', 'dtbuild2', 'dtbuild3'):
-        assert not os.path.exists(os.path.join(viewdir, pkg))
+        assert not os.path.join(viewdir, pkg.exists())
 
 
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
@@ -1988,8 +1988,8 @@ env:
             file_path = test.default_view.view()._root
             file_to_test = os.path.join(
                 file_path, spec.name)
-            assert os.path.isfile(file_to_test)
-            assert os.path.islink(file_to_test)  == (link_type == 'symlink')
+            assert file_to_test.is_file()
+            assert file_to_test.is_symlink()  == (link_type == 'symlink')
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
@@ -2315,7 +2315,7 @@ def test_update_anonymous_env(packages_yaml_v015):
     # The environment is now at the latest format
     assert ev.is_latest_format(str(manifest))
     # A backup file has been created and it's not at the latest format
-    assert os.path.exists(str(backup_file))
+    assert str(backup_file.exists())
     assert not ev.is_latest_format(str(backup_file))
 
 
@@ -2332,7 +2332,7 @@ def test_double_update(packages_yaml_v015):
     # The environment is at the latest format
     assert ev.is_latest_format(str(manifest))
     # A backup file has been created and it's not at the latest format
-    assert os.path.exists(str(backup_file))
+    assert str(backup_file.exists())
     assert not ev.is_latest_format(str(backup_file))
 
 
@@ -2341,13 +2341,13 @@ def test_update_and_revert(packages_yaml_v015):
 
     # Update the environment
     env('update', '-y', str(manifest.dirname))
-    assert os.path.exists(str(backup_file))
+    assert str(backup_file.exists())
     assert not ev.is_latest_format(str(backup_file))
     assert ev.is_latest_format(str(manifest))
 
     # Revert to previous state
     env('revert', '-y', str(manifest.dirname))
-    assert not os.path.exists(str(backup_file))
+    assert not str(backup_file.exists())
     assert not ev.is_latest_format(str(manifest))
 
 
@@ -2453,7 +2453,7 @@ spack:
     # Concretize a first time and create a lockfile
     with ev.Environment(str(tmpdir)):
         concretize()
-    assert os.path.exists(str(spack_lock))
+    assert str(spack_lock.exists())
 
     # If I run concretize again and there's an error during write,
     # the spack.lock file shouldn't disappear from disk
@@ -2468,7 +2468,7 @@ spack:
         with pytest.raises(RuntimeError):
             e.clear()
             e.write()
-    assert os.path.exists(str(spack_lock))
+    assert str(spack_lock.exists())
 
 
 def _setup_develop_packages(tmpdir):
@@ -2726,11 +2726,11 @@ def test_env_view_fail_if_symlink_points_elsewhere(tmpdir, install_mockery, mock
     view = str(tmpdir.join('view'))
     # Put a symlink to an actual directory in view
     non_view_dir = str(tmpdir.mkdir('dont-delete-me'))
-    os.symlink(non_view_dir, view)
+    view.symlink_to(non_view_dir)
     with ev.create('env', with_view=view):
         add('libelf')
         install('--fake')
-    assert os.path.isdir(non_view_dir)
+    assert non_view_dir.is_dir()
 
 
 def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
@@ -2742,7 +2742,7 @@ def test_failed_view_cleanup(tmpdir, mock_stage, mock_fetch, install_mockery):
 
     # Save the current view directory.
     resolved_view = os.path.realpath(view)
-    all_views = os.path.dirname(resolved_view)
+    all_views = resolved_view.parent
     views_before = os.listdir(all_views)
 
     # Add a spec that results in MergeConflictError's when creating a view
@@ -2782,7 +2782,7 @@ def test_environment_view_target_already_exists(
     fs.touch(os.path.join(real_view, 'file'))
 
     # Remove the symlink so Spack can't know about the "previous root"
-    os.unlink(view)
+    view.unlink()
 
     # Regenerate the view, which should realize it can't write into the same dir.
     msg = 'Failed to generate environment view'
@@ -2891,7 +2891,7 @@ def test_read_v1_lock_creates_backup(config, tmpdir):
     shutil.copy(v1_lockfile_path, test_lockfile_path)
 
     e = ev.Environment(str(tmpdir))
-    assert os.path.exists(e._lock_backup_v1_path)
+    assert e._lock_backup_v1_path.exists()
     assert filecmp.cmp(e._lock_backup_v1_path, v1_lockfile_path)
 
 

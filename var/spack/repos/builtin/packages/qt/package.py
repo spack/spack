@@ -371,7 +371,7 @@ class Qt(Package):
             platdirname = "".join([subdir, pname, "-", cname])
             tty.debug("Checking for platform '{0}' in {1}".format(
                       platdirname, mkspec_dir))
-            if os.path.exists(os.path.join(mkspec_dir, platdirname)):
+            if os.path.join(mkspec_dir, platdirname.exists()):
                 qtplat = platdirname
                 break
         else:
@@ -482,7 +482,7 @@ class Qt(Package):
 
         # Intel's `ar` equivalent might not be in the path: replace it with
         # explicit
-        xiar = os.path.join(os.path.dirname(self.compiler.cc), 'xiar')
+        xiar = os.path.join(self.compiler.cc.parent, 'xiar')
         filter_file(r'\bxiar\b', xiar, conf_file)
 
         if self.spec.satisfies('@4'):
@@ -633,9 +633,9 @@ class Qt(Package):
         # However, if LD_LIBRARY_PATH is not set the qt build fails, check
         # and set LD_LIBRARY_PATH if not set, update if it is set.
         if os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
+            os.environ['LD_LIBRARY_PATH'] += os.pathsep + Path.cwd() + '/lib'
         else:
-            os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
+            os.environ['LD_LIBRARY_PATH'] = os.pathsep + Path.cwd() + '/lib'
 
         configure('-prefix', prefix,
                   '-v',

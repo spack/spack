@@ -114,7 +114,7 @@ class VtkH(Package, CudaPackage):
                 cmake_args.extend(["-DMPI_C_COMPILER={0}".format(mpicc),
                                    "-DMPI_CXX_COMPILER={0}".format(mpicxx)])
                 mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-                if os.path.isfile(mpiexe_bin):
+                if mpiexe_bin.is_file():
                     cmake_args.append("-DMPIEXEC={0}".format(mpiexe_bin))
 
             # openmp support
@@ -275,7 +275,7 @@ class VtkH(Package, CudaPackage):
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-            if os.path.isfile(mpiexe_bin):
+            if mpiexe_bin.is_file():
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
                 if self.spec["cmake"].satisfies('@3.10:'):
@@ -303,6 +303,6 @@ class VtkH(Package, CudaPackage):
         cfg.write("##################################\n")
         cfg.close()
 
-        host_cfg_fname = os.path.abspath(host_cfg_fname)
+        host_cfg_fname = host_cfg_fname.resolve()
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname

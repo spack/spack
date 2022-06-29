@@ -140,7 +140,7 @@ class Julia(MakefilePackage):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
         # touches the main Makefile, so we reset the a/m-time to doc/_build's.
         f = os.path.join("doc", "_build", "html", "en", "index.html")
-        if os.path.exists(f):
+        if f.exists():
             time = (os.path.getatime(f), os.path.getmtime(f))
             os.utime(os.path.join("base", "Makefile"), time)
 

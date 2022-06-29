@@ -186,9 +186,9 @@ class Amdfftw(FftwBase):
 
         # Check if compiler is AOCC
         if '%aocc' in spec:
-            options.append('CC={0}'.format(os.path.basename(spack_cc)))
-            options.append('FC={0}'.format(os.path.basename(spack_fc)))
-            options.append('F77={0}'.format(os.path.basename(spack_fc)))
+            options.append('CC={0}'.format(spack_cc.name))
+            options.append('FC={0}'.format(spack_fc.name))
+            options.append('F77={0}'.format(spack_fc.name))
 
         if '+debug' in spec:
             options.append('--enable-debug')

@@ -48,7 +48,7 @@ class Matlab(Package):
     extendable = True
 
     def url_for_version(self, version):
-        return "file://{0}/matlab_{1}_glnxa64.zip".format(os.getcwd(), version)
+        return "file://{0}/matlab_{1}_glnxa64.zip".format(Path.cwd(), version)
 
     def install(self, spec, prefix):
         config = {

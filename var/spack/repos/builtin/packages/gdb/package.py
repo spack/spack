@@ -113,7 +113,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     def gdbinit(self):
         if '+python' in self.spec:
             tool = self.spec['python'].command.path + '-gdb.py'
-            if os.path.exists(tool):
+            if tool.exists():
                 mkdir(self.prefix.etc)
                 with open(self.prefix.etc.gdbinit, 'w') as gdbinit:
                     gdbinit.write('add-auto-load-safe-path {0}\n'.format(tool))

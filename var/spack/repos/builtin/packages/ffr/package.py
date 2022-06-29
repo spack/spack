@@ -17,8 +17,8 @@ class Ffr(MakefilePackage):
     homepage = "http://www.ciss.iis.u-tokyo.ac.jp/rss21/theme/multi/fluid/fluid_softwareinfo.html"
     manual_download = True
 
-    version('3.1.004', sha256='2b396f66bb6437366721fac987f9c6e8b830638c3e4cb5df6a08ff41633f8481', url="file://{0}/FFR_V3.1.004.zip".format(os.getcwd()))
-    version('3.0_000', sha256='edc69fb1fd9dbdb3f531a8f2b9533a9b3c1a28768bb4029b84a6b35c95db0b48', url="file://{0}/open_FrontFlowRed_3.0_000.tar.gz".format(os.getcwd()))
+    version('3.1.004', sha256='2b396f66bb6437366721fac987f9c6e8b830638c3e4cb5df6a08ff41633f8481', url="file://{0}/FFR_V3.1.004.zip".format(Path.cwd()))
+    version('3.0_000', sha256='edc69fb1fd9dbdb3f531a8f2b9533a9b3c1a28768bb4029b84a6b35c95db0b48', url="file://{0}/open_FrontFlowRed_3.0_000.tar.gz".format(Path.cwd()))
 
     # FrontFlow/red used Fortran format I/E without width (For Example 3I)
     # But gfortran require width (For Example (3I6).
@@ -45,9 +45,9 @@ class Ffr(MakefilePackage):
             fflags.append('-Fwide')
         d = find('.', 'src_main', recursive=True)
         src_main = d[0]
-        root_dir  = os.path.dirname(src_main)
+        root_dir  = src_main.parent
         make = join_path(root_dir, 'src_pre', 'src', 'Makefile')
-        os.chmod(make, 0o644)
+        make.chmod(0o644)
         filter_file('#CSRCS =.*$', 'CSRCS = kmetis_main.c io.c', make)
         filter_file(
             'LIBPRE =.*$',
@@ -56,7 +56,7 @@ class Ffr(MakefilePackage):
         )
 
         make = join_path(src_main, 'src', 'Makefile')
-        os.chmod(make, 0o644)
+        make.chmod(0o644)
         with open(make, 'a') as m:
             m.write('module_hpc.o: module_hpc.f\n')
             m.write('\t$(MPI_F90) $(FFLAGS) -c $<\n')
@@ -68,7 +68,7 @@ class Ffr(MakefilePackage):
             for d in ['src_pre', 'FFR2VIZ']:
                 workdir = join_path(root_dir, d, 'src')
                 make = join_path(workdir, 'Makefile')
-                os.chmod(make, 0o644)
+                make.chmod(0o644)
                 m = FileFilter(make)
                 m.filter(
                     r'include Makefile\..*\.in',
@@ -89,7 +89,7 @@ class Ffr(MakefilePackage):
                     m.write('AR = ar rv\n')
                     m.write('RANLIB = :\n')
         for makefile_in in find('.', 'Makefile.in', recursive=True):
-            os.chmod(makefile_in, 0o644)
+            makefile_in.chmod(0o644)
             m = FileFilter(makefile_in)
             m.filter(r'OS\s*=.*$', 'OS = {0}'.format(spec.os))
             m.filter(r'F90\s*=.*$', 'F90 = {0}'.format(spack_fc))
@@ -115,7 +115,7 @@ class Ffr(MakefilePackage):
 
     def build(self, spec, prefix):
         d = find('.', 'src_main', recursive=True)
-        root_dir  = os.path.dirname(d[0])
+        root_dir  = d[0].parent
         copy(
             join_path(root_dir, 'src_metis_4.1_fflow', 'Lib', 'kmetis_main.c'),
             join_path(root_dir, 'src_pre', 'src')
@@ -132,5 +132,5 @@ class Ffr(MakefilePackage):
 
     def install(self, spec, prefix):
         d = find('.', 'src_main', recursive=True)
-        root_dir  = os.path.dirname(d[0])
+        root_dir  = d[0].parent
         install_tree(join_path(root_dir, 'bin_FFR'), prefix.bin)

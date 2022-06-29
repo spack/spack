@@ -15,7 +15,7 @@ class Roms(MakefilePackage):
     the scientific community for a diverse range of applications"""
 
     homepage = "https://www.myroms.org/"
-    url      = "file://{0}/roms_3.8_source.tar.gz".format(os.getcwd())
+    url      = "file://{0}/roms_3.8_source.tar.gz".format(Path.cwd())
     manual_download = True
 
     # TODO: ROMS v3.8 (svn version 986) require credentials to download and use
@@ -92,7 +92,7 @@ class Roms(MakefilePackage):
         # ROMS doesn't have support for AOCC out of the box
         # Support extended to AOCC from below steps
         if '%aocc' in self.spec:
-            lib_info = os.path.basename(spack_fc)
+            lib_info = spack_fc.name
             self._copy_arch_file(lib_info)
             self._edit_arch(spec, prefix, lib_info)
 
@@ -103,7 +103,7 @@ class Roms(MakefilePackage):
         makefile.filter(r'ROMS_APPLICATION.*?=.*',
                         'ROMS_APPLICATION = {0}'.format(app_type.upper()))
         makefile.filter(r'\sFORT\s[?]=.*',
-                        'FORT = {0}'.format(os.path.basename(spack_fc)))
+                        'FORT = {0}'.format(spack_fc.name))
         makefile.filter(r'\sUSE_NETCDF4\s[?]=.*', 'USE_NETCDF4 = on')
 
         # Build MPI variant of ROMS

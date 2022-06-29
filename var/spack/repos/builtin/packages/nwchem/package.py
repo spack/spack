@@ -53,8 +53,8 @@ class Nwchem(Package):
             'NWCHEM_TOP=%s' % self.stage.source_path,
             # NWCHEM is picky about FC and CC. They should NOT be full path.
             # see https://nwchemgit.github.io/Special_AWCforum/sp/id7524
-            'CC=%s' % os.path.basename(spack_cc),
-            'FC=%s' % os.path.basename(spack_fc),
+            'CC=%s' % spack_cc.name,
+            'FC=%s' % spack_fc.name,
             'USE_MPI=y',
             'USE_BLAS=y',
             'USE_FFTW3=y',

@@ -111,7 +111,7 @@ def libraries_in_ld_library_path(path_hints=None):
 def _group_by_prefix(paths):
     groups = collections.defaultdict(set)
     for p in paths:
-        groups[os.path.dirname(p)].add(p)
+        groups[p.parent].add(p)
     return groups.items()
 
 

@@ -81,21 +81,21 @@ class Nektools(Package):
             if not libx11_h:
                 raise RuntimeError('Xlib.h not found in %s' %
                                    spec['libx11'].prefix.include)
-            cflags += ['-I%s' % os.path.dirname(libx11_h.directories[0])]
+            cflags += ['-I%s' % libx11_h.directories[0].parent]
 
             xproto_h = find_headers('X', spec['xproto'].prefix.include,
                                     recursive=True)
             if not xproto_h:
                 raise RuntimeError('X.h not found in %s' %
                                    spec['xproto'].prefix.include)
-            cflags += ['-I%s' % os.path.dirname(xproto_h.directories[0])]
+            cflags += ['-I%s' % xproto_h.directories[0].parent]
 
             libxt_h = find_headers('Intrinsic', spec['libxt'].prefix.include,
                                    recursive=True)
             if not libxt_h:
                 raise RuntimeError('X11/Intrinsic.h not found in %s' %
                                    spec['libxt'].prefix.include)
-            cflags += ['-I%s' % os.path.dirname(libxt_h.directories[0])]
+            cflags += ['-I%s' % libxt_h.directories[0].parent]
         if self.compiler.name in ['xl', 'xl_r']:
             # Use '-qextname' to add underscores.
             # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'

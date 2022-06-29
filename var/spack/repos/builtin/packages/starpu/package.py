@@ -87,7 +87,7 @@ class Starpu(AutotoolsPackage):
     conflicts('+shared', when='+mpi+simgrid', msg="Simgrid MPI cannot be built with a shared library")
 
     def autoreconf(self, spec, prefix):
-        if not os.path.isfile("./configure"):
+        if not "./configure".is_file():
             autogen = Executable("./autogen.sh")
             autogen()
 

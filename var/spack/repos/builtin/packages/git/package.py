@@ -172,7 +172,7 @@ class Git(AutotoolsPackage):
 
     @classmethod
     def determine_variants(cls, exes, version_str):
-        prefix = os.path.dirname(exes[0])
+        prefix = exes[0].parent
         variants = ''
         if 'gitk' in os.listdir(prefix):
             variants += '+tcltk'

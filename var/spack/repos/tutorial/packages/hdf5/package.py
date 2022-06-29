@@ -427,11 +427,11 @@ class Hdf5(CMakePackage):
         # Create non-versioned symlinks to the versioned pkg-config files:
         with working_dir(self.prefix.lib.pkgconfig):
             for f in pc_files:
-                src_filename = os.path.basename(f)
+                src_filename = f.name
                 version_sep_idx = src_filename.find('-')
                 if version_sep_idx > -1:
                     tgt_filename = src_filename[:version_sep_idx] + '.pc'
-                    if not os.path.exists(tgt_filename):
+                    if not tgt_filename.exists():
                         symlink(src_filename, tgt_filename)
 
     @run_after('install')

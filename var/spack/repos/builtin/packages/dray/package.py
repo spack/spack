@@ -220,7 +220,7 @@ class Dray(Package, CudaPackage):
             else:
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-            if os.path.isfile(mpiexe_bin):
+            if mpiexe_bin.is_file():
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
                 if self.spec["cmake"].satisfies('@3.10:'):

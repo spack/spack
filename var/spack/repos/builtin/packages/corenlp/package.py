@@ -51,7 +51,7 @@ class Corenlp(Package):
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         mkdirp(prefix.bin)
-        script_sh = join_path(os.path.dirname(__file__), "corenlp.sh")
+        script_sh = join_path(__file__.parent, "corenlp.sh")
         script = prefix.bin.corenlp
         install(script_sh, script)
         set_executable(script)

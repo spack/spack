@@ -60,7 +60,7 @@ class CrayMpich(Package):
         for line in mpich_module:
             if "CRAY_LD_LIBRARY_PATH" in line:
                 libdir = get_path_args_from_module_line(line)[0]
-                return os.path.dirname(os.path.normpath(libdir))
+                return os.path.normpath(libdir.parent)
 
     def setup_run_environment(self, env):
         if '+wrappers' in self.spec:
@@ -103,7 +103,7 @@ class CrayMpich(Package):
     @property
     def headers(self):
         hdrs = find_headers('mpi', self.prefix.include, recursive=True)
-        hdrs.directories = os.path.dirname(hdrs[0])
+        hdrs.directories = hdrs[0].parent
         return hdrs
 
     @property

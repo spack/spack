@@ -579,7 +579,7 @@ class TestSpecSyntax(object):
             f.write(s.to_yaml(hash=ht.dag_hash))
 
         file_name = specfile.basename
-        parent_dir = os.path.basename(specfile.dirname)
+        parent_dir = specfile.dirname.name
 
         # Relative path to specfile
         with fs.working_dir(specfile.dirname):
@@ -617,7 +617,7 @@ class TestSpecSyntax(object):
 
         # Relative path to specfile
         with tmpdir.as_cwd():
-            assert os.path.exists('subdir/{0}'.format(file_name))
+            assert 'subdir/{0}'.format(file_name.exists())
 
             # Test for command like: "spack spec libelf.yaml"
             specs = sp.parse('subdir/{0}'.format(file_name))
@@ -634,7 +634,7 @@ class TestSpecSyntax(object):
             f.write(s['libelf'].to_yaml(hash=ht.dag_hash))
 
         file_name = specfile.basename
-        parent_dir = os.path.basename(specfile.dirname)
+        parent_dir = specfile.dirname.name
 
         # Relative path to specfile
         with fs.working_dir(specfile.dirname):

@@ -37,14 +37,14 @@ class Bracken(Package):
         filter_file(
             r'#!/usr/bin/python',
             '#!/usr/bin/env {0}'.format(
-                os.path.basename(self.spec['python'].command.path)),
+                self.spec['python'].command.path.name),
             'est_abundance.py'
         )
 
         filter_file(
             r'#!/usr/bin/python',
             '#!/usr/bin/env {0}'.format(
-                os.path.basename(self.spec['python'].command.path)),
+                self.spec['python'].command.path.name),
             'generate_kmer_distribution.py'
         )
 

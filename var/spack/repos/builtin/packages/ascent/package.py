@@ -304,7 +304,7 @@ class Ascent(CMakePackage, CudaPackage):
 
         """
         spec = self.spec
-        if not os.path.isdir(spec.prefix):
+        if not spec.prefix.is_dir():
             os.mkdir(spec.prefix)
 
         #######################
@@ -482,7 +482,7 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-            if os.path.isfile(mpiexe_bin):
+            if mpiexe_bin.is_file():
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
                 if self.spec["cmake"].satisfies('@3.10:'):
@@ -594,5 +594,5 @@ class Ascent(CMakePackage, CudaPackage):
         cfg.write("##################################\n")
         cfg.close()
 
-        host_cfg_fname = os.path.abspath(host_cfg_fname)
+        host_cfg_fname = host_cfg_fname.resolve()
         tty.info("spack generated ascent host-config file: " + host_cfg_fname)

@@ -155,7 +155,7 @@ class Catalyst(CMakePackage):
         for edition in self.editions:
             command.extend(['-i', os.path.join(editions_dir, edition)])
 
-        if not os.path.isdir(catalyst_source_dir):
+        if not catalyst_source_dir.is_dir():
             os.mkdir(catalyst_source_dir)
             subprocess.check_call(command)
             tty.msg("Generated catalyst source in %s" % self.stage.source_path)
@@ -168,7 +168,7 @@ class Catalyst(CMakePackage):
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib
         # - python bits under lib/python2.8/site-packages
-        if os.path.isdir(self.prefix.lib64):
+        if self.prefix.lib64.is_dir():
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib

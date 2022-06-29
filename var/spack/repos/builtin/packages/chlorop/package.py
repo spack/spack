@@ -19,7 +19,7 @@ class Chlorop(Package):
     a temporary directory."""
 
     homepage = "https://www.cbs.dtu.dk/services/ChloroP/"
-    url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
+    url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('1.1', 'eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9')

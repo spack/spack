@@ -20,7 +20,7 @@ class Adf(Package):
 
     def url_for_version(self, version):
         return "file://{0}/adf/adf{1}.pc64_linux.openmpi.bin.tgz".format(
-               os.getcwd(), version)
+               Path.cwd(), version)
 
     # Licensing
     license_required = True

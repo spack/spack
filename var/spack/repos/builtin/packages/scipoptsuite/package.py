@@ -21,7 +21,7 @@ class Scipoptsuite(CMakePackage):
     https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://scipopt.org"
-    url      = "file://{0}/scipoptsuite-7.0.1.tgz".format(os.getcwd())
+    url      = "file://{0}/scipoptsuite-7.0.1.tgz".format(Path.cwd())
     manual_download = True
 
     version('7.0.1', sha256='971962f2d896b0c8b8fa554c18afd2b5037092685735d9494a05dc16d56ad422')

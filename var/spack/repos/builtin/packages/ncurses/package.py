@@ -62,7 +62,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             for termDir in output.split(':'):
                 for top, dirs, files in os.walk(termDir):
                     for filename in files:
-                        if os.path.islink(os.path.join(top, filename)):
+                        if os.path.join(top, filename.is_symlink()):
                             usingSymlinks = True
                             break
                     if usingSymlinks:
@@ -153,7 +153,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         # fix for packages that use "#include <ncurses.h>" (use wide by default)
         headers = glob.glob(os.path.join(prefix.include, 'ncursesw', '*.h'))
         for header in headers:
-            h = os.path.basename(header)
+            h = header.name
             os.symlink(os.path.join('ncursesw', h), os.path.join(prefix.include, h))
 
     def query_parameter_options(self):

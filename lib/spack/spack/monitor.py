@@ -149,7 +149,7 @@ class SpackMonitorClient:
         # Name based on timestamp
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
         self.save_dir = os.path.join(save_dir, now)
-        if not os.path.exists(self.save_dir):
+        if not self.save_dir.exists():
             os.makedirs(self.save_dir)
 
     def save(self, obj, filename):
@@ -171,7 +171,7 @@ class SpackMonitorClient:
         if not hasattr(spec, "package") or not spec.package:
             tty.die("A spec must have a package to load the environment.")
 
-        pkg_dir = os.path.dirname(spec.package.install_log_path)
+        pkg_dir = spec.package.install_log_path.parent
         env_file = os.path.join(pkg_dir, "install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
@@ -486,9 +486,9 @@ class SpackMonitorClient:
         # If we allow the spec to not exist (meaning we create it) we need to
         # include the full specfile here
         if not spec_exists:
-            meta_dir = os.path.dirname(spec.package.install_log_path)
+            meta_dir = spec.package.install_log_path.parent
             spec_file = os.path.join(meta_dir, "spec.json")
-            if os.path.exists(spec_file):
+            if spec_file.exists():
                 data['spec'] = sjson.load(read_file(spec_file))
             else:
                 spec_file = os.path.join(meta_dir, "spec.yaml")
@@ -615,7 +615,7 @@ class SpackMonitorClient:
         A helper to read json from a directory glob and return it loaded.
         """
         for filename in glob(pattern):
-            basename = os.path.basename(filename)
+            basename = filename.name
             tty.info("Reading %s" % basename)
             yield read_json(filename)
 
@@ -628,8 +628,8 @@ class SpackMonitorClient:
         And then a request to upload the root or specific directory.
         spack upload monitor ~/.spack/reports/monitor/<date>/
         """
-        dirname = os.path.abspath(dirname)
-        if not os.path.exists(dirname):
+        dirname = dirname.resolve()
+        if not dirname.exists():
             tty.die("%s does not exist." % dirname)
 
         # We can't be sure the level of nesting the user has provided
@@ -662,7 +662,7 @@ class SpackMonitorClient:
         for metafile in metadata:
             data = read_json(metafile)
             build = self.do_request("builds/new/", data=sjson.dump(data))
-            localhash = os.path.basename(metafile).replace(".json", "")
+            localhash = metafile.name.replace(".json", "")
             hashes[localhash.replace('build-metadata-', "")] = build
 
         # Next upload build phases
@@ -704,7 +704,7 @@ def read_file(filename):
     """
     Read a file, if it exists. Otherwise return None
     """
-    if not os.path.exists(filename):
+    if not filename.exists():
         return
     with open(filename, 'r') as fd:
         content = fd.read()
@@ -724,7 +724,7 @@ def write_json(obj, filename):
     """
     Write a json file, if the output directory exists.
     """
-    if not os.path.exists(os.path.dirname(filename)):
+    if not filename.exists(.parent):
         return
     return write_file(sjson.dump(obj), filename)
 
@@ -733,6 +733,6 @@ def read_json(filename):
     """
     Read a file and load into json, if it exists. Otherwise return None.
     """
-    if not os.path.exists(filename):
+    if not filename.exists():
         return
     return sjson.load(read_file(filename))

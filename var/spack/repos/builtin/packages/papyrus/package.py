@@ -27,7 +27,7 @@ class Papyrus(CMakePackage):
     test_requires_compiler = True
 
     def setup_run_environment(self, env):
-        if os.path.isdir(self.prefix.lib64):
+        if self.prefix.lib64.is_dir():
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
@@ -47,11 +47,11 @@ class Papyrus(CMakePackage):
 
         example_dir = join_path(self.test_suite.current_test_cache_dir, 'kv', 'tests')
 
-        if not os.path.exists(example_dir):
+        if not example_dir.exists():
             print('Skipping all test')
             return
 
-        if os.path.isdir(self.prefix.lib64):
+        if self.prefix.lib64.is_dir():
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
@@ -67,7 +67,7 @@ class Papyrus(CMakePackage):
                                  'kv', 'tests', example)
             test_example = 'test{0}.c'.format(example)
 
-            if not os.path.exists(test_dir):
+            if not test_dir.exists():
                 print('Skipping {0} test'.format(example))
                 continue
 

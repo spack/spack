@@ -432,7 +432,7 @@ def test_default_queries(database):
     command = spec['zmpi'].command
     assert isinstance(command, Executable)
     assert command.name == 'zmpi'
-    assert os.path.exists(command.path)
+    assert command.path.exists()
 
     # Testing a package whose name *does* start with 'lib'
     # to ensure the library doesn't have a double 'lib' prefix
@@ -451,17 +451,17 @@ def test_default_queries(database):
     command = spec['libelf'].command
     assert isinstance(command, Executable)
     assert command.name == 'libelf'
-    assert os.path.exists(command.path)
+    assert command.path.exists()
 
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
     index_file = os.path.join(database.root, '.spack-db', 'index.json')
     lock_file = os.path.join(database.root, '.spack-db', 'lock')
-    assert os.path.exists(str(index_file))
+    assert str(index_file.exists())
     # Lockfiles not currently supported on Windows
     if not is_windows:
-        assert os.path.exists(str(lock_file))
+        assert str(lock_file.exists())
 
     with open(index_file) as fd:
         index_object = json.load(fd)
@@ -956,7 +956,7 @@ def test_database_works_with_empty_dir(tmpdir):
     with db.read_transaction():
         db.query()
     # Check that reading an empty directory didn't create a new index.json
-    assert not os.path.exists(db._index_path)
+    assert not db._index_path.exists()
 
 
 @pytest.mark.parametrize('query_arg,exc_type,msg_str', [

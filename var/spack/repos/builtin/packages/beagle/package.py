@@ -28,12 +28,12 @@ class Beagle(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = os.path.basename(self.stage.archive_file)
+        jar_file = self.stage.archive_file.name
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "beagle.sh")
+        script_sh = join_path(__file__.parent, "beagle.sh")
         script = prefix.bin.beagle
         install(script_sh, script)
         set_executable(script)

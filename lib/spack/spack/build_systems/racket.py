@@ -48,7 +48,7 @@ class RacketPackage(PackageBase):
 
     @property
     def build_directory(self):
-        ret = os.getcwd()
+        ret = Path.cwd()
         if self.subdirectory:
             ret = os.path.join(ret, self.subdirectory)
         return ret
@@ -61,7 +61,7 @@ class RacketPackage(PackageBase):
             args = ['pkg', 'install', '-t', 'dir', '-n', self.name, '--deps', 'fail',
                     '--ignore-implies', '--copy', '-i', '-j',
                     str(determine_number_of_jobs(allow_parallel)),
-                    '--', os.getcwd()]
+                    '--', Path.cwd()]
             try:
                 raco(*args)
             except ProcessError:

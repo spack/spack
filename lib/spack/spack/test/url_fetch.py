@@ -170,7 +170,7 @@ def test_fetch(
             with spack.config.override('config:url_fetch_method', _fetch_method):
                 pkg.do_stage()
         with working_dir(pkg.stage.source_path):
-            assert os.path.exists('configure')
+            assert 'configure'.exists()
             assert is_exe('configure')
 
             with open('configure') as f:
@@ -210,7 +210,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
         pkg = spack.repo.get(specification)
         fetch_strategy = fs.from_list_url(pkg)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == url
+        assert fetch_strategy.url.name == url
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
         pkg.fetch_options = {'timeout': 60}
@@ -250,7 +250,7 @@ def test_new_version_from_list_url(
         fetch_strategy = fs.from_list_url(pkg)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == tarball
+        assert fetch_strategy.url.name == tarball
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
         pkg.fetch_options = {"timeout": 60}

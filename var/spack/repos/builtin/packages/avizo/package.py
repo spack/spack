@@ -23,19 +23,19 @@ class Avizo(Package):
 
     version('2020.1',
             sha256='9321aaa276567eebf116e268353c33a4c930d768d22793f921338e1d8cefe991',
-            url="file://{0}/Avizo-20201-Linux64-gcc48.bin".format(os.getcwd()),
+            url="file://{0}/Avizo-20201-Linux64-gcc48.bin".format(Path.cwd()),
             expand=False)
     version('2019.4',
             sha256='a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248',
-            url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
+            url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(Path.cwd()),
             expand=False)
     version('2019.3',
             sha256='be109df81e2f7238f234862367841dae05e76cc62218c1f36b1d9bc9514ce5f7',
-            url="file://{0}/Avizo-20193-Linux64-gcc48.bin".format(os.getcwd()),
+            url="file://{0}/Avizo-20193-Linux64-gcc48.bin".format(Path.cwd()),
             expand=False)
     version('9.7.0',
             sha256='9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
-            url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
+            url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(Path.cwd()),
             expand=False)
 
     gcc_ver = {

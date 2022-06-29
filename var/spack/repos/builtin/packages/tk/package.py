@@ -118,7 +118,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         """
         # When using tkinter from within spack provided python+tkinter,
         # python will not be able to find Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', os.path.dirname(sorted(find(self.prefix, 'tk.tcl'))[0]))
+        env.set('TK_LIBRARY', sorted(find(self.prefix, 'tk.tcl'.parent)[0]))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TK_LIBRARY to the directory containing tk.tcl.
@@ -127,4 +127,4 @@ class Tk(AutotoolsPackage, SourceforgePackage):
 
         * https://www.tcl-lang.org/man/tcl/TkCmd/tkvars.htm
         """
-        env.set('TK_LIBRARY', os.path.dirname(sorted(find(self.prefix, 'tk.tcl'))[0]))
+        env.set('TK_LIBRARY', sorted(find(self.prefix, 'tk.tcl'.parent)[0]))

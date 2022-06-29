@@ -267,7 +267,7 @@ def install_specs(cli_args, kwargs, specs):
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
             e.print_context()
-            if not os.path.exists(e.pkg.build_log_path):
+            if not e.pkg.build_log_path.exists():
                 tty.error("'spack install' created no log.")
             else:
                 sys.stderr.write('Full build log:\n')
@@ -362,7 +362,7 @@ environment variables:
             return
         else:
             msg = "install requires a package argument or active environment"
-            if 'spack.yaml' in os.listdir(os.getcwd()):
+            if 'spack.yaml' in os.listdir(Path.cwd()):
                 # There's a spack.yaml file in the working dir, the user may
                 # have intended to use that
                 msg += "\n\n"

@@ -218,7 +218,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # export SPACK_DISABLE_LOCAL_CONFIG=true
     def test(self):
         if not self.spec.satisfies('@develop') or \
-                not os.path.isdir(self.prefix.bin):
+                not self.prefix.bin.is_dir():
             tty.info('Skipping: checks not installed in bin for v{0}'.
                      format(self.version))
             return

@@ -59,7 +59,7 @@ class AnalyzerBase(object):
         """
         self.spec = spec
         self.dirname = dirname
-        self.meta_dir = os.path.dirname(spec.package.install_log_path)
+        self.meta_dir = spec.package.install_log_path.parent
 
         for required in ["name", "outfile", "description"]:
             if not hasattr(self, required):
@@ -102,11 +102,11 @@ class AnalyzerBase(object):
             outfile = os.path.join(self.output_dir, self.outfile)
 
             # Only try to create the results directory if we have a result
-            if not os.path.exists(self._output_dir):
+            if not self._output_dir.exists():
                 os.makedirs(self._output_dir)
 
             # Don't overwrite an existing result if overwrite is False
-            if os.path.exists(outfile) and not overwrite:
+            if outfile.exists() and not overwrite:
                 tty.info("%s exists and overwrite is False, skipping." % outfile)
             else:
                 tty.info("Writing result to %s" % outfile)

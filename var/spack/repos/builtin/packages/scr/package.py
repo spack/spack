@@ -187,7 +187,7 @@ class Scr(CMakePackage):
 
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
-        if os.path.isabs(path):
+        if path.is_absolute():
             return path
         else:
             return join_path(self.spec.prefix, path)

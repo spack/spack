@@ -125,7 +125,7 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
     os.environ['EDITOR'] = nosuch_exe
 
     os.environ['PATH'] = '%s%s%s' % (
-        os.path.dirname(vim_exe), os.pathsep, os.environ['PATH'])
+        vim_exe.parent, os.pathsep, os.environ['PATH'])
 
     def assert_exec(exe, args):
         assert exe == vim_exe

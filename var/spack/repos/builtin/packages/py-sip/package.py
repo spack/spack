@@ -45,7 +45,7 @@ class PySip(PythonPackage):
 
     @when('@:4')
     def install(self, spec, prefix):
-        if not os.path.exists('configure.py'):
+        if not 'configure.py'.exists():
             python('build.py', 'prepare')
 
         args = [

@@ -317,7 +317,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # Assume name contains no digits
 
     # namever
-    ('turbolinux', '702', 'file://{0}/turbolinux702.tar.gz'.format(os.getcwd())),
+    ('turbolinux', '702', 'file://{0}/turbolinux702.tar.gz'.format(Path.cwd())),
     ('nauty', '26r7', 'http://pallini.di.uniroma1.it/nauty26r7.tar.gz'),
 
     # 4th Pass: A single separator character is used
@@ -394,7 +394,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
      'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz'),
     # name-namever.ver_ver.ver
     ('STAR-CCM+', '11.06.010_02',
-     'file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz'.format(os.getcwd())),
+     'file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz'.format(Path.cwd())),
     # name-name_name-ver.ver
     ('PerlIO-utf8_strict', '0.002',
      'http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/PerlIO-utf8_strict-0.002.tar.gz'),

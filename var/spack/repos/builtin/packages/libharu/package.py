@@ -30,7 +30,7 @@ class Libharu(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         """execute their autotools wrapper script"""
-        if os.path.exists('./buildconf.sh'):
+        if './buildconf.sh'.exists():
             bash = which('bash')
             bash('./buildconf.sh', '--force')
 

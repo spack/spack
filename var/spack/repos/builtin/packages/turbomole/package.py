@@ -24,7 +24,7 @@ class Turbomole(Package):
     manual_download = True
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
-            url="file://%s/turbolinux702.tar.gz" % os.getcwd())
+            url="file://%s/turbolinux702.tar.gz" % Path.cwd())
 
     variant('mpi', default=True, description='Set up MPI environment')
     variant('smp', default=False, description='Set up SMP environment')
@@ -45,7 +45,7 @@ class Turbomole(Package):
         super(Turbomole, self).do_fetch(mirror_only)
 
     def get_tm_arch(self):
-        if 'TURBOMOLE' in os.getcwd():
+        if 'TURBOMOLE' in Path.cwd():
             tm_sysname = Executable('./scripts/sysname')
             tm_arch = tm_sysname(output=str)
             return tm_arch.rstrip('\n')

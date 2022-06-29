@@ -44,7 +44,7 @@ class Easi(CMakePackage):
         spec = self.spec
         if "jit=impalajit" in spec:
             impalajir_src = join_path(self.stage.source_path, 'impalajit')
-            if os.path.isdir(impalajir_src):
+            if impalajir_src.is_dir():
                 shutil.rmtree(impalajir_src)
 
             git_exe = GitExe()

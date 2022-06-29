@@ -196,6 +196,6 @@ class Likwid(Package):
                         '\\1 -fcommon',
                         'make/include_GCC.mk')
 
-        env['PWD'] = os.getcwd()
+        env['PWD'] = Path.cwd()
         make()
         make('install')

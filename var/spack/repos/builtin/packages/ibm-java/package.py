@@ -78,13 +78,13 @@ class IbmJava(Package):
         self.spec.home = self.home
 
     def install(self, spec, prefix):
-        archive = os.path.basename(self.stage.archive_file)
+        archive = self.stage.archive_file.name
 
         # The archive.bin file is quite fussy and doesn't work as a
         # symlink.
-        if os.path.islink(archive):
+        if archive.is_symlink():
             targ = os.readlink(archive)
-            os.unlink(archive)
+            archive.unlink()
             copy(targ, archive)
 
         # The properties file is how we avoid an interactive install.

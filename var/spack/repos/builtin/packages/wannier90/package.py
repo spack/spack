@@ -80,7 +80,7 @@ class Wannier90(MakefilePackage):
         }
 
         template = join_path(
-            os.path.dirname(inspect.getmodule(self).__file__),
+            inspect.getmodule(self.parent.__file__),
             'make.sys'
         )
 

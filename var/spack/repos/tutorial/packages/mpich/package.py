@@ -109,7 +109,7 @@ spack package at this time.''',
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if os.path.exists(self.configure_abs_path):
+        if self.configure_abs_path.exists():
             return
         # Else bootstrap with autotools
         bash = which('bash')

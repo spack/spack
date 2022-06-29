@@ -67,7 +67,7 @@ class Parflow(CMakePackage):
         """Perform smoke test on installed ParFlow package."""
         # Run the single phase flow test
         run_path = join_path(self.spec.prefix, self.examples_dir)
-        if os.path.isdir(run_path):
+        if run_path.is_dir():
             with working_dir(run_path):
                 self.run_test(
                     '{0}/tclsh'.format(self.spec['tcl'].prefix.bin),

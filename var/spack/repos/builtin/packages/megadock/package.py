@@ -74,5 +74,5 @@ class Megadock(MakefilePackage, CudaPackage):
 
         for suffix in ['', '-gpu', '-dp', '-gpu-dp']:
             fn = 'megadock' + suffix
-            if os.path.isfile(fn):
+            if fn.is_file():
                 install(fn, prefix.bin)

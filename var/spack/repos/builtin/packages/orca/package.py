@@ -18,7 +18,7 @@ class Orca(Package):
        set up a mirror, see https://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://cec.mpg.de"
-    url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(os.getcwd())
+    url      = "file://{0}/orca_4_0_1_2_linux_x86-64_openmpi202.tar.zst".format(Path.cwd())
     manual_download = True
 
     version('4.2.1', sha256='9bbb3bfdca8220b417ee898b27b2885508d8c82799adfa63dde9e72eab49a6b2',
@@ -42,14 +42,14 @@ class Orca(Package):
 
     def url_for_version(self, version):
         out = "file://{0}/orca_{1}_linux_x86-64_openmpi{2}.tar.zst"
-        return out.format(os.getcwd(), version.underscored,
+        return out.format(Path.cwd(), version.underscored,
                           self.openmpi_versions[version.string])
 
     def install(self, spec, prefix):
         # we have to extract the archive ourself
         # fortunately it's just full of a bunch of binaries
 
-        vername = os.path.basename(self.stage.archive_file).split('.')[0]
+        vername = self.stage.archive_file.name.split('.')[0]
 
         zstd = which('zstd')
         zstd('-d', self.stage.archive_file, '-o', vername + '.tar')
@@ -65,6 +65,6 @@ class Orca(Package):
         # with Slurm scheduler and add a "mpirun" wrapper that
         # calls "srun" if need be
         if '^openmpi ~legacylaunchers schedulers=slurm' in self.spec:
-            mpirun_srun = join_path(os.path.dirname(__file__),
+            mpirun_srun = join_path(__file__.parent,
                                     "mpirun_srun.sh")
             install(mpirun_srun, prefix.bin.mpirun)

@@ -400,7 +400,7 @@ class PackageMeta(
     @property
     def package_dir(self):
         """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(self.module.__file__))
+        return os.path.abspath(self.module.__file__.parent)
 
     @property
     def module(self):
@@ -964,7 +964,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.license_files:
             return
         return os.path.join(self.global_license_dir, self.name,
-                            os.path.basename(self.license_files[0]))
+                            self.license_files[0].name)
 
     @property
     def version(self):
@@ -1194,7 +1194,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
         old_filename = os.path.join(self.stage.path, 'spack-build.env')
-        if os.path.exists(old_filename):
+        if old_filename.exists():
             return old_filename
         else:
             return os.path.join(self.stage.path, _spack_build_envfile)
@@ -1220,7 +1220,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
         old_filename = os.path.join(self.metadata_dir, 'build.env')
-        if os.path.exists(old_filename):
+        if old_filename.exists():
             return old_filename
         else:
             return os.path.join(self.metadata_dir, _spack_build_envfile)
@@ -1231,7 +1231,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Backward compatibility: Return the name of an existing log path.
         for filename in ['spack-build.out', 'spack-build.txt']:
             old_log = os.path.join(self.stage.path, filename)
-            if os.path.exists(old_log):
+            if old_log.exists():
                 return old_log
 
         # Otherwise, return the current log path name.
@@ -1251,7 +1251,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Backward compatibility: Return the name of an existing install log.
         for filename in ['build.out', 'build.txt']:
             old_log = os.path.join(self.metadata_dir, filename)
-            if os.path.exists(old_log):
+            if old_log.exists():
                 return old_log
 
         # Otherwise, return the current install log path name.
@@ -1606,15 +1606,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
-        if os.path.isfile(bad_file):
+        if bad_file.is_file():
             tty.debug('Patching failed last time. Restaging.')
             self.stage.restage()
 
         # If this file exists, then we already applied all the patches.
-        if os.path.isfile(good_file):
+        if good_file.is_file():
             tty.msg('Already patched {0}'.format(self.name))
             return
-        elif os.path.isfile(no_patches_file):
+        elif no_patches_file.is_file():
             tty.msg('No patches needed for {0}'.format(self.name))
             return
 
@@ -1660,8 +1660,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Get rid of any old failed file -- patches have either succeeded
         # or are not needed.  This is mostly defensive -- it's needed
         # if the restage() method doesn't clean *everything* (e.g., for a repo)
-        if os.path.isfile(bad_file):
-            os.remove(bad_file)
+        if bad_file.is_file():
+            bad_file.unlink()
 
         # touch good or no patches file so that we skip next time.
         if patched:
@@ -1773,7 +1773,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Check if we have a Makefile
         for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
-            if os.path.exists(makefile):
+            if makefile.exists():
                 break
         else:
             tty.debug('No Makefile found in the build directory')
@@ -1835,7 +1835,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
-        if not os.path.exists('build.ninja'):
+        if not 'build.ninja'.exists():
             tty.debug('No Ninja build script found in the build directory')
             return False
 
@@ -1966,10 +1966,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         for path in paths:
             src_path = os.path.join(self.stage.source_path, path)
             dest_path = os.path.join(self.install_test_root, path)
-            if os.path.isdir(src_path):
+            if src_path.is_dir():
                 fsys.install_tree(src_path, dest_path)
             else:
-                fsys.mkdirp(os.path.dirname(dest_path))
+                fsys.mkdirp(dest_path.parent)
                 fsys.copy(src_path, dest_path)
 
     @contextlib.contextmanager
@@ -2386,7 +2386,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @staticmethod
     def uninstall_by_spec(spec, force=False, deprecator=None):
-        if not os.path.isdir(spec.prefix):
+        if not spec.prefix.is_dir():
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
@@ -2528,7 +2528,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # copy spec metadata to "deprecated" dir of deprecator
         depr_yaml = spack.store.layout.deprecated_file_path(spec,
                                                             deprecator)
-        fsys.mkdirp(os.path.dirname(depr_yaml))
+        fsys.mkdirp(depr_yaml.parent)
         shutil.copy2(self_yaml, depr_yaml)
 
         # Any specs deprecated in favor of this spec are re-deprecated in
@@ -2768,9 +2768,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         rpaths = [self.prefix.lib, self.prefix.lib64]
         deps = self.spec.dependencies(deptype='link')
         rpaths.extend(d.prefix.lib for d in deps
-                      if os.path.isdir(d.prefix.lib))
+                      if d.prefix.lib.is_dir())
         rpaths.extend(d.prefix.lib64 for d in deps
-                      if os.path.isdir(d.prefix.lib64))
+                      if d.prefix.lib64.is_dir())
         return rpaths
 
     @property
@@ -2898,15 +2898,15 @@ def test_process(pkg, kwargs):
                     if spec.concrete:
                         cache_source = spec_pkg.install_test_root
                         cache_dir = pkg.test_suite.current_test_cache_dir
-                        if (os.path.isdir(cache_source) and
-                                not os.path.exists(cache_dir)):
+                        if (cache_source.is_dir() and
+                                not cache_dir.exists()):
                             fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir
-                    if (os.path.isdir(data_source) and
-                            not os.path.exists(data_dir)):
+                    if (data_source.is_dir() and
+                            not data_dir.exists()):
                         # We assume data dir is used read-only
                         # maybe enforce this later
                         shutil.copytree(data_source, data_dir)

@@ -149,7 +149,7 @@ class Tau(Package):
         #
         # In the following we give TAU what he expects and put compilers into
         # PATH
-        compiler_path = os.path.dirname(self.compiler.cc)
+        compiler_path = self.compiler.cc.parent
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
         compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
@@ -331,7 +331,7 @@ class Tau(Package):
             for d in ('bin', 'lib'):
                 src = join_path(self.prefix, subdir, d)
                 dest = join_path(self.prefix, d)
-                if os.path.isdir(src) and not os.path.exists(dest):
+                if src.is_dir() and not dest.exists():
                     os.symlink(join_path(subdir, d), dest)
 
     def setup_run_environment(self, env):

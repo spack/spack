@@ -25,7 +25,7 @@ class Varscan(Package):
         jar_file = 'VarScan.v{v}.jar'.format(v=self.version.dotted)
         install(jar_file, prefix.jar)
 
-        script_sh = join_path(os.path.dirname(__file__), "varscan.sh")
+        script_sh = join_path(__file__.parent, "varscan.sh")
         script = prefix.bin.varscan
         install(script_sh, script)
         set_executable(script)

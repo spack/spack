@@ -96,4 +96,4 @@ class PyPybind11(CMakePackage, PythonPackage):
                 output=str).strip()
             for inc in [py_inc, self.prefix.include]:
                 inc_file = join_path(inc, 'pybind11', 'pybind11.h')
-                assert os.path.isfile(inc_file)
+                assert inc_file.is_file()

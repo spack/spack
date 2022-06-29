@@ -134,7 +134,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         # Octave extensions outside of the build env
         mkoctfile = Executable(os.path.join(self.prefix, 'bin', 'mkoctfile'))
         helloworld_cc = os.path.join(
-            os.path.dirname(__file__), 'helloworld.cc'
+            __file__.parent, 'helloworld.cc'
         )
         tmp_dir = tempfile.mkdtemp()
         shutil.copy(helloworld_cc, tmp_dir)

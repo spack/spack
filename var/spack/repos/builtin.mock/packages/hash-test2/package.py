@@ -30,7 +30,7 @@ class HashTest2(Package):
 
     def install(self, spec, prefix):
         print("install 1")
-        os.listdir(os.getcwd())
+        os.listdir(Path.cwd())
 
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)

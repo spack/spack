@@ -195,7 +195,7 @@ class Hpcviewer(Package):
         with open(viewer_file, 'w') as file:
             file.write('#!/bin/sh\n')
             file.write('open ' + app_dir + '\n')
-        os.chmod(viewer_file, 0o755)
+        viewer_file.chmod(0o755)
 
     # Install for Cray front-end is the same as Linux.
     @when('platform=cray')
@@ -215,14 +215,14 @@ class Hpcviewer(Package):
 
         # Sometimes the script is install.sh, sometimes install.
         inst_path = join_path('.', 'install.sh')
-        if not os.path.exists(inst_path):
+        if not inst_path.exists():
             inst_path = join_path('.', 'install')
 
         inst = Executable(inst_path)
         inst(*args)
 
         # Older versions used a separate resource for the traceviewer.
-        if os.path.isdir('TRACE'):
+        if 'TRACE'.is_dir():
             cd('TRACE')
             inst = Executable(inst_path)
             inst(*args)

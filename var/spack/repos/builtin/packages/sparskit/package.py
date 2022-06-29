@@ -59,7 +59,7 @@ class Sparskit(MakefilePackage):
     def edit(self, spec, prefix):
         mkfile = FileFilter('makefile')
         mkfile.filter(r'^(OPT).*=.+', r'\1= -c $(FFLAGS)')
-        if os.path.exists('libskit.a'):
+        if 'libskit.a'.exists():
             os.unlink('libskit.a')
 
     def build(self, spec, prefix):

@@ -158,12 +158,12 @@ class Caliper(CMakePackage, CudaPackage):
         exe = 'cxx-example'
         source_file = 'cxx-example.cpp'
 
-        if not os.path.isfile(join_path(test_dir, source_file)):
+        if not join_path(test_dir, source_file.is_file()):
             tty.warn('Skipping caliper test:'
                      '{0} does not exist'.format(source_file))
             return
 
-        if os.path.exists(self.prefix.lib):
+        if self.prefix.lib.exists():
             lib_dir = self.prefix.lib
         else:
             lib_dir = self.prefix.lib64

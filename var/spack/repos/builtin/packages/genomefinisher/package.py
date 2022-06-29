@@ -29,7 +29,7 @@ class Genomefinisher(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "genomefinisher.sh")
+        script_sh = join_path(__file__.parent, "genomefinisher.sh")
         script = prefix.bin.genomefinisher
         install(script_sh, script)
         set_executable(script)

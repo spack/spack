@@ -5188,7 +5188,7 @@ class SpecParser(spack.parse.Parser):
             raise SpecFilenameError(
                 "Spec filename must end in .yaml or .json: '{0}'".format(path))
 
-        if not os.path.exists(path):
+        if not path.exists():
             raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
 
         with open(path) as f:

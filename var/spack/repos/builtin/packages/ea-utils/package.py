@@ -38,14 +38,14 @@ class EaUtils(MakefilePackage):
             # remove the vendored sparsehash
             filter_file(' sparsehash', '', 'Makefile')
             # replace system perl references
-            for f in next(os.walk(os.getcwd()))[2]:
+            for f in next(os.walk(Path.cwd()))[2]:
                 filter_file('/usr/bin/perl', spec['perl'].prefix.bin.perl, f)
             # fix up test script require path
             tests = ['join.t', 'mcf.t', 'multx.t']
-            rep = 'require "{0}";'.format(os.path.join(os.getcwd(),
+            rep = 'require "{0}";'.format(os.path.join(Path.cwd(),
                                           't', 'test-prep.pl'))
             for f in tests:
-                filter_file(r'^require.*$', rep, os.path.join(os.getcwd(),
+                filter_file(r'^require.*$', rep, os.path.join(Path.cwd(),
                             't', f))
 
     def flag_handler(self, name, flags):

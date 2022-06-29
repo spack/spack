@@ -245,7 +245,7 @@ with '-Wl,-commons,use_dylibs' and without
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
                 if (spack_compiler.cc and
-                        os.path.dirname(spack_compiler.cc) == path):
+                        spack_compiler.cc.parent == path):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -329,7 +329,7 @@ with '-Wl,-commons,use_dylibs' and without
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
             compiler_spec = get_spack_compiler_spec(
-                os.path.dirname(match.group(1)))
+                match.group(1.parent))
             if compiler_spec:
                 variants.append('%' + str(compiler_spec))
             results.append(' '.join(variants))
@@ -416,7 +416,7 @@ with '-Wl,-commons,use_dylibs' and without
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
-        if (os.path.exists(self.configure_abs_path) and
+        if (self.configure_abs_path.exists() and
             not spec.satisfies('@3.3:3.3.99 +hwloc')):
             return
         # Else bootstrap with autotools
@@ -564,7 +564,7 @@ with '-Wl,-commons,use_dylibs' and without
                              example_dir)
         exe_source = join_path(test_dir, '{0}.c'.format(exe))
 
-        if not os.path.isfile(exe_source):
+        if not exe_source.is_file():
             print('Skipping {0} test'.format(exe))
             return
 

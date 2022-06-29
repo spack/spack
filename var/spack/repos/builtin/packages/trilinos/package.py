@@ -836,7 +836,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             # https://github.com/spack/spack/pull/25823#issuecomment-917231118
             options.append(
                 define('Trilinos_EXTRA_LINK_FLAGS',
-                       '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
+                       '-L%s/ -lgfortran' % libgfortran.parent))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader

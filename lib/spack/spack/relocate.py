@@ -132,7 +132,7 @@ def _make_relative(reference_file, path_root, paths):
     Returns:
         List of relative paths
     """
-    start_directory = os.path.dirname(reference_file)
+    start_directory = reference_file.parent
     pattern = re.compile(path_root)
     relative_paths = []
 
@@ -168,7 +168,7 @@ def _normalize_relative_paths(start_path, relative_paths):
     """
     normalized_paths = []
     pattern = re.compile(re.escape('$ORIGIN'))
-    start_directory = os.path.dirname(start_path)
+    start_directory = start_path.parent
 
     for path in relative_paths:
         if path.startswith('$ORIGIN'):
@@ -199,16 +199,16 @@ def macho_make_paths_relative(path_name, old_layout_root,
     paths_to_paths = dict()
     if idpath:
         paths_to_paths[idpath] = os.path.join(
-            '@rpath', '%s' % os.path.basename(idpath))
+            '@rpath', '%s' % idpath.name)
     for rpath in rpaths:
         if re.match(old_layout_root, rpath):
-            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
+            rel = os.path.relpath(rpath, start=path_name.parent)
             paths_to_paths[rpath] = os.path.join('@loader_path', '%s' % rel)
         else:
             paths_to_paths[rpath] = rpath
     for dep in deps:
         if re.match(old_layout_root, dep):
-            rel = os.path.relpath(dep, start=os.path.dirname(path_name))
+            rel = os.path.relpath(dep, start=path_name.parent)
             paths_to_paths[dep] = os.path.join('@loader_path', '%s' % rel)
         else:
             paths_to_paths[dep] = dep
@@ -229,7 +229,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
     for rpath in rpaths:
         if re.match('@loader_path', rpath):
             norm = os.path.normpath(re.sub(re.escape('@loader_path'),
-                                           os.path.dirname(orig_path_name),
+                                           orig_path_name.parent,
                                            rpath))
             rel_to_orig[rpath] = norm
         else:
@@ -237,7 +237,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
     for dep in deps:
         if re.match('@loader_path', dep):
             norm = os.path.normpath(re.sub(re.escape('@loader_path'),
-                                           os.path.dirname(orig_path_name),
+                                           orig_path_name.parent,
                                            dep))
             rel_to_orig[dep] = norm
         else:
@@ -420,8 +420,8 @@ def _set_elf_rpaths(target, rpaths):
         msg = 'patchelf --force-rpath --set-rpath {0} failed with error {1}'
         tty.warn(msg.format(target, e))
     finally:
-        if bak_path and os.path.exists(bak_path):
-            os.remove(bak_path)
+        if bak_path and bak_path.exists():
+            bak_path.unlink()
     return output
 
 
@@ -682,8 +682,8 @@ def make_link_relative(new_links, orig_links):
     """
     for new_link, orig_link in zip(new_links, orig_links):
         target = os.readlink(orig_link)
-        relative_target = os.path.relpath(target, os.path.dirname(orig_link))
-        os.unlink(new_link)
+        relative_target = os.path.relpath(target, orig_link.parent)
+        new_link.unlink()
         symlink(relative_target, new_link)
 
 
@@ -764,12 +764,12 @@ def relocate_links(links, orig_layout_root,
             link_target = re.sub(
                 orig_install_prefix, new_install_prefix, link_target
             )
-            os.unlink(abs_link)
+            abs_link.unlink()
             symlink(link_target, abs_link)
 
         # If the link is absolute and has not been relocated then
         # warn the user about that
-        if (os.path.isabs(link_target) and
+        if (link_target.is_absolute() and
             not link_target.startswith(new_install_prefix)):
             msg = ('Link target "{0}" for symbolic link "{1}" is outside'
                    ' of the new install prefix {2}')
@@ -909,10 +909,10 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
     paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
-    if not os.path.exists(filename):
+    if not filename.exists():
         raise ValueError('{0} does not exist'.format(filename))
 
-    if not os.path.isabs(filename):
+    if not filename.is_absolute():
         raise ValueError('{0} is not an absolute path'.format(filename))
 
     strings = executable.Executable('strings')
@@ -994,7 +994,7 @@ def mime_type(filename):
 # Memoize this due to repeated calls to libraries in the same directory.
 @llnl.util.lang.memoized
 def _exists_dir(dirname):
-    return os.path.isdir(dirname)
+    return dirname.is_dir()
 
 
 def fixup_macos_rpath(root, filename):
@@ -1098,7 +1098,7 @@ def fixup_macos_rpaths(spec):
                       'Library', 'Frameworks'])
     prefix = spec.prefix
 
-    if not os.path.exists(prefix):
+    if not prefix.exists():
         raise RuntimeError(
             'Could not fix up install prefix spec {0} because it does '
             'not exist: {1!s}'.format(prefix, spec.name)

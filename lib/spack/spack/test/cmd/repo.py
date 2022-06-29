@@ -23,7 +23,7 @@ def test_create_add_list_remove(mutable_config, tmpdir):
     # Create a new repository and check that the expected
     # files are there
     repo('create', str(tmpdir), 'mockrepo')
-    assert os.path.exists(os.path.join(str(tmpdir), 'repo.yaml'))
+    assert os.path.join(str(tmpdir.exists(), 'repo.yaml'))
 
     # Add the new repository and check it appears in the list output
     repo('add', '--scope=site', str(tmpdir))

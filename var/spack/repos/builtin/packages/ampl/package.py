@@ -32,28 +32,28 @@ class Ampl(Package):
 
     resource(
         name='amplapi',
-        url='file://{0}/amplapi-linux64.2.0.0.zip'.format(os.getcwd()),
+        url='file://{0}/amplapi-linux64.2.0.0.zip'.format(Path.cwd()),
         sha256='a4abe111f142b862f11fcd8700f964b688d5d2291e9e055f6e7adbd92b0e243a',
         destination='',
         placement='amplapi'
     )
     resource(
         name='amplide',
-        url='file://{0}/amplide-linux64.3.5.tgz'.format(os.getcwd()),
+        url='file://{0}/amplide-linux64.3.5.tgz'.format(Path.cwd()),
         sha256='c2163896df672b71901d2e46cd5cf1c1c4f0451e478ef32d0971705aaf86d6ac',
         destination='',
         placement='amplide'
     )
     resource(
         name='ampl_lic',
-        url='file://{0}/ampl_lic.linux-intel64.20210618.tgz'.format(os.getcwd()),
+        url='file://{0}/ampl_lic.linux-intel64.20210618.tgz'.format(Path.cwd()),
         sha256='f5c38638d6cc99c85e0d6de001722b64a03e2adeaf5aed9ed622401654d9ff33',
         destination='',
         placement=''
     )
 
     def url_for_version(self, version):
-        return "file://{0}/ampl.linux-intel64.{1}.tgz".format(os.getcwd(), version)
+        return "file://{0}/ampl.linux-intel64.{1}.tgz".format(Path.cwd(), version)
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", self.prefix)

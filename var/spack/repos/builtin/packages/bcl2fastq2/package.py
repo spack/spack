@@ -84,7 +84,7 @@ class Bcl2fastq2(Package):
                     # Rename the tarball so it resides in self.stage.path
                     # alongside the original zip file before unpacking it.
                     tarball = files[0]
-                    basename = os.path.basename(tarball)
+                    basename = tarball.name
                     os.rename(tarball, basename)
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tar = which('tar')

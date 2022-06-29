@@ -30,14 +30,14 @@ class HashTest3(Package):
     @when('@:1.4')
     def install(self, spec, prefix):
         print("install 1")
-        os.listdir(os.getcwd())
+        os.listdir(Path.cwd())
 
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)
 
     @when('@1.5:')
     def install(self, spec, prefix):
-        os.listdir(os.getcwd())
+        os.listdir(Path.cwd())
 
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)

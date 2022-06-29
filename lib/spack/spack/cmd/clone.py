@@ -57,12 +57,12 @@ def clone(parser, args):
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
-    if os.path.isfile(prefix):
+    if prefix.is_file():
         tty.die("There is already a file at %s" % prefix)
 
     mkdirp(prefix)
 
-    if os.path.exists(os.path.join(prefix, '.git')):
+    if os.path.join(prefix, '.git'.exists()):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
     files_in_the_way = os.listdir(prefix)

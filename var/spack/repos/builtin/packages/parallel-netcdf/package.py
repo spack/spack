@@ -202,7 +202,7 @@ class ParallelNetcdf(AutotoolsPackage):
                        self.spec['mpi'].prefix.bin.mpirun,
                        self.spec['mpi'].prefix.bin.mpiexec]
         for mpiexe in mpiexe_list:
-            if os.path.isfile(mpiexe):
+            if mpiexe.is_file():
                 self.run_test(mpiexe, ['-n', '1', test_exe], [],
                               installed=False,
                               purpose='test: pnetcdf smoke test',

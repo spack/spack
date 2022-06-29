@@ -12,6 +12,8 @@ import os
 import shutil
 from collections import OrderedDict
 
+from pathlib import Path
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
 from llnl.util.symlink import islink, symlink
@@ -28,7 +30,7 @@ def remove_link(src, dest):
     # be false if two packages are merged into a prefix and have a
     # conflicting file
     if filecmp.cmp(src, dest, shallow=True):
-        os.remove(dest)
+        dest.unlink()
 
 
 class MergeConflict:
@@ -126,7 +128,7 @@ class SourceMergeVisitor(object):
         else:
             # Only follow symlinked dirs when pointing deeper
             src = os.path.join(root, rel_path)
-            real_parent = os.path.realpath(os.path.dirname(src))
+            real_parent = os.path.realpath(src.parent)
             real_child = os.path.realpath(src)
             handle_as_dir = real_child.startswith(real_parent)
 
@@ -282,10 +284,11 @@ class LinkTree(object):
     modified.
     """
     def __init__(self, source_root):
-        if not os.path.exists(source_root):
+        root = Path(source_root)
+        if not root.exists():
             raise IOError("No such file or directory: '%s'", source_root)
 
-        self._root = source_root
+        self._root = root
 
     def find_conflict(self, dest_root, ignore=None,
                       ignore_file_conflicts=False):
@@ -297,7 +300,7 @@ class LinkTree(object):
             conflicts.extend(
                 dst for src, dst
                 in self.get_file_map(dest_root, ignore).items()
-                if os.path.exists(dst))
+                if dst.exists())
 
         if conflicts:
             return conflicts[0]
@@ -306,10 +309,10 @@ class LinkTree(object):
         conflicts = []
         kwargs = {'follow_nonexisting': False, 'ignore': ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
-            if os.path.isdir(src):
-                if os.path.exists(dest) and not os.path.isdir(dest):
+            if src.is_dir():
+                if dest.exists() and not dest.is_dir():
                     conflicts.append("File blocks directory: %s" % dest)
-            elif os.path.exists(dest) and os.path.isdir(dest):
+            elif dest.exists() and dest.is_dir():
                 conflicts.append("Directory blocks directory: %s" % dest)
         return conflicts
 
@@ -317,18 +320,18 @@ class LinkTree(object):
         merge_map = {}
         kwargs = {'follow_nonexisting': True, 'ignore': ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
-            if not os.path.isdir(src):
+            if not src.is_dir():
                 merge_map[src] = dest
         return merge_map
 
     def merge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(self._root, dest_root, ignore=ignore):
-            if os.path.isdir(src):
-                if not os.path.exists(dest):
+            if src.is_dir():
+                if not dest.exists():
                     mkdirp(dest)
                     continue
 
-                if not os.path.isdir(dest):
+                if not dest.is_dir():
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # mark empty directories so they aren't removed on unmerge.
@@ -339,10 +342,10 @@ class LinkTree(object):
     def unmerge_directories(self, dest_root, ignore):
         for src, dest in traverse_tree(
                 self._root, dest_root, ignore=ignore, order='post'):
-            if os.path.isdir(src):
-                if not os.path.exists(dest):
+            if src.is_dir():
+                if not dest.exists():
                     continue
-                elif not os.path.isdir(dest):
+                elif not dest.is_dir():
                     raise ValueError("File blocks directory: %s" % dest)
 
                 # remove directory if it is empty.
@@ -351,8 +354,8 @@ class LinkTree(object):
 
                 # remove empty dir marker if present.
                 marker = os.path.join(dest, empty_file_name)
-                if os.path.exists(marker):
-                    os.remove(marker)
+                if marker.exists():
+                    marker.unlink()
 
     def merge(self, dest_root, ignore_conflicts=False, ignore=None,
               link=symlink, relative=False):
@@ -384,11 +387,11 @@ class LinkTree(object):
         self.merge_directories(dest_root, ignore)
         existing = []
         for src, dst in self.get_file_map(dest_root, ignore).items():
-            if os.path.exists(dst):
+            if dst.exists():
                 existing.append(dst)
             elif relative:
-                abs_src = os.path.abspath(src)
-                dst_dir = os.path.dirname(os.path.abspath(dst))
+                abs_src = src.resolve()
+                dst_dir = dst.parent.resolve()
                 rel = os.path.relpath(abs_src, dst_dir)
                 link(rel, dst)
             else:

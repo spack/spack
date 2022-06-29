@@ -21,7 +21,7 @@ class Tecplot(Package):
     version('2018r2', 'd3cf54a7555e0259b7ba0d82fef23bc3', expand=False)
 
     def url_for_version(self, version):
-        return "file://{0}/tecplot360ex{1}_linux64.sh".format(os.getcwd(), version)
+        return "file://{0}/tecplot360ex{1}_linux64.sh".format(Path.cwd(), version)
 
     def install(self, spec, prefix):
         makefile = FileFilter(self.stage.archive_file)

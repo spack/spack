@@ -85,7 +85,7 @@ def test_affirmative_ninja_check(
 
         # Clean up Ninja files
         for filename in glob.iglob('.ninja_*'):
-            os.remove(filename)
+            filename.unlink()
 
 
 @pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
@@ -202,7 +202,7 @@ class TestAutotoolsPackage(object):
 
         # Assert the libtool archive is not there and we have
         # a log of removed files
-        assert not os.path.exists(s.package.libtool_archive_file)
+        assert not s.package.libtool_archive_file.exists()
         search_directory = os.path.join(s.prefix, '.spack')
         libtool_deletion_log = fs.find(
             search_directory, 'removed_la_files.txt', recursive=True
@@ -220,7 +220,7 @@ class TestAutotoolsPackage(object):
         s.package.do_install(explicit=True)
 
         # Assert libtool archives are installed
-        assert os.path.exists(s.package.libtool_archive_file)
+        assert s.package.libtool_archive_file.exists()
 
     def test_autotools_gnuconfig_replacement(self, mutable_database):
         """

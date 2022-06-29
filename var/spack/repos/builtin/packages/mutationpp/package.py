@@ -33,20 +33,20 @@ class Mutationpp(CMakePackage):
 
     @run_after('install')
     def install_data(self):
-        if '+data' in self.spec and os.path.isdir('data'):
+        if '+data' in self.spec and 'data'.is_dir():
             install_tree('data', self.prefix.data)
 
     @run_after('install')
     def install_examples(self):
-        if '+examples' in self.spec and os.path.isdir('examples'):
+        if '+examples' in self.spec and 'examples'.is_dir():
             install_tree('examples', self.prefix.examples)
 
     def setup_run_environment(self, env):
         env.set('MPP_DIRECTORY', self.prefix)
-        if os.path.isdir(self.prefix.data):
+        if self.prefix.data.is_dir():
             env.set('MPP_DATA_DIRECTORY', self.prefix.data)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPP_DIRECTORY', self.prefix)
-        if os.path.isdir(self.prefix.data):
+        if self.prefix.data.is_dir():
             env.set('MPP_DATA_DIRECTORY', self.prefix.data)

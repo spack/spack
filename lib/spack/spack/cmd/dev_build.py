@@ -82,7 +82,7 @@ def dev_build(self, args):
 
     source_path = args.source_path
     if source_path is None:
-        source_path = os.getcwd()
+        source_path = Path.cwd()
     source_path = os.path.abspath(source_path)
 
     # Forces the build to run out of the source directory.

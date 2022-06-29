@@ -77,7 +77,7 @@ export CPLUS_INCLUDE_PATH
         """Install under the prefix directory"""
 
         for f in ['README.md', 'LICENSE']:
-            if os.path.isfile(f):
+            if f.is_file():
                 install(f, join_path(self.prefix, f))
 
         install_tree('tutorials', join_path(self.prefix, 'tutorials'))

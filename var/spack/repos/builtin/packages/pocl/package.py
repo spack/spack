@@ -108,7 +108,7 @@ class Pocl(CMakePackage):
         print("Checking pocl installation...")
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
-            source = join_path(os.path.dirname(self.module.__file__),
+            source = join_path(self.module.__file__.parent,
                                "example1.c")
             cflags = spec["pocl"].headers.cpp_flags.split()
             # ldflags = spec["pocl"].libs.ld_flags.split()
@@ -117,5 +117,5 @@ class Pocl(CMakePackage):
             output = compile_c_and_execute(source, cflags, ldflags)
             compare_output_file(
                 output,
-                join_path(os.path.dirname(self.module.__file__),
+                join_path(self.module.__file__.parent,
                           "example1.out"))

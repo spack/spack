@@ -170,12 +170,12 @@ class ScriptDirectory(object):
 
     def make_executable(self, path):
         # make a file executable
-        st = os.stat(path)
+        st = path.stat()
         executable_mode = st.st_mode \
             | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-        os.chmod(path, executable_mode)
+        path.chmod(executable_mode)
 
-        st = os.stat(path)
+        st = path.stat()
         assert oct(executable_mode) == oct(st.st_mode & executable_mode)
 
 
@@ -256,13 +256,13 @@ def test_shebang_handling(script_dir, sbang_line):
 
 def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     # make a file non-writable
-    st = os.stat(script_dir.long_shebang)
+    st = script_dir.long_shebang.stat()
     not_writable_mode = st.st_mode & ~stat.S_IWRITE
-    os.chmod(script_dir.long_shebang, not_writable_mode)
+    script_dir.long_shebang.chmod(not_writable_mode)
 
     test_shebang_handling(script_dir, sbang_line)
 
-    st = os.stat(script_dir.long_shebang)
+    st = script_dir.long_shebang.stat()
     assert oct(not_writable_mode) == oct(st.st_mode)
 
 
@@ -295,20 +295,20 @@ all:
 
 def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = sbang_path.parent
     assert sbang_path.startswith(spack.store.store.unpadded_root)
 
-    assert os.path.exists(sbang_path)
+    assert sbang_path.exists()
     assert fs.is_exe(sbang_path)
 
-    status = os.stat(sbang_bin_dir)
+    status = sbang_bin_dir.stat()
     mode = (status.st_mode & 0o777)
     if group:
         assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
     else:
         assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
 
-    status = os.stat(sbang_path)
+    status = sbang_path.stat()
     mode = (status.st_mode & 0o777)
     if group:
         assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
@@ -318,10 +318,10 @@ def check_sbang_installation(group=False):
 
 def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
-    sbang_bin_dir = os.path.dirname(sbang_path)
+    sbang_bin_dir = sbang_path.parent
 
     assert sbang_path.startswith(spack.store.store.unpadded_root)
-    assert not os.path.exists(sbang_bin_dir)
+    assert not sbang_bin_dir.exists()
 
     sbang.install_sbang()
     check_sbang_installation(group)
@@ -433,8 +433,8 @@ def test_sbang_hook_handles_non_writable_files_preserving_permissions(tmpdir):
     path = str(tmpdir.join('file.sh'))
     with open(path, 'w') as f:
         f.write(long_line)
-    os.chmod(path, 0o555)
+    path.chmod(0o555)
     sbang.filter_shebang(path)
     with open(path, 'r') as f:
         assert 'sbang' in f.readline()
-    assert os.stat(path).st_mode & 0o777 == 0o555
+    assert path.stat().st_mode & 0o777 == 0o555

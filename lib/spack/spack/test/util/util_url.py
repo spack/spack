@@ -85,20 +85,20 @@ def test_url_local_file_path():
 
     if is_windows:
         lfp = url_util.local_file_path('file://a/b/c.txt')
-        expected = os.path.abspath(os.path.join('a', 'b', 'c.txt'))
+        expected = os.path.join('a', 'b', 'c.txt').resolve()
         assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
-    expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
+    expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
     assert(lfp == expected)
 
     if is_windows:
         lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
-        expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
+        expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
         assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
-    expected = os.path.abspath(os.path.join(spack_root, 'a', 'b', 'c.txt'))
+    expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
     assert(lfp == expected)
 
     # not a file:// URL - so no local file path
@@ -286,7 +286,7 @@ def test_url_join_absolute_paths():
     #     HOWEVER, the URL, itself, *is* an absolute path component
 
     # (We just need...
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     # ...to work out what resource it points to)
 
     if sys.platform == "win32":

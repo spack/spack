@@ -23,6 +23,6 @@ class Netgauge(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append('MPICC=%s' % os.path.basename(self.spec['mpi'].mpicc))
-        args.append('MPICXX=%s' % os.path.basename(self.spec['mpi'].mpicxx))
+        args.append('MPICC=%s' % self.spec['mpi'].mpicc.name)
+        args.append('MPICXX=%s' % self.spec['mpi'].mpicxx.name)
         return args

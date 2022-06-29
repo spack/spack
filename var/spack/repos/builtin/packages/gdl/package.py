@@ -145,8 +145,8 @@ class Gdl(CMakePackage):
                 self.spec.prefix.lib,
                 'site-python')
             dst = python_platlib
-            if os.path.isdir(src):
-                if not os.path.isdir(dst):
+            if src.is_dir():
+                if not dst.is_dir():
                     mkdirp(dst)
                 for f in os.listdir(src):
                     os.rename(os.path.join(src, f),

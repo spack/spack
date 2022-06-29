@@ -36,7 +36,7 @@ class Lhapdfsets(BundlePackage):
         if sets == 'all':
             # parse set names from index file
             all_sets = [_line.split()[1] for _line in
-                        open(join_path(os.path.dirname(__file__),
+                        open(join_path(__file__.parent,
                              'pdfsets.index')).readlines()]
             sets = all_sets
         elif sets == 'default':

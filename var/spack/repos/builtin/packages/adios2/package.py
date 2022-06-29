@@ -231,6 +231,6 @@ class Adios2(CMakePackage, CudaPackage):
         try:
             all_libs = self.libs
             idx = all_libs.basenames.index('libadios2_h5vol.so')
-            env.prepend_path('HDF5_PLUGIN_PATH', os.path.dirname(all_libs[idx]))
+            env.prepend_path('HDF5_PLUGIN_PATH', all_libs[idx].parent)
         except ValueError:
             pass

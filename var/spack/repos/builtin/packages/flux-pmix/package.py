@@ -30,7 +30,7 @@ class FluxPmix(AutotoolsPackage):
     depends_on('libtool', type='build')
 
     def autoreconf(self, spec, prefix):
-        if not os.path.exists('configure'):
+        if not 'configure'.exists():
             # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')

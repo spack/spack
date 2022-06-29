@@ -607,7 +607,7 @@ class PyclingoDriver(object):
 
         # read in the main ASP program and display logic -- these are
         # handwritten, not generated, so we load them as resources
-        parent_dir = os.path.dirname(__file__)
+        parent_dir = __file__.parent
 
         # extract error messages from concretize.lp by inspecting its AST
         with self.backend:

@@ -205,7 +205,7 @@ class Mumps(Package):
         # check handles mixed toolchains which are not handled by the method
         # 'flag_handler' defined below.
         # TODO: remove 'flag_handler' since this check covers that case too?
-        if os.path.basename(spack_fc) == 'gfortran':
+        if spack_fc.name == 'gfortran':
             gfortran = Executable(spack_fc)
             gfort_ver = Version(gfortran('-dumpversion', output=str).strip())
             if gfort_ver >= Version('10'):
@@ -328,7 +328,7 @@ class Mumps(Package):
             'EXTRA_LIBS4MUMPS = {0}'.format(' '.join(extra_libs4mumps))
         ])
         makefile_inc_template = join_path(
-            os.path.dirname(self.module.__file__), 'Makefile.inc')
+            self.module.__file__.parent, 'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
             makefile_conf.extend(fh.read().split('\n'))
 

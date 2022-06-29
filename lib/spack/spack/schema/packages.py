@@ -34,7 +34,7 @@ def deprecate_paths_and_modules(instance, deprecated_properties):
     # Check if this configuration comes from an environment or not
     absolute_path = instance_copy._end_mark.name
     command_to_suggest = '$ spack config update packages'
-    if os.path.basename(absolute_path) == 'spack.yaml':
+    if absolute_path.name == 'spack.yaml':
         command_to_suggest = '$ spack env update <environment>'
 
     # Retrieve the relevant part of the configuration as YAML

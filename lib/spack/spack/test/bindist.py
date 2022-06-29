@@ -43,7 +43,7 @@ def cache_directory(tmpdir):
 
     yield spack.config.caches
 
-    fetch_cache_dir.remove()
+    fetch_cache_dir.unlink()
     spack.config.caches = old_cache_path
 
 
@@ -52,7 +52,7 @@ def mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp('mirror')
     dir.ensure('build_cache', dir=True)
     yield str(dir)
-    dir.join('build_cache').remove()
+    dir.join('build_cache').unlink()
 
 
 @pytest.fixture(scope='function')
@@ -95,7 +95,7 @@ def config_directory(tmpdir_factory):
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
     repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
     yield tmpdir
-    tmpdir.remove()
+    tmpdir.unlink()
 
 
 @pytest.fixture(scope='function')
@@ -141,7 +141,7 @@ def default_config(
     yield spack.config.config
 
     spack.config.config = old_config
-    mutable_dir.remove()
+    mutable_dir.unlink()
 
 
 @pytest.fixture(scope='function')

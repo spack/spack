@@ -84,11 +84,11 @@ class RocmValidationSuite(CMakePackage):
         if self.spec.satisfies('@4.5.0:'):
             args.append(self.define('UT_INC', self.spec['googletest'].prefix.include))
             libloc = self.spec['googletest'].prefix.lib64
-            if not os.path.isdir(libloc):
+            if not libloc.is_dir():
                 libloc = self.spec['googletest'].prefix.lib
             args.append(self.define('UT_LIB', libloc))
             libloc = self.spec['hsakmt-roct'].prefix.lib64
-            if not os.path.isdir(libloc):
+            if not libloc.is_dir():
                 libloc = self.spec['hsakmt-roct'].prefix.lib
             args.append(self.define('HSAKMT_LIB_DIR', libloc))
         return args

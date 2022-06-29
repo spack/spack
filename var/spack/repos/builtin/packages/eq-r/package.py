@@ -44,7 +44,7 @@ class EqR(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-tcl=' + self.spec['tcl'].prefix]
         r_location = '{0}/rlib/R'.format(self.spec['r'].prefix)
-        if not os.path.exists(r_location):
+        if not r_location.exists():
             rscript = which('Rscript')
             if rscript is not None:
                 r_location = rscript('-e', 'cat(R.home())', output=str)

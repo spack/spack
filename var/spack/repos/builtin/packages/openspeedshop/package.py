@@ -287,7 +287,7 @@ class Openspeedshop(CMakePackage):
         env.set('OPENSS_RAWDATA_DIR', '.')
 
         # Set the openspeedshop plugin path
-        if os.path.isdir(self.prefix.lib64):
+        if self.prefix.lib64.is_dir():
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib

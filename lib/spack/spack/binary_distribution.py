@@ -123,7 +123,7 @@ class BinaryCacheIndex(object):
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
-            if os.path.isfile(cache_path):
+            if cache_path.is_file():
                 with self._index_file_cache.read_transaction(
                         cache_key) as cache_file:
                     self._local_index_cache = json.load(cache_file)
@@ -637,9 +637,9 @@ def get_buildfile_manifest(spec):
         for directory in dirs:
             dir_path_name = os.path.join(root, directory)
             rel_path_name = os.path.relpath(dir_path_name, spec.prefix)
-            if os.path.islink(dir_path_name):
+            if dir_path_name.is_symlink():
                 link = os.readlink(dir_path_name)
-                if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+                if link.is_absolute() and link.startswith(spack.store.layout.root):
                     data['link_to_relocate'].append(rel_path_name)
 
         for filename in files:
@@ -648,9 +648,9 @@ def get_buildfile_manifest(spec):
             rel_path_name = os.path.relpath(path_name, spec.prefix)
             added = False
 
-            if os.path.islink(path_name):
+            if path_name.is_symlink():
                 link = os.readlink(path_name)
-                if os.path.isabs(link):
+                if link.is_absolute():
                     # Relocate absolute links into the spack tree
                     if link.startswith(spack.store.layout.root):
                         data['link_to_relocate'].append(rel_path_name)
@@ -768,9 +768,9 @@ def select_signing_key(key=None):
 
 def sign_specfile(key, force, specfile_path):
     signed_specfile_path = '%s.sig' % specfile_path
-    if os.path.exists(signed_specfile_path):
+    if signed_specfile_path.exists():
         if force:
-            os.remove(signed_specfile_path)
+            signed_specfile_path.unlink()
         else:
             raise NoOverwriteException(signed_specfile_path)
 
@@ -1012,7 +1012,7 @@ def _build_tarball(
         raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    workdir = os.path.join(tmpdir, spec.prefix.name)
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
@@ -1023,7 +1023,7 @@ def _build_tarball(
                 arcname='.')
     with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
         tar.extractall(workdir)
-    os.remove(temp_tarfile_path)
+    temp_tarfile_path.unlink()
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec, workdir, relative)
@@ -1050,7 +1050,7 @@ def _build_tarball(
     # create gzip compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(spec.prefix))
+                arcname='%s' % spec.prefix.name)
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -1521,7 +1521,7 @@ def relocate_package(spec, allow_root):
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
-    stagepath = os.path.dirname(filename)
+    stagepath = filename.parent
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, '.tar.gz')
@@ -1533,19 +1533,19 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(extract_to)
     # some buildcache tarfiles use bzip2 compression
-    if not os.path.exists(tarfile_path):
+    if not tarfile_path.exists():
         tarfile_name = tarball_name(spec, '.tar.bz2')
         tarfile_path = os.path.join(extract_to, tarfile_name)
 
-    if os.path.exists(json_path):
+    if json_path.exists():
         specfile_path = json_path
-    elif os.path.exists(deprecated_yaml_path):
+    elif deprecated_yaml_path.exists():
         specfile_path = deprecated_yaml_path
     else:
         raise ValueError('Cannot find spec file for {0}.'.format(extract_to))
 
     if not unsigned:
-        if os.path.exists('%s.asc' % specfile_path):
+        if '%s.asc' % specfile_path.exists():
             suppress = config.get('config:suppress_gpg_warnings', False)
             try:
                 spack.util.gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
@@ -1573,7 +1573,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
     """
     extract binary tarball for given package into install area
     """
-    if os.path.exists(spec.prefix):
+    if spec.prefix.exists():
         if force:
             shutil.rmtree(spec.prefix)
         else:
@@ -1662,8 +1662,8 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
         _delete_staged_downloads(download_result)
         shutil.rmtree(extracted_dir)
         raise e
-    os.remove(tarfile_path)
-    os.remove(specfile_path)
+    tarfile_path.unlink()
+    specfile_path.unlink()
 
     try:
         relocate_package(spec, allow_root)
@@ -1674,14 +1674,14 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
         manifest_file = os.path.join(spec.prefix,
                                      spack.store.layout.metadata_dir,
                                      spack.store.layout.manifest_file_name)
-        if not os.path.exists(manifest_file):
+        if not manifest_file.exists():
             spec_id = spec.format('{name}/{hash:7}')
             tty.warn('No manifest file in tarball for spec %s' % spec_id)
     finally:
         if tmpdir:
             shutil.rmtree(tmpdir)
-        if os.path.exists(filename):
-            os.remove(filename)
+        if filename.exists():
+            filename.unlink()
         _delete_staged_downloads(download_result)
 
 
@@ -1901,9 +1901,9 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             link = os.path.join(keys_url, fingerprint + '.pub')
 
             with Stage(link, name="build_cache", keep=True) as stage:
-                if os.path.exists(stage.save_filename) and force:
-                    os.remove(stage.save_filename)
-                if not os.path.exists(stage.save_filename):
+                if stage.save_filename.exists() and force:
+                    stage.save_filename.unlink()
+                if not stage.save_filename.exists():
                     try:
                         stage.fetch()
                     except fs.FetchError:

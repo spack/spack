@@ -338,7 +338,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             with open(filepath, 'w') as out_file:
                 cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
                 out_file.write('{0}\n'.format(cmake_bin))
-        elif os.path.isfile(filepath):
+        elif filepath.is_file():
             with open(filepath, 'r') as in_file:
                 return in_file.read().strip()
 
@@ -347,7 +347,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         # Skip if unsupported version
         cmake_source_path = join_path(self.stage.source_path,
                                       self.test_script_relative_path)
-        if not os.path.exists(cmake_source_path):
+        if not cmake_source_path.exists():
             return
         """Copy test."""
         cmake_out_path = join_path(self.test_script_relative_path, 'out')
@@ -393,7 +393,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         cmake_path = join_path(self.test_suite.current_test_cache_dir,
                                self.test_script_relative_path, 'out')
 
-        if not os.path.exists(cmake_path):
+        if not cmake_path.exists():
             tty.warn('Skipping smoke tests: {0} is missing'.format(cmake_path))
             return
 

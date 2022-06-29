@@ -62,7 +62,7 @@ class AutotoolsConfigReplacement(AutotoolsPackage):
         configure_script = join_path(self.stage.source_path, 'configure')
         with open(configure_script, 'w') as f:
             f.write("#!/bin/sh\nexit 0")
-        os.chmod(configure_script, 0o775)
+        configure_script.chmod(0o775)
 
         # broken config.sub (not executable)
         broken_config_sub = join_path(broken, 'config.sub')
@@ -73,16 +73,16 @@ class AutotoolsConfigReplacement(AutotoolsPackage):
         broken_config_guess = join_path(broken, 'config.guess')
         with open(broken_config_guess, 'w') as f:
             f.write("#!/bin/sh\nexit 1")
-        os.chmod(broken_config_guess, 0o775)
+        broken_config_guess.chmod(0o775)
 
         # working config.sub
         working_config_sub = join_path(working, 'config.sub')
         with open(working_config_sub, 'w') as f:
             f.write("#!/bin/sh\nexit 0")
-        os.chmod(working_config_sub, 0o775)
+        working_config_sub.chmod(0o775)
 
         # working config.guess
         working_config_guess = join_path(working, 'config.guess')
         with open(working_config_guess, 'w') as f:
             f.write("#!/bin/sh\nexit 0")
-        os.chmod(working_config_guess, 0o775)
+        working_config_guess.chmod(0o775)

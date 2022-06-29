@@ -150,9 +150,9 @@ class Atlas(Package):
         )
 
     def install_test(self):
-        source_file = join_path(os.path.dirname(self.module.__file__),
+        source_file = join_path(self.module.__file__.parent,
                                 'test_cblas_dgemm.c')
-        blessed_file = join_path(os.path.dirname(self.module.__file__),
+        blessed_file = join_path(self.module.__file__.parent,
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % self.spec.prefix.include]

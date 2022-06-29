@@ -356,10 +356,10 @@ class Database(object):
         self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
+        if not is_upstream and not self._db_dir.exists():
             fs.mkdirp(self._db_dir)
 
-        if not is_upstream and not os.path.exists(self._failure_dir):
+        if not is_upstream and not self._failure_dir.exists():
             fs.mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
@@ -448,7 +448,7 @@ class Database(object):
         tty.debug('Removing prefix failure tracking files')
         for fail_mark in os.listdir(self._failure_dir):
             try:
-                os.remove(os.path.join(self._failure_dir, fail_mark))
+                os.path.join(self._failure_dir, fail_mark).unlink()
             except OSError as exc:
                 tty.warn('Unable to remove failure marking file {0}: {1}'
                          .format(fail_mark, str(exc)))
@@ -485,7 +485,7 @@ class Database(object):
             try:
                 path = self._failed_spec_path(spec)
                 tty.debug('Removing failure marking for {0}'.format(spec.name))
-                os.remove(path)
+                path.unlink()
             except OSError as err:
                 tty.warn('Unable to remove failure marking for {0} ({1}): {2}'
                          .format(spec.name, path, str(err)))
@@ -564,7 +564,7 @@ class Database(object):
 
     def prefix_failure_marked(self, spec):
         """Determine if the spec has a persistent failure marking."""
-        return os.path.exists(self._failed_spec_path(spec))
+        return self._failed_spec_path(spec.exists())
 
     def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
@@ -863,7 +863,7 @@ class Database(object):
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
+                if self._index_path.is_file():
                     self._read_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
@@ -903,7 +903,7 @@ class Database(object):
         tty.debug(
             'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
         explicit = True
-        inst_time = os.stat(spec.prefix).st_ctime
+        inst_time = spec.prefix.stat().st_ctime
         if old_data is not None:
             old_info = old_data.get(spec.dag_hash())
             if old_info is not None:
@@ -1040,13 +1040,13 @@ class Database(object):
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+            if temp_file.exists():
+                temp_file.unlink()
             raise
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
+        if self._index_path.is_file():
             current_verifier = ''
             if _use_uuid:
                 try:

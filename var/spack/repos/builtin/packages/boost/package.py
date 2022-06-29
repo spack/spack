@@ -564,7 +564,7 @@ class Boost(Package):
     def add_buildopt_symlinks(self, prefix):
         with working_dir(prefix.lib):
             for lib in os.listdir(os.curdir):
-                if os.path.isfile(lib):
+                if lib.is_file():
                     prefix, remainder = lib.split('.', 1)
                     symlink(lib, '%s-mt.%s' % (prefix, remainder))
 

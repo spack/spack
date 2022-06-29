@@ -53,7 +53,7 @@ class Hpcg(AutotoolsPackage):
             # Platform identifier
             'ARCH          = {0}'.format(self.arch),
             # HPCG Directory Structure / HPCG library
-            'TOPdir        = {0}'.format(os.getcwd()),
+            'TOPdir        = {0}'.format(Path.cwd()),
             'SRCdir        = $(TOPdir)/src',
             'INCdir        = $(TOPdir)/src',
             'BINdir        = $(TOPdir)/bin',

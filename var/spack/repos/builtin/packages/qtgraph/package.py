@@ -32,7 +32,7 @@ class Qtgraph(QMakePackage):
 
     def setup_run_environment(self, env):
         # What library suffix should be used based on library existence
-        if os.path.isdir(self.prefix.lib64):
+        if self.prefix.lib64.is_dir():
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib

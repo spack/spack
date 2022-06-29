@@ -79,7 +79,7 @@ class Tix(AutotoolsPackage):
         """
         # When using tkinter.tix from within spack provided python+tkinter+tix,
         # python will not be able to find Tix unless TIX_LIBRARY is set.
-        env.set('TIX_LIBRARY', os.path.dirname(find(self.prefix, 'Tix.tcl')[0]))
+        env.set('TIX_LIBRARY', find(self.prefix, 'Tix.tcl'.parent[0]))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TIX_LIBRARY to the directory containing Tix.tcl.
@@ -88,4 +88,4 @@ class Tix(AutotoolsPackage):
 
         * http://tix.sourceforge.net/docs/pdf/TixUser.pdf
         """
-        env.set('TIX_LIBRARY', os.path.dirname(find(self.prefix, 'Tix.tcl')[0]))
+        env.set('TIX_LIBRARY', find(self.prefix, 'Tix.tcl'.parent[0]))

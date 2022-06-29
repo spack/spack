@@ -46,7 +46,7 @@ class GaussianSrc(Package):
         return self.prefix.join(self.g_name)
 
     def url_for_version(self, version):
-        return "file://{0}/g{1}.tgz".format(os.getcwd(), version)
+        return "file://{0}/g{1}.tgz".format(Path.cwd(), version)
 
     def install(self, spec, prefix):
         # Spacks strips the single dir inside the tarball, but Gaussian

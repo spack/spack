@@ -123,14 +123,14 @@ class AppleClang(spack.compilers.clang.Clang):
 
             raise OSError(msg)
 
-        real_root = os.path.dirname(os.path.dirname(real_root))
+        real_root = os.path.dirname(real_root.parent)
         developer_root = os.path.join(spack.stage.get_stage_root(),
                                       'xcode-select',
                                       self.name,
                                       str(self.version))
         xcode_link = os.path.join(developer_root, 'Xcode.app')
 
-        if not os.path.exists(developer_root):
+        if not developer_root.exists():
             tty.warn('Copying Xcode from %s to %s in order to add spack '
                      'wrappers to it. Please do not interrupt.'
                      % (real_root, developer_root))

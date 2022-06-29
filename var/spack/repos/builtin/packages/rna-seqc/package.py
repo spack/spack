@@ -30,7 +30,7 @@ class RnaSeqc(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        script_sh = join_path(os.path.dirname(__file__), "rna-seqc.sh")
+        script_sh = join_path(__file__.parent, "rna-seqc.sh")
         script = join_path(prefix.bin, "rna-seqc")
         install(script_sh, script)
         set_executable(script)

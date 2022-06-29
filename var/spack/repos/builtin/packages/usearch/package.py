@@ -27,7 +27,7 @@ class Usearch(Package):
     version('10.0.240', sha256='297ba03cb5bdc60c9727b7949cc08bfeecad8b290c2844b5ad011f72a7e1399c')
 
     def url_for_version(self, version):
-        return "file://{0}/usearch{1}_i86linux32.gz".format(os.getcwd(), version)
+        return "file://{0}/usearch{1}_i86linux32.gz".format(Path.cwd(), version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

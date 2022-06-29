@@ -286,10 +286,10 @@ class SingleFileScope(ConfigScope):
 
         validate(data_to_write, self.schema)
         try:
-            parent = os.path.dirname(self.path)
+            parent = self.path.parent
             mkdirp(parent)
 
-            tmp = os.path.join(parent, '.%s.tmp' % os.path.basename(self.path))
+            tmp = os.path.join(parent, '.%s.tmp' % self.path.name)
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
@@ -769,7 +769,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
     for i, path in enumerate(command_line_scopes):
         # We ensure that these scopes exist and are readable, as they are
         # provided on the command line by the user.
-        if not os.path.isdir(path):
+        if not path.is_dir():
             raise ConfigError("config scope is not a directory: '%s'" % path)
         elif not os.access(path, os.R_OK):
             raise ConfigError("config scope is not readable: '%s'" % path)
@@ -1003,10 +1003,10 @@ def read_config_file(filename, schema=None):
     # known schema when the top-level key could be incorrect.
 
     # Ignore nonexisting files.
-    if not os.path.exists(filename):
+    if not filename.exists():
         return None
 
-    elif not os.path.isfile(filename):
+    elif not filename.is_file():
         raise ConfigFileError(
             "Invalid configuration. %s exists but is not a file." % filename)
 
@@ -1299,8 +1299,8 @@ def _config_from(scopes_or_paths):
 
         # Otherwise we need to construct it
         path = os.path.normpath(scope_or_path)
-        assert os.path.isdir(path), '"{0}" must be a directory'.format(path)
-        name = os.path.basename(path)
+        assert path.is_dir(), '"{0}" must be a directory'.format(path)
+        name = path.name
         scopes.append(ConfigScope(name, path))
 
     configuration = Configuration(*scopes)

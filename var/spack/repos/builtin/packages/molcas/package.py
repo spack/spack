@@ -15,7 +15,7 @@ class Molcas(CMakePackage):
        export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
     homepage = "https://www.molcas.org/"
-    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
+    url = "file://{0}/molcas8.2.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('8.2', '25b5fb8e1338b458a3eaea0b3d3b5e58')

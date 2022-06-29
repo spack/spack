@@ -79,7 +79,7 @@ class Totalview(Package):
         when='@2021.1.16 target=ppcle:')
 
     def url_for_version(self, version):
-        return "file://{0}/totalview.{1}-doc.tar".format(os.getcwd(), version)
+        return "file://{0}/totalview.{1}-doc.tar".format(Path.cwd(), version)
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH',

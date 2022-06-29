@@ -37,9 +37,9 @@ class GenemarkEt(Package):
 
     def url_for_version(self, version):
         if version >= Version('4.65'):
-            return "file://{0}/gmes_linux_64.tar.gz".format(os.getcwd())
+            return "file://{0}/gmes_linux_64.tar.gz".format(Path.cwd())
         else:
-            return "file://{0}/gm_et_linux_64.tar.gz".format(os.getcwd())
+            return "file://{0}/gm_et_linux_64.tar.gz".format(Path.cwd())
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -52,7 +52,7 @@ class GenemarkEt(Package):
             install_tree('lib', prefix.lib)
             files = glob.iglob('*')
             for file in files:
-                if os.path.isfile(file):
+                if file.is_file():
                     install(file, prefix.bin)
             install_tree('heu_dir', prefix.bin.heu_dir)
 

@@ -28,7 +28,7 @@ class Iozone(MakefilePackage):
         for dirpath, dirnames, filenames in os.walk(self.stage.source_path):
             for filename in filenames:
                 path = os.path.join(dirpath, filename)
-                os.chmod(path, 0o644)
+                path.chmod(0o644)
 
         with working_dir(self.build_directory):
             filter_file(r'^CC\t= cc',

@@ -91,4 +91,4 @@ class _7zip(SourceforgePackage, Package):
                     glob_str = os.path.join(pth, ext)
                     files = glob.glob(glob_str)
                     [shutil.copy(os.path.join(self._7z_src_dir, x),
-                     os.path.join(prefix, os.path.basename(x))) for x in files]
+                     os.path.join(prefix, x.name)) for x in files]

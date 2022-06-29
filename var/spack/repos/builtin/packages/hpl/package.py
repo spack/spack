@@ -65,7 +65,7 @@ class Hpl(AutotoolsPackage):
             # Platform identifier
             'ARCH         = {0}'.format(self.arch),
             # HPL Directory Structure / HPL library
-            'TOPdir       = {0}'.format(os.getcwd()),
+            'TOPdir       = {0}'.format(Path.cwd()),
             'INCdir       = $(TOPdir)/include',
             'BINdir       = $(TOPdir)/bin/$(ARCH)',
             'LIBdir       = $(TOPdir)/lib/$(ARCH)',

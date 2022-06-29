@@ -172,7 +172,7 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs,
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, python_pkg.view())
 
-    assert os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
+    assert os.path.join(python_prefix, 'bin/py-ext-tool'.exists())
 
     easy_install_location = 'lib/python2.7/site-packages/easy-install.pth'
     with open(os.path.join(python_prefix, easy_install_location), 'r') as f:
@@ -200,9 +200,9 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs,
     python_pkg = python_spec.package
     python_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(os.path.join(python_prefix, 'bin/py-ext-tool'))
+    assert not os.path.join(python_prefix, 'bin/py-ext-tool'.exists())
 
-    assert os.path.exists(os.path.join(view_dir, 'bin/py-ext-tool'))
+    assert os.path.join(view_dir, 'bin/py-ext-tool'.exists())
 
 
 def test_python_ignore_namespace_init_conflict(
@@ -234,9 +234,9 @@ def test_python_ignore_namespace_init_conflict(
     f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
     init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
 
-    assert os.path.exists(os.path.join(view_dir, f1))
-    assert os.path.exists(os.path.join(view_dir, f2))
-    assert os.path.exists(os.path.join(view_dir, init_file))
+    assert os.path.join(view_dir, f1.exists())
+    assert os.path.join(view_dir, f2.exists())
+    assert os.path.join(view_dir, init_file.exists())
 
 
 def test_python_keep_namespace_init(
@@ -272,13 +272,13 @@ def test_python_keep_namespace_init(
     python_pkg.deactivate(ext1_pkg, view)
     view.extensions_layout.remove_extension(python_spec, ext1_pkg.spec)
 
-    assert not os.path.exists(os.path.join(view_dir, f1))
-    assert os.path.exists(os.path.join(view_dir, init_file))
+    assert not os.path.join(view_dir, f1.exists())
+    assert os.path.join(view_dir, init_file.exists())
 
     python_pkg.deactivate(ext2_pkg, view)
     view.extensions_layout.remove_extension(python_spec, ext2_pkg.spec)
 
-    assert not os.path.exists(os.path.join(view_dir, init_file))
+    assert not os.path.join(view_dir, init_file.exists())
 
 
 def test_python_namespace_conflict(tmpdir, namespace_extensions,
@@ -391,7 +391,7 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs,
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, perl_pkg.view())
 
-    assert os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
+    assert os.path.join(perl_prefix, 'bin/perl-ext-tool'.exists())
 
 
 def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
@@ -412,9 +412,9 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs,
     perl_pkg = perl_spec.package
     perl_pkg.activate(ext_pkg, view)
 
-    assert not os.path.exists(os.path.join(perl_prefix, 'bin/perl-ext-tool'))
+    assert not os.path.join(perl_prefix, 'bin/perl-ext-tool'.exists())
 
-    assert os.path.exists(os.path.join(view_dir, 'bin/perl-ext-tool'))
+    assert os.path.join(view_dir, 'bin/perl-ext-tool'.exists())
 
 
 def test_is_activated_upstream_extendee(tmpdir, builtin_and_mock_packages,

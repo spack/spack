@@ -20,7 +20,7 @@ class Fsl(Package, CudaPackage):
     # mirror, see https://spack.readthedocs.io/en/latest/mirrors.html
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
-    url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())
+    url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(Path.cwd())
     manual_download = True
 
     version('6.0.5', sha256='df12b0b1161a26470ddf04e4c5d5d81580a04493890226207667ed8fd2b4b83f')
@@ -217,7 +217,7 @@ class Fsl(Package, CudaPackage):
         fslsetup = join_path(self.stage.source_path, 'etc', 'fslconf',
                              'fsl.sh')
 
-        if os.path.isfile(fslsetup):
+        if fslsetup.is_file():
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
 
     def setup_run_environment(self, env):
@@ -225,5 +225,5 @@ class Fsl(Package, CudaPackage):
         env.set('FSLDIR', self.prefix)
         fslsetup = join_path(self.prefix, 'etc', 'fslconf', 'fsl.sh')
 
-        if os.path.isfile(fslsetup):
+        if fslsetup.is_file():
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))

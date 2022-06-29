@@ -44,7 +44,7 @@ class EnvironmentVariables(AnalyzerBase):
         the install_manifest.json, we don't (at least to start) parse the values
         to remove path prefixes specific to user systems.
         """
-        if not os.path.exists(filename):
+        if not filename.exists():
             tty.warn("No environment file available")
             return
 

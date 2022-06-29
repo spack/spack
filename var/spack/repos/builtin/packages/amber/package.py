@@ -23,7 +23,7 @@ class Amber(Package, CudaPackage):
        """
 
     homepage = "https://ambermd.org/"
-    url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
+    url = "file://{0}/Amber18.tar.bz2".format(Path.cwd())
     manual_download = True
 
     maintainers = ['hseara']
@@ -47,7 +47,7 @@ class Amber(Package, CudaPackage):
         resource(when='@{0}'.format(ver),
                  name='AmberTools',
                  url='file://{0}/AmberTools{1}.tar.bz2'.format(
-                      os.getcwd(), ambertools_ver),
+                      Path.cwd(), ambertools_ver),
                  sha256=ambertools_checksum,
                  destination='',
                  placement='ambertools_tmpdir',
@@ -158,7 +158,7 @@ class Amber(Package, CudaPackage):
               msg='OpenMP not available for the pgi compiler')
 
     def url_for_version(self, version):
-        url = "file://{0}/Amber{1}.tar.bz2".format(os.getcwd(), version)
+        url = "file://{0}/Amber{1}.tar.bz2".format(Path.cwd(), version)
         return url
 
     def setup_build_environment(self, env):
