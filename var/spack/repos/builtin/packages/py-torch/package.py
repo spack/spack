@@ -269,24 +269,6 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1',
           sha256='8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da', when='@:1.9.1 ^cuda@11.4.100:')
 
-    @property
-    def libs(self):
-        # TODO: why doesn't `python_platlib` work here?
-        root = join_path(
-            self.prefix, self.spec['python'].package.platlib, 'torch', 'lib'
-        )
-        return find_libraries('libtorch', root)
-
-    @property
-    def headers(self):
-        # TODO: why doesn't `python_platlib` work here?
-        root = join_path(
-            self.prefix, self.spec['python'].package.platlib, 'torch', 'include'
-        )
-        headers = find_all_headers(root)
-        headers.directories = [root]
-        return headers
-
     @when('@1.5.0:')
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
