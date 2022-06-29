@@ -21,12 +21,12 @@ class Cutlass(CMakePackage, CudaPackage):
     variant('cuda', default=True, description='Build with CUDA')
     conflicts('~cuda', msg='Cutlass requires CUDA')
     conflicts('cuda_arch=none',
-                    msg='Must specify CUDA compute capabilities of your GPU, see '
-                    'https://developer.nvidia.com/cuda-gpus')
+              msg='Must specify CUDA compute capabilities of your GPU, see '
+              'https://developer.nvidia.com/cuda-gpus')
 
     def setup_build_environment(self, env):
         env.set('CUDACXX', self.spec["cuda"].prefix.bin.nvcc)
 
     def cmake_args(self):
         cuda_arch = self.spec.variants['cuda_arch'].value
-        return [self.define("CUTLASS_NVCC_ARCHS", ";".join(cuda_arch)))]
+        return [self.define("CUTLASS_NVCC_ARCHS", ";".join(cuda_arch))]
