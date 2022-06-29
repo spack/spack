@@ -28,10 +28,5 @@ class Cutlass(CMakePackage, CudaPackage):
         env.set('CUDACXX', self.spec["cuda"].prefix.bin.nvcc)
 
     def cmake_args(self):
-        cmake_args = []
-        define = CMakePackage.define
         cuda_arch = self.spec.variants['cuda_arch'].value
-        if len(cuda_arch):
-            cmake_args.append(
-                define("CUTLASS_NVCC_ARCHS", ";".join(cuda_arch)))
-        return cmake_args
+        return [self.define("CUTLASS_NVCC_ARCHS", ";".join(cuda_arch)))]
