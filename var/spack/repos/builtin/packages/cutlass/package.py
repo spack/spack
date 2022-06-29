@@ -22,7 +22,7 @@ class Cutlass(CMakePackage, CudaPackage):
     conflicts('~cuda')
 
     def setup_build_environment(self, env):
-        env.set('CUDACXX', join_path(self.spec["cuda"].prefix, "bin", "nvcc"))
+        env.set('CUDACXX', self.spec["cuda"].prefix.bin.nvcc)
 
     def cmake_args(self):
         cmake_args = []
