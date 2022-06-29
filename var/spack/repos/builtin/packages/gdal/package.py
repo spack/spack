@@ -662,7 +662,7 @@ class Gdal(CMakePackage):
     depends_on('expat', when='vector=jml')
     depends_on('libkml@1.3:', when='vector=libkml')
     depends_on('expat', when='vector=lvbag')
-    depends_on('mongo-cxx-driver@3.4:', when='vector=mongodbv3')
+    depends_on('mongo-cxx-driver', when='vector=mongodbv3')
     # depends_on('mssql_odbc', when='vector=mssqlspatial')
     depends_on('unixodbc', when='vector=mssqlspatial')
     depends_on('sqlite@3:', when='vector=mvt')
