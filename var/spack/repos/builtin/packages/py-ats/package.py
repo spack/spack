@@ -17,6 +17,7 @@ class PyAts(PythonPackage):
     maintainers = ['white238']
 
     version('main', branch='main')
+    version('7.0.105', tag='7.0.105')
     version('7.0.100', tag='7.0.100')
     version('7.0.5', tag='7.0.5')
 
