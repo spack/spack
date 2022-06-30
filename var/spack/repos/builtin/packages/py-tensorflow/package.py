@@ -635,7 +635,7 @@ class PyTensorflow(Package, CudaPackage):
     def patch(self):
         filter_file(
             '"-U_FORTIFY_SOURCE",',
-            "\"-U_FORTIFY_SOURCE\", \"-I%s\"," % self.spec['protobuf'].prefix.include,
+            '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec['protobuf'].prefix.include,
             "third_party/gpus/crosstool/BUILD.rocm.tpl")
         if self.spec.satisfies('@2.3.0:'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
