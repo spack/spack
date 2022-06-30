@@ -18,23 +18,44 @@ class Omnitrace(CMakePackage):
     version('main', branch='main', submodules=True)
     version('1.2.0', commit='f82845388aab108ed1d1fc404f433a0def391bb3', submodules=True)
 
-    variant('rocm', default=True, description='Enable ROCm API and kernel tracing support')
-    variant('strip', default=False, description="Faster binary instrumentation, worse debugging")
+    variant(
+        'rocm', default=True, description='Enable ROCm API and kernel tracing support'
+    )
+    variant(
+        'strip',
+        default=False,
+        description="Faster binary instrumentation, worse debugging",
+    )
     variant('python', default=False, description='Enable Python support')
     variant('papi', default=True, description='Enable PAPI support')
     variant('ompt', default=True, description='Enable OpenMP Tools support')
     variant('tau', default=False, description='Enable TAU support')
     variant('caliper', default=False, description='Enable Caliper support')
-    variant('perfetto_tools', default=False, description='Install perfetto tools (e.g. traced, perfetto)')
+    variant(
+        'perfetto_tools',
+        default=False,
+        description='Install perfetto tools (e.g. traced, perfetto)',
+    )
     variant(
         'mpi',
         default=False,
-        description='Enable intercepting MPI functions and aggregating output during finalization (requires target application to use same MPI installation)',
+        description=' '.join(
+            [
+                'Enable intercepting MPI functions and aggregating output',
+                'during finalization (requires target application to use',
+                'same MPI installation)',
+            ]
+        ),
     )
     variant(
         'mpi_headers',
         default=True,
-        description='Enable intercepting MPI functions but w/o support for aggregating output (target application can use any MPI installation)',
+        description=' '.join(
+            [
+                'Enable intercepting MPI functions but w/o support for aggregating',
+                'output (target application can use any MPI installation)',
+            ]
+        ),
     )
 
     extends('python', when='+python')
@@ -79,7 +100,9 @@ class Omnitrace(CMakePackage):
             self.define_from_variant('OMNITRACE_USE_ROCTRACER', 'rocm'),
             self.define_from_variant('OMNITRACE_USE_PYTHON', 'python'),
             self.define_from_variant('OMNITRACE_USE_MPI_HEADERS', 'mpi_headers'),
-            self.define_from_variant('OMNITRACE_INSTALL_PERFETTO_TOOLS', 'perfetto_tools'),
+            self.define_from_variant(
+                'OMNITRACE_INSTALL_PERFETTO_TOOLS', 'perfetto_tools'
+            ),
             self.define_from_variant('OMNITRACE_STRIP_LIBRARIES', 'strip'),
             # timemory arguments
             self.define('TIMEMORY_UNITY_BUILD', False),
