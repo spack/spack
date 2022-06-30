@@ -104,7 +104,7 @@ class Plumed(AutotoolsPackage):
                                'multicolvar',
                                conditional('opes', when='@2.7:'),
                                conditional('pamm',
-                               when='@2.5: optional_modules=adjmat'),
+                                           when='@2.5: optional_modules=adjmat'),
                                conditional('piv', when='@2.5:'),
                                conditional('reference', when='@:2.2.99'),
                                conditional('s2cm', when='@2.8:'),
