@@ -120,7 +120,7 @@ class Plumed(AutotoolsPackage):
             ('reset',),
             single_optional_modules
         ).prohibit_empty_set().with_default('all'),
-        description='Activates optional modules: all, reset (a tested subset of all), or custom list (advanced)'
+        description='Activates optional modules: all, reset, or custom list (advanced)'
     )
 
     variant('shared', default=True, description='Builds shared libraries')
