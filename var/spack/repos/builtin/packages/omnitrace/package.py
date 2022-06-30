@@ -125,3 +125,9 @@ class Omnitrace(CMakePackage):
             args.append(self.define('MPI_CXX_COMPILER', spec['mpi'].mpicxx))
 
         return args
+
+    def setup_run_environment(self, env):
+        if "+python" in self.spec:
+            env.prepend_path(
+                "PYTHONPATH", join_path(self.prefix.lib, "python", "site-packages")
+            )
