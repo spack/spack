@@ -18,9 +18,18 @@ class Sp(CMakePackage):
 
     version('2.3.3', sha256='c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f')
 
+    variant('openmp', default=True,
+            description='builds with OpenMP support')
+
     def setup_run_environment(self, env):
         for suffix in ('4', '8', 'd'):
             lib = find_libraries('libsp_' + suffix, root=self.prefix,
                                  shared=False, recursive=True)
             env.set('SP_LIB' + suffix, lib[0])
             env.set('SP_INC' + suffix, 'include_' + suffix)
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('OPENMP', 'openmp')
+        ]
+        return args
