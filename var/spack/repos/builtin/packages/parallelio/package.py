@@ -16,8 +16,9 @@ class Parallelio(CMakePackage):
 
     maintainers = ['tkameyama']
 
-    version('2_5_4', sha256='e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65')
-    version('2_5_2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
+    version('2.5.7', sha256='af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd')
+    version('2.5.4', sha256='e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65')
+    version('2.5.2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
     variant('pnetcdf', default=False, description='enable pnetcdf')
     variant('timing', default=False, description='enable GPTL timing')
@@ -32,9 +33,14 @@ class Parallelio(CMakePackage):
     resource(name='CMake_Fortran_utils',
              git='https://github.com/CESM-Development/CMake_Fortran_utils.git',
              tag='master')
+
     resource(name='genf90',
              git='https://github.com/PARALLELIO/genf90.git',
              tag='genf90_200608')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
+        return url.format(version.underscored)
 
     def cmake_args(self):
         define = self.define

@@ -42,6 +42,9 @@ class Mapl(CMakePackage):
     # Patch to configure Apple M1 chip in x86_64 Rosetta 2 emulator mode
     patch('esma_cmake_apple_m1_rosetta.patch')
 
+    # Patch to add missing NetCDF C target in various CMakeLists.txt
+    patch('mapl-2.12.3-netcdf-c.patch', when='@2.12.3:')
+
     variant('flap', default=False)
     variant('pflogger', default=False)
     variant('esma_gfe_namespace', default=True)
@@ -51,6 +54,7 @@ class Mapl(CMakePackage):
     depends_on('mpi')
     depends_on('hdf5')
     depends_on('netcdf-c')
+    depends_on('netcdf-fortran')
     depends_on('esmf~debug', when='~debug')
     depends_on('esmf+debug', when='+debug')
     depends_on('yafyaml@:0.5.1')
@@ -63,7 +67,6 @@ class Mapl(CMakePackage):
             self.define_from_variant('BUILD_WITH_PFLOGGER', 'pflogger'),
             self.define_from_variant('ESMA_USE_GFE_NAMESPACE', 'esma_gfe_namespace'),
             self.define_from_variant('BUILD_SHARED_MAPL', 'shared'),
-            '-DCMAKE_Fortran_FLAGS=-ffree-line-length-none',
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc
