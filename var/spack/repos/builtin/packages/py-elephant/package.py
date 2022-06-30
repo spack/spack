@@ -29,7 +29,7 @@ class PyElephant(PythonPackage):
 
     variant('docs', default=False, description='Install documentation dependencies')
     variant('pandas', default=False, description='Build with pandas', when='@0.3.0:0.4.1')
-    variant('extras', default=True, description='Build with extras for GPFA, ASSET', when='@0.6.4:')
+    variant('extras', default=False, description='Build with extras for GPFA, ASSET', when='@0.6.4:')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@3.7:', type=('build', 'run'), when='@0.11.0:')
