@@ -24,7 +24,7 @@ class Omnitrace(CMakePackage):
     variant(
         'strip',
         default=False,
-        description="Faster binary instrumentation, worse debugging",
+        description='Faster binary instrumentation, worse debugging',
     )
     variant('python', default=False, description='Enable Python support')
     variant('papi', default=True, description='Enable PAPI support')
@@ -78,7 +78,7 @@ class Omnitrace(CMakePackage):
     def __init__(self, *args, **kwargs):
         super(Omnitrace, self).__init__(*args, **kwargs)
         # default to a release build
-        self.variants["build_type"][0].default = "Release"
+        self.variants['build_type'][0].default = 'Release'
 
     def cmake_args(self):
         spec = self.spec
@@ -111,7 +111,7 @@ class Omnitrace(CMakePackage):
             self.define_from_variant('TIMEMORY_USE_CALIPER', 'caliper'),
         ]
 
-        if "+tau" in spec:
+        if '+tau' in spec:
             tau_root = spec['tau'].prefix
             args.append(self.define('TAU_ROOT_DIR', tau_root))
 
@@ -126,8 +126,18 @@ class Omnitrace(CMakePackage):
 
         return args
 
+    def setup_build_environment(self, env):
+        if '+tau' in self.spec:
+            import glob
+
+            # below is how TAU_MAKEFILE is set in packages/tau/package.py
+            pattern = join_path(self.spec['tau'].prefix.lib, 'Makefile.*')
+            files = glob.glob(pattern)
+            if files:
+                env.set('TAU_MAKEFILE', files[0])
+
     def setup_run_environment(self, env):
-        if "+python" in self.spec:
+        if '+python' in self.spec:
             env.prepend_path(
-                "PYTHONPATH", join_path(self.prefix.lib, "python", "site-packages")
+                'PYTHONPATH', join_path(self.prefix.lib, 'python', 'site-packages')
             )
