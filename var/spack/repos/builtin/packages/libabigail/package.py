@@ -12,6 +12,7 @@ class Libabigail(AutotoolsPackage):
     homepage = "https://sourceware.org/libabigail"
     url      = "https://mirrors.kernel.org/sourceware/libabigail/libabigail-2.0.tar.gz"
     git      = "https://sourceware.org/git/libabigail.git"
+    maintainers = ['woodard']
 
     version('master', branch='master')
     version('2.0', sha256='3704ae97a56bf076ca08fb5dea6b21db998fbbf14c4f9de12824b78db53b6fda')
