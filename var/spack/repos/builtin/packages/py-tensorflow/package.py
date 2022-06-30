@@ -276,20 +276,20 @@ class PyTensorflow(Package, CudaPackage):
     # TODO: add support for tensorflow-io-gcs-filesystem
     # depends_on('tensorflow-io-gcs-filesystem
     with when("+rocm"):
-         depends_on('hip')
-         depends_on('rocrand')
-         depends_on('rocblas')
-         depends_on('rocfft')
-         depends_on('hipfft')
-         depends_on('rccl')
-         depends_on('hipsparse')
-         depends_on('hipcub')
-         depends_on('rocsolver')
-         depends_on('rocprim')
-         depends_on('miopen-hip')
-         depends_on('llvm-amdgpu')
-         depends_on('hsa-rocr-dev')
-         depends_on('rocminfo')
+        depends_on('hip')
+        depends_on('rocrand')
+        depends_on('rocblas')
+        depends_on('rocfft')
+        depends_on('hipfft')
+        depends_on('rccl')
+        depends_on('hipsparse')
+        depends_on('hipcub')
+        depends_on('rocsolver')
+        depends_on('rocprim')
+        depends_on('miopen-hip')
+        depends_on('llvm-amdgpu')
+        depends_on('hsa-rocr-dev')
+        depends_on('rocminfo')
 
     # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
@@ -881,7 +881,7 @@ def protobuf_deps():
                 args.append('--config=cuda')
 
             if '+rocm' in spec:
-                 args.append('--config=rocm')
+                args.append('--config=rocm')
 
             if '~aws' in spec:
                 args.append('--config=noaws')
