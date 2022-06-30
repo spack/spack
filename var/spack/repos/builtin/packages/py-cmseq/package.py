@@ -8,18 +8,19 @@ from spack.package import *
 
 
 class PyCmseq(PythonPackage):
-    """CMSeq is a set of commands to provide an
-       interface to .bam files for coverage and sequence
-       consensus. Used as a dependency for py-metaphlan."""
+    """CMSeq is a set of commands to provide an interface
+       to .bam files for coverage and sequence consensus."""
 
     homepage = "https://github.com/SegataLab/cmseq"
-    url      = "https://github.com/SegataLab/cmseq/archive/refs/tags/1.0.4.tar.gz"
+    pypi     = "CMSeq/CMSeq-1.0.4.tar.gz"
 
-    version('1.0.4', sha256='9d9412b0c58dfaef0d9e3621a0c4b7cd5330dbc1399370d3e69ba03959a26d68')
+    version('1.0.4', sha256='93038a6dba826e29a66df3ec8ab2b3e3872acac7af9df245e4a5a624584aca5c')
 
-    depends_on('py-numpy')
-    depends_on('samtools@1.2:')
-    depends_on('py-pysam')
-    depends_on('py-pandas')
-    depends_on('py-biopython@:1.76')
-    depends_on('py-setuptools@:57', type=('build'))
+    depends_on('py-numpy',           type=('build', 'run'))
+    depends_on('py-scipy',           type=('build', 'run'))
+    depends_on('py-bcbio-gff',       type=('build', 'run'))
+    depends_on('samtools@1.2:',      type=('build', 'run'))
+    depends_on('py-pysam',           type=('build', 'run'))
+    depends_on('py-pandas',          type=('build', 'run'))
+    depends_on('py-biopython@:1.76', type=('build', 'run'))
+    depends_on('py-setuptools@:57',  type=('build'))
