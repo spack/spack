@@ -24,6 +24,7 @@ class Mapl(CMakePackage):
 
     maintainers = ['kgerheiser', 'edwardhartnett', 'Hang-Lei-NOAA']
 
+    version('2.22.0', sha256='3356b8d29813431d272c5464e265f3fe3ce1ac7f49ae6d41da34fe4b82aa691a')
     version('2.12.3', sha256='e849eff291939509e74830f393cb2670c2cc96f6160d8060dbeb1742639c7d41')
     version('2.11.0', sha256='76351e026c17e2044b89085db639e05ba0e7439a174d14181e01874f0f93db44')
     version('2.8.1', sha256='a7657d4c52a66c3a6663e436d2c2dd4dbb81addd747e1ace68f59843665eb739')
@@ -50,6 +51,7 @@ class Mapl(CMakePackage):
     variant('esma_gfe_namespace', default=True)
     variant('shared', default=True)
     variant('debug', default=False, description='Make a debuggable version of the library')
+    variant('extdata2g', default=False, description='Use ExtData2G')
 
     depends_on('mpi')
     depends_on('hdf5')
@@ -67,6 +69,7 @@ class Mapl(CMakePackage):
             self.define_from_variant('BUILD_WITH_PFLOGGER', 'pflogger'),
             self.define_from_variant('ESMA_USE_GFE_NAMESPACE', 'esma_gfe_namespace'),
             self.define_from_variant('BUILD_SHARED_MAPL', 'shared'),
+            self.define_from_variant('USE_EXTDATA2G', 'extdata2g'),
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc
