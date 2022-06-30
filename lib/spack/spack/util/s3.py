@@ -17,7 +17,7 @@ def get_mirror_connection(url, url_type="push"):
     # Check to see if desired file starts with any of the mirror URLs
     rebuilt_path = "%s://%s%s" % (url.scheme, url.netloc, url.path)
     # Gather dict of push URLS point to the value of the whole mirror
-    mirror_dict =  {x.push_url: x for x in spack.mirror.MirrorCollection().values()}
+    mirror_dict = {x.push_url: x for x in spack.mirror.MirrorCollection().values()}  # noqa: E501
     # Ensure most specific URLs (longest) are presented first
     mirror_url_keys = mirror_dict.keys()
     mirror_url_keys = sorted(mirror_url_keys, key=len, reverse=True)
