@@ -75,11 +75,13 @@ class Plumed(AutotoolsPackage):
     # +crystallization:-bias default: reset
     #
     # Optional modules can be provided in two ways, via the `optional_modules` variant:
-    # 1. Use a reference set of optional modules via `optional_modules`.
-    #    Allowed values are: `all`[default], `reset`, `none`.
-    # 2. Pick any combination of specific optional modules, e.g. `analysis,colvar`.
+    # 1. Use a reference set of optional modules via `optional_modules` (recommended).
+    #    Allowed values are: `all`[default], `reset`.
+    # 2. Pick any combination of specific optional modules (advanced).
+    #    Only the requested optional modules will be activated.
     #    See list in variable `single_optional_modules` below.
-    #    Specific optional modules are implemented on top of the `none` option above.
+    #    This list comes from the Plumed manual, eg for 2.8:
+    #    https://www.plumed.org/doc-v2.8/user-doc/html/mymodules.html
     # These are implemented using multi-valued variants (`disjoint_sets`),
     # and the `conditional` option to handle version conflicts.
     single_optional_modules = (conditional('adjmat', when='@2.3:'),
@@ -116,10 +118,9 @@ class Plumed(AutotoolsPackage):
         values=disjoint_sets(
             ('all',),
             ('reset',),
-            ('none',),
             single_optional_modules
-        ).with_default('all'),
-        description='Activates optional modules: all, reset, none, or custom list'
+        ).prohibit_empty_set().with_default('all'),
+        description='Activates optional modules: all, reset (a tested subset of all), or custom list (advanced)'
     )
 
     variant('shared', default=True, description='Builds shared libraries')
@@ -276,8 +277,6 @@ class Plumed(AutotoolsPackage):
             selected_modules = 'all'
         elif 'reset' in optional_modules:
             selected_modules = 'reset'
-        elif 'none' in optional_modules:
-            selected_modules = 'none'
         # Custom set of modules
         else:
             selected_modules = 'none'
