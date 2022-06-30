@@ -275,6 +275,21 @@ class PyTensorflow(Package, CudaPackage):
 
     # TODO: add support for tensorflow-io-gcs-filesystem
     # depends_on('tensorflow-io-gcs-filesystem
+    with when("+rocm"):
+         depends_on('hip')
+         depends_on('rocrand')
+         depends_on('rocblas')
+         depends_on('rocfft')
+         depends_on('hipfft')
+         depends_on('rccl')
+         depends_on('hipsparse')
+         depends_on('hipcub')
+         depends_on('rocsolver')
+         depends_on('rocprim')
+         depends_on('miopen-hip')
+         depends_on('llvm-amdgpu')
+         depends_on('hsa-rocr-dev')
+         depends_on('rocminfo')
 
     # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
@@ -343,6 +358,7 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.9.patch', when='@1.9')
     patch('contrib_cloud_1.4.patch', when='@1.4:1.8')
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
+    patch('tf_27_rocm_diff.patch', when='@2.7.0+rocm')
 
     # needed for protobuf-3.16 and greater
     patch('example_parsing.patch', when='^protobuf@3.16:')
@@ -617,6 +633,10 @@ class PyTensorflow(Package, CudaPackage):
             env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
     def patch(self):
+        filter_file(
+            '"-U_FORTIFY_SOURCE",',
+            "\"-U_FORTIFY_SOURCE\", \"-I%s\"," % self.spec['protobuf'].prefix.include,
+            "third_party/gpus/crosstool/BUILD.rocm.tpl")
         if self.spec.satisfies('@2.3.0:'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
                         'deps = protodeps,',
@@ -859,6 +879,9 @@ def protobuf_deps():
 
             if '+cuda' in spec:
                 args.append('--config=cuda')
+
+            if '+rocm' in spec:
+                 args.append('--config=rocm')
 
             if '~aws' in spec:
                 args.append('--config=noaws')
