@@ -7,7 +7,6 @@ import platform
 
 from spack.package import *
 
-
 _versions = {
     # cuTensor 1.5.0
     '1.5.0.3': {
