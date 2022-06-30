@@ -18,7 +18,7 @@ class Bdsim(CMakePackage):
 
     tags = ['hep']
 
-    maintainers = ['ganis']
+    maintainers = ['gganis']
 
     version('develop', branch='develop')
     version('1.6.0', sha256='e3241d2d097cb4e22249e315c1474da9b3657b9c6893232d9f9e543a5323f717')
