@@ -18,6 +18,7 @@ class Libabigail(AutotoolsPackage):
     version('1.8', sha256='1cbf260b894ccafc61b2673ba30c020c3f67dbba9dfa88dca3935dff661d665c')
 
     variant('docs', default=False, description='build documentation')
+    variant('rpm', default=False, description='build RPM tools')
 
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libxml2', type=("build", "link"))
@@ -36,11 +37,22 @@ class Libabigail(AutotoolsPackage):
     depends_on('doxygen', type="build", when="+docs")
     depends_on('py-sphinx', type='build', when="+docs")
 
+    # RPM tool dependencies
+    depends_on('py-six', type=('build', 'run'), when="+rpm")
+    depends_on('py-mock', type=('build', 'run'), when="+rpm")
+    depends_on('py-xdg', type=('build', 'run'), when="+rpm")
+    depends_on('py-koji', type=('build', 'run'), when="+rpm")
+    depends_on('wget',  type=('build', 'run'), when="+rpm")
+
     def configure_args(self):
         spec = self.spec
         config_args = ['CPPFLAGS=-I{0}/include'.format(spec['libxml2'].prefix)]
         config_args.append('LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(
             spec['libxml2'].libs.directories[0]))
+
+        if '+rpm' in spec:
+            config_args.append("--enable-rpm=yes")
+
         return config_args
 
     def autoreconf(self, spec, prefix):
