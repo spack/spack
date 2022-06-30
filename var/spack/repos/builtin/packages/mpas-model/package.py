@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 
 from spack.package import *
 
@@ -22,6 +23,24 @@ class MpasModel(MakefilePackage):
     version('7.0', sha256='f898ce257e66cff9e29320458870570e55721d16cb000de7f2cc27de7fdef14f')
     version('6.3', sha256='e7f1d9ebfeb6ada37d42a286aaedb2e69335cbc857049dc5c5544bb51e7a8db8')
     version('6.2', sha256='2a81825a62a468bf5c56ef9d9677aa2eb88acf78d4f996cb49a7db98b94a6b16')
+
+    # These targets are defined in the Makefile. Some can be auto-detected by the
+    # compiler name, others need to be explicitly set.
+    make_target = [
+        'xlf', 'ftn', 'titan-cray', 'pgi', 'pgi-nersc', 'pgi-llnl', 'ifort',
+        'ifort-scorep', 'ifort-gcc', 'gfortran', 'gfortran-clang', 'g95',
+        'pathscale-nersc', 'cray-nersc', 'gnu-nersc', 'intel-nersc', 'bluegene', 'llvm'
+    ]
+    variant(
+        'make_target', default='none',
+        description='Predefined targets in the MPAS Makefile.',
+        values=make_target.extend('none'), multi=False
+    )
+    variant(
+        'precision', default='double',
+        description='MPAS will be built with double/single precision reals.',
+        values=('double', 'single'), multi=False
+    )
 
     depends_on('mpi')
     depends_on('parallelio')
@@ -84,20 +103,34 @@ class MpasModel(MakefilePackage):
             targets.append(
                 'PNETCDF={0}'.format(spec['parallel-netcdf'].prefix)
             )
+        if self.spec.variants['precision']:
+            targets.extend([
+                'PRECISION={0}'.format(self.spec.variants['precision'].value)
+            ])
+
+        if action == 'all':
+            # First try to guess by compiler name
+            if os.path.basename(spack_fc) in self.make_target:
+                action = os.path.basename(spack_fc)
+            # Then overwrite with the optional variant if set
+            if self.spec.variants['make_target'].value != 'none':
+                action = self.spec.variants['make_target'].value
+
         targets.extend([
             'USE_PIO2=true', 'CPP_FLAGS=-D_MPI', 'OPENMP=true',
             'CORE={0}'.format(model), action
         ])
+
         return targets
 
     def build(self, spec, prefix):
         copy_tree(join_path('MPAS-Data', 'atmosphere'),
                   join_path('src', 'core_atmosphere', 'physics'))
-        make(*self.target('init_atmosphere', 'all'))
+        make(*self.target('init_atmosphere', 'all'), parallel=True)
         mkdir('bin')
         copy('init_atmosphere_model', 'bin')
         make(*self.target('init_atmosphere', 'clean'))
-        make(*self.target('atmosphere', 'all'))
+        make(*self.target('atmosphere', 'all'), parallel=True)
         copy('atmosphere_model', 'bin')
 
     def install(self, spec, prefix):
