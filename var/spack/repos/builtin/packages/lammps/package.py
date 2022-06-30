@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
 
+import archspec
+
 from spack.package import *
 
 
@@ -529,6 +531,13 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('%aocc'):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
+
+        # Overwrite generic cpu tune option
+        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
+            spec.compiler.name,
+            spec.compiler.version
+        )
+        args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
         lammps_sizes = self.spec.variants['lammps_sizes'].value
         args.append(self.define('LAMMPS_SIZES', lammps_sizes))
