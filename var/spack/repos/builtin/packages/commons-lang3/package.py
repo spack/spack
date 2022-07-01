@@ -23,7 +23,7 @@ class CommonsLang3(Package):
 
     version('3.7', sha256='94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2')
 
-    extends('jdk')
+    extends('openjdk')
     depends_on('java@7:', type='run')
 
     def install(self, spec, prefix):

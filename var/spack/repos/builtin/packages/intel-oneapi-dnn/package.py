@@ -64,10 +64,11 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'include')
+        include_path = join_path(self.component_prefix,
+                                 'cpu_dpcpp_gpu_dpcpp', 'include')
         return find_headers('dnnl', include_path)
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'lib')
+        lib_path = join_path(self.component_prefix, 'cpu_dpcpp_gpu_dpcpp', 'lib')
         return find_libraries(['libdnnl', 'libmkldnn'], root=lib_path, shared=True)

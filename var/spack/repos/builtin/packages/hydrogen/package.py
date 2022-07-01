@@ -201,6 +201,11 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC {1}'
                     ' -std=c++17'.format(arch_str, cxxflags_str)
                 )
+                args.extend([
+                    '-DCMAKE_HIP_ARCHITECTURES=%s' % arch_str,
+                    '-DAMDGPU_TARGETS=%s' % arch_str,
+                    '-DGPU_TARGETS=%s' % arch_str,
+                ])
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang +openmp platform=darwin'):
