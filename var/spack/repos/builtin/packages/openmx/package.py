@@ -72,6 +72,9 @@ class Openmx(MakefilePackage):
             common_option.append(lapack_blas_headers.include_flags)
             if '%gcc' in spec:
                 lib_option.append('-lgfortran')
+                if spec.satisfies('%gcc@10:'):
+                    fc_option.append('-fallow-argument-mismatch')
+                    cc_option.append('-fcommon')
 
         return [
             'CC={0} {1} -I$(LIBERIDIR)'.format(
