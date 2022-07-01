@@ -118,7 +118,7 @@ class TagIndex(Mapping):
             pkg_name (str): name of the package to be removed from the index
 
         """
-        package = spack.repo.path.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():
@@ -126,9 +126,9 @@ class TagIndex(Mapping):
                 pkg_list.remove(pkg_name)
 
         # Add it again under the appropriate tags
-        for tag in getattr(package, 'tags', []):
+        for tag in getattr(pkg_cls, 'tags', []):
             tag = tag.lower()
-            self._tag_dict[tag].append(package.name)
+            self._tag_dict[tag].append(pkg_cls.name)
 
 
 class TagIndexError(spack.error.SpackError):
