@@ -207,8 +207,8 @@ class DetectablePackageMeta(object):
         # If a package has the executables or libraries  attribute then it's
         # assumed to be detectable
         if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
-            @property
-            def platform_executables(self):
+            @classmethod
+            def platform_executables(cls):
                 def to_windows_exe(exe):
                     if exe.endswith('$'):
                         exe = exe.replace('$', '%s$' % spack.util.path.win_exe_ext())
@@ -216,8 +216,15 @@ class DetectablePackageMeta(object):
                         exe += spack.util.path.win_exe_ext()
                     return exe
                 plat_exe = []
-                if hasattr(self, 'executables'):
-                    for exe in self.executables:
+                if hasattr(cls, 'executables'):
+                    # Executable can be a standalone class attribute or
+                    # a class method in more complex cases
+                    if callable(cls.executables):
+                        exes = cls.executables()
+                    else:
+                        exes = cls.executables
+
+                    for exe in exes:
                         if sys.platform == 'win32':
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)

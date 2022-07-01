@@ -351,8 +351,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    @property
-    def executables(self):
+    @classmethod
+    def executables(cls):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
         suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
         return [r''.join(x) for x in itertools.product(names, suffixes)]
