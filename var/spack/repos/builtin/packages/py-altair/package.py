@@ -18,6 +18,6 @@ class PyAltair(PythonPackage):
     depends_on('py-entrypoints', type="run")
     depends_on('py-jsonschema@3:', type="run")
     depends_on('py-numpy', type="run")
-    depends_on('py-pandas', type="run")
+    depends_on('py-pandas@0.18:', type="run")
     depends_on('py-toolz', type="run")
     depends_on('py-jinja2', type="run")
