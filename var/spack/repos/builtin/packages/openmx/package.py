@@ -26,7 +26,7 @@ class Openmx(MakefilePackage):
              when='@3.8')
 
     depends_on('mpi')
-    depends_on('fftw')
+    depends_on('fftw-api@3')
     depends_on('blas')
     depends_on('lapack')
     depends_on('sse2neon', when='target=aarch64:')
@@ -54,11 +54,11 @@ class Openmx(MakefilePackage):
         cc_option = [
             spec['mpi'].mpicc,
             self.compiler.openmp_flag,
-            spec['fftw'].headers.include_flags
+            spec['fftw-api'].headers.include_flags
         ]
         fc_option = [spec['mpi'].mpifc]
         lib_option = [
-            spec['fftw'].libs.ld_flags,
+            spec['fftw-api'].libs.ld_flags,
             lapack_blas_libs.ld_flags,
             '-lmpi_mpifh'
         ]
