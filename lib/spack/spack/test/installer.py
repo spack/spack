@@ -208,8 +208,8 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     """Tests of _process_binary_cache_tarball when no tarball."""
     monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _none)
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    assert not inst._process_binary_cache_tarball(pkg, None, False, False)
+    s = spack.spec.Spec('trivial-install-test-package')
+    assert not inst._process_binary_cache_tarball(s.package, None, False, False)
 
     assert 'exists in binary cache but' in capfd.readouterr()[0]
 
@@ -264,26 +264,26 @@ def test_installer_str(install_mockery):
 
 
 def test_check_before_phase_error(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
-    pkg.stop_before_phase = 'beforephase'
+    s = spack.spec.Spec('trivial-install-test-package')
+    s.package.stop_before_phase = 'beforephase'
     with pytest.raises(inst.BadInstallPhase) as exc_info:
-        inst._check_last_phase(pkg)
+        inst._check_last_phase(s.package)
 
     err = str(exc_info.value)
     assert 'is not a valid phase' in err
-    assert pkg.stop_before_phase in err
+    assert s.package.stop_before_phase in err
 
 
 def test_check_last_phase_error(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
-    pkg.stop_before_phase = None
-    pkg.last_phase = 'badphase'
+    s = spack.spec.Spec('trivial-install-test-package')
+    s.package.stop_before_phase = None
+    s.package.last_phase = 'badphase'
     with pytest.raises(inst.BadInstallPhase) as exc_info:
-        inst._check_last_phase(pkg)
+        inst._check_last_phase(s.package)
 
     err = str(exc_info.value)
     assert 'is not a valid phase' in err
-    assert pkg.last_phase in err
+    assert s.package.last_phase in err
 
 
 def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
@@ -414,9 +414,9 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 
 def test_package_id_err(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
+    s = spack.spec.Spec('trivial-install-test-package')
     with pytest.raises(ValueError, match='spec is not concretized'):
-        inst.package_id(pkg)
+        inst.package_id(s.package)
 
 
 def test_package_id_ok(install_mockery):
