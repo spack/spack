@@ -469,10 +469,12 @@ class GitVersion(VersionBase):
         self.ref_version = None
 
         git_prefix = string.startswith('git.')
-        self.ref = string[4:] if git_prefix else string
+        pruned_string = string[4:] if git_prefix else string
         
-        if '=' in self.ref:
-            self.ref, self.ref_version = string.split('=')
+        if '=' in pruned_string:
+            self.ref, self.ref_version = pruned_string.split('=')
+        else:
+            self.ref = pruned_string
         
 
         self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)

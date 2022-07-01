@@ -5307,9 +5307,10 @@ class SpecParser(spack.parse.Parser):
         end = None
         if self.accept(ID):
             start = self.token.value
+            # TODO FIX THIS
             if self.accept(EQ):
                 # This is for versions that are associated with a hash
-                # i.e. @develop=[40 char hash]
+                # i.e. @[40 char hash]=version
                 start += self.token.value
                 self.expect(VAL)
                 start += self.token.value

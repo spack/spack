@@ -736,5 +736,6 @@ def test_git_hash_can_be_assigned_a_version():
     v = Version('687bc7d40e96f497ed8dc2e18fd0479005b24cfb=develop')
     v_equivalent = Version('develop')
     assert v.is_commit
+    assert v.is_ref
     assert not v._ref_lookup
     assert v_equivalent.version[0] == v.ref_version

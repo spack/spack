@@ -181,8 +181,8 @@ class TestSpecSyntax(object):
                          'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel')
 
     def test_spec_with_version_hash_pair(self):
-        self.check_parse('mvapich_foo@develop='
-                         'abcdefghijklmnopqrstuvwxyz1234567890aaaa')
+        hash = 'abc123ABC0'*4
+        self.check_parse(f'develop-test@{hash}=develop')
 
     def test_full_specs(self):
         self.check_parse(
