@@ -14,7 +14,7 @@ class PyAltair(PythonPackage):
 
     version('4.2.0', sha256="ee28a56d4d7ef7a089d5b7f47f2555c66e5a47786d16df5b274648d25550e1ab")
 
-    depends_on('python@3.6:')
+    depends_on('python@3.7:')
     depends_on('py-entrypoints', type="run")
     depends_on('py-jsonschema', type="run")
     depends_on('py-numpy', type="run")
