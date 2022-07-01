@@ -40,8 +40,8 @@ class Cutensor(Package):
             version(cutensor_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuTensor version
             cuda_req = 'cuda@{0}:'.format(cuda_ver)
-            cudnn_ver_req = '@{0}'.format(cutensor_ver)
-            depends_on(cuda_req, when=cudnn_ver_req)
+            cutensor_ver_req = '@{0}'.format(cutensor_ver)
+            depends_on(cuda_req, when=cutensor_ver_req)
 
     def url_for_version(self, version):
         # Get the system and machine arch for building the file path
