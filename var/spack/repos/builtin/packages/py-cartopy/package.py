@@ -14,6 +14,7 @@ class PyCartopy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('0.20.3', sha256='0d60fa2e2fbd77c4d1f6b1f9d3b588966147f07c1b179d2d34570ac1e1b49006')
     version('0.20.2', sha256='4d08c198ecaa50a6a6b109d0f14c070e813defc046a83ac5d7ab494f85599e35')
     version('0.20.1', sha256='91f87b130e2574547a20cd634498df97d797abd12dcfd0235bc0cdbcec8b05e3')
     version('0.20.0', sha256='eae58aff26806e63cf115b2bce9477cedc4aa9f578c5e477b2c25cfa404f2b7a')
@@ -45,7 +46,8 @@ class PyCartopy(PythonPackage):
     depends_on('py-cython@0.29.2:', when='@0.19:', type='build')
     depends_on('py-cython@0.29.13:', when='@0.20:', type='build')
     depends_on('py-setuptools-scm', when='@0.19:', type='build')
-    depends_on('py-setuptools-scm-git-archive', when='@0.19:', type='build')
+    depends_on('py-setuptools-scm@7:', when='@0.20.3:', type='build')
+    depends_on('py-setuptools-scm-git-archive', when='@0.19:0.20.2', type='build')
 
     # requirements/default.txt
     depends_on('py-numpy@1.6:', type=('build', 'run'))

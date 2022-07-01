@@ -172,6 +172,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cudnn', when='@0.90:0.100 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10')
+    depends_on('cutensor', when='@:0.90,0.102: +cuda')
     depends_on('hipcub', when='+rocm')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
