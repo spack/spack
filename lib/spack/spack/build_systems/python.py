@@ -19,11 +19,31 @@ from llnl.util.filesystem import (
     same_path,
     working_dir,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import ClassProperty, match_predicate
 
 from spack.directives import depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.package_base import PackageBase, run_after
+
+
+def _python_homepage(instance, owner):
+    if owner.pypi:
+        name = owner.pypi.split('/')[0]
+        return 'https://pypi.org/project/' + name + '/'
+
+
+def _python_url(instance, owner):
+    if owner.pypi:
+        return (
+            'https://files.pythonhosted.org/packages/source/'
+            + owner.pypi[0] + '/' + owner.pypi
+        )
+
+
+def _python_list_url(instance, owner):
+    if owner.pypi:
+        name = owner.pypi.split('/')[0]
+        return 'https://pypi.org/simple/' + name + '/'
 
 
 class PythonPackage(PackageBase):
@@ -77,25 +97,9 @@ class PythonPackage(PackageBase):
             '--no-index',
         ]
 
-    @property
-    def homepage(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/project/' + name + '/'
-
-    @property
-    def url(self):
-        if self.pypi:
-            return (
-                'https://files.pythonhosted.org/packages/source/'
-                + self.pypi[0] + '/' + self.pypi
-            )
-
-    @property
-    def list_url(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/simple/' + name + '/'
+    homepage = ClassProperty(callback=_python_homepage)
+    url = ClassProperty(callback=_python_url)
+    list_url = ClassProperty(callback=_python_list_url)
 
     @property
     def import_modules(self):

@@ -5,6 +5,7 @@
 import os
 from typing import Optional
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
@@ -13,6 +14,11 @@ from spack.directives import extends
 from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
+
+
+def _racket_homepage(instance, owner):
+    if owner.pkgs:
+        return 'https://pkgs.racket-lang.org/package/{0}'.format(owner.name)
 
 
 class RacketPackage(PackageBase):
@@ -40,11 +46,7 @@ class RacketPackage(PackageBase):
     subdirectory = None  # type: Optional[str]
     name = None  # type: Optional[str]
     parallel = True
-
-    @property
-    def homepage(self):
-        if self.pkgs:
-            return 'https://pkgs.racket-lang.org/package/{0}'.format(self.name)
+    homepage = lang.ClassProperty(callback=_racket_homepage)
 
     @property
     def build_directory(self):

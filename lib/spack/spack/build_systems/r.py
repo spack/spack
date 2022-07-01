@@ -7,8 +7,38 @@
 import inspect
 from typing import Optional
 
+import llnl.util.lang as lang
+
 from spack.directives import extends
 from spack.package_base import PackageBase, run_after
+
+
+def _r_homepage(instance, owner):
+    if owner.cran:
+        return 'https://cloud.r-project.org/package=' + owner.cran
+    elif owner.bioc:
+        return 'https://bioconductor.org/packages/' + owner.bioc
+
+
+def _r_url(instance, owner):
+    if owner.cran:
+        return (
+            'https://cloud.r-project.org/src/contrib/'
+            + owner.cran + '_' + str(list(owner.versions)[0]) + '.tar.gz'
+        )
+
+
+def _r_list_url(instance, owner):
+    if owner.cran:
+        return (
+            'https://cloud.r-project.org/src/contrib/Archive/'
+            + owner.cran + '/'
+        )
+
+
+def _r_git(instance, owner):
+    if owner.bioc:
+        return 'https://git.bioconductor.org/packages/' + owner.bioc
 
 
 class RPackage(PackageBase):
@@ -42,33 +72,10 @@ class RPackage(PackageBase):
 
     extends('r')
 
-    @property
-    def homepage(self):
-        if self.cran:
-            return 'https://cloud.r-project.org/package=' + self.cran
-        elif self.bioc:
-            return 'https://bioconductor.org/packages/' + self.bioc
-
-    @property
-    def url(self):
-        if self.cran:
-            return (
-                'https://cloud.r-project.org/src/contrib/'
-                + self.cran + '_' + str(list(self.versions)[0]) + '.tar.gz'
-            )
-
-    @property
-    def list_url(self):
-        if self.cran:
-            return (
-                'https://cloud.r-project.org/src/contrib/Archive/'
-                + self.cran + '/'
-            )
-
-    @property
-    def git(self):
-        if self.bioc:
-            return 'https://git.bioconductor.org/packages/' + self.bioc
+    homepage = lang.ClassProperty(callback=_r_homepage)
+    url = lang.ClassProperty(callback=_r_url)
+    list_url = lang.ClassProperty(callback=_r_list_url)
+    git = lang.ClassProperty(callback=_r_git)
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""

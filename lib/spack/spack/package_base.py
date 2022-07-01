@@ -751,10 +751,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     _patches_by_hash = None
 
     #: Package homepage where users can find more information about the package
-    homepage = None  # type: str
+    homepage = None  # type: Any
 
     #: Default list URL (place to find available versions)
-    list_url = None  # type: str
+    list_url = None  # type: Any
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
@@ -1336,7 +1336,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self._fetcher = f
         self._fetcher.set_package(self)
 
-    def dependencies_of_type(self, *deptypes):
+    @classmethod
+    def dependencies_of_type(cls, *deptypes):
         """Get dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
@@ -1346,8 +1347,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         run dependency in another.
         """
         return dict(
-            (name, conds) for name, conds in self.dependencies.items()
-            if any(dt in self.dependencies[name][cond].type
+            (name, conds) for name, conds in cls.dependencies.items()
+            if any(dt in cls.dependencies[name][cond].type
                    for cond in conds for dt in deptypes))
 
     @property
@@ -2714,14 +2715,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.stage.destroy()
 
-    def format_doc(self, **kwargs):
+    @classmethod
+    def format_doc(cls, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
         indent = kwargs.get('indent', 0)
 
-        if not self.__doc__:
+        if not cls.__doc__:
             return ""
 
-        doc = re.sub(r'\s+', ' ', self.__doc__)
+        doc = re.sub(r'\s+', ' ', cls.__doc__)
         lines = textwrap.wrap(doc, 72)
         results = six.StringIO()
         for line in lines:
