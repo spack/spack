@@ -17,19 +17,10 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', branch='master', submodules=False, get_full_repo=True)
+    version('0.1.13', tag='v0.1.13', submodules=False, get_full_repo=True)
     version('0.1.12', tag='v0.1.12', submodules=False, get_full_repo=True)
     version('0.1.11', tag='v0.1.11', submodules=False, get_full_repo=True)
     version('0.1.10', tag='v0.1.10', submodules=False, get_full_repo=True)
-    # Important: v0.1.9 is not Spack-compatible (use v0.1.10: instead)
-    # version('0.1.9', tag='v0.1.9', submodules=False, get_full_repo=True)
-    version('0.1.8', tag='v0.1.8', submodules=False, get_full_repo=True)
-    version('0.1.6', tag='v0.1.6', submodules=False, get_full_repo=True)
-    version('0.1.5', tag='v0.1.5', submodules=False, get_full_repo=True)
-    version('0.1.4', tag='v0.1.4', submodules=False, get_full_repo=True)
-    version('0.1.3', tag='v0.1.3', submodules=False, get_full_repo=True)
-    version('0.1.2', tag='v0.1.2', submodules=False, get_full_repo=True)
-    version('0.1.0', tag='v0.1.0', submodules=False, get_full_repo=True)
-    version('0.0.3', tag='v0.0.3', submodules=False)
 
     variant('mpi', default=True, description="Enable MPI backend")
 

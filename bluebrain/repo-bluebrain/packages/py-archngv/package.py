@@ -21,7 +21,7 @@ class PyArchngv(PythonPackage):
     depends_on("py-numpy@1.19.5:", type=("build", "run"))
     depends_on("py-scipy@1.5.0:", type=("build", "run"))
     depends_on("py-h5py@3.1.0:", type=("build", "run"))
-    depends_on("py-libsonata@0.1.8", type=("build", "run"))
+    depends_on("py-libsonata@0.1.8:", type=("build", "run"))
     depends_on("py-bluepysnap@0.13:0.99", type=("build", "run"))
     depends_on("py-cached-property@1.5:", type=("build", "run"))
     depends_on("py-voxcell@3.0.0:", type=("build", "run"))
