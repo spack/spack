@@ -41,7 +41,7 @@ class PyNbval(PythonPackage):
     # added implicity by the PythonPackage base class.
     depends_on('python@3.6:3.99', type=('build', 'run'))
     depends_on('py-pytest@2.8:', type=('build'))
-    depends_on('py-jupyter_client', type=('build'))
+    depends_on('py-jupyter-client', type=('build'))
     depends_on('py-nbformat', type=('build'))
     depends_on('py-ipykernel', type=('build'))
     depends_on('py-coverage', type=('build'))
