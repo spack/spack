@@ -23,7 +23,7 @@ def test_build_request_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
         inst.BuildRequest('abc', {})
 
-    pkg = spack.repo.get('trivial-install-test-package')
+    pkg = spack.repo.path.get('trivial-install-test-package')
     with pytest.raises(ValueError, match='must have a concrete spec'):
         inst.BuildRequest(pkg, {})
 

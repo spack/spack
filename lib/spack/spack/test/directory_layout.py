@@ -171,7 +171,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
     # Create all the packages that are not in mock.
     installed_specs = {}
     for pkg_name in packages:
-        spec = spack.repo.get(pkg_name).spec
+        spec = spack.spec.Spec(pkg_name)
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.

@@ -14,7 +14,7 @@ def test_build_task_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
         inst.BuildTask('abc', None, False, 0, 0, 0, [])
 
-    pkg = spack.repo.get('trivial-install-test-package')
+    pkg = spack.repo.path.get('trivial-install-test-package')
     with pytest.raises(ValueError, match='must have a concrete spec'):
         inst.BuildTask(pkg, None, False, 0, 0, 0, [])
 
