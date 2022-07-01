@@ -38,7 +38,7 @@ class Cutensor(Package):
 
         if pkg:
             version(cutensor_ver, sha256=pkg)
-            # Add constraints matching CUDA version to cuDNN version
+            # Add constraints matching CUDA version to cuTensor version
             cuda_req = 'cuda@{0}:'.format(cuda_ver)
             cudnn_ver_req = '@{0}'.format(cutensor_ver)
             depends_on(cuda_req, when=cudnn_ver_req)
