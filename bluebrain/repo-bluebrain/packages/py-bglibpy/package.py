@@ -13,7 +13,7 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='main')
 
-    version('4.7.2', commit='50e5e46b97105fb2b3fe67fba883d5c3c21e1134')
+    version('4.7.5', commit='0123b49aa98f7287f5076ee53367f846b7ce06d1')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('neuron+python', type='run')
