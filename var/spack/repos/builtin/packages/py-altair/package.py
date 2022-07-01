@@ -9,15 +9,15 @@ from spack.package import *
 class PyAltair(PythonPackage):
     """Declarative statistical visualization library for Python"""
 
-    homepage = "https://altair-viz.github.io/"
-    url = "https://github.com/altair-viz/altair/archive/refs/tags/v4.2.0.tar.gz"
+    pypi = 'altair/altair-4.2.0.tar.gz'
 
-    version('4.2.0', sha256="ee28a56d4d7ef7a089d5b7f47f2555c66e5a47786d16df5b274648d25550e1ab")
+    version('4.2.0', sha256="d87d9372e63b48cd96b2a6415f0cf9457f50162ab79dc7a31cd7e024dd840026")
 
     depends_on('python@3.7:')
+    depends_on('py-setuptools@40.6:', type='build')
     depends_on('py-entrypoints', type="run")
     depends_on('py-jsonschema@3:', type="run")
-    depends_on('py-numpy', type="run")
-    depends_on('py-pandas@0.18:', type="run")
-    depends_on('py-toolz', type="run")
-    depends_on('py-jinja2', type="run")
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pandas@0.18:', type=('build', 'run'))
+    depends_on('py-toolz', type=('build', 'run'))
+    depends_on('py-jinja2', type=('build', 'run'))
