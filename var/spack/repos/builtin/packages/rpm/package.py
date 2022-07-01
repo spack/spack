@@ -128,6 +128,9 @@ class Rpm(AutotoolsPackage):
         else:
             args.extend(['--disable-bdb', '--disable-bdb-ro'])
 
+        if '+python' in spec:
+            args.append('--enable-python')
+
         # enable POSIX.1e draft 15 file capabilities support
         if '+posix' in spec:
             args.append('--with-cap')
