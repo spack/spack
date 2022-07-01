@@ -138,8 +138,8 @@ class PackagePrefs(object):
     @classmethod
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
-        for pkg in (pkg_name, 'all'):
-            variants = spack.config.get('packages').get(pkg, {}).get(
+        for pkg_cls in (pkg_name, 'all'):
+            variants = spack.config.get('packages').get(pkg_cls, {}).get(
                 'variants', '')
             if variants:
                 break
@@ -149,10 +149,10 @@ class PackagePrefs(object):
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict((name, variant) for name, variant in spec.variants.items()
-                    if name in pkg.variants)
+                    if name in pkg_cls.variants)
 
 
 def spec_externals(spec):
