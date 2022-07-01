@@ -733,16 +733,8 @@ def test_version_list_with_range_and_concrete_version_is_not_concrete():
 
 
 def test_git_hash_can_be_assigned_a_version():
-    v = Version('develop=687bc7d40e96f497ed8dc2e18fd0479005b24cfb')
+    v = Version('687bc7d40e96f497ed8dc2e18fd0479005b24cfb=develop')
     v_equivalent = Version('develop')
     assert v.is_commit
-    assert not v._commit_lookup
-    assert v.version == v.commit_version
-    assert v_equivalent.version == v.commit_version
-
-
-def test_git_hash_has_what_version_on_init():
-    v = Version('687bc7d40e96f497ed8dc2e18fd0479005b24cfb')
-    assert v.is_commit
-    assert v._commit_lookup is None
-    assert not v.commit_version
+    assert not v._ref_lookup
+    assert v_equivalent.version[0] == v.ref_version

@@ -174,6 +174,8 @@ def is_git_version(string):
         return True
     elif len(string) == 40 and COMMIT_VERSION.match(string):
         return True
+    elif '=' in string:
+        return True
     return False
 
 
@@ -461,8 +463,17 @@ class GitVersion(VersionBase):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
+            
+        # An object that can lookup git refs to compare them to versions
+        self._ref_lookup = None
+        self.ref_version = None
+
         git_prefix = string.startswith('git.')
         self.ref = string[4:] if git_prefix else string
+        
+        if '=' in self.ref:
+            self.ref, self.ref_version = string.split('=')
+        
 
         self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
@@ -472,9 +483,6 @@ class GitVersion(VersionBase):
         canonical_string = self.ref if self.is_commit else string
         super(GitVersion, self).__init__(canonical_string)
 
-        # An object that can lookup git refs to compare them to versions
-        self._ref_lookup = None
-        self.ref_version = None
 
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs
@@ -601,7 +609,7 @@ class GitVersion(VersionBase):
             tty.die("%s is not a git version." % self)
 
         # don't need a lookup if we already have a version assigned
-        if self.commit_version:
+        if self.ref_version:
             return
 
         # Generate a commit looker-upper
