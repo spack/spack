@@ -32,25 +32,32 @@ def find_nothing(*args):
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
-    # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
+    spec = Spec('trivial-install-test-package').concretized()
 
-    # Get the package
-    pkg = spec.package
-    try:
-        pkg.do_install()
+    spec.package.do_install()
+    assert spec.installed
 
-        spec._package = None
-        monkeypatch.setattr(spack.repo, 'get', find_nothing)
-        with pytest.raises(spack.repo.UnknownPackageError):
-            spec.package
+    spec.package.do_uninstall()
+    assert not spec.installed
 
-        pkg.do_uninstall()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+
+@pytest.mark.regression('11870')
+def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch):
+    """Ensure that we can uninstall a package that has been deleted from the repo"""
+    spec = Spec('trivial-install-test-package').concretized()
+
+    spec.package.do_install()
+    assert spec.installed
+
+    # Mock deletion of the package
+    spec._package = None
+    monkeypatch.setattr(spack.repo.path, 'get', find_nothing)
+    with pytest.raises(spack.repo.UnknownPackageError):
+        spec.package
+
+    # Ensure we can uninstall it
+    PackageBase.uninstall_by_spec(spec)
+    assert not spec.installed
 
 
 def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):

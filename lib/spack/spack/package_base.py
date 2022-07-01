@@ -813,7 +813,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self._fetch_time = 0.0
 
         if self.is_extension:
-            spack.repo.get(self.extendee_spec)._check_extendable()
+            spack.repo.path.get(self.extendee_spec)._check_extendable()
 
         super(PackageBase, self).__init__()
 

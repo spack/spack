@@ -1391,7 +1391,7 @@ class SpackSolverSetup(object):
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         for pkg_name in possible_pkgs:
-            pkg = spack.repo.get(pkg_name)
+            pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -1404,7 +1404,7 @@ class SpackSolverSetup(object):
                 return info.get('preferred', False), not version.isdevelop(), version
 
             for idx, item in enumerate(sorted(
-                    pkg.versions.items(), key=key_fn, reverse=True
+                    pkg_cls.versions.items(), key=key_fn, reverse=True
             )):
                 v, version_info = item
                 self.possible_versions[pkg_name].add(v)

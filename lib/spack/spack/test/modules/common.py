@@ -10,6 +10,7 @@ import pytest
 
 import spack.error
 import spack.modules.tcl
+import spack.package_base
 import spack.spec
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
@@ -203,31 +204,25 @@ module_index:
         spack.modules.common.upstream_module_index = old_index
 
 
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
-                                            monkeypatch):
-    # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-
-    # Get the package
-    pkg = spec.package
+@pytest.mark.regression('14347')
+def test_load_installed_package_not_in_repo(
+        install_mockery, mock_fetch, monkeypatch
+):
+    """Test that installed packages that have been removed are still loadable"""
+    spec = Spec('trivial-install-test-package').concretized()
+    spec.package.do_install()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError(
             'Repo package access is disabled for test')
 
-    try:
-        pkg.do_install()
+    # Mock deletion of the package
+    spec._package = None
+    monkeypatch.setattr(spack.repo.path, 'get', find_nothing)
+    with pytest.raises(spack.repo.UnknownPackageError):
+        spec.package
 
-        spec._package = None
-        monkeypatch.setattr(spack.repo, 'get', find_nothing)
-        with pytest.raises(spack.repo.UnknownPackageError):
-            spec.package
+    module_path = spack.modules.common.get_module('tcl', spec, True)
+    assert module_path
 
-        module_path = spack.modules.common.get_module('tcl', spec, True)
-        assert module_path
-        pkg.do_uninstall()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+    spack.package_base.PackageBase.uninstall_by_spec(spec)

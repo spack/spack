@@ -1518,7 +1518,7 @@ class Spec(object):
     @property
     def package(self):
         if not self._package:
-            self._package = spack.repo.get(self)
+            self._package = spack.repo.path.get(self)
         return self._package
 
     @property
@@ -3377,7 +3377,7 @@ class Spec(object):
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.get(spec.fullname)
+                spack.repo.path.get(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -3633,7 +3633,7 @@ class Spec(object):
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
-                    pkg = spack.repo.get(self.fullname)
+                    pkg = spack.repo.path.get(self.fullname)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
                     # it as a provider of this vdep.
