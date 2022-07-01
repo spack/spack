@@ -40,7 +40,7 @@ spack:
     - mfem +cuda cuda_arch=70 ^hypre+cuda
     - raja
     - raja +cuda cuda_arch=70
-    - umpire 
+    - umpire
     - umpire +cuda
 
   - compiler:
@@ -57,7 +57,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws-aarch64" }
 
   gitlab-ci:
 
