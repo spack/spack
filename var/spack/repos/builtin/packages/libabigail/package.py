@@ -39,6 +39,8 @@ class Libabigail(AutotoolsPackage):
     depends_on('py-sphinx', type='build', when="+docs")
 
     # RPM tool dependencies
+    depends_on('rpm',  type=('build', 'run'), when="+rpm")
+    depends_on('cpio',  type=('build', 'run'), when="+rpm")
     depends_on('py-six', type=('build', 'run'), when="+rpm")
     depends_on('py-mock', type=('build', 'run'), when="+rpm")
     depends_on('py-xdg', type=('build', 'run'), when="+rpm")
