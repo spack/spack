@@ -16,7 +16,7 @@ class PyAltair(PythonPackage):
 
     depends_on('python@3.7:')
     depends_on('py-entrypoints', type="run")
-    depends_on('py-jsonschema', type="run")
+    depends_on('py-jsonschema@3:', type="run")
     depends_on('py-numpy', type="run")
     depends_on('py-pandas', type="run")
     depends_on('py-toolz', type="run")
