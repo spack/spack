@@ -1811,12 +1811,12 @@ class TestConcretize(object):
 
     def test_git_hash_assigned_version_is_preferred(self):
         hash = 'a'*40
-        s = Spec(f'develop-test@{hash}=develop')
+        s = Spec(f'develop-branch-version@{hash}=develop')
         c = s.concretized()
         assert hash in str(c)
 
     def test_git_hash_version_is_equivalent_to_specified_infinity_version(self):
         hash = 'a'*40
-        s = Spec(f'depends-on-develop ^develop-test@{hash}=develop')
+        s = Spec(f'depends-on-develop ^develop-branch-version@{hash}=develop')
         c = s.concretized()
         assert hash in str(c)

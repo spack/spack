@@ -5157,6 +5157,7 @@ class SpecParser(spack.parse.Parser):
             if (
                 spec.name and spec.versions.concrete and
                 isinstance(spec.version, vn.GitVersion)
+                #and not spec.version.ref_version
             ):
                 spec.version.generate_git_lookup(spec.fullname)
 

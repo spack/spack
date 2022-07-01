@@ -481,9 +481,11 @@ class GitVersion(VersionBase):
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
+        print(self.is_commit, self.is_ref, git_prefix, self.ref, len(self.ref), COMMIT_VERSION.match(self.ref))
+
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
-        canonical_string = self.ref if self.is_commit else string
-        super(GitVersion, self).__init__(canonical_string)
+        # canonical_string = self.ref if self.is_commit else string
+        super(GitVersion, self).__init__(string)
 
 
     def _cmp(self, other_lookups=None):

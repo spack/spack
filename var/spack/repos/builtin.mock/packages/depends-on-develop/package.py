@@ -14,4 +14,4 @@ class DependsOnDevelop(Package):
     version('main', branch='main')
     version('0.0.0', sha256='0123456789abcdef0123456789abcdef')
 
-    depends_on('develop-test@develop')
+    depends_on('develop-branch-version@develop')
