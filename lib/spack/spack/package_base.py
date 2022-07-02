@@ -961,8 +961,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                              " does not have a concrete version.")
         return self.spec.versions[0]
 
+    @classmethod
     @memoized
-    def version_urls(self):
+    def version_urls(cls):
         """OrderedDict of explicitly defined URLs for versions of this package.
 
         Return:
@@ -974,7 +975,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if a package only defines ``url`` at the top level.
         """
         version_urls = collections.OrderedDict()
-        for v, args in sorted(self.versions.items()):
+        for v, args in sorted(cls.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
         return version_urls
@@ -1014,14 +1015,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def all_urls_for_version(self, version, custom_url_for_version=None):
-        """Returns all URLs derived from version_urls(), url, urls, and
+    def all_urls_for_version(self, version):
+        """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
-        version: class Version
-            The version for which a URL is sought.
-
-        See Class Version (version.py)
+        Args:
+            version (spack.version.Version): the version for which a URL is sought
         """
         uf = None
         if type(self).url_for_version != Package.url_for_version:

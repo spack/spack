@@ -54,7 +54,7 @@ def checksum(parser, args):
         tty.die("`spack checksum` accepts package names, not URLs.")
 
     # Get the package we're going to generate checksums for
-    pkg = spack.repo.get(args.package)
+    pkg = spack.repo.path.get(args.package)
 
     url_dict = {}
     versions = args.versions
