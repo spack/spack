@@ -749,10 +749,10 @@ class SpackSolverSetup(object):
 
         def equivalent_versions(ver_a, ver_b):
             # test if a commit version should be equivalenced with another version
-            if (isinstance(ver_a, spack.version.GitVersion) and 
+            if (isinstance(ver_a, spack.version.GitVersion) and
                 not isinstance(ver_b, spack.version.GitVersion)
-                and ver_a.is_commit):
-                return ver_a.ref_version == ver_b.version
+                and len(ver_b.version) == 1):
+                return ver_a.ref_version == ver_b.version[0]
             return False
 
         pkg = packagize(pkg)
@@ -773,9 +773,11 @@ class SpackSolverSetup(object):
 
         for v1 in most_to_least_preferred:
             for v2 in most_to_least_preferred:
-                if v1 == v2: continue
+                if v1 == v2:
+                    continue
                 if equivalent_versions(v1.version, v2.version):
-                    self.gen.fact(fn.version_equivalent(pkg.name, v1.version, v2.version)) 
+                    self.gen.fact(
+                        fn.version_equivalent(pkg.name, v1.version, v2.version))
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]

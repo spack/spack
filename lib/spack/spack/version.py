@@ -463,30 +463,27 @@ class GitVersion(VersionBase):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
-            
         # An object that can lookup git refs to compare them to versions
         self._ref_lookup = None
         self.ref_version = None
 
         git_prefix = string.startswith('git.')
         pruned_string = string[4:] if git_prefix else string
-        
+
         if '=' in pruned_string:
             self.ref, self.ref_version = pruned_string.split('=')
         else:
             self.ref = pruned_string
-        
 
         self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
-        print(self.is_commit, self.is_ref, git_prefix, self.ref, len(self.ref), COMMIT_VERSION.match(self.ref))
-
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
-        # canonical_string = self.ref if self.is_commit else string
-        super(GitVersion, self).__init__(string)
-
+        # unless we are assigning a version with =
+        canonical_string = self.ref if (self.is_commit and
+                                        not self.ref_version) else string
+        super(GitVersion, self).__init__(canonical_string)
 
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs

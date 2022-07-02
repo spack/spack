@@ -798,7 +798,6 @@ class _EdgeMap(Mapping):
 
     Edges are stored in a dictionary and keyed by package name.
     """
-
     def __init__(self, store_by=EdgeDirection.child):
         # Sanitize input arguments
         msg = 'unexpected value for "store_by" argument'
@@ -4967,7 +4966,6 @@ class LazySpecCache(collections.defaultdict):
     """Cache for Specs that uses a spec_like as key, and computes lazily
     the corresponding value ``Spec(spec_like``.
     """
-
     def __init__(self):
         super(LazySpecCache, self).__init__(Spec)
 
@@ -5157,7 +5155,6 @@ class SpecParser(spack.parse.Parser):
             if (
                 spec.name and spec.versions.concrete and
                 isinstance(spec.version, vn.GitVersion)
-                #and not spec.version.ref_version
             ):
                 spec.version.generate_git_lookup(spec.fullname)
 
@@ -5308,7 +5305,6 @@ class SpecParser(spack.parse.Parser):
         end = None
         if self.accept(ID):
             start = self.token.value
-            # TODO FIX THIS
             if self.accept(EQ):
                 # This is for versions that are associated with a hash
                 # i.e. @[40 char hash]=version
@@ -5326,7 +5322,6 @@ class SpecParser(spack.parse.Parser):
         elif start:
             # No colon, but there was a version.
             return vn.Version(start)
-            # TODO psakiev
         else:
             # No colon and no id: invalid version.
             self.next_token_error("Invalid version specifier")
@@ -5414,7 +5409,6 @@ def save_dependency_specfiles(
 
 class SpecParseError(spack.error.SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
-
     def __init__(self, parse_error):
         super(SpecParseError, self).__init__(parse_error.message)
         self.string = parse_error.string
@@ -5445,7 +5439,6 @@ class DuplicateCompilerSpecError(spack.error.SpecError):
 
 class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
-
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
@@ -5463,7 +5456,6 @@ class InconsistentSpecError(spack.error.SpecError):
 class InvalidDependencyError(spack.error.SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
-
     def __init__(self, pkg, deps):
         self.invalid_deps = deps
         super(InvalidDependencyError, self).__init__(
@@ -5475,7 +5467,6 @@ class NoProviderError(spack.error.SpecError):
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
-
     def __init__(self, vpkg):
         super(NoProviderError, self).__init__(
             "No providers found for virtual package: '%s'" % vpkg)
@@ -5486,7 +5477,6 @@ class MultipleProviderError(spack.error.SpecError):
     """Raised when there is no package that provides a particular
        virtual dependency.
     """
-
     def __init__(self, vpkg, providers):
         """Takes the name of the vpkg"""
         super(MultipleProviderError, self).__init__(
@@ -5498,7 +5488,6 @@ class MultipleProviderError(spack.error.SpecError):
 
 class UnsatisfiableSpecNameError(spack.error.UnsatisfiableSpecError):
     """Raised when two specs aren't even for the same package."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableSpecNameError, self).__init__(
             provided, required, "name")
@@ -5506,7 +5495,6 @@ class UnsatisfiableSpecNameError(spack.error.UnsatisfiableSpecError):
 
 class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec version conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableVersionSpecError, self).__init__(
             provided, required, "version")
@@ -5514,7 +5502,6 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
 
 class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec comiler conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerSpecError, self).__init__(
             provided, required, "compiler")
@@ -5522,7 +5509,6 @@ class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
 
 class UnsatisfiableCompilerFlagSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableCompilerFlagSpecError, self).__init__(
             provided, required, "compiler_flags")
@@ -5530,7 +5516,6 @@ class UnsatisfiableCompilerFlagSpecError(spack.error.UnsatisfiableSpecError):
 
 class UnsatisfiableArchitectureSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
-
     def __init__(self, provided, required):
         super(UnsatisfiableArchitectureSpecError, self).__init__(
             provided, required, "architecture")
@@ -5539,7 +5524,6 @@ class UnsatisfiableArchitectureSpecError(spack.error.UnsatisfiableSpecError):
 class UnsatisfiableProviderSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a provider is supplied but constraints don't match
        a vpkg requirement"""
-
     def __init__(self, provided, required):
         super(UnsatisfiableProviderSpecError, self).__init__(
             provided, required, "provider")
@@ -5549,7 +5533,6 @@ class UnsatisfiableProviderSpecError(spack.error.UnsatisfiableSpecError):
 # dep constraints
 class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
     """Raised when some dependency of constrained specs are incompatible"""
-
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
@@ -5557,7 +5540,6 @@ class UnsatisfiableDependencySpecError(spack.error.UnsatisfiableSpecError):
 
 class UnconstrainableDependencySpecError(spack.error.SpecError):
     """Raised when attempting to constrain by an anonymous dependency spec"""
-
     def __init__(self, spec):
         msg = "Cannot constrain by spec '%s'. Cannot constrain by a" % spec
         msg += " spec containing anonymous dependencies"
@@ -5609,7 +5591,6 @@ class SpecFormatStringError(spack.error.SpecError):
 
 class SpecFormatSigilError(SpecFormatStringError):
     """Called for mismatched sigils and attributes in format strings"""
-
     def __init__(self, sigil, requirement, used):
         msg = 'The sigil %s may only be used for %s.' % (sigil, requirement)
         msg += ' It was used with the attribute %s.' % used

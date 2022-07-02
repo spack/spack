@@ -200,8 +200,10 @@ def test_env_aware_spec(mutable_mock_env_path):
 
 
 @pytest.mark.parametrize('name, version, error',
-                         [('mpileaks', '1.0=f3c7206350ac8ee364af687deaae5c574dcfca2c', False),
-                          ('callpath', '1.0=f3c7206350ac8ee364af687deaae5c574dcfca2c', False)])
+                         [('mpileaks',
+                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0', False),
+                          ('callpath',
+                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0', False)])
 def test_spec_version_assigned_hash_as_version(name, version, error):
     output = spec(name + '@' + version)
     assert version in output

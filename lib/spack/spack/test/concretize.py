@@ -1810,13 +1810,13 @@ class TestConcretize(object):
         assert concrete_spec.satisfies('os=debian6')
 
     def test_git_hash_assigned_version_is_preferred(self):
-        hash = 'a'*40
-        s = Spec('develop-branch-version@%s=develop'%hash)
+        hash = 'a' * 40
+        s = Spec('develop-branch-version@%s=develop' % hash)
         c = s.concretized()
         assert hash in str(c)
 
     def test_git_hash_version_is_equivalent_to_specified_infinity_version(self):
-        hash = 'a'*40
-        s = Spec('depends-on-develop ^develop-branch-version@%s=develop'%hash)
+        hash = 'a' * 40
+        s = Spec('depends-on-develop ^develop-branch-version@%s=develop' % hash)
         c = s.concretized()
         assert hash in str(c)
