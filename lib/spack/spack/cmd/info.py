@@ -386,7 +386,7 @@ def print_virtuals(pkg):
 
 
 def info(parser, args):
-    pkg = spack.repo.get(args.package)
+    pkg = spack.repo.path.get(args.package)
 
     # Output core package information
     header = section_title(

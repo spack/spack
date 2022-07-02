@@ -452,9 +452,9 @@ def test_env_repo():
     with ev.read('test'):
         concretize()
 
-    package = e.repo.get('mpileaks')
-    assert package.name == 'mpileaks'
-    assert package.namespace == 'builtin.mock'
+    pkg_cls = e.repo.get_pkg_class('mpileaks')
+    assert pkg_cls.name == 'mpileaks'
+    assert pkg_cls.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():

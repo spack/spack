@@ -58,8 +58,7 @@ def stage(parser, args):
 
     for spec in specs:
         spec = spack.cmd.matching_spec_from_env(spec)
-        package = spack.repo.get(spec)
         if custom_path:
-            package.path = custom_path
-        package.do_stage()
-        tty.msg("Staged {0} in {1}".format(package.name, package.stage.path))
+            spec.package.path = custom_path
+        spec.package.do_stage()
+        tty.msg("Staged {0} in {1}".format(spec.package.name, spec.package.stage.path))

@@ -52,8 +52,8 @@ def extensions(parser, args):
 
         extendable_pkgs = []
         for name in spack.repo.all_package_names():
-            pkg = spack.repo.get(name)
-            if pkg.extendable:
+            pkg_cls = spack.repo.path.get_pkg_class(name)
+            if pkg_cls.extendable:
                 extendable_pkgs.append(name)
 
         colify(extendable_pkgs, indent=4)
