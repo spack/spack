@@ -807,27 +807,6 @@ target_compatible(Descendent, Ancestor)
 #defined target_satisfies/2.
 #defined target_parent/2.
 
-% If the package does not have any specific weight for this
-% target, offset the default weights by the number of specific
-% weights and use that. We additionally offset by 30 to ensure
-% preferences are propagated even against large numbers of
-% otherwise "better" matches.
-target_weight(Target, Package, Weight)
-  :- default_target_weight(Target, Package, Weight),
-     node(Package),
-     not derive_target_from_parent(_, Package),
-     not package_target_weight(Target, Package, _).
-
-% TODO: Need to account for the case of more than one parent
-% TODO: each of which sets different targets
-target_weight(Target, Dependency, Weight)
-  :- depends_on(Package, Dependency),
-     derive_target_from_parent(Package, Dependency),
-     target_weight(Target, Package, Weight).
-
-target_weight(Target, Package, Weight)
-  :- package_target_weight(Target, Package, Weight).
-
 % can't use targets on node if the compiler for the node doesn't support them
 error(2, "{0} compiler '{2}@{3}' incompatible with 'target={1}'", Package, Target, Compiler, Version)
   :- node_target(Package, Target),
@@ -844,11 +823,7 @@ node_target(Package, Target)
 node_target_weight(Package, Weight)
  :- node(Package),
     node_target(Package, Target),
-    target_weight(Target, Package, Weight).
-
-derive_target_from_parent(Parent, Package)
-  :- depends_on(Parent, Package),
-     not package_target_weight(_, Package, _).
+    target_weight(Package, Target, Weight).
 
 % compatibility rules for targets among nodes
 node_target_match(Parent, Dependency)
