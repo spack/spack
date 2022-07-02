@@ -88,13 +88,6 @@ class Rocblas(CMakePackage):
         depends_on('llvm-amdgpu@' + ver,  type='build',  when='@' + ver)
         depends_on('rocminfo@' + ver,     type='build',  when='@' + ver)
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
-        depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
-
-    for ver in ['4.0.0', '4.1.0', '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2',
-                '5.0.0', '5.0.2', '5.1.0', '5.1.3']:
-        depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-
     depends_on('python@3.6:', type='build')
 
     with when('+tensile'):
