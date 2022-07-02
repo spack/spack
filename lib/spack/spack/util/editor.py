@@ -85,7 +85,7 @@ def editor(*args, **kwargs):
             _exec_func(exe, args)
             return True
 
-        except OSError as e:
+        except Exception as e:
             if spack.config.get('config:debug'):
                 raise
 
@@ -122,7 +122,7 @@ def editor(*args, **kwargs):
     # trying them all -- if we get here and one fails, something is
     # probably much more deeply wrong with the environment.
     exe = which_string(*_default_editors)
-    if try_exec(exe, [exe] + list(args)):
+    if exe and try_exec(exe, [exe] + list(args)):
         return
 
     # Fail if nothing could be found
