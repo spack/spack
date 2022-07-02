@@ -10,6 +10,7 @@ import pytest
 
 import spack.environment as ev
 import spack.error
+from spack.fetch_strategy import FetchError
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -200,10 +201,14 @@ def test_env_aware_spec(mutable_mock_env_path):
 
 
 @pytest.mark.parametrize('name, version, error',
-                         [('mpileaks',
-                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0', False),
+                         [('develop-branch-version',
+                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=develop', None),
                           ('callpath',
-                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0', False)])
+                           'f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0', FetchError)])
 def test_spec_version_assigned_hash_as_version(name, version, error):
-    output = spec(name + '@' + version)
-    assert version in output
+    if error:
+        with pytest.raises(error):
+            output = spec(name + '@' + version)
+    else:
+        output = spec(name + '@' + version)
+        assert version in output
