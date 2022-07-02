@@ -26,26 +26,6 @@ from spack.error import NoHeadersError, NoLibrariesError
 from spack.package_base import PackageBase, run_after
 
 
-def _python_homepage(instance, owner):
-    if owner.pypi:
-        name = owner.pypi.split('/')[0]
-        return 'https://pypi.org/project/' + name + '/'
-
-
-def _python_url(instance, owner):
-    if owner.pypi:
-        return (
-            'https://files.pythonhosted.org/packages/source/'
-            + owner.pypi[0] + '/' + owner.pypi
-        )
-
-
-def _python_list_url(instance, owner):
-    if owner.pypi:
-        name = owner.pypi.split('/')[0]
-        return 'https://pypi.org/simple/' + name + '/'
-
-
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using pip."""
     #: Package name, version, and extension on PyPI
@@ -97,9 +77,22 @@ class PythonPackage(PackageBase):
             '--no-index',
         ]
 
-    homepage = ClassProperty(callback=_python_homepage)
-    url = ClassProperty(callback=_python_url)
-    list_url = ClassProperty(callback=_python_list_url)
+    @ClassProperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
+            return 'https://pypi.org/project/' + name + '/'
+
+    @ClassProperty
+    def url(cls):
+        if cls.pypi:
+            return 'https://files.pythonhosted.org/packages/source/' + cls.pypi[0] + '/' + cls.pypi
+
+    @ClassProperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
+            return 'https://pypi.org/simple/' + name + '/'
 
     @property
     def import_modules(self):

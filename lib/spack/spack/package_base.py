@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import match_predicate, memoized, nullcontext
+from llnl.util.lang import ClassProperty, match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -404,63 +404,6 @@ class PackageMeta(
             return func
         return _decorator
 
-    @property
-    def package_dir(self):
-        """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(self.module.__file__))
-
-    @property
-    def module(self):
-        """Module object (not just the name) that this package is defined in.
-
-        We use this to add variables to package modules.  This makes
-        install() methods easier to write (e.g., can call configure())
-        """
-        return __import__(self.__module__, fromlist=[self.__name__])
-
-    @property
-    def namespace(self):
-        """Spack namespace for the package, which identifies its repo."""
-        return spack.repo.namespace_from_fullname(self.__module__)
-
-    @property
-    def fullname(self):
-        """Name of this package, including the namespace"""
-        return '%s.%s' % (self.namespace, self.name)
-
-    @property
-    def fullnames(self):
-        """
-        Fullnames for this package and any packages from which it inherits.
-        """
-        fullnames = []
-        for cls in inspect.getmro(self):
-            namespace = getattr(cls, 'namespace', None)
-            if namespace:
-                fullnames.append('%s.%s' % (namespace, self.name))
-            if namespace == 'builtin':
-                # builtin packages cannot inherit from other repos
-                break
-        return fullnames
-
-    @property
-    def name(self):
-        """The name of this package.
-
-        The name of a package is the name of its Python module, without
-        the containing module names.
-        """
-        if self._name is None:
-            self._name = self.module.__name__
-            if '.' in self._name:
-                self._name = self._name[self._name.rindex('.') + 1:]
-        return self._name
-
-    @property
-    def global_license_dir(self):
-        """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
-
 
 def run_before(*phases):
     """Registers a method of a package to be run before a given phase"""
@@ -751,10 +694,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     _patches_by_hash = None
 
     #: Package homepage where users can find more information about the package
-    homepage = None  # type: Any
+    homepage = None  # type: str
 
     #: Default list URL (place to find available versions)
-    list_url = None  # type: Any
+    list_url = None  # type: str
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
@@ -909,41 +852,60 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
-    # package_dir and module are *class* properties (see PackageMeta),
-    # but to make them work on instances we need these defs as well.
-    @property
-    def package_dir(self):
+    @ClassProperty
+    def package_dir(cls):
         """Directory where the package.py file lives."""
-        return type(self).package_dir
+        return os.path.abspath(os.path.dirname(cls.module.__file__))
 
-    @property
-    def module(self):
-        """Module object that this package is defined in."""
-        return type(self).module
+    @ClassProperty
+    def module(cls):
+        """Module object (not just the name) that this package is defined in.
 
-    @property
-    def namespace(self):
+        We use this to add variables to package modules.  This makes
+        install() methods easier to write (e.g., can call configure())
+        """
+        return __import__(cls.__module__, fromlist=[cls.__name__])
+
+    @ClassProperty
+    def namespace(cls):
         """Spack namespace for the package, which identifies its repo."""
-        return type(self).namespace
+        return spack.repo.namespace_from_fullname(cls.__module__)
 
-    @property
-    def fullname(self):
-        """Name of this package, including namespace: namespace.name."""
-        return type(self).fullname
+    @ClassProperty
+    def fullname(cls):
+        """Name of this package, including the namespace"""
+        return '%s.%s' % (cls.namespace, cls.name)
 
-    @property
-    def fullnames(self):
-        return type(self).fullnames
+    @ClassProperty
+    def fullnames(cls):
+        """Fullnames for this package and any packages from which it inherits."""
+        fullnames = []
+        for cls in inspect.getmro(cls):
+            namespace = getattr(cls, 'namespace', None)
+            if namespace:
+                fullnames.append('%s.%s' % (namespace, cls.name))
+            if namespace == 'builtin':
+                # builtin packages cannot inherit from other repos
+                break
+        return fullnames
 
-    @property
-    def name(self):
-        """Name of this package (the module without parent modules)."""
-        return type(self).name
+    @ClassProperty
+    def name(cls):
+        """The name of this package.
 
-    @property
-    def global_license_dir(self):
-        """Returns the directory where global license files are stored."""
-        return type(self).global_license_dir
+        The name of a package is the name of its Python module, without
+        the containing module names.
+        """
+        if cls._name is None:
+            cls._name = cls.module.__name__
+            if '.' in cls._name:
+                cls._name = cls._name[cls._name.rindex('.') + 1:]
+        return cls._name
+
+    @ClassProperty
+    def global_license_dir(cls):
+        """Returns the directory where license files for all packages are stored."""
+        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
 
     @property
     def global_license_file(self):

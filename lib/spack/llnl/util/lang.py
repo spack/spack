@@ -1083,4 +1083,4 @@ class ClassProperty(object):
         self.callback = callback
 
     def __get__(self, instance, owner):
-        return self.callback(instance, owner)
+        return self.callback(owner)

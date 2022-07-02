@@ -16,11 +16,6 @@ from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
 
 
-def _racket_homepage(instance, owner):
-    if owner.pkgs:
-        return 'https://pkgs.racket-lang.org/package/{0}'.format(owner.name)
-
-
 class RacketPackage(PackageBase):
     """Specialized class for packages that are built using Racket's
     `raco pkg install` and `raco setup` commands.
@@ -46,7 +41,11 @@ class RacketPackage(PackageBase):
     subdirectory = None  # type: Optional[str]
     name = None  # type: Optional[str]
     parallel = True
-    homepage = lang.ClassProperty(callback=_racket_homepage)
+
+    @lang.ClassProperty
+    def _racket_homepage(cls):
+        if cls.pkgs:
+            return 'https://pkgs.racket-lang.org/package/{0}'.format(cls.name)
 
     @property
     def build_directory(self):

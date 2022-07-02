@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 from typing import Optional
 
@@ -11,34 +9,6 @@ import llnl.util.lang as lang
 
 from spack.directives import extends
 from spack.package_base import PackageBase, run_after
-
-
-def _r_homepage(instance, owner):
-    if owner.cran:
-        return 'https://cloud.r-project.org/package=' + owner.cran
-    elif owner.bioc:
-        return 'https://bioconductor.org/packages/' + owner.bioc
-
-
-def _r_url(instance, owner):
-    if owner.cran:
-        return (
-            'https://cloud.r-project.org/src/contrib/'
-            + owner.cran + '_' + str(list(owner.versions)[0]) + '.tar.gz'
-        )
-
-
-def _r_list_url(instance, owner):
-    if owner.cran:
-        return (
-            'https://cloud.r-project.org/src/contrib/Archive/'
-            + owner.cran + '/'
-        )
-
-
-def _r_git(instance, owner):
-    if owner.bioc:
-        return 'https://git.bioconductor.org/packages/' + owner.bioc
 
 
 class RPackage(PackageBase):
@@ -72,10 +42,33 @@ class RPackage(PackageBase):
 
     extends('r')
 
-    homepage = lang.ClassProperty(callback=_r_homepage)
-    url = lang.ClassProperty(callback=_r_url)
-    list_url = lang.ClassProperty(callback=_r_list_url)
-    git = lang.ClassProperty(callback=_r_git)
+    @lang.ClassProperty
+    def homepage(cls):
+        if cls.cran:
+            return 'https://cloud.r-project.org/package=' + cls.cran
+        elif cls.bioc:
+            return 'https://bioconductor.org/packages/' + cls.bioc
+
+    @lang.ClassProperty
+    def url(cls):
+        if cls.cran:
+            return (
+                'https://cloud.r-project.org/src/contrib/'
+                + cls.cran + '_' + str(list(cls.versions)[0]) + '.tar.gz'
+            )
+
+    @lang.ClassProperty
+    def list_url(cls):
+        if cls.cran:
+            return (
+                'https://cloud.r-project.org/src/contrib/Archive/'
+                + cls.cran + '/'
+            )
+
+    @property
+    def git(self):
+        if self.bioc:
+            return 'https://git.bioconductor.org/packages/' + self.bioc
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
