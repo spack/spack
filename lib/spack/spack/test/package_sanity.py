@@ -28,7 +28,7 @@ import spack.variant
 def check_repo():
     """Get all packages in the builtin repo to make sure they work."""
     for name in spack.repo.all_package_names():
-        spack.repo.get(name)
+        spack.repo.path.get_pkg_class(name)
 
 
 @pytest.mark.maybeslow
@@ -40,7 +40,7 @@ def test_get_all_packages():
 def test_packages_are_pickleable():
     failed_to_pickle = list()
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
+        pkg = spack.repo.path.get(name)
         try:
             pickle.dumps(pkg)
         except Exception:
@@ -54,7 +54,7 @@ def test_packages_are_pickleable():
                 ', '.join(failed_to_pickle))
 
         for name in failed_to_pickle:
-            pkg = spack.repo.get(name)
+            pkg = spack.repo.path.get(name)
             pickle.dumps(pkg)
 
 
@@ -132,7 +132,7 @@ def test_all_virtual_packages_have_default_providers():
 def test_package_version_consistency():
     """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
+        pkg = spack.repo.path.get(name)
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
             assert spack.fetch_strategy.for_package_version(pkg, version)
@@ -164,10 +164,9 @@ def test_no_fixme():
 
 def test_docstring():
     """Ensure that every package has a docstring."""
-
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
-        assert pkg.__doc__
+        pkg_cls = spack.repo.path.get_pkg_class(name)
+        assert pkg_cls.__doc__
 
 
 def test_all_packages_use_sha256_checksums():
@@ -246,7 +245,7 @@ def test_prs_update_old_api():
     for file in changed_package_files:
         if 'builtin.mock' not in file:  # don't restrict packages for tests
             name = os.path.basename(os.path.dirname(file))
-            pkg = spack.repo.get(name)
+            pkg = spack.repo.path.get(name)
 
             failed = (hasattr(pkg, 'setup_environment') or
                       hasattr(pkg, 'setup_dependent_environment'))

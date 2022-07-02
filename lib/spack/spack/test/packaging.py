@@ -54,9 +54,8 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
-    pspec = Spec("patchelf")
-    pspec.concretize()
-    pkg = spack.repo.get(pspec)
+    pspec = Spec("patchelf").concretized()
+    pkg = pspec.package
     fake_fetchify(pkg.fetcher, pkg)
     mkdirp(os.path.join(pkg.prefix, "bin"))
     patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
