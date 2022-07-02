@@ -1398,11 +1398,6 @@ path = llnl.util.lang.Singleton(_path)
 sys.meta_path.append(ReposFinder())
 
 
-def get(spec):
-    """Convenience wrapper around ``spack.repo.get()``."""
-    return path.get(spec)
-
-
 def all_package_names(include_virtuals=False):
     """Convenience wrapper around ``spack.repo.all_package_names()``."""
     return path.all_package_names(include_virtuals)
