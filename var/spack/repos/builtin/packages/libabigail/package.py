@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+\# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,6 +45,8 @@ class Libabigail(AutotoolsPackage):
     depends_on('py-mock', type=('build', 'run'), when="+rpm")
     depends_on('py-xdg', type=('build', 'run'), when="+rpm")
     depends_on('py-koji', type=('build', 'run'), when="+rpm")
+    depends_on('py-python-dateutil', type=('build', 'run'), when="+rpm")
+    depends_on('py-requests', type=('build', 'run'), when="+rpm")
     depends_on('wget',  type=('build', 'run'), when="+rpm")
 
     def configure_args(self):
