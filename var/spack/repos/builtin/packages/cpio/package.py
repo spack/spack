@@ -21,6 +21,9 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    # See configure_args()
+    conflicts('%intel@19')
+
     def patch(self):
         """Fix mutiple definition of char *program_name for gcc@10: and clang"""
         filter_file(r'char \*program_name;', '', 'src/global.c')
@@ -42,3 +45,13 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
                 flags.append('--rtlib=compiler-rt')
 
         return (flags, None, None)
+
+    def configure_args(self):
+        args=[]
+        # See #31420 for discussion.
+        # For %intel@19 comment out the conflict() above and uncomment
+        # the next two lines.  Modify the path to point to a recent version
+        # of gcc on your machine.  gcc@4.9.3 is known not to work.
+        #if self.spec.satisfies('%intel@19'):
+        #    args.append('CFLAGS=-gcc-name=/usr/tce/packages/gcc/gcc-10.2.1/bin/gcc')
+        return args
