@@ -53,16 +53,13 @@ class Rocalution(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             rocblas_tgt = tgt if tgt != 'gfx900:xnack-' else 'gfx900'
             depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, rocblas_tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-            depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
-                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
             depends_on('rocsparse@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-        depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
