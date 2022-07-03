@@ -72,6 +72,12 @@ class Rocalution(CMakePackage):
             depends_on('rocrand@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
 
+    depends_on('googletest@1.10.0:', type='test')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'rocalution-test')
+        self.run_test(exe)
+
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 
@@ -102,7 +108,8 @@ class Rocalution(CMakePackage):
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('SUPPORT_HIP', 'ON'),
             self.define('SUPPORT_MPI', 'OFF'),
-            self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
         ]
 
         if 'auto' not in self.spec.variants['amdgpu_target']:
