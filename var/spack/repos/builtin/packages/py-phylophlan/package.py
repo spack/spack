@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class PyPhylophlan(PythonPackage):
     """PhyloPhlAn 3.0 is an integrated pipeline for large-scale
     phylogenetic profiling of genomes and metagenomes."""
