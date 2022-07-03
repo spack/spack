@@ -1815,7 +1815,13 @@ class TestConcretize(object):
         c = s.concretized()
         assert hash in str(c)
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Not supported on Windows (yet)")
     def test_git_hash_version_is_equivalent_to_specified_infinity_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip(
+                'Original concretizer cannot account for git hashes'
+            )
         hash = 'a' * 40
         s = Spec('depends-on-develop ^develop-branch-version@%s=develop' % hash)
         c = s.concretized()
