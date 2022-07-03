@@ -1996,6 +1996,17 @@ class SpecBuilder(object):
             )
             return
 
+        if name == 'cmakeflags':
+            variants = self._specs[pkg].variants
+            if not variants.get(name):
+                variants.setdefault(
+                    name,
+                    spack.variant.MultiValuedVariant(name, value)
+                )
+            else:
+                variants[name].append(value)
+        return
+
         self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
@@ -2057,7 +2068,7 @@ class SpecBuilder(object):
         flags will appear last on the compile line, in the order they
         were specified.
 
-        The solver determines wihch flags are on nodes; this routine
+        The solver determines which flags are on nodes; this routine
         imposes order afterwards.
         """
         # nodes with no flags get flag order from compiler

@@ -53,6 +53,7 @@ __all__ = ['DirectiveError', 'DirectiveMeta', 'version', 'conflicts', 'depends_o
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']
+reserved_names += ['cmakeflags']
 
 #: Names of possible directives. This list is populated elsewhere in the file.
 directive_names = []
