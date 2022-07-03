@@ -13,7 +13,8 @@ from spack.package import *
 #  - checksum must be sha256
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
-#  - the newest non-cuda version should be set as 'preferred_ver' in package
+#  - the newest non-cuda version should be set as 'preferred_ver'
+#  - a cuda dependency must be set for each new cuda version
 
 _versions = {
     '6.1.7-cuda': {
