@@ -32,15 +32,18 @@ class OntGuppy(Package):
     homepage = "https://community.nanoporetech.com/downloads/guppy/release_notes"
     preferred_ver = "6.1.7"
 
+    preferred_defined = False
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            is_preferred = (ver == preferred_ver)
+            is_preferred = not preferred_defined and (ver == preferred_ver)
+            if is_preferred:
+                preferred_defined = True
 
-        version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
+            version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
-    depends_on('cuda@11.0.0:', when='@6.1.7-cuda')
+    depends_on('cuda@11.0.0:', when='@6.1.7-cuda', type='run')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
