@@ -18,13 +18,14 @@ from spack.package import *
 
 _versions = {
     '6.1.7-cuda': {
-    'Linux-x86_64': ('c3dd8f8b7567061a155d1921586dd95540410b35b2ccb8a33a463d9db8642711', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy_6.1.7_linux64.tar.gz'),
-    'Linux-aarch64': ('e821fe85b538e1a5d38c17c8fc7497f6fad200ff9fdf0c98921b4d7b1d490914', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy_6.1.7_linuxaarch64_cuda10.tar.gz'),
+        'Linux-x86_64': ('c3dd8f8b7567061a155d1921586dd95540410b35b2ccb8a33a463d9db8642711', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy_6.1.7_linux64.tar.gz'),
+        'Linux-aarch64': ('e821fe85b538e1a5d38c17c8fc7497f6fad200ff9fdf0c98921b4d7b1d490914', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy_6.1.7_linuxaarch64_cuda10.tar.gz'),
     },
     '6.1.7': {
-    'Linux-x86_64': ('4540441ca5393d76f05485f38cdba2dc0b5785af31d77006bdc3664b3f2644cb', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy-cpu_6.1.7_linux64.tar.gz')
+        'Linux-x86_64': ('4540441ca5393d76f05485f38cdba2dc0b5785af31d77006bdc3664b3f2644cb', 'https://cdn.oxfordnanoportal.com/software/analysis/ont-guppy-cpu_6.1.7_linux64.tar.gz')
     }
 }
+
 
 class OntGuppy(Package):
     """Guppy: local accelerated basecalling for Nanopore data"""
