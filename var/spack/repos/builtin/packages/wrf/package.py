@@ -144,9 +144,12 @@ class Wrf(Package):
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
     patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
     patch("patches/3.9/fujitsu.patch", when="@3.9.1.1 %fj")
-    patch("patches/3.9/add_elec_support.patch", when="@3.9.1.1+elec")
+
+    patch("https://ccad.unc.edu.ar/files/add_elec_support.patch",
+          sha256="3caf160be9db90c8dd8ce1b7ccc23ba5a788b3dbc538fe15610839b07d7d2d26", when="@3.9.1.1+elec")
     # WRF-ELEC modifies some of the WRF codebase
-    patch("patches/3.9/add_elec_changes.patch", when="@3.9.1.1+elec")
+    patch("https://ccad.unc.edu.ar/files/add_elec_changes.patch",
+          sha256="193a8ea9d0be9eba86d71863d2ffaddd5e77c75727bdb195bd75c053dbf4d01c", when="@3.9.1.1+elec")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
