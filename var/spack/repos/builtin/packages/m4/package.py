@@ -19,6 +19,9 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
     version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
 
+    # See note in configure_args() for a local fix.
+    conflicts('%intel@19')
+
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
     # The NVIDIA compilers do not currently support some GNU builtins.
@@ -92,6 +95,11 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
         if spec.satisfies('%intel@:18'):
             args.append('CFLAGS=-no-gcc')
+        # See issue #31423
+        # %intel@19 requires gcc5 or greater in the PATH.  Uncomment
+        # the following to point to an appropraite version.
+        # if spec.satisfies('%intel@19'):
+        #   args.append('CFLAGS=-gcc-name=/usr/tce/packages/gcc/gcc-10.2.1/bin/gcc')
 
         if '+sigsegv' in spec:
             args.append('--with-libsigsegv-prefix={0}'.format(
