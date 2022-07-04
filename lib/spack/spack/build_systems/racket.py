@@ -43,7 +43,7 @@ class RacketPackage(PackageBase):
     parallel = True
 
     @lang.classproperty
-    def _racket_homepage(cls):
+    def homepage(cls):
         if cls.pkgs:
             return 'https://pkgs.racket-lang.org/package/{0}'.format(cls.name)
 
