@@ -217,14 +217,7 @@ class DetectablePackageMeta(object):
                     return exe
                 plat_exe = []
                 if hasattr(cls, 'executables'):
-                    # Executable can be a standalone class attribute or
-                    # a class method in more complex cases
-                    if callable(cls.executables):
-                        exes = cls.executables()
-                    else:
-                        exes = cls.executables
-
-                    for exe in exes:
+                    for exe in cls.executables:
                         if sys.platform == 'win32':
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
