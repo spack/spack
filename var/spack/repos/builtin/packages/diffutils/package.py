@@ -30,7 +30,7 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     conflicts('%nvhpc', when='@:3.6,3.8:')
     # See configure_args() for details on %intel@19 compilers
-    conflicts('%intel@19')
+    conflicts('%intel@19.0.0:19')
 
     depends_on('iconv')
 
