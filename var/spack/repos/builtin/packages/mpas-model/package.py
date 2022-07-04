@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.executable import Executable
 
 
 class MpasModel(MakefilePackage):
@@ -36,6 +37,21 @@ class MpasModel(MakefilePackage):
              name='MPAS-Data',
              git='https://github.com/MPAS-Dev/MPAS-Data.git',
              tag='v7.0')
+
+    def patch_makefile(self, action, targets):
+        """Patch predefined flags in Makefile.
+        MPAS Makefile uses strings rather Makefile variables for its compiler flags.
+        This patch substitutes the strings with flags set in `target:`."""
+
+        # Target `all:` does not contain any strings with compiler flags
+        if action == "all":
+            return
+
+        sed = Executable('sed')
+        for target in targets:
+            key = target.split('=')[0]
+            sed("-i", "-e",  "/^" + action + ":.*$/,/^$/s?" + key + ".*\\\" \\\\?"
+                + target + "\\\" \\\\?1", "Makefile")
 
     def target(self, model, action):
         spec = self.spec
@@ -88,6 +104,9 @@ class MpasModel(MakefilePackage):
             'USE_PIO2=true', 'CPP_FLAGS=-D_MPI', 'OPENMP=true',
             'CORE={0}'.format(model), action
         ])
+
+        self.patch_makefile(action, targets)
+
         return targets
 
     def build(self, spec, prefix):
