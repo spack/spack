@@ -42,7 +42,7 @@ class RacketPackage(PackageBase):
     name = None  # type: Optional[str]
     parallel = True
 
-    @lang.ClassProperty
+    @lang.classproperty
     def _racket_homepage(cls):
         if cls.pkgs:
             return 'https://pkgs.racket-lang.org/package/{0}'.format(cls.name)

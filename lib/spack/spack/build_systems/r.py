@@ -42,14 +42,14 @@ class RPackage(PackageBase):
 
     extends('r')
 
-    @lang.ClassProperty
+    @lang.classproperty
     def homepage(cls):
         if cls.cran:
             return 'https://cloud.r-project.org/package=' + cls.cran
         elif cls.bioc:
             return 'https://bioconductor.org/packages/' + cls.bioc
 
-    @lang.ClassProperty
+    @lang.classproperty
     def url(cls):
         if cls.cran:
             return (
@@ -57,7 +57,7 @@ class RPackage(PackageBase):
                 + cls.cran + '_' + str(list(cls.versions)[0]) + '.tar.gz'
             )
 
-    @lang.ClassProperty
+    @lang.classproperty
     def list_url(cls):
         if cls.cran:
             return (

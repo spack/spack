@@ -1074,7 +1074,7 @@ class GroupedExceptionForwarder(object):
         return True
 
 
-class ClassProperty(object):
+class classproperty(object):
     """Non-data descriptor to evaluate a class-level property. The function that performs
     the evaluation is injected at creation time and take an instance (could be None) and
     an owner (i.e. the class that originated the instance)

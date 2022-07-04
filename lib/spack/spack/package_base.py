@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import ClassProperty, match_predicate, memoized, nullcontext
+from llnl.util.lang import classproperty, match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -852,12 +852,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
-    @ClassProperty
+    @classproperty
     def package_dir(cls):
         """Directory where the package.py file lives."""
         return os.path.abspath(os.path.dirname(cls.module.__file__))
 
-    @ClassProperty
+    @classproperty
     def module(cls):
         """Module object (not just the name) that this package is defined in.
 
@@ -866,17 +866,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return __import__(cls.__module__, fromlist=[cls.__name__])
 
-    @ClassProperty
+    @classproperty
     def namespace(cls):
         """Spack namespace for the package, which identifies its repo."""
         return spack.repo.namespace_from_fullname(cls.__module__)
 
-    @ClassProperty
+    @classproperty
     def fullname(cls):
         """Name of this package, including the namespace"""
         return '%s.%s' % (cls.namespace, cls.name)
 
-    @ClassProperty
+    @classproperty
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
@@ -889,7 +889,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 break
         return fullnames
 
-    @ClassProperty
+    @classproperty
     def name(cls):
         """The name of this package.
 
@@ -902,7 +902,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 cls._name = cls._name[cls._name.rindex('.') + 1:]
         return cls._name
 
-    @ClassProperty
+    @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
         return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
