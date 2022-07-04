@@ -31,6 +31,8 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("8.2.0", tag="8.2.0")
+    version("8.1.0", tag="8.1.0")
     version("8.0.2", tag="8.0.2")
     version("8.0.1", tag="8.0.1")
     version("8.0.0", tag="8.0.0")
@@ -152,7 +154,7 @@ class Neuron(CMakePackage):
             compilation_flags.append('-DR123_USE_INTRIN_H=0')
         # Added in https://github.com/neuronsimulator/nrn/pull/1574, this
         # improves ccache performance in CI builds.
-        if self.spec.satisfies('@develop'):
+        if self.spec.satisfies('@8.2:'):
             compilation_flags.append('-DNRN_AVOID_ABSOLUTE_PATHS=ON')
         # Pass Spack's target architecture flags in explicitly so that they're
         # saved to the nrnivmodl Makefile.

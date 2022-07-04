@@ -21,6 +21,7 @@ class Coreneuron(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/coreneuron.git"
 
     version('develop', branch='master')
+    version('8.2.0', tag='8.2.0')
     # 1.0.1 > 1.0.0.20210519 > 1.0 as far as Spack is concerned
     version('1.0.0.20220304', commit='2d08705')
     version('1.0.0.20220218', commit='102ebde')
@@ -78,6 +79,7 @@ class Coreneuron(CMakePackage):
     depends_on('caliper~mpi', when='@1.0.0.20210519:+caliper~mpi')
 
     # nmodl specific dependency
+    depends_on('nmodl@0.4.0:', when='@8.2:+nmodl')
     depends_on('nmodl@0.3.0:', when='@1.0:+nmodl')
     depends_on('nmodl@0.3b', when='@:0.22+nmodl')
     depends_on('ispc', when='+ispc')
