@@ -20,7 +20,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
 
     # See note in configure_args() for a local fix.
-    conflicts('%intel@19')
+    conflicts('%intel@19.0.0:19')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
