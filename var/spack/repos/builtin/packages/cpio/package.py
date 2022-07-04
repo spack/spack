@@ -47,11 +47,11 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        args=[]
+        args = []
         # See #31420 for discussion.
         # For %intel@19 comment out the conflict() above and uncomment
         # the next two lines.  Modify the path to point to a recent version
         # of gcc on your machine.  gcc@4.9.3 is known not to work.
-        #if self.spec.satisfies('%intel@19'):
+        # if self.spec.satisfies('%intel@19'):
         #    args.append('CFLAGS=-gcc-name=/usr/tce/packages/gcc/gcc-10.2.1/bin/gcc')
         return args
