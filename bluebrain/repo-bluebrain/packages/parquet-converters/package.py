@@ -26,6 +26,7 @@ class ParquetConverters(CMakePackage):
     depends_on('arrow+parquet@:0.12', when='@:0.5.5')
     depends_on('arrow+parquet@0.15.1', when='@0.5.6:0.5.7')
     depends_on('arrow+parquet@3.0.0:', when='@0.6.0:')
+    depends_on('nlohmann-json', when='@0.7.1:')
     depends_on('snappy~shared')
     depends_on('synapsetool+mpi')
     depends_on('synapsetool+mpi@:0.5.6', when='@:0.5.2')

@@ -50,6 +50,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-libsonata', type='run', when='@0.15.3:')
     depends_on('py-lxml', type=('build', 'run'))
+    depends_on('py-morphio', type=('build', 'run'), when='@0.17.2:')
     depends_on('py-morpho-kit', type=('build', 'run'), when='@0.14.4:')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
