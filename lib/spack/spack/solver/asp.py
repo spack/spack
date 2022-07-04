@@ -771,13 +771,10 @@ class SpackSolverSetup(object):
                 version_origin_str[declared_version.origin]
             ))
 
-        for v1 in most_to_least_preferred:
-            for v2 in most_to_least_preferred:
-                if v1 == v2:
-                    continue
-                if equivalent_versions(v1.version, v2.version):
-                    self.gen.fact(
-                        fn.version_equivalent(pkg.name, v1.version, v2.version))
+        for v1, v2 in zip(most_to_least_preferred, most_to_least_preferred[::-1]):
+            if equivalent_versions(v1.version, v2.version):
+                self.gen.fact(
+                    fn.version_equivalent(pkg.name, v1.version, v2.version))
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
