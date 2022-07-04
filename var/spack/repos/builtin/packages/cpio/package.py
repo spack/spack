@@ -22,7 +22,7 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     # See configure_args()
-    conflicts('%intel@19')
+    conflicts('%intel@19.0.0:19')
 
     def patch(self):
         """Fix mutiple definition of char *program_name for gcc@10: and clang"""
