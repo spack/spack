@@ -59,10 +59,12 @@ class MpasModel(MakefilePackage):
             ])
         elif satisfies('%intel'):
             fflags.extend([
-                '-r8',
                 '-convert big_endian',
                 '-FR',
             ])
+            if satisfies('precision=double'):
+                fflags.extend(['-r8'])
+
             cppflags.append('-DUNDERSCORE')
         targets = [
             'FC_PARALLEL={0}'.format(spec['mpi'].mpifc),
