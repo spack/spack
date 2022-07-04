@@ -33,10 +33,12 @@ class FujitsuFftw(FftwBase):
     homepage = "https://github.com/fujitsu/fftw3"
     url = "https://github.com/fujitsu/fftw3/archive/sve-v1.0.0.tar.gz"
 
+    version('1.1.0', sha256='47b01a20846802041a9533a115f816b973cc9b15b3e827a2f0caffaae34a6c9d')
     version('1.0.0', sha256='b5931e352355d8d1ffeb215922f4b96de11b8585c423fceeaffbf3d5436f6f2f')
 
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('openmp', default=True, description="Enable OpenMP support")
+    variant('threads', default=True, description="Enable thread support")
     variant('debug', default=False, description='Builds a debug version of the library')
 
     depends_on('texinfo')
@@ -89,6 +91,11 @@ class FujitsuFftw(FftwBase):
             options.append('OPENMP_CFLAGS=-Kopenmp')
         else:
             options.append('--disable-openmp')
+
+        if '+threads' in spec:
+            options.append('--enable-threads')
+        else:
+            options.append('--disable-threads')
 
         if '+mpi' in spec:
             options.append('--enable-mpi')
