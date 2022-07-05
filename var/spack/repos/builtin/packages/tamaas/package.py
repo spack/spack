@@ -17,6 +17,7 @@ class Tamaas(SConsPackage):
     maintainers = ["prs513rosewood"]
 
     version("master", branch="master")
+    version("2.5.0.post1", sha256="9c550b3a905bfc973f79fc52c56a55cb2234087c8014e0177610ec8b76b46a71")
     version("2.4.0", sha256="38edba588ff3a6643523c28fb391e001dbafa9d0e58053b9e080eda70f8c71c9")
     version("2.3.1", sha256="7d63e374cbc7b5b93578ece7be5c084d1c2f0dbe1d57c4f0c8abd5ff5fff9ab0")
     version("2.3.0", sha256="0529e015c6cb5bbabaea5dce6efc5ec0f2aa76c00541f0d90ad0e2e3060a4520")
