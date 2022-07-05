@@ -85,7 +85,7 @@ def editor(*args, **kwargs):
             _exec_func(exe, args)
             return True
 
-        except Exception as e:
+        except OSError as e:
             if spack.config.get('config:debug'):
                 raise
 

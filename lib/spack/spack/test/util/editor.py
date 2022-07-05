@@ -144,5 +144,5 @@ def test_no_editor():
     def assert_exec(exe, args):
         assert False
 
-    with pytest.raises(EnvironmentError):
+    with pytest.raises(EnvironmentError, match=r'No text editor found.*'):
         ed.editor('/path/to/file', _exec_func=assert_exec)
