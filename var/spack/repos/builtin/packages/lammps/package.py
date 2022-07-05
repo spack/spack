@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import datetime as dt
 
+import archspec
+
 from spack.package import *
 
 
@@ -21,6 +23,11 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='develop')
+    version('20220623', sha256='21533ce6f174c80815a48c99e5f3dd109e69d55c4cad47312d88a7190a35927f')
+    version('20220602', sha256='3e8f54453e53b3b387a68317277f832b8cf64a981e64b21e98bb37ea36ac4a60')
+    version('20220504', sha256='fe05bae8090fd0177b3c1b987cd32a9cb7cd05d790828ba954c764eb52e10b52')
+    version('20220324', sha256='d791cc93eedfc345fdf87bfa5b6f7e17e461f86ba197f9e9c3d477ce8657a7ef')
+    version('20220217', sha256='e5bd2bf325835fa98d1b95f0667c83076580916027df5b8109d5470d1b97da98')
     version('20220107', sha256='fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb')
     version('20211214', sha256='9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9')
     version('20211027', sha256='c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938')
@@ -36,7 +43,7 @@ class Lammps(CMakePackage, CudaPackage):
     version('20210514', sha256='74d9c4386f2181b15a024314c42b7a0b0aaefd3b4b947aeca00fe07e5b2f3317')
     version('20210408', sha256='1645147b7777de4f616b8232edf0b597868084f969c777fa0a757949c3f71f56')
     version('20210310', sha256='25708378dbeccf794bc5045aceb84380bf4a3ca03fc8e5d150a26ca88d371474')
-    version('20201029', sha256='759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726')
+    version('20201029', sha256='3d347f6b512bc360505019d1c6183c969a2e1da402e31a1e26577daf5e419d95')
     version('20200721', sha256='845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9')
     version('20200630', sha256='413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc')
     version('20200505', sha256='c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73')
@@ -81,9 +88,9 @@ class Lammps(CMakePackage, CudaPackage):
     # List of supported optional packages
     # Note: package `openmp` in this recipe is called `openmp-package`, to avoid clash
     # with the pre-existing `openmp` variant
-    supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
-                          'coreshell', 'dielectric', 'dipole', 'granular', 'kspace',
-                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
+    supported_packages = ['asphere', 'body', 'bpm', 'class2', 'colloid', 'compress',
+                          'coreshell', 'dielectric', 'dipole', 'electrode', 'granular',
+                          'kspace', 'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
                           'mliap', 'ml-iap', 'ml-snap', 'molecule', 'mpiio',
                           'opt', 'peri', 'plugin', 'poems', 'python', 'qeq', 'replica',
                           'rigid', 'shock', 'snap', 'spin', 'srd', 'voronoi',
@@ -215,6 +222,13 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts(
         '+dpd-basic', when='@:20210527',
         msg='+dpd-basic only supported for version 20210702 and later')
+    conflicts(
+        '+bpm', when='@:20220324',
+        msg='+bpm only supported for version 20220504 and later')
+    conflicts(
+        '+electrode', when='@:20220324',
+        msg='+electrode only supported for version 20220504 and later')
+    conflicts('+electrode', when='~kspace')
     conflicts('+mliap', when='~snap')
     conflicts('+ml-iap', when='~ml-snap')
     conflicts(
@@ -529,6 +543,13 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('%aocc'):
             cxx_flags = '-Ofast -mfma -fvectorize -funroll-loops'
             args.append(self.define('CMAKE_CXX_FLAGS_RELEASE', cxx_flags))
+
+        # Overwrite generic cpu tune option
+        cmake_tune_flags = archspec.cpu.TARGETS[spec.target.name].optimization_flags(
+            spec.compiler.name,
+            spec.compiler.version
+        )
+        args.append(self.define('CMAKE_TUNE_FLAGS', cmake_tune_flags))
 
         lammps_sizes = self.spec.variants['lammps_sizes'].value
         args.append(self.define('LAMMPS_SIZES', lammps_sizes))
