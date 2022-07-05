@@ -2898,14 +2898,8 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
     with ev.read('test') as e:
         for _, root in e.concretized_specs():
             for spec in root.traverse(root=True):
-                for task in ('.fetch', '.install'):
-                    tgt = os.path.join('prefix', task, spec.dag_hash())
-                    assert 'touch {}'.format(tgt) in all_out
-
-    # Check whether make prefix/fetch-all only fetches
-    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
-    assert '.install/' not in fetch_out
-    assert '.fetch/' in fetch_out
+                tgt = os.path.join('prefix', '.install', spec.dag_hash())
+                assert 'touch {}'.format(tgt) in all_out
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):
