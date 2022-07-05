@@ -16,6 +16,7 @@ class PyPylint(PythonPackage):
                       'pylint.message', 'pylint.utils', 'pylint.pyreverse',
                       'pylint.reporters', 'pylint.reporters.ureports']
 
+    version('2.14.4', sha256='47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a')
     version('2.13.5', sha256='dab221658368c7a05242e673c275c488670144123f4bd262b2777249c1c0de9b')
     version('2.11.1', sha256='2c9843fff1a88ca0ad98a256806c82c5a8f86086e7ccbdb93297d86c3f90c436')
     version('2.8.2', sha256='586d8fa9b1891f4b725f587ef267abe2a1bad89d6b184520c7f07a253dd6e217')
@@ -41,6 +42,7 @@ class PyPylint(PythonPackage):
     depends_on('py-astroid@2.5.6:2.6', type=('build', 'run'), when='@2.8.0:2.10')
     depends_on('py-astroid@2.8.0:2.8', type=('build', 'run'), when='@2.11.1')
     depends_on('py-astroid@2.11.2:2.11', type=('build', 'run'), when='@2.13.5:')
+    depends_on('py-astroid@2.11.6:2.11', type=('build', 'run'), when='@2.14.2:')
     depends_on('py-backports-functools-lru-cache', when='^python@:2.8', type=('build', 'run'))
     depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))
     depends_on('py-dill@0.2:', when='@2.13.5:', type=('build', 'run'))
