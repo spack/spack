@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Definitions that control how Spack creates Spec hashes."""
 
 import spack.dependency as dp
+import spack.repo
 
 hashes = []
 
@@ -54,7 +54,7 @@ process_hash = SpecHashDescriptor(
 #: Package hash used as part of dag hash
 package_hash = SpecHashDescriptor(
     deptype=(), package_hash=True, name='package_hash',
-    override=lambda s: s.package.content_hash())
+    override=lambda s: spack.repo.path.get(s).content_hash())
 
 
 # Deprecated hash types, no longer used, but needed to understand old serialized

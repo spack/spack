@@ -391,7 +391,8 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
     if spec:
-        versions = spec.package.versions.get(spec.package.version, {})
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        versions = pkg_cls.versions.get(spec.version, {})
         ext = versions.get('extension', None)
     # If the spec does not explicitly specify an extension (the default case),
     # then try to determine it automatically. An extension can only be

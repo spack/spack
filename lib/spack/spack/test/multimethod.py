@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test for multi_method dispatch."""
+import os
+import sys
+
 import pytest
 
 import spack.platforms
@@ -11,7 +14,13 @@ import spack.repo
 import spack.spec
 from spack.multimethod import NoSuchMethodError
 
-pytestmark = pytest.mark.usefixtures('mock_packages')
+pytestmark = [
+    pytest.mark.usefixtures('mock_packages', 'config'),
+    pytest.mark.skipif(
+        os.environ.get('SPACK_TEST_SOLVER') == 'original' or sys.platform == 'win32',
+        reason='The original concretizer cannot concretize most of the specs'
+    )
+]
 
 
 @pytest.fixture(scope='module',
@@ -26,7 +35,7 @@ def pkg_name(request):
 
 
 def test_no_version_match(pkg_name):
-    spec = spack.spec.Spec(pkg_name + '@2.0')
+    spec = spack.spec.Spec(pkg_name + '@2.0').concretized()
     with pytest.raises(NoSuchMethodError):
         spec.package.no_version_2()
 
@@ -48,14 +57,11 @@ def test_no_version_match(pkg_name):
     ('^mpich@1.4', 'mpi_version', 1),
     # Constraints on compilers with a default
     ('%gcc', 'has_a_default', 'gcc'),
-    ('%intel', 'has_a_default', 'intel'),
-    ('%pgi', 'has_a_default', 'default'),
+    ('%clang', 'has_a_default', 'clang'),
+    ('%apple-clang os=elcapitan', 'has_a_default', 'default'),
     # Constraints on dependencies
     ('^zmpi', 'different_by_dep', 'zmpi'),
     ('^mpich', 'different_by_dep', 'mpich'),
-    # If we try to switch on some entirely different dep, it's ambiguous,
-    # but should take the first option
-    ('^foobar', 'different_by_dep', 'mpich'),
     # Constraints on virtual dependencies
     ('^mpich2', 'different_by_virtual_dep', 2),
     ('^mpich@1.0', 'different_by_virtual_dep', 1),
@@ -66,7 +72,7 @@ def test_no_version_match(pkg_name):
     ('', 'boolean_false_first', 'True')
 ])
 def test_multimethod_calls(pkg_name, constraint_str, method_name, expected_result):
-    s = spack.spec.Spec(pkg_name + constraint_str)
+    s = spack.spec.Spec(pkg_name + constraint_str).concretized()
     assert getattr(s.package, method_name)() == expected_result
 
 
@@ -74,10 +80,10 @@ def test_target_match(pkg_name):
     platform = spack.platforms.host()
     targets = list(platform.targets.values())
     for target in targets[:-1]:
-        s = spack.spec.Spec(pkg_name + ' target=' + target.name)
+        s = spack.spec.Spec(pkg_name + ' target=' + target.name).concretized()
         assert s.package.different_by_target() == target.name
 
-    s = spack.spec.Spec(pkg_name + ' target=' + targets[-1].name)
+    s = spack.spec.Spec(pkg_name + ' target=' + targets[-1].name).concretized()
     if len(targets) == 1:
         assert s.package.different_by_target() == targets[-1].name
     else:
@@ -104,5 +110,5 @@ def test_target_match(pkg_name):
     ('multimethod-diamond@4.0', 'diamond_inheritance', 'subclass'),
 ])
 def test_multimethod_calls_and_inheritance(spec_str, method_name, expected_result):
-    s = spack.spec.Spec(spec_str)
+    s = spack.spec.Spec(spec_str).concretized()
     assert getattr(s.package, method_name)() == expected_result

@@ -640,10 +640,10 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     spec = Spec('trivial-install-test-package')
 
     with pytest.raises(ValueError, match='must have a concrete spec'):
-        spec.package.do_install()
+        spack.repo.path.get(spec).do_install()
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
-        spec.package.do_patch()
+        spack.repo.path.get(spec).do_patch()
 
 
 def test_install_error():

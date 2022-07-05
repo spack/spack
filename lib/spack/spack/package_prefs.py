@@ -157,13 +157,14 @@ class PackagePrefs(object):
 
 def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
-       one for each known external installation."""
+    one for each known external installation.
+    """
     # break circular import.
     from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
-    names |= set(vspec.name for vspec in spec.package.virtuals_provided)
+    names |= set(vspec.name for vspec in spack.repo.path.get(spec).virtuals_provided)
 
     external_specs = []
     for name in names:
@@ -200,7 +201,7 @@ def is_spec_buildable(spec):
                if entry.get('buildable', all_buildable) != all_buildable]
     # Does this spec override all_buildable
     spec_reversed = (spec.name in reverse or
-                     any(spec.package.provides(name) for name in reverse))
+                     any(spack.repo.path.get(spec).provides(name) for name in reverse))
     return not all_buildable if spec_reversed else all_buildable
 
 

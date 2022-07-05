@@ -299,7 +299,7 @@ def test_variant_defaults_listed_explicitly_in_values():
             variant, _ = entry
             vspec = variant.make_default()
             try:
-                variant.validate_or_raise(vspec, pkg=pkg)
+                variant.validate_or_raise(vspec, pkg_cls=type(pkg))
             except spack.variant.InvalidVariantValueError:
                 failing.append((pkg.name, variant.name))
     assert not failing

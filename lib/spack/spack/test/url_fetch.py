@@ -252,7 +252,7 @@ def test_new_version_from_list_url(
 
 def test_nosource_from_list_url(mock_packages, config):
     """This test confirms BundlePackages do not have list url."""
-    s = Spec('nosource')
+    s = Spec('nosource').concretized()
     fetch_strategy = fs.from_list_url(s.package)
     assert fetch_strategy is None
 

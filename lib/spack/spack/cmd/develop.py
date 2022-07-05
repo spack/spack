@@ -54,7 +54,7 @@ def develop(parser, args):
                 tty.msg(msg)
                 continue
 
-            stage = spack.spec.Spec(entry['spec']).package.stage
+            stage = spack.repo.path.get(spack.spec.Spec(entry['spec'])).stage
             stage.steal_source(abspath)
 
         if not env.dev_specs:

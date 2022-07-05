@@ -1311,12 +1311,14 @@ class SpackSolverSetup(object):
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
                         try:
-                            variant_def, _ = spec.package.variants[vname]
+                            variant_def, _ = spack.repo.path.get(spec).variants[vname]
                         except KeyError:
                             msg = 'variant "{0}" not found in package "{1}"'
                             raise RuntimeError(msg.format(vname, spec.name))
                         else:
-                            variant_def.validate_or_raise(variant, spec.package)
+                            variant_def.validate_or_raise(
+                                variant, spack.repo.path.get_pkg_class(spec.name)
+                            )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 

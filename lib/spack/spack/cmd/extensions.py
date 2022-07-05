@@ -64,11 +64,11 @@ def extensions(parser, args):
     if len(spec) > 1:
         tty.die("Can only list extensions for one package.")
 
-    if not spec[0].package.extendable:
-        tty.die("%s is not an extendable package." % spec[0].name)
-
     env = ev.active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
+
+    if not spec.package.extendable:
+        tty.die("%s is not an extendable package." % spec[0].name)
 
     if not spec.package.extendable:
         tty.die("%s does not have extensions." % spec.short_spec)

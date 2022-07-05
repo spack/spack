@@ -194,8 +194,8 @@ def test_fetcher_url(spec_str, expected_type, expected_url):
 ])
 def test_fetcher_errors(spec_str, version_str, exception_type):
     """Verify that we can't extrapolate versions for non-URL packages."""
-    s = Spec(spec_str)
     with pytest.raises(exception_type):
+        s = Spec(spec_str).concretized()
         spack.fetch_strategy.for_package_version(s.package, version_str)
 
 
@@ -208,7 +208,7 @@ def test_fetcher_errors(spec_str, version_str, exception_type):
 ])
 def test_git_url_top_level_url_versions(version_str, expected_url, digest):
     """Test URL fetch strategy inference when url is specified with git."""
-    s = Spec('git-url-top-level')
+    s = Spec('git-url-top-level').concretized()
     # leading 62 zeros of sha256 hash
     leading_zeros = '0' * 62
 
@@ -230,7 +230,7 @@ def test_git_url_top_level_url_versions(version_str, expected_url, digest):
 ])
 def test_git_url_top_level_git_versions(version_str, tag, commit, branch):
     """Test git fetch strategy inference when url is specified with git."""
-    s = Spec('git-url-top-level')
+    s = Spec('git-url-top-level').concretized()
 
     fetcher = spack.fetch_strategy.for_package_version(s.package, version_str)
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
@@ -244,7 +244,7 @@ def test_git_url_top_level_git_versions(version_str, tag, commit, branch):
 @pytest.mark.parametrize('version_str', ['1.0', '1.1', '1.2', '1.3'])
 def test_git_url_top_level_conflicts(version_str):
     """Test git fetch strategy inference when url is specified with git."""
-    s = Spec('git-url-top-level')
+    s = Spec('git-url-top-level').concretized()
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
         spack.fetch_strategy.for_package_version(s.package, version_str)
 
@@ -284,7 +284,7 @@ def test_bundle_patch_directive(mock_directive_bundle,
 ])
 def test_fetch_options(version_str, digest_end, extra_options):
     """Test fetch options inference."""
-    s = Spec('fetch-options')
+    s = Spec('fetch-options').concretized()
     leading_zeros = '000000000000000000000000000000'
     fetcher = spack.fetch_strategy.for_package_version(s.package, version_str)
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)

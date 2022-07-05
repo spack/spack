@@ -44,7 +44,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in abstract.package.variants:
+    for name in spack.repo.path.get_pkg_class(abstract.name).variants:
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():

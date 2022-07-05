@@ -245,7 +245,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec('trivial-install-test-package@nonexistingversion')
+    spec = Spec('trivial-install-test-package@nonexistingversion').concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 
