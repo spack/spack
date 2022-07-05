@@ -428,7 +428,7 @@ class Root(CMakePackage):
             define('fail-on-missing', True),
             define_from_variant('fortran'),
             define_from_variant('gminimal'),
-            define('gnuinstall', False),
+            define('gnuinstall', True),
             define('libcxx', False),
             define('pch', True),
             define('roottest', False),

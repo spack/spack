@@ -215,6 +215,11 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
     depends_on('py-numpy', when='+numpy', type=('build', 'run'))
 
+    # Improve the error message when the context-impl variant is conflicting
+    conflicts('context-impl=fcontext', when='@:1.65.0')
+    conflicts('context-impl=ucontext', when='@:1.65.0')
+    conflicts('context-impl=winfib', when='@:1.65.0')
+
     # Coroutine, Context, Fiber, etc., are not straightforward.
     conflicts('+context', when='@:1.50')  # Context since 1.51.0.
     conflicts('cxxstd=98', when='+context')  # Context requires >=C++11.
@@ -489,7 +494,7 @@ class Boost(Package):
                                "multithreaded} must be enabled")
 
         # If we are building context, tell b2 which backend to use
-        if '+context' in spec:
+        if '+context' in spec and 'context-impl' in spec.variants:
             options.extend(['context-impl=%s' % spec.variants['context-impl'].value])
 
         if '+taggedlayout' in spec:
@@ -680,7 +685,7 @@ class Boost(Package):
             type(dependent_spec.package).cmake_args = _cmake_args
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        if '+context' in self.spec:
+        if '+context' in self.spec and 'context-impl' in self.spec.variants:
             context_impl = self.spec.variants['context-impl'].value
             # fcontext, as the default, has no corresponding macro
             if context_impl == 'ucontext':
