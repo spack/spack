@@ -18,6 +18,37 @@ _os_map = {
 
 
 _versions = {
+    '22.0.2_gcc-11.2': {
+        'RHEL-7': ('c8191f3a65762955714f020caf2a89e37ff7f9cb2326dc180c746acd8a018acd'),
+        'RHEL-8': ('d69432a3148c9d2745c70859a0143285537e06920ecfdb4669ff364a9d24972c'),
+        'SLES-15': ('dab5efa8cad15cc78212a085e7ed9125725fb51924cb79bd556229cde3c4f1a3'),
+        'Ubuntu-18.04': ('38a9a2f8bf5101dd7a8b66b3eec7647730434b8ee5e4c5efd17a172e2ea1357e'),
+        'Ubuntu-20.04': ('b7322d0e824615cd6fe784bfd4eeed359f11aa4eeb01a52cb61863844d79791f')
+    },
+    '22.0.2_gcc-10.2': {
+        'RHEL-7': ('1b728f7551db8b3d6a710151f24872d6ba8c97a7572581680161441268b9e500'),
+        'RHEL-8': ('d0e2101db55f25a3ee5723c14c4209d5b082c6b737bad6121ae692e829b50038'),
+        'SLES-15': ('4de686744937345bc7eeac06db2086535e0230813b87d6b4013f1336a54324a3'),
+        'Ubuntu-18.04': ('ca08d6942352f4cdec634b5e8c3bfe46a05f04f19d957e6af56c25a433682e66'),
+        'Ubuntu-20.04': ('25c5288c285fc08160a104dd2c36d2adab7f72b42b99771f93b0dfcb2b3e3230')
+    },
+    '22.0.2_gcc-9.3': {
+        'RHEL-7': ('2c2bc000d9819cae7785880b3bab00556fcc5eda3fb48356300048df28876e09'),
+        'RHEL-8': ('1e992d603af0d1f80f05fffb0d57e3f66a5457fb82c56e38d5aec380f66b7bd9'),
+        'SLES-15': ('e30b6d989b97f2065f981ce6061a00377455c84018c4639865c774994bab0c71'),
+        'Ubuntu-18.04': ('fa0fa8367aa18169e045d9ba40f339629f14fdd6e7087b946b9bea9588213d5f'),
+        'Ubuntu-20.04': ('7d3f6661304ecc7111e8b67b745d6d7fc15306e04e87dac4561e6040ac5f68b0')
+    },
+    '22.0.2_gcc-8.2': {
+        'RHEL-7': ('5a8cdbdfceb53252358842e505cfdc35c50af06d8d17d073bab41efdb78a38b5'),
+        'RHEL-8': ('564f3e2fcdadc831d010aed0a938a419321a9ba8c18978bdad08f53924bd3986'),
+        'SLES-15': ('c4d43e1ba84e2f09b6223ac148be3f7b4c7f83a4af77255dd1cb7ad0034c713a'),
+        'Ubuntu-18.04': ('98c752dc997a3abe4ac4db16fd684bdd8aa8d4482bccf93948a593d523e477e0')
+    },
+    '22.0.2_gcc-7.5': {
+        'RHEL-7': ('adc76d9b1375330dd424dd85cd1aefa7bceaa3b25a353157d493d98850c0d8fa'),
+        'Ubuntu-18.04': ('331846312e579e954dac54f69b1ffcda96ab51984050659f2314269e55b58b9e')
+    },
     '22.0.1_gcc-11.2': {
         'RHEL-7': ('32529fdc70c39084eafe746db6baa487815bb49dae1588ccf2f7bd7929c10f7c'),
         'RHEL-8': ('1abd0b1c47cae65ee74510cf6e25946c66f9f4244e4674d5e9f73c442901482c'),
@@ -73,12 +104,12 @@ def get_armpl_prefix(spec):
     return os.path.join(spec.prefix, 'armpl_' + spec.version.string)
 
 
-class Armpl(Package):
+class ArmplGcc(Package):
     """Arm Performance Libraries provides optimized standard core math libraries for
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-0-1/RHEL7/arm-performance-libraries_22.0.1_RHEL-7_gcc-11.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-0-2/RHEL7/arm-performance-libraries_22.0.2_RHEL-7_gcc-11.2.tar"
 
     maintainers = ['annop-w']
 
@@ -92,6 +123,12 @@ class Armpl(Package):
     conflicts('target=x86:', msg='Only available on Aarch64')
     conflicts('target=ppc64:', msg='Only available on Aarch64')
     conflicts('target=ppc64le:', msg='Only available on Aarch64')
+
+    conflicts('%gcc@:11.0', when='@22.0.2_gcc-11.2')
+    conflicts('%gcc@:10.0', when='@22.0.2_gcc-10.2')
+    conflicts('%gcc@:9.0', when='@22.0.2_gcc-9.3')
+    conflicts('%gcc@:8.0', when='@22.0.2_gcc-8.2')
+    conflicts('%gcc@:7.0', when='@22.0.2_gcc-7.5')
 
     conflicts('%gcc@:11.0', when='@22.0.1_gcc-11.2')
     conflicts('%gcc@:10.0', when='@22.0.1_gcc-10.2')
