@@ -22,6 +22,7 @@ class Parallelio(CMakePackage):
 
     variant('pnetcdf', default=False, description='enable pnetcdf')
     variant('timing', default=False, description='enable GPTL timing')
+    variant('shared', default=True, description='Build shared libraries')
 
     patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
 
@@ -54,6 +55,7 @@ class Parallelio(CMakePackage):
             define('NetCDF_Fortran_PATH', spec['netcdf-fortran'].prefix),
             define('USER_CMAKE_MODULE_PATH', join_path(src, 'CMake_Fortran_utils')),
             define('GENF90_PATH', join_path(src, 'genf90')),
+            define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
         if spec.satisfies('+pnetcdf'):
             args.extend([
