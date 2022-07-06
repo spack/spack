@@ -43,6 +43,7 @@ class Rpm(AutotoolsPackage):
 
     # Always required
     depends_on('popt')
+    extends('python', when='+python')
 
     # Without this file patch, we don't detect lua
     depends_on('lua+pcfile@5.3.5:', when='+lua')
@@ -130,7 +131,6 @@ class Rpm(AutotoolsPackage):
 
         if '+python' in spec:
             args.append('--enable-python')
-            extends('python')
 
         # enable POSIX.1e draft 15 file capabilities support
         if '+posix' in spec:
