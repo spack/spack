@@ -38,6 +38,10 @@ class EcmwfAtlas(CMakePackage):
     patch('clang_include_array.patch', when='%apple-clang')
     patch('clang_include_array.patch', when='%clang')
 
+    variant('build_type', default='RelWithDebInfo',
+        description='CMake build type',
+        values=('Debug', 'Release', 'RelWithDebInfo'))
+
     variant('shared', default=True)
 
     variant('trans', default=False)
