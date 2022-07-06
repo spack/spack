@@ -25,6 +25,7 @@ class Plumed(AutotoolsPackage):
     homepage = 'https://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2/archive/v2.7.4.tar.gz'
     git = 'https://github.com/plumed/plumed2.git'
+    maintainers = ['marcodelapierre']
 
     version('master', branch='master')
 
@@ -68,13 +69,61 @@ class Plumed(AutotoolsPackage):
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
-    # FIXME: This needs to be an optional
+    #
+    # From 'configure --help' @2.3:
+    # all/none/reset or : separated list such as
+    # +crystallization:-bias default: reset
+    #
+    # Optional modules can be provided in two ways, via the `optional_modules` variant:
+    # 1. Use a reference set of optional modules via `optional_modules` (recommended).
+    #    Allowed values are: `all`[default], `reset`.
+    # 2. Pick any combination of specific optional modules (advanced).
+    #    Only the requested optional modules will be activated.
+    #    See list in variable `single_optional_modules` below.
+    #    This list comes from the Plumed manual, eg for 2.8:
+    #    https://www.plumed.org/doc-v2.8/user-doc/html/mymodules.html
+    # These are implemented using multi-valued variants (`disjoint_sets`),
+    # and the `conditional` option to handle version conflicts.
+    single_optional_modules = (conditional('adjmat', when='@2.3:'),
+                               'analysis',
+                               conditional('annfunc', when='@2.6:'),
+                               'bias', 'cltools', 'colvar', 'crystallization',
+                               conditional('dimred', when='@2.5:'),
+                               conditional('drr', when='@2.4:'),
+                               conditional('eds', when='@2.4:'),
+                               conditional('fisst', when='@2.7:'),
+                               'function',
+                               conditional('funnel', when='@2.7:'),
+                               'generic',
+                               conditional('imd', when='@:2.2.99'),
+                               conditional('isdb', when='@2.4:'),
+                               conditional('logmfd', when='@2.5:'),
+                               'manyrestraints', 'mapping',
+                               conditional('maze', when='@2.6:'),
+                               'molfile',
+                               'multicolvar',
+                               conditional('opes', when='@2.7:'),
+                               conditional('pamm',
+                                           when='@2.5: optional_modules=adjmat'),
+                               conditional('piv', when='@2.5:'),
+                               conditional('reference', when='@:2.2.99'),
+                               conditional('s2cm', when='@2.8:'),
+                               conditional('sasa', when='@2.8:'),
+                               'secondarystructure', 'setup', 'vatom',
+                               conditional('ves', when='@2.4:'),
+                               conditional('vesselbase', when='@:2.2.99'),
+                               conditional('xdrfile', when='@2.8:'))
+
     variant(
         'optional_modules',
-        default='all',
-        values=lambda x: True,
-        description='String that is used to build optional modules'
+        values=disjoint_sets(
+            ('all',),
+            ('reset',),
+            single_optional_modules
+        ).prohibit_empty_set().with_default('all'),
+        description='Activates optional modules: all, reset, or custom list (advanced)'
     )
+
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
@@ -223,16 +272,17 @@ class Plumed(AutotoolsPackage):
         ])
 
         # Construct list of optional modules
-
-        # If we have specified any optional modules then add the argument to
-        # enable or disable them.
         optional_modules = self.spec.variants['optional_modules'].value
-        if optional_modules:
-            # From 'configure --help' @2.3:
-            # all/none/reset or : separated list such as
-            # +crystallization:-bias default: reset
-            configure_opts.append(
-                '--enable-modules={0}'.format(optional_modules)
-            )
+        # Predefined set of modules
+        if 'all' in optional_modules:
+            selected_modules = 'all'
+        elif 'reset' in optional_modules:
+            selected_modules = 'reset'
+        # Custom set of modules
+        else:
+            selected_modules = 'none'
+            for mod in optional_modules:
+                selected_modules += ':+{0}'.format(mod)
+        configure_opts.append('--enable-modules={0}'.format(selected_modules))
 
         return configure_opts

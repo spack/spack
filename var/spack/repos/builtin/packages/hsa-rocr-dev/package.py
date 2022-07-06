@@ -18,6 +18,7 @@ class HsaRocrDev(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
     url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['libhsa-runtime64']

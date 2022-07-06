@@ -19,6 +19,7 @@ class Rocalution(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocALUTION"
     git      = "https://github.com/ROCmSoftwarePlatform/rocALUTION.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocALUTION/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocalution_hip']
@@ -40,9 +41,7 @@ class Rocalution(CMakePackage):
     version('3.7.0', sha256='4d6b20aaaac3bafb7ec084d684417bf578349203b0f9f54168f669e3ec5699f8', deprecated=True)
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe', deprecated=True)
 
-    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
-                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
-                      'gfx1030')
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
@@ -52,16 +51,13 @@ class Rocalution(CMakePackage):
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
                 '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
+        depends_on('rocprim@' + ver, when='@' + ver)
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             rocblas_tgt = tgt if tgt != 'gfx900:xnack-' else 'gfx900'
             depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, rocblas_tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-            depends_on('rocprim@{0} amdgpu_target={1}'.format(ver, tgt),
-                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
             depends_on('rocsparse@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
-        depends_on('comgr@' + ver, when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
     for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0',
@@ -70,6 +66,12 @@ class Rocalution(CMakePackage):
         for tgt in itertools.chain(['auto'], amdgpu_targets):
             depends_on('rocrand@{0} amdgpu_target={1}'.format(ver, tgt),
                        when='@{0} amdgpu_target={1}'.format(ver, tgt))
+
+    depends_on('googletest@1.10.0:', type='test')
+
+    def check(self):
+        exe = join_path(self.build_directory, 'clients', 'staging', 'rocalution-test')
+        self.run_test(exe)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -101,7 +103,8 @@ class Rocalution(CMakePackage):
             self.define('CMAKE_MODULE_PATH', self.spec['hip'].prefix.cmake),
             self.define('SUPPORT_HIP', 'ON'),
             self.define('SUPPORT_MPI', 'OFF'),
-            self.define('BUILD_CLIENTS_SAMPLES', 'OFF')
+            self.define('BUILD_CLIENTS_SAMPLES', 'OFF'),
+            self.define('BUILD_CLIENTS_TESTS', self.run_tests),
         ]
 
         if 'auto' not in self.spec.variants['amdgpu_target']:

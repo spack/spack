@@ -55,6 +55,10 @@ class Libxml2(AutotoolsPackage):
     patch('nvhpc-elfgcchack.patch', when='%nvhpc')
 
     @property
+    def command(self):
+        return Executable(self.prefix.bin.join('xml2-config'))
+
+    @property
     def headers(self):
         include_dir = self.spec.prefix.include.libxml2
         hl = find_all_headers(include_dir)

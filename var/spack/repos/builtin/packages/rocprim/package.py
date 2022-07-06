@@ -12,6 +12,7 @@ class Rocprim(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git      = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
@@ -32,9 +33,7 @@ class Rocprim(CMakePackage):
     version('3.7.0', sha256='225209a0cbd003c241821c8a9192cec5c07c7f1a6ab7da296305fc69f5f6d365', deprecated=True)
     version('3.5.0', sha256='29302dbeb27ae88632aa1be43a721f03e7e597c329602f9ca9c9c530c1def40d', deprecated=True)
 
-    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-',
-                      'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
-                      'gfx1030')
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')

@@ -16,14 +16,13 @@ class Rocsolver(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['librocsolver']
 
-    amdgpu_targets = (
-        'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
-        'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
-    )
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \

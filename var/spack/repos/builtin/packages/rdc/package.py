@@ -12,6 +12,7 @@ class Rdc(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/rdc"
     url      = "https://github.com/RadeonOpenCompute/rdc/archive/rocm-4.3.0.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librdc']

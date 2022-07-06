@@ -13,6 +13,7 @@ class RocmDeviceLibs(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
     git      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git"
     url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 

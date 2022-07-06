@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('22.6.0', sha256='6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9')
     version('22.3.0', sha256='35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79')
     version('22.1.0', sha256='a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5')
 
@@ -40,8 +41,8 @@ class PyBlack(PythonPackage):
     depends_on('py-dataclasses@0.6:', when='^python@:3.6', type=('build', 'run'))
     depends_on('py-typing-extensions@3.10:', when='^python@:3.9', type=('build', 'run'))
     depends_on('py-mypy-extensions@0.4.3:', type=('build', 'run'))
-    depends_on('py-colorama@0.4.3:', when='+colorama', type=('build', 'run'))
     depends_on('py-aiohttp@3.7.4:', when='+d', type=('build', 'run'))
+    depends_on('py-colorama@0.4.3:', when='+colorama', type=('build', 'run'))
     depends_on('py-uvloop@0.15.2:', when='+uvloop', type=('build', 'run'))
     depends_on('py-ipython@7.8:', when='+jupyter', type=('build', 'run'))
     depends_on('py-tokenize-rt@3.2:', when='+jupyter', type=('build', 'run'))
