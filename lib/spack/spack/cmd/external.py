@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import argparse
+import errno
 import os
 import sys
 
@@ -93,6 +94,21 @@ def external_find(args):
             # It's fine to not find any manifest file if we are doing the
             # search implicitly (i.e. as part of 'spack external find')
             pass
+        except Exception as e:
+            # For most exceptions, just print a warning and continue.
+            # Note that KeyboardInterrupt does not subclass Exception
+            # (so CTRL-C will terminate the program as expected).
+            skip_msg = ("Skipping manifest and continuing with other external "
+                        "checks")
+            if ((isinstance(e, IOError) or isinstance(e, OSError)) and
+                    e.errno in [errno.EPERM, errno.EACCES]):
+                # The manifest file does not have sufficient permissions enabled:
+                # print a warning and keep going
+                tty.warn("Unable to read manifest due to insufficient "
+                         "permissions.", skip_msg)
+            else:
+                tty.warn("Unable to read manifest, unexpected error: {0}"
+                         .format(str(e)), skip_msg)
 
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
@@ -125,7 +141,7 @@ def external_find(args):
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not packages_to_check:
-        packages_to_check = spack.repo.path.all_packages()
+        packages_to_check = list(spack.repo.path.all_packages())
 
     detected_packages = spack.detection.by_executable(
         packages_to_check, path_hints=args.path)
@@ -177,7 +193,10 @@ def _collect_and_consume_cray_manifest_files(
 
     for directory in manifest_dirs:
         for fname in os.listdir(directory):
-            manifest_files.append(os.path.join(directory, fname))
+            if fname.endswith('.json'):
+                fpath = os.path.join(directory, fname)
+                tty.debug("Adding manifest file: {0}".format(fpath))
+                manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
         raise NoManifestFileError(
@@ -185,6 +204,7 @@ def _collect_and_consume_cray_manifest_files(
             .format(cray_manifest.default_path))
 
     for path in manifest_files:
+        tty.debug("Reading manifest file: " + path)
         try:
             cray_manifest.read(path, not dry_run)
         except (spack.compilers.UnknownCompilerError, spack.error.SpackError) as e:

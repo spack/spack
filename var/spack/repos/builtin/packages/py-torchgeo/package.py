@@ -55,8 +55,8 @@ class PyTorchgeo(PythonPackage):
     depends_on('py-torchmetrics@0.7:', when='@0.2.2:', type=('build', 'run'))
     depends_on('py-torchmetrics@0.7:0.8', when='@0.2.1', type=('build', 'run'))
     depends_on('py-torchmetrics@:0.7', when='@:0.2.0', type=('build', 'run'))
-    depends_on('py-torchvision@0.10:', when='@0.2:', type=('build', 'run'))
-    depends_on('py-torchvision@0.3:', type=('build', 'run'))
+    depends_on('py-torchvision@0.10:0.12', when='@0.2:', type=('build', 'run'))
+    depends_on('py-torchvision@0.3:0.12', type=('build', 'run'))
 
     # Optional dependencies
     with when('+datasets'):

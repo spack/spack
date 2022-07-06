@@ -21,7 +21,7 @@ class Libkml(CMakePackage):
     variant('java', default=False, description='Build java bindings')
     variant('python', default=False, description='Build python bindings')
 
-    extends('jdk', when='+java')
+    extends('openjdk', when='+java')
     extends('python', when='+python')
 
     # See DEPENDENCIES
@@ -36,6 +36,10 @@ class Libkml(CMakePackage):
     depends_on('googletest@1.7.0:', type='link')
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries('libkmlbase', root=self.prefix, recursive=True)
 
     def cmake_args(self):
         spec = self.spec
