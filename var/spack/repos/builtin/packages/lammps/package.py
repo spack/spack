@@ -148,7 +148,6 @@ class Lammps(CMakePackage, CudaPackage):
             description='Select FFTW precision (used by Kspace)',
             values=('single', 'double'), multi=False)
 
-
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw-api@3', when='+kspace')
