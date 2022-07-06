@@ -46,6 +46,9 @@ class Libzmq(AutotoolsPackage):
     variant("libunwind", default=False,
             description="Build with libunwind support")
 
+    variant("zmq", default=True,
+            description="Builds ZeroMQ tests")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
@@ -91,4 +94,6 @@ class Libzmq(AutotoolsPackage):
         if 'clang' in self.compiler.cc:
             config_args.append("CFLAGS=-Wno-gnu")
             config_args.append("CXXFLAGS=-Wno-gnu")
+        if '+zmq' in self.spec:
+            config_args.append('ZMQ_BUILD_TESTS')
         return config_args
