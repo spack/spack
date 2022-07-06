@@ -35,3 +35,7 @@ class PyGevent(PythonPackage):
     depends_on('py-greenlet@0.4.13:', when='@:1.4', type=('build', 'run'))
     depends_on('py-zope-event', when='@20.5.1:', type=('build', 'run'))
     depends_on('py-zope-interface', when='@20.5.1:', type=('build', 'run'))
+
+    patch('icc.patch',
+          sha256='44a3aa7ec3a9f056145c25492012f494166dee4c816a3a998a7e3b2d85b57c77',
+          when='%intel')
