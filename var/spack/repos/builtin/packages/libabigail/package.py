@@ -43,7 +43,7 @@ class Libabigail(AutotoolsPackage):
     depends_on('cpio',  type=('build', 'run'), when="+rpm")
     depends_on('py-six', type=('build', 'run'), when="+rpm")
     depends_on('py-mock', type=('build', 'run'), when="+rpm")
-    depends_on('py-xdg', type=('build', 'run'), when="+rpm")
+    depends_on('py-pyxdg', type=('build', 'run'), when="+rpm")
     depends_on('py-koji', type=('build', 'run'), when="+rpm")
     depends_on('wget',  type=('build', 'run'), when="+rpm")
 
