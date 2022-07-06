@@ -129,7 +129,8 @@ class HipRocclr(CMakePackage):
             '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
         ]
         return args
+
     def __init__(self, spec):
         super(HipRocclr, self).__init__(spec)
         if '@4.5.0:' in self.spec:
-           self.phases = ['cmake', 'build']
+            self.phases = ['cmake', 'build']
