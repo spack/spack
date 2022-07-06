@@ -110,6 +110,11 @@ class PyDevito(PythonPackage):
         options = []
         return options
 
+    @run_before('install')
+    def add_examples_dir(self):
+        # Add file `__init__py` to examples/ so it is picked up by setuptools
+        touch('examples/__init__.py')
+
     def setup_run_environment(self, env):
         # Make benchmark.py available
         env.prepend_path('DEVITO_HOME', self.prefix)
