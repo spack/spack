@@ -71,7 +71,7 @@ class ImprovedRdock(MakefilePackage):
                 '-o', '1sj0_docking_out', '-s', '1']
         self.run_test(str(mpiexe), options=opts)
 
-        opts = ['test.sh']
+        opts = [join_path(self.test_suite.current_test_data_dir, 'test.sh')]
         self.run_test('bash', options=opts)
 
         pythonexe = self.spec['python'].command.path
