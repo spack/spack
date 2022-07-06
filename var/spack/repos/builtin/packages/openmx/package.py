@@ -52,7 +52,7 @@ class Openmx(MakefilePackage):
         # Move extra file for 3.9 patch
         # http://www.openmx-square.org/bugfixed/21Oct17/README.txt
         if spec.satisfies('@3.9'):
-            copy( join_path('source', 'kpoint.in'), 'work') 
+            copy(join_path('source', 'kpoint.in'), 'work')
         makefile = FileFilter('./source/makefile')
         makefile.filter('^DESTDIR.*$', 'DESTDIR = {0}/bin'.format(prefix))
         mkdirp(prefix.bin)
@@ -107,9 +107,9 @@ class Openmx(MakefilePackage):
     def build_targets(self):
         if self.spec.satisfies('@3.9'):
             return [
-                'openmx', 'DosMain', 'jx', 'analysis_example', 'esp', 'polB', 
-                'calB', 'Z2FH', 'bandgnu13', 'bin2txt', 'cube2xsf', 'intensity_map', 
-                'md2axsf', 'tp', 'kSpin', 'BandDispersion', 'ADenBand', 'FermiLoop', 
+                'openmx', 'DosMain', 'jx', 'analysis_example', 'esp', 'polB',
+                'calB', 'Z2FH', 'bandgnu13', 'bin2txt', 'cube2xsf', 'intensity_map',
+                'md2axsf', 'tp', 'kSpin', 'BandDispersion', 'ADenBand', 'FermiLoop',
                 'GridCalc', 'MulPOnly', 'MulPCalc', 'example_mpi_spawn', 'gcube2oned'
             ] + self.common_arguments
         else:
