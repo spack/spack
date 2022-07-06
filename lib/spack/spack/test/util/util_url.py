@@ -64,6 +64,11 @@ def test_url_parse():
     assert(parsed.netloc == 'path')
     assert(parsed.path == '/to/resource')
 
+    parsed = url_util.parse('git@bitbucket.org:name/repo.git')
+    assert(parsed.scheme == 'git')
+    assert(parsed.netloc == 'bitbucket.org:name')
+    assert(parsed.path == '/repo.git')
+
     spack_root = spack.paths.spack_root
     parsed = url_util.parse('file://$spack')
     assert(parsed.scheme == 'file')
