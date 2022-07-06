@@ -545,8 +545,8 @@ environment and have a single view of it in the filesystem.
 
    The ``concretizer:unify`` config option was introduced in Spack 0.18 to
    replace the ``concretization`` property. For reference,
-   ``concretization: separately`` is replaced by ``concretizer:unify:true``,
-   and ``concretization: together`` is replaced by ``concretizer:unify:false``.
+   ``concretization: together`` is replaced by ``concretizer:unify:true``,
+   and ``concretization: separately`` is replaced by ``concretizer:unify:false``.
 
 .. admonition:: Re-concretization of user specs
 
@@ -1013,7 +1013,7 @@ The following advanced example shows how generated targets can be used in a
 
    SPACK ?= spack
 
-   .PHONY: all clean fetch env
+   .PHONY: all clean env
 
    all: env
 
@@ -1022,9 +1022,6 @@ The following advanced example shows how generated targets can be used in a
 
    env.mk: spack.lock
    	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
-   
-   fetch: spack/fetch
-   	$(info Environment fetched!)
 
    env: spack/env
    	$(info Environment installed!)
@@ -1037,10 +1034,10 @@ The following advanced example shows how generated targets can be used in a
    endif
 
 When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
-from its rule, which triggers concretization. When done, the generated targets
-``spack/fetch`` and ``spack/env`` are available. In the above
-example, the ``env`` target uses the latter as a prerequisite, meaning
-that it can make use of the installed packages in its commands.
+from its rule, which triggers concretization. When done, the generated target
+``spack/env`` is available. In the above example, the ``env`` target uses this generated
+target as a prerequisite, meaning that it can make use of the installed packages in
+its commands.
 
 As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
 the include is conditional.
@@ -1048,7 +1045,6 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony targets
-   ``<target-prefix>/env`` and ``<target-prefix>/fetch`` as
-   prerequisites, instead of the phony targets ``<target-prefix>/all``
-   and ``<target-prefix>/fetch-all`` respectively.
+   the ``--make-target-prefix`` flag and use the non-phony target
+   ``<target-prefix>/env`` as prerequisite, instead of the phony target
+   ``<target-prefix>/all``.

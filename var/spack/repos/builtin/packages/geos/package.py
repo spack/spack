@@ -47,6 +47,10 @@ class Geos(CMakePackage):
           sha256='ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35',
           when='@3.8:')
 
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('geos-config'))
+
     def cmake_args(self):
         args = []
 

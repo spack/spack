@@ -21,7 +21,7 @@ class Mvapich2(AutotoolsPackage):
 
     maintainers = ['natshineman', 'harisubramoni', 'ndcontini']
 
-    executables = ['^mpiname$']
+    executables = ['^mpiname$', '^mpichversion$']
 
     # Prefer the latest stable release
     version('2.3.7', sha256='4b6ad2c8c270e1fabcd073c49edb6bf95af93780f4a487bc48404a8ca384f34e')
@@ -137,8 +137,12 @@ class Mvapich2(AutotoolsPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('-a', output=str, error=str)
-        match = re.search(r'^MVAPICH2 (\S+)', output)
+        if exe.endswith('mpichversion'):
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r'^MVAPICH2 Version:\s*(\S+)', output)
+        elif exe.endswith('mpiname'):
+            output = Executable(exe)('-a', output=str, error=str)
+            match = re.search(r'^MVAPICH2 (\S+)', output)
         return match.group(1) if match else None
 
     @classmethod
@@ -152,7 +156,10 @@ class Mvapich2(AutotoolsPackage):
         results = []
         for exe in exes:
             variants = ''
-            output = Executable(exe)('-a', output=str, error=str)
+            if exe.endswith('mpichversion'):
+                output = Executable(exe)(output=str, error=str)
+            elif exe.endswith('mpiname'):
+                output = Executable(exe)('-a', output=str, error=str)
 
             if re.search(r'--enable-wrapper-rpath=yes', output):
                 variants += '+wrapperrpath'

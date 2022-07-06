@@ -15,6 +15,7 @@ class HsakmtRoct(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
     git      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface.git"
     url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-5.0.2.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 

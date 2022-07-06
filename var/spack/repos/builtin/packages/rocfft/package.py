@@ -14,6 +14,7 @@ class Rocfft(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git      = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
     libraries = ['librocfft']
@@ -35,11 +36,7 @@ class Rocfft(CMakePackage):
     version('3.7.0', sha256='94462e4bd19c2c749fcf6903adbee66d4d3bd345c0246861ff8f40b9d08a6ead', deprecated=True)
     version('3.5.0', sha256='629f02cfecb7de5ad2517b6a8aac6ed4de60d3a9c620413c4d9db46081ac2c88', deprecated=True)
 
-    amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
-    )
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))

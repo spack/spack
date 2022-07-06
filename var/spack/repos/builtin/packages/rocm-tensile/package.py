@@ -14,6 +14,7 @@ class RocmTensile(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git      = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
     url      = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
