@@ -6,9 +6,9 @@ class ArmForge(BuiltinArmForge):
     __doc__ = BuiltinArmForge.__doc__
 
     version(
-        "22.0.1-Linux-x86_64",
-        sha256="8f8a61c159665d3de3bc5334ed97bdb4966bfbdb91b65d32d162d489eb2219ac",
-        url="https://content.allinea.com/downloads/arm-forge-22.0.1-linux-x86_64.tar",
+        "22.0.3-Linux-x86_64",
+        sha256="4dc8d0bb3923810cf78279dd446d5a529af523271111249b795cef01f86bd0fd",
+        url="https://content.allinea.com/downloads/arm-forge-22.0.3-linux-x86_64.tar",
     )
 
     def setup_run_environment(self, env):
