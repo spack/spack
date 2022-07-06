@@ -23,6 +23,11 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='develop')
+    version('20220623', sha256='21533ce6f174c80815a48c99e5f3dd109e69d55c4cad47312d88a7190a35927f')
+    version('20220602', sha256='3e8f54453e53b3b387a68317277f832b8cf64a981e64b21e98bb37ea36ac4a60')
+    version('20220504', sha256='fe05bae8090fd0177b3c1b987cd32a9cb7cd05d790828ba954c764eb52e10b52')
+    version('20220324', sha256='d791cc93eedfc345fdf87bfa5b6f7e17e461f86ba197f9e9c3d477ce8657a7ef')
+    version('20220217', sha256='e5bd2bf325835fa98d1b95f0667c83076580916027df5b8109d5470d1b97da98')
     version('20220107', sha256='fbf6c6814968ae0d772d7b6783079ff4f249a8faeceb39992c344969e9f1edbb')
     version('20211214', sha256='9f7b1ee2394678c1a6baa2c158a62345680a952eee251783e3c246b3f12db4c9')
     version('20211027', sha256='c06f682fcf9d5921ca90c857a104e90fba0fe65decaac9732745e4da49281938')
@@ -83,9 +88,9 @@ class Lammps(CMakePackage, CudaPackage):
     # List of supported optional packages
     # Note: package `openmp` in this recipe is called `openmp-package`, to avoid clash
     # with the pre-existing `openmp` variant
-    supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
-                          'coreshell', 'dielectric', 'dipole', 'granular', 'kspace',
-                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
+    supported_packages = ['asphere', 'body', 'bpm', 'class2', 'colloid', 'compress',
+                          'coreshell', 'dielectric', 'dipole', 'electrode', 'granular',
+                          'kspace', 'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
                           'mliap', 'ml-iap', 'ml-snap', 'molecule', 'mpiio',
                           'opt', 'peri', 'plugin', 'poems', 'python', 'qeq', 'replica',
                           'rigid', 'shock', 'snap', 'spin', 'srd', 'voronoi',
@@ -217,6 +222,13 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts(
         '+dpd-basic', when='@:20210527',
         msg='+dpd-basic only supported for version 20210702 and later')
+    conflicts(
+        '+bpm', when='@:20220324',
+        msg='+bpm only supported for version 20220504 and later')
+    conflicts(
+        '+electrode', when='@:20220324',
+        msg='+electrode only supported for version 20220504 and later')
+    conflicts('+electrode', when='~kspace')
     conflicts('+mliap', when='~snap')
     conflicts('+ml-iap', when='~ml-snap')
     conflicts(
