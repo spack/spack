@@ -56,9 +56,9 @@ class Atmi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DROCM_VERSION={0}'.format(self.spec.version),
+            '-DROCM_VERSION={0}'.format(self.spec.version)
         ]
-        if '@5.0.0:' in self.spec:
+        if self.spec.satisfies('@5.0.2:'):
             args.append(self.define('FILE_REORG_BACKWARD_COMPATIBILITY', 'OFF'))
         return args
 
