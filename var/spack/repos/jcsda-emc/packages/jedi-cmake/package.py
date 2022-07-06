@@ -17,7 +17,7 @@ class JediCmake(CMakePackage):
 
     version('master', branch='master', no_cache=True)
     version('develop', branch='develop', no_cache=True)
-    version('1.3.0', sha256='b217e2250398f6c34f0da0a50a8efe500684af4d484adebaa87a9de630eee1b7', preferred=True)
+    version('1.3.0', sha256='3e92339df858e9663b2cdd9f7bb7e56d18098e9c60606fe7af9e5f5911e5ca55', preferred=True)
     version('1.2.0', sha256='eb9f1c403d1b43a90a5e774097382b183d56d5b40a1204b51af2da8db1559b21')
     version('1.1.0', sha256='f1fe41eb5edd343bdf57eb76bea6d1b9f015878f0a9d0eb1e9dba18b903d3b35')
     version('1.0.0', sha256='d773a800350e69372355b45e89160b593818cd438a86925b8a689c47996a0b9a')
