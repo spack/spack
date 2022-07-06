@@ -61,6 +61,7 @@ class Libzmq(AutotoolsPackage):
     depends_on('libunwind', when='+libunwind')
 
     conflicts('%gcc@8:', when='@:4.2.2')
+    conflicts('%gcc@12:', when='@4.3.2:4.3.4')
 
     # Fix aggressive compiler warning false positive
     patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1', sha256='310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239', when='@4.2.3:4.3.4 %gcc@11:')
