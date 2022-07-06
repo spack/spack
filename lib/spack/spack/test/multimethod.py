@@ -73,7 +73,8 @@ def test_no_version_match(pkg_name):
 ])
 def test_multimethod_calls(pkg_name, constraint_str, method_name, expected_result):
     s = spack.spec.Spec(pkg_name + constraint_str).concretized()
-    assert getattr(s.package, method_name)() == expected_result
+    msg = "Method {0} from {1} is giving a wrong result".format(method_name, s)
+    assert getattr(s.package, method_name)() == expected_result, msg
 
 
 def test_target_match(pkg_name):
