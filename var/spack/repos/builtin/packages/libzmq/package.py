@@ -49,9 +49,9 @@ class Libzmq(AutotoolsPackage):
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
     depends_on('pkgconfig', type='build')
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
@@ -73,7 +73,7 @@ class Libzmq(AutotoolsPackage):
             url = "https://github.com/zeromq/libzmq/releases/download/v{0}/zeromq-{0}.tar.gz"
         return url.format(version)
 
-    @when('@develop')
+    @when('@master')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
