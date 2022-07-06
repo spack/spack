@@ -862,10 +862,6 @@ class RepoPath(object):
             r |= set(repo.packages_with_tags(*tags))
         return sorted(r)
 
-    def all_packages(self):
-        for name in self.all_package_names():
-            yield self.get_(name)
-
     def all_package_classes(self):
         for name in self.all_package_names():
             yield self.get_pkg_class(name)
@@ -1203,7 +1199,9 @@ class Repo(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [pkg_cls(spack.spec.Spec(pkg_cls.name))
+                for pkg_cls in self.all_package_classes()
+                if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)]
 
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
@@ -1244,15 +1242,6 @@ class Repo(object):
             v &= set(index[t])
 
         return sorted(v)
-
-    def all_packages(self):
-        """Iterator over all packages in the repository.
-
-        Use this with care, because loading packages is slow.
-
-        """
-        for name in self.all_package_names():
-            yield self.get(name)
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.
