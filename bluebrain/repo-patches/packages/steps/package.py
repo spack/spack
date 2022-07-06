@@ -48,8 +48,6 @@ class Steps(CMakePackage):
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
     depends_on("pkg-config", type="build")
-    depends_on("clang-tools", type=("build", "test"), when="+codechecks")
-    depends_on("py-cmake-format", type=("build", "test"), when="+codechecks")
     depends_on("py-cython")
     depends_on("py-h5py", type="test")
     depends_on("py-gcovr", when="+coverage", type="build")
@@ -60,8 +58,6 @@ class Steps(CMakePackage):
     depends_on("py-scipy", type=("build", "test"))
     depends_on("py-unittest2", type=("build", "test"))
     depends_on("python")
-    depends_on('py-pre-commit', type='build', when='+codechecks')
-    depends_on('py-pyyaml', type='build', when='+codechecks')
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("gmsh", when="+distmesh")
     depends_on("easyloggingpp", when="~bundle")
@@ -137,12 +133,10 @@ class Steps(CMakePackage):
             args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=False")
 
         if "+codechecks" in spec:
-            args.append("-DSTEPS_CMAKE_FORMAT:BOOL=ON")
-            args.append("-DSTEPS_CLANG_FORMAT:BOOL=OFF")
             args.append("-DSTEPS_TEST_FORMATTING:BOOL=ON")
             args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=ON")
         else:
-            args.append("-DSTEPS_FORMATTING:BOOL=OFF")
+            args.append("-DSTEPS_TEST_FORMATTING:BOOL=OFF")
             args.append("-DSTEPS_ENABLE_ERROR_ON_WARNING:BOOL=OFF")
 
         if "+caliper" in spec:
