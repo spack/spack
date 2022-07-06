@@ -38,13 +38,10 @@ class Mapl(CMakePackage):
     resource(
         name='esma_cmake',
         git='https://github.com/GEOS-ESM/ESMA_cmake.git',
-        tag='v3.13.0')
-
-    # Patch to configure Apple M1 chip in x86_64 Rosetta 2 emulator mode
-    patch('esma_cmake_apple_m1_rosetta.patch')
+        tag='v3.17.0')
 
     # Patch to add missing NetCDF C target in various CMakeLists.txt
-    patch('mapl-2.12.3-netcdf-c.patch', when='@2.12.3:')
+    patch('mapl-2.12.3-netcdf-c.patch', when='@:2.12.3')
 
     variant('flap', default=False)
     variant('pflogger', default=False)
@@ -72,7 +69,8 @@ class Mapl(CMakePackage):
             self.define_from_variant('USE_EXTDATA2G', 'extdata2g'),
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc
+            '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
+            '-DCMAKE_MODULE_PATH=%s' % self.spec['esmf'].prefix.cmake,
         ]
 
         # Compatibility flags for gfortran
@@ -80,7 +78,7 @@ class Mapl(CMakePackage):
         if self.compiler.name in ['gcc', 'clang', 'apple-clang']:
             fflags.append('-ffree-line-length-none')
             gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
-            if gfortran_major_version>=10:
+            if gfortran_major_version >= 10:
                 fflags.append('-fallow-invalid-boz')
                 fflags.append('-fallow-argument-mismatch')
         if fflags:

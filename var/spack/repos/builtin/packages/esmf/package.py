@@ -293,6 +293,10 @@ class Esmf(MakefilePackage):
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
+    @run_after('install')
+    def install_findesmf(self):
+        install_tree('cmake', self.prefix.cmake)
+
     def check(self):
         make('check', parallel=False)
 
