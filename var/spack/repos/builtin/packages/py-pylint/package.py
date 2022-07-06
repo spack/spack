@@ -33,6 +33,7 @@ class PyPylint(PythonPackage):
     depends_on('python@3.4:', when='@2:2.7', type=('build', 'run'))
     depends_on('python@3.6:', when='@2.8.2:', type=('build', 'run'))
     depends_on('python@3.6.2:', when='@2.13.5:', type=('build', 'run'))
+    depends_on('python@3.7.2:', when='@2.14.0:', type=('build', 'run'))
     depends_on('py-astroid', type=('build', 'run'))
     # note there is no working version of astroid for this
     depends_on('py-astroid@1.5.1:', type=('build', 'run'), when='@1.7:')
@@ -60,5 +61,6 @@ class PyPylint(PythonPackage):
     depends_on('py-six', type=('build', 'run'), when='@1:2.3.1')
     depends_on('py-toml@0.7.1:', type=('build', 'run'), when='@2.8.2:2.12.2')
     depends_on('py-tomli@1.1.0:', type=('build', 'run'), when='@2.13.5: ^python@:3.10')
+    depends_on('py-tomlkit@0.10.1:', type=('build', 'run'), when='@2.14.0:')
     depends_on('py-platformdirs@2.2.0:', type=('build', 'run'), when='@2.11.1:')
     depends_on('py-typing-extensions@3.10.0:', type=('build', 'run'), when='@2.11.1: ^python@:3.9')
