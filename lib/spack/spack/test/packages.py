@@ -132,12 +132,13 @@ def test_urls_for_versions(mock_packages, config):
 
 
 def test_url_for_version_with_no_urls(mock_packages, config):
-    pkg = spack.repo.path.get('git-test')
+    spec = Spec('git-test')
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
     with pytest.raises(spack.package_base.NoURLError):
-        pkg.url_for_version('1.0')
+        pkg_cls(spec).url_for_version('1.0')
 
     with pytest.raises(spack.package_base.NoURLError):
-        pkg.url_for_version('1.1')
+        pkg_cls(spec).url_for_version('1.1')
 
 
 def test_url_for_version_with_only_overrides(mock_packages, config):

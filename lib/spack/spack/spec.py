@@ -2731,7 +2731,8 @@ class Spec(object):
         visited_user_specs = set()
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
-            visited_user_specs.update(x.name for x in spack.repo.path.get(dep).provided)
+            pkg_cls = spack.repo.path.get_pkg_class(dep.name)
+            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -2865,9 +2866,10 @@ class Spec(object):
             for mod in compiler.modules:
                 md.load_module(mod)
 
-            # get the path from the module
-            # the package can override the default
-            package = spack.repo.path.get(external_spec)
+            # Get the path from the module the package can override the default
+            # (this is mostly needed for Cray)
+            pkg_cls = spack.repo.path.get_pkg_class(external_spec.name)
+            package = pkg_cls(external_spec)
             external_spec.external_path = getattr(
                 package, 'external_prefix',
                 md.path_from_modules(external_spec.external_modules)
@@ -3380,7 +3382,7 @@ class Spec(object):
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.path.get(spec.fullname)
+                spack.repo.path.get_pkg_class(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -3636,7 +3638,9 @@ class Spec(object):
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
-                    pkg = spack.repo.path.get(self.fullname)
+                    # Here we might get an abstract spec
+                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
+                    pkg = pkg_cls(self)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
                     # it as a provider of this vdep.

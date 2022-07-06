@@ -638,12 +638,13 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
 def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec('trivial-install-test-package')
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
 
     with pytest.raises(ValueError, match='must have a concrete spec'):
-        spack.repo.path.get(spec).do_install()
+        pkg_cls(spec).do_install()
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
-        spack.repo.path.get(spec).do_patch()
+        pkg_cls(spec).do_patch()
 
 
 def test_install_error():

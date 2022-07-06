@@ -51,10 +51,16 @@ process_hash = SpecHashDescriptor(
 )
 
 
+def _content_hash_override(spec):
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+    return pkg.content_hash()
+
+
 #: Package hash used as part of dag hash
 package_hash = SpecHashDescriptor(
     deptype=(), package_hash=True, name='package_hash',
-    override=lambda s: spack.repo.path.get(s).content_hash())
+    override=_content_hash_override)
 
 
 # Deprecated hash types, no longer used, but needed to understand old serialized

@@ -144,7 +144,7 @@ def external_find(args):
 
     # If the list of packages is empty, search for every possible package
     if not args.tags and not pkg_cls_to_check:
-        pkg_cls_to_check = list(spack.repo.path.all_packages())
+        pkg_cls_to_check = list(spack.repo.path.all_package_classes())
 
     detected_packages = spack.detection.by_executable(
         pkg_cls_to_check, path_hints=args.path)
@@ -220,7 +220,7 @@ def _collect_and_consume_cray_manifest_files(
 
 def external_list(args):
     # Trigger a read of all packages, might take a long time.
-    list(spack.repo.path.all_packages())
+    list(spack.repo.path.all_package_classes())
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
     for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):

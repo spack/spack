@@ -1118,8 +1118,8 @@ class Environment(object):
             # to be created, to copy it afterwards somewhere else. It would be
             # better if we can create the `source_path` directly into its final
             # destination.
-            stage = spack.repo.path.get(spec).stage
-            stage.steal_source(abspath)
+            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls(spec).stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}

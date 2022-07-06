@@ -864,7 +864,7 @@ class RepoPath(object):
 
     def all_packages(self):
         for name in self.all_package_names():
-            yield self.get(name)
+            yield self.get_(name)
 
     def all_package_classes(self):
         for name in self.all_package_names():
@@ -909,7 +909,9 @@ class RepoPath(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [pkg_cls(spack.spec.Spec(pkg_cls.name))
+                for pkg_cls in self.all_package_classes()
+                if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)]
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -945,9 +947,10 @@ class RepoPath(object):
         # that can operate on packages that don't exist yet.
         return self.first_repo()
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "RepoPath.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
@@ -1107,9 +1110,10 @@ class Repo(object):
             tty.die("Error reading %s when opening %s"
                     % (self.config_file, self.root))
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "Repo.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,

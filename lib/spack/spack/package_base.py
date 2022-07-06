@@ -50,6 +50,7 @@ import spack.mixins
 import spack.multimethod
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.url
 import spack.util.environment
@@ -749,7 +750,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self._fetch_time = 0.0
 
         if self.is_extension:
-            spack.repo.path.get(self.extendee_spec)._check_extendable()
+            pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
+            pkg_cls(self.extendee_spec)._check_extendable()
 
         super(PackageBase, self).__init__()
 
@@ -1314,8 +1316,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = next(iter(self.extendees.items()))
-            return spec
+            spec_str, kwargs = next(iter(self.extendees.items()))
+            return spack.spec.Spec(spec_str)
 
     @property
     def extendee_args(self):

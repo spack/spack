@@ -415,8 +415,9 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 def test_package_id_err(install_mockery):
     s = spack.spec.Spec('trivial-install-test-package')
+    pkg_cls = spack.repo.path.get_pkg_class(s.name)
     with pytest.raises(ValueError, match='spec is not concretized'):
-        inst.package_id(spack.repo.path.get(s))
+        inst.package_id(pkg_cls(s))
 
 
 def test_package_id_ok(install_mockery):

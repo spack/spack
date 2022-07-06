@@ -162,9 +162,13 @@ def spec_externals(spec):
     # break circular import.
     from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
 
+    def _package(maybe_abstract_spec):
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        return pkg_cls(maybe_abstract_spec)
+
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
-    names |= set(vspec.name for vspec in spack.repo.path.get(spec).virtuals_provided)
+    names |= set(vspec.name for vspec in _package(spec).virtuals_provided)
 
     external_specs = []
     for name in names:
@@ -191,17 +195,21 @@ def spec_externals(spec):
 
 
 def is_spec_buildable(spec):
-    """Return true if the spec pkgspec is configured as buildable"""
+    """Return true if the spec is configured as buildable"""
 
     allpkgs = spack.config.get('packages')
     all_buildable = allpkgs.get('all', {}).get('buildable', True)
+
+    def _package(s):
+        pkg_cls = spack.repo.path.get_pkg_class(s.name)
+        return pkg_cls(s)
 
     # Get the list of names for which all_buildable is overridden
     reverse = [name for name, entry in allpkgs.items()
                if entry.get('buildable', all_buildable) != all_buildable]
     # Does this spec override all_buildable
     spec_reversed = (spec.name in reverse or
-                     any(spack.repo.path.get(spec).provides(name) for name in reverse))
+                     any(_package(spec).provides(name) for name in reverse))
     return not all_buildable if spec_reversed else all_buildable
 
 
