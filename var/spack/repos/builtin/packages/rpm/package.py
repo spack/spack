@@ -130,6 +130,7 @@ class Rpm(AutotoolsPackage):
 
         if '+python' in spec:
             args.append('--enable-python')
+            extends('python')
 
         # enable POSIX.1e draft 15 file capabilities support
         if '+posix' in spec:
