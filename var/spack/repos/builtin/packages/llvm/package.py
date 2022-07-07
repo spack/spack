@@ -221,9 +221,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libffi", when="+cuda")  # libomptarget
 
     # llvm-config --system-libs libraries.
-    depends_on("ncurses+termlib")
     depends_on("zlib")
-    depends_on("libxml2")
 
     # lldb dependencies
     with when("+lldb +python"):
@@ -231,6 +229,7 @@ class Llvm(CMakePackage, CudaPackage):
         depends_on("swig@2:", when="@10:")
         depends_on("swig@3:", when="@12:")
     depends_on("libedit", when="+lldb")
+    depends_on("ncurses", when="+lldb")
     depends_on("py-six", when="@5.0.0: +lldb +python")
 
     # gold support, required for some features
@@ -545,6 +544,8 @@ class Llvm(CMakePackage, CudaPackage):
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_EH", True),
+            define("LLVM_ENABLE_TERMINFO", False),
+            define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
             define("LIBOMP_USE_HWLOC", True),
@@ -595,11 +596,14 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "omp_debug"))
 
         if "+lldb" in spec:
+            projects.append("lldb")
+            cmake_args.append(define('LLDB_ENABLE_LIBEDIT', True))
+            cmake_args.append(define('LLDB_ENABLE_NCURSES', True))
+            cmake_args.append(define('LLDB_ENABLE_LIBXML2', False))
             if spec.version >= Version('10'):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", 'python'))
             else:
-                cmake_args.append(define("LLDB_DISABLE_PYTHON",
-                                         '~python' in spec))
+                cmake_args.append(define("LLDB_DISABLE_PYTHON", '~python' in spec))
             if spec.satisfies("@5.0.0: +python"):
                 cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
 
@@ -623,8 +627,6 @@ class Llvm(CMakePackage, CudaPackage):
 
         if "+flang" in spec:
             projects.append("flang")
-        if "+lldb" in spec:
-            projects.append("lldb")
         if "+lld" in spec:
             projects.append("lld")
         if "+compiler-rt" in spec:
