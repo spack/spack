@@ -47,6 +47,7 @@ class Brayns(CMakePackage):
     depends_on('mvdtool', when='@1.1.1: +brion')
     depends_on('opengl', when='+viewer')
     depends_on('ospray', when='+ospray')
+    depends_on('rkcommon', when='+ospray')
     depends_on('spdlog')
     depends_on('poco', when='@2.0.0:')
     depends_on('zlib', when='@3.0.0:')
@@ -106,6 +107,7 @@ class Brayns(CMakePackage):
             '-DBRAYNS_CIRCUITINFO_ENABLED={0}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_ATLASEXPLORER_ENABLED=ON',
+            '-DBRAYNS_CYLINDRICCAMERA_ENABLED=ON',
             '-DBRAYNS_DEFLECT_ENABLED={0}'.format(
                 'ON' if '+deflect' in self.spec else 'OFF')
         ]
