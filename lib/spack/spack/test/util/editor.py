@@ -132,3 +132,17 @@ def test_editor_both_bad(nosuch_exe, vim_exe):
         assert args == [vim_exe, '/path/to/file']
 
     ed.editor('/path/to/file', _exec_func=assert_exec)
+
+
+def test_no_editor():
+    if 'VISUAL' in os.environ:
+        del os.environ['VISUAL']
+    if 'EDITOR' in os.environ:
+        del os.environ['EDITOR']
+    os.environ['PATH'] = ''
+
+    def assert_exec(exe, args):
+        assert False
+
+    with pytest.raises(EnvironmentError, match=r'No text editor found.*'):
+        ed.editor('/path/to/file', _exec_func=assert_exec)

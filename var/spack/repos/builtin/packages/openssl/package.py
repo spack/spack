@@ -8,7 +8,7 @@ import re
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -27,13 +27,16 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     executables = ['openssl']
 
-    version('3.0.2', sha256='98e91ccead4d4756ae3c9cde5e09191a8e586d9f4d50838e7ec09d6411dfdb63')
+    version('3.0.4', sha256='2831843e9a668a0ab478e7020ad63d2d65e51f72977472dc73efcefbafc0c00f')
+    version('3.0.2', sha256='98e91ccead4d4756ae3c9cde5e09191a8e586d9f4d50838e7ec09d6411dfdb63', deprecated=True)
     version('3.0.1', sha256='c311ad853353bce796edad01a862c50a8a587f62e7e2100ef465ab53ec9b06d1', deprecated=True)
     version('3.0.0', sha256='59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536', deprecated=True)
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', preferred=True)
+    version('1.1.1p', sha256='bf61b62aaa66c7c7639942a94de4c9ae8280c08f17d4eac2e44644d9fc8ace6f', preferred=True)
+    version('1.1.1o', sha256='9384a2b0570dd80358841464677115df785edb941c71211f75076d72fe6b438f', deprecated=True)
+    version('1.1.1n', sha256='40dceb51a4f6a5275bde0e6bf20ef4b91bfc32ed57c0552e2e8e15463372b17a', deprecated=True)
     version('1.1.1m', sha256='f89199be8b23ca45fc7cb9f1d8d3ee67312318286ad030f5316aca6462db6c96', deprecated=True)
     version('1.1.1l', sha256='0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1', deprecated=True)
     version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5', deprecated=True)
@@ -84,10 +87,17 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1h', sha256='9d1c8a9836aa63e2c6adb684186cbd4371c9e9dcc01d6e3bb447abf2d4d3d093', deprecated=True)
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
-    variant('certs', default='system',
+    # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
+    # either due to a bug or because DVS is not intended to be POSIX compliant.
+    # Therefore, stick to system agnostic certs=mozilla.
+    variant('certs', default='mozilla',
             values=('mozilla', 'system', 'none'), multi=False,
             description=('Use certificates from the ca-certificates-mozilla '
-                         'package, symlink system certificates, or none'))
+                         'package, symlink system certificates, or use none, '
+                         'respectively. The default is `mozilla`, since it is '
+                         'system agnostic. Instead of picking certs=system, '
+                         'one can mark openssl as an external package, to '
+                         'avoid compiling openssl entirely.'))
     variant('docs', default=False, description='Install docs and manpages')
     variant('shared', default=False, description="Build shared library version")
     with when('platform=windows'):

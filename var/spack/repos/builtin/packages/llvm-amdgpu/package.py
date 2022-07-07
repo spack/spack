@@ -6,7 +6,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class LlvmAmdgpu(CMakePackage):
@@ -15,19 +15,21 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='amd-stg-open')
-
+    version('5.1.3', sha256='d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128')
+    version('5.1.0', sha256='db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10')
     version('5.0.2', sha256='99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf')
     version('5.0.0', sha256='bca2db4aaab71541cac588d6a708fde60f0ebe744809bde8a3847044a1a77413')
     version('4.5.2', sha256='36a4f7dd961cf373b743fc679bdf622089d2a905de2cfd6fd6c9e7ff8d8ad61f')
     version('4.5.0', sha256='b71451bf26650ba06c0c5c4c7df70f13975151eaa673ef0cc77c1ab0000ccc97')
-    version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f')
-    version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87')
-    version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661')
+    version('4.3.1', sha256='b53c6b13be7d77dc93a7c62e4adbb414701e4e601e1af2d1e98da4ee07c9837f', deprecated=True)
+    version('4.3.0', sha256='1567d349cd3bcd2c217b3ecec2f70abccd5e9248bd2c3c9f21d4cdb44897fc87', deprecated=True)
+    version('4.2.0', sha256='751eca1d18595b565cfafa01c3cb43efb9107874865a60c80d6760ba83edb661', deprecated=True)
     version('4.1.0', sha256='244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae', deprecated=True)
     version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69', deprecated=True)
     version('3.10.0', sha256='8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370', deprecated=True)
@@ -53,7 +55,8 @@ class LlvmAmdgpu(CMakePackage):
 
     provides('libllvm@11', when='@3.5:3.8')
     provides('libllvm@12', when='@3.9:4.2')
-    provides('libllvm@13', when='@4.3:')
+    provides('libllvm@13', when='@4.3:4.9')
+    provides('libllvm@14', when='@5:')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
@@ -74,6 +77,7 @@ class LlvmAmdgpu(CMakePackage):
     # This is already fixed in upstream but not in 4.2.0 rocm release
     patch('fix-spack-detection-4.2.0.patch', when='@4.2.0:4.5.2')
 
+    patch('remove-cyclades-inclusion-in-sanitizer.patch', when='@4.2.0:4.5.2')
     conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
@@ -81,6 +85,8 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ('5.1.3',  'c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e'),
+        ('5.1.0',  '47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f'),
         ('5.0.2',  '49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e'),
         ('5.0.0',  '83ed7aa1c9322b4fc1f57c48a63fc7718eb4195ee6fde433009b4bc78cb363f0'),
         ('4.5.2',  '50e9e87ecd6b561cad0d471295d29f7220e195528e567fcabe2ec73838979f61'),
@@ -196,4 +202,4 @@ class LlvmAmdgpu(CMakePackage):
                 ]
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
-                make()
+                cmake("--build", ".")

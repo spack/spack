@@ -62,6 +62,22 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
         spack.bootstrap.store_path()
 
 
+def test_raising_exception_module_importable():
+    with pytest.raises(
+        ImportError,
+        match='cannot bootstrap the "asdf" Python module',
+    ):
+        spack.bootstrap.ensure_module_importable_or_raise("asdf")
+
+
+def test_raising_exception_executables_in_path():
+    with pytest.raises(
+        RuntimeError,
+        match="cannot bootstrap any of the asdf, fdsa executables",
+    ):
+        spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
+
+
 @pytest.mark.regression('25603')
 def test_bootstrap_deactivates_environments(active_mock_environment):
     assert spack.environment.active_environment() == active_mock_environment
@@ -164,3 +180,20 @@ def test_status_function_find_files(
 
     _, missing = spack.bootstrap.status_message('optional')
     assert missing is expected_missing
+
+
+@pytest.mark.regression('31042')
+def test_source_is_disabled(mutable_config):
+    # Get the configuration dictionary of the current bootstrapping source
+    conf = next(iter(spack.bootstrap.bootstrapping_sources()))
+
+    # The source is not explicitly enabled or disabled, so the following
+    # call should raise to skip using it for bootstrapping
+    with pytest.raises(ValueError):
+        spack.bootstrap.source_is_enabled_or_raise(conf)
+
+    # Try to explicitly disable the source and verify that the behavior
+    # is the same as above
+    spack.config.add('bootstrap:trusted:{0}:{1}'.format(conf['name'], False))
+    with pytest.raises(ValueError):
+        spack.bootstrap.source_is_enabled_or_raise(conf)

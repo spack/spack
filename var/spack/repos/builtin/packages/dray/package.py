@@ -8,7 +8,17 @@ import socket
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
+
+
+def propagate_cuda_arch(package, spec=None):
+    if not spec:
+        spec = ''
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on('{0} +cuda cuda_arch={1}'
+                   .format(package, cuda_arch),
+                   when='{0} +cuda cuda_arch={1}'
+                        .format(spec, cuda_arch))
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -54,15 +64,6 @@ class Dray(Package, CudaPackage):
     # set to false for systems that implicitly link mpi
     variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
 
-    def propagate_cuda_arch(package, spec=None):
-        if not spec:
-            spec = ''
-        for cuda_arch in CudaPackage.cuda_arch_values:
-            depends_on('{0} +cuda cuda_arch={1}'
-                       .format(package, cuda_arch),
-                       when='{0} +cuda cuda_arch={1}'
-                            .format(spec, cuda_arch))
-
     depends_on('mpi', when='+mpi')
 
     depends_on('cmake@3.9:', type='build')
@@ -78,6 +79,8 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared", when="~shared")
     depends_on("apcomp+shared", when="+shared")
 
+    depends_on("raja@0.12.0:")
+    depends_on("raja@:0.14", when='@0.1.7:')
     depends_on("raja@:0.13", when="@:0.1.6")
     depends_on("raja~cuda", when="~cuda")
     depends_on("raja+cuda", when="+cuda")

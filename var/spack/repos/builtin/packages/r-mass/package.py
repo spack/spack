@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMass(RPackage):
@@ -14,6 +14,7 @@ class RMass(RPackage):
 
     cran = "MASS"
 
+    version('7.3-57', sha256='bd8b880105bc1aadb2db699086f74bd92a8611287979a24243187f9d80795a8d')
     version('7.3-55', sha256='65299cbc8f3fd5e09cb3535eabcb3faad2308e01d5ba9422145cc04d7d0c31a4')
     version('7.3-54', sha256='b800ccd5b5c2709b1559cf5eab126e4935c4f8826cf7891253432bb6a056e821')
     version('7.3-53', sha256='41824e70ada302a620226c0f17b1b2c880c6d1a3a100b53bd6df8e8c97e64b38')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RZlibbioc(RPackage):
@@ -16,6 +16,7 @@ class RZlibbioc(RPackage):
 
     bioc = "zlibbioc"
 
+    version('1.42.0', commit='aa074d72515df745ad65133ca21d3cad778ccc0e')
     version('1.40.0', commit='3f116b39d104c1ea8288f6b8f0ef94bb95f41f69')
     version('1.36.0', commit='62e888cd7fb482d512c6c31961b657e0b924e357')
     version('1.30.0', commit='99eae5b05968bf6abc9b54b9031afd93517381e0')

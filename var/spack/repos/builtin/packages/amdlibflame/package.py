@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------\
+from spack.package import *
 from spack.pkg.builtin.libflame import LibflameBase
 
 
@@ -36,7 +37,7 @@ class Amdlibflame(LibflameBase):
 
     maintainers = ['amd-toolchain-support']
 
-    version('3.1', sha256='97c74086306fa6dea9233a3730407c400c196b55f4461d4861364b1ac131ca42')
+    version('3.1', sha256='4520fb93fcc89161f65a40810cae0fa1f87cecb242da4a69655f502545a53426')
     version('3.0.1', sha256='5859e7b39ffbe73115dd598b035f212d36310462cf3a45e555a5087301710776')
     version('3.0', sha256='d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced')
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')

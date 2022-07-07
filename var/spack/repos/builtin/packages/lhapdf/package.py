@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Lhapdf(AutotoolsPackage):
@@ -19,6 +19,7 @@ class Lhapdf(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('6.5.1', sha256='7a19ba4cdee7053bb79db317143fe768dd6abef1ec34e2d183225e13df96a983')
     version('6.4.0', sha256='155702c36df46de30c5f7fa249193a9a0eea614191de1606301e06cd8062fc29')
     version('6.3.0', sha256='864468439c7662bbceed6c61c7132682ec83381a23c9c9920502fdd7329dd816')
     version('6.2.3', sha256='37200a1ab70247250a141dfed7419d178f9a83bd23a4f8a38e203d4e27b41308')
@@ -35,6 +36,7 @@ class Lhapdf(AutotoolsPackage):
     depends_on('py-setuptools', type='build', when='+python')
 
     def configure_args(self):
-        args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
+        args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3',
+                'LIBS=-L' + self.spec['python'].prefix.lib]
         args.extend(self.enable_or_disable('python'))
         return args

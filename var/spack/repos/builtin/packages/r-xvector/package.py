@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RXvector(RPackage):
@@ -15,6 +15,7 @@ class RXvector(RPackage):
 
     bioc = "XVector"
 
+    version('0.36.0', commit='ff6f818ff4357eb9bf00654de9e0f508a5285408')
     version('0.34.0', commit='06adb25ac51c707b90fb8e0637fa06df237a863c')
     version('0.30.0', commit='985e963e0b1c3ff004dd0b07ad7c9ff7ed853ec0')
     version('0.24.0', commit='e5109cb2687724b9fddddf296c07a82bae4c551d')

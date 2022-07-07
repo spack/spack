@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RInteractivedisplaybase(RPackage):
@@ -16,6 +16,7 @@ class RInteractivedisplaybase(RPackage):
 
     bioc = "interactiveDisplayBase"
 
+    version('1.34.0', commit='fafbb13a42bb7549f17aa08cdb0e51728c5e825e')
     version('1.32.0', commit='0f88b2ac3689d51abb6ac0045b3207ca77963a5a')
     version('1.28.0', commit='a74c02c971c4f9c7086e14abd23f1a4190da4599')
     version('1.22.0', commit='4ce3cde1dabc01375c153ad614d77a5e28b96916')

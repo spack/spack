@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
 from spack.pkg.builtin.gromacs import Gromacs
 
 
@@ -14,11 +15,23 @@ class GromacsSwaxs(Gromacs):
     git = 'https://gitlab.com/cbjh/gromacs-swaxs.git'
     maintainers = ['w8jcik']
 
+    version('2021.5-0.4', sha256='9f8ed6d448a04789d45e847cbbc706a07130377f578388220a9d5357fae9d1c3',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.4/gromacs-swaxs-release-2021.swaxs-0.4.tar.bz2')
+
+    version('2021.5-0.3', sha256='e05ea76610657e52e8293abff53ee9f16f4cffa508074e1e10132ed5fba97881',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.3/gromacs-swaxs-release-2021.swaxs-0.3.tar.bz2')
+
     version('2021.4-0.2', sha256='ea0dbe868d20e05c8fca337e0dddc16116a83fa7a6ac3a924942e9d00952ed62',
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.2/gromacs-swaxs-release-2021.swaxs-0.2.tar.bz2')
 
     version('2021.4-0.1', sha256='eda1c8a7aae6001ef40480addf9fff9cdccc7e2b80480e36d069f50d6f2be26e', deprecated=True,
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2021.swaxs-0.1/gromacs-swaxs-release-2021.swaxs-0.1.tar.bz2')
+
+    version('2020.7-0.4', sha256='3eb0975ec92a89f6a3be548896307376974805ac685a9f776b0131a449a6b8a4',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2020.swaxs-0.4/gromacs-swaxs-release-2020.swaxs-0.4.tar.bz2')
+
+    version('2020.7-0.3', sha256='eb5902df079b8f86c56b62be695c0d17307c195b2cdd7cefb7e117466be83211',
+            url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2020.swaxs-0.3/gromacs-swaxs-release-2020.swaxs-0.3.tar.bz2')
 
     version('2020.6-0.2', sha256='c22a7c6a0ee54eee1b3e224530f65e6f976a7aca5dc0f5ea22b2935a5a4357e9',
             url='https://gitlab.com/cbjh/gromacs-swaxs/-/archive/release-2020.swaxs-0.2/gromacs-swaxs-release-2020.swaxs-0.2.tar.bz2')

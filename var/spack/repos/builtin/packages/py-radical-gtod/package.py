@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyRadicalGtod(PythonPackage):
@@ -14,12 +14,15 @@ class PyRadicalGtod(PythonPackage):
 
     homepage = 'https://radical-cybertools.github.io'
     git      = 'https://github.com/radical-cybertools/radical.gtod.git'
-    pypi     = 'radical.gtod/radical.gtod-1.6.7.tar.gz'
+    pypi     = 'radical.gtod/radical.gtod-1.13.0.tar.gz'
 
     maintainers = ['andre-merzky']
 
     version('develop', branch='devel')
+    version('1.13.0',  sha256='15df4ae728a8878b111cfdedffb9457aecc8003c2cfbdf2c918dfcb6b836cc93')
     version('1.6.7',   sha256='8d7d32e3d0bcf6d7cf176454a9892a46919b03e1ed96bee389380e6d75d6eff8')
 
-    depends_on('python@3.6:',   type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-radical-utils', type=('build', 'run'), when='@1.13:')
+
+    depends_on('python@3.6:',      type=('build', 'run'))
+    depends_on('py-setuptools',    type='build')

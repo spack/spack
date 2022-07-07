@@ -6,7 +6,8 @@
 import os
 import sys
 
-from spack import *
+from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 
 
 class PyTorch(PythonPackage, CudaPackage):
@@ -23,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.12.0', tag='v1.12.0', submodules=True)
     version('1.11.0', tag='v1.11.0', submodules=True)
     version('1.10.2', tag='v1.10.2', submodules=True)
     version('1.10.1', tag='v1.10.1', submodules=True)
@@ -42,8 +44,8 @@ class PyTorch(PythonPackage, CudaPackage):
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
-    version('1.0.1', tag='v1.0.1', submodules=True, deprecated=True)
-    version('1.0.0', tag='v1.0.0', submodules=True, deprecated=True)
+    version('1.0.1', tag='v1.0.1', submodules=True)
+    version('1.0.0', tag='v1.0.0', submodules=True)
 
     is_darwin = sys.platform == 'darwin'
 
@@ -59,6 +61,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('kineto', default=True, description='Use Kineto profiling library', when='@1.8:')
     variant('magma', default=not is_darwin, description='Use MAGMA', when='+cuda')
     variant('metal', default=is_darwin, description='Use Metal for Caffe2 iOS build')
+    variant('mps', default=is_darwin and macos_version() >= Version('12.3'), description='Use MPS for macOS build', when='@1.12: platform=darwin')
     variant('nccl', default=True, description='Use NCCL', when='+cuda platform=linux')
     variant('nccl', default=True, description='Use NCCL', when='+cuda platform=cray')
     variant('nccl', default=True, description='Use NCCL', when='+rocm platform=linux')
@@ -78,11 +81,14 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('gloo', default=not is_darwin, description='Use Gloo', when='+distributed')
     variant('tensorpipe', default=not is_darwin, description='Use TensorPipe', when='@1.6: +distributed')
     variant('onnx_ml', default=True, description='Enable traditional ONNX ML API', when='@1.5:')
-    variant('breakpad', default=True, description='Enable breakpad crash dump library', when='@1.9:')
+    variant('breakpad', default=True, description='Enable breakpad crash dump library', when='@1.9:1.11')
 
     conflicts('+cuda+rocm')
     conflicts('+breakpad', when='target=ppc64:')
     conflicts('+breakpad', when='target=ppc64le:')
+
+    # https://github.com/pytorch/pytorch/issues/77811
+    conflicts('+qnnpack', when='platform=darwin target=aarch64:')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -117,6 +123,10 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-protobuf@:3.14', when='@:1.9', type=('build', 'run'))
     depends_on('protobuf@3.12.2:', when='@1.10:')
     depends_on('protobuf@:3.14', when='@:1.9')
+    # https://github.com/protocolbuffers/protobuf/issues/10051
+    # https://github.com/pytorch/pytorch/issues/78362
+    depends_on('py-protobuf@:3', type=('build', 'run'))
+    depends_on('protobuf@:3', type=('build', 'run'))
     depends_on('py-typing-extensions@3.6.2.1:', when='@1.7:', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')
@@ -151,16 +161,36 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('numactl', when='+numa')
     depends_on('llvm-openmp', when='%apple-clang +openmp')
     depends_on('valgrind', when='+valgrind')
+    with when("+rocm"):
+        depends_on('hsa-rocr-dev')
+        depends_on('hip')
+        depends_on('rccl')
+        depends_on('rocprim')
+        depends_on('hipcub')
+        depends_on('rocthrust')
+        depends_on('roctracer-dev')
+        depends_on('rocrand')
+        depends_on('hipsparse')
+        depends_on('hipfft')
+        depends_on('rocfft')
+        depends_on('rocblas')
+        depends_on('miopen-hip')
     # https://github.com/pytorch/pytorch/issues/60332
-    # depends_on('xnnpack@2021-02-22', when='@1.8:+xnnpack')
+    # depends_on('xnnpack@2022-02-16', when='@1.12:+xnnpack')
+    # depends_on('xnnpack@2021-06-21', when='@1.10:1.11+xnnpack')
+    # depends_on('xnnpack@2021-02-22', when='@1.8:1.9+xnnpack')
     # depends_on('xnnpack@2020-03-23', when='@1.6:1.7+xnnpack')
     depends_on('mpi', when='+mpi')
     # https://github.com/pytorch/pytorch/issues/60270
-    # depends_on('gloo@2021-05-04', when='@1.9:+gloo')
+    # depends_on('gloo@2021-05-21', when='@1.10:+gloo')
+    # depends_on('gloo@2021-05-04', when='@1.9+gloo')
     # depends_on('gloo@2020-09-18', when='@1.7:1.8+gloo')
     # depends_on('gloo@2020-03-17', when='@1.6+gloo')
     # https://github.com/pytorch/pytorch/issues/60331
-    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8:+onnx_ml')
+    # depends_on('onnx@1.11.0', when='@1.12:+onnx_ml')
+    # depends_on('onnx@1.10.1_2021-10-08', when='@1.11+onnx_ml')
+    # depends_on('onnx@1.10.1', when='@1.10+onnx_ml')
+    # depends_on('onnx@1.8.0_2020-11-03', when='@1.8:1.9+onnx_ml')
     # depends_on('onnx@1.7.0_2020-05-31', when='@1.6:1.7+onnx_ml')
     depends_on('mkl', when='+mkldnn')
 
@@ -173,7 +203,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # https://github.com/pytorch/pytorch/issues/60328
     patch('https://github.com/pytorch/pytorch/pull/59220.patch?full_index=1',
           sha256='6d5717267f901e8ee493dfacd08734d9bcc48ad29a76ca9ef702368e96bee675',
-          when='@1.2:')
+          when='@1.2:1.11')
 
     # Fixes build on older systems with glibc <2.12
     patch('https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1',
@@ -221,23 +251,54 @@ class PyTorch(PythonPackage, CudaPackage):
     patch('https://github.com/pytorch/pytorch/commit/c075f0f633fa0136e68f0a455b5b74d7b500865c.patch?full_index=1',
           sha256='41271e494a3a60a65a8dd45ac053d1a6e4e4d5b42c2dac589ac67524f61ac41e', when='@1.10.0+distributed~tensorpipe')
 
-    @property
-    def libs(self):
-        # TODO: why doesn't `python_platlib` work here?
-        root = join_path(
-            self.prefix, self.spec['python'].package.platlib, 'torch', 'lib'
-        )
-        return find_libraries('libtorch', root)
+    # Use patches from IBM's Open CE to enable building on Power systems
+    # 03xx - patch temporary to fix a problem that when fixed upstream can be removed
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0302-cpp-extension.patch',
+          sha256='ecb3973fa7d0f4c8f8ae40433f3ca5622d730a7b16f6cb63325d1e95baff8aa2', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0311-PR66085-Remove-unused-dump-method-from-VSX-vec256-methods.patch',
+          sha256='f05db59f3def4c4215db7142d81029c73fe330c660492159b66d65ca5001f4d1', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0312-PR67331-Dummpy-VSX-bfloat16-implementation.patch',
+          sha256='860b64afa85f5e6647ebc3c91d5a0bb258784770900c9302c3599c98d5cff1ee', when='@1.10.0: arch=ppc64le:')
+
+    patch('https://github.com/open-ce/pytorch-feedstock/raw/main/recipe/0313-add-missing-vsx-dispatch.patch',
+          sha256='7393c2bc0b6d41ecc813c829a1e517bee864686652e91f174cb7bcdfb10ba451', when='@1.10.0: arch=ppc64le:')
+
+    # Cherry-pick a patch to allow earlier versions of PyTorch to work with CUDA 11.4
+    patch('https://github.com/pytorch/pytorch/commit/c74c0c571880df886474be297c556562e95c00e0.patch?full_index=1',
+          sha256='8ff7d285e52e4718bad1ca01ceb3bb6471d7828329036bb94222717fcaa237da', when='@:1.9.1 ^cuda@11.4.100:')
 
     @property
     def headers(self):
-        # TODO: why doesn't `python_platlib` work here?
-        root = join_path(
-            self.prefix, self.spec['python'].package.platlib, 'torch', 'include'
-        )
-        headers = find_all_headers(root)
-        headers.directories = [root]
-        return headers
+        """Discover header files in platlib."""
+
+        # Headers may be in either location
+        include = join_path(self.prefix, self.spec['python'].package.include)
+        platlib = join_path(self.prefix, self.spec['python'].package.platlib)
+        headers = find_all_headers(include) + find_all_headers(platlib)
+
+        if headers:
+            return headers
+
+        msg = 'Unable to locate {} headers in {} or {}'
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+
+    @property
+    def libs(self):
+        """Discover libraries in platlib."""
+
+        # Remove py- prefix in package name
+        library = 'lib' + self.spec.name[3:].replace('-', '?')
+        root = join_path(self.prefix, self.spec['python'].package.platlib)
+
+        for shared in [True, False]:
+            libs = find_libraries(library, root, shared=shared, recursive=True)
+            if libs:
+                return libs
+
+        msg = 'Unable to recursively locate {} libraries in {}'
+        raise NoLibrariesError(msg.format(self.spec.name, root))
 
     @when('@1.5.0:')
     def patch(self):
@@ -307,6 +368,22 @@ class PyTorch(PythonPackage, CudaPackage):
                         env.set('CMAKE_CUDA_FLAGS', '=-Xcompiler={0}'.format(flag))
 
         enable_or_disable('rocm')
+        if '+rocm' in self.spec:
+            env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
+            env.set('ROCBLAS_PATH', self.spec['rocblas'].prefix)
+            env.set('ROCFFT_PATH', self.spec['rocfft'].prefix)
+            env.set('HIPFFT_PATH', self.spec['hipfft'].prefix)
+            env.set('HIPSPARSE_PATH', self.spec['hipsparse'].prefix)
+            env.set('THRUST_PATH', self.spec['rocthrust'].prefix.include)
+            env.set('HIP_PATH', self.spec['hip'].prefix)
+            env.set('HIPRAND_PATH', self.spec['rocrand'].prefix)
+            env.set('ROCRAND_PATH', self.spec['rocrand'].prefix)
+            env.set('MIOPEN_PATH', self.spec['miopen-hip'].prefix)
+            env.set('RCCL_PATH', self.spec['rccl'].prefix)
+            env.set('ROCPRIM_PATH', self.spec['rocprim'].prefix)
+            env.set('HIPCUB_PATH', self.spec['hipcub'].prefix)
+            env.set('ROCTHRUST_PATH', self.spec['rocthrust'].prefix)
+            env.set('ROCTRACER_PATH', self.spec['roctracer-dev'].prefix)
 
         enable_or_disable('cudnn')
         if '+cudnn' in self.spec:
@@ -318,6 +395,7 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('kineto')
         enable_or_disable('magma')
         enable_or_disable('metal')
+        enable_or_disable('mps')
         enable_or_disable('breakpad')
 
         enable_or_disable('nccl')

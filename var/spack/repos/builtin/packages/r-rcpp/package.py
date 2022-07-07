@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRcpp(RPackage):
@@ -23,6 +23,7 @@ class RRcpp(RPackage):
 
     cran = "Rcpp"
 
+    version('1.0.8.3', sha256='9da5b84cdaf56e972b41e669d496b1ece2e91bcd435505c68b9f2bd98375f8bf')
     version('1.0.8', sha256='879f9296bc045ac4ed464578723bd37fcabbbdaa30aaaf070cf953e329f678ee')
     version('1.0.7', sha256='15e5a4732216daed16263c79fb37017c2ada84a2d4e785e3b76445d0eba3dc1d')
     version('1.0.6', sha256='c9f24756bc000f7a989bd4f9aa93d57f7739dcde77946703f8bb32332a35f012')

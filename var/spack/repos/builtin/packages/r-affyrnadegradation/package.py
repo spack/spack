@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffyrnadegradation(RPackage):
@@ -18,6 +18,7 @@ class RAffyrnadegradation(RPackage):
 
     bioc  = "AffyRNADegradation"
 
+    version('1.42.0', commit='5775f41f538b3c8ee4d07d38cec1b49c548cebe6')
     version('1.40.0', commit='8539a91ee464d692a267bb17c91dc1ef9a231f41')
     version('1.36.0', commit='89662b93076659db2967a526899184c12c156bc5')
     version('1.30.0', commit='620c464fb09248e1c7a122828eab59a4fb778cc1')

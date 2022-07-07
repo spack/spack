@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Nghttp2(AutotoolsPackage):
@@ -13,6 +13,7 @@ class Nghttp2(AutotoolsPackage):
     homepage = "https://nghttp2.org/"
     url      = "https://github.com/nghttp2/nghttp2/releases/download/v1.26.0/nghttp2-1.26.0.tar.gz"
 
+    version('1.47.0', sha256='62f50f0e9fc479e48b34e1526df8dd2e94136de4c426b7680048181606832b7c')
     version('1.44.0', sha256='3e4824d02ae27eca931e0bb9788df00a26e5fd8eb672cf52cbb89c1463ba16e9')
     version('1.26.0', sha256='daf7c0ca363efa25b2cbb1e4bd925ac4287b664c3d1465f6a390359daa3f0cf1')
 

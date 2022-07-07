@@ -6,17 +6,31 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiDnn(IntelOneApiLibraryPackage):
-    """Intel oneAPI DNN."""
+    """The Intel oneAPI Deep Neural Network Library (oneDNN) helps
+       developers improve productivity and enhance the performance of
+       their deep learning frameworks. It supports key data type
+       formats, including 16 and 32-bit floating point, bfloat16, and
+       8-bit integers and implements rich operators, including
+       convolution, matrix multiplication, pooling, batch
+       normalization, activation functions, recurrent neural network
+       (RNN) cells, and long short-term memory (LSTM) cells.
+
+    """
 
     maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onednn.html'
 
     if platform.system() == 'Linux':
+        version('2022.1.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18725/l_onednn_p_2022.1.0.132_offline.sh',
+                sha256='0b9a7efe8dd0f0b5132b353a8ee99226f75bae4bab188a453817263a0684cc93',
+                expand=False)
         version('2022.0.2',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18476/l_onednn_p_2022.0.2.43_offline.sh',
                 sha256='a2a953542b4f632b51a2527d84bd76c3140a41c8085420da4237e2877c27c280',
@@ -50,10 +64,11 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'include')
+        include_path = join_path(self.component_prefix,
+                                 'cpu_dpcpp_gpu_dpcpp', 'include')
         return find_headers('dnnl', include_path)
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'lib')
+        lib_path = join_path(self.component_prefix, 'cpu_dpcpp_gpu_dpcpp', 'lib')
         return find_libraries(['libdnnl', 'libmkldnn'], root=lib_path, shared=True)

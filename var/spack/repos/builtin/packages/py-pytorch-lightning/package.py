@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPytorchLightning(PythonPackage):
@@ -14,6 +14,10 @@ class PyPytorchLightning(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.6.4', sha256='5459f2c3e67676ec59e94576d1499e9559d214e7df41eadd135db64b4ccf54b9')
+    version('1.6.3', sha256='beb1f36a6dae91f5fef0959a04af1092dff4f3f4d99c20f0e033f84e615903e3')
+    version('1.6.2', sha256='ccb5e8593837afc9ecf914ee66bf171ee0e08a8d6673531a617b0a61863a9611')
+    version('1.6.1', sha256='280b9c7f84f9a6b6d2efb91c7b3caad50031e318d37cfe052f3047faf1f0a2de')
     version('1.6.0', sha256='1ab6f15750862cfbac48ad7be420050c8c353a060da7c2575f9e267158a33d42')
     version('1.5.3', sha256='a206169a0c4356366a7edadb5ebd2f38e9a611ff78265ce93b767662682f5620')
     version('1.4.1', sha256='1d1128aeb5d0e523d2204c4d9399d65c4e5f41ff0370e96d694a823af5e8e6f3')
@@ -29,7 +33,8 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-torch@1.8:', when='@1.6:', type=('build', 'run'))
     depends_on('py-torch@1.6:', when='@1.4:1.5', type=('build', 'run'))
     depends_on('py-torch@1.4:', when='@:1.3', type=('build', 'run'))
-    depends_on('py-tqdm@4.41.0:', type=('build', 'run'))
+    depends_on('py-tqdm@4.57.0:', when='@1.6.3:', type=('build', 'run'))
+    depends_on('py-tqdm@4.41.0:', when='@:1.6.2', type=('build', 'run'))
     depends_on('py-pyyaml@5.4:', when='@1.6:', type=('build', 'run'))
     depends_on('py-pyyaml@5.1:', when='@1.4:1.5', type=('build', 'run'))
     depends_on('py-pyyaml@5.1:5.4.1', when='@1.3', type=('build', 'run'))
@@ -42,12 +47,14 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-torchmetrics@0.4.0:', when='@1.4', type=('build', 'run'))
     depends_on('py-torchmetrics@0.2.0:', when='@1.3', type=('build', 'run'))
     depends_on('py-torchmetrics@0.2.0', when='@:1.2', type=('build', 'run'))
-    depends_on('py-pydeprecate@0.3.1:0.3', when='@1.6:', type=('build', 'run'))
+    depends_on('py-pydeprecate@0.3.1:', when='@1.6.4:', type=('build', 'run'))
+    depends_on('py-pydeprecate@0.3.1:0.3', when='@1.6:1.6.3', type=('build', 'run'))
     depends_on('py-pydeprecate@0.3.1', when='@1.4:1.5', type=('build', 'run'))
     depends_on('py-pydeprecate@0.3.0', when='@1.3', type=('build', 'run'))
     depends_on('py-packaging@17.0:', when='@1.3:', type=('build', 'run'))
     depends_on('py-packaging', when='@:1.2', type=('build', 'run'))
-    depends_on('py-typing-extensions@4:', when='@1.6:', type=('build', 'run'))
+    depends_on('py-typing-extensions@4.0.0:', when='@1.6:', type=('build', 'run'))
     depends_on('py-typing-extensions', when='@1.4:1.5', type=('build', 'run'))
     depends_on('py-future@0.17.1:', when='@:1.5', type=('build', 'run'))
     depends_on('pil@:8.2,8.3.1:', when='@1.3', type=('build', 'run'))
+    depends_on('py-protobuf@:3.20.1', when='@1.6.4:', type='build')

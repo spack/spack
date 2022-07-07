@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyTypingExtensions(PythonPackage):
@@ -15,6 +15,7 @@ class PyTypingExtensions(PythonPackage):
     homepage = "https://github.com/python/typing/tree/master/typing_extensions"
     pypi = "typing_extensions/typing_extensions-3.7.4.tar.gz"
 
+    version('4.2.0', sha256='f1c24655a0da0d1b67f07e17a5e6b2a105894e6824b92096378bb3668ef02376')
     version('4.1.1', sha256='1a9462dcc3347a79b1f1c0271fbe79e844580bb598bafa1ed208b94da3cdcd42')
     version('3.10.0.2', sha256='49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e')
     version('3.10.0.0', sha256='50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342')
@@ -24,6 +25,7 @@ class PyTypingExtensions(PythonPackage):
     version('3.6.6', sha256='51e7b7f3dcabf9ad22eed61490f3b8d23d9922af400fe6656cb08e66656b701f')
 
     # typing-extensions 4+ uses flit
+    depends_on('python@3.7:', when='@4.2:', type=('build', 'run'))
     depends_on('python@3.6:', when='@4:', type=('build', 'run'))
     depends_on('py-flit-core@3.4:3', when='@4:', type='build')
 

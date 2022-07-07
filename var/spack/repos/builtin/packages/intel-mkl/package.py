@@ -5,11 +5,15 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelMkl(IntelPackage):
-    """Intel Math Kernel Library."""
+    """Intel Math Kernel Library. This package has been replaced by
+       intel-oneapi-mkl.
+
+    """
 
     maintainers = ['rscohn2']
 
@@ -77,6 +81,8 @@ class IntelMkl(IntelPackage):
 
     provides('blas')
     provides('lapack')
+    provides('lapack@3.9.0', when='@2020.4')
+    provides('lapack@3.7.0', when='@11.3')
     provides('scalapack')
     provides('mkl')
     provides('fftw-api@3', when='@2017:')

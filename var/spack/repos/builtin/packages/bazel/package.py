@@ -5,6 +5,8 @@
 
 import re
 
+from spack.package import *
+
 
 class Bazel(Package):
     """Bazel is an open-source build and test tool similar to Make, Maven, and
@@ -16,10 +18,16 @@ class Bazel(Package):
     homepage = "https://bazel.build/"
     url      = "https://github.com/bazelbuild/bazel/releases/download/3.1.0/bazel-3.1.0-dist.zip"
 
-    maintainers = ['adamjstewart']
-
     tags = ['build-tools']
 
+    version('5.2.0', sha256='820a94dbb14071ed6d8c266cf0c080ecb265a5eea65307579489c4662c2d582a')
+    version('5.1.1', sha256='7f5d3bc1d344692b2400f3765fd4b5c0b636eb4e7a8a7b17923095c7b56a4f78')
+    version('5.1.0', sha256='4de301f509fc6d0cbc697b2017384ecdc94df8f36245bbcbedc7ea6780acc9f5')
+    version('5.0.0', sha256='072dd62d237dbc11e0bac02e118d8c2db4d0ba3ba09f1a0eb1e2a460fb8419db')
+    version('4.2.2', sha256='9981d0d53a356c4e87962847750a97c9e8054e460854748006c80f0d7e2b2d33')
+    version('4.2.1', sha256='12ea7aa11e2bdb12de1dceb9939a22e96f5a480437cb17c123379d8e0fdf5e82')
+    version('4.2.0', sha256='74814b63920aaee47dbbbee7082e5c4317e4eebaf07e03c5fb5626e1716f1034')
+    version('4.1.0', sha256='f377d755c96a50f6bd2f423562598d822f43356783330a0b780ad442864d6eeb')
     version('4.0.0',  sha256='d350f80e70654932db252db380d2ec0144a00e86f8d9f2b4c799ffdb48e9cdd1')
     version('3.7.2',  sha256='de255bb42163a915312df9f4b86e5b874b46d9e8d4b72604b5123c3a845ed9b1')
     version('3.7.1',  sha256='c9244e5905df6b0190113e26082c72d58b56b1b0dec66d076f083ce4089b0307')
@@ -113,13 +121,12 @@ class Bazel(Package):
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
     depends_on('java', type=('build', 'run'))
+    depends_on('java@11', when='@5.3:', type=('build', 'run'))
+    depends_on('java@8,11', when='@3.3:5.2', type=('build', 'run'))
+    depends_on('java@8', when='@0.6:3.2', type=('build', 'run'))
+    depends_on('java@7:8', when='@:0.5', type=('build', 'run'))
     depends_on('python+pythoncmd', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
-
-    # make work on power9 (2x commits)
-    # https://github.com/bazelbuild/bazel/commit/5cff4f1edf8b95bf0612791632255852332f72b5
-    # https://github.com/bazelbuild/bazel/commit/ab62a6e097590dac5ec946ad7a796ea0e8593ae0
-    patch('linux_ppc-0.29.1.patch', when='@0.29.1')
 
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
@@ -144,9 +151,21 @@ class Bazel(Package):
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
 
-    # for fcc
-    patch('patch_for_fcc.patch', when='@0.29.1:%fj')
-    patch('patch_for_fcc2.patch', when='@0.25:%fj')
+    # Disable dependency search
+    patch('cppcompileaction-0.3.2.patch', when='@0.3.2:+nodepfail')
+    patch('cppcompileaction-0.3.0.patch', when='@0.3.0:0.3.1+nodepfail')
+
+    # Fix build on power9 (2x commits)
+    # https://github.com/bazelbuild/bazel/commit/5cff4f1edf8b95bf0612791632255852332f72b5
+    # https://github.com/bazelbuild/bazel/commit/ab62a6e097590dac5ec946ad7a796ea0e8593ae0
+    patch('build-0.29.1.patch', when='@0.29.1')
+
+    # Fix build with Fujitsu compiler
+    patch('blaze_util_posix-0.29.1.patch', when='@0.29.1:%fj')
+    patch('unix_cc_configure_fj-5.2.patch', when='@5.2:%fj')
+    patch('unix_cc_configure_fj-5.0.patch', when='@5.0:5.1%fj')
+    patch('unix_cc_configure_fj-0.29.1.patch', when='@0.29.1:4%fj')
+    patch('bazelruleclassprovider_fj-0.25.patch', when='@0.25:%fj')
     conflicts(
         '%fj',
         when='@:0.24.1',
@@ -154,8 +173,8 @@ class Bazel(Package):
         'please use a newer release.'
     )
 
-    patch('disabledepcheck.patch', when='@0.3.2:+nodepfail')
-    patch('disabledepcheck_old.patch', when='@0.3.0:0.3.1+nodepfail')
+    # https://blog.bazel.build/2021/05/21/bazel-4-1.html
+    conflicts('platform=darwin target=aarch64:', when='@:4.0')
 
     executables = ['^bazel$']
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenefilter(RPackage):
@@ -13,6 +13,7 @@ class RGenefilter(RPackage):
 
     bioc = "genefilter"
 
+    version('1.78.0', commit='2f574388971641d3a71858f5c34606c04fcd2ba2')
     version('1.76.0', commit='8d630fd25f0d2a4101e05e123c3959591203a7ea')
     version('1.72.1', commit='b01b00a766982ef7d80b90a252085c8c4f085e1b')
     version('1.72.0', commit='8cb0b2e73531a417d53e5625bcf436265cdbe101')
@@ -22,6 +23,7 @@ class RGenefilter(RPackage):
     version('1.60.0', commit='c98f695253c330a9380b2b4ffa27f3b7d66773e4')
     version('1.58.1', commit='ace2556049677f60882adfe91f8cc96791556fc2')
 
+    depends_on('r-biocgenerics', type=('build', 'run'), when='@1.78.0:')
     depends_on('r-biocgenerics@0.31.2:', type=('build', 'run'), when='@1.68.0:')
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-annotate', type=('build', 'run'))

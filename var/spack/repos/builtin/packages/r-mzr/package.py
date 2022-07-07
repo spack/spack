@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMzr(RPackage):
@@ -19,6 +19,7 @@ class RMzr(RPackage):
 
     bioc = "mzR"
 
+    version('2.30.0', commit='563ae755cfc7de1ac8862247779182b7b3aebdcc')
     version('2.28.0', commit='bee7d6fb5f99e1fab5444ae1ad27b0bc6e83be9e')
     version('2.24.1', commit='e1d4de8761e6729fd45320d842691c8fe9116b7b')
     version('2.18.1', commit='13f9f9b1149859c3e29cfce941d958cc4f680546')
@@ -27,6 +28,7 @@ class RMzr(RPackage):
     version('2.12.0', commit='f05eb27ae31c3d019cca10fc3b9ee513cbcdfc5a')
     version('2.10.0', commit='a6168b68e48c281e88de9647254a8db1e21df388')
 
+    depends_on('r@4.0.0:', type=('build', 'run'), when='@2.30.0:')
     depends_on('r-rcpp@0.10.1:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.6:', type=('build', 'run'))
@@ -34,6 +36,7 @@ class RMzr(RPackage):
     depends_on('r-protgenerics@1.9.1:', type=('build', 'run'), when='@2.12.0:')
     depends_on('r-protgenerics@1.17.3:', type=('build', 'run'), when='@2.24.1:')
     depends_on('r-ncdf4', type=('build', 'run'), when='@2.16.2:')
-    depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-rhdf5lib@1.1.4:', type=('build', 'run'), when='@2.14.0:')
     depends_on('gmake', type='build')
+
+    depends_on('r-zlibbioc', type=('build', 'run'), when='@:2.28.0')

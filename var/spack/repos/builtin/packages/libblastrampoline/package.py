@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libblastrampoline(MakefilePackage):
@@ -15,6 +15,7 @@ class Libblastrampoline(MakefilePackage):
 
     maintainers = ['haampie', 'giordano']
 
+    version('5.1.0', sha256='55ac0c8f9cb91b2ed2db014be8394c9dadf3b5f26bd8af6dca9d6f20ca72b8fd')
     version('5.0.2', sha256='2e96fa62957719351da3e4dff8cd0949449073708f5564dae0a224a556432356')
     version('5.0.1', sha256='1066b4d157276e41ca66ca94f0f8c2900c221b49da2df3c410e6f8bf1ce9b488')
     # v5.0.0 contains a bug, fixed in v5.0.1, which causes segmentation faults

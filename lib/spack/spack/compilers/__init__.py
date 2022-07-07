@@ -252,6 +252,13 @@ def find_new_compilers(path_hints=None, scope=None):
             merged configuration.
     """
     compilers = find_compilers(path_hints)
+    return select_new_compilers(compilers, scope)
+
+
+def select_new_compilers(compilers, scope=None):
+    """Given a list of compilers, remove those that are already defined in
+    the configuration.
+    """
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
@@ -766,7 +773,8 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc']) or \
+           toolchains == set(['Dpcpp', 'Oneapi']):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True

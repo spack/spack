@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RLfe(RPackage):
@@ -22,6 +22,7 @@ class RLfe(RPackage):
 
     cran = "lfe"
 
+    version('2.8-8', sha256='0fc22928fa16f22ee66c8e426a0e994346ad2f67b3c5aea597f3eeffbd85ab71')
     version('2.8-7.1', sha256='d6a1efd8c43f84fa291e4959938f16e85bf5feef113515aaca1fe90075a78c50')
     version('2.8-6', sha256='bf5fd362e9722e871a5236f30da562c489ae6506b667609b9465eefa8f101612')
     version('2.8-5', sha256='fd80c573d334594db933ff38f67bd4c9f899aaf648c3bd68f19477a0059723c2')

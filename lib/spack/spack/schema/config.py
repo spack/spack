@@ -56,6 +56,7 @@ properties = {
                 'type': 'array',
                 'items': {'type': 'string'}
             },
+            'license_dir': {'type': 'string'},
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'connect_timeout': {'type': 'integer', 'minimum': 0},

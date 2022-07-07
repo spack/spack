@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REnrichplot(RPackage):
@@ -16,6 +16,7 @@ class REnrichplot(RPackage):
 
     bioc = "enrichplot"
 
+    version('1.16.1', commit='cff77b622b2312be546714ec437aa4bc585bac87')
     version('1.14.1', commit='ccf3a6d9b7cd9cffd8de6d6263efdffe59d2ec36')
     version('1.10.2', commit='77ee04f60a07cc31151f8f47f8ee64f3a43c9760')
     version('1.4.0', commit='6ffe5d9c5dbe5cbea29f2e0941595475bbbcea0e')

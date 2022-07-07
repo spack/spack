@@ -6,17 +6,28 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
-    """Intel oneAPI MPI."""
+    """Intel MPI Library is a multifabric message-passing library that
+       implements the open-source MPICH specification. Use the library
+       to create, maintain, and test advanced, complex applications
+       that perform better on high-performance computing (HPC)
+       clusters based on Intel processors.
+
+    """
 
     maintainers = ['rscohn2', ]
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18714/l_mpi_oneapi_p_2021.6.0.602_offline.sh',
+                sha256='e85db63788c434d43c1378e5e2bf7927a75d11aee8e6b78ee0d933da920977a6',
+                expand=False)
         version('2021.5.1',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18471/l_mpi_oneapi_p_2021.5.1.515_offline.sh',
                 sha256='b992573959e39752e503e691564a0d876b099547c38b322d5775c5b06ec07a7f',
@@ -44,7 +55,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     variant('ilp64', default=False,
             description='Build with ILP64 support')
-    variant('external-libfabric', default=False, description='Enable external libfabric dependency')
+    variant('generic-names', default=False,
+            description='Use generic names, e.g mpicc instead of mpiicc')
+    variant('external-libfabric', default=False,
+            description='Enable external libfabric dependency')
     depends_on('libfabric', when='+external-libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
@@ -54,11 +68,16 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         return 'mpi'
 
     def setup_dependent_package(self, module, dep_spec):
-        dir = join_path(self.component_path, 'bin')
-        self.spec.mpicc  = join_path(dir, 'mpicc')
-        self.spec.mpicxx = join_path(dir, 'mpicxx')
-        self.spec.mpif77 = join_path(dir, 'mpif77')
-        self.spec.mpifc  = join_path(dir, 'mpifc')
+        if '+generic-names' in self.spec:
+            self.spec.mpicc  = join_path(self.component_prefix.bin, 'mpicc')
+            self.spec.mpicxx = join_path(self.component_prefix.bin, 'mpicxx')
+            self.spec.mpif77 = join_path(self.component_prefix.bin, 'mpif77')
+            self.spec.mpifc  = join_path(self.component_prefix.bin, 'mpifc')
+        else:
+            self.spec.mpicc  = join_path(self.component_prefix.bin, 'mpiicc')
+            self.spec.mpicxx = join_path(self.component_prefix.bin, 'mpiicpc')
+            self.spec.mpif77 = join_path(self.component_prefix.bin, 'mpiifort')
+            self.spec.mpifc  = join_path(self.component_prefix.bin, 'mpiifort')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICH_CC', spack_cc)
@@ -68,54 +87,54 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPICH_FC', spack_fc)
 
         # Set compiler wrappers for dependent build stage
-        dir = join_path(self.component_path, 'bin')
-        env.set('MPICC', join_path(dir, 'mpicc'))
-        env.set('MPICXX', join_path(dir, 'mpicxx'))
-        env.set('MPIF77', join_path(dir, 'mpif77'))
-        env.set('MPIF90', join_path(dir, 'mpif90'))
-        env.set('MPIFC', join_path(dir, 'mpifc'))
+        if '+generic-names' in self.spec:
+            env.set('MPICC', join_path(self.component_prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.component_prefix.bin, 'mpicxx'))
+            env.set('MPIF77', join_path(self.component_prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.component_prefix.bin, 'mpif90'))
+            env.set('MPIFC', join_path(self.component_prefix.bin, 'mpifc'))
+        else:
+            env.set('MPICC', join_path(self.component_prefix.bin, 'mpiicc'))
+            env.set('MPICXX', join_path(self.component_prefix.bin, 'mpiicpc'))
+            env.set('MPIF77', join_path(self.component_prefix.bin, 'mpiifort'))
+            env.set('MPIF90', join_path(self.component_prefix.bin, 'mpiifort'))
+            env.set('MPIFC', join_path(self.component_prefix.bin, 'mpiifort'))
 
-        env.set('I_MPI_ROOT', self.component_path)
+        env.set('I_MPI_ROOT', self.component_prefix)
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'include')
-        headers = find_headers('*', include_path)
+        headers = find_headers('*', self.component_prefix.include)
         if '+ilp64' in self.spec:
-            headers += find_headers('*', join_path(include_path, 'ilp64'))
+            headers += find_headers('*', self.component_prefix.include.ilp64)
         return headers
 
     @property
     def libs(self):
-        lib_dir = join_path(self.component_path, 'lib')
-        release_lib_dir = join_path(lib_dir, 'release')
         libs = []
         if '+ilp64' in self.spec:
-            libs += find_libraries('libmpi_ilp64', release_lib_dir)
-        libs += find_libraries(['libmpicxx', 'libmpifort'], lib_dir)
-        libs += find_libraries('libmpi', release_lib_dir)
+            libs += find_libraries('libmpi_ilp64', self.component_prefix.lib.release)
+        libs += find_libraries(['libmpicxx', 'libmpifort'], self.component_prefix.lib)
+        libs += find_libraries('libmpi', self.component_prefix.lib.release)
         libs += find_system_libraries(['libdl', 'librt', 'libpthread'])
 
         # Find libfabric for libmpi.so
         if '+external-libfabric' in self.spec:
             libs += self.spec['libfabric'].libs
         else:
-            libs += find_libraries(['libfabric'],
-                                   join_path(self.component_path, 'libfabric', 'lib'))
+            libs += find_libraries(['libfabric'], self.component_prefix.libfabric.lib)
 
         return libs
 
-    def install(self, spec, prefix):
-        super(IntelOneapiMpi, self).install(spec, prefix)
-
+    @run_after('install')
+    def fix_wrappers(self):
         # When spack builds from source
         # fix I_MPI_SUBSTITUTE_INSTALLDIR and
         #   __EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__
-        scripts = ["mpif77", "mpif90", "mpigcc", "mpigxx", "mpiicc", "mpiicpc",
-                   "mpiifort"]
-        for script in scripts:
-            file = join_path(self.component_path, 'bin', script)
-            filter_file('I_MPI_SUBSTITUTE_INSTALLDIR',
-                        self.component_path, file, backup=False)
-            filter_file('__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
-                        self.component_path, file, backup=False)
+        for wrapper in ['mpif77', 'mpif90', 'mpigcc', 'mpigxx', 'mpiicc',
+                        'mpiicpc', 'mpiifort']:
+            filter_file(r'I_MPI_SUBSTITUTE_INSTALLDIR|'
+                        r'__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__',
+                        self.component_prefix,
+                        self.component_prefix.bin.join(wrapper),
+                        backup=False)

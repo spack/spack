@@ -6,17 +6,31 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiDal(IntelOneApiLibraryPackage):
-    """Intel oneAPI DAL."""
+    """Intel oneAPI Data Analytics Library (oneDAL) is a library that
+       helps speed up big data analysis by providing highly optimized
+       algorithmic building blocks for all stages of data analytics
+       (preprocessing, transformation, analysis, modeling, validation,
+       and decision making) in batch, online, and distributed
+       processing modes of computation. The library optimizes data
+       ingestion along with algorithmic computation to increase
+       throughput and scalability.
+
+    """
 
     maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html'
 
     if platform.system() == 'Linux':
+        version('2021.6.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18698/l_daal_oneapi_p_2021.6.0.915_offline.sh',
+                sha256='bc9a430f372a5f9603c19ec25207c83ffd9d59fe517599c734d465e32afc9790',
+                expand=False)
         version('2021.5.3',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18480/l_daal_oneapi_p_2021.5.3.832_offline.sh',
                 sha256='6d3503cf7be2908bbb7bd18e67b8f2e96ad9aec53d4813c9be620adaa2db390f',

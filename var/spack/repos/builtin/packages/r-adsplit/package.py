@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAdsplit(RPackage):
@@ -16,6 +16,7 @@ class RAdsplit(RPackage):
 
     bioc = "adSplit"
 
+    version('1.66.0', commit='64580a6f7a9bc6b16334267c90df48fbb839cc16')
     version('1.64.0', commit='32f150eb51c66b867301dceeb527de5b97f9f490')
     version('1.60.0', commit='de5abccfe652cbc5b5f49fb6ed77cdd15cc760cd')
     version('1.54.0', commit='ce8fb61f4a3d0942294da2baa28be1472acb0652')

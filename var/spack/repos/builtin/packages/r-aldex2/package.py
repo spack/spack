@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAldex2(RPackage):
@@ -23,6 +23,7 @@ class RAldex2(RPackage):
 
     bioc = "ALDEx2"
 
+    version('1.28.1', commit='f8d8ba6d2439bff75ab80f5466c9a047c31ed0a6')
     version('1.26.0', commit='0876a2eac08d3f1c01df7414d97d391c80182ada')
     version('1.22.0', commit='ac7f0ab3f094ec52713da7620a27058b14c7181d')
     version('1.16.0', commit='bd698a896a5bea91187e3060e56a147bad1d586f')

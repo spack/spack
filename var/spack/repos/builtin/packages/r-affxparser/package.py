@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffxparser(RPackage):
@@ -20,6 +20,7 @@ class RAffxparser(RPackage):
 
     bioc = "affxparser"
 
+    version('1.68.1', commit='821a01a2df18115a3b7864b3f45418255b7123eb')
     version('1.66.0', commit='2ea72d4c924ac14bdd807b23563c8501c226ce3a')
     version('1.62.0', commit='b3e988e5c136c3f1a064e1da13730b403c8704c0')
     version('1.56.0', commit='20d27701ad2bdfacf34d857bb8ecb4f505b4d056')

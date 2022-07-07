@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiocneighbors(RPackage):
@@ -21,6 +21,7 @@ class RBiocneighbors(RPackage):
 
     bioc = "BiocNeighbors"
 
+    version('1.14.0', commit='670a1bd4d82636d28fbff50cea2157e16bb1a858')
     version('1.12.0', commit='3c8a290f75adc944b408e6e77a36f3a0c1509c4c')
     version('1.8.2', commit='889bc91f8cb45d210b47ae5c0b9cfb86fb071ca2')
     version('1.2.0', commit='f754c6300f835142536a4594ddf750481e0fe273')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAcde(RPackage):
@@ -22,6 +22,7 @@ class RAcde(RPackage):
 
     bioc = "acde"
 
+    version('1.26.0', commit='dfef9a435062e948efd5eda22942a0d500baa992')
     version('1.24.0', commit='0c3c4d47af7eaff37420032ea5245743a65124cf')
     version('1.20.0', commit='cefb4f2e2b0ef3c5f51944c0ece7a71294020350')
     version('1.14.0', commit='6017c7436a46f186b2a3cea9d2b93274f6dd3417')

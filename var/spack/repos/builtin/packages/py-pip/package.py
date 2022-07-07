@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class PyPip(Package):
@@ -14,6 +14,8 @@ class PyPip(Package):
     homepage = "https://pip.pypa.io/"
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
+
+    maintainers = ['adamjstewart']
 
     version('21.3.1', sha256='deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d', expand=False)
     version('21.1.2', sha256='f8ea1baa693b61c8ad1c1d8715e59ab2b93cd3c4769bacab84afcc4279e7a70e', expand=False)

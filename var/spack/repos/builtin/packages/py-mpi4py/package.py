@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyMpi4py(PythonPackage):
@@ -35,8 +35,3 @@ class PyMpi4py(PythonPackage):
     @when('@3.1:')
     def install_options(self, spec, prefix):
         return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
-
-    @property
-    def headers(self):
-        headers = find_all_headers(self.prefix.lib)
-        return headers

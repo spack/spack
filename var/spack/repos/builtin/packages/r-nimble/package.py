@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNimble(RPackage):
@@ -26,6 +26,7 @@ class RNimble(RPackage):
 
     cran = "nimble"
 
+    version('0.12.2', sha256='2af7a3ab159a7f0b3b4b139da1db45be4b602f2c0e115cb0403b060ab0101a1b')
     version('0.12.1', sha256='3520f3212a48c8cbe08a6a8e57b3a72180594f7c09f647d1daf417c9857867d8')
     version('0.10.1', sha256='11e248fda442f233c3590640efd9381c9b4b2e6fb66dce45a3391db03b70e702')
     version('0.9.1', sha256='ad5e8a171193cb0172e68bf61c4f94432c45c131a150101ad1c5c7318c335757')

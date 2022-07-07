@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyWheel(Package):
@@ -12,6 +12,8 @@ class PyWheel(Package):
     homepage = "https://github.com/pypa/wheel"
     url = "https://files.pythonhosted.org/packages/py2.py3/w/wheel/wheel-0.34.2-py2.py3-none-any.whl"
     list_url = "https://pypi.org/simple/wheel/"
+
+    maintainers = ['adamjstewart']
 
     version('0.37.0', sha256='21014b2bd93c6d0034b6ba5d35e4eb284340e09d63c59aef6fc14b0f346146fd', expand=False)
     version('0.36.2', sha256='78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e', expand=False)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RMinfi(RPackage):
@@ -13,6 +13,7 @@ class RMinfi(RPackage):
 
     bioc = "minfi"
 
+    version('1.42.0', commit='30fc7059460a9ec0be734fc26e608426ca9f5614')
     version('1.40.0', commit='17fa2b5d6cdbef6cbfb690242bd3f660731431f1')
     version('1.36.0', commit='94301da343226be7cd878c2a6c1bb529564785d6')
     version('1.30.0', commit='a4c28e9388fe3b35e7d21a9669e39250ed6dcbcd')

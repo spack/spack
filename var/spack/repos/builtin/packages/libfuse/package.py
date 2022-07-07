@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Libfuse(MesonPackage):
@@ -16,6 +16,7 @@ class Libfuse(MesonPackage):
     homepage = "https://github.com/libfuse/libfuse"
     url      = "https://github.com/libfuse/libfuse/releases/download/fuse-2.9.9/fuse-2.9.9.tar.gz"
 
+    version('3.11.0', sha256='25a00226d2d449c15b2f08467d6d5ebbb2a428260c4ab773721c32adbc6da072')
     version('3.10.5', sha256='e73f75e58da59a0e333d337c105093c496c0fd7356ef3a5a540f560697c9c4e6')
     version('3.10.4', sha256='bfcb2520fd83db29e9fefd57d3abd5285f38ad484739aeee8e03fbec9b2d984a')
     version('3.10.3', sha256='c32527782cef620df58b162aa29901d1fb13253b029375d5860a2253a810344e')
@@ -32,11 +33,12 @@ class Libfuse(MesonPackage):
             return "https://github.com/libfuse/libfuse/releases/download/fuse-{0}/fuse-{1}.tar.gz".format(version, version)
         return "https://github.com/libfuse/libfuse/archive/refs/tags/fuse-{0}.tar.gz".format(version)
 
-    variant('useroot', default=False, description="Use root privileges to make fusermount a setuid binary after installation")
-    variant('system_install', default=False, description=(
+    variant('useroot', when='+utils', default=False, description="Use root privileges to make fusermount a setuid binary after installation")
+    variant('system_install', when='+utils', default=False, description=(
         "Do not run the post-install script "
         "which typically sets up udev rules and "
         "and init script in /etc/init.d"))
+    variant('utils', default=True, description='Build and install helper and example programs.')
 
     depends_on('autoconf', type='build', when='@:2')
     depends_on('automake', type='build', when='@:2')
@@ -66,6 +68,13 @@ class Libfuse(MesonPackage):
 
     def meson_args(self):
         args = []
+
+        if '+utils' in self.spec:
+            args.append('-Dutils=true')
+            args.append('-Dexamples=true')
+        else:
+            args.append('-Dutils=false')
+            args.append('-Dexamples=false')
 
         if '+useroot' in self.spec:
             args.append('-Duseroot=true')

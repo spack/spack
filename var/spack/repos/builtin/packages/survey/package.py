@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Survey(CMakePackage):
@@ -33,6 +33,8 @@ class Survey(CMakePackage):
     maintainers = ['jgalarowicz']
 
     version('master', branch='master')
+    version('1.0.5', branch='1.0.5')
+    version('1.0.4', tag='1.0.4')
     version('1.0.3', tag='1.0.3')
     version('1.0.2', tag='1.0.2')
     version('1.0.1.1', tag='1.0.1.1')
@@ -42,7 +44,7 @@ class Survey(CMakePackage):
     variant('mpi', default=False,
             description="Enable mpi, build MPI data collector")
 
-    variant('tls_model', default='implicit',
+    variant('tls_model', default='explicit',
             description='The TLS model to build with',
             values=('implicit', 'explicit'))
 
@@ -61,7 +63,7 @@ class Survey(CMakePackage):
     # MPI Installation
     depends_on("mpi", when="+mpi")
 
-    depends_on("python@3:", type=('build', 'link', 'run'))
+    depends_on("python@3:", type=('build', 'run'))
     depends_on("py-setuptools", type='build')
     depends_on("py-pip", type='build')
     depends_on("py-pandas", type=('build', 'run'))
@@ -71,6 +73,8 @@ class Survey(CMakePackage):
     depends_on("py-seaborn", type=('build', 'run'), when='@1.0.3:')
     depends_on("py-jinja2", type=('build', 'run'), when='@1.0.3:')
     depends_on("py-matplotlib", type=('build', 'run'), when='@1.0.3:')
+    depends_on("py-more-itertools", type=('build', 'run'), when='@1.0.4:')
+    depends_on("py-versioneer", type=('build', 'run'), when='@1.0.5:')
 
     extends('python')
 
@@ -103,8 +107,10 @@ class Survey(CMakePackage):
         ]
 
         # Add any MPI implementations coming from variant settings
-        mpi_options = self.get_mpi_cmake_options(spec)
-        cmake_args.extend(mpi_options)
+        if '+mpi' in spec:
+            mpi_options = self.get_mpi_cmake_options(spec)
+            cmake_args.extend(mpi_options)
+
         return cmake_args
 
     def setup_run_environment(self, env):
@@ -112,6 +118,11 @@ class Survey(CMakePackage):
 
         # Set SURVEY_MPI_IMPLEMENTATON to the appropriate mpi implementation
         # This is needed by survey to deploy the correct mpi runtimes.
-        env.set('SURVEY_MPI_IMPLEMENTATION', self.spec['mpi'].name.lower())
+        if '+mpi' in self.spec:
+            env.set('SURVEY_MPI_IMPLEMENTATION', self.spec['mpi'].name.lower())
+
         # For compatibility reasons we need
         env.prepend_path('PATH', self.spec['python'].prefix.bin)
+        # Add paths for sub-tools that are used by survey
+        env.prepend_path('PATH', self.spec['papi'].prefix.bin)
+        env.prepend_path('PATH', self.spec['libmonitor'].prefix.bin)

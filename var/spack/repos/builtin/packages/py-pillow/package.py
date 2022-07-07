@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
+
 class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
@@ -18,10 +21,10 @@ class PyPillowBase(PythonPackage):
     variant('freetype',   default=False, description='Type related services')
     variant('lcms',       default=False, description='Color management')
     variant('webp',       default=False, description='WebP format')
-    variant('webpmux',    default=False, description='WebP metadata')
+    variant('webpmux', when='+webp', default=False, description='WebP metadata')
     variant('jpeg2000',   default=False, description='JPEG 2000 functionality')
-    variant('imagequant', default=False, description='Improved color quantization')
-    variant('xcb',        default=False, description='X11 screengrab support')
+    variant('imagequant', when='@3.3:', default=False, description='Improved color quantization')
+    variant('xcb', when='@7.1:', default=False, description='X11 screengrab support')
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
@@ -50,10 +53,6 @@ class PyPillowBase(PythonPackage):
     depends_on('libimagequant', when='+imagequant')
     depends_on('libxcb', when='+xcb')
 
-    conflicts('+webpmux', when='~webp', msg='Webpmux relies on WebP support')
-    conflicts('+imagequant', when='@:3.2', msg='imagequant support was added in 3.3')
-    conflicts('+xcb', when='@:7.0', msg='XCB support was added in 7.1')
-
     def patch(self):
         """Patch setup.py to provide library and include directories
         for dependencies."""
@@ -78,12 +77,6 @@ class PyPillowBase(PythonPackage):
         with open('setup.cfg', 'a') as setup:
             setup.write('[build_ext]\n')
             variants = list(self.spec.variants)
-
-            if self.spec.satisfies('@:7.0'):
-                variants.remove('xcb')
-            if self.spec.satisfies('@:3.2'):
-                variants.remove('imagequant')
-
             for variant in variants:
                 setup.write(variant_to_cfg(variant))
 
@@ -103,6 +96,10 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
+    version('9.2.0', sha256='75e636fd3e0fb872693f23ccb8a5ff2cd578801251f3a4f6854c6a5d437d3c04')
+    version('9.1.1', sha256='7502539939b53d7565f3d11d87c78e7ec900d3c72945d4ee0e2f250d598309a0')
+    version('9.1.0', sha256='f401ed2bbb155e1ade150ccc63db1a4f6c1909d3d378f7d1235a44e90d75fb97')
+    version('9.0.1', sha256='6c8bc8238a7dfdaf7a75f5ec5a663f4173f8c367e5a39f87e720495e1eed75fa')
     version('9.0.0', sha256='ee6e2963e92762923956fe5d3479b1fdc3b76c83f290aad131a2f98c3df0593e')
     version('8.4.0', sha256='b8e2f83c56e141920c39464b852de3719dfbfb6e3c99a2d8da0edf4fb33176ed')
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
@@ -118,7 +115,7 @@ class PyPillow(PyPillowBase):
     version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     for ver in [
-        '9.0.0',
+        '9.2.0', '9.1.1', '9.1.0', '9.0.1', '9.0.0',
         '8.4.0', '8.0.0',
         '7.2.0', '7.0.0',
         '6.2.2', '6.2.1', '6.2.0', '6.0.0',

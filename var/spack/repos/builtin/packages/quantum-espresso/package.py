@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class QuantumEspresso(CMakePackage):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
@@ -18,6 +21,7 @@ class QuantumEspresso(CMakePackage):
     maintainers = ['ye-luo', 'danielecesarini']
 
     version('develop', branch='develop')
+    version('7.1', sha256='d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6')
     version('7.0', sha256='85beceb1aaa1678a49e774c085866d4612d9d64108e0ac49b23152c8622880ee')
     version('6.8', sha256='654855c69864de7ece5ef2f2c0dea2d32698fe51192a8646b1555b0c57e033b2')
     version('6.7', sha256='fe0ce74ff736b10d2a20c9d59025c01f88f86b00d229c123b1791f1edd7b4315',
@@ -53,15 +57,14 @@ class QuantumEspresso(CMakePackage):
     with when('+cmake'):
         depends_on("cmake@3.14.0:", type="build")
         conflicts('@:6.7', msg='+cmake works since QE v6.8')
-
-        variant('libxc', default=False, description='Uses libxc')
-        depends_on('libxc@5.1.2:', when='+libxc')
-
         # TODO
         # variant(
         #     'gpu', default='none', description='Builds with GPU support',
         #     values=('nvidia', 'none'), multi=False
         # )
+
+    variant('libxc', default=False, description='Uses libxc')
+    depends_on('libxc@5.1.2:', when='+libxc')
 
     variant('openmp', default=False, description='Enables openMP support')
     # Need OpenMP threaded FFTW and BLAS libraries when configured
@@ -101,7 +104,7 @@ class QuantumEspresso(CMakePackage):
     # Support for HDF5 has been added starting in version 6.1.0 and is
     # still experimental, therefore we default to False for the variant
     variant(
-        'hdf5', default='none', description='Builds with HDF5 support',
+        'hdf5', default='none', description='Orbital and density data I/O with HDF5',
         values=('parallel', 'serial', 'none'), multi=False
     )
 
@@ -153,9 +156,18 @@ class QuantumEspresso(CMakePackage):
             'supported with parallel HDF5'
         )
         conflicts(
-            'hdf5=none',
+            '@:7.0 hdf5=none',
             msg='QE-to-QMCPACK wave function converter requires HDF5'
         )
+        # QE > 7.0, the converter for QMCPACK can be built without hdf5 enabled in QE.
+        # The converter for QMCPACK itself still needs hdf5 library
+        with when('@7.0.1:'):
+            # when QE doesn't use hdf5 library, the converter plugin still needs it
+            depends_on('hdf5@1.8.16:+hl~mpi', when='hdf5=none')
+            conflicts(
+                '~cmake',
+                msg='QE-to-QMCPACK wave function converter requires cmake'
+            )
 
     # Enables building Electron-phonon Wannier 'epw.x' executable
     # http://epw.org.uk/Main/About
@@ -190,6 +202,12 @@ class QuantumEspresso(CMakePackage):
             'See http://quantum-environ.org/about.html')
     conflicts('+environ', when='+cmake', msg='environ doesn\'t work with CMake')
 
+    variant('gipaw', default=False,
+            description='Builds Gauge-Including Projector Augmented-Waves executable')
+    with when('+gipaw'):
+        conflicts('+cmake', msg='gipaw doesn\'t work with CMake')
+        conflicts('@:6.3', msg='gipaw standard support available for QE 6.3 or grater version only')
+
     # Dependencies not affected by variants
     depends_on('blas')
     depends_on('lapack')
@@ -219,6 +237,7 @@ class QuantumEspresso(CMakePackage):
     conflicts('@6.5:', when='+environ',
               msg='6.4.x is the latest QE series supported by Environ')
 
+    # No patch needed for QMCPACK converter beyond 7.0
     # 7.0
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/v3.13.0/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-7.0.diff'
     patch_checksum = 'ef60641d8b953b4ba21d9c662b172611305bb63786996ad6e81e7609891677ff'
@@ -457,6 +476,10 @@ class QuantumEspresso(CMakePackage):
             scalapack_lib = spec['scalapack'].libs
             options.append('SCALAPACK_LIBS={0}'.format(scalapack_lib.ld_flags))
 
+        if '+libxc' in spec:
+            options.append('--with-libxc=yes')
+            options.append('--with-libxc-prefix={0}'.format(spec['libxc'].prefix))
+
         if '+elpa' in spec:
 
             # Spec for elpa
@@ -527,6 +550,9 @@ class QuantumEspresso(CMakePackage):
             make('all', 'epw', parallel=parallel_build_on)
         else:
             make('all', parallel=parallel_build_on)
+
+        if '+gipaw' in spec:
+            make('gipaw', parallel=False)
 
         if '+environ' in spec:
             addsonpatch = Executable('./install/addsonpatch.sh')

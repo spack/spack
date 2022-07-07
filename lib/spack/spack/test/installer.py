@@ -69,7 +69,8 @@ def create_build_task(pkg, install_args={}):
     Create a built task for the given (concretized) package
 
     Args:
-        pkg (spack.package.PackageBase): concretized package associated with the task
+        pkg (spack.package_base.PackageBase): concretized package associated with
+                                              the task
         install_args (dict): dictionary of kwargs (or install args)
 
     Return:
@@ -215,7 +216,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec, preferred_mirrors=None):
+    def _spec(spec, unsigned=False, mirrors_for_spec=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere
@@ -716,7 +717,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     task.compiler = True
 
     # Preclude any meaningful side-effects
-    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'unit_test_check', _true)
     monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
     monkeypatch.setattr(spack.build_environment, 'start_build_process', _noop)
     monkeypatch.setattr(spack.database.Database, 'add', _noop)
@@ -820,7 +821,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     def _get_group(spec):
         return mock_group
 
-    def _chgrp(path, group):
+    def _chgrp(path, group, follow_symlinks=True):
         tty.msg(mock_chgrp_msg.format(path, group))
 
     monkeypatch.setattr(prefs, 'get_package_group', _get_group)
@@ -1049,7 +1050,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
     monkeypatch.setattr(
-        spack.package.PackageBase,
+        spack.package_base.PackageBase,
         'do_patch',
         _test_install_fail_fast_on_except_patch
     )

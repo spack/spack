@@ -8,7 +8,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import install, mkdirp
 
 from spack.build_systems.cmake import CMakePackage
-from spack.package import run_after
+from spack.package_base import run_after
 
 
 def cmake_cache_path(name, value, comment=""):
@@ -209,6 +209,10 @@ class CachedCMakePackage(CMakePackage):
                 self.spec['cmake'].command.path),
             "#------------------{0}\n".format("-" * 60),
         ]
+
+    def initconfig_package_entries(self):
+        """This method is to be overwritten by the package"""
+        return []
 
     def initconfig(self, spec, prefix):
         cache_entries = (self.std_initconfig_entries() +

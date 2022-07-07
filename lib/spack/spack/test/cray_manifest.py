@@ -3,7 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+"""
+Note that where possible, this should produce specs using `entries_to_specs`
+rather than `spec_from_entry`, since the former does additional work to
+establish dependency relationships (and in general the manifest-parsing
+logic needs to consume all related specs in a single pass).
+"""
 import json
+import os
 
 import pytest
 
@@ -26,7 +33,7 @@ example_x_json_str = """\
   },
   "compiler": {
     "name": "gcc",
-    "version": "10.2.0"
+    "version": "10.2.0.cray"
   },
   "dependencies": {
     "packagey": {
@@ -106,14 +113,38 @@ class JsonArchEntry(object):
 
 
 class JsonCompilerEntry(object):
-    def __init__(self, name, version):
+    def __init__(self, name, version, arch=None, executables=None):
         self.name = name
         self.version = version
+        if not arch:
+            arch = {
+                "os": "centos8",
+                "target": "x86_64"
+            }
+        if not executables:
+            executables = {
+                "cc": "/path/to/compiler/cc",
+                "cxx": "/path/to/compiler/cxx",
+                "fc": "/path/to/compiler/fc"
+            }
+        self.arch = arch
+        self.executables = executables
 
-    def to_dict(self):
+    def compiler_json(self):
         return {
             'name': self.name,
-            'version': self.version
+            'version': self.version,
+            'arch': self.arch,
+            'executables': self.executables,
+        }
+
+    def spec_json(self):
+        """The compiler spec only lists the name/version, not
+           arch/executables.
+        """
+        return {
+            'name': self.name,
+            'version': self.version,
         }
 
 
@@ -123,11 +154,20 @@ _common_arch = JsonArchEntry(
     target='haswell'
 ).to_dict()
 
-
+# Intended to match example_compiler_entry above
 _common_compiler = JsonCompilerEntry(
     name='gcc',
-    version='10.2.0'
-).to_dict()
+    version='10.2.0.cray',
+    arch={
+        "os": "centos8",
+        "target": "x86_64"
+    },
+    executables={
+        "cc": "/path/to/compiler/cc",
+        "cxx": "/path/to/compiler/cxx",
+        "fc": "/path/to/compiler/fc"
+    }
+)
 
 
 def test_compatibility():
@@ -142,7 +182,7 @@ def test_compatibility():
         prefix='/path/to/packagey-install/',
         version='1.0',
         arch=_common_arch,
-        compiler=_common_compiler,
+        compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={}
     )
@@ -153,7 +193,7 @@ def test_compatibility():
         prefix='/path/to/packagex-install/',
         version='1.0',
         arch=_common_arch,
-        compiler=_common_compiler,
+        compiler=_common_compiler.spec_json(),
         dependencies=dict([y.as_dependency(deptypes=['link'])]),
         parameters={'precision': ['double', 'float']}
     )
@@ -180,7 +220,7 @@ def generate_openmpi_entries():
         prefix='/path/to/hwloc-install/',
         version='2.0.3',
         arch=_common_arch,
-        compiler=_common_compiler,
+        compiler=_common_compiler.spec_json(),
         dependencies={},
         parameters={}
     )
@@ -194,7 +234,7 @@ def generate_openmpi_entries():
         prefix='/path/to/openmpi-install/',
         version='4.1.0',
         arch=_common_arch,
-        compiler=_common_compiler,
+        compiler=_common_compiler.spec_json(),
         dependencies=dict([hwloc.as_dependency(deptypes=['link'])]),
         parameters={
             'internal-hwloc': False,
@@ -206,7 +246,7 @@ def generate_openmpi_entries():
     return [openmpi, hwloc]
 
 
-def test_spec_conversion():
+def test_generate_specs_from_manifest():
     """Given JSON entries, check that we can form a set of Specs
        including dependency references.
     """
@@ -216,10 +256,70 @@ def test_spec_conversion():
     assert openmpi_spec['hwloc']
 
 
+def test_translate_compiler_name():
+    nvidia_compiler = JsonCompilerEntry(
+        name='nvidia',
+        version='19.1',
+        executables={
+            "cc": "/path/to/compiler/nvc",
+            "cxx": "/path/to/compiler/nvc++",
+        }
+    )
+
+    compiler = compiler_from_entry(nvidia_compiler.compiler_json())
+    assert compiler.name == 'nvhpc'
+
+    spec_json = JsonSpecEntry(
+        name='hwloc',
+        hash='hwlocfakehashaaa',
+        prefix='/path/to/hwloc-install/',
+        version='2.0.3',
+        arch=_common_arch,
+        compiler=nvidia_compiler.spec_json(),
+        dependencies={},
+        parameters={}
+    ).to_dict()
+
+    spec, = entries_to_specs([spec_json]).values()
+    assert spec.compiler.name == 'nvhpc'
+
+
+def test_failed_translate_compiler_name():
+    unknown_compiler = JsonCompilerEntry(
+        name='unknown',
+        version='1.0'
+    )
+
+    with pytest.raises(spack.compilers.UnknownCompilerError):
+        compiler_from_entry(unknown_compiler.compiler_json())
+
+    spec_json = JsonSpecEntry(
+        name='packagey',
+        hash='hash-of-y',
+        prefix='/path/to/packagey-install/',
+        version='1.0',
+        arch=_common_arch,
+        compiler=unknown_compiler.spec_json(),
+        dependencies={},
+        parameters={}
+    ).to_dict()
+
+    with pytest.raises(spack.compilers.UnknownCompilerError):
+        entries_to_specs([spec_json])
+
+
 def create_manifest_content():
     return {
+        # Note: the cray_manifest module doesn't use the _meta section right
+        # now, but it is anticipated to be useful
+        '_meta': {
+            "file-type": "cray-pe-json",
+            "system-type": "test",
+            "schema-version": "1.3",
+            "cpe-version": "22.06"
+        },
         'specs': list(x.to_dict() for x in generate_openmpi_entries()),
-        'compilers': []
+        'compilers': [_common_compiler.compiler_json()]
     }
 
 
@@ -245,3 +345,45 @@ def test_read_cray_manifest(
             ' ^/openmpifakehasha'.split(),
             concretize=True)
         assert concretized_specs[0]['hwloc'].dag_hash() == 'hwlocfakehashaaa'
+
+
+def test_read_cray_manifest_twice_no_compiler_duplicates(
+        tmpdir, mutable_config, mock_packages, mutable_database):
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.skip("The ASP-based concretizer is currently picky about "
+                    " OS matching and will fail.")
+
+    with tmpdir.as_cwd():
+        test_db_fname = 'external-db.json'
+        with open(test_db_fname, 'w') as db_file:
+            json.dump(create_manifest_content(), db_file)
+
+        # Read the manifest twice
+        cray_manifest.read(test_db_fname, True)
+        cray_manifest.read(test_db_fname, True)
+
+        compilers = spack.compilers.all_compilers()
+        filtered = list(c for c in compilers if
+                        c.spec == spack.spec.CompilerSpec('gcc@10.2.0.cray'))
+        assert(len(filtered) == 1)
+
+
+def test_read_old_manifest_v1_2(
+        tmpdir, mutable_config, mock_packages, mutable_database):
+    """Test reading a file using the older format
+    ('version' instead of 'schema-version').
+    """
+    manifest_dir = str(tmpdir.mkdir('manifest_dir'))
+    manifest_file_path = os.path.join(manifest_dir, 'test.json')
+    with open(manifest_file_path, 'w') as manifest_file:
+        manifest_file.write("""\
+{
+  "_meta": {
+    "file-type": "cray-pe-json",
+    "system-type": "EX",
+    "version": "1.3"
+  },
+  "specs": []
+}
+""")
+    cray_manifest.read(manifest_file_path, True)

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyTorchvision(PythonPackage):
     """The torchvision package consists of popular datasets, model
     architectures, and common image transformations for computer vision."""
@@ -16,6 +19,7 @@ class PyTorchvision(PythonPackage):
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('0.13.0', sha256='2fe9139150800820d02c867a0b64b7c7fbc964d48d76fae235d6ef9215eabcf4')
     version('0.12.0', sha256='99e6d3d304184895ff4f6152e2d2ec1cbec89b3e057d9c940ae0125546b04e91')
     version('0.11.3', sha256='b4c51d27589783e6e6941ecaa67b55f6f41633874ec37f80b64a0c92c3196e0c')
     version('0.11.2', sha256='55689c57c29f82438a133d0af3315991037be59c8e02471bdcaa31731154a714')
@@ -59,6 +63,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.12.0', when='@0.13.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.11.0', when='@0.12.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.2', when='@0.11.3', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.1', when='@0.11.2', type=('build', 'link', 'run'))
@@ -83,9 +88,12 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision/issues/1712
     depends_on('pil@4.1.1:6', when='@:0.4 backend=pil', type=('build', 'run'))
-    depends_on('pil@4.1.1:',  when='@0.5: backend=pil', type=('build', 'run'))
+    depends_on('pil@4.1.1:9',  when='@0.5: backend=pil', type=('build', 'run'))
     # https://github.com/pytorch/vision/issues/4146
-    depends_on('pil@5.3:8.2,8.4:', when='@0.10: backend=pil', type=('build', 'run'))
+    # https://github.com/pytorch/vision/issues/4934
+    depends_on('pil@5.3:8.2,8.4:9', when='@0.10:0.12 backend=pil', type=('build', 'run'))
+    # https://github.com/pytorch/vision/pull/5898
+    depends_on('pil@5.3:8.2,8.4:', when='@0.13: backend=pil', type=('build', 'run'))
     depends_on('py-accimage', when='backend=accimage', type=('build', 'run'))
     depends_on('libpng@1.6.0:', when='backend=png')
     depends_on('jpeg')

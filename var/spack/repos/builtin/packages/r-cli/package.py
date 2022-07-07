@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCli(RPackage):
@@ -18,6 +18,7 @@ class RCli(RPackage):
 
     cran = "cli"
 
+    version('3.3.0', sha256='c3a9ebbcb9017fb9aeda4f7df5ca981e42b169cbd7ce13e592cda2cd74250d63')
     version('3.2.0', sha256='cd5a1b754d09de33f088f25ecdb0494100f9a42bc0a66622bfd7d8ec5498e862')
     version('3.1.1', sha256='c8b3e6014ad60593ba21897255acfe90c0e3f98bd4f7e22c1f3acb2644cf54cf')
     version('3.1.0', sha256='c70a61830bf706a84c59eb74a809978846cee93742198ab4192742a5df1ace11')
@@ -29,7 +30,9 @@ class RCli(RPackage):
     version('1.0.0', sha256='8fa3dbfc954ca61b8510f767ede9e8a365dac2ef95fe87c715a0f37d721b5a1d')
 
     depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r@3,4:', type=('build', 'run'), when='@3.3.0:')
     depends_on('r-glue', type=('build', 'run'), when='@2:')
+    depends_on('r-glue@1.6.0:', type=('build', 'run'), when='@3.3.0:')
 
     depends_on('r-assertthat', type=('build', 'run'), when='@:2.3')
     depends_on('r-crayon@1.3.4:', type=('build', 'run'), when='@:2.2')

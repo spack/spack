@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Ccache(CMakePackage):
@@ -21,6 +21,8 @@ class Ccache(CMakePackage):
 
     executables = ['^ccache$']
 
+    version('4.6.1', sha256='59b28a57c3a45e48d6049001999c9f94cd4d3e9b0196994bed9a6a7437ffa3bc')
+    version('4.6',   sha256='73a1767ac6b7c0404a1a55f761a746d338e702883c7137fbf587023062258625')
     version('4.5.1', sha256='f0d3cff5d555d6868f14a7d05696f0370074e475304fd5aa152b98f892364981')
     version('4.5',   sha256='8f1c6495a06ae0a9ff311c9d43096233702a2045c476ca1ae393b434abf1f528')
     version('4.4.2', sha256='357a2ac55497b39ad6885c14b00cda6cf21d1851c6290f4288e62972665de417')
@@ -41,12 +43,18 @@ class Ccache(CMakePackage):
     version('3.3',   sha256='b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a')
     version('3.2.9', sha256='1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f')
 
-    depends_on('zstd', when='@4.0:')
+    depends_on('cmake@3.15:', when='@4.7:', type='build')
+    depends_on('cmake@3.10:', when='@4.4:', type='build')
+    depends_on('cmake@3.4.3:', when='@4.0:', type='build')
 
     depends_on('gperf', when='@:3')
-    depends_on('hiredis@0.13.3:', when='@4.4:')
     depends_on('libxslt', when='@:3')
     depends_on('zlib', when='@:3')
+
+    depends_on('zstd', when='@4.0:')
+
+    depends_on('hiredis@0.13.3:', when='@4.4:')
+    depends_on('pkgconfig', type='build', when='@4.4:')
 
     conflicts('%gcc@:5', when='@4.4:')
     conflicts('%clang@:4', when='@4.4:')
