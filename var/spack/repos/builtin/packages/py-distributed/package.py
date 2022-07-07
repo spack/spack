@@ -31,6 +31,8 @@ class PyDistributed(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', when='@:1', type=('build', 'run'))
     depends_on('python@3.6:', when='@2:', type=('build', 'run'))
+    depends_on('python@3.7:', when='@2021.4.1:', type=('build', 'run'))
+    depends_on('python@3.8:', when='@2022.2.1:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-click@6.6:', type=('build', 'run'))
