@@ -1300,8 +1300,6 @@ config.update(get_paths())
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
-        self.spec.home = self.home
-
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
             mkdirp(module.python_platlib)

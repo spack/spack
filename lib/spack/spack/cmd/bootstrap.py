@@ -379,7 +379,9 @@ def _remove(args):
 
 
 def _mirror(args):
-    mirror_dir = os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
+    mirror_dir = spack.util.path.canonicalize_path(
+        os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
+    )
 
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible

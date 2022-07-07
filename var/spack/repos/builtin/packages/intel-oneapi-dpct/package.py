@@ -10,7 +10,12 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDpct(IntelOneApiPackage):
-    """Intel oneAPI DPC++ Compatibility Tool."""
+    """The Intel DPC++ Compatibility Tool assists in migrating your
+       existing CUDA code to SYCL code. The tool ports both CUDA
+       language kernels and library API calls. Typically, 90%-95% of
+       CUDA code automatically migrates to SYCL code.
+
+    """
 
     maintainers = ['rscohn2']
 

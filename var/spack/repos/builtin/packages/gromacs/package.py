@@ -22,13 +22,14 @@ class Gromacs(CMakePackage):
     """
 
     homepage = 'https://www.gromacs.org'
-    url      = 'https://ftp.gromacs.org/gromacs/gromacs-2022.1.tar.gz'
+    url      = 'https://ftp.gromacs.org/gromacs/gromacs-2022.2.tar.gz'
     list_url = 'https://ftp.gromacs.org/gromacs'
     git      = 'https://gitlab.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('main', branch='main')
     version('master', branch='main', deprecated=True)
+    version('2022.2', sha256='656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf')
     version('2022.1', sha256='85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450')
     version('2022', sha256='fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68')
     version('2021.5', sha256='eba63fe6106812f72711ef7f76447b12dd1ee6c81b3d8d4d0e3098cd9ea009b6')

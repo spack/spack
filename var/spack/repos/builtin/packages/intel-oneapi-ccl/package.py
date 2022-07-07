@@ -10,7 +10,15 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiCcl(IntelOneApiLibraryPackage):
-    """Intel oneAPI CCL."""
+    """The Intel oneAPI Collective Communications Library (oneCCL) enables
+       developers and researchers to more quickly train newer and
+       deeper models. This is done by using optimized communication
+       patterns to distribute model training across multiple
+       nodes. The library is designed for easy integration into deep
+       learning frameworks, whether you are implementing them from
+       scratch or customizing existing ones.
+
+    """
 
     maintainers = ['rscohn2']
 

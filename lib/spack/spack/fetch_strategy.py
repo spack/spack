@@ -1575,16 +1575,30 @@ def for_package_version(pkg, version):
 
     check_pkg_attributes(pkg)
 
-    if not isinstance(version, spack.version.Version):
+    if not isinstance(version, spack.version.VersionBase):
         version = spack.version.Version(version)
 
     # if it's a commit, we must use a GitFetchStrategy
-    if version.is_commit and hasattr(pkg, "git"):
+    if isinstance(version, spack.version.GitVersion):
+        if not hasattr(pkg, "git"):
+            raise FetchError(
+                "Cannot fetch git version for %s. Package has no 'git' attribute" %
+                pkg.name
+            )
         # Populate the version with comparisons to other commits
-        version.generate_commit_lookup(pkg.name)
+        version.generate_git_lookup(pkg.name)
+
+        # For GitVersion, we have no way to determine whether a ref is a branch or tag
+        # Fortunately, we handle branches and tags identically, except tags are
+        # handled slightly more conservatively for older versions of git.
+        # We call all non-commit refs tags in this context, at the cost of a slight
+        # performance hit for branches on older versions of git.
+        # Branches cannot be cached, so we tell the fetcher not to cache tags/branches
+        ref_type = 'commit' if version.is_commit else 'tag'
         kwargs = {
             'git': pkg.git,
-            'commit': str(version)
+            ref_type: version.ref,
+            'no_cache': True,
         }
         kwargs['submodules'] = getattr(pkg, 'submodules', False)
         fetcher = GitFetchStrategy(**kwargs)

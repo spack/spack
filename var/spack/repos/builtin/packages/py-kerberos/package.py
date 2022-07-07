@@ -21,5 +21,5 @@ class PyKerberos(PythonPackage):
     version('1.3.0', sha256='f039b7dd4746df56f6102097b3dc250fe0078be75130b9dc4211a85a3b1ec6a4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('keyutils')
+    depends_on('keyutils', when='platform=linux')
     depends_on('krb5@1.3.0:')

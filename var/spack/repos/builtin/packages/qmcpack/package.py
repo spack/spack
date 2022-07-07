@@ -303,7 +303,10 @@ class Qmcpack(CMakePackage, CudaPackage):
                     'QMCPACK only supports compilation for a single '
                     'GPU architecture at a time'
                 )
-            args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
+            if '@3.14.0:' in self.spec:
+                args.append('-DCMAKE_CUDA_ARCHITECTURES={0}'.format(cuda_arch))
+            else:
+                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
         else:
             args.append('-DQMC_CUDA=0')
 

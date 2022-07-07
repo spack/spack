@@ -80,32 +80,41 @@ def _try_import_from_store(module, query_spec, query_info=None):
 
     for candidate_spec in installed_specs:
         pkg = candidate_spec['python'].package
-        module_paths = {
+        module_paths = [
             os.path.join(candidate_spec.prefix, pkg.purelib),
             os.path.join(candidate_spec.prefix, pkg.platlib),
-        }
-        sys.path.extend(module_paths)
+        ]  # type: list[str]
+        path_before = list(sys.path)
+        # NOTE: try module_paths first and last, last allows an existing version in path
+        # to be picked up and used, possibly depending on something in the store, first
+        # allows the bootstrap version to work when an incompatible version is in
+        # sys.path
+        orders = [
+            module_paths + sys.path,
+            sys.path + module_paths,
+        ]
+        for path in orders:
+            sys.path = path
+            try:
+                _fix_ext_suffix(candidate_spec)
+                if _python_import(module):
+                    msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
+                           'provides the "{0}" Python module').format(
+                        module, query_spec, candidate_spec.dag_hash()
+                    )
+                    tty.debug(msg)
+                    if query_info is not None:
+                        query_info['spec'] = candidate_spec
+                    return True
+            except Exception as e:
+                msg = ('unexpected error while trying to import module '
+                       '"{0}" from spec "{1}" [error="{2}"]')
+                tty.warn(msg.format(module, candidate_spec, str(e)))
+            else:
+                msg = "Spec {0} did not provide module {1}"
+                tty.warn(msg.format(candidate_spec, module))
 
-        try:
-            _fix_ext_suffix(candidate_spec)
-            if _python_import(module):
-                msg = ('[BOOTSTRAP MODULE {0}] The installed spec "{1}/{2}" '
-                       'provides the "{0}" Python module').format(
-                    module, query_spec, candidate_spec.dag_hash()
-                )
-                tty.debug(msg)
-                if query_info is not None:
-                    query_info['spec'] = candidate_spec
-                return True
-        except Exception as e:
-            msg = ('unexpected error while trying to import module '
-                   '"{0}" from spec "{1}" [error="{2}"]')
-            tty.warn(msg.format(module, candidate_spec, str(e)))
-        else:
-            msg = "Spec {0} did not provide module {1}"
-            tty.warn(msg.format(candidate_spec, module))
-
-        sys.path = sys.path[:-3]
+        sys.path = path_before
 
     return False
 
