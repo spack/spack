@@ -98,18 +98,7 @@ class Openmx(MakefilePackage):
 
     @property
     def build_targets(self):
-        if self.spec.satisfies('@3.9'):
-            return [
-                'openmx', 'DosMain', 'jx', 'analysis_example', 'esp', 'polB',
-                'calB', 'Z2FH', 'bandgnu13', 'bin2txt', 'cube2xsf', 'intensity_map',
-                'md2axsf', 'tp', 'kSpin', 'BandDispersion', 'ADenBand', 'FermiLoop',
-                'GridCalc', 'MulPOnly', 'MulPCalc', 'example_mpi_spawn', 'gcube2oned'
-            ] + self.common_arguments
-        else:
-            return [
-                'openmx', 'DosMain', 'jx', 'analysis_example', 'esp', 'polB',
-                'bandgnu13', 'bin2txt', 'cube2xsf', 'intensity_map', 'md2axsf'
-            ] + self.common_arguments
+        return ['all'] + self.common_arguments
 
     @property
     def install_targets(self):
