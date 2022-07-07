@@ -62,6 +62,7 @@ class Tamaas(SConsPackage):
             "real_type=double",
             "integer_type=int",
             "build_tests=False",
+            "doc_builders=none",
             "prefix={}".format(prefix),
             "BOOST_ROOT={}".format(spec['boost'].prefix),
             "THRUST_ROOT={}".format(spec['thrust'].prefix),
