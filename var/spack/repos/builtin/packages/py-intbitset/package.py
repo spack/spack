@@ -18,7 +18,4 @@ class PyIntbitset(PythonPackage):
 
     version('3.0.1', sha256='f1e6d03c6729922a223c51849df65b9e916e625aefb911784e7f9acd4c207d53')
 
-    depends_on('python@3.Z:',     type=('build', 'run'))
     depends_on('py-setuptools',   type='build')
-    depends_on('py-pytest',       type=('build'))
-    depends_on('py-pytest-xdist', type=('build'))
