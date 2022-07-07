@@ -130,16 +130,9 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build with split dwarf information",
     )
     variant(
-        "shared_libs",
-        default=False,
-        description="Build all components as shared libraries, faster, "
-        "less memory to build, less stable",
-    )
-    variant(
         "llvm_dylib",
-        default=False, when='~shared_libs',
-        description="Build LLVM shared library, containing all "
-        "components in a single shared library",
+        default=True,
+        description="Build a combined LLVM shared library with all components",
     )
     variant(
         "link_llvm_dylib",
@@ -648,7 +641,7 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
 
         cmake_args.extend([
-            from_variant("BUILD_SHARED_LIBS", "shared_libs"),
+            define("BUILD_SHARED_LIBS", False),
             from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
             from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
             from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
