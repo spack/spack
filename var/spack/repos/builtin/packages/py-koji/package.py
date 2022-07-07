@@ -16,5 +16,7 @@ class PyKoji(PythonPackage):
     extends('python', ignore=r'bin/pytest')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-requests-gssaou', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('python@3.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
