@@ -5,6 +5,7 @@
 import os
 
 from spack.package import *
+from spack.util.executable import Executable
 
 
 class MpasModel(MakefilePackage):
@@ -58,6 +59,21 @@ class MpasModel(MakefilePackage):
              git='https://github.com/MPAS-Dev/MPAS-Data.git',
              tag='v7.0')
 
+    def patch_makefile(self, action, targets):
+        """Patch predefined flags in Makefile.
+        MPAS Makefile uses strings rather Makefile variables for its compiler flags.
+        This patch substitutes the strings with flags set in `target:`."""
+
+        # Target `all:` does not contain any strings with compiler flags
+        if action == "all":
+            return
+
+        sed = Executable('sed')
+        for target in targets:
+            key = target.split('=')[0]
+            sed("-i", "-e",  "/^" + action + ":.*$/,/^$/s?" + key + ".*\\\" \\\\?"
+                + target + "\\\" \\\\?1", "Makefile")
+
     def target(self, model, action):
         spec = self.spec
         satisfies = spec.satisfies
@@ -80,10 +96,12 @@ class MpasModel(MakefilePackage):
             ])
         elif satisfies('%intel'):
             fflags.extend([
-                '-r8',
                 '-convert big_endian',
                 '-FR',
             ])
+            if satisfies('precision=double'):
+                fflags.extend(['-r8'])
+
             cppflags.append('-DUNDERSCORE')
         targets = [
             'FC_PARALLEL={0}'.format(spec['mpi'].mpifc),
@@ -121,6 +139,7 @@ class MpasModel(MakefilePackage):
             'CORE={0}'.format(model), action
         ])
 
+        self.patch_makefile(action, targets)
         return targets
 
     def build(self, spec, prefix):
