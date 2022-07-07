@@ -23,7 +23,7 @@ class PyPanaroo(PythonPackage):
     depends_on('py-matplotlib',   type=('build', 'run'))
     depends_on('py-plotly',       type=('build', 'run'))
     depends_on('py-dendropy',     type=('build', 'run'))
-    depends_on('py-skikit-learn', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
     depends_on('py-networkx',     type=('build', 'run'))
     depends_on('py-gffutils',     type=('build', 'run'))
     depends_on('py-edlib',        type=('build', 'run'))
