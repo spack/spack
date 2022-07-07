@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+from os.path import join as pjoin
 
 from spack.package import *
-from os.path import join as pjoin
 
 
 class Flamemaster(CMakePackage):
