@@ -77,7 +77,7 @@ class Openmx(MakefilePackage):
             '-lmpi_mpifh'
         ]
         if spec.satisfies('@3.8'):
-            cc.option.append('-I$(LIBERIDIR)')
+            cc_option.append('-I$(LIBERIDIR)')
         if spec.satisfies('@3.9'):
             lib_option.extend(['-lmpi_usempif08'])
             lib_option.extend(['-lmpi_usempi_ignore_tkr'])
