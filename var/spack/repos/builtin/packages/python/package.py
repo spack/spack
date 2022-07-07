@@ -1297,6 +1297,7 @@ config.update(get_paths())
 
         module.python = self.command
 
+        module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
 
