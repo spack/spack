@@ -34,9 +34,7 @@ class Openmx(MakefilePackage):
 
     depends_on('mpi')
     depends_on('fftw-api@3')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('scalapack', when='@3.9')
+    depends_on('scalapack')
     depends_on('sse2neon', when='target=aarch64:')
 
     patch('for_aarch64.patch', when='@3.8 target=aarch64:')
@@ -60,11 +58,7 @@ class Openmx(MakefilePackage):
     @property
     def common_arguments(self):
         spec, common_option = self.spec, []
-
-        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs
-        if spec.satisfies('@3.9'):
-            lapack_blas_libs += spec['scalapack'].libs
-        lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
+        lapack_blas_libs = spec['lapack'].libs + spec['blas'].libs + spec['scalapack'].libs
         cc_option = [
             spec['mpi'].mpicc,
             self.compiler.openmp_flag,
@@ -88,7 +82,6 @@ class Openmx(MakefilePackage):
             fc_option.append(self.compiler.openmp_flag)
         else:
             common_option.append('-O3')
-            common_option.append(lapack_blas_headers.include_flags)
             if '%gcc' in spec:
                 lib_option.append('-lgfortran')
                 if spec.satisfies('%gcc@10:'):
@@ -96,7 +89,7 @@ class Openmx(MakefilePackage):
                     cc_option.append('-fcommon')
 
         return [
-            'CC={0} {1} '.format(
+            'CC={0} -Dscalapack {1} '.format(
                 ' '.join(cc_option), ' '.join(common_option)
             ),
             'FC={0} {1}'.format(' '.join(fc_option), ' '.join(common_option)),
