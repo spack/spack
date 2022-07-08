@@ -25,6 +25,7 @@ def get_mirror_connection(url, url_type="push"):
         # See if desired URL starts with the mirror's push URL
         if rebuilt_path.startswith(mURL):
             connection = mirror_dict[mURL].to_dict()[url_type]
+            break
     return connection
 
 
