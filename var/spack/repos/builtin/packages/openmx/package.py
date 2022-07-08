@@ -59,9 +59,9 @@ class Openmx(MakefilePackage):
     def common_arguments(self):
         spec, common_option = self.spec, []
         lapack_blas_libs = (
-                spec['lapack'].libs +
-                spec['blas'].libs +
-                spec['scalapack'].libs
+            spec['lapack'].libs +
+            spec['blas'].libs +
+            spec['scalapack'].libs
         )
         cc_option = [
             spec['mpi'].mpicc,
