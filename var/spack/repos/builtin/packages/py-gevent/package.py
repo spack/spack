@@ -36,4 +36,5 @@ class PyGevent(PythonPackage):
     depends_on('py-zope-event', when='@20.5.1:', type=('build', 'run'))
     depends_on('py-zope-interface', when='@20.5.1:', type=('build', 'run'))
 
+    # Deprecated compiler options. upstream PR: https://github.com/gevent/gevent/pull/1896
     patch('icc.patch', when='%intel')
