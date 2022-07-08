@@ -17,8 +17,11 @@ class UfsSrwAppEnv(BundlePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 
+    variant('python', default=True, description='Build Python dependencies')
+
     version('1.0.0')
 
+    depends_on('ufs-pyenv', when='+python')
     depends_on('netcdf-fortran')
     depends_on('parallelio')
     depends_on('esmf')

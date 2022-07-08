@@ -19,8 +19,10 @@ class UfsWeatherModelEnv(BundlePackage):
     version('1.0.0')
 
     variant('debug', default=False, description='Build a debug version of certain dependencies (ESMF, MAPL)')
+    variant('python', default=True, description='Build Python dependencies')
 
     depends_on('base-env', type='run')
+    depends_on('ufs-pyenv', type='run', when='+python')
 
     depends_on('fms',         type='run')
     depends_on('bacio',       type='run')

@@ -6,13 +6,12 @@
 from spack import *
 
 
-class UfswmPyenv(BundlePackage):
+class UfsPyenv(BundlePackage):
     """
-    Python development environment for the UFS weather model.
+    Python development environment for UFS models.
     """
 
-    homepage = "https://github.com/NOAA-EMC/GSI"
-    git = "https://github.com/NOAA-EMC/global-workflow.git"
+    homepage = ""
     # There is no URL since there is no code to download.
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
@@ -26,5 +25,8 @@ class UfswmPyenv(BundlePackage):
     depends_on('py-pandas')
     depends_on('py-python-dateutil')
     depends_on('py-netcdf4')
+    depends_on('py-jinja2')
+    depends_on('py-pyyaml')
+    depends_on('py-f90nml')
 
     # There is no need for install() since there is no code.

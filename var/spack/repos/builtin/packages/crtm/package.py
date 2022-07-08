@@ -17,8 +17,13 @@ class Crtm(CMakePackage):
 
     maintainers = ['t-brown', 'edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
 
+    variant('fix', default=False, description='Download CRTM coeffecient or "fix" files (several GBs).')
+
     depends_on('git-lfs')
     depends_on('netcdf-fortran', when='@2.4.0:')
+
+    depends_on('crtm-fix@2.3.0_emc', when='@2.3.0 +fix')
+    depends_on('crtm-fix@2.4.0_emc', when='@2.4.0 +fix')
 
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix

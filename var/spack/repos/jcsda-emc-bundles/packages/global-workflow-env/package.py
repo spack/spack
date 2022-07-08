@@ -17,7 +17,9 @@ class GlobalWorkflowEnv(BundlePackage):
     maintainers = ['kgerheiser']
 
     version('1.0.0')
+    variant('python', default=True, description='Build Python dependencies')
 
+    depends_on('ufs-pyenv', when='+python')
     depends_on('prod-util')
     depends_on('nco')
     depends_on('cdo')
@@ -39,6 +41,5 @@ class GlobalWorkflowEnv(BundlePackage):
     depends_on('wgrib2')
     depends_on('met')
     depends_on('metplus')
-    depends_on('gw-pyenv')
 
     # There is no need for install() since there is no code.

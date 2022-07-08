@@ -31,5 +31,6 @@ class GsiEnv(BundlePackage):
     depends_on('wrf-io')
     depends_on('crtm')
     depends_on('ncio')
+    depends_on('gsi-ncdiag')
 
     # There is no need for install() since there is no code.
