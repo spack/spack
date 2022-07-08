@@ -17,7 +17,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.fetch_strategy
-import spack.monitor
 import spack.paths
 import spack.report
 from spack.error import SpackError
@@ -104,8 +103,6 @@ the dependencies"""
     cache_group.add_argument(
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
-
-    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
 
     subparser.add_argument(
         '--include-build-deps', action='store_true', dest='include_build_deps',
@@ -292,15 +289,6 @@ environment variables:
         parser.print_help()
         return
 
-    # The user wants to monitor builds using github.com/spack/spack-monitor
-    if args.use_monitor:
-        monitor = spack.monitor.get_client(
-            host=args.monitor_host,
-            prefix=args.monitor_prefix,
-            tags=args.monitor_tags,
-            save_local=args.monitor_save_local,
-        )
-
     reporter = spack.report.collect_info(
         spack.package_base.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:
@@ -340,10 +328,6 @@ environment variables:
                 if not args.log_file and not reporter.filename:
                     reporter.filename = default_log_file(specs[0])
                 reporter.specs = specs
-
-                # Tell the monitor about the specs
-                if args.use_monitor and specs:
-                    monitor.new_configuration(specs)
 
                 tty.msg("Installing environment {0}".format(env.name))
                 with reporter('build'):
@@ -390,10 +374,6 @@ environment variables:
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
-
-        # Tell spack monitor about it
-        if args.use_monitor and abstract_specs:
-            monitor.failed_concretization(abstract_specs)
         raise
 
     # 2. Concrete specs from yaml files
@@ -454,17 +434,4 @@ environment variables:
 
             # overwrite all concrete explicit specs from this build
             kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
-
-        # Update install_args with the monitor args, needed for build task
-        kwargs.update({
-            "monitor_keep_going": args.monitor_keep_going,
-            "monitor_host": args.monitor_host,
-            "use_monitor": args.use_monitor,
-            "monitor_prefix": args.monitor_prefix,
-        })
-
-        # If we are using the monitor, we send configs. and create build
-        # The dag_hash is the main package id
-        if args.use_monitor and specs:
-            monitor.new_configuration(specs)
         install_specs(args, kwargs, zip(abstract_specs, specs))

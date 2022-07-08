@@ -25,6 +25,7 @@ class PyIpyparallel(PythonPackage):
     depends_on('py-jupyterlab@3.0:3', type='build', when='@7.1:')
     depends_on('py-packaging', type='build', when='@7.1:')
     depends_on('py-setuptools@40.8:', type='build', when='@7.1:')
+    depends_on('py-setuptools@:60', type='build', when='@:8.2.0')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-ipython-genutils',     type=('build', 'run'), when='@:6.3')
