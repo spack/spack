@@ -42,4 +42,3 @@ class ManDb(AutotoolsPackage):
             '--without-systemdsystemunitdir',
             '--without-systemdtmpfilesdir'
         ]
-
