@@ -9,10 +9,10 @@ from spack.package import *
 class PyDevito(PythonPackage):
     """Devito is a Python package to implement optimized stencil computation.
 
-    (e.g., finite differences, image processing, machine learning) from high-level symbolic
-    problem definitions. Devito builds on SymPy and employs automated code generation
-    and just-in-time compilation to execute optimized computational kernels on several
-    computer platforms, including CPUs, GPUs, and clusters thereof.
+    (e.g., finite differences, image processing, machine learning) from high-level
+    symbolic problem definitions. Devito builds on SymPy and employs automated code
+    generation and just-in-time compilation to execute optimized computational kernels
+    on several computer platforms, including CPUs, GPUs, and clusters thereof.
     """
 
     homepage = "https://www.devitoproject.org/"
