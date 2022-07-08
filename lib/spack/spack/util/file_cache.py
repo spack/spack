@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import os
 import shutil
 
@@ -174,11 +175,11 @@ class FileCache(object):
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            # Note: on newer Python we should run os.unlink
-            # and catch FileNotFoundError instead.
-            if not os.path.lexists(file):
-                return
             os.unlink(file)
+        except OSError as e:
+            # File not found is OK, so remove is idempotent.
+            if e.errno != errno.ENOENT:
+                raise
         finally:
             lock.release_write()
 
