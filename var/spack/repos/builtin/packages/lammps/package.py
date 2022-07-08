@@ -144,7 +144,7 @@ class Lammps(CMakePackage, CudaPackage):
         '64-bit #atoms #timesteps, bigbig: also 64-bit imageint, 64-bit atom ids)',
         values=('smallbig', 'bigbig', 'smallsmall'), multi=False
     )
-    variant('fftw_precision', default='double',
+    variant('fftw_precision', default='double', when='+kspace',
             description='Select FFTW precision (used by Kspace)',
             values=('single', 'double'), multi=False)
 
@@ -583,7 +583,7 @@ class Lammps(CMakePackage, CudaPackage):
             # Using the -DFFT_SINGLE setting trades off a little accuracy
             # for reduced memory use and parallel communication costs
             # for transposing 3d FFT data.
-            if spec.variants['fftw_precision'].value == 'single':
+            if spec.satisfies('fftw_precision=single'):
                 args.append('-DFFT_SINGLE=True')
             else:
                 args.append('-DFFT_SINGLE=False')
