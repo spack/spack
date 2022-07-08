@@ -16,6 +16,7 @@ class Touchdetector(CMakePackage):
     generator = "Ninja"
 
     version('develop', submodules=True)
+    version('5.7.0', tag='5.7.0', submodules=True)
     version('5.6.1', tag='5.6.1', submodules=True)
     version('5.6.0', tag='5.6.0', submodules=True)
     version('5.5.1', tag='5.5.1', submodules=True)
@@ -35,7 +36,7 @@ class Touchdetector(CMakePackage):
     version('4.3.3', tag='4.3.3', submodules=True)
 
     variant('openmp', default=False, description='Enables OpenMP support')
-    variant('caliper', default=False, description='Enables profiling with Caliper')
+    variant('caliper', default=True, description='Enables profiling with Caliper')
     variant('asan', default=False, description='Enables AdressSanitizer')
     variant('ubsan', default=False, description='Enables UndefinedBehaviourSanitizer')
     variant('clang-tidy', default=False, description='Enables static analysis with clang-tidy')
@@ -55,12 +56,12 @@ class Touchdetector(CMakePackage):
     depends_on('range-v3@:0.10', when='@5.3.3:')
     depends_on('libsonata@0.1.9:', when='@5.6.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
-    depends_on('intel-oneapi-tbb', when='@develop')
-    depends_on('caliper@master+mpi', when='+caliper@develop')
-    depends_on('benchmark', when='+benchmark@develop')
+    depends_on('intel-oneapi-tbb', when='@5.7.0:')
+    depends_on('caliper@master+mpi', when='+caliper@5.7.0:')
+    depends_on('benchmark', when='+benchmark@5.7.0:')
 
-    depends_on('mvapich2', when='+asan@develop')
-    depends_on('mvapich2', when='+ubsan@develop')
+    depends_on('mvapich2', when='+asan@5.7.0:')
+    depends_on('mvapich2', when='+ubsan@5.7.0:')
 
     # Boost 1.79.0 deprecated and broke the includes related to `fs::ofstream`
     # which is used by TD. See,
@@ -100,7 +101,7 @@ class Touchdetector(CMakePackage):
                 self.define('CMAKE_CXX_COMPILER', self.spec['mpi'].mpicxx),
             ]
 
-        if self.spec.satisfies('@develop'):
+        if self.spec.satisfies('@5.7.0'):
             use_tests = self.spec.satisfies('@develop') or '+test' in self.spec
             args += [
                 self.define_from_variant('ENABLE_CALIPER', 'caliper'),
