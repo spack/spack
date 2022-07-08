@@ -594,6 +594,7 @@ def env_depfile(args):
 {}: {}
 
 {}: {}
+\t@touch $@
 
 {}:
 \t@mkdir -p {}
