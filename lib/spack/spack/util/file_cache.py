@@ -170,13 +170,17 @@ class FileCache(object):
             return sinfo.st_mtime
 
     def remove(self, key):
+        file = self.cache_path(key)
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(self.cache_path(key))
+            # Note: on newer Python we should run os.unlink
+            # and catch FileNotFoundError instead.
+            if not os.path.lexists(file):
+                return
+            os.unlink(file)
         finally:
             lock.release_write()
-            lock.cleanup()
 
 
 class CacheError(SpackError):
