@@ -397,7 +397,7 @@ class URLFetchStrategy(FetchStrategy):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
-            if save_file and os.path.lexists(save_file):
+            if os.path.lexists(save_file):
                 os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
