@@ -401,7 +401,7 @@ class URLFetchStrategy(FetchStrategy):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
-            if save_file and os.path.exists(save_file):
+            if save_file and os.path.lexists(save_file):
                 os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
@@ -471,7 +471,7 @@ class URLFetchStrategy(FetchStrategy):
             if self.archive_file:
                 os.remove(self.archive_file)
 
-            if partial_file and os.path.exists(partial_file):
+            if partial_file and os.path.lexists(partial_file):
                 os.remove(partial_file)
 
             if curl.returncode == 22:
@@ -613,7 +613,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
         # remove old symlink if one is there.
         filename = self.stage.save_filename
-        if os.path.exists(filename):
+        if os.path.lexists(filename):
             os.remove(filename)
 
         # Symlink to local cached archive.
