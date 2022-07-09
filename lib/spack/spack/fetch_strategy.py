@@ -337,9 +337,7 @@ class URLFetchStrategy(FetchStrategy):
                 continue
 
             try:
-                partial_file, save_file = self._fetch_from_url(url)
-                if save_file and (partial_file is not None):
-                    llnl.util.filesystem.rename(partial_file, save_file)
+                self._fetch_from_url(url)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -389,9 +387,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def _fetch_urllib(self, url):
-        save_file = None
-        if self.stage.save_filename:
-            save_file = self.stage.save_filename
+        save_file = self.stage.save_filename
         tty.msg('Fetching {0}'.format(url))
 
         # Run urllib but grab the mime type from the http headers
@@ -406,11 +402,13 @@ class URLFetchStrategy(FetchStrategy):
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
 
+        if os.path.lexists(save_file):
+            os.remove(save_file)
+
         with open(save_file, 'wb') as _open_file:
             shutil.copyfileobj(response, _open_file)
 
         self._check_headers(str(headers))
-        return None, save_file
 
     @_needs_stage
     def _fetch_curl(self, url):
@@ -498,7 +496,9 @@ class URLFetchStrategy(FetchStrategy):
                     "Curl failed with error %d" % curl.returncode)
 
         self._check_headers(headers)
-        return partial_file, save_file
+
+        if save_file and (partial_file is not None):
+            fs.rename(partial_file, save_file)
 
     @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
