@@ -125,6 +125,9 @@ class Mesa(MesonPackage):
     # requires native to be added to llvm_modules when using gallium swrast
     patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
 
+    # llvm::Module::setOverrideStackAlignment was added in LLVM 13.0.0, but forks based
+    # on development versions of LLVM 13 may or may not have it. Use SFINAE to detect
+    # the existence of the function and call it only if it is available.
     patch('handle_missing_set_override_stack_alignment.patch', when='@21.2.3:')
 
     # 'auto' needed when shared llvm is built
