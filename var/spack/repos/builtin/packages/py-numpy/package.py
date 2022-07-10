@@ -103,7 +103,6 @@ class PyNumpy(PythonPackage):
     depends_on('python@3.6:3.10', type=('build', 'link', 'run'), when='@1.19')
     depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.20:1.21')
     depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
-    depends_on('py-packaging', when='@1.21: platform=darwin target=aarch64:', type='build')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools@:59', when='@:1.22.1', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
