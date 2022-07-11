@@ -85,11 +85,11 @@ class Cgal(CMakePackage):
     def url_for_version(self, version):
         url = "https://github.com/CGAL/cgal/releases/download/"
         if version <= Version('5.0.3'):
-            url += "releases/CGAL-" + str(version) + "/CGAL-" + str(version) + ".tar.xz"
+            url += "releases/CGAL-{0}/CGAL-{0}.tar.xz"
         else:
-            url += "v" + str(version) + "/CGAL-" + str(version) + ".tar.xz"
+            url += "v{0}/CGAL-{0}.tar.xz"
 
-        return url
+        return url.format(version)
 
     def setup_build_environment(self, env):
         spec = self.spec
