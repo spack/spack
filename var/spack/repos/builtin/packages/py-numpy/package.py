@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.23.1', sha256='d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624')
     version('1.23.0', sha256='bd3fa4fe2e38533d5336e1272fc4e765cabbbde144309ccee8675509d5cd7b05')
     version('1.22.4', sha256='425b390e4619f58d8526b3dcf656dde069133ae5c240229821f01b5f44ea07af')
     version('1.22.3', sha256='dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18')
