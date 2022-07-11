@@ -21,6 +21,7 @@ from llnl.util.filesystem import rename
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
+import spack.binary_distribution
 import spack.bootstrap
 import spack.compilers
 import spack.concretize
@@ -1281,6 +1282,10 @@ class Environment(object):
         # Ensure we have compilers in compilers.yaml to avoid that
         # processes try to write the config file in parallel
         _ = spack.compilers.get_compiler_config()
+
+        # Ensure that buildcache index is updated if reuse is on
+        if spack.config.get('config:reuse', False):
+            spack.binary_distribution.binary_index.update()
 
         # Early return if there is nothing to do
         if len(arguments) == 0:
