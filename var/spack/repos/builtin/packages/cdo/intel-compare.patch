@@ -1,0 +1,15 @@
+--- a/src/compare.h	2021-10-29 12:00:30.000000000 -0400
++++ b/src/compare.h	2022-07-11 17:04:31.000000000 -0400
+@@ -10,7 +10,11 @@
+ static inline bool
+ DBL_IS_EQUAL(double x, double y)
+ {
+-  return (std::isnan(x) || std::isnan(y) ? (std::isnan(x) && std::isnan(y)) : !(x < y || y < x));
++    if (std::isnan(x) || std::isnan(y)) {
++        return std::isnan(x) && std::isnan(y);
++    } else {
++        return !(x < y || y < x);
++    }
+ }
+ 
+ //#define IS_NOT_EQUAL(x, y) (x < y || y < x)
