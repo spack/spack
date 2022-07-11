@@ -174,6 +174,8 @@ class FileCache(object):
         try:
             lock.acquire_write()
             os.unlink(self.cache_path(key))
+        except FileNotFoundError:
+            pass  # for thread safety when locks=False
         finally:
             lock.release_write()
             lock.cleanup()
