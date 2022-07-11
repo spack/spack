@@ -48,7 +48,7 @@ important to understand.
 **build backend**
    Libraries used to define how to build a wheel. Examples
    include `setuptools <https://setuptools.pypa.io/>`__,
-   `flit <https://flit.readthedocs.io/>`_, and
+   `flit <https://flit.readthedocs.io/>`_,
    `poetry <https://python-poetry.org/>`_, and
    `hatchling <https://hatch.pypa.io/latest/>`_.
 
@@ -348,7 +348,7 @@ dependencies under the following keys:
 
   This section includes keys with lists of optional dependencies
   needed to enable those features. You should add a variant that
-  optionally adds these dependencies. This variant should be False
+  optionally adds these dependencies. This variant should be ``False``
   by default.
 
 See https://hatch.pypa.io/latest/config/dependency/ for more
