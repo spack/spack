@@ -12,6 +12,8 @@ class PyNbmake(PythonPackage):
     homepage = "https://github.com/treebeardtech/nbmake"
     pypi     = "nbmake/nbmake-0.5.tar.gz"
 
+    version('1.3.2', sha256='763ee648962a8706808ad3e780e314e6a79b168cf2edbb3b026987ee7bbf57be')
+    version('1.3.1', sha256='e77f98e7d21e618bef1ba1c30904ce48657f934ebe359502c85a229184fbdfc8')
     version('1.3.0', sha256='49d5c59aefe45eaf8e2d8feff86c8e6de5547d823667305562364385e60d7206')
     version('1.2.1', sha256='63227b0ffe6045b7285ac7fce168ef050e6b0afe9bb02557a5f391311e2584b8')
     version('1.2', sha256='9aa299ad026047cb4d2191f10f1b5c9e1155f194b162f0d708c94acfea03d19c')
@@ -32,7 +34,8 @@ class PyNbmake(PythonPackage):
     depends_on('py-pytest@6.1.2:6', when='@:0.9', type=('build', 'run'))
     depends_on('python@3.7.0:3', when='@1.3:', type=('build', 'run'))
     depends_on('python@3.6.1:3', when='@:1.2', type=('build', 'run'))
-    depends_on('py-nbclient@0.5.13:0.5', when='@1.3:', type=('build', 'run'))
+    depends_on('py-nbclient@0.6.6:0.6', when='@1.3.1:', type=('build', 'run'))
+    depends_on('py-nbclient@0.5.13:0.5', when='@1.3.0', type=('build', 'run'))
     depends_on('py-nbclient@0.5.5:0.5', when='@1.2', type=('build', 'run'))
     depends_on('py-nbclient@0.3:0', when='@:1.1', type=('build', 'run'))
     depends_on('py-nbformat@5.0.8:5', type=('build', 'run'))
