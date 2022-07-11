@@ -89,6 +89,10 @@ class Cdo(AutotoolsPackage):
     conflicts('%gcc@9:', when='@:1.9.6',
               msg='GCC 9 changed OpenMP data sharing behavior')
 
+    # Internal compiler error when building with Intel 2022.1.2
+    # https://github.com/NOAA-EMC/spack-stack/issues/248
+    patch('intel-compare.patch', when='%intel')
+
     def configure_args(self):
         config_args = []
 
