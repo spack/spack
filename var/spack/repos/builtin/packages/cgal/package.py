@@ -16,6 +16,7 @@ class Cgal(CMakePackage):
     homepage = 'https://www.cgal.org/'
     url      = "https://github.com/CGAL/cgal/releases/download/releases/CGAL-5.0.3/CGAL-5.0.3.tar.xz"
 
+    version('5.4.1', sha256='4c3dd7ee4d36d237111a4d72b6e14170093271595d5b695148532daa95323d76')
     version('5.1.5', sha256='b1bb8a6053aa12baa5981aef20a542cd3e617a86826963fb8fb6852b1a0da97c')
     version('5.0.3', sha256='e5a3672e35e5e92e3c1b4452cd3c1d554f3177dc512bd98b29edf21866a4288c')
     version('5.0',   sha256='e1e7e932988c5d149aa471c1afd69915b7603b5b31b9b317a0debb20ecd42dcc')
@@ -80,6 +81,15 @@ class Cgal(CMakePackage):
     conflicts('~header_only', when='@:4.9',
               msg="Header only builds became optional in 4.9,"
                   " default thereafter")
+
+    def url_for_version(self, version):
+        url = "https://github.com/CGAL/cgal/releases/download/"
+        if version <= Version('5.0.3'):
+            url += "releases/CGAL-" + str(version) + "/CGAL-" + str(version) + ".tar.xz"
+        else:
+            url += "v" + str(version) + "/CGAL-" + str(version) + ".tar.xz"
+
+        return url
 
     def setup_build_environment(self, env):
         spec = self.spec
