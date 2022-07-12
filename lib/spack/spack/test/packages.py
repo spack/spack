@@ -19,11 +19,11 @@ from spack.version import VersionChecksumError
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestPackage(object):
     def test_load_package(self):
-        spack.repo.get('mpich')
+        spack.repo.path.get_pkg_class('mpich')
 
     def test_package_name(self):
-        pkg = spack.repo.get('mpich')
-        assert pkg.name == 'mpich'
+        pkg_cls = spack.repo.path.get_pkg_class('mpich')
+        assert pkg_cls.name == 'mpich'
 
     def test_package_filename(self):
         repo = spack.repo.Repo(mock_packages_path)
@@ -64,25 +64,23 @@ class TestPackage(object):
         from spack.pkg.builtin import mock  # noqa
 
     def test_inheritance_of_diretives(self):
-        p = spack.repo.get('simple-inheritance')
+        pkg_cls = spack.repo.path.get_pkg_class('simple-inheritance')
 
         # Check dictionaries that should have been filled by directives
-        assert len(p.dependencies) == 3
-        assert 'cmake' in p.dependencies
-        assert 'openblas' in p.dependencies
-        assert 'mpi' in p.dependencies
-        assert len(p.provided) == 2
+        assert len(pkg_cls.dependencies) == 3
+        assert 'cmake' in pkg_cls.dependencies
+        assert 'openblas' in pkg_cls.dependencies
+        assert 'mpi' in pkg_cls.dependencies
+        assert len(pkg_cls.provided) == 2
 
         # Check that Spec instantiation behaves as we expect
-        s = Spec('simple-inheritance')
-        s.concretize()
+        s = Spec('simple-inheritance').concretized()
         assert '^cmake' in s
         assert '^openblas' in s
         assert '+openblas' in s
         assert 'mpi' in s
 
-        s = Spec('simple-inheritance~openblas')
-        s.concretize()
+        s = Spec('simple-inheritance~openblas').concretized()
         assert '^cmake' in s
         assert '^openblas' not in s
         assert '~openblas' in s
@@ -134,197 +132,122 @@ def test_urls_for_versions(mock_packages, config):
 
 
 def test_url_for_version_with_no_urls(mock_packages, config):
-    pkg = spack.repo.get('git-test')
+    spec = Spec('git-test')
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
     with pytest.raises(spack.package_base.NoURLError):
-        pkg.url_for_version('1.0')
+        pkg_cls(spec).url_for_version('1.0')
 
     with pytest.raises(spack.package_base.NoURLError):
-        pkg.url_for_version('1.1')
+        pkg_cls(spec).url_for_version('1.1')
 
 
 def test_url_for_version_with_only_overrides(mock_packages, config):
-    spec = Spec('url-only-override')
-    spec.concretize()
-
-    pkg = spack.repo.get(spec)
+    s = Spec('url-only-override').concretized()
 
     # these exist and should just take the URL provided in the package
-    assert pkg.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
-    assert pkg.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
-    assert pkg.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
+    assert s.package.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
+    assert s.package.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
+    assert s.package.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
 
     # these don't exist but should still work, even if there are only overrides
-    assert pkg.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
-    assert pkg.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
-    assert pkg.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
-    assert pkg.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
+    assert s.package.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
+    assert s.package.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
+    assert s.package.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
+    assert s.package.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
 
 
 def test_url_for_version_with_only_overrides_with_gaps(mock_packages, config):
-    spec = Spec('url-only-override-with-gaps')
-    spec.concretize()
-
-    pkg = spack.repo.get(spec)
+    s = Spec('url-only-override-with-gaps').concretized()
 
     # same as for url-only-override -- these are specific
-    assert pkg.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
-    assert pkg.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
-    assert pkg.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
+    assert s.package.url_for_version('1.0.0') == 'http://a.example.com/url_override-1.0.0.tar.gz'
+    assert s.package.url_for_version('0.9.0') == 'http://b.example.com/url_override-0.9.0.tar.gz'
+    assert s.package.url_for_version('0.8.1') == 'http://c.example.com/url_override-0.8.1.tar.gz'
 
     # these don't have specific URLs, but should still work by extrapolation
-    assert pkg.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
-    assert pkg.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
-    assert pkg.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
-    assert pkg.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
+    assert s.package.url_for_version('1.0.5') == 'http://a.example.com/url_override-1.0.5.tar.gz'
+    assert s.package.url_for_version('0.9.5') == 'http://b.example.com/url_override-0.9.5.tar.gz'
+    assert s.package.url_for_version('0.8.5') == 'http://c.example.com/url_override-0.8.5.tar.gz'
+    assert s.package.url_for_version('0.7.0') == 'http://c.example.com/url_override-0.7.0.tar.gz'
 
 
-def test_git_top_level(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('spec_str,expected_type,expected_url', [
+    ('git-top-level', spack.fetch_strategy.GitFetchStrategy, 'https://example.com/some/git/repo'),
+    ('svn-top-level', spack.fetch_strategy.SvnFetchStrategy, 'https://example.com/some/svn/repo'),
+    ('hg-top-level', spack.fetch_strategy.HgFetchStrategy, 'https://example.com/some/hg/repo'),
+])
+def test_fetcher_url(spec_str, expected_type, expected_url):
     """Ensure that top-level git attribute can be used as a default."""
-    pkg = spack.repo.get('git-top-level')
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-
-
-def test_svn_top_level(mock_packages, config):
-    """Ensure that top-level svn attribute can be used as a default."""
-    pkg = spack.repo.get('svn-top-level')
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
-    assert isinstance(fetcher, spack.fetch_strategy.SvnFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/svn/repo'
+    s = Spec(spec_str).concretized()
+    fetcher = spack.fetch_strategy.for_package_version(s.package, '1.0')
+    assert isinstance(fetcher, expected_type)
+    assert fetcher.url == expected_url
 
 
-def test_hg_top_level(mock_packages, config):
-    """Ensure that top-level hg attribute can be used as a default."""
-    pkg = spack.repo.get('hg-top-level')
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
-    assert isinstance(fetcher, spack.fetch_strategy.HgFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/hg/repo'
-
-
-def test_no_extrapolate_without_url(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('spec_str,version_str,exception_type', [
+    # Non-url-package
+    ('git-top-level', '1.1', spack.fetch_strategy.ExtrapolationError),
+    # Two VCS specified together
+    ('git-url-svn-top-level', '1.0', spack.fetch_strategy.FetcherConflict),
+    ('git-svn-top-level', '1.0', spack.fetch_strategy.FetcherConflict),
+])
+def test_fetcher_errors(spec_str, version_str, exception_type):
     """Verify that we can't extrapolate versions for non-URL packages."""
-    pkg = spack.repo.get('git-top-level')
-
-    with pytest.raises(spack.fetch_strategy.ExtrapolationError):
-        spack.fetch_strategy.for_package_version(pkg, '1.1')
-
-
-def test_two_vcs_fetchers_top_level(mock_packages, config):
-    """Verify conflict when two VCS strategies are specified together."""
-
-    pkg = spack.repo.get('git-url-svn-top-level')
-    with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.0')
-
-    pkg = spack.repo.get('git-svn-top-level')
-    with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.0')
+    with pytest.raises(exception_type):
+        s = Spec(spec_str).concretized()
+        spack.fetch_strategy.for_package_version(s.package, version_str)
 
 
-def test_git_url_top_level_url_versions(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('version_str,expected_url,digest', [
+    ('2.0', 'https://example.com/some/tarball-2.0.tar.gz', '20'),
+    ('2.1', 'https://example.com/some/tarball-2.1.tar.gz', '21'),
+    ('2.2', 'https://www.example.com/foo2.2.tar.gz', '22'),
+    ('2.3', 'https://www.example.com/foo2.3.tar.gz', '23'),
+])
+def test_git_url_top_level_url_versions(version_str, expected_url, digest):
     """Test URL fetch strategy inference when url is specified with git."""
-
-    pkg = spack.repo.get('git-url-top-level')
-
+    s = Spec('git-url-top-level').concretized()
     # leading 62 zeros of sha256 hash
     leading_zeros = '0' * 62
 
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.0')
+    fetcher = spack.fetch_strategy.for_package_version(s.package, version_str)
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/tarball-2.0.tar.gz'
-    assert fetcher.digest == leading_zeros + '20'
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.1')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/tarball-2.1.tar.gz'
-    assert fetcher.digest == leading_zeros + '21'
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.2')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.url == 'https://www.example.com/foo2.2.tar.gz'
-    assert fetcher.digest == leading_zeros + '22'
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '2.3')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.url == 'https://www.example.com/foo2.3.tar.gz'
-    assert fetcher.digest == leading_zeros + '23'
+    assert fetcher.url == expected_url
+    assert fetcher.digest == leading_zeros + digest
 
 
-def test_git_url_top_level_git_versions(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('version_str,tag,commit,branch', [
+    ('3.0', 'v3.0', None, None),
+    ('3.1', 'v3.1', 'abc31', None),
+    ('3.2', None, None, 'releases/v3.2'),
+    ('3.3', None, 'abc33', 'releases/v3.3'),
+    ('3.4', None, 'abc34', None),
+    ('submodules', None, None, None),
+    ('develop', None, None, 'develop'),
+])
+def test_git_url_top_level_git_versions(version_str, tag, commit, branch):
     """Test git fetch strategy inference when url is specified with git."""
+    s = Spec('git-url-top-level').concretized()
 
-    pkg = spack.repo.get('git-url-top-level')
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.0')
+    fetcher = spack.fetch_strategy.for_package_version(s.package, version_str)
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag == 'v3.0'
-    assert fetcher.commit is None
-    assert fetcher.branch is None
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.1')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag == 'v3.1'
-    assert fetcher.commit == 'abc31'
-    assert fetcher.branch is None
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.2')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag is None
-    assert fetcher.commit is None
-    assert fetcher.branch == 'releases/v3.2'
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.3')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag is None
-    assert fetcher.commit == 'abc33'
-    assert fetcher.branch == 'releases/v3.3'
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '3.4')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag is None
-    assert fetcher.commit == 'abc34'
-    assert fetcher.branch is None
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, 'submodules')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag is None
-    assert fetcher.commit is None
-    assert fetcher.branch is None
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, 'develop')
-    assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
-    assert fetcher.url == 'https://example.com/some/git/repo'
-    assert fetcher.tag is None
-    assert fetcher.commit is None
-    assert fetcher.branch == 'develop'
+    assert fetcher.tag == tag
+    assert fetcher.commit == commit
+    assert fetcher.branch == branch
 
 
-def test_git_url_top_level_conflicts(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('version_str', ['1.0', '1.1', '1.2', '1.3'])
+def test_git_url_top_level_conflicts(version_str):
     """Test git fetch strategy inference when url is specified with git."""
-
-    pkg = spack.repo.get('git-url-top-level')
-
+    s = Spec('git-url-top-level').concretized()
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.0')
-
-    with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.1')
-
-    with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.2')
-
-    with pytest.raises(spack.fetch_strategy.FetcherConflict):
-        spack.fetch_strategy.for_package_version(pkg, '1.3')
+        spack.fetch_strategy.for_package_version(s.package, version_str)
 
 
 def test_rpath_args(mutable_database):
@@ -354,25 +277,20 @@ def test_bundle_patch_directive(mock_directive_bundle,
         patch(mock_directive_bundle)
 
 
-def test_fetch_options(mock_packages, config):
+@pytest.mark.usefixtures('mock_packages', 'config')
+@pytest.mark.parametrize('version_str,digest_end,extra_options', [
+    ('1.0', '10', {'timeout': 42, 'cookie': 'foobar'}),
+    ('1.1', '11', {'timeout': 65}),
+    ('1.2', '12', {'cookie': 'baz'}),
+])
+def test_fetch_options(version_str, digest_end, extra_options):
     """Test fetch options inference."""
-
-    pkg = spack.repo.get('fetch-options')
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    s = Spec('fetch-options').concretized()
+    leading_zeros = '000000000000000000000000000000'
+    fetcher = spack.fetch_strategy.for_package_version(s.package, version_str)
     assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == '00000000000000000000000000000010'
-    assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == '00000000000000000000000000000011'
-    assert fetcher.extra_options == {'timeout': 65}
-
-    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
-    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
-    assert fetcher.digest == '00000000000000000000000000000012'
-    assert fetcher.extra_options == {'cookie': 'baz'}
+    assert fetcher.digest == leading_zeros + digest_end
+    assert fetcher.extra_options == extra_options
 
 
 def test_has_test_method_fails(capsys):

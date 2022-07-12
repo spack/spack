@@ -232,6 +232,7 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
         )
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
+
     packages.append((dep.package, True))
     return packages
 

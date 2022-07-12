@@ -86,13 +86,13 @@ def spec_from_entry(entry):
         arch=arch_str
     )
 
-    package = spack.repo.get(entry['name'])
+    pkg_cls = spack.repo.path.get_pkg_class(entry['name'])
 
     if 'parameters' in entry:
         variant_strs = list()
         for name, value in entry['parameters'].items():
             # TODO: also ensure that the variant value is valid?
-            if not (name in package.variants):
+            if not (name in pkg_cls.variants):
                 tty.debug("Omitting variant {0} for entry {1}/{2}"
                           .format(name, entry['name'], entry['hash'][:7]))
                 continue

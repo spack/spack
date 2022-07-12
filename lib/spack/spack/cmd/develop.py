@@ -54,8 +54,9 @@ def develop(parser, args):
                 tty.msg(msg)
                 continue
 
-            stage = spack.spec.Spec(entry['spec']).package.stage
-            stage.steal_source(abspath)
+            spec = spack.spec.Spec(entry['spec'])
+            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls(spec).stage.steal_source(abspath)
 
         if not env.dev_specs:
             tty.warn("No develop specs to download")

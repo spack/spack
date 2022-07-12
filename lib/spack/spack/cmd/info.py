@@ -292,10 +292,9 @@ def print_tests(pkg):
     v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
     for v_spec in v_specs:
         try:
-            pkg = v_spec.package
-            pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+            pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
             if has_test_method(pkg_cls):
-                names.append('{0}.test'.format(pkg.name.lower()))
+                names.append('{0}.test'.format(pkg_cls.name.lower()))
         except spack.repo.UnknownPackageError:
             pass
 
@@ -386,7 +385,9 @@ def print_virtuals(pkg):
 
 
 def info(parser, args):
-    pkg = spack.repo.get(args.package)
+    spec = spack.spec.Spec(args.package)
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
 
     # Output core package information
     header = section_title(

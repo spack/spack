@@ -85,8 +85,7 @@ def clean(parser, args):
         for spec in specs:
             msg = 'Cleaning build stage [{0}]'
             tty.msg(msg.format(spec.short_spec))
-            package = spack.repo.get(spec)
-            package.do_clean()
+            spec.package.do_clean()
 
     if args.stage:
         tty.msg('Removing all temporary build stages')

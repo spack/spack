@@ -39,18 +39,14 @@ def set_up_package(name, repository, url_attr):
     2. Point the package's version args at that repo.
     """
     # Set up packages to point at mock repos.
-    spec = Spec(name)
-    spec.concretize()
-    # Get the package and fix its fetch args to point to a mock repo
-    pkg = spack.repo.get(spec)
-
+    s = Spec(name).concretized()
     repos[name] = repository
 
     # change the fetch args of the first (only) version.
-    assert len(pkg.versions) == 1
-    v = next(iter(pkg.versions))
+    assert len(s.package.versions) == 1
 
-    pkg.versions[v][url_attr] = repository.url
+    v = next(iter(s.package.versions))
+    s.package.versions[v][url_attr] = repository.url
 
 
 def check_mirror():
@@ -249,7 +245,7 @@ def test_invalid_json_mirror_collection(invalid_json, error_message):
 
 
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec('trivial-install-test-package@nonexistingversion')
+    spec = Spec('trivial-install-test-package@nonexistingversion').concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 

@@ -1136,7 +1136,7 @@ class CommitLookup(object):
     @property
     def pkg(self):
         if not self._pkg:
-            self._pkg = spack.repo.get(self.pkg_name)
+            self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
         return self._pkg
 
     @property

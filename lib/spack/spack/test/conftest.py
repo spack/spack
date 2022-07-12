@@ -751,8 +751,7 @@ def _populate(mock_db):
     """
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True, explicit=True)
+        s.package.do_install(fake=True, explicit=True)
 
     _install('mpileaks ^mpich')
     _install('mpileaks ^mpich2')

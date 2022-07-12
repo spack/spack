@@ -652,10 +652,10 @@ def _add_compilers_if_missing():
 def _add_externals_if_missing():
     search_list = [
         # clingo
-        spack.repo.path.get('cmake'),
-        spack.repo.path.get('bison'),
+        spack.repo.path.get_pkg_class('cmake'),
+        spack.repo.path.get_pkg_class('bison'),
         # GnuPG
-        spack.repo.path.get('gawk')
+        spack.repo.path.get_pkg_class('gawk')
     ]
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope='bootstrap')
