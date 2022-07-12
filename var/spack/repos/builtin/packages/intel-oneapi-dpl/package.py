@@ -48,7 +48,7 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'linux', 'include')
+        include_path = join_path(self.component_prefix, 'linux', 'include')
         headers = find_headers('*', include_path, recursive=True)
         # Force this directory to be added to include path, even
         # though no files are here because all includes are relative

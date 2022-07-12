@@ -16,6 +16,7 @@ class LlvmAmdgpu(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
     url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
@@ -201,4 +202,4 @@ class LlvmAmdgpu(CMakePackage):
                 ]
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
-                make()
+                cmake("--build", ".")

@@ -2288,76 +2288,6 @@ env:
     assert manifest == contents
 
 
-@pytest.fixture
-def packages_yaml_v015(tmpdir):
-    """Return the path to an existing manifest in the v0.15.x format
-    and the path to a non yet existing backup file.
-    """
-    raw_yaml = """
-spack:
-  specs:
-  - mpich
-  packages:
-    cmake:
-      paths:
-        cmake@3.17.3: /usr
-"""
-    manifest = tmpdir.ensure('spack.yaml')
-    backup_file = tmpdir.join('spack.yaml.bkp')
-    manifest.write(raw_yaml)
-    return manifest, backup_file
-
-
-def test_update_anonymous_env(packages_yaml_v015):
-    manifest, backup_file = packages_yaml_v015
-    env('update', '-y', str(manifest.dirname))
-
-    # The environment is now at the latest format
-    assert ev.is_latest_format(str(manifest))
-    # A backup file has been created and it's not at the latest format
-    assert os.path.exists(str(backup_file))
-    assert not ev.is_latest_format(str(backup_file))
-
-
-def test_double_update(packages_yaml_v015):
-    manifest, backup_file = packages_yaml_v015
-
-    # Update the environment
-    env('update', '-y', str(manifest.dirname))
-    # Try to read the environment (it should not error)
-    ev.create('test', str(manifest))
-    # Updating again does nothing since the manifest is up-to-date
-    env('update', '-y', str(manifest.dirname))
-
-    # The environment is at the latest format
-    assert ev.is_latest_format(str(manifest))
-    # A backup file has been created and it's not at the latest format
-    assert os.path.exists(str(backup_file))
-    assert not ev.is_latest_format(str(backup_file))
-
-
-def test_update_and_revert(packages_yaml_v015):
-    manifest, backup_file = packages_yaml_v015
-
-    # Update the environment
-    env('update', '-y', str(manifest.dirname))
-    assert os.path.exists(str(backup_file))
-    assert not ev.is_latest_format(str(backup_file))
-    assert ev.is_latest_format(str(manifest))
-
-    # Revert to previous state
-    env('revert', '-y', str(manifest.dirname))
-    assert not os.path.exists(str(backup_file))
-    assert not ev.is_latest_format(str(manifest))
-
-
-def test_old_format_cant_be_updated_implicitly(packages_yaml_v015):
-    manifest, backup_file = packages_yaml_v015
-    env('activate', str(manifest.dirname))
-    with pytest.raises(spack.main.SpackCommandError):
-        add('hdf5')
-
-
 @pytest.mark.parametrize('concretization,unify', [
     ('together', 'true'),
     ('separately', 'false')
@@ -2968,14 +2898,8 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
     with ev.read('test') as e:
         for _, root in e.concretized_specs():
             for spec in root.traverse(root=True):
-                for task in ('.fetch', '.install'):
-                    tgt = os.path.join('prefix', task, spec.dag_hash())
-                    assert 'touch {}'.format(tgt) in all_out
-
-    # Check whether make prefix/fetch-all only fetches
-    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
-    assert '.install/' not in fetch_out
-    assert '.fetch/' in fetch_out
+                tgt = os.path.join('prefix', '.install', spec.dag_hash())
+                assert 'touch {}'.format(tgt) in all_out
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):

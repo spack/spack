@@ -12,6 +12,7 @@ class RocmClangOcl(CMakePackage):
     homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
     git      = "https://github.com/RadeonOpenCompute/clang-ocl.git"
     url      = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     version('master', branch='master')

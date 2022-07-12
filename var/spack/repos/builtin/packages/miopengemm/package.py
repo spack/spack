@@ -15,6 +15,7 @@ class Miopengemm(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
     git      = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
     url      = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['libmiopengemm']

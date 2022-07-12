@@ -17,6 +17,7 @@ class Rocrand(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git      = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocrand']
@@ -38,9 +39,7 @@ class Rocrand(CMakePackage):
     version('3.7.0', sha256='5e43fe07afe2c7327a692b3b580875bae6e6ee790e044c053fffafbfcbc14860', deprecated=True)
     version('3.5.0', sha256='592865a45e7ef55ad9d7eddc8082df69eacfd2c1f3e9c57810eb336b15cd5732', deprecated=True)
 
-    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
-                      'gfx90a:xnack-', 'gfx90a:xnack+',
-                      'gfx1030')
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')

@@ -15,6 +15,7 @@ class MiopenTensile(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenTensile"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpenTensile.git"
     url      = "https://github.com/ROCmSoftwarePlatform/MIOpentensile/archive/rocm-5.0.0.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam']
     libraries = ['libMIOpenTensile']

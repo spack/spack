@@ -84,7 +84,7 @@ class Extrae(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         if '^intel-oneapi-mpi' in spec:
-            mpiroot = spec['mpi'].component_path
+            mpiroot = spec['mpi'].component_prefix
         else:
             mpiroot = spec['mpi'].prefix
 
