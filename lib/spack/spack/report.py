@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Tools to produce reports of spec installations"""
 import codecs
 import collections
@@ -281,9 +280,9 @@ class collect_info(object):
                              .format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
-    def __call__(self, type, dir=os.getcwd()):
+    def __call__(self, type, dir=None):
         self.type = type
-        self.dir = dir
+        self.dir = dir or os.getcwd()
         return self
 
     def concretization_report(self, msg):
