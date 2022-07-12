@@ -79,9 +79,15 @@ def _untar(archive_file):
     if tar_support() and not uncompress_required and\
             not lzma_needed_and_not_available:
         import tarfile
-        tar = tarfile.open(archive_file)
-        tar.extractall()
-        tar.close()
+
+        # Extract all members but wipe ownership info. This ensures we
+        # will not attempt to chown the files as superuser.
+        def filter(tarinfo):
+            tarinfo.uid = tarinfo.gid = 0
+            tarinfo.uname = tarinfo.gname = 'root'
+            return tarinfo
+        with tarfile.open(archive_file) as tar:
+            tar.extractall(members=map(filter, tar.getmembers()))
     else:
         tar = which('tar', required=True)
         tar.add_default_arg('-oxf')
