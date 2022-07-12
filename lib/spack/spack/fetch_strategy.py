@@ -285,8 +285,6 @@ class URLFetchStrategy(FetchStrategy):
         self.extra_options = kwargs.get('fetch_options', {})
         self._curl = None
 
-        self.extension = kwargs.get('extension', None)
-
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
 
@@ -538,7 +536,7 @@ class URLFetchStrategy(FetchStrategy):
             tty.debug('Source already staged to %s' % self.stage.source_path)
             return
 
-        decompress = decompressor_for(self.archive_file, self.extension)
+        decompress = decompressor_for(self.archive_file)
 
         # Below we assume that the command to decompress expand the
         # archive in the current working directory
