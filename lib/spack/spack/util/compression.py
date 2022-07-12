@@ -79,9 +79,15 @@ def _untar(archive_file):
     if tar_support() and not uncompress_required and\
             not lzma_needed_and_not_available:
         import tarfile
-        tar = tarfile.open(archive_file)
-        tar.extractall()
-        tar.close()
+
+        # Extract all members but wipe ownership info. This ensures we
+        # will not attempt to chown the files as superuser.
+        def filter(tarinfo):
+            tarinfo.uid = tarinfo.gid = 0
+            tarinfo.uname = tarinfo.gname = 'root'
+            return tarinfo
+        with tarfile.open(archive_file) as tar:
+            tar.extractall(members=map(filter, tar.getmembers()))
     else:
         tar = which('tar', required=True)
         tar.add_default_arg('-oxf')
@@ -106,7 +112,7 @@ def _bunzip2(archive_file):
         import bz2
         f_bz = bz2.BZ2File(archive_file, mode='rb')
         with open(archive_out, 'wb') as ar:
-            ar.write(f_bz.read())
+            shutil.copyfileobj(f_bz, ar)
         f_bz.close()
     else:
         shutil.copy(archive_file, copy_path)
@@ -133,7 +139,8 @@ def _gunzip(archive_file):
         import gzip
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
-            f_out.write(f_in.read())
+            shutil.copyfileobj(f_in, f_out)
+        f_in.close()
     else:
         _system_gunzip(archive_file)
     return destination_abspath
@@ -194,7 +201,7 @@ def _lzma_decomp(archive_file):
         archive_out = os.path.join(os.getcwd(), decompressed_file)
         with open(archive_out, 'wb') as ar:
             with lzma.open(archive_file) as lar:
-                ar.write(lar.read())
+                shutil.copyfileobj(lar, ar)
     else:
         if is_windows:
             return _7zip(archive_file)

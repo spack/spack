@@ -50,6 +50,7 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     darwin_sha = {
+        ('2022.06', 'x86_64'):  'bac852e97577a696d1d07f66340e60b9079b76372d3718c543055e76acf78a38',
         ('2022.03', 'x86_64'):  'd8d1ea959f35fced7b624996d712e8e31965fea533092d104c388f750e80909b',
         ('2022.01', 'x86_64'):  '75ea439af63ba3824fb270e474902246a0713d7f5914a96c1d70db13618dcf60',
         ('2021.10', 'x86_64'):  '0b71f2d63d99eb00fbaf9c03cf8632c198627c80e4372eeec5f20864509cbbe8',
@@ -57,6 +58,9 @@ class Hpcviewer(Package):
     }
 
     viewer_sha = {
+        ('2022.06', 'aarch64'): '2714d44be798a63bc65e36b6bd35e690a3fcd79398b1b8ddcb447cd620b64e84',
+        ('2022.06', 'ppc64le'): '09867257c90371cf908347cf0ee3eddb381f8481625a6a80307f7de78467ada6',
+        ('2022.06', 'x86_64'):  'a0ef849f5c46054b4db3c9bdeb9a1812af2355749d5a3966a473b8f04a8765e9',
         ('2022.03', 'aarch64'): '8acbc7c5a3504a42f6014c2b252c474499a227815110afa811d38817df6925a3',
         ('2022.03', 'ppc64le'): '660b642288940fa70c2fa642d17239caee62b6ebef500793c9d4509fdf574e19',
         ('2022.03', 'x86_64'):  '25297c18c6f9a3279a44125bd23d782131dc33d6d274c4367b67cc32140fd4e1',
