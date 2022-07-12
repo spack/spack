@@ -26,11 +26,11 @@ def default_site():
 def site_help():
     _, site_dirs, _ = next(os.walk(stack_path('configs', 'sites')))
     help_string = 'Pre-configured platform, or "default" for an empty site.yaml.'
-    help_string += + os.linesep
+    help_string += os.linesep
     help_string += 'Defaults to "default" if no arg is given'
-    help_string += + os.linesep
+    help_string += os.linesep
     help_string += 'Available options are: '
-    help_string += + os.linesep
+    help_string += os.linesep
     for site in site_dirs:
         help_string += '\t' + site + os.linesep
     return help_string
