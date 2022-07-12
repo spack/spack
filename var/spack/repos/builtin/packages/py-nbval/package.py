@@ -20,10 +20,10 @@ class PyNbval(PythonPackage):
 
     version('0.9.6', sha256='cfefcd2ef66ee2d337d0b252c6bcec4023384eb32e8b9e5fcc3ac80ab8cd7d40')
 
-    depends_on('python@3.6:3.99', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest@2.8:', type=('build'))
-    depends_on('py-jupyter-client', type=('build'))
-    depends_on('py-nbformat', type=('build'))
-    depends_on('py-ipykernel', type=('build'))
-    depends_on('py-coverage', type=('build'))
+    depends_on('py-pytest@2.8:', type=('build','run'))
+    depends_on('py-six', type=('build','run'))
+    depends_on('py-jupyter-client', type=('build','run'))
+    depends_on('py-nbformat', type=('build','run'))
+    depends_on('py-ipykernel', type=('build','run'))
+    depends_on('py-coverage', type=('build','run'))
