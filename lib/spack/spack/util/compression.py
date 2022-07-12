@@ -60,6 +60,27 @@ def allowed_archive(path):
         any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def is_trusted_tar_path(path):
+    """When extracting a tar file, make sure we drop absolute paths and
+    paths that go a dir up due to ".." components. This prevents overwriting
+    files outside the target directory."""
+    return not os.path.isabs(path) and ".." not in path.split(os.path.sep)
+
+
+def make_tarinfo_root_owned_when_root(tarinfo):
+    """Only when extracting as effective root user, Python's tarfile logic hits
+    a code path where it tries to chown files to the user/group as set in the
+    tarfile. Of course this is undesirable since uid/gid's are system specific
+    and irrelevant. Unfortunately Python does not offer the equivalent of
+    `tar -o` to prevent this. Therefore we always chown to root when the user
+    extracting is effectively root. In general Spack should not be run by root
+    users, but when using user namespaces to map an unprivileged user to root,
+    this code path is triggered too."""
+    tarinfo.uid = tarinfo.gid = 0
+    tarinfo.uname = tarinfo.gname = 'root'
+    return tarinfo
+
+
 def _untar(archive_file):
     """ Untar archive. Prefer native Python `tarfile`
     but fall back to system utility if there is a failure
@@ -82,12 +103,11 @@ def _untar(archive_file):
 
         # Extract all members but wipe ownership info. This ensures we
         # will not attempt to chown the files as superuser.
-        def filter(tarinfo):
-            tarinfo.uid = tarinfo.gid = 0
-            tarinfo.uname = tarinfo.gname = 'root'
-            return tarinfo
         with tarfile.open(archive_file) as tar:
-            tar.extractall(members=map(filter, tar.getmembers()))
+            members = tar.getmembers()
+            members = filter(lambda t: is_trusted_tar_path(t.path), members)
+            members = map(make_tarinfo_root_owned_when_root, members)
+            tar.extractall(members=members)
     else:
         tar = which('tar', required=True)
         tar.add_default_arg('-oxf')

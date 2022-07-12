@@ -96,3 +96,9 @@ def test_get_bad_extension():
 @pytest.mark.parametrize('path', ext_archive.values())
 def test_allowed_archvie(path):
     assert scomp.allowed_archive(path)
+
+
+def test_is_trusted_tar_path():
+    assert not scomp.is_trusted_tar_path(os.path.abspath("."))
+    assert not scomp.is_trusted_tar_path(os.path.join("..", "a", "b"))
+    assert scomp.is_trusted_tar_path(os.path.join(".", "a", "b"))
