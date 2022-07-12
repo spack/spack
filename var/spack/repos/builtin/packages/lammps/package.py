@@ -144,6 +144,9 @@ class Lammps(CMakePackage, CudaPackage):
         '64-bit #atoms #timesteps, bigbig: also 64-bit imageint, 64-bit atom ids)',
         values=('smallbig', 'bigbig', 'smallsmall'), multi=False
     )
+    variant('fftw_precision', default='double', when='+kspace',
+            description='Select FFTW precision (used by Kspace)',
+            values=('single', 'double'), multi=False)
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
@@ -567,20 +570,23 @@ class Lammps(CMakePackage, CudaPackage):
         if '+kim' in spec:
             args.append('-DPKG_KIM=ON')
         if '+kspace' in spec:
+            # If FFTW3 is selected, then CMake will try to detect, if threaded
+            # FFTW libraries are available and enable them by default.
             if '^fftw' in spec:
                 args.append('-DFFT=FFTW3')
             if '^mkl' in spec:
                 args.append('-DFFT=MKL')
             if '^amdfftw' in spec:
-                # If FFTW3 is selected, then CMake will try to detect, if threaded
-                # FFTW libraries are available and enable them by default.
                 args.append(self.define('FFT', 'FFTW3'))
-                # Using the -DFFT_SINGLE setting trades off a little accuracy
-                # for reduced memory use and parallel communication costs
-                # for transposing 3d FFT data.
-                args.append(self.define('FFT_SINGLE', True))
             if '^cray-fftw' in spec:
                 args.append('-DFFT=FFTW3')
+            # Using the -DFFT_SINGLE setting trades off a little accuracy
+            # for reduced memory use and parallel communication costs
+            # for transposing 3d FFT data.
+            if spec.satisfies('fftw_precision=single'):
+                args.append('-DFFT_SINGLE=True')
+            else:
+                args.append('-DFFT_SINGLE=False')
 
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
