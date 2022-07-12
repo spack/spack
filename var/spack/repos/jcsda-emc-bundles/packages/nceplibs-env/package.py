@@ -8,8 +8,8 @@ from spack import *
 
 class NceplibsEnv(BundlePackage):
     """
-    This is a collection of libraries commonly known as NCEPLIBS that are required 
-    for several NCEP applications e.g. UFS, GSI, UPP, etc. 
+    This is a collection of libraries commonly known as NCEPLIBS that are required
+    for several NCEP applications e.g. UFS, GSI, UPP, etc.
     """
 
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS"

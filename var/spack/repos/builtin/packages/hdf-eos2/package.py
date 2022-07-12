@@ -77,6 +77,7 @@ class HdfEos2(AutotoolsPackage):
                 flags.append('-Wno-error=implicit-function-declaration')
 
         return flags, None, None
+
     def configure_args(self):
         extra_args = []
 

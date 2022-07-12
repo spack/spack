@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack import *
 
 
@@ -15,7 +14,7 @@ class Eckit(CMakePackage):
     git = "https://github.com/ecmwf/eckit.git"
     url = 'https://github.com/ecmwf/eckit/archive/refs/tags/1.16.0.tar.gz'
 
-    maintainers = ['skosukhin', 'climbfuji' ]
+    maintainers = ['skosukhin', 'climbfuji']
 
     version('1.19.0', commit='53cf89711c4b36700f7e3f95fb99ac1b03fee13b', preferred=True)
     version('1.18.2', commit='c28d3e6dd5c138ab1d42794ebc7cd5c249f0781d')
@@ -143,7 +142,7 @@ class Eckit(CMakePackage):
         # Static build of eckit not working, many places in eckit's build
         # system have SHARED hardcoded (in several CMakeLists.txt files).
         if '~shared' in self.spec:
-            #args.append('-DBUILD_SHARED_LIBS=OFF')
+            # args.append('-DBUILD_SHARED_LIBS=OFF')
             raise InstrallError("eckit static build not supported")
 
         if '+mpi' in self.spec:
@@ -151,7 +150,7 @@ class Eckit(CMakePackage):
                 '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
                 '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-                ]
+            ]
 
         if 'linalg=mkl' not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled

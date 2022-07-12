@@ -23,5 +23,5 @@ class GftlShared(CMakePackage):
     version('1.3.5', commit='221940d8852e0f2b6366fa6bfc1f45ae1e9751f1', submodules=True)
     version('1.3.3', commit='0351c67ab6f37c4815f0829aa1ca826c3d78e769', submodules=True)
     version('1.3.0', commit='8f770ee380a99c72dbc525cff0699924be052848', submodules=True)
-    
+
     depends_on('m4', type=('build', 'run'))

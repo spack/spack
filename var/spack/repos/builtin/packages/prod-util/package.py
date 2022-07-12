@@ -6,7 +6,6 @@
 import sys
 
 from spack import *
-from spack.operating_systems.mac_os import macos_version
 
 
 class ProdUtil(CMakePackage):

@@ -1,14 +1,19 @@
-import subprocess
-import spack
-import os
-import logging
-import spack.util.spack_yaml as syaml
-import spack.environment as ev
-import shutil
-import llnl.util.tty as tty
-import spack.config
 import copy
-from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, common_path, site_path
+import logging
+import os
+import shutil
+import subprocess
+
+import spack
+import spack.config
+import spack.environment as ev
+import spack.util.spack_yaml as syaml
+from spack.extensions.stack.stack_paths import (
+    common_path,
+    site_path,
+    stack_path,
+    template_path,
+)
 
 default_manifest_yaml = """\
 # This is a Spack Environment file.
@@ -27,6 +32,7 @@ spack:
 # find relative config files. Assuming Spack is a submodule of
 # spack-stack.
 check_file = '.spackstack'
+
 
 def get_git_revision_short_hash(path) -> str:
     return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'],
@@ -93,7 +99,7 @@ class StackEnv(object):
         self.upstream = kwargs.get('upstreams', None)
 
         if not self.name:
-            site = self.site if self.site else 'default'
+            # site = self.site if self.site else 'default'
             self.name = '{}.{}'.format(self.template, self.site)
 
     def env_dir(self):

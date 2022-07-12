@@ -161,7 +161,7 @@ class PyNumpy(PythonPackage):
         # module is already loaded.
         if self.spec.satisfies('%intel') and name == 'cflags':
             # Note that the compiler environment variables and modules
-            # aren't loaded for the flag_handler phase ... 
+            # aren't loaded for the flag_handler phase ...
             # See https://github.com/spack/spack/issues/2056
             #
             # Newer/other flavors of Cray systems using the Intel compilers directly

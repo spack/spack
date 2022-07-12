@@ -5,8 +5,6 @@
 
 from spack import *
 
-import os
-
 
 class Solo(PythonPackage):
     """General tools for Python programmers to be used in various

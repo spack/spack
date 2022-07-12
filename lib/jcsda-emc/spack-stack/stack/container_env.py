@@ -1,8 +1,14 @@
+import copy
 import os
+
 import spack
 import spack.util.spack_yaml as syaml
-from spack.extensions.stack.stack_paths import stack_path, container_path, template_path, common_path
-import copy
+from spack.extensions.stack.stack_paths import (
+    common_path,
+    container_path,
+    stack_path,
+    template_path,
+)
 
 
 class StackContainer():

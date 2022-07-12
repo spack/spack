@@ -5,8 +5,6 @@
 
 from spack import *
 
-import os
-
 
 class Ewok(PythonPackage):
     """Experiments and Workflows Orchestration Kit (EWOK) - DH* NEED TO FILL IN THE DETAILS

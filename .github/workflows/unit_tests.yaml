@@ -5,10 +5,12 @@ on:
     branches:
       - develop
       - releases/**
+      - jcsda_emc_spack_stack
   pull_request:
     branches:
       - develop
       - releases/**
+      - jcsda_emc_spack_stack
 jobs:
   # Validate that the code can be run on all the Python versions
   # supported by Spack

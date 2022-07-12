@@ -24,7 +24,8 @@ from spack import *
 
 
 class GslLite(CMakePackage):
-    """gsl-lite – A single-file header-only version of ISO C++ Guidelines Support Library (GSL) for C++98, C++11, and later"""
+    """A single-file header-only version of ISO C++ Guidelines Support Library
+    (GSL) for C++98, C++11, and later"""
 
     homepage = "https://github.com/gsl-lite/gsl-lite"
     git = "https://github.com/gsl-lite/gsl-lite.git"

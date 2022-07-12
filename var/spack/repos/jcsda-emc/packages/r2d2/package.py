@@ -5,8 +5,6 @@
 
 from spack import *
 
-import os
-
 
 class R2d2(PythonPackage):
     """Research Repository for Data and Diagnostics (R2D2) - DH* NEED TO FILL IN THE DETAILS

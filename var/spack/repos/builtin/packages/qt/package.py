@@ -205,7 +205,8 @@ class Qt(Package):
 
     @classmethod
     def determine_version(cls, exe):
-        return Executable(exe)('-v', output=str, error=str).lstrip('qplugininfo').strip()
+        version_string = Executable(exe)('-v', output=str, error=str)
+        return version_string.lstrip('qplugininfo').strip()
 
     with when('+webkit'):
         patch(

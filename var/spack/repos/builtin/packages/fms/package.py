@@ -33,9 +33,9 @@ class Fms(CMakePackage):
     # These versions were adapated by JCSDA and are only meant to be
     # used temporarily, until the JCSDA changes have found their way
     # back into the official repository.
-    # The following commit corresponds to branch='release-stable' in the JCSDA public fork
+    # Commit corresponds to branch='release-stable' in the JCSDA public fork
     version('release-jcsda', commit="1f739141ef8b000a0bd75ae8bebfadea340299ba", no_cache=True)
-    #version('dev-jcsda', branch='dev/jcsda', no_cache=True)
+    # version('dev-jcsda', branch='dev/jcsda', no_cache=True)
 
     with when('@release-jcsda'):
         git      = "https://github.com/JCSDA/fms.git"
@@ -79,8 +79,10 @@ class Fms(CMakePackage):
         fflags = []
 
         if self.compiler.name in ['gcc', 'clang', 'apple-clang']:
-            gfortran_major_version = int(spack.compiler.get_compiler_version_output(self.compiler.fc, '-dumpversion').split('.')[0])
-            if gfortran_major_version>=10:
+            gfortran_major_version = int(spack.compiler.get_compiler_version_output(
+                self.compiler.fc, '-dumpversion').split('.')[0])
+
+            if gfortran_major_version >= 10:
                 fflags.append('-fallow-argument-mismatch')
 
         if '+pic' in self.spec:

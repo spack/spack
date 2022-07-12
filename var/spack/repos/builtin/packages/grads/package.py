@@ -46,9 +46,6 @@ class Grads(AutotoolsPackage):
     # Grads does not supply #include <stdint.h> which Intel complains about
     patch('stdint.patch')
 
-    def setup_build_environment(self, env):
-        env.set('SUPPLIBS', '/')
-
     def setup_run_environment(self, env):
         env.set('GADDIR', self.prefix.data)
 
@@ -63,10 +60,12 @@ class Grads(AutotoolsPackage):
         libs = []
         cppflags = []
 
+        env.set('SUPPLIBS', '/')
+
         if '+grib2' in spec:
             cppflags.append('-I' + spec['g2c'].prefix.include)
             cppflags.append('-I' + spec['jasper'].prefix.include.jasper)
-        
+
         # Grads is not compatible with HDF5 1.12.0
         # which had an API change in h5_getinfo
         if spec['hdf5'].satisfies('@1.12.0:'):
@@ -79,7 +78,6 @@ class Grads(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        spec = self.spec
 
         args.extend(self.with_or_without('geotiff'))
 

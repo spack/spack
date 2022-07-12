@@ -1,8 +1,10 @@
-import pytest
-import spack.main
 import os
+
+import pytest
+
 import spack
 import spack.environment as ev
+import spack.main
 
 stack_create = spack.main.SpackCommand('stack')
 
@@ -13,24 +15,27 @@ def stack_path(*paths):
     stack_dir = os.path.dirname(spack.paths.spack_root)
 
     if not os.path.exists(os.path.join(stack_dir, '.spackstack')):
-        raise Exception('Not a submodule of spack-stack')
+        return None
 
     return os.path.join(stack_dir, *paths)
 
 
 test_dir = stack_path('envs', 'unit-tests', 'setup-meta-modules')
 
+
 @pytest.mark.extension('stack')
 @pytest.mark.filterwarnings('ignore::UserWarning')
 def test_setup_meta_modules():
+    if not test_dir:
+        return
+
     os.makedirs(test_dir, exist_ok=True)
 
     env_dir = os.path.join(test_dir)
-    create_output = stack_create('create', 'env', '--dir', env_dir,
-                                 '--site', 'linux.default', '--overwrite')
+    stack_create('create', 'env', '--dir', env_dir, '--overwrite', '--name', 'modtest')
 
     # Create empty env
-    env_dir = os.path.join(env_dir, 'empty.linux.default')
+    env_dir = os.path.join(env_dir, 'modtest')
     env = ev.Environment(path=env_dir, init_file=os.path.join(env_dir, 'spack.yaml'))
     ev.activate(env)
 
@@ -52,7 +57,7 @@ def test_setup_meta_modules():
     os.makedirs(compiler_module_path)
     os.makedirs(mpi_module_path)
     cmd = spack.main.SpackCommand('external')
-    output = cmd('find', 'python')
+    cmd('find', 'python')
     with env.write_transaction():
         env.write()
-    meta_module_output = stack_create('setup-meta-modules')
+    stack_create('setup-meta-modules')

@@ -1,13 +1,12 @@
-import spack.cmd.common.arguments
-import spack.cmd.modules
-import os
 import logging
-from spack.extensions.stack.stack_env import StackEnv, stack_path
-from spack.extensions.stack.container_env import StackContainer
+import os
 import shutil
-import llnl.util.tty as tty
-import spack.util.spack_yaml as syaml
 from sys import platform
+
+import llnl.util.tty as tty
+
+from spack.extensions.stack.container_env import StackContainer
+from spack.extensions.stack.stack_env import StackEnv, stack_path
 
 description = "Create spack-stack environment (environment or container)"
 section = "spack-stack"
@@ -26,9 +25,12 @@ def default_site():
 
 def site_help():
     _, site_dirs, _ = next(os.walk(stack_path('configs', 'sites')))
-    help_string = 'Pre-configured platform, or "default" for an empty site.yaml.' + os.linesep
-    help_string += 'Defaults to "default" if no arg is given' + os.linesep
-    help_string += 'Available options are: ' + os.linesep
+    help_string = 'Pre-configured platform, or "default" for an empty site.yaml.'
+    help_string += + os.linesep
+    help_string += 'Defaults to "default" if no arg is given'
+    help_string += + os.linesep
+    help_string += 'Available options are: '
+    help_string += + os.linesep
     for site in site_dirs:
         help_string += '\t' + site + os.linesep
     return help_string
@@ -101,7 +103,8 @@ def setup_env_parser(subparser):
 
     subparser.add_argument(
         '--prefix', type=str, required=False, default=None,
-        help='Install prefix for spack packages and modules (not the spack environment).'
+        help="""Install prefix for spack packages and
+                modules (not the spack environment)."""
     )
 
 

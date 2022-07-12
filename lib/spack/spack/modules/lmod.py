@@ -30,6 +30,7 @@ def configuration(module_set_name):
         return spack.config.get('modules:lmod', {})
     return config
 
+
 # DH* this is not the best way, but works for now
 def get_hash_length():
     if 'hash_length' in configuration('default').keys():
@@ -37,6 +38,7 @@ def get_hash_length():
     else:
         return 7
 # *DH
+
 
 # Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
@@ -302,9 +304,9 @@ class LmodFileLayout(BaseFileLayout):
         path = path_part_fmt.format(token=value)
 
         # Use the hash length that the user specied, not something else
-        if get_hash_length()>0:
+        if get_hash_length() > 0:
             path = '-'.join([path, value.dag_hash(get_hash_length())])
-        #path = '-'.join([path, value.dag_hash(length=7)])
+        # path = '-'.join([path, value.dag_hash(length=7)])
 
         return path
 
@@ -423,11 +425,11 @@ class LmodContext(BaseContext):
         s = self.spec
 
         # Use the hash length that the user specied, not something else
-        if get_hash_length()>0:
+        if get_hash_length() > 0:
             return '-'.join([str(s.version), s.dag_hash(length=get_hash_length())])
         else:
             return str(s.version)
-        #return '-'.join([str(s.version), s.dag_hash(length=7)])
+        # return '-'.join([str(s.version), s.dag_hash(length=7)])
 
     @tengine.context_property
     def provides(self):

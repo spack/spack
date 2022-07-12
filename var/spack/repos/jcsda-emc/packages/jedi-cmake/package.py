@@ -1,10 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack import *
+
 
 class JediCmake(CMakePackage):
     """CMake/ecbuild toolchains to facilitate portability on different systems."""
@@ -23,4 +23,3 @@ class JediCmake(CMakePackage):
     version('1.0.0', sha256='d773a800350e69372355b45e89160b593818cd438a86925b8a689c47996a0b9a')
 
     depends_on('cmake @3.10:', type=('build'))
-

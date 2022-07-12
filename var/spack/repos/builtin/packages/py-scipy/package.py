@@ -121,7 +121,7 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/14935
         # Disable pythran backend with latest Intel compilers
         if self.spec.satisfies('%intel@2021:') or \
-            self.spec.satisfies('%intel-oneapi-compilers@2021:'):
+                self.spec.satisfies('%intel-oneapi-compilers@2021:'):
             env.set('SCIPY_USE_PYTHRAN', '0')
 
         # Kluge to get the gfortran linker to work correctly on Big

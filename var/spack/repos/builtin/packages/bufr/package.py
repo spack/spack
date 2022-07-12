@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class Bufr(CMakePackage):
@@ -38,14 +38,12 @@ class Bufr(CMakePackage):
     depends_on('py-numpy', type='build', when='+python')
     depends_on('py-pip', type='build', when='+python')
 
-
     def cmake_args(self):
         args = [
             self.define_from_variant('ENABLE_PYTHON', 'python')
         ]
 
         return args
-
 
     def flag_handler(self, name, flags):
         """
@@ -97,6 +95,6 @@ class Bufr(CMakePackage):
     def install_python_interface(self):
         prefix = self.prefix
         if self.spec.satisfies('+python'):
-            with working_dir(os.path.join(self.build_directory,'python')):
+            with working_dir(os.path.join(self.build_directory, 'python')):
                 args = std_pip_args + ['--prefix=' + prefix, '.']
                 pip(*args)

@@ -204,7 +204,8 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # openmpi. Unfortuntately, the openmpi configure command has flat namespace
     # hardwired in.
     def patch(self):
-        if '+two_level_namespace' in self.spec and self.spec.satisfies('platform=darwin'):
+        spec = self.spec
+        if '+two_level_namespace' in spec and spec.satisfies('platform=darwin'):
             print("Applying configure patch for two_level_namespace on MacOS")
             filter_file(r'-flat_namespace', '-commons,use_dylibs', 'configure')
 
@@ -825,12 +826,12 @@ with '-Wl,-commons,use_dylibs' and without
                 config_args.append('--disable-wrapper-runpath')
 
             # Add extra_rpaths and implicit_rpaths into the wrappers.
-            if wrapper_ldflags and any(self.compiler.linker_arg \
-                    in x for x in wrapper_ldflags):
+            if wrapper_ldflags and any(self.compiler.linker_arg
+                                       in x for x in wrapper_ldflags):
                 for i in range(len(wrapper_ldflags)):
                     if wrapper_ldflags[i].startswith(self.compiler.linker_arg):
-                        rpaths = ','.join(self.compiler.extra_rpaths + \
-                            self.compiler.implicit_rpaths())
+                        rpaths = ','.join(self.compiler.extra_rpaths +
+                                          self.compiler.implicit_rpaths())
                         # Remove leading '-Wl'
                         rpaths = (self.compiler.cc_rpath_arg + rpaths).lstrip(
                             self.compiler.linker_arg)
@@ -1081,7 +1082,7 @@ with '-Wl,-commons,use_dylibs' and without
 
 
 def get_spack_compiler_spec(compiler):
-    spack_compilers=spack.compilers.find_compilers(
+    spack_compilers = spack.compilers.find_compilers(
         [os.path.dirname(compiler)])
     actual_compiler = None
     # check if the compiler actually matches the one we want

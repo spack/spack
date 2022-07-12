@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Metplus(Package):
     """
-    METplus is a verification framework that spans a wide range of temporal 
+    METplus is a verification framework that spans a wide range of temporal
     (warn-on-forecast to climate) and spatial (storm to global) scales.
     """
 

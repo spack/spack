@@ -50,7 +50,8 @@ class LibjpegTurbo(Package):
     @property
     def libs(self):
         shared = '+shared' in self.spec
-        return find_libraries('libjpeg*', root=self.prefix, shared=shared, recursive=True)
+        return find_libraries('libjpeg*', root=self.prefix,
+                              shared=shared, recursive=True)
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('@1.5.90:'):
@@ -79,7 +80,7 @@ class LibjpegTurbo(Package):
     def install(self, spec, prefix):
         cmake_args = [
             '-GUnix Makefiles',
-            ]
+        ]
         if self.spec.satisfies('+shared'):
             cmake_args.append('-DENABLE_SHARED=ON')
         else:
