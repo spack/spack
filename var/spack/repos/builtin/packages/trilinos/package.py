@@ -832,11 +832,18 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 libgfortran = fc('--print-file-name',
                                  'libgfortran.a',
                                  output=str).strip()
-            # -L<libdir> -lgfortran required for OSX
-            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
-            options.append(
-                define('Trilinos_EXTRA_LINK_FLAGS',
-                       '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
+            if spec.version < Version('14'):
+                # Trilinos_EXTRA_LINK_FLAGS do not correctly propagate to
+                # Kokkos-Kernels prior to version 14.0
+                options.append(
+                    define('CMAKE_SHARED_LINKER_FLAGS',
+                           '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
+            else:
+                # -L<libdir> -lgfortran required for OSX
+                # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+                options.append(
+                    define('Trilinos_EXTRA_LINK_FLAGS',
+                           '-L%s/ -lgfortran' % os.path.dirname(libgfortran)))
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
