@@ -99,6 +99,7 @@ def test_cache_write_readonly_cache_fails(file_cache):
         file_cache.write_transaction(filename)
 
 
+@pytest.mark.regression('31475')
 def test_delete_is_idempotent(file_cache):
     """Deleting a non-existent key should be idempotent, to simplify life when
     running delete with multiple processes"""
