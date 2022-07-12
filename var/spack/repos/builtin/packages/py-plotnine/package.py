@@ -21,12 +21,11 @@ class PyPlotnine(PythonPackage):
     version('0.7.0', sha256='8ee67cbf010ccea32670760e930b7b02177030a89ccdf85e35d156a96ce36cd3')
     version('0.6.0', sha256='aae2c8164abb209ef4f28cab01132d23f6879fcf8d492657487359e1241459e5')
 
-    # common requirements
-    depends_on("py-setuptools",          type="build")
-
-    # variable requirements
     depends_on('python@3.8:',            type=('build', 'run'), when='@0.9.0:')
     depends_on('python@3.6:',            type=('build', 'run'), when='@0.6.0:')
+
+    depends_on("py-setuptools@59:",      type=("build", "run"), when='@0.9.0:')
+    depends_on("py-setuptools",          type=("build", "run"), when='@0.6.0:')
 
     depends_on("py-descartes@1.1.0:",    type=("build", "run"), when='@:0.8.0')
 
@@ -39,6 +38,7 @@ class PyPlotnine(PythonPackage):
     depends_on("py-numpy@1.19.0:",       type=("build", "run"), when='@0.8.0:')
     depends_on("py-numpy@1.16.0:",       type=("build", "run"), when='@0.6.0:')
 
+    depends_on("py-pandas@1.3.5:",       type=("build", "run"), when='@0.9.0:')
     depends_on("py-pandas@1.1.0:",       type=("build", "run"), when='@0.7.1:')
     depends_on("py-pandas@1.0.3:",       type=("build", "run"), when='@0.7.0:')
     depends_on("py-pandas@0.25.0:",      type=("build", "run"), when='@0.6.0:')

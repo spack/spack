@@ -19,12 +19,14 @@ class PyMizani(PythonPackage):
     version('0.6.0', sha256='2cdba487ee54faf3e5bfe0903155a13ff13d27a2dae709f9432194915b4fb1cd')
 
     # common requirements
-    depends_on("py-setuptools", type="build")
     depends_on("py-palettable", type=("build", "run"))
 
     # variable requirements
     depends_on('python@3.8:', type=('build', 'run'), when='@0.7.4:')
     depends_on('python@3.6:', type=('build', 'run'), when='@0.6.0:')
+
+    depends_on("py-setuptools@42:", type="build", when='@0.7.4:')
+    depends_on("py-setuptools",     type="build", when='@0.6.0:')
 
     depends_on("py-matplotlib@3.5.0:", type=("build", "run"), when='@0.7.4:')
     depends_on("py-matplotlib@3.1.1:", type=("build", "run"), when='@0.6.0:')
@@ -34,6 +36,7 @@ class PyMizani(PythonPackage):
 
     depends_on("py-scipy@1.5.0:", type=("build", "run"), when='@0.7.4:')
 
+    depends_on("py-pandas@1.3.5:",  type=("build", "run"), when='@0.7.4:')
     depends_on("py-pandas@1.1.0:",  type=("build", "run"), when='@0.7.2:')
     depends_on("py-pandas@1.0.0:",  type=("build", "run"), when='@0.7.0:')
     depends_on("py-pandas@0.25.0:", type=("build", "run"), when='@0.6.0:')
