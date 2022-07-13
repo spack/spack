@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyPdoc3(PythonPackage):
-    """.Auto-generate API documentation for Python projects."""
+    """Auto-generate API documentation for Python projects."""
 
     homepage = "https://pdoc3.github.io/pdoc/"
     pypi     = "pdoc3/pdoc3-0.10.0.tar.gz"

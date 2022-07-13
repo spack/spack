@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-
 from spack.package import *
 
 
@@ -45,5 +43,5 @@ class PyBlight(PythonPackage):
     depends_on('py-pytest-cov', type=('build', 'run'), when='+dev')
     depends_on('py-coverage+toml', type=('build', 'run'), when='+dev')
     depends_on('py-twine', type=('build', 'run'), when='+dev')
-    depends_on('py-pdoc3', type=('build', 'run'), when='+dev'
+    depends_on('py-pdoc3', type=('build', 'run'), when='+dev')
     depends_on('py-mypy', type=('build', 'run'), when='@0.0.5:+dev')
