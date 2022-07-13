@@ -307,7 +307,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
 
     # https://bugs.llvm.org/show_bug.cgi?id=39696
-    patch("thread-p9.patch", when="@develop+libcxx")
+    patch("thread-p9.patch", when="@:10 +libcxx")
 
     # https://github.com/spack/spack/issues/19625,
     # merged in llvm-11.0.0_rc2, but not found in 11.0.1
@@ -315,7 +315,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0
-    patch("llvm_python_path.patch", when="@11.0.0")
+    patch("llvm_python_path.patch", when="@:11")
 
     # Workaround for issue https://github.com/spack/spack/issues/18197
     patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.0:19.1.99')
