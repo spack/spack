@@ -117,6 +117,7 @@ class Sensei(CMakePackage):
     patch('libsim-add-missing-symbol-visibility-pr67.patch', when='@4.0.0')
     patch('sensei-find-mpi-component-cxx-pr68.patch', when='@4.0.0')
     patch('sensei-install-external-pugixml-pr69.patch', when='@4.0.0')
+    patch('sensei-version-detection-pr75.patch', when='@4.0.0')
 
     def cmake_args(self):
         spec = self.spec
