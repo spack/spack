@@ -13,6 +13,7 @@ class PyLibsonata(PythonPackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('0.1.14', tag='v0.1.14', submodules=True, get_full_repo=True)
     version('0.1.13', tag='v0.1.13', submodules=True, get_full_repo=True)
     version('0.1.12', tag='v0.1.12', submodules=True, get_full_repo=True)
     version('0.1.11', tag='v0.1.11', submodules=True, get_full_repo=True)
