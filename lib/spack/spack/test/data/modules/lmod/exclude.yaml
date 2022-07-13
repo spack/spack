@@ -1,5 +1,3 @@
-# DEPRECATED: remove this in v0.20
-# See `exclude.yaml` for the new syntax
 enable:
   - lmod
 lmod:
@@ -7,7 +5,7 @@ lmod:
     - 'clang@3.3'
   hierarchy:
     - mpi
-  blacklist:
+  exclude:
     - callpath
 
   all:

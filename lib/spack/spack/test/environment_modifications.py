@@ -379,40 +379,40 @@ def test_clear(env):
     assert len(env) == 0
 
 
-@pytest.mark.parametrize('env,blacklist,whitelist', [
-    # Check we can blacklist a literal
+@pytest.mark.parametrize('env,exclude,include', [
+    # Check we can exclude a literal
     ({'SHLVL': '1'}, ['SHLVL'], []),
-    # Check whitelist takes precedence
+    # Check include takes precedence
     ({'SHLVL': '1'}, ['SHLVL'], ['SHLVL']),
 ])
-def test_sanitize_literals(env, blacklist, whitelist):
+def test_sanitize_literals(env, exclude, include):
 
-    after = environment.sanitize(env, blacklist, whitelist)
+    after = environment.sanitize(env, exclude, include)
 
-    # Check that all the whitelisted variables are there
-    assert all(x in after for x in whitelist)
+    # Check that all the included variables are there
+    assert all(x in after for x in include)
 
-    # Check that the blacklisted variables that are not
-    # whitelisted are there
-    blacklist = list(set(blacklist) - set(whitelist))
-    assert all(x not in after for x in blacklist)
+    # Check that the excluded variables that are not
+    # included are there
+    exclude = list(set(exclude) - set(include))
+    assert all(x not in after for x in exclude)
 
 
-@pytest.mark.parametrize('env,blacklist,whitelist,expected,deleted', [
-    # Check we can blacklist using a regex
+@pytest.mark.parametrize('env,exclude,include,expected,deleted', [
+    # Check we can exclude using a regex
     ({'SHLVL': '1'}, ['SH.*'], [], [], ['SHLVL']),
-    # Check we can whitelist using a regex
+    # Check we can include using a regex
     ({'SHLVL': '1'}, ['SH.*'], ['SH.*'], ['SHLVL'], []),
-    # Check regex to blacklist Modules v4 related vars
+    # Check regex to exclude Modules v4 related vars
     ({'MODULES_LMALTNAME': '1', 'MODULES_LMCONFLICT': '2'},
      ['MODULES_(.*)'], [], [], ['MODULES_LMALTNAME', 'MODULES_LMCONFLICT']),
     ({'A_modquar': '1', 'b_modquar': '2', 'C_modshare': '3'},
      [r'(\w*)_mod(quar|share)'], [], [],
      ['A_modquar', 'b_modquar', 'C_modshare']),
 ])
-def test_sanitize_regex(env, blacklist, whitelist, expected, deleted):
+def test_sanitize_regex(env, exclude, include, expected, deleted):
 
-    after = environment.sanitize(env, blacklist, whitelist)
+    after = environment.sanitize(env, exclude, include)
 
     assert all(x in after for x in expected)
     assert all(x not in after for x in deleted)
@@ -460,7 +460,7 @@ def test_from_environment_diff(before, after, search_list):
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="LMod not supported on Windows")
 @pytest.mark.regression('15775')
-def test_blacklist_lmod_variables():
+def test_exclude_lmod_variables():
     # Construct the list of environment modifications
     file = os.path.join(datadir, 'sourceme_lmod.sh')
     env = EnvironmentModifications.from_sourcing_file(file)
