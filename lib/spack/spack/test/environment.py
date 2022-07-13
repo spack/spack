@@ -8,6 +8,7 @@ import pickle
 
 import pytest
 
+import spack.config
 from spack.environment import Environment
 from spack.environment.environment import (
     SpackEnvironmentViewError,
@@ -54,6 +55,9 @@ def test_environment_write_updates_config_scopes(tmpdir):
     with tmpdir.as_cwd():
         e = Environment(tmpdir.strpath)
         e.yaml['spack']['concretizer'] = {'unify': True}
+        spack.config.config.highest_precedence_scope().clear()
         e.write()
         assert e.yaml['spack']['concretizer']['unify']
-        assert e.unify
+        e2 = Environment(tmpdir.strpath)
+        assert e2.yaml['spack']['concretizer']['unify']
+        assert e2.unify
