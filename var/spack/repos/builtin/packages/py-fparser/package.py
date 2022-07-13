@@ -12,15 +12,17 @@ class PyFparser(PythonPackage):
     homepage = "https://github.com/stfc/fparser"
     url      = "https://github.com/stfc/fparser/archive/0.0.5.tar.gz"
     git      = "https://github.com/stfc/fparser.git"
+    pypi     = "fparser/fparser-0.0.16.tar.gz"
 
     version('develop', branch='master')
+    version('0.0.16', sha256='a06389b95a1b9ed12f8141b69c67343da5ba0a29277b2997b02573a93af14e13')
     version('0.0.6', sha256='6ced61573257d11037d25c02d5f0ea92ca9bf1783018bf5f0de30d245ae631ac')
     version('0.0.5', sha256='7668b331b9423d15353d502ab26d1d561acd5247882dab672f1e45565dabaf08')
 
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy', type=('build', 'run'), when='@:0.0.5')
-    depends_on('py-nose', type='build')
+    depends_on('py-nose', type='build', when='@:0.0.7')
     depends_on('py-six', type='build', when='@0.0.6:')
 
     depends_on('py-pytest', type='test')
