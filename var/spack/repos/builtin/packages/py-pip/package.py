@@ -15,6 +15,8 @@ class PyPip(Package):
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
 
+    maintainers = ['adamjstewart']
+
     version('21.3.1', sha256='deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d', expand=False)
     version('21.1.2', sha256='f8ea1baa693b61c8ad1c1d8715e59ab2b93cd3c4769bacab84afcc4279e7a70e', expand=False)
     version('20.2',   sha256='d75f1fc98262dabf74656245c509213a5d0f52137e40e8f8ed5cc256ddd02923', expand=False)

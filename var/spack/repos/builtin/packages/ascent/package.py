@@ -117,6 +117,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding ADIOS2 more reliably
     # https://github.com/Alpine-DAV/ascent/pull/922
     patch('ascent-find-adios2-pr922.patch', when='@0.8.0')
+    # patch for finding Conduit python more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/935
+    patch('ascent-find-conduit-python-pr935.patch', when='@0.8.0')
 
     ##########################################################################
     # package dependencies
@@ -173,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
     # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m", when="+vtkh")
+    depends_on("vtk-m@:1.7", when="+vtkh")
     depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
 
     # mfem

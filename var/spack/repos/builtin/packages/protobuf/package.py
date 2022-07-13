@@ -15,6 +15,7 @@ class Protobuf(Package):
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
 
+    version('21.1', sha256='f1a83673cbcaff6346a8fba87a9c02c0f943a4a696b6c7d1b71586d97609db12')
     version('3.20.1', sha256='8b28fdd45bab62d15db232ec404248901842e5340299a57765e48abe8a80d930')
     version('3.20.0', sha256='b07772d38ab07e55eca4d50f4b53da2d998bb221575c60a4f81100242d4b4889')
     version('3.19.4', sha256='3bd7828aa5af4b13b99c191e8b1e884ebfa9ad371b0ce264605d347f135d2568')
@@ -87,6 +88,10 @@ class Protobuf(Package):
     patch('intel-v2.patch', when='@3.7:3.11.4 %intel')
 
     patch('protoc2.5.0_aarch64.patch', sha256='7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451', when='@2.5.0 target=aarch64:')
+
+    # See https://github.com/protocolbuffers/protobuf/issues/9916
+    patch('https://github.com/protocolbuffers/protobuf/pull/9936.patch?full_index=1', when='@3.20 %gcc@12.1.0',
+          sha256='fa1abf042eddc1b3b43875dc018c651c90cd1c0c5299975a818a1610bee54ab8')
 
     def fetch_remote_versions(self, *args, **kwargs):
         """Ignore additional source artifacts uploaded with releases,

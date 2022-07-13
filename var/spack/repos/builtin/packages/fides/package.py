@@ -27,7 +27,12 @@ class Fides(CMakePackage):
 
     depends_on("mpi", when="+mpi")
     depends_on('adios2~zfp', when='+adios2')
-    depends_on("vtk-m", when="+vtk-m")
+    depends_on("vtk-m@:1.7", when="+vtk-m")
+
+    # Fix missing implicit includes
+    @when('%gcc@7:')
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', '-include limits -include numeric')
 
     def cmake_args(self):
         spec = self.spec

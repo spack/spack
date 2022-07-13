@@ -221,7 +221,7 @@ def _read_specs_from_file(filename):
         for i, string in enumerate(stream):
             try:
                 s = Spec(string)
-                s.package
+                spack.repo.path.get_pkg_class(s.name)
                 specs.append(s)
             except SpackError as e:
                 tty.debug(e)

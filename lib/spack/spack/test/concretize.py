@@ -22,7 +22,6 @@ import spack.repo
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
 
 is_windows = sys.platform == 'win32'
@@ -44,7 +43,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in abstract.package.variants:
+    for name in spack.repo.path.get_pkg_class(abstract.name).variants:
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -356,20 +355,11 @@ class TestConcretize(object):
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        default_dep = ('link', 'build')
-
-        mock_repo = MockPackageMultiRepo()
-        bazpkg = mock_repo.add_package('bazpkg', [], [])
-        barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
-        mock_repo.add_package('foopkg', [barpkg], [default_dep])
-
-        with spack.repo.use_repositories(mock_repo):
-            spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
-                        ' ^barpkg os=CNL ^bazpkg os=CNL')
-            spec.concretize()
-
-            for s in spec.traverse(root=False):
-                assert s.architecture.target == spec.architecture.target
+        spec_str = ('mpileaks %gcc@4.5.0 os=CNL target=nocona'
+                    ' ^dyninst os=CNL ^callpath os=CNL')
+        spec = Spec(spec_str).concretized()
+        for s in spec.traverse(root=False):
+            assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
@@ -1732,3 +1722,79 @@ class TestConcretize(object):
             if expected_spec in spec:
                 counter += 1
         assert counter == occurances, concrete_specs
+
+    @pytest.mark.regression('30864')
+    def test_misleading_error_message_on_version(self, mutable_database):
+        # For this bug to be triggered we need a reusable dependency
+        # that is not optimal in terms of optimization scores.
+        # We pick an old version of "b"
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec('non-existing-conditional-dep@1.0').concretized()
+        ]
+        root_spec = spack.spec.Spec('non-existing-conditional-dep@2.0')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            with pytest.raises(spack.solver.asp.UnsatisfiableSpecError,
+                               match="'dep-with-variants' satisfies '@999'"):
+                solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
+
+    @pytest.mark.regression('31148')
+    def test_version_weight_and_provenance(self):
+        """Test package preferences during coconcretization."""
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        reusable_specs = [
+            spack.spec.Spec(spec_str).concretized()
+            for spec_str in ('b@0.9', 'b@1.0')
+        ]
+        root_spec = spack.spec.Spec('a foobar=bar')
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+            # The result here should have a single spec to build ('a')
+            # and it should be using b@1.0 with a version badness of 2
+            # The provenance is:
+            # version_declared("b","1.0",0,"package_py").
+            # version_declared("b","0.9",1,"package_py").
+            # version_declared("b","1.0",2,"installed").
+            # version_declared("b","0.9",3,"installed").
+            for criterion in [
+                (1, None, 'number of packages to build (vs. reuse)'),
+                (2, 0, 'version badness')
+            ]:
+                assert criterion in result.criteria
+            assert result.specs[0].satisfies('^b@1.0')
+
+    @pytest.mark.regression('31169')
+    def test_not_reusing_incompatible_os_or_compiler(self):
+        import spack.solver.asp
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot reuse')
+
+        root_spec = spack.spec.Spec('b')
+        s = root_spec.concretized()
+        wrong_compiler, wrong_os = s.copy(), s.copy()
+        wrong_compiler.compiler = spack.spec.CompilerSpec('gcc@12.1.0')
+        wrong_os.architecture = spack.spec.ArchSpec('test-ubuntu2204-x86_64')
+        reusable_specs = [wrong_compiler, wrong_os]
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result = solver.driver.solve(
+                setup, [root_spec], reuse=reusable_specs, out=sys.stdout
+            )
+        concrete_spec = result.specs[0]
+        assert concrete_spec.satisfies('%gcc@4.5.0')
+        assert concrete_spec.satisfies('os=debian6')

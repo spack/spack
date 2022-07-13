@@ -50,21 +50,19 @@ def test_fetch(
     h = mock_hg_repository.hash
 
     # Construct the package under test
-    spec = Spec('hg-test')
-    spec.concretize()
-    pkg = spack.repo.get(spec)
-    monkeypatch.setitem(pkg.versions, ver('hg'), t.args)
+    s = Spec('hg-test').concretized()
+    monkeypatch.setitem(s.package.versions, ver('hg'), t.args)
 
     # Enter the stage directory and check some properties
-    with pkg.stage:
+    with s.package.stage:
         with spack.config.override('config:verify_ssl', secure):
-            pkg.do_stage()
+            s.package.do_stage()
 
-        with working_dir(pkg.stage.source_path):
+        with working_dir(s.package.stage.source_path):
             assert h() == t.revision
 
-            file_path = os.path.join(pkg.stage.source_path, t.file)
-            assert os.path.isdir(pkg.stage.source_path)
+            file_path = os.path.join(s.package.stage.source_path, t.file)
+            assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
             os.unlink(file_path)
@@ -73,10 +71,10 @@ def test_fetch(
             untracked_file = 'foobarbaz'
             touch(untracked_file)
             assert os.path.isfile(untracked_file)
-            pkg.do_restage()
+            s.package.do_restage()
             assert not os.path.isfile(untracked_file)
 
-            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isdir(s.package.stage.source_path)
             assert os.path.isfile(file_path)
 
             assert h() == t.revision

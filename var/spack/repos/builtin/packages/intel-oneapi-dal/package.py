@@ -11,11 +11,14 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDal(IntelOneApiLibraryPackage):
-    """Intel Data Analytics Library (DAL) provides the right tools to
-    build compute-intense applications that run fast on Intel
-    architecture. It includes algorithms for analysis functions, math
-    functions, training and library prediction functions for C++ and
-    Java.
+    """Intel oneAPI Data Analytics Library (oneDAL) is a library that
+       helps speed up big data analysis by providing highly optimized
+       algorithmic building blocks for all stages of data analytics
+       (preprocessing, transformation, analysis, modeling, validation,
+       and decision making) in batch, online, and distributed
+       processing modes of computation. The library optimizes data
+       ingestion along with algorithmic computation to increase
+       throughput and scalability.
 
     """
 

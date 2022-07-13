@@ -19,6 +19,8 @@ class Vim(AutotoolsPackage):
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
     maintainers = ['sethrj']
 
+    version('9.0.0045', sha256='594a31e96e3eda07a358db305de939ca749693b4684de9e027bfa70311b1994d')
+    version('9.0.0000', sha256='1b3cd3732eb7039cf58a9321de26ab1a12d81c2f6760eb03c5d7b60d548f4587', deprecated=True)
     version('8.2.2541', sha256='2699dfe87b524169e7390f0b383c406cb77a9fde7431665d3b9b80964d8d5daf')
     version('8.2.1201', sha256='39032fe866f44724b104468038dc9ac4ff2c00a4b18c9a1e2c27064ab1f1143d')
     version('8.2.0752', sha256='d616945810dac5a1fab2f23b003d22bdecd34861b31f208d5d0012a609821c0f')

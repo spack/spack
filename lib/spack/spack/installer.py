@@ -49,7 +49,6 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
-import spack.monitor
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -233,6 +232,7 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
         )
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
+
     packages.append((dep.package, True))
     return packages
 

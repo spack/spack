@@ -98,6 +98,26 @@ def test_changed_files(flake8_package):
     assert flake8_package in files
 
 
+def test_changed_files_from_git_rev_base(tmpdir, capfd):
+    """Test arbitrary git ref as base."""
+    git = which("git", required=True)
+    with tmpdir.as_cwd():
+        git("init")
+        git("checkout", "-b", "main")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("commit", "--allow-empty", "-m", "initial commit")
+
+        tmpdir.ensure('bin/spack')
+        assert changed_files(base="HEAD") == ['bin/spack']
+        assert changed_files(base="main") == ['bin/spack']
+
+        git("add", 'bin/spack')
+        git("commit", "-m", "v1")
+        assert changed_files(base="HEAD") == []
+        assert changed_files(base="HEAD~") == ["bin/spack"]
+
+
 def test_changed_no_base(tmpdir, capfd):
     """Ensure that we fail gracefully with no base branch."""
     tmpdir.join("bin").ensure("spack")
@@ -113,7 +133,7 @@ def test_changed_no_base(tmpdir, capfd):
             changed_files(base="foobar")
 
         out, err = capfd.readouterr()
-        assert "This repository does not have a 'foobar' branch." in err
+        assert "This repository does not have a 'foobar'" in err
 
 
 def test_changed_files_all_files(flake8_package):

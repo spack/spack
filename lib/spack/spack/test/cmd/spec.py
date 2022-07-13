@@ -4,10 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+from textwrap import dedent
 
 import pytest
 
 import spack.environment as ev
+import spack.error
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
@@ -53,6 +55,54 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
 
     output = spec("--reuse", "-l", "mpileaks")
     assert h in output
+
+
+def test_spec_parse_dependency_variant_value():
+    """Verify that we can provide multiple key=value variants to multiple separate
+    packages within a spec string."""
+    output = spec('multivalue-variant fee=barbaz ^ a foobar=baz')
+
+    assert 'fee=barbaz' in output
+    assert 'foobar=baz' in output
+
+
+def test_spec_parse_cflags_quoting():
+    """Verify that compiler flags can be provided to a spec from the command line."""
+    output = spec('--yaml', 'gcc cflags="-Os -pipe" cxxflags="-flto -Os"')
+    gh_flagged = spack.spec.Spec.from_yaml(output)
+
+    assert ['-Os', '-pipe'] == gh_flagged.compiler_flags['cflags']
+    assert ['-flto', '-Os'] == gh_flagged.compiler_flags['cxxflags']
+
+
+def test_spec_parse_unquoted_flags_report():
+    """Verify that a useful error message is produced if unquoted compiler flags are
+    provided."""
+    # This should fail during parsing, since /usr/include is interpreted as a spec hash.
+    with pytest.raises(spack.error.SpackError) as cm:
+        # We don't try to figure out how many following args were intended to be part of
+        # cflags, we just explain how to fix it for the immediate next arg.
+        spec('gcc cflags=-Os -pipe -other-arg-that-gets-ignored cflags=-I /usr/include')
+    # Verify that the generated error message is nicely formatted.
+    assert str(cm.value) == dedent('''\
+    No installed spec matches the hash: 'usr'
+
+    Some compiler or linker flags were provided without quoting their arguments,
+    which now causes spack to try to parse the *next* argument as a spec component
+    such as a variant instead of an additional compiler or linker flag. If the
+    intent was to set multiple flags, try quoting them together as described below.
+
+    Possible flag quotation errors (with the correctly-quoted version after the =>):
+    (1) cflags=-Os -pipe => cflags="-Os -pipe"
+    (2) cflags=-I /usr/include => cflags="-I /usr/include"''')
+
+    # Verify that the same unquoted cflags report is generated in the error message even
+    # if it fails during concretization, not just during parsing.
+    with pytest.raises(spack.error.SpackError) as cm:
+        spec('gcc cflags=-Os -pipe')
+    cm = str(cm.value)
+    assert cm.startswith('trying to set variant "pipe" in package "gcc", but the package has no such variant [happened during concretization of gcc cflags="-Os" ~pipe]')  # noqa: E501
+    assert cm.endswith('(1) cflags=-Os -pipe => cflags="-Os -pipe"')
 
 
 def test_spec_yaml():
@@ -125,14 +175,14 @@ def test_spec_returncode():
 
 
 def test_spec_parse_error():
-    with pytest.raises(spack.spec.SpecParseError) as e:
+    with pytest.raises(spack.error.SpackError) as e:
         spec("1.15:")
 
     # make sure the error is formatted properly
     error_msg = """\
     1.15:
         ^"""
-    assert error_msg in e.value.long_message
+    assert error_msg in str(e.value)
 
 
 def test_env_aware_spec(mutable_mock_env_path):

@@ -19,6 +19,7 @@ class Sloccount(MakefilePackage):
 
     # md5sum needed at run-time
     depends_on('coreutils', type=('build', 'run'))
+    depends_on('flex', type='build')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
