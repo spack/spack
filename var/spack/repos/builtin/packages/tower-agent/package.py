@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import platform
-import sys
 
 from spack.package import *
 
@@ -17,8 +16,8 @@ class TowerAgent(Package):
 
     homepage = "https://github.com/seqeralabs/tower-agent"
 
-    if platform.machine().startswith('x86_64'):
-        if sys.platform.startswith('linux'):
+    if platform.machine() == 'x86_64':
+        if platform.system() == 'Linux':
             version('0.4.3',
                     sha256='1125e64d4e3342e77fcf7f6827f045e421084654fe8faafd5389e356e0613cc0',
                     url='https://github.com/seqeralabs/tower-agent/releases/download/v0.4.3/tw-agent-linux-x86_64',
