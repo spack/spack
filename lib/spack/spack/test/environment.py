@@ -48,3 +48,12 @@ def test_error_on_nonempty_view_dir(tmpdir):
 
         with pytest.raises(SpackEnvironmentViewError):
             _error_on_nonempty_view_dir("file")
+
+
+def test_environment_write_updates_config_scopes(tmpdir):
+    with tmpdir.as_cwd():
+        e = Environment(tmpdir.strpath)
+        e.yaml['spack']['concretizer'] = {'unify': True}
+        e.write()
+        assert e.yaml['spack']['concretizer']['unify']
+        assert e.unify

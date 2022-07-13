@@ -1984,6 +1984,10 @@ class Environment(object):
         # new specs and new installs reset at write time
         self.new_specs = []
         self.new_installs = []
+        print("HIT")
+        self._re_read()
+        assert self.yaml['spack']['concretizer']['unify']
+        spack.config.config.highest_precedence_scope().clear()
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
         """Update YAML manifest for this environment based on changes to
