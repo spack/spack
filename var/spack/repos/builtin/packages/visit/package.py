@@ -195,14 +195,14 @@ class Visit(CMakePackage):
     depends_on('vtk ~mpi', when='~mpi')
 
     # Necessary VTK patches
-    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')])
+    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')],
+               when='^vtk@8')
     depends_on('vtk', patches=[patch('vtk_rendering_opengl2_x11.patch')],
-               when='~osmesa platform=linux')
+               when='~osmesa platform=linux ^vtk@8')
     depends_on('vtk', patches=[patch('vtk_wrapping_python_x11.patch')],
-               when='+python')
+               when='+python ^vtk@8')
 
-    depends_on('glu', when='~osmesa')
-    depends_on('mesa-glu+osmesa', when='+osmesa')
+    depends_on('glu')
 
     # VisIt doesn't work with later versions of qt.
     depends_on('qt+gui+opengl@5:5.14', when='+gui')
@@ -262,6 +262,7 @@ class Visit(CMakePackage):
         spec = self.spec
 
         args = [
+            self.define('CMAKE_SKIP_COMPATIBILITY_TESTS', True),
             self.define('CMAKE_POSITION_INDEPENDENT_CODE', True),
             self.define('VTK_MAJOR_VERSION', spec['vtk'].version[0]),
             self.define('VTK_MINOR_VERSION', spec['vtk'].version[1]),
@@ -269,7 +270,7 @@ class Visit(CMakePackage):
             self.define('VISIT_ZLIB_DIR', spec['zlib'].prefix),
             self.define('VISIT_USE_GLEW', False),
             self.define('VISIT_CONFIG_SITE', 'NONE'),
-            self.define('VISIT_INSTALL_THIRD_PARTY', True),
+            self.define('VISIT_INSTALL_THIRD_PARTY', False),
         ]
 
         if '@3.1: platform=darwin' in spec:
@@ -303,14 +304,27 @@ class Visit(CMakePackage):
                 self.define('VISIT_ENGINE_ONLY', True),
             ])
 
-        # No idea why this is actually needed
-        if '^mesa' in spec:
-            args.append(self.define('VISIT_MESAGL_DIR', spec['mesa'].prefix))
-            if '+llvm' in spec['mesa']:
-                args.append(self.define('VISIT_LLVM_DIR', spec['libllvm'].prefix))
+        # OpenGL args
+        args.extend([
+            self.define('VISIT_USE_X', 'glx' in spec),
+            self.define('VISIT_MESAGL_DIR', 'IGNORE'),
+            self.define('VISIT_OPENGL_DIR', 'IGNORE'),
+            self.define('VISIT_OSMESA_DIR', 'IGNORE'),
+            self.define('OpenGL_GL_PREFERENCE', 'LEGACY'),
+            self.define('OPENGL_INCLUDE_DIR', spec['gl'].headers.directories[0]),
+            self.define('OPENGL_glu_LIBRARY', spec['glu'].libs[0]),
+        ])
+        if '+osmesa' in spec:
+            args.extend([
+                self.define('HAVE_OSMESA', True),
+                self.define('OSMESA_LIBRARIES', spec['osmesa'].libs[0]),
+                self.define('OPENGL_gl_LIBRARY', spec['osmesa'].libs[0]),
+            ])
+        else:
+            args.append(self.define('OPENGL_gl_LIBRARY', spec['gl'].libs[0]))
 
         if '+hdf5' in spec:
-            args.append(self.define('VISIT_HDF5_DIR', spec['hdf5'].prefix))
+            args.append(self.define('HDF5_DIR', spec['hdf5'].prefix))
             if '+mpi' in spec and '+mpi' in spec['hdf5']:
                 args.append(self.define('VISIT_HDF5_MPI_DIR', spec['hdf5'].prefix))
 

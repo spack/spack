@@ -55,19 +55,20 @@ class Pocl(CMakePackage):
     # enabled by default, and also because they fail to build for us
     # (see #1616)
     # These are the supported LLVM versions
-    depends_on("llvm +clang @6.0:11.0", when="@master")
-    depends_on("llvm +clang +shared_libs -flang @6.0:11.0", when="@1.6")
-    depends_on("llvm +clang @6.0:10.0", when="@1.5")
-    depends_on("llvm +clang @6.0:9.0", when="@1.4")
-    depends_on("llvm +clang @5.0:8.0", when="@1.3")
-    depends_on("llvm +clang @5.0:7.0", when="@1.2")
-    depends_on("llvm +clang @5.0:6.0", when="@1.1")
-    depends_on("llvm +clang @4.0:5.0", when="@1.0")
-    depends_on("llvm +clang @3.7:4.0", when="@0.14")
-    depends_on("llvm +clang @3.7:3.8", when="@0.13")
-    depends_on("llvm +clang @3.2:3.7", when="@0.12")
-    depends_on("llvm +clang @3.2:3.6", when="@0.11")
-    depends_on("llvm +clang @3.2:3.5", when="@0.10")
+    depends_on('llvm +clang')
+    depends_on("llvm @6.0:11.0", when="@master")
+    depends_on("llvm @6.0:11.0", when="@1.6")
+    depends_on("llvm @6.0:10.0", when="@1.5")
+    depends_on("llvm @6.0:9.0", when="@1.4")
+    depends_on("llvm @5.0:8.0", when="@1.3")
+    depends_on("llvm @5.0:7.0", when="@1.2")
+    depends_on("llvm @5.0:6.0", when="@1.1")
+    depends_on("llvm @4.0:5.0", when="@1.0")
+    depends_on("llvm @3.7:4.0", when="@0.14")
+    depends_on("llvm @3.7:3.8", when="@0.13")
+    depends_on("llvm @3.2:3.7", when="@0.12")
+    depends_on("llvm @3.2:3.6", when="@0.11")
+    depends_on("llvm @3.2:3.5", when="@0.10")
 
     variant("distro", default=False,
             description=("Support several CPU architectures, "
