@@ -1984,6 +1984,7 @@ class Environment(object):
         # new specs and new installs reset at write time
         self.new_specs = []
         self.new_installs = []
+        # re-read to update properties after a write action
         self._re_read()
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
