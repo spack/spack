@@ -21,8 +21,8 @@ class PyPystan(PythonPackage):
     version('2.19.0.0', sha256='b85301b960d5991918b40bd64a4e9321813657a9fc028e0f39edce7220a309eb')
 
     # common requirements
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-poetry-core@1.0.0:', type='build')
+    depends_on('py-setuptools',         type=('build', 'run'))
+    depends_on('py-poetry-core@1.0.0:', type=('build', 'run'))
 
     # variable requirements
     depends_on('python@3.8:3',                  type=('build', 'run'), when='@3.4.0:')
