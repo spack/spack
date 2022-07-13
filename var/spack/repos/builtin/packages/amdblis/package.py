@@ -31,11 +31,6 @@ class Amdblis(BlisBase):
 
     variant('ilp64', default=False, when='@3.0.1:', description='ILP64 support')
 
-    conflicts(
-        '+ilp64',
-        when='@:3.0.0',
-        msg='ilp64 is supported from amdblis 3.0.1 version onwards')
-
     def configure_args(self):
         spec = self.spec
         args = super(Amdblis, self).configure_args()

@@ -74,6 +74,7 @@ class Amdfftw(FftwBase):
     variant(
         'amd-dynamic-dispatcher',
         default=False,
+        when='@3.2:',
         description='Single portable optimized library'
                     ' to execute on different x86 CPU architectures')
 
@@ -181,10 +182,6 @@ class Amdfftw(FftwBase):
         '+amd-dynamic-dispatcher',
         when='%aocc',
         msg='dynamic-dispatcher is not supported by AOCC clang compiler')
-    conflicts(
-        '+amd-dynamic-dispatcher',
-        when='@:3.1',
-        msg='dynamic-dispatcher is supported from 3.2 version onwards')
 
     def configure(self, spec, prefix):
         """Configure function"""

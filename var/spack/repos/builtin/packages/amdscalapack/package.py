@@ -38,14 +38,11 @@ class Amdscalapack(ScalapackBase):
               msg="ILP64 is supported from 3.1 onwards")
 
     def url_for_version(self, version):
-        if version == Version('3.2'):
-            return "https://github.com/amd/aocl-scalapack/archive/3.2.tar.gz"
-        elif version == Version('3.1'):
-            return "https://github.com/amd/aocl-scalapack/archive/3.1.tar.gz"
-        elif version == Version('3.0'):
-            return "https://github.com/amd/scalapack/archive/3.0.tar.gz"
-        elif version == Version('2.2'):
-            return "https://github.com/amd/scalapack/archive/2.2.tar.gz"
+        vers = "https://github.com/amd/{0}/archive/{1}.tar.gz"
+        if version >= Version('3.1'):
+            return vers.format('aocl-scalapack', version)
+        else:
+            return vers.format('scalapack', version)
 
     def cmake_args(self):
         """ cmake_args function"""
