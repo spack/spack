@@ -31,8 +31,8 @@ class Fckit(CMakePackage):
     depends_on('ecbuild', type=('build'))
 
     variant('build_type', default='RelWithDebInfo',
-        description='CMake build type',
-        values=('Debug', 'Release', 'RelWithDebInfo'))
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     variant('eckit', default=True)
     depends_on('eckit+mpi', when='+eckit')

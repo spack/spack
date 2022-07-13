@@ -24,8 +24,8 @@ class Ectrans(CMakePackage):
     version('1.0.0', commit='ee1d307f1e47e1dd0b5ea91663a41df8a94cafb3', preferred=True)
 
     variant('build_type', default='RelWithDebInfo',
-        description='CMake build type',
-        values=('Debug', 'Release', 'RelWithDebInfo'))
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     variant('mpi', default=True, description='Use MPI?')
     variant('openmp', default=True, description='Use OpenMP?')
