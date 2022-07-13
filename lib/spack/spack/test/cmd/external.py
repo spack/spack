@@ -45,7 +45,7 @@ def define_plat_exe(exe):
 
 def test_find_external_single_package(mock_executable, executables_found,
                                       _platform_executables):
-    pkgs_to_check = [spack.repo.get('cmake')]
+    pkgs_to_check = [spack.repo.path.get_pkg_class('cmake')]
     executables_found({
         mock_executable("cmake", output='echo cmake version 1.foo'):
             define_plat_exe('cmake')
@@ -61,7 +61,7 @@ def test_find_external_single_package(mock_executable, executables_found,
 
 def test_find_external_two_instances_same_package(mock_executable, executables_found,
                                                   _platform_executables):
-    pkgs_to_check = [spack.repo.get('cmake')]
+    pkgs_to_check = [spack.repo.path.get_pkg_class('cmake')]
 
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes

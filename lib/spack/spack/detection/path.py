@@ -220,7 +220,7 @@ def by_executable(packages_to_check, path_hints=None):
     searching by path.
 
     Args:
-        packages_to_check (list): list of packages to be detected
+        packages_to_check (list): list of package classes to be detected
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
@@ -228,7 +228,7 @@ def by_executable(packages_to_check, path_hints=None):
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
-            for exe in pkg.platform_executables:
+            for exe in pkg.platform_executables():
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
         path_hints.extend(compute_windows_program_path_for_package(pkg))

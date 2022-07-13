@@ -10,6 +10,7 @@ import pytest
 
 import spack.directives
 import spack.paths
+import spack.repo
 import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
@@ -19,9 +20,13 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content1 = content1.replace(
+        spack.repo.path.get_pkg_class(spec1.name).__name__, 'TestPackage'
+    )
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    content2 = content2.replace(
+        spack.repo.path.get_pkg_class(spec2.name).__name__, 'TestPackage'
+    )
     if eq:
         assert content1 == content2
     else:
@@ -30,12 +35,14 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
-    hash1 = spec1.package.content_hash(content=content1)
+    pkg_cls1 = spack.repo.path.get_pkg_class(spec1.name)
+    content1 = content1.replace(pkg_cls1.__name__, 'TestPackage')
+    hash1 = pkg_cls1(spec1).content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
-    hash2 = spec2.package.content_hash(content=content2)
+    pkg_cls2 = spack.repo.path.get_pkg_class(spec2.name)
+    content2 = content2.replace(pkg_cls2.__name__, 'TestPackage')
+    hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
     if eq:
         assert hash1 == hash2

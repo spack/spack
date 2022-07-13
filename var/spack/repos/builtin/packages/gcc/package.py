@@ -11,6 +11,7 @@ import sys
 from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.platforms
 import spack.util.executable
@@ -351,8 +352,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    @property
-    def executables(self):
+    @classproperty
+    def executables(cls):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
         suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
         return [r''.join(x) for x in itertools.product(names, suffixes)]

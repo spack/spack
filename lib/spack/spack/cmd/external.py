@@ -119,34 +119,37 @@ def external_find(args):
         args.tags = []
 
     # Construct the list of possible packages to be detected
-    packages_to_check = []
+    pkg_cls_to_check = []
 
     # Add the packages that have been required explicitly
     if args.packages:
-        packages_to_check = list(spack.repo.get(pkg) for pkg in args.packages)
+        pkg_cls_to_check = [
+            spack.repo.path.get_pkg_class(pkg) for pkg in args.packages
+        ]
         if args.tags:
             allowed = set(spack.repo.path.packages_with_tags(*args.tags))
-            packages_to_check = [x for x in packages_to_check if x in allowed]
+            pkg_cls_to_check = [x for x in pkg_cls_to_check if x.name in allowed]
 
-    if args.tags and not packages_to_check:
+    if args.tags and not pkg_cls_to_check:
         # If we arrived here we didn't have any explicit package passed
         # as argument, which means to search all packages.
         # Since tags are cached it's much faster to construct what we need
         # to search directly, rather than filtering after the fact
-        packages_to_check = [
-            spack.repo.get(pkg) for tag in args.tags for pkg in
-            spack.repo.path.packages_with_tags(tag)
+        pkg_cls_to_check = [
+            spack.repo.path.get_pkg_class(pkg_name)
+            for tag in args.tags
+            for pkg_name in spack.repo.path.packages_with_tags(tag)
         ]
-        packages_to_check = list(set(packages_to_check))
+        pkg_cls_to_check = list(set(pkg_cls_to_check))
 
     # If the list of packages is empty, search for every possible package
-    if not args.tags and not packages_to_check:
-        packages_to_check = list(spack.repo.path.all_packages())
+    if not args.tags and not pkg_cls_to_check:
+        pkg_cls_to_check = list(spack.repo.path.all_package_classes())
 
     detected_packages = spack.detection.by_executable(
-        packages_to_check, path_hints=args.path)
+        pkg_cls_to_check, path_hints=args.path)
     detected_packages.update(spack.detection.by_library(
-        packages_to_check, path_hints=args.path))
+        pkg_cls_to_check, path_hints=args.path))
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
@@ -217,7 +220,7 @@ def _collect_and_consume_cray_manifest_files(
 
 def external_list(args):
     # Trigger a read of all packages, might take a long time.
-    list(spack.repo.path.all_packages())
+    list(spack.repo.path.all_package_classes())
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
     for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
