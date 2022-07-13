@@ -149,13 +149,6 @@ class Eckit(CMakePackage):
             # args.append('-DBUILD_SHARED_LIBS=OFF')
             raise InstrallError("eckit static build not supported")
 
-        #if '+mpi' in self.spec:
-        #    args += [
-        #        '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-        #        '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-        #        '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-        #    ]
-
         if 'linalg=mkl' not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled
             # (the LAPACK backend is still built though):
