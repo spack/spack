@@ -220,11 +220,15 @@ class Ascent(CMakePackage, CudaPackage):
     # Note: cmake, build, and install stages are handled by CMakePackage
     ####################################################################
 
+    @property
+    def root_cmakelists_dir(self):
+        return os.path.join(self.stage.source_path, 'src')
+
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
         options = []
-        options.extend(["-C", host_config, "../spack-src/src/"])
+        options.extend(["-C", host_config])
         return options
 
     @run_after("install")
