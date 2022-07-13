@@ -1767,3 +1767,41 @@ class TestConcretize(object):
             match="The reference version 'main' for package 'develop-branch-version'",
         ):
             s.concretized()
+
+    @pytest.mark.regression('31484')
+    def test_installed_externals_are_reused(
+            self, mutable_database, repo_with_changing_recipe
+    ):
+        """Test that external specs that are in the DB can be reused."""
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Use case not supported by the original concretizer')
+
+        # Configuration to be added to packages.yaml
+        external_conf = {
+            'changing': {
+                'buildable': False,
+                'externals': [{
+                    'spec': 'changing@1.0',
+                    'prefix': '/usr'
+                }]
+            }
+        }
+        spack.config.set('packages', external_conf)
+
+        # Install the external spec
+        external1 = Spec('changing@1.0').concretized()
+        external1.package.do_install(fake=True, explicit=True)
+        assert external1.external
+
+        # Modify the package.py file
+        repo_with_changing_recipe.change({'delete_variant': True})
+
+        # Try to concretize the external without reuse and confirm the hash changed
+        with spack.config.override("concretizer:reuse", False):
+            external2 = Spec('changing@1.0').concretized()
+        assert external2.dag_hash() != external1.dag_hash()
+
+        # ... while with reuse we have the same hash
+        with spack.config.override("concretizer:reuse", True):
+            external3 = Spec('changing@1.0').concretized()
+        assert external3.dag_hash() == external1.dag_hash()

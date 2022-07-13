@@ -464,7 +464,9 @@ version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
 
 % if a package is not buildable (external_only), only externals are allowed
-external(Package) :- external_only(Package), node(Package).
+external(Package) :- external_only(Package),
+                     node(Package),
+                     not hash(Package, _).
 
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
@@ -483,7 +485,8 @@ external(Package) :- external_spec_selected(Package, _).
 % determine if an external spec has been selected
 external_spec_selected(Package, LocalIndex) :-
     external_conditions_hold(Package, LocalIndex),
-    node(Package).
+    node(Package),
+    not hash(Package, _).
 
 external_conditions_hold(Package, LocalIndex) :-
     possible_external(ID, Package, LocalIndex), condition_holds(ID).
