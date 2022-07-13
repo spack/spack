@@ -22,8 +22,8 @@ class PyFparser(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy', type=('build', 'run'), when='@:0.0.5')
-    depends_on('py-nose', type='build', when='@:0.0.7')
-    depends_on('py-six', type='build', when='@0.0.6:')
+    depends_on('py-nose', type=('build', 'run'), when='@:0.0.7')
+    depends_on('py-six', type=('build', 'run'), when='@0.0.6:0.0.14')
 
     depends_on('py-pytest', type='test')
 
