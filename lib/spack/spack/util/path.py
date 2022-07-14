@@ -204,12 +204,8 @@ def format_os_path(path, mode=Path.unix):
         mode (Path): the path filesperator style to normalize the
             passed path to. Default is unix style, i.e. '/'
     """
-    if not path:
-        return path
     if mode == Path.windows:
-        path = path.replace('/', '\\')
-    else:
-        path = path.replace('\\', '/')
+        return path.replace('/', '\\')
     return path
 
 
