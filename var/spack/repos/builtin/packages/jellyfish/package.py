@@ -18,27 +18,32 @@ class Jellyfish(AutotoolsPackage):
     version('1.1.11', sha256='496645d96b08ba35db1f856d857a159798c73cbc1eccb852ef1b253d1678c8e2',
             url='https://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
 
-    variant('pybind', default=False, description='Enable python binding')
-    variant('rubybind', default=False, description='Enable ruby binding')
-    variant('perlbind', default=False, description='Enable perl binding')
+    variant(
+        'bindings', default='none', description='Support for binding to Ruby, Python and Perl',
+        values=('pybind', 'rubybind', 'perlbind', 'none'), multi=True
+    )
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    extends('perl', when='bindings=perlbind')
+    extends('python', when='bindings=pybind')
+    extends('ruby', when='bindings=rubybind')
 
     patch('dna_codes.patch', when='@1.1.11')
 
     def configure_args(self):
         spec = self.spec
-        if '+pybind' in spec:
-            args = [
+
+        args = []
+
+        if 'bindings=pybind' in spec:
+            args.append = [
                 '--enable-python-binding',
             ]
-        elif '+rubybind' in spec:
-            args = [
+        if 'bindings=rubybind' in spec:
+            args.append = [
                 '--enable-ruby-binding',
             ]
-        elif '+perlbind' in spec:
-            args = [
+        if 'bindings=perlbind' in spec:
+            args.append = [
                 '--enable-perl-binding'
             ]
         return args
