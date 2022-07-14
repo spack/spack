@@ -3,20 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import os
 import re
 import shutil
 import sys
 from itertools import product
 
+import spack.util.path as spath
 from spack.util.executable import CommandNotFoundError, which
-
-from llnl.util.lang import memoized
 
 # Supported archive extensions.
 PRE_EXTS   = ["tar", "TAR"]
 EXTS       = ["gz", "bz2", "xz", "Z"]
-NOTAR_EXTS = ["zip", "tgz", "tbz", "tbz2", "txz"]
+NOTAR_EXTS = ["zip", "tgz", "tbz2", "tbz", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
 ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
@@ -179,7 +179,7 @@ def _lzma_decomp(archive_file):
     lzma module, but fall back on command line xz tooling
     to find available Python support. This is the xz command
     on Unix and 7z on Windows"""
-    if lzma_support:
+    if is_lzma_supported():
         _, ext = os.path.splitext(archive_file)
         decompressed_file = os.path.basename(archive_file.strip(ext))
         archive_out = os.path.join(os.getcwd(), decompressed_file)
@@ -244,7 +244,7 @@ def decompressor_for(path):
     Args:
         path (str): path of the archive file requiring decompression
     """
-    ext = extension(path)
+    ext = extension_from_file(path, decompress=True)
     if not allowed_archive(ext):
         raise CommandNotFoundError("Cannot extract archive, \
 unrecognized file extension: '%s'" % ext)
@@ -277,126 +277,206 @@ unrecognized file extension: '%s'" % ext)
     return _untar
 
 
-class FileType:
+class FileTypeInterface:
+    """
+    Base interface class for describing and querying file type information.
+    FileType describes information about a single file type
+    such as extension, and byte header properties, and provides an interface
+    to check a given file against said type based on magic number.
+
+    This class should be subclassed each time a new type is to be
+    described.
+
+    Note: This class should not be used directly as it does not define any specific
+    file. Attempts to directly use this class will fail, as it does not define
+    a magic number or extension string.
+
+    Subclasses should each describe a different
+    type of file. In order to do so, they must define
+    the extension string, magic number, and header offset (if non zero).
+    If a class has multiple magic numbers, it will need to
+    override the method describin that file types magic numbers and
+    the method that checks a types magic numbers against a given file's.
+    """
     _OFFSET = 0
-    _MAGIC_NUMBER = b'\x00'
-    _ext = ''
     _compressed = False
 
     @classmethod
-    @property
+    def name(cls):
+        raise NotImplementedError
+
+    @classmethod
     def is_compression_type(cls):
         return cls._compressed
 
     @classmethod
-    @property
     def offset(cls):
         return cls._OFFSET
 
     @classmethod
-    @property
     def magic_number(cls):
         return cls._MAGIC_NUMBER
 
     @classmethod
-    @property
     def extension(cls):
         return cls._ext
 
     @classmethod
-    @property
     def header_size(cls):
-        return len(cls.magic_number)
+        return len(cls.magic_number())
 
     @classmethod
-    @property
     def _bytes_check(cls, magic_bytes):
         return cls._MAGIC_NUMBER == magic_bytes
 
     @classmethod
     def is_file_of_type(cls, iostream):
-        iostream.seek(cls.offset)
-        magic_bytes = iostream.read(cls.header_size)
+        """Query byte stream for appropriate magic number
+
+        Args:
+            iostream (IOBase): file byte stream
+
+        Returns:
+            Bool denoting whether file is of class file type
+            based on magic number
+        """
+        # move to location of magic bytes
+        iostream.seek(cls.offset())
+        magic_bytes = iostream.read(cls.header_size())
+        # return to beginning of file
+        iostream.seek(0)
         if cls._bytes_check(magic_bytes):
             return True
         return False
 
-class CompressedFileType(FileType):
+
+class CompressedFileTypeInterface(FileTypeInterface):
+    """Interface class for FileTypes that include compression information"""
     _compressed = True
 
     @classmethod
-    def decomp_in_memory(cls, filepath):
-        raise RuntimeError("Implementation by subclass required")
+    def decomp_in_memory(cls, stream):
+        raise NotImplementedError("Implementation by compression subclass required")
 
 
-class BZipFileType(CompressedFileType):
+class BZipFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b'\x42\x5a\x68'
     _ext = 'bz2'
 
     @classmethod
-    def decomp_in_memory(cls, filepath):
-        pass
+    def name(cls):
+        return 'bzip2 compressed data'
+
+    @classmethod
+    def decomp_in_memory(cls, stream):
+        if is_bz2_supported():
+            return io.BytesIO(initial_bytes=bz2.BZ2Decompressor().decompress(
+                stream.read(), max_length=cls.offset() + cls.header_size()))
+        return None
 
 
-class ZCompressedFileType(CompressedFileType):
+class ZCompressedFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER_LZW = b'\x1f\x9d'
     _MAGIC_NUMBER_LZH = b'\x1f\xa0'
     _ext = 'Z'
 
     @classmethod
-    @property
+    def name(cls):
+        return "compress'd data"
+
+    @classmethod
     def magic_number(cls):
-        [cls._MAGIC_NUMBER_LZH, cls._MAGIC_NUMBER_LZW]
+        return [cls._MAGIC_NUMBER_LZH, cls._MAGIC_NUMBER_LZW]
 
     @classmethod
-    @property
     def header_size(cls):
-        return max(len(cls._MAGIC_NUMBER_LZW), len(cls._MAGIC_NUMBER_LZH))
+        return max(len(cls._MAGIC_NUMBER_LZW),
+                   len(cls._MAGIC_NUMBER_LZH))
 
     @classmethod
-    def decomp_in_memory(cls, filepath):
-        pass
+    def _bytes_check(cls, magic_bytes):
+        for magic in cls.magic_number():
+            if magic_bytes.startswith(magic):
+                return True
+        return False
+
+    @classmethod
+    def decomp_in_memory(cls, stream):
+        # python has no method of decompressing `.Z` files
+        return None
 
 
-class GZipFileType(CompressedFileType):
+class GZipFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b'\x1f\x8b\x08'
     _ext = 'gz'
 
     @classmethod
-    def decomp_in_memory(cls, filepath):
-        pass
+    def name(cls):
+        return "gzip compressed data"
+
+    @classmethod
+    def decomp_in_memory(cls, stream):
+        if is_gzip_supported():
+            return io.BytesIO(
+                initial_bytes=gzip.GzipFile(
+                    fileobj=stream).read(cls.offset() + cls.header_size()))
+        return None
 
 
-class LzmaFileType(CompressedFileType):
+class LzmaFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b'\xfd7zXZ'
     _ext = 'xz'
 
     @classmethod
-    def decomp_in_memory(cls, filepath):
-        pass
+    def name(cls):
+        return "xz compressed data"
 
-class TarFileType(FileType):
+    @classmethod
+    def decomp_in_memory(cls, stream):
+        if is_lzma_supported():
+            max_size = cls.offset() + cls.header_size()
+            return io.BytesIO(initial_bytes=lzma.LZMADecompressor().decompress(
+                stream.read(max_size), max_length=max_size))
+        return None
+
+
+class TarFileType(FileTypeInterface):
     _OFFSET = 257
     _GNU_MAGIC = b'ustar  \0'
     _POSIX_MAGIC = b'ustar\x0000'
     _ext = 'tar'
 
     @classmethod
-    @property
-    def magic_number(cls):
-        [cls._GNU_MAGIC, cls._POSIX_MAGIC]
+    def name(cls):
+        return "tar archive"
 
     @classmethod
-    @property
+    def magic_number(cls):
+        return [cls._GNU_MAGIC, cls._POSIX_MAGIC]
+
+    @classmethod
     def header_size(cls):
         return max(len(cls._GNU_MAGIC), len(cls._POSIX_MAGIC))
 
+    @classmethod
+    def _bytes_check(cls, magic_bytes):
+        for magic in cls.magic_number():
+            if magic_bytes.startswith(magic):
+                return True
+        return False
 
-class ZipFleType(FileType):
+
+class ZipFleType(FileTypeInterface):
     _MAGIC_NUMBER = b'PK\003\004'
     _ext = 'zip'
 
+    @classmethod
+    def name(cls):
+        return "Zip archive data"
 
+
+# collection of valid Spack recognized archive and compression
+# file type identifier classes.
 VALID_FILETYPES = [BZipFileType, ZCompressedFileType,
                    GZipFileType, LzmaFileType, TarFileType,
                    ZipFleType]
@@ -414,7 +494,7 @@ def extension_from_stream(stream, decompress=False):
         stream (IOBase): stream representing a file on system
         decompress (bool) : if True, compressed files are checked
                             for archive types beneath compression i.e. tar.gz
-                            default is False
+                            default is False, otherwise, return top level type i.e. gz
 
     Return:
         extension (str|None): A string represting corresponding archive extension
@@ -423,41 +503,62 @@ def extension_from_stream(stream, decompress=False):
     """
     for arc_type in VALID_FILETYPES:
         if arc_type.is_file_of_type(stream):
-            suffix_ext = arc_type.extension
+            suffix_ext = arc_type.extension()
             prefix_ext = ''
             if arc_type.is_compression_type() and decompress:
                 # stream represents compressed file
-                prefix_ext = extension_from_stream(arc_type.decomp_in_memory(stream))
+                # get decompressed stream (if possible)
+                decomp_stream = arc_type.decomp_in_memory(stream)
+                if not decomp_stream:
+                    # we were unable to decompress, fallback on
+                    # filename parsing to derive extension
+                    return extension_from_path(stream.name)
+                prefix_ext = extension_from_stream(decomp_stream, decompress=decompress)
             return suffix_ext if not prefix_ext else '.'.join([prefix_ext, suffix_ext])
     return None
 
 
 def extension_from_file(file, decompress=False):
-    """Takes filepath representing file on system.
-    Opens file into memory and checks for spack supported archive types.
+    """Return extension from archive file path
+    Extension is derived based on magic number parsing similar
+    to the `file` utility. Attempts to return abbreviated file extensions
+    whenever relevant (i.e. compressed tarball as `.tgz`). This distinction
+    in abbreivated extension names is accomplished by string parsing.
+
 
     Args:
-        file (os.PathLike)
+        file (os.PathLike): path descibing file on system for which ext
+            will be determined.
+        decompress (bool): If True, method will peek into compressed
+            files to check for archive file types. default is False.
+            If false, method will be unable to distinguish `.tar.gz` from `.gz`
+            or similar.
+    Return:
+        Spack recognized archive file extension as determined by file's magic number and
+         file name. If file is not on system or is of an type not recognized by Spack as
+         an archive or compression type, None is returned.
     """
-    with open(file, 'rb') as f:
-        ext = extension_from_stream(f, decompress)
-        # based on magic number, file is compressed
-        # tar archive. Check to see if file is abbreviated as
-        # t[xz|gz|bz2|bz]
-        if ext.startswith('tar.'):
-            suf = ext.split('.')[1]
-            abbr = 't' + suf
-            if check_extension(file, abbr):
-                return abbr
-        return ext
+    if os.path.exists(file):
+        with open(file, 'rb') as f:
+            ext = extension_from_stream(f, decompress)
+            # based on magic number, file is compressed
+            # tar archive. Check to see if file is abbreviated as
+            # t[xz|gz|bz2|bz]
+            if ext and ext.startswith('tar.'):
+                suf = ext.split('.')[1]
+                abbr = 't' + suf
+                if check_extension(file, abbr):
+                    return abbr
+            return ext
+    return None
 
 
 def strip_extension(path):
     """Get the part of a path that does not include its compressed
        type extension."""
-    for type in ALLOWED_ARCHIVE_TYPES:
-        suffix = r'\.%s$' % type
-        if re.search(suffix, path):
+    for t in ALLOWED_ARCHIVE_TYPES:
+        if check_extension(path, t):
+            suffix = r'\.%s' % t
             return re.sub(suffix, "", path)
     return path
 
@@ -465,22 +566,15 @@ def strip_extension(path):
 def check_extension(path, ext):
     """Check if extension is present in path"""
     # Strip sourceforge suffix.
-    suffix = r'%s$' % ext
-    if re.search(suffix, path):
+    prefix, _ = spath.find_sourceforge_suffix(path)
+    if not ext.startswith(r'\.'):
+        ext = r'\.' + ext
+    if re.search(ext, prefix):
         return True
     return False
 
 
-def strip_sourceforge_suffix(path):
-    """remove sourceforge suffix from path if present
-    return stripped path"""
-    # Strip sourceforge suffix.
-    if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        return os.path.dirname(path)
-    return path
-
-
-def extension(path):
+def extension_from_path(path):
     """Get the allowed archive extension for a path.
     If path does not include a valid archive extension
     (see`spack.util.compression.ALLOWED_ARCHIVE_TYPES`) return None
@@ -488,10 +582,7 @@ def extension(path):
     if path is None:
         raise ValueError("Can't call extension() on None")
 
-    # Strip sourceforge suffix.
-    path = strip_sourceforge_suffix(path)
-
     for t in ALLOWED_ARCHIVE_TYPES:
-        if check_extension(path, '\.'+t):
+        if check_extension(path, t):
             return t
     return None

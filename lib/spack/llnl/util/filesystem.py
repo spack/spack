@@ -133,7 +133,6 @@ def _get_mime_type_compressed():
     return mime_uncompressed
 
 
-@memoized
 def mime_type(filename):
     """Returns the mime type and subtype of a file.
 
@@ -149,7 +148,6 @@ def mime_type(filename):
     return type, subtype
 
 
-@memoized
 def compressed_mime_type(filename):
     """Same as mime_type but checks for type that has been compressed
 

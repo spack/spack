@@ -11,8 +11,8 @@ import shutil
 import macholib.mach_o
 import macholib.MachO
 
-import llnl.util.lang
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.symlink import symlink
 

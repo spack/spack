@@ -54,7 +54,7 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
-from spack.util.compression import decompressor_for, extension
+from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -284,6 +284,8 @@ class URLFetchStrategy(FetchStrategy):
         self.expand_archive = kwargs.get('expand', True)
         self.extra_options = kwargs.get('fetch_options', {})
         self._curl = None
+
+        self.extension = kwargs.get('extension', None)
 
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
@@ -669,7 +671,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert (extension(destination) == 'tar.gz')
+        assert (extension_from_path(destination) == 'tar.gz')
         assert (self.stage.source_path.startswith(self.stage.path))
 
         tar = which('tar', required=True)
