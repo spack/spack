@@ -110,6 +110,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     depends_on('ca-certificates-mozilla', type=('build', 'run'), when='certs=mozilla')
     depends_on('nasm', when='platform=windows')
 
+    patch('v3ext_stringh_111q.patch',
+      sha256='5bce75d3bd482c793096a0ced4a9e273b08ebadd0b198638c7a9342a761234e7',
+      when='@1.1.1q')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('version', output=str, error=str)

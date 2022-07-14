@@ -1,0 +1,10 @@
+--- a/test/v3ext.c	2022-07-14 06:35:24.000000000 -0600
++++ b/test/v3ext.c	2022-07-14 06:33:22.000000000 -0600
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include <openssl/x509.h>
+ #include <openssl/x509v3.h>
+ #include <openssl/pem.h>
