@@ -22,9 +22,9 @@ class Jellyfish(AutotoolsPackage):
     variant('rubybind', default=False, description='Enable ruby binding')
     variant('perlbind', default=False, description='Enable perl binding')
 
-    extends('perl', when='bindings=perlbind')
-    extends('python', when='bindings=pybind')
-    extends('ruby', when='bindings=rubybind')
+    extends('perl', when='+perlbind')
+    extends('python', when='+pybind')
+    extends('ruby', when='+rubybind')
 
     patch('dna_codes.patch', when='@1.1.11')
 
