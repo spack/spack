@@ -26,11 +26,11 @@ class AmdAocl(BundlePackage):
 
     for vers in ['2.2', '3.0', '3.1', '3.2']:
         depends_on('amdblis@{0} threads=openmp'.format(vers), when='@{0} +openmp'.format(vers))
-        depends_on('amdblis@{0}'.format(vers), when='@{0} ~openmp'.format(vers))
+        depends_on('amdblis@{0} threads=none'.format(vers), when='@{0} ~openmp'.format(vers))
         depends_on('amdfftw@{0} +openmp'.format(vers), when='@{0} +openmp'.format(vers))
-        depends_on('amdfftw@{0}'.format(vers), when='@{0} ~openmp'.format(vers))
+        depends_on('amdfftw@{0} ~openmp'.format(vers), when='@{0} ~openmp'.format(vers))
         depends_on('amdlibflame@{0}'.format(vers), when='@{0}'.format(vers))
         depends_on('amdlibm@{0}'.format(vers), when='@{0}'.format(vers))
-        depends_on('amdscalapack@{0}'.format(vers), when='@{0} ~openmp'.format(vers))
+        depends_on('amdscalapack@{0} ^amdblis@{0} threads=none'.format(vers), when='@{0} ~openmp'.format(vers))
         depends_on('amdscalapack@{0} ^amdblis@{0} threads=openmp'.format(vers), when='@{0} +openmp'.format(vers))
         depends_on('aocl-sparse@{0}'.format(vers), when='@{0}'.format(vers))
