@@ -457,7 +457,7 @@ class Conduit(CMakePackage):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if spec["mpi"].mpicc == spack_cc:
+            if spec["mpi"].mpicc == spack_cc and  "@3.14" in spec["cmake"]:
                 mpicc_path = c_compiler
                 mpicxx_path = cpp_compiler
                 mpifc_path = f_compiler
