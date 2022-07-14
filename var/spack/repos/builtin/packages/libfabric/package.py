@@ -17,6 +17,8 @@ class Libfabric(AutotoolsPackage):
     maintainers = ["rajachan"]
 
     version("master", branch="master")
+    version('1.15.1', sha256='cafa3005a9dc86064de179b0af4798ad30b46b2f862fe0268db03d13943e10cd')
+    version('1.15.0', sha256='70982c58eadeeb5b1ddb28413fd645e40b206618b56fbb2b18ab1e7f607c9bea')
     version("1.14.1", sha256="6cfabb94bca8e419d9015212506f5a367d077c5b11e94b9f57997ec6ca3d8aed")
     version("1.14.0", sha256="fc261388848f3cff555bd653f5cb901f6b9485ad285e5c53328b13f0e69f749a")
     version("1.13.2", sha256="25d783b0722a8df8fe61c1de75fafca684c5fe520303180f26f0ad6409cfc0b9")
@@ -44,8 +46,9 @@ class Libfabric(AutotoolsPackage):
     fabrics = (
         "efa",
         "gni",
-        "mlx",
+        conditional("mlx", when="@:1.8.1"), # removed in 1.9
         "mrail",
+        conditional("opx", when="@1.15.0:"),
         "psm",
         "psm2",
         "psm3",
@@ -98,6 +101,8 @@ class Libfabric(AutotoolsPackage):
     depends_on("autoconf", when="@develop", type="build")
     depends_on("automake", when="@develop", type="build")
     depends_on("libtool", when="@develop", type="build")
+    depends_on("uuid", when="fabrics=opx")
+    depends_on("numactl", when="fabrics=opx")
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
 
@@ -120,7 +125,7 @@ class Libfabric(AutotoolsPackage):
         else:
             args.append("--with-kdreg=no")
 
-        for fabric in self.fabrics:
+        for fabric in self.spec.variants["fabrics"].value:
             if "fabrics=" + fabric in self.spec:
                 args.append("--enable-{0}=yes".format(fabric))
             else:
