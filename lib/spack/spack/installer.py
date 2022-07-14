@@ -230,9 +230,10 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     # concretize as Spec to add that information
     # cache concretizations within an instantiation of Spack
     global _compiler_concretization_cache
-    if dep not in _compiler_concretization_cache:
-        _compiler_concretization_cache[dep] = dep.concretized()
-    concrete_dep = _compiler_concretization_cache[dep]
+    depstr = str(dep)
+    if depstr not in _compiler_concretization_cache:
+        _compiler_concretization_cache[depstr] = dep.concretized()
+    concrete_dep = _compiler_concretization_cache[depstr]
 
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
