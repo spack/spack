@@ -112,7 +112,7 @@ class Gdal(CMakePackage):
     variant('jxl', default=False, when='@3.4:', description='Required for JPEGXL driver')
     variant('kdu', default=False, description='Required for JP2KAK and JPIPKAK drivers')
     variant('kea', default=False, description='Required for KEA driver')
-    variant('lerc', default=True, when='@2.4:', description='Required for LERC compression')
+    variant('lerc', default=True, when='@3.3:', description='Required for LERC compression')
     variant('libcsf', default=False, description='Required for PCRaster driver')
     variant('libkml', default=False, description='Required for LIBKML driver')
     variant('liblzma', default=False, description='Required for Zarr driver')
