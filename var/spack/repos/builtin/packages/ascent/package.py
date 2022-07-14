@@ -107,6 +107,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding Conduit python more reliably
     # https://github.com/Alpine-DAV/ascent/pull/935
     patch("ascent-find-conduit-python-pr935.patch", when="@0.8.0")
+    # patch for finding dependencies in configure file
+    # https://github.com/Alpine-DAV/ascent/pull/962
+    patch("ascent-configure-deps-pr962.patch", when="@0.8.0")
 
     ##########################################################################
     # package dependencies

@@ -1,0 +1,83 @@
+diff --git a/src/config/ascent_setup_deps.cmake b/src/config/ascent_setup_deps.cmake
+index 3b369717..28c60df6 100644
+--- a/src/config/ascent_setup_deps.cmake
++++ b/src/config/ascent_setup_deps.cmake
+@@ -51,7 +51,7 @@ endif()
+ 
+ if(VTKH_DIR)
+     if(NOT EXISTS ${VTKH_DIR}/lib/VTKhConfig.cmake)
+-        message(FATAL_ERROR "Could not find VTKh CMake include file (${VTKH_DIR}/lib/VTKhConfig.cmake)")
++      message(FATAL_ERROR "Could not find VTKh CMake include file (${VTKH_DIR}/lib/VTKhConfig.cmake)")
+     endif()
+ 
+     ###############################################################################
+@@ -59,7 +59,7 @@ if(VTKH_DIR)
+     ###############################################################################
+     find_dependency(VTKh REQUIRED
+                     NO_DEFAULT_PATH
+-                    PATHS ${VTKH_DIR}/lib/)
++                    PATHS ${VTKH_DIR}/lib)
+ endif()
+ 
+ ###############################################################################
+@@ -71,15 +71,16 @@ endif()
+ 
+ if(VTKM_DIR)
+     # use VTKM_DIR to setup the options that cmake's find VTKm needs
+-    file(GLOB VTKm_DIR "${VTKM_DIR}/lib/cmake/vtkm-*")
+-    if(NOT VTKm_DIR)
+-        message(FATAL_ERROR "Failed to find VTKm at VTKM_DIR=${VTKM_DIR}/lib/cmake/vtk-*")
++    if(NOT EXISTS ${VTKM_DIR})
++        message(FATAL_ERROR "Failed to find VTKm at VTKM_DIR=${VTKM_DIR}")
+     endif()
+ 
+     ###############################################################################
+     # Import CMake targets
+     ###############################################################################
+-    find_dependency(VTKm REQUIRED)
++    find_dependency(VTKm REQUIRED
++      NO_DEFAULT_PATH
++      PATHS ${VTKM_DIR})
+ endif()
+ 
+ ###############################################################################
+@@ -168,8 +169,8 @@ if(NOT ADIOS2_DIR)
+ endif()
+ 
+ if(ADIOS2_DIR)
+-    if(NOT EXISTS ${ADIOS2_DIR}/lib/cmake/adios2)
+-      message(FATAL_ERROR "Could not find ADIOS2 CMake include info (${ADIOS2_DIR}/lib/cmake/adios2)")
++    if(NOT EXISTS ${ADIOS2_DIR})
++      message(FATAL_ERROR "Could not find ADIOS2 CMake include info (${ADIOS2_DIR})")
+     endif()
+ 
+     ###############################################################################
+@@ -177,7 +178,7 @@ if(ADIOS2_DIR)
+     ###############################################################################
+     find_dependency(ADIOS2 REQUIRED
+                     NO_DEFAULT_PATH
+-                    PATHS ${ADIOS2_DIR}/lib/cmake/adios2)
++                    PATHS ${ADIOS2_DIR})
+ endif()
+ 
+ ###############################################################################
+@@ -188,8 +189,8 @@ if(NOT FIDES_DIR)
+ endif()
+ 
+ if(FIDES_DIR)
+-    if(NOT EXISTS ${FIDES_DIR}/lib/cmake/fides)
+-        message(FATAL_ERROR "Could not find FIDES CMake include info (${FIDES_DIR}/lib/cmake/fides)")
++    if(NOT EXISTS ${FIDES_DIR})
++        message(FATAL_ERROR "Could not find FIDES CMake include info (${FIDES_DIR})")
+     endif()
+ 
+     ###############################################################################
+@@ -197,7 +198,7 @@ if(FIDES_DIR)
+     ###############################################################################
+     find_dependency(Fides REQUIRED
+                     NO_DEFAULT_PATH
+-                    PATHS ${FIDES_DIR}/lib/cmake/fides)
++                    PATHS ${FIDES_DIR})
+ endif()
+ 
+ ###############################################################################
