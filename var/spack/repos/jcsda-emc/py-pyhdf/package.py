@@ -8,7 +8,7 @@ from spack import *
 
 class PyPyhdf(PythonPackage):
     """pyhdf is a python wrapper around the NCSA HDF version 4 library.
-    The SD (Scientific Dataset), VS (Vdata) and V (Vgroup) API’s are
+    The SD (Scientific Dataset), VS (Vdata) and V (Vgroup) APIs are
     currently implemented. NetCDF files can also be read and modified."""
 
     homepage = "https://github.com/fhs/pyhdf"
