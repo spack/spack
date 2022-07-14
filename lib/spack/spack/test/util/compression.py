@@ -20,6 +20,9 @@ datadir = os.path.join(spack_root, 'lib', 'spack',
 ext_archive = {}
 [ext_archive.update({ext: '.'.join(['Foo', ext])}) for
     ext in scomp.ALLOWED_ARCHIVE_TYPES if 'TAR' not in ext]
+# Spack does not use Python native handling for tarballs
+# Don't test tarballs in native test
+native_archive_list = [key for key in ext_archive.keys() if 'tar' not in key]
 
 
 def support_stub():
@@ -28,10 +31,9 @@ def support_stub():
 
 @pytest.fixture
 def compr_support_check(monkeypatch):
-    monkeypatch.setattr(scomp, 'lzma_support', support_stub)
-    monkeypatch.setattr(scomp, 'tar_support', support_stub)
-    monkeypatch.setattr(scomp, 'gzip_support', support_stub)
-    monkeypatch.setattr(scomp, 'bz2_support', support_stub)
+    monkeypatch.setattr(scomp, 'is_lzma_supported', support_stub)
+    monkeypatch.setattr(scomp, 'is_gzip_supported', support_stub)
+    monkeypatch.setattr(scomp, 'is_bz2_supported', support_stub)
 
 
 @pytest.fixture
@@ -44,7 +46,7 @@ def archive_file(tmpdir_factory, request):
     return os.path.join(str(tmpdir), 'Foo.%s' % extension)
 
 
-@pytest.mark.parametrize('archive_file', ext_archive.keys(), indirect=True)
+@pytest.mark.parametrize('archive_file', native_archive_list, indirect=True)
 def test_native_unpacking(tmpdir_factory, archive_file):
     extension = scomp.extension(archive_file)
     util = scomp.decompressor_for(archive_file, extension)
