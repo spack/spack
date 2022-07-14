@@ -71,15 +71,13 @@ class Xgboost(CMakePackage, CudaPackage):
                 self.define('OpenMP_CXX_FLAGS', OpenMP_C_FLAGS),
                 self.define('OpenMP_CXX_LIB_NAMES', OpenMP_C_LIB_NAMES),
             ]
-            shared_lib_suffix = 'so'
-            if self.spec.satisfies('platform=darwin'):
-                shared_lib_suffix = 'dylib'
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)
             args += [
-                self.define('OpenMP_libomp_LIBRARY', clang_root +
-                            '/lib/libomp.' + shared_lib_suffix)
+                self.define('OpenMP_libomp_LIBRARY',
+                            find_libraries('libomp', root=clang_root,
+                                           shared=True, recursive=True))
             ]
 
         return args
