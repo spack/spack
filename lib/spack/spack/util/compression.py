@@ -11,7 +11,7 @@ from itertools import product
 
 from spack.util.executable import CommandNotFoundError, which
 
-import llnl.util.filesystem as fs
+from llnl.util.lang import memoized
 
 # Supported archive extensions.
 PRE_EXTS = ["tar", "TAR"]
@@ -25,41 +25,37 @@ ALLOWED_ARCHIVE_TYPES = (
 
 is_windows = sys.platform == "win32"
 
-
-def bz2_support():
-    try:
-        import bz2  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
+try:
+    import bz2 # noqa
+    _bz2_support = True
+except ImportError:
+    _bz2_support = False
 
 
-def gzip_support():
-    try:
-        import gzip  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
+try:
+    import gzip # noqa
+    _gzip_support = True
+except ImportError:
+    _gzip_support = False
 
 
-def lzma_support():
-    try:
-        import lzma  # noqa: F401 # novm
-
-        return True
-    except ImportError:
-        return False
+try:
+    import lzma  # noqa # novermin
+    _lzma_support = True
+except ImportError:
+    _lzma_support = False
 
 
-def tar_support():
-    try:
-        import tarfile  # noqa: F401
+def is_lzma_supported():
+    return _lzma_support
 
-        return True
-    except ImportError:
-        return False
+
+def is_gzip_supported():
+    return _gzip_support
+
+
+def is_bz2_supported():
+    return _bz2_support
 
 
 def allowed_archive(path):
@@ -99,11 +95,9 @@ def _bunzip2(archive_file):
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
-    if bz2_support():
-        import bz2
-
-        f_bz = bz2.BZ2File(archive_file, mode="rb")
-        with open(archive_out, "wb") as ar:
+    if is_bz2_supported():
+        f_bz = bz2.BZ2File(archive_file, mode='rb')
+        with open(archive_out, 'wb') as ar:
             shutil.copyfileobj(f_bz, ar)
         f_bz.close()
     else:
@@ -127,9 +121,7 @@ def _gunzip(archive_file):
     decompressed_file = os.path.basename(archive_file.strip(ext))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
-    if gzip_support():
-        import gzip
-
+    if is_gzip_supported():
         f_in = gzip.open(archive_file, "rb")
         with open(destination_abspath, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
@@ -187,9 +179,7 @@ def _lzma_decomp(archive_file):
     lzma module, but fall back on command line xz tooling
     to find available Python support. This is the xz command
     on Unix and 7z on Windows"""
-    if lzma_support():
-        import lzma  # novermin
-
+    if lzma_support:
         _, ext = os.path.splitext(archive_file)
         decompressed_file = os.path.basename(archive_file.strip(ext))
         archive_out = os.path.join(os.getcwd(), decompressed_file)
@@ -295,7 +285,7 @@ unrecognized file extension: '%s'"
 
 class FileType:
     _OFFSET = 0
-    _MAGIC_NUMBER = b'\x0000'
+    _MAGIC_NUMBER = b'\x00'
     _ext = ''
     _compressed = False
 
@@ -342,7 +332,7 @@ class CompressedFileType(FileType):
 
     @classmethod
     def decomp_in_memory(cls, filepath):
-        raise RuntimeError("Implementation required")
+        raise RuntimeError("Implementation by subclass required")
 
 
 class BZipFileType(CompressedFileType):
@@ -352,6 +342,7 @@ class BZipFileType(CompressedFileType):
     @classmethod
     def decomp_in_memory(cls, filepath):
         pass
+
 
 class ZCompressedFileType(CompressedFileType):
     _MAGIC_NUMBER_LZW = b'\x1f\x9d'
