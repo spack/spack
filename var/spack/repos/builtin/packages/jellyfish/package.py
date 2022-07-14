@@ -18,10 +18,9 @@ class Jellyfish(AutotoolsPackage):
     version('1.1.11', sha256='496645d96b08ba35db1f856d857a159798c73cbc1eccb852ef1b253d1678c8e2',
             url='https://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
 
-    variant(
-        'bindings', default='none', description='Support for binding to Ruby, Python and Perl',
-        values=('pybind', 'rubybind', 'perlbind', 'none'), multi=True
-    )
+    variant('pybind', default=False, description='Enable python binding')
+    variant('rubybind', default=False, description='Enable ruby binding')
+    variant('perlbind', default=False, description='Enable perl binding')
 
     extends('perl', when='bindings=perlbind')
     extends('python', when='bindings=pybind')
@@ -32,18 +31,20 @@ class Jellyfish(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = []
+        # Can only specify one binding to build with using extends()
+        # see https://github.com/spack/spack/issues/987
 
-        if 'bindings=pybind' in spec:
-            args.append = [
+        if '+pybind' in spec:
+            args = [
                 '--enable-python-binding',
             ]
-        if 'bindings=rubybind' in spec:
-            args.append = [
+        elif '+rubybind' in spec:
+            args = [
                 '--enable-ruby-binding',
             ]
-        if 'bindings=perlbind' in spec:
-            args.append = [
+        elif '+perlbind' in spec:
+            args = [
                 '--enable-perl-binding'
             ]
+
         return args
