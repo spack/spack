@@ -28,6 +28,7 @@ class Jellyfish(AutotoolsPackage):
 
     patch('dna_codes.patch', when='@1.1.11')
 
+    # v1.1.11 does not support language bindings
     conflicts('+pybind', when='@1.1.11')
     conflicts('+rubybind', when='@1.1.11')
     conflicts('+perlbind', when='@1.1.11')
