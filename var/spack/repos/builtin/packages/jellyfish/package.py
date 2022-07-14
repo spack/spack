@@ -23,10 +23,14 @@ class Jellyfish(AutotoolsPackage):
     variant('perlbind', default=False, description='Enable perl binding')
 
     extends('perl', when='+perlbind')
-    extends('python', when='+pybind')
+    extends('python@:2.7.18', when='+pybind')
     extends('ruby', when='+rubybind')
 
     patch('dna_codes.patch', when='@1.1.11')
+
+    conflicts('+pybind', when='@1.1.11')
+    conflicts('+rubybind', when='@1.1.11')
+    conflicts('+perlbind', when='@1.1.11')
 
     def configure_args(self):
         spec = self.spec
