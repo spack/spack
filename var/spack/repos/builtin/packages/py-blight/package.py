@@ -12,9 +12,7 @@ class PyBlight(PythonPackage):
     homepage = "https://github.com/trailofbits/blight"
     pypi     = "blight/blight-0.0.47.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['woodruffw']
 
     version('0.0.47', sha256='eb4a881adb98e03a0a855b95bfcddb0f4b3ca568b00cb45b571f047ae75c5667')
 
