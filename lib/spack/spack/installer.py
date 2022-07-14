@@ -188,6 +188,9 @@ def _do_fake_install(pkg):
     dump_packages(pkg.spec, packages_dir)
 
 
+_compiler_concretization_cache = {}
+
+
 def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     """
     Return a list of packages required to bootstrap `pkg`s compiler
@@ -222,18 +225,24 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     dep.constrain('os=%s' % str(architecture.os))
     dep.constrain('target=%s:' %
                   architecture.target.microarchitecture.family.name)
+
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
-    dep.concretize()
+    # cache concretizations within an instantiation of Spack
+    global _compiler_concretization_cache
+    if dep not in _compiler_concretization_cache:
+        _compiler_concretization_cache[dep] = dep.concretized()
+    concrete_dep = _compiler_concretization_cache[dep]
+
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
-        dep._dependents.add(
-            spack.spec.DependencySpec(pkg.spec, dep, ('build',))
+        concrete_dep._dependents.add(
+            spack.spec.DependencySpec(pkg.spec, concrete_dep, ('build',))
         )
     packages = [(s.package, False) for
-                s in dep.traverse(order='post', root=False)]
+                s in concrete_dep.traverse(order='post', root=False)]
 
-    packages.append((dep.package, True))
+    packages.append((concrete_dep.package, True))
     return packages
 
 
