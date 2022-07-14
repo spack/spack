@@ -11,8 +11,8 @@ import shutil
 import macholib.mach_o
 import macholib.MachO
 
-import llnl.util.lang
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
@@ -952,7 +952,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if fs.mime_type(abspath) != ('application', 'x-mach-binary'):
+    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands
