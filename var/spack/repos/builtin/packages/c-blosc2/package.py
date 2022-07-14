@@ -17,6 +17,9 @@ class CBlosc2(CMakePackage):
     maintainers = ['ax3l', 'robert-mijakovic']
 
     version('develop', branch='master')
+    version('2.2.0', sha256='66f9977de26d6bc9ea1c0e623d873c3225e4fff709aa09b3335fd09d41d57c0e')
+    version('2.1.1', sha256='a8cbedefb8ed3b83629534ec8b4a822ffcdb1576e13dfb93107361551d32e6e9')
+    version('2.1.0', sha256='a9570f4101654c2fe2a706adcab0821cdbcf7523fcb6602407dda21b67fdacfd')
     version('2.0.4', sha256='90c78edcc262759dd16d243141513310624bb4fda3d98ac34dcfb78255e151c1')
     version('2.0.2', sha256='fba51ba601610441eea6046e384284b2d8d7884922060cf15369d01d713b9b77')
     version('2.0.1', sha256='35b93dfed479b1dfd9372d41d7843b60254ed1d71792577b95e489c28705874f')
