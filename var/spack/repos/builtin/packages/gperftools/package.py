@@ -37,8 +37,9 @@ class Gperftools(AutotoolsPackage):
                                        variant='dynamic_sized_delete_support')
         args += self.enable_or_disable("debugalloc")
         args += self.enable_or_disable("libunwind")
-        args += [
-            "LDFLAGS=-lunwind"
-        ]
+        if self.spec.satisfies('+libunwind'):
+            args += [
+                "LDFLAGS=-lunwind"
+            ]
 
         return args
