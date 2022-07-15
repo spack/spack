@@ -1,3 +1,5 @@
+# DEPRECATED: remove this in v0.20
+# See `alter_environment.yaml` for the new syntax
 enable:
   - lmod
 lmod:
@@ -10,7 +12,7 @@ lmod:
   all:
     autoload: none
     filter:
-      exclude_env_vars:
+      environment_blacklist:
         - CMAKE_PREFIX_PATH
     environment:
       set:

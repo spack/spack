@@ -44,6 +44,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     variant('sigsegv', default=True,
             description="Build the libsigsegv dependency")
 
+    depends_on('diffutils', type='build')
     depends_on('libsigsegv', when='+sigsegv')
 
     build_directory = 'spack-build'

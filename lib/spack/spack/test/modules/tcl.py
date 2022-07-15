@@ -97,10 +97,16 @@ class TestTcl(object):
 
         assert len([x for x in content if 'prereq' in x]) == 5
 
-    def test_alter_environment(self, modulefile_content, module_configuration):
+    # DEPRECATED: remove blacklist in v0.20
+    @pytest.mark.parametrize(
+        "config_name", ["alter_environment", "blacklist_environment"]
+    )
+    def test_alter_environment(
+            self, modulefile_content, module_configuration, config_name
+    ):
         """Tests modifications to run-time environment."""
 
-        module_configuration('alter_environment')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks platform=test target=x86_64')
 
         assert len([x for x in content
@@ -129,10 +135,11 @@ class TestTcl(object):
         assert len([x for x in content if 'module load foo/bar' in x]) == 1
         assert len([x for x in content if 'setenv LIBDWARF_ROOT' in x]) == 1
 
-    def test_blacklist(self, modulefile_content, module_configuration):
-        """Tests blacklisting the generation of selected modules."""
+    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+    def test_exclude(self, modulefile_content, module_configuration, config_name):
+        """Tests excluding the generation of selected modules."""
 
-        module_configuration('blacklist')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks ^zmpi')
 
         assert len([x for x in content if 'is-loaded' in x]) == 1
@@ -359,24 +366,27 @@ class TestTcl(object):
 
     @pytest.mark.regression('4400')
     @pytest.mark.db
-    def test_blacklist_implicits(
-            self, modulefile_content, module_configuration, database
+    @pytest.mark.parametrize(
+        "config_name", ["exclude_implicits", "blacklist_implicits"]
+    )
+    def test_exclude_implicits(
+            self, modulefile_content, module_configuration, database, config_name
     ):
-        module_configuration('blacklist_implicits')
+        module_configuration(config_name)
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
         mpileaks_specs = database.query('mpileaks')
         for item in mpileaks_specs:
             writer = writer_cls(item, 'default')
-            assert not writer.conf.blacklisted
+            assert not writer.conf.excluded
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
         callpath_specs = database.query('callpath')
         for item in callpath_specs:
             writer = writer_cls(item, 'default')
-            assert writer.conf.blacklisted
+            assert writer.conf.excluded
 
     @pytest.mark.regression('9624')
     @pytest.mark.db
