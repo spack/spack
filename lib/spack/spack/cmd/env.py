@@ -398,6 +398,9 @@ def env_view(args):
 #
 def env_status_setup_parser(subparser):
     """print whether there is an active environment"""
+    subparser.add_argument(
+        '-x', '--exit_code', action='store_true', default=False,
+        help='Exit with nonzero status if no environment is active')
 
 
 def env_status(args):
@@ -412,7 +415,7 @@ def env_status(args):
         # Check if environment views can be safely activated
         env.check_views()
     else:
-        tty.msg('No active environment')
+        (tty.die if args.exit_code else tty.msg)('No active environment')
 
 
 #
