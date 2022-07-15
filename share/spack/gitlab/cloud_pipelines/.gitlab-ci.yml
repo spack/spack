@@ -749,3 +749,32 @@ tutorial-protected-build:
   needs:
     - artifacts: True
       job: tutorial-protected-generate
+
+########################################
+# Machine Learning
+########################################
+.ml:
+  variables:
+    SPACK_CI_STACK_NAME: ml
+
+ml-pr-generate:
+  extends: [ ".ml", ".pr-generate"]
+
+ml-protected-generate:
+  extends: [ ".ml", ".protected-generate"]
+
+ml-stack-pr-build:
+  extends: [ ".ml", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-pr-generate
+    strategy: depend
+
+ml-protected-build:
+  extends: [ ".ml", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-protected-generate
+    strategy: depend
