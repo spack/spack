@@ -229,12 +229,18 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     # cache concretizations within an instantiation of Spack
+    from time import gmtime, strftime
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     global _compiler_concretization_cache
     depstr = str(dep)
     if depstr not in _compiler_concretization_cache:
+        print("Cache miss")
         _compiler_concretization_cache[depstr] = dep.concretized()
+    else:
+        print("Cache hit")
+    print(_compiler_concretization_cache.keys())
     concrete_dep = _compiler_concretization_cache[depstr]
-
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     # mark compiler as depended-on by the packages that use it
     for pkg in pkgs:
         concrete_dep._dependents.add(
