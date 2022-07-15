@@ -1,0 +1,83 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/spack
+      padded_length: 384
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  specs:
+    # ML-adjacent libraries
+    - bazel
+    - onnx
+    - py-numpy
+    - py-pandas
+    - py-scipy
+
+    # Core ML libraries
+    - caffe
+    - cntk
+    - mxnet
+    - py-chainer
+    - py-scikit-learn
+    - py-tensorflow
+    - py-torch
+    - theano
+    - xgboost
+
+    # ML extensions
+    - py-keras
+    - py-gpytorch
+    - py-pytorch-lightning
+    - py-tensorboard
+    - py-torchaudio
+    - py-torchgeo
+    - py-torchmetrics
+    - py-torchtext
+    - py-torchvision
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/ml" }
+
+  gitlab-ci:
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+      tags: ["spack", "public", "x86_64_v4"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
+  cdash:
+    build-group: Machine Learning
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure
