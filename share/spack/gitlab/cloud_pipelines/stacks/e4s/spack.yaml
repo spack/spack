@@ -196,6 +196,7 @@ spack:
   - petsc +rocm amdgpu_target=gfx90a
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
   - strumpack ~slate +rocm amdgpu_target=gfx90a
+  - sundials +rocm amdgpu_target=gfx90a
   - superlu-dist +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
   - upcxx +rocm amdgpu_target=gfx90a
