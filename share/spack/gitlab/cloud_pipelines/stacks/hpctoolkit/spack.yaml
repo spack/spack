@@ -3,7 +3,7 @@ spack:
   
   concretizer:
     reuse: false
-    unify: when_possible
+    unify: false
   
   config:
     concretizer: clingo
@@ -12,9 +12,35 @@ spack:
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-  
+
   specs:
-    - hpctoolkit +mpi +cuda +rocm +level_zero +gtpin +opencl +viewer
+    - matrix:
+      - - libmonitor +hpctoolkit ~dlopen ~commrank
+      - ['@2021.11.08', '@:']
+    - matrix:
+      - - hpctoolkit +mpi +cuda +rocm +level_zero +gtpin +opencl +viewer
+      - - +papi
+        - +papi ^papi @6.0.0.1
+        - ~papi
+        - ~papi ^libpfm4 @4.11.0
+      - # Latest release with latest compatible dependencies
+        - '@:'
+        # Latest release with minimum supported dependencies
+        - ^autoconf @2.69
+          ^automake @1.15.1
+          ^libtool @2.4.6
+          ^boost @1.77.0
+          ^libiberty @2.37
+          ^elfutils @0.186
+          ^dyninst @12.1.0
+          ^intel-tbb @2020.3
+          ^bzip2 @1.0.8
+          ^xz @5.2.5
+          ^zlib @1.2.12
+          ^libunwind @1.6.2
+          ^xerces-c @3.2.3
+          ^memkind @1.12.0
+          ^intel-xed @12.0.1
 
   mirrors: { "mirror": "s3://spack-binaries/develop/hpctoolkit" }
 
