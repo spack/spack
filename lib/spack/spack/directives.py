@@ -329,6 +329,13 @@ def version(ver, checksum=None, **kwargs):
 
             kwargs['checksum'] = checksum
 
+        if 'preferred' in kwargs and 'reason_preferred' not in kwargs:
+            msg = "When a Spack version is preferred, a reason must be given. "
+            msg += "Error in package '%s'" % pkg.name
+            msg += ", version('%s')" % version.string
+            msg += ": keyword argument 'reason_preferred' is missing"
+            raise VersionLookupError(msg)
+
         # Store kwargs for the package to later with a fetch_strategy.
         version = Version(ver)
         if isinstance(version, GitVersion):
