@@ -28,8 +28,8 @@ spack:
     - py-chainer
     - py-scikit-learn
     - py-tensorflow
+    - py-theano
     - py-torch
-    - theano
     - xgboost
 
     # ML extensions
