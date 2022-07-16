@@ -20,5 +20,5 @@ class PyColorcet(PythonPackage):
 
     depends_on('python@2.7:')
     depends_on('py-setuptools@30.3.0:', type='build')
-    depends_on('py-param@1.7.0:', type='build')
-    depends_on('py-pyct@0.4.4:', type='build')
+    depends_on('py-param@1.7.0:', type=('build', 'run'))
+    depends_on('py-pyct@0.4.4:', type=('build', 'run'))

@@ -16,5 +16,6 @@ class PyPyct(PythonPackage):
 
     version('0.4.8', sha256='23d7525b5a1567535c093aea4b9c33809415aa5f018dd77f6eb738b1226df6f7')
 
+    depends_on('python@2.7:')
     depends_on('py-setuptools@30.3.0:', type='build')
-    depends_on('py-param@1.7.0:', type='build')
+    depends_on('py-param@1.7.0:', type=('build', 'run'))
