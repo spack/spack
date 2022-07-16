@@ -15,6 +15,10 @@ spack:
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
+  packages:
+    all:
+      target: [x86_64_v4]
+
   specs:
     - matrix:
       - - libmonitor +hpctoolkit ~dlopen ~commrank
@@ -61,13 +65,13 @@ spack:
       - match: ['os=opensuse_leap15']
         runner-attributes:
           image: { "name": "ghcr.io/spack/leap15:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64"]
+          tags: ["spack", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
       - match: ['os=ubuntu22.04']
         runner-attributes:
           image: { "name": "ghcr.io/spack/ubuntu-jammy:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64"]
+          tags: ["spack", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
 
