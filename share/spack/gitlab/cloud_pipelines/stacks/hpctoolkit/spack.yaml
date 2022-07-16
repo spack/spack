@@ -4,6 +4,8 @@ spack:
   concretizer:
     reuse: false
     unify: false
+    targets:
+      granularity: generic
   
   config:
     concretizer: clingo
