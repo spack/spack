@@ -770,14 +770,14 @@ hpctoolkit-ubuntu22.04-protected-generate:
   extends: [ ".hpctoolkit-ubuntu22.04", ".protected-generate"]
 
 hpctoolkit-leap15-pr-build:
-  extends: [ ".hpctoolkit-leap15", ".pr-build" ]
+  extends: [ ".hpctoolkit", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: hpctoolkit-leap15-pr-generate
     strategy: depend
 hpctoolkit-ubuntu22.04-pr-build:
-  extends: [ ".hpctoolkit-ubuntu22.04", ".pr-build" ]
+  extends: [ ".hpctoolkit", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -785,14 +785,14 @@ hpctoolkit-ubuntu22.04-pr-build:
     strategy: depend
 
 hpctoolkit-leap15-protected-build:
-  extends: [ ".hpctoolkit-leap15", ".protected-build" ]
+  extends: [ ".hpctoolkit", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: hpctoolkit-leap15-protected-generate
     strategy: depend
 hpctoolkit-ubuntu22.04-protected-build:
-  extends: [ ".hpctoolkit-ubuntu22.04", ".protected-build" ]
+  extends: [ ".hpctoolkit", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
