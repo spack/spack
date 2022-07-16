@@ -755,8 +755,10 @@ tutorial-protected-build:
   variables:
     SPACK_CI_STACK_NAME: hpctoolkit
 .hpctoolkit-leap15:
+  extends: .hpctoolkit
   image: ghcr.io/spack/leap15:latest
 .hpctoolkit-ubuntu22.04:
+  extends: .hpctoolkit
   image: ghcr.io/spack/ubuntu-jammy:latest
 
 hpctoolkit-leap15-pr-generate:
