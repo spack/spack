@@ -18,7 +18,7 @@ class PyColorcet(PythonPackage):
 
     version('3.0.0', sha256='21c522346a7aa81a603729f2996c22ac3f7822f4c8c303c59761e27d2dfcf3db')
 
-    depends_on('python@2.7:')
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools@30.3.0:', type='build')
     depends_on('py-param@1.7.0:', type=('build', 'run'))
     depends_on('py-pyct@0.4.4:', type=('build', 'run'))
