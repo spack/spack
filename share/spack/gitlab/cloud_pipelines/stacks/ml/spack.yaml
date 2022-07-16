@@ -33,8 +33,9 @@ spack:
     - xgboost
 
     # ML extensions
-    - py-keras
     - py-gpytorch
+    - py-horovod frameworks=tensorflow,pytorch,mxnet,keras,spark,ray
+    - py-keras
     - py-pytorch-lightning
     - py-tensorboard
     - py-torchaudio
