@@ -126,8 +126,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     # https://github.com/horovod/horovod/pull/1835
     patch('fma.patch', when='@0.19.0:0.19.1')
 
-    # This patch modifies Eigen to enable the compilation on aarch64 system.
-    # See the following URL for more detail:
+    # Patch vendored copy of eigen to fix build on aarch64
+    # https://github.com/horovod/horovod/issues/3605
     # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
     patch('eigen.patch', when='@0.21: target=aarch64:')
 
@@ -146,8 +146,7 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         if 'frameworks=pytorch' in self.spec:
             modules.extend([
-                'horovod.torch', 'horovod.torch.mpi_lib',
-                'horovod.torch.elastic', 'horovod.torch.mpi_lib_impl'
+                'horovod.torch', 'horovod.torch.elastic'
             ])
 
         if 'frameworks=mxnet' in self.spec:
@@ -242,4 +241,4 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     def test(self):
         super(PyHorovod, self).test()
-        run_test(self.prefix.bin.horovodrun, '--check-build')
+        self.run_test(self.prefix.bin.horovodrun, '--check-build')
