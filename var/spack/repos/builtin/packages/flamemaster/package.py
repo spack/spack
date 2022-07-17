@@ -12,14 +12,14 @@ from spack.package import *
 class Flamemaster(CMakePackage):
     """
     FlameMaster is an open source C++ program package for 0D combustion
-    and 1D laminar flame calculations.
+    and 1D laminar flame calculations. FlameMaster is written by Heinz Pitsch.
     """
 
     homepage = "https://www.itv.rwth-aachen.de/downloads/flamemaster/"
     url      = "file://{0}/flamemaster-4.3.1.tar.gz".format(os.getcwd())
     manual_download = True
 
-    maintainers = ['Heinz Pitsch', 'amd-toolchain-support']
+    maintainers = ['amd-toolchain-support']
 
     version('4.3.1', sha256='8ff382f098e44a7978fe1bcc688272d65f0b374487af4523d94cca983dc57378')
 
