@@ -3,13 +3,8 @@
 RUN yum update -y \
  && yum install -y \
         gettext \
-        diffstat \
-        doxygen \
         git \
         patch \
-        patchutils \
-        subversion \
-        systemtap \
         curl \
         findutils \
         gcc-c++ \
