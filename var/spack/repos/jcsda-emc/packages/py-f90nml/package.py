@@ -9,7 +9,7 @@ from spack import *
 class PyF90nml(PythonPackage):
     """A Python module and command line tool for parsing Fortran namelist files"""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/marshallward/f90nml"
     pypi     = "f90nml/f90nml-1.4.2.tar.gz"
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
