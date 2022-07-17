@@ -1,8 +1,15 @@
 {% extends "container/bootstrap-base.dockerfile" %}
 {% block install_os_packages %}
 RUN yum update -y \
- && yum groupinstall -y "Development Tools" \
  && yum install -y \
+        gettext \
+        diffstat \
+        doxygen \
+        git \
+        patch \
+        patchutils \
+        subversion \
+        systemtap \
         curl \
         findutils \
         gcc-c++ \
