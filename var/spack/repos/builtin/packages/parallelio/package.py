@@ -18,6 +18,7 @@ class Parallelio(CMakePackage):
 
     version('2.5.7', sha256='af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd')
     version('2.5.4', sha256='e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65')
+    version('2.5.3', sha256='205a0a128fd5262700efc230b3380dc5ab10e74bc5d273ae05db76c9d95487ca')
     version('2.5.2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
     variant('pnetcdf', default=False, description='enable pnetcdf')
