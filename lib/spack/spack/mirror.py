@@ -424,15 +424,15 @@ def get_all_versions(specs):
 
     version_specs = []
     for spec in specs:
-        pkg = spec.package_class(spec)
+        pkg_class = spec.package_class
 
         # Skip any package that has no known versions.
-        if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+        if not pkg_class.versions:
+            tty.msg("No safe (checksummed) versions for package %s" % pkg_class.name)
             continue
 
-        for version in pkg.versions:
-            version_spec = spack.spec.Spec(pkg.name)
+        for version in pkg_class.versions:
+            version_spec = spack.spec.Spec(pkg_class.name)
             version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
@@ -647,7 +647,7 @@ def _add_single_spec(spec, mirror, mirror_stats):
         try:
             with spec.package_class(spec).stage as pkg_stage:
                 pkg_stage.cache_mirror(mirror, mirror_stats)
-                for patch in spec.package_class(spec).all_patches():
+                for patch in spec.package_class.all_patches():
                     if patch.stage:
                         patch.stage.cache_mirror(mirror, mirror_stats)
                     patch.clean()
