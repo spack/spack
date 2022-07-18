@@ -1,0 +1,3 @@
+packages:
+  zlib:
+    require: 'zlib@1.2.11'
