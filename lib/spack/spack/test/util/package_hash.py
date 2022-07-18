@@ -340,7 +340,7 @@ def test_remove_complex_package_logic_filtered():
 @pytest.mark.parametrize("package_spec,expected_hash", [
     ("amdfftw",      "tivb752zddjgvfkogfs7cnnvp5olj6co"),
     ("grads",        "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-    ("llvm",         "g3hoqf4rhprd3da7byp5nzco6tcwliiy"),
+    ("llvm",         "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
     # has @when("@4.1.0") and raw unicode literals
     ("mfem",         "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
     ("mfem@4.0.0",   "tiiv7uq7v2xtv24vdij5ptcv76dpazrw"),
