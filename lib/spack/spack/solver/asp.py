@@ -881,7 +881,7 @@ class SpackSolverSetup(object):
         config = spack.config.get("packages")
         requirements = config.get(pkg_name, {}).get("require", {})
         if isinstance(requirements, string_types):
-            rules = [(pkg_name, requirements)]
+            rules = [(pkg_name, [requirements])]
         else:
             rules = []
             for requirement in requirements:
