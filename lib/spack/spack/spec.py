@@ -2254,6 +2254,20 @@ class Spec(object):
             yield dep_name, dep_hash, list(deptypes), hash_type
 
     @staticmethod
+    def override(init_spec, change_spec):
+        new_spec = init_spec.copy()
+        for variant, value in change_spec.variants.items():
+            new_spec.variants[variant] = value
+        if change_spec.compiler:
+            new_spec.compiler = change_spec.compiler
+        if change_spec.arch:
+            new_spec.arch = ArchSpec.override(
+                new_spec.arch,
+                change_spec.arch
+            )
+        return new_spec
+
+    @staticmethod
     def from_literal(spec_dict, normal=True):
         """Builds a Spec from a dictionary containing the spec literal.
 

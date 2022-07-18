@@ -1010,6 +1010,32 @@ class Environment(object):
 
         return bool(not existing)
 
+    def change_existing_spec(self, user_spec, list_name=user_speclist_name):
+        """
+        Provide a single spec and assume you want to find another spec with the
+        same name and override it with any conflicting details in user_spec.
+
+        Alternatively, you could provide two values "where" and "new", and
+        only things matching "where" get updated with "new".
+        """
+        if not user_spec.name:
+            raise ValueError(
+                "Must specify a spec name to identify a single spec"
+                " in the environment that will be changed")
+
+        list_to_change = self.spec_lists[list_name]
+
+        matches = [(i, s) for (i, s) in enumerate(list_to_change)
+                   if s.name == user_spec.name]
+        if not matches:
+            raise ValueError(
+                "There are no specs named {0} in {1}"
+                .format(user_spec.name, list_name)
+            )
+        for index, match in matches:
+            list_to_change[i] = Spec.override(list_to_change_[i], user_spec)
+
+
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
         query_spec = Spec(query_spec)

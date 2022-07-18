@@ -17,6 +17,9 @@ def setup_parser(subparser):
     subparser.add_argument('-l', '--list-name',
                            dest='list_name', default='specs',
                            help="name of the list to add specs to")
+    subparser.add_argument(
+        '--change', action='store_true', default=False,
+        help="change a spec that already exists in the environment")
     arguments.add_common_arguments(subparser, ['specs'])
 
 
@@ -25,7 +28,9 @@ def add(parser, args):
 
     with env.write_transaction():
         for spec in spack.cmd.parse_specs(args.specs):
-            if not env.add(spec, args.list_name):
+            if args.change:
+                env.change(spec)
+            elif not env.add(spec, args.list_name):
                 tty.msg("Package {0} was already added to {1}"
                         .format(spec.name, env.name))
             else:
