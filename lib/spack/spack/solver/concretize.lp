@@ -497,6 +497,9 @@ error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
 % to less-preferred conditions)
 condition_weight(Package, Y) :- condition_holds(Y), condition_group_member(Y, X), node(Package), condition_group(Package, X).
 
+#defined condition_group/2.
+#defined condition_group_member/2.
+
 %-----------------------------------------------------------------------------
 % Variant semantics
 %-----------------------------------------------------------------------------
