@@ -37,7 +37,8 @@ class Gperftools(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("gperftools_sized_delete", "sized_delete"),
-            self.define_from_variant("gperftools_dynamic_sized_delete_support", "dynamic_sized_delete_support"),
+            self.define_from_variant("gperftools_dynamic_sized_delete_support",
+                                     "dynamic_sized_delete_support"),
             self.define_from_variant("GPERFTOOLS_BUILD_DEBUGALLOC", "debugalloc"),
             self.define_from_variant("gperftools_enable_libunwind", "libunwind"),
         ]
@@ -54,7 +55,8 @@ class Gperftools(CMakePackage):
     def configure_args(self):
         def enable_or_disable(option, variant):
             if variant not in self.variants:
-                raise KeyError("Invalid variant {} given for gperftools".format(variant))
+                raise KeyError("Invalid variant {} given for gperftools"
+                               .format(variant))
             if self.spec.variants[variant].value:
                 return "--enable-" + option
             else:
@@ -62,7 +64,8 @@ class Gperftools(CMakePackage):
 
         args = [
             enable_or_disable("sized-delete", "sized_delete"),
-            enable_or_disable("dynamic-sized-delete-support", "dynamic_sized_delete_support"),
+            enable_or_disable("dynamic-sized-delete-support",
+                              "dynamic_sized_delete_support"),
             enable_or_disable("debugalloc", "debugalloc"),
             enable_or_disable("libunwind", "debugalloc"),
         ]
