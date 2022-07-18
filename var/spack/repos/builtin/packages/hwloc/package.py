@@ -130,7 +130,7 @@ class Hwloc(AutotoolsPackage):
 
     with when("+oneapi-level-zero"):
         depends_on("oneapi-level-zero")
-        # oneapi-level-zero isn't available until version 2.5.0
+        # LevelZero support isn't available until hwloc version 2.5.0
         conflicts("@:2.4.99", msg="hwloc supports Intel OneAPI Level Zero only since 2.5.0")
 
     @classmethod
@@ -179,7 +179,6 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
         args.extend(self.enable_or_disable("shared"))
-        args.extend(self.enable_or_disable("oneapi-level-zero"))
 
         if "+cuda" in self.spec:
             args.append("--with-cuda={0}".format(self.spec["cuda"].prefix))
