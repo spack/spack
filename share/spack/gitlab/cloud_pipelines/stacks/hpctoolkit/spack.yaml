@@ -17,7 +17,7 @@ spack:
 
   packages:
     all:
-      target: [x86_64_v4]
+      target: [x86_64_v3]
 
   specs:
     - matrix:
@@ -60,32 +60,31 @@ spack:
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild
-      
+    
+    variables:
+      CI_JOB_SIZE: default
+
     mappings:
-      - match: ['os=opensuse_leap15']
+      - match: ['os=centos7']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/leap15:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64_v4"]
-          variables:
-            CI_JOB_SIZE: "default"
-      - match: ['os=ubuntu22.04']
-        runner-attributes:
-          image: { "name": "ghcr.io/spack/ubuntu-jammy:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64_v4"]
-          variables:
-            CI_JOB_SIZE: "default"
-      - match: ['os=rhel8']
-        runner-attributes:
-          image: { "name": "ghcr.io/blue42u/ubi8:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64_v4"]
-          variables:
-            CI_JOB_SIZE: "default"
+          image: { "name": "ghcr.io/spack/centos7:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v3"]
       - match: ['os=fedora36']
         runner-attributes:
           image: { "name": "ghcr.io/blue42u/fedora36:latest", "entrypoint": [""] }
-          tags: ["spack", "x86_64_v4"]
-          variables:
-            CI_JOB_SIZE: "default"
+          tags: ["spack", "x86_64_v3"]
+      - match: ['os=opensuse_leap15']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/leap15:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v3"]
+      - match: ['os=rhel8']
+        runner-attributes:
+          image: { "name": "ghcr.io/blue42u/ubi8:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v3"]
+      - match: ['os=ubuntu20.04']
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/ubuntu-focal:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v3"]
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
@@ -94,7 +93,7 @@ spack:
         - . "./share/spack/setup-env.sh"
         - spack --version
       image: { "name": "ghcr.io/spack/ubuntu-jammy:latest", "entrypoint": [""] }
-      tags: ["spack", "public", "x86_64_v4"]
+      tags: ["spack", "public", "x86_64_v3"]
 
     signing-job-attributes:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }

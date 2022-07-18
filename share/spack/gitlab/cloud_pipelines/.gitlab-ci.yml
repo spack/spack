@@ -754,57 +754,50 @@ tutorial-protected-build:
 .hpctoolkit:
   variables:
     SPACK_CI_STACK_NAME: hpctoolkit
-.hpctoolkit-leap15:
+.hpctoolkit-centos7:
   extends: .hpctoolkit
-  image: ghcr.io/spack/leap15:latest
-.hpctoolkit-ubuntu22.04:
-  extends: .hpctoolkit
-  image: ghcr.io/spack/ubuntu-jammy:latest
-.hpctoolkit-ubi8:
-  extends: .hpctoolkit
-  image: ghcr.io/blue42u/ubi8:latest
+  image: ghcr.io/spack/centos7:latest
 .hpctoolkit-fedora36:
   extends: .hpctoolkit
   image: ghcr.io/blue42u/fedora36:latest
+.hpctoolkit-leap15:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/leap15:latest
+.hpctoolkit-ubi8:
+  extends: .hpctoolkit
+  image: ghcr.io/blue42u/ubi8:latest
+.hpctoolkit-ubuntu20.04:
+  extends: .hpctoolkit
+  image: ghcr.io/spack/ubuntu-focal:latest
 
-hpctoolkit-leap15-pr-generate:
-  extends: [ ".hpctoolkit-leap15", ".pr-generate"]
-hpctoolkit-ubuntu22.04-pr-generate:
-  extends: [ ".hpctoolkit-ubuntu22.04", ".pr-generate"]
-hpctoolkit-ubi8-pr-generate:
-  extends: [ ".hpctoolkit-ubi8", ".pr-generate"]
+hpctoolkit-centos7-pr-generate:
+  extends: [ ".hpctoolkit-centos7", ".pr-generate"]
 hpctoolkit-fedora36-pr-generate:
   extends: [ ".hpctoolkit-fedora36", ".pr-generate"]
+hpctoolkit-leap15-pr-generate:
+  extends: [ ".hpctoolkit-leap15", ".pr-generate"]
+hpctoolkit-ubi8-pr-generate:
+  extends: [ ".hpctoolkit-ubi8", ".pr-generate"]
+hpctoolkit-ubuntu20.04-pr-generate:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".pr-generate"]
 
-hpctoolkit-leap15-protected-generate:
-  extends: [ ".hpctoolkit-leap15", ".protected-generate"]
-hpctoolkit-ubuntu22.04-protected-generate:
-  extends: [ ".hpctoolkit-ubuntu22.04", ".protected-generate"]
-hpctoolkit-ubi8-protected-generate:
-  extends: [ ".hpctoolkit-ubi8", ".protected-generate"]
+hpctoolkit-centos7-protected-generate:
+  extends: [ ".hpctoolkit-centos7", ".protected-generate"]
 hpctoolkit-fedora36-protected-generate:
   extends: [ ".hpctoolkit-fedora36", ".protected-generate"]
+hpctoolkit-leap15-protected-generate:
+  extends: [ ".hpctoolkit-leap15", ".protected-generate"]
+hpctoolkit-ubi8-protected-generate:
+  extends: [ ".hpctoolkit-ubi8", ".protected-generate"]
+hpctoolkit-ubuntu20.04-protected-generate:
+  extends: [ ".hpctoolkit-ubuntu20.04", ".protected-generate"]
 
-hpctoolkit-leap15-pr-build:
+hpctoolkit-centos7-pr-build:
   extends: [ ".hpctoolkit", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-leap15-pr-generate
-    strategy: depend
-hpctoolkit-ubuntu22.04-pr-build:
-  extends: [ ".hpctoolkit", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-ubuntu22.04-pr-generate
-    strategy: depend
-hpctoolkit-ubi8-pr-build:
-  extends: [ ".hpctoolkit", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-ubi8-pr-generate
+        job: hpctoolkit-centos7-pr-generate
     strategy: depend
 hpctoolkit-fedora36-pr-build:
   extends: [ ".hpctoolkit", ".pr-build" ]
@@ -813,20 +806,48 @@ hpctoolkit-fedora36-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: hpctoolkit-fedora36-pr-generate
     strategy: depend
+hpctoolkit-leap15-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-leap15-pr-generate
+    strategy: depend
+hpctoolkit-ubi8-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubi8-pr-generate
+    strategy: depend
+hpctoolkit-ubuntu20.04-pr-build:
+  extends: [ ".hpctoolkit", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-ubuntu20.04-pr-generate
+    strategy: depend
 
+hpctoolkit-centos7-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-centos7-protected-generate
+    strategy: depend
+hpctoolkit-fedora36-protected-build:
+  extends: [ ".hpctoolkit", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hpctoolkit-fedora36-protected-generate
+    strategy: depend
 hpctoolkit-leap15-protected-build:
   extends: [ ".hpctoolkit", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: hpctoolkit-leap15-protected-generate
-    strategy: depend
-hpctoolkit-ubuntu22.04-protected-build:
-  extends: [ ".hpctoolkit", ".protected-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-ubuntu22.04-protected-generate
     strategy: depend
 hpctoolkit-ubi8-protected-build:
   extends: [ ".hpctoolkit", ".protected-build" ]
@@ -835,10 +856,10 @@ hpctoolkit-ubi8-protected-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: hpctoolkit-ubi8-protected-generate
     strategy: depend
-hpctoolkit-fedora36-protected-build:
+hpctoolkit-ubuntu20.04-protected-build:
   extends: [ ".hpctoolkit", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-fedora36-protected-generate
+        job: hpctoolkit-ubuntu20.04-protected-generate
     strategy: depend

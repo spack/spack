@@ -18,6 +18,7 @@ RUN yum update -y \
         python3-pip \
         python3-setuptools \
         unzip \
+        bzip2 \
  && pip3 install boto3 \
  && rm -rf /var/cache/yum \
  && yum clean all
