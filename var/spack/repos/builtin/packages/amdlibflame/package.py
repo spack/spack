@@ -71,10 +71,10 @@ class Amdlibflame(LibflameBase):
         """configure_args function"""
         args = super(Amdlibflame, self).configure_args()
 
-        # 3.2.rc2 version onwards amd optimized flags are encapsulated under:
+        # From 3.2 version, amd optimized flags are encapsulated under:
         # enable-amd-flags for gcc compiler
         # enable-amd-aocc-flags for aocc compiler
-        if "@3.2.rc2:" in self.spec:
+        if "@3.2:" in self.spec:
             if "%gcc" in self.spec:
                 args.append("--enable-amd-flags")
             if "%aocc" in self.spec:
