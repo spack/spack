@@ -1020,6 +1020,12 @@ def get_cmake_prefix_path(pkg):
     build_link_deps = build_deps | link_deps
     spack_built = []
     externals = []
+
+    env_mod_list = modifications_from_dependencies(pkg.spec, 'build', custom_mods_only=True)
+    env_mod = {}
+    env_mod_list.apply_modifications(env_mod)
+    extra_prefix_paths = env_mod.get("CMAKE_PREFIX_PATH", "").split(";")
+
     # modifications_from_dependencies updates CMAKE_PREFIX_PATH by first
     # prepending all externals and then all non-externals
     for dspec in pkg.spec.traverse(root=False, order="post"):
@@ -1030,8 +1036,9 @@ def get_cmake_prefix_path(pkg):
                 spack_built.insert(0, dspec)
 
     ordered_build_link_deps = spack_built + externals
-    build_link_prefixes = filter_system_paths(x.prefix for x in ordered_build_link_deps)
-    return build_link_prefixes
+    build_link_prefixes = filter_system_paths(
+        x.prefix for x in ordered_build_link_deps)
+    return build_link_prefixes + extra_prefix_paths
 
 
 def _setup_pkg_and_run(

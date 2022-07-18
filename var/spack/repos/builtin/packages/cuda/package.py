@@ -463,7 +463,10 @@ class Cuda(Package):
             env.append_path("LD_LIBRARY_PATH", libxml2_home.lib)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+        env.set('CUDAHOSTCXX', dependent_spec.package.compiler.cxx)
+        if self.spec.satisfies("target=x86_64:"):
+            cub_path =  self.prefix.targets + "/x86_64-linux/lib/cmake"
+            env.append_path("CMAKE_PREFIX_PATH", cub_path)
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
