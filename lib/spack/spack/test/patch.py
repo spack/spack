@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.patch
 import spack.paths
@@ -211,6 +211,21 @@ def test_patched_dependency(
             # Make sure the Makefile contains the patched text
             with open('Makefile') as mf:
                 assert 'Patched!' in mf.read()
+
+
+def test_patch_failure_develop_spec_exits_gracefully(
+        mock_packages, config, install_mockery, mock_fetch, tmpdir):
+
+    spec = Spec('patch-a-dependency '
+                '^libelf dev_path=%s' % str(tmpdir))
+    spec.concretize()
+    libelf = spec['libelf']
+    assert 'patches' in list(libelf.variants.keys())
+    pkg = libelf.package
+    # trigger a bad patch
+    bad_file = os.path.join(pkg.stage.source_path, '.spack_patch_failed')
+    touch(bad_file)
+    pkg.do_patch()
 
 
 def test_multiple_patched_dependencies(mock_packages, config):
