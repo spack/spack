@@ -74,6 +74,18 @@ spack:
           tags: ["spack", "x86_64_v4"]
           variables:
             CI_JOB_SIZE: "default"
+      - match: ['os=rhel8']
+        runner-attributes:
+          image: { "name": "ghcr.io/blue42u/ubi8:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v4"]
+          variables:
+            CI_JOB_SIZE: "default"
+      - match: ['os=fedora36']
+        runner-attributes:
+          image: { "name": "ghcr.io/blue42u/fedora36:latest", "entrypoint": [""] }
+          tags: ["spack", "x86_64_v4"]
+          variables:
+            CI_JOB_SIZE: "default"
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
