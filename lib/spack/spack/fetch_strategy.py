@@ -488,7 +488,7 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(headers)
 
         if save_file and (partial_file is not None):
-            fs.rename(partial_file, save_file)
+            os.rename(partial_file, save_file)
 
     @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
