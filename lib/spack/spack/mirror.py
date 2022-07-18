@@ -424,7 +424,7 @@ def get_all_versions(specs):
 
     version_specs = []
     for spec in specs:
-        pkg = spec.package
+        pkg = spec.package_class(spec)
 
         # Skip any package that has no known versions.
         if not pkg.versions:
@@ -645,9 +645,9 @@ def _add_single_spec(spec, mirror, mirror_stats):
     num_retries = 3
     while num_retries > 0:
         try:
-            with spec.package.stage as pkg_stage:
+            with spec.package_class(spec).stage as pkg_stage:
                 pkg_stage.cache_mirror(mirror, mirror_stats)
-                for patch in spec.package.all_patches():
+                for patch in spec.package_class(spec).all_patches():
                     if patch.stage:
                         patch.stage.cache_mirror(mirror, mirror_stats)
                     patch.clean()
