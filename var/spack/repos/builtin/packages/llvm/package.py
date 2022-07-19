@@ -221,7 +221,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libxml2")
 
     # lldb dependencies
-    with when("+lldb"):
+    with when("+lldb +python"):
         depends_on("swig")
         depends_on("swig@2:", when="@10:")
         depends_on("swig@3:", when="@12:")
