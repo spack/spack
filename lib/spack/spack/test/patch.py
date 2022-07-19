@@ -214,6 +214,8 @@ def test_patched_dependency(
 
 
 def trigger_bad_patch(pkg):
+    if not os.path.isdir(pkg.stage.source_path):
+        os.makedirs(pkg.stage.source_path)
     bad_file = os.path.join(pkg.stage.source_path, '.spack_patch_failed')
     touch(bad_file)
 
@@ -230,8 +232,9 @@ def test_patch_failure_develop_spec_exits_gracefully(
     libelf = spec['libelf']
     assert 'patches' in list(libelf.variants.keys())
     pkg = libelf.package
-    trigger_bad_patch(pkg)
-    pkg.do_patch()
+    with pkg.stage:
+        trigger_bad_patch(pkg)
+        pkg.do_patch()
     # success if no exceptions raised
 
 
@@ -240,9 +243,10 @@ def test_patch_failure_restages(
     spec = Spec('patch-a-dependency')
     spec.concretize()
     pkg = spec['libelf'].package
-    trigger_bad_patch(pkg)
-    pkg.do_patch()
-    # TODO check that restage happend. not sure how to do
+    with pkg.stage:
+        trigger_bad_patch(pkg)
+        pkg.do_patch()
+        # TODO check that restage happend. not sure how to do
 
 
 def test_multiple_patched_dependencies(mock_packages, config):
