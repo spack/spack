@@ -754,9 +754,9 @@ tutorial-protected-build:
 .hpctoolkit:
   variables:
     SPACK_CI_STACK_NAME: hpctoolkit
-.hpctoolkit-centos7:
-  extends: .hpctoolkit
-  image: ghcr.io/spack/centos7:latest
+# .hpctoolkit-centos7:
+#   extends: .hpctoolkit
+#   image: ghcr.io/spack/centos7:latest
 .hpctoolkit-fedora36:
   extends: .hpctoolkit
   image: ghcr.io/blue42u/fedora36:latest
@@ -770,8 +770,8 @@ tutorial-protected-build:
   extends: .hpctoolkit
   image: ghcr.io/spack/ubuntu-focal:latest
 
-hpctoolkit-centos7-pr-generate:
-  extends: [ ".hpctoolkit-centos7", ".pr-generate"]
+# hpctoolkit-centos7-pr-generate:
+#   extends: [ ".hpctoolkit-centos7", ".pr-generate"]
 hpctoolkit-fedora36-pr-generate:
   extends: [ ".hpctoolkit-fedora36", ".pr-generate"]
 hpctoolkit-leap15-pr-generate:
@@ -792,13 +792,13 @@ hpctoolkit-ubi8-protected-generate:
 hpctoolkit-ubuntu20.04-protected-generate:
   extends: [ ".hpctoolkit-ubuntu20.04", ".protected-generate"]
 
-hpctoolkit-centos7-pr-build:
-  extends: [ ".hpctoolkit", ".pr-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-centos7-pr-generate
-    strategy: depend
+# hpctoolkit-centos7-pr-build:
+#   extends: [ ".hpctoolkit", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: hpctoolkit-centos7-pr-generate
+#     strategy: depend
 hpctoolkit-fedora36-pr-build:
   extends: [ ".hpctoolkit", ".pr-build" ]
   trigger:
@@ -828,13 +828,13 @@ hpctoolkit-ubuntu20.04-pr-build:
         job: hpctoolkit-ubuntu20.04-pr-generate
     strategy: depend
 
-hpctoolkit-centos7-protected-build:
-  extends: [ ".hpctoolkit", ".protected-build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hpctoolkit-centos7-protected-generate
-    strategy: depend
+# hpctoolkit-centos7-protected-build:
+#   extends: [ ".hpctoolkit", ".protected-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: hpctoolkit-centos7-protected-generate
+#     strategy: depend
 hpctoolkit-fedora36-protected-build:
   extends: [ ".hpctoolkit", ".protected-build" ]
   trigger:
