@@ -78,7 +78,7 @@ class Visit(CMakePackage):
     generator = "Ninja"
 
     variant('gui',    default=True, description='Enable VisIt\'s GUI')
-    variant('osmesa', default=False, description='Use OSMesa for off-screen CPU rendering')
+    variant('osmesa', default=True, description='Use OSMesa for off-screen CPU rendering')
     variant('adios2', default=True, description='Enable ADIOS2 file format')
     variant('hdf5',   default=True, description='Enable HDF5 file format')
     variant('silo',   default=True, description='Enable Silo file format')
@@ -89,9 +89,6 @@ class Visit(CMakePackage):
     patch('spack-changes-3.0.1.patch', when="@3.0.1")
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
     patch('parallel-hdf5.patch', when='+hdf5+mpi')
-
-    # Exactly one of 'gui' or 'osmesa' has to be enabled
-    conflicts('+gui', when='+osmesa')
 
     #############################################
     # Full List of dependencies from build_visit
@@ -201,8 +198,7 @@ class Visit(CMakePackage):
     depends_on('vtk', patches=[patch('vtk_wrapping_python_x11.patch')],
                when='+python')
 
-    depends_on('glu', when='~osmesa')
-    depends_on('mesa-glu+osmesa', when='+osmesa')
+    depends_on('glu', when='platform=linux')
 
     # VisIt doesn't work with later versions of qt.
     depends_on('qt+gui+opengl@5:5.14', when='+gui')
