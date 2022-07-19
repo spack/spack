@@ -24,7 +24,7 @@ spack:
       - - libmonitor +hpctoolkit ~dlopen ~commrank
       - ['@2021.11.08', '@:']
     - matrix:
-      - - hpctoolkit +mpi +cuda +rocm +level_zero +opencl +viewer
+      - - hpctoolkit +mpi +viewer
       - - +papi
         - +papi ^papi @6.0.0.1
         - ~papi
