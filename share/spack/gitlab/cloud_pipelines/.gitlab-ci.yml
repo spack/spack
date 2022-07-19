@@ -781,8 +781,8 @@ hpctoolkit-ubi8-pr-generate:
 hpctoolkit-ubuntu20.04-pr-generate:
   extends: [ ".hpctoolkit-ubuntu20.04", ".pr-generate"]
 
-hpctoolkit-centos7-protected-generate:
-  extends: [ ".hpctoolkit-centos7", ".protected-generate"]
+# hpctoolkit-centos7-protected-generate:
+#   extends: [ ".hpctoolkit-centos7", ".protected-generate"]
 hpctoolkit-fedora36-protected-generate:
   extends: [ ".hpctoolkit-fedora36", ".protected-generate"]
 hpctoolkit-leap15-protected-generate:
