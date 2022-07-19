@@ -1591,6 +1591,11 @@ class Environment(object):
                     installed.append(spec)
         return installed, uninstalled
 
+    def uninstalled_specs(self):
+        """Return root specs that are not installed, or are installed, but
+        are development specs themselves or have those among their dependencies."""
+        return self._partition_roots_by_install_status()[1]
+
     def install_all(self, **install_args):
         """Install all concretized specs in an environment.
 
