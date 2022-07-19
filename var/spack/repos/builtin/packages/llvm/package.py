@@ -372,7 +372,7 @@ class Llvm(CMakePackage, CudaPackage):
     # Add missing include leading to build fail with clang
     patch('https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch',
           sha256='151d0fb4c32933d224033c2fd855b28fe85c7d487307c6345c7074c19d77feb5',
-          when='@8.0.0:11.1.0')
+          when='@8:11')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
