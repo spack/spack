@@ -637,6 +637,10 @@ class MirrorStats(object):
 
 
 def _add_single_spec(spec, mirror, mirror_stats):
+    # Ensure that the spec is concrete, since we'll stage it later
+    if not spec.concrete:
+        spec = spec.concretized()
+
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
