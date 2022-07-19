@@ -12,8 +12,6 @@ class PyNeurodamus(PythonPackage):
     homepage = "https://bbpteam.epfl.ch/project/spaces/display/BGLIB/Neurodamus"
     git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-py.git"
 
-    LATEST_STABLE = '2.12.0'  # Use for neurodamus-models
-
     version('develop', branch='main', submodules=True)
     version('2.12.0',  tag='2.12.0', submodules=True)
     version('2.11.3',  tag='2.11.3', submodules=True)
@@ -64,3 +62,16 @@ class PyNeurodamus(PythonPackage):
     def setup_run_environment(self, env):
         PythonPackage.setup_run_environment(self, env)
         env.set('NEURODAMUS_PYTHON', self.prefix.share)
+
+    LATEST_STABLE = 'develop'  # Use for neurodamus-models (updated below)
+
+
+# Update LATEST_STABLE
+# Note: Directives are lazyly executed. The `versions` attr is only avail now
+_all_versions = sorted(PyNeurodamus.versions)
+_max_version = None
+if _all_versions:
+    _max_version = _all_versions[-1]
+    if _max_version.isdevelop() and len(_all_versions) > 1:
+        _max_version = _all_versions[-2]
+    PyNeurodamus.LATEST_STABLE = _max_version.string
