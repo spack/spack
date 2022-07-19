@@ -26,7 +26,7 @@ class RRhtslib(RPackage):
     #             Please, commit your changes or stash them before you can switch
     #             branches.
     #             Aborting
-    #version('1.28.0', commit='214fde2218bdbca89f1e12a30d2e081e76915aef')
+    # version('1.28.0', commit='214fde2218bdbca89f1e12a30d2e081e76915aef')
     version('1.28.0', branch='RELEASE_3_15')
     version('1.26.0', commit='f5b20e97b283942877529f750b28398782552655')
     version('1.22.0', commit='899b79faa54d42c7c9b9a2bc49972109637d367f')
