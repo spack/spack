@@ -34,9 +34,11 @@ class Lhapdf(AutotoolsPackage):
     extends('python', when='+python')
     depends_on('py-cython',     type='build', when='+python')
     depends_on('py-setuptools', type='build', when='+python')
+    depends_on('gettext',       type='build', when='+python')
 
     def configure_args(self):
         args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3',
-                'LIBS=-L' + self.spec['python'].prefix.lib]
+                'LIBS=-L' + self.spec['python'].prefix.lib +
+                ' -L' + self.spec['gettext'].prefix.lib]
         args.extend(self.enable_or_disable('python'))
         return args
