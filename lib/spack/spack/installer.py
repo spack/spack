@@ -2212,7 +2212,7 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.pkg == self.request.pkg
+        return self.pkg == self.request.pkg and self.request.install_args['explicit']
 
     @property
     def key(self):
