@@ -13,6 +13,7 @@ class SpatialIndex(PythonPackage):
     url      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
 
     version('develop', branch='main', submodules=True)
+    version('0.5.2-rc1', commit="796da683101e1fd3916644064703c9524a0e1e99", submodules=True)
     version('0.5.1', tag='0.5.1', submodules=True)
     version('0.5.0', tag='0.5.0', submodules=True)
     version('0.4.9', tag='0.4.9', submodules=True)
@@ -31,7 +32,7 @@ class SpatialIndex(PythonPackage):
 
     depends_on("py-setuptools")
     depends_on("cmake@3.2:", type="build")
-    depends_on("boost@:1.70.0")
+    depends_on("boost@:1.70.0", when="@:0.5.1")
     depends_on("py-docopt", type=("build", "run"))
     depends_on("py-libsonata", type=("build", "run"), when="@0.2.2:")
     depends_on("py-morphio", type=("build", "run"))
@@ -40,10 +41,9 @@ class SpatialIndex(PythonPackage):
     depends_on("py-numpy-quaternion", type=("build", "run"), when="@0.2.1:")
     depends_on("py-numpy", type=("build", "run"))
 
-    # TODO Update the `when=*` when releasing a new version
-    # of `spatial-index`.
-    depends_on("mpi", type=("build", "run"), when="@develop")
-    depends_on("py-mpi4py", type=("build", "run"), when="@develop")
+    depends_on("boost@1.79.0:", when="@0.5.2:")
+    depends_on("mpi", when="@0.5.2:")
+    depends_on("py-mpi4py", when="@0.5.2:")
 
     @run_after('install')
     def install_headers(self):
