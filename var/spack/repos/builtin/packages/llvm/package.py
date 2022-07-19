@@ -295,19 +295,20 @@ class Llvm(CMakePackage, CudaPackage):
     # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
     patch('missing-includes.patch', when='@8')
 
-    # Backport from llvm master + additional fix
-    # see  https://bugs.llvm.org/show_bug.cgi?id=39696
-    # for a bug report about this problem in llvm master.
-    patch("constexpr_longdouble.patch", when="@6:8+libcxx")
-    patch("constexpr_longdouble_9.0.patch", when="@9:10.0.0+libcxx")
+    # Backport from llvm upstream gcc ppc const expr long double issue
+    # see https://bugs.llvm.org/show_bug.cgi?id=39696
+    # This fix was initially commited (3bf63cf3b366) for the 9.0 release
+    # but was then broken (0583d9ea8d5e) prior to the 9.0 release and
+    # eventually unbroken (d9a42ec98adc) for the 11.0 release.  The first
+    # patch backports the original correct fix to previous releases.  The
+    # second patch backports the un-breaking of the original fix.
+    patch('constexpr_longdouble.patch', when='@6:8+libcxx')
+    patch('constexpr_longdouble_9.0.patch', when='@9:10+libcxx')
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
     # for a bug report about this problem in llvm master.
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
-
-    # https://bugs.llvm.org/show_bug.cgi?id=39696
-    patch("thread-p9.patch", when="@:10 +libcxx")
 
     # https://github.com/spack/spack/issues/19625,
     # merged in llvm-11.0.0_rc2, but not found in 11.0.1
