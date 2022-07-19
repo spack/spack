@@ -14,6 +14,7 @@ class PyHttpstan(PythonPackage):
 
     maintainers = ['haralmha']
 
+    version('4.8.0', sha256='cadfce05d24ec2af50d71c5212c648cbee5684a7f98fedd3838e124e5a9b4962')
     version('4.7.2', sha256='94f6631d969cbd91d136194b074d02642d8c9e2a05674877a39059be87c5bf7b')
     version('4.6.1', sha256='703e5e04e60651e0004574bb9695827d759fd13eb0d6bd67f827c1bfa0a1fd31')
 
