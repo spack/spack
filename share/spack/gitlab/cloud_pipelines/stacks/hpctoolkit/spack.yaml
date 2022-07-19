@@ -48,7 +48,9 @@ spack:
           ^memkind @1.12.0
           ^intel-xed @12.0.1
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/hpctoolkit" }
+  mirrors:
+    mirror: s3://spack-binaries/develop/hpctoolkit
+    develop: s3://spack-binaries/develop
 
   gitlab-ci:
     script:
