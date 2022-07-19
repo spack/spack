@@ -218,12 +218,14 @@ def trigger_bad_patch(pkg):
         os.makedirs(pkg.stage.source_path)
     bad_file = os.path.join(pkg.stage.source_path, '.spack_patch_failed')
     touch(bad_file)
+    return bad_file
 
 
 def test_patch_failure_develop_spec_exits_gracefully(
         mock_packages, config, install_mockery, mock_fetch, tmpdir):
     """
     ensure that a failing patch does not trigger exceptions
+    for develop specs
     """
 
     spec = Spec('patch-a-dependency '
@@ -233,20 +235,26 @@ def test_patch_failure_develop_spec_exits_gracefully(
     assert 'patches' in list(libelf.variants.keys())
     pkg = libelf.package
     with pkg.stage:
-        trigger_bad_patch(pkg)
+        bad_patch_indicator = trigger_bad_patch(pkg)
+        assert os.path.isfile(bad_patch_indicator)
         pkg.do_patch()
     # success if no exceptions raised
 
 
 def test_patch_failure_restages(
         mock_packages, config, install_mockery, mock_fetch):
+    """
+    ensure that a failing patch does not trigger exceptions
+    for non-develop specs and the source gets restaged
+    """
     spec = Spec('patch-a-dependency')
     spec.concretize()
     pkg = spec['libelf'].package
     with pkg.stage:
-        trigger_bad_patch(pkg)
+        bad_patch_indicator = trigger_bad_patch(pkg)
+        assert os.path.isfile(bad_patch_indicator)
         pkg.do_patch()
-        # TODO check that restage happend. not sure how to do
+        assert not os.path.isfile(bad_patch_indicator)
 
 
 def test_multiple_patched_dependencies(mock_packages, config):
