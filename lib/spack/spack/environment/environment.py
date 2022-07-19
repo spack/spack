@@ -1574,10 +1574,10 @@ class Environment(object):
                 symlink(spec.package.build_log_path, build_log_link)
 
     def _partition_roots_by_install_status(self):
-        """Return a list of all installed / uninstalled root specs.
-        NB: development specs are always listed as 'uninstalled'."""
-        # Do the installed check across all specs within a single
-        # DB read transaction to reduce time spent in lock acquisition.
+        """Partition root specs into those that do not have to be passed to the
+        installer, and those that should be, taking into account development
+        specs. This is done in a single read transaction per environment instead
+        of per spec."""
         installed, uninstalled = [], []
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
