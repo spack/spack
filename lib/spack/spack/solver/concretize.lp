@@ -479,26 +479,28 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % A package may have an associated "condition_group": a set of specs where
 % at least one must be applied. Each spec in the group is associated
 % with a condition via asp.impose().
-{ condition_holds(Y) : condition_group_member(Y, X) } :- node(Package), condition_group(Package, X).
+{ condition_holds(Y) : condition_group_member(Y, Package, X) } :- node(Package), condition_group(Package, X).
 
-condition_group_satisfied(X) :-
+condition_group_satisfied(Package, X) :-
   node(Package),
   condition_group(Package, X),
-  condition_group_member(Y, X),
+  condition_group_member(Y, Package, X),
   condition_holds(Y).
 
 error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
   node(Package),
   condition_group(Package, X),
-  not condition_group_satisfied(X).
+  not condition_group_satisfied(Package, X).
 
 % If a condition is a member of a condition group, then it has a weight
 % equal to its ID (so you can prioritize by assigning higher ID numbers
 % to less-preferred conditions)
-condition_weight(Package, Y) :- condition_holds(Y), condition_group_member(Y, X), node(Package), condition_group(Package, X).
+
+condition_weight(Package, W) :- condition_holds(Y), condition_has_weight(Y, W), condition_group_member(Y, Package, X), node(Package), condition_group(Package, X).
 
 #defined condition_group/2.
-#defined condition_group_member/2.
+#defined condition_group_member/3.
+#defined condition_has_weight/2.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
