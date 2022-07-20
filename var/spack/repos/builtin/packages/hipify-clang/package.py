@@ -19,6 +19,7 @@ class HipifyClang(CMakePackage):
 
     version('master', branch='master')
 
+    version('5.2.0', sha256='dcd5f44daceb984bb654a209e78debf81e1cdeaf9202444a1e110b45ad6c3f4f')
     version('5.1.3', sha256='6354b08b8ab2f4c481398fb768652bae00bb78c4cec7a11d5f6c7e4cb831ddf1')
     version('5.1.0', sha256='ba792294cbdcc880e0f02e38ee352dff8d4a2c183430e13d1c5ed176bd46cfc5')
     version('5.0.2', sha256='812bccfeb044483a1c7df89f45843afcb28d8146f348c792f082b693cbff3984')
@@ -39,9 +40,11 @@ class HipifyClang(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
 
     depends_on('cmake@3.5:', type='build')
+    patch('0001-Install-clang-header-into-clang-include-directory.patch', when='@4.5.0:')
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                '5.1.0', '5.1.3', 'master']:
+                '5.1.0', '5.1.3', '5.2.0', 'master']:
         depends_on('llvm-amdgpu@' + ver, when='@' + ver)
 
     def setup_run_environment(self, env):

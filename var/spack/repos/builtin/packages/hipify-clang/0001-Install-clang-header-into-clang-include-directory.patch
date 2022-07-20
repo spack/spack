@@ -1,0 +1,24 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 822f8db..a22737d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -95,16 +95,16 @@ endif()
+ 
+ set(HIPIFY_INSTALL_PATH ${CMAKE_INSTALL_PREFIX})
+ 
+-install(TARGETS hipify-clang DESTINATION ${CMAKE_INSTALL_PREFIX})
++install(TARGETS hipify-clang DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+ install(
+     DIRECTORY ${CMAKE_SOURCE_DIR}/bin/
+-    DESTINATION ${CMAKE_INSTALL_PREFIX}
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+     USE_SOURCE_PERMISSIONS
+     PATTERN "hipify-perl"
+     PATTERN "*.sh")
+ install(
+     DIRECTORY ${LLVM_DIR}/../../clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/
+-    DESTINATION ${CMAKE_INSTALL_PREFIX}
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/clang-include
+     COMPONENT clang-resource-headers
+     FILES_MATCHING
+     PATTERN "*.h"
