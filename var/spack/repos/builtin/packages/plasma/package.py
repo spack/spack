@@ -58,6 +58,9 @@ class Plasma(CMakePackage):
     # need a Python version to generate all precisions' code in repo
     depends_on("python", when="@develop", type="build")
 
+    # need a Python version to generate all precisions' code in repo
+    depends_on("python", when="@develop")
+
     depends_on("lua", when="+lua")
 
     depends_on("blas")
