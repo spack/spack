@@ -1115,7 +1115,8 @@ class PackageInstaller(object):
         #
         # External and upstream packages need to get flagged as installed to
         # ensure proper status tracking for environment build.
-        not_local = _handle_external_and_upstream(request.pkg, True)
+        explicit = request.install_args.get('explicit', True)
+        not_local = _handle_external_and_upstream(request.pkg, explicit)
         if not_local:
             self._flag_installed(request.pkg)
             return
