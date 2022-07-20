@@ -12,10 +12,10 @@ class HipifyClang(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIPIFY"
     git      = "https://github.com/ROCm-Developer-Tools/HIPIFY.git"
-    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.1.3.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/HIPIFY/archive/rocm-5.2.0.tar.gz"
     tags     = ['rocm']
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'renjithravindrankannath']
 
     version('master', branch='master')
 
