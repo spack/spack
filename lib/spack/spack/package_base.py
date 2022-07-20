@@ -1556,8 +1556,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.debug('Patching failed last time. Restaging.')
-            self.stage.restage()
+            if self.stage.managed_by_spack:
+                tty.debug('Patching failed last time. Restaging.')
+                self.stage.restage()
+            else:
+                # develop specs/ DIYStages may have patch failures but
+                # should never be restaged
+                msg = ('A patch failure was detected in %s.' % self.name +
+                       ' Build errors may occur due to this.')
+                tty.warn(msg)
+                return
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
