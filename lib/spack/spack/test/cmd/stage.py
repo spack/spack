@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+import spack.config
 import spack.environment as ev
 import spack.repo
 from spack.main import SpackCommand
@@ -122,3 +123,13 @@ def test_stage_full_env(mutable_mock_env_path, monkeypatch):
 
     # assert that all were staged
     assert len(expected) == 0
+
+
+@pytest.mark.disable_clean_stage_check
+def test_concretizer_arguments(mock_packages, mock_fetch):
+    """Make sure stage also has --reuse and --fresh flags."""
+    stage("--reuse", "trivial-install-test-package")
+    assert spack.config.get("concretizer:reuse", None) is True
+
+    stage("--fresh", "trivial-install-test-package")
+    assert spack.config.get("concretizer:reuse", None) is False
