@@ -19,7 +19,18 @@ class Ip(CMakePackage):
     version('4.0.0', sha256='a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8')
     version('3.3.3', sha256='d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633', preferred=True)
 
+    variant('openmp', description='Enable OpenMP threading', default=True)
+    variant('pic', default=True, description='Build with position-independent-code')
+
     depends_on('sp')
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('OPENMP', 'openmp'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic')
+        ]
+
+        return args
 
     def setup_run_environment(self, env):
         for suffix in ('4', '8', 'd'):

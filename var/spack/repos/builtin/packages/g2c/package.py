@@ -16,23 +16,22 @@ class G2c(CMakePackage):
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA', 'edwardhartnett']
 
+    version('1.6.4', sha256='5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d')
+    version('1.6.2', sha256='b5384b48e108293d7f764cdad458ac8ce436f26be330b02c69c2a75bb7eb9a2c')
+
     variant('png', default=True)
     variant('jasper', default=True)
     variant('openjpeg', default=False)
     variant('pic', default=True, description='Build with position-independent-code')
-
-    version('1.6.4', sha256='5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d')
-    version('1.6.2', sha256='b5384b48e108293d7f764cdad458ac8ce436f26be330b02c69c2a75bb7eb9a2c')
 
     depends_on('libpng', when='+png')
     depends_on('jasper', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
 
     def cmake_args(self):
-        args = []
-
-        if '+pic' in self.spec:
-            args.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
+        args = [
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic')
+        ]
 
         return args
 

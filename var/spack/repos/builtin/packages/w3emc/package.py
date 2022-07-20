@@ -22,12 +22,21 @@ class W3emc(CMakePackage):
     version('2.9.0', sha256='994f59635ab91e34e96cab5fbaf8de54389d09461c7bac33b3104a1187e6c98a')
     version('2.7.3', sha256='eace811a1365f69b85fdf2bcd93a9d963ba72de5a7111e6fa7c0e6578b69bfbc')
 
+    variant('pic', default=True, description='Build with position-independent-code')
+
     depends_on('bacio', when='@2.9.2:')
 
     # w3emc 2.7.3 contains gblevents which has these dependencies
     depends_on('nemsio', when='@2.7.3')
     depends_on('sigio', when='@2.7.3')
     depends_on('netcdf-fortran', when='@2.7.3')
+
+    def cmake_args(self):
+        args = [
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic')
+        ]
+
+        return args
 
     def setup_run_environment(self, env):
         for suffix in ('4', '8', 'd'):
