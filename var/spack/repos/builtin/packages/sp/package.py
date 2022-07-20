@@ -20,6 +20,7 @@ class Sp(CMakePackage):
 
     variant('openmp', default=True,
             description='builds with OpenMP support')
+    variant('pic', default=True, description='Build with position-independent-code')
 
     def setup_run_environment(self, env):
         for suffix in ('4', '8', 'd'):
@@ -30,6 +31,7 @@ class Sp(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('OPENMP', 'openmp')
+            self.define_from_variant('OPENMP', 'openmp'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic')
         ]
         return args
