@@ -18,9 +18,13 @@ import spack.schema.projections
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
-             r'blacklist|projections|naming_scheme|core_compilers|all|' \
-             r'defaults)(^\w[\w-]*)'
+spec_regex = (
+    r'(?!hierarchy|core_specs|verbose|hash_length|defaults|'
+    r'whitelist|blacklist|'  # DEPRECATED: remove in 0.20.
+    r'include|exclude|'      # use these more inclusive/consistent options
+    r'projections|naming_scheme|core_compilers|all)(^\w[\w-]*)'
+
+)
 
 #: Matches a valid name for a module set
 valid_module_set_name = r'^(?!arch_folder$|lmod$|roots$|enable$|prefix_inspections$|'\
@@ -50,7 +54,16 @@ module_file_configuration = {
             'default': {},
             'additionalProperties': False,
             'properties': {
+                # DEPRECATED: remove in 0.20.
                 'environment_blacklist': {
+                    'type': 'array',
+                    'default': [],
+                    'items': {
+                        'type': 'string'
+                    }
+                },
+                # use exclude_env_vars instead
+                'exclude_env_vars': {
                     'type': 'array',
                     'default': [],
                     'items': {
@@ -95,9 +108,17 @@ module_type_configuration = {
                 'minimum': 0,
                 'default': 7
             },
+            # DEPRECATED: remove in 0.20.
             'whitelist': array_of_strings,
             'blacklist': array_of_strings,
             'blacklist_implicits': {
+                'type': 'boolean',
+                'default': False
+            },
+            # whitelist/blacklist have been replaced with include/exclude
+            'include': array_of_strings,
+            'exclude': array_of_strings,
+            'exclude_implicits': {
                 'type': 'boolean',
                 'default': False
             },
@@ -224,14 +245,51 @@ schema = {
 }
 
 
-def update(data):
-    """Update the data in place to remove deprecated properties.
+# deprecated keys and their replacements
+exclude_include_translations = {
+    "whitelist": "include",
+    "blacklist": "exclude",
+    "blacklist_implicits": "exclude_implicits",
+    "environment_blacklist": "exclude_env_vars",
+}
 
-    Args:
-        data (dict): dictionary to be updated
 
-    Returns:
-        True if data was changed, False otherwise
+def update_keys(data, key_translations):
+    """Change blacklist/whitelist to exclude/include.
+
+    Arguments:
+        data (dict): data from a valid modules configuration.
+        key_translations (dict): A dictionary of keys to translate to
+            their respective values.
+
+    Return:
+        (bool) whether anything was changed in data
+    """
+    changed = False
+
+    if isinstance(data, dict):
+        keys = list(data.keys())
+        for key in keys:
+            value = data[key]
+
+            translation = key_translations.get(key)
+            if translation:
+                data[translation] = data.pop(key)
+                changed = True
+
+            changed |= update_keys(value, key_translations)
+
+    elif isinstance(data, list):
+        for elt in data:
+            changed |= update_keys(elt, key_translations)
+
+    return changed
+
+
+def update_default_module_set(data):
+    """Update module configuration to move top-level keys inside default module set.
+
+    This change was introduced in v0.18 (see 99083f1706 or #28659).
     """
     changed = False
 
@@ -256,5 +314,23 @@ def update(data):
     if default:
         changed = True
         data['default'] = default
+
+    return changed
+
+
+def update(data):
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # deprecated top-level module config (everything in default module set)
+    changed = update_default_module_set(data)
+
+    # translate blacklist/whitelist to exclude/include
+    changed |= update_keys(data, exclude_include_translations)
 
     return changed
