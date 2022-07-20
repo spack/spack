@@ -235,6 +235,7 @@ class SimmetrixSimmodsuite(Package):
     variant('paralleladapt', default=False, description='enable parallel adaptation')
 
     depends_on('mpi')
+    depends_on('rpc')
 
     oslib = 'x64_rhel7_gcc48'
 
