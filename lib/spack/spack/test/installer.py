@@ -1176,6 +1176,18 @@ def test_install_skip_patch(install_mockery, mock_fetch):
     assert inst.package_id(spec.package) in installer.installed
 
 
+def test_install_implicit(install_mockery, mock_fetch):
+    """Test the path skip_patch install path."""
+    spec_name = 'trivial-install-test-package'
+    const_arg = installer_args([spec_name],
+                               {'fake': False})
+    installer = create_installer(const_arg)
+    pkg = installer.build_requests[0].pkg
+    assert not create_build_task(pkg, {'explicit': False}).explicit
+    assert create_build_task(pkg, {'explicit': True}).explicit
+    assert create_build_task(pkg).explicit
+
+
 def test_overwrite_install_backup_success(temporary_store, config, mock_packages,
                                           tmpdir):
     """
