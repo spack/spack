@@ -24,7 +24,7 @@ class Cmake(Package):
 
     tags = ['build-tools']
 
-    executables = ['^cmake$']
+    executables = ['^cmake$', '^cmake3$']
 
     version('master',  branch='master')
     version('3.23.1',   sha256='33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3')
