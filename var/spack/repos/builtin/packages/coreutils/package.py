@@ -35,6 +35,17 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    def flag_handler(self, name, flags):
+        # gcc11+ defaults to C17 which casues issues
+        # on older glibc versions as shipped with rhel7
+        # in this particular case the gnu extensions
+        # are required.
+
+        older_glibc = 'os=rhel7' in self.spec or 'os=centos7' in self.spec
+        if '%gcc@11:' in self.spec and older_glibc and name.lower() == 'cflags':
+            flags.append('-std=gnu11')
+        return (None, None, flags)
+
     def configure_args(self):
         spec = self.spec
         configure_args = []
