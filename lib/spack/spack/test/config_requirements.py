@@ -3,18 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import stat
-
 import pytest
 
 import spack.config
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigError, ConfigScope
+from spack.config import ConfigScope
 from spack.spec import Spec
-from spack.version import Version
 from spack.solver.asp import UnsatisfiableSpecError
+
 
 # TODO: this is entirely reused from concretize_preferences
 @pytest.fixture()
