@@ -20,7 +20,7 @@ class PyTorchGeometric(PythonPackage):
 
     homepage = "https://github.com/rusty1s/pytorch_geometric"
     url      = "https://github.com/rusty1s/pytorch_geometric/archive/1.6.0.tar.gz"
-   
+
     version('2.0.4', sha256='61b00a8c1d76455c65055645899492b37642c1bfd65a3b9beb8fe2a906d11bff')
     version('1.7.2', sha256='33663e84c97ba9a35bf0c15a63c1c7d9b2aec7a2178e92e39deb6712ce2fbb27')
     version('1.6.3', sha256='1907c0f5eb7ab8f6f79a7e43703579b39b514501dd956ed0fc3d33210bcbb4c2')
