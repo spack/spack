@@ -41,6 +41,9 @@ class Mapl(CMakePackage):
     # Patch to add missing NetCDF C target in various CMakeLists.txt
     patch('mapl-2.12.3-netcdf-c.patch', when='@:2.12.3')
 
+    # Patch to add missing MPI Fortran target to top-level CMakeLists.txt
+    patch('mapl-2.12.3-mpi-fortran.patch', when='@:2.12.3')
+
     variant('flap', default=False)
     variant('pflogger', default=False)
     variant('esma_gfe_namespace', default=True)
