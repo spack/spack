@@ -63,7 +63,7 @@ class Y(Package):
 def test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join('repo.yaml')
-    with open(repo_yaml, 'w') as f:
+    with open(str(repo_yaml), 'w') as f:
         f.write("""\
 repo:
   namespace: testcfgrequirements
@@ -73,7 +73,7 @@ repo:
     for (pkg_name, pkg_str) in [_pkgx, _pkgy]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join('package.py')
-        with open(pkg_file, 'w') as f:
+        with open(str(pkg_file), 'w') as f:
             f.write(pkg_str)
 
     mock_repo = spack.repo.Repo(repo_path)
