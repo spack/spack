@@ -7,8 +7,7 @@ from spack import *
 
 
 class R2d2(PythonPackage):
-    """Research Repository for Data and Diagnostics (R2D2) - DH* NEED TO FILL IN THE DETAILS
-    """
+    """Research Repository for Data and Diagnostics (R2D2) for JEDI at JCSDA."""
 
     homepage = "https://github.com/JCSDA/r2d2"
     git = "https://github.com/JCSDA/r2d2.git"
@@ -17,7 +16,8 @@ class R2d2(PythonPackage):
     maintainers = ['climbfuji', 'ericlingerfelt']
 
     version('develop', branch='develop', no_cache=True)
-    version('0.0.1', commit='011990d36c9c651593e5e158b5ad7ef07aee16dc', preferred=True)
+    version('1.0.0', commit='74236aba6817e8ca7880f8109268aae1048ccdbe', preferred=True)
+    version('0.0.1', commit='011990d36c9c651593e5e158b5ad7ef07aee16dc')
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-pyyaml@5.3.1:', type=('build', 'run'))

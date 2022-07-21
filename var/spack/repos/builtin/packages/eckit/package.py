@@ -26,6 +26,10 @@ class Eckit(CMakePackage):
 
     version('1.16.0', sha256='9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1')
 
+    variant('build_type', default='RelWithDebInfo',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
+
     variant('shared', default=True, description='Build shared libraries')
     variant('tools', default=True, description='Build the command line tools')
     variant('mpi', default=True, description='Enable MPI support')
@@ -144,13 +148,6 @@ class Eckit(CMakePackage):
         if '~shared' in self.spec:
             # args.append('-DBUILD_SHARED_LIBS=OFF')
             raise InstrallError("eckit static build not supported")
-
-        if '+mpi' in self.spec:
-            args += [
-                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-            ]
 
         if 'linalg=mkl' not in self.spec:
             # ENABLE_LAPACK is ignored if MKL backend is enabled

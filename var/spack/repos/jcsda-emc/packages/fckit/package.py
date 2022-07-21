@@ -30,6 +30,10 @@ class Fckit(CMakePackage):
     depends_on('python')
     depends_on('ecbuild', type=('build'))
 
+    variant('build_type', default='RelWithDebInfo',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
+
     variant('eckit', default=True)
     depends_on('eckit+mpi', when='+eckit')
 
@@ -38,9 +42,6 @@ class Fckit(CMakePackage):
     def cmake_args(self):
         res = [
             self.define_from_variant('ENABLE_ECKIT', 'eckit'),
-            '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-            '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
             "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec['python'].command.path,
             '-DFYPP_NO_LINE_NUMBERING=ON'
         ]
