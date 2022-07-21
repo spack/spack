@@ -359,7 +359,7 @@ To resolve this problem, please try the following:
 
     @property
     def autoreconf_search_path_args(self):
-        """Search path includes for autoreconf: add an -I flag for all `aclocal` dirs
+        """Search path includes for autoreconf. Add an -I flag for all `aclocal` dirs
         of build deps, skips the default path of automake, move external include
         flags to the back, since they might pull in unrelated m4 files shadowing
         spack dependencies."""
