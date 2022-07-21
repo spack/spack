@@ -170,7 +170,8 @@ class FilePatch(Patch):
             msg += 'package %s.%s does not exist.' % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super(FilePatch, self).__init__(pkg, abs_path, level, working_dir, ignore_whitespace)
+        super(FilePatch, self).__init__(pkg, abs_path, level,
+                                        working_dir, ignore_whitespace)
         self.path = abs_path
         self._sha256 = None
         self.ordering_key = ordering_key
