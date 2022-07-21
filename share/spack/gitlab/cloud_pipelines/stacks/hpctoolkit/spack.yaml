@@ -69,23 +69,23 @@ spack:
     mappings:
       - match: ['os=centos7']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/centos7:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-centos-7:latest", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=fedora36']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/fedora36:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-fedora-36:latest", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=opensuse_leap15']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/leap15:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-leap-15:latest", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
-      - match: ['os=rhel8']
+      - match: ['os=rocky8']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/ubi8:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-rockylinux-8:latest", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=ubuntu20.04']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/ubuntu-focal:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2022-03-21", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
