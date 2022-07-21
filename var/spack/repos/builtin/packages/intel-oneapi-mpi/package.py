@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import platform
+import re
 
 from spack.package import *
 
@@ -22,6 +22,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     maintainers = ['rscohn2', ]
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
+
+    executables = [r'^mpiicpc$']  # one should be sufficient
 
     if platform.system() == 'Linux':
         version('2021.6.0',
@@ -62,6 +64,20 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     depends_on('libfabric', when='+external-libfabric', type=('link', 'run'))
 
     provides('mpi@:3.1')
+
+    @classmethod
+    def determine_version(cls, exe):
+        """Return the version of the provided executable or ``None`` if
+        the version cannot be determined.
+
+        Arguments:
+            exe (str): absolute path to the executable being examined
+        """
+        versions = [str(v) for v in cls.versions]
+        output = Executable(exe)('-v', output=str, error=str)
+        match = re.search(r'MPI Library ([\d\.]+)', output)
+        vers = match.group(1) if match else None
+        return vers if vers and vers in versions else None
 
     @property
     def component_dir(self):
