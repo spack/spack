@@ -25,3 +25,4 @@ class GftlShared(CMakePackage):
     version('1.3.0', commit='8f770ee380a99c72dbc525cff0699924be052848', submodules=True)
 
     depends_on('m4', type=('build', 'run'))
+    depends_on('git', type=('build'))
