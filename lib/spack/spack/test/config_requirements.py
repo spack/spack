@@ -82,6 +82,10 @@ repo:
 
 
 def test_requirements_arent_optional(concretize_scope, test_repo):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
     conf_str = """\
 packages:
   x:
@@ -93,6 +97,10 @@ packages:
 
 
 def test_basic_requirements_are_respected(concretize_scope, test_repo):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
     s1 = Spec('x').concretized()
     # Without any requirements/preferences, the later version is preferred
     assert s1.satisfies('@1.1')
@@ -110,6 +118,10 @@ packages:
 
 def test_multiple_package_requirements_are_respected(
         concretize_scope, test_repo):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
     conf_str = """\
 packages:
   x:
@@ -123,8 +135,11 @@ packages:
     assert spec['y'].satisfies('@2.4')
 
 
-def test_one_package_one_of(
-        concretize_scope, test_repo):
+def test_one_package_one_of(concretize_scope, test_repo):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
     conf_str = """\
 packages:
   y:
