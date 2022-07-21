@@ -29,6 +29,7 @@ def concretize_scope(mutable_config, tmpdir):
     mutable_config.pop_scope()
     spack.repo.path._provider_index = None
 
+
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
     spack.config.set('packages', conf['packages'], scope='concretize')
@@ -39,6 +40,9 @@ class X(Package):
     version('1.1')
     version('1.0')
 
+    variant('shared', default=True,
+            description='Build shared libraries')
+
     depends_on('y')
 """)
 
@@ -47,6 +51,9 @@ _pkgy = ('y', """\
 class Y(Package):
     version('2.5')
     version('2.4')
+
+    variant('shared', default=True,
+            description='Build shared libraries')
 """)
 
 
@@ -99,7 +106,7 @@ packages:
     assert s2.satisfies('@1.0')
 
 
-def test_multi_package_requirements_are_respected(
+def test_multiple_package_requirements_are_respected(
         concretize_scope, test_repo):
     conf_str = """\
 packages:
@@ -112,3 +119,18 @@ packages:
     spec = Spec('x').concretized()
     assert spec['x'].satisfies('@1.0')
     assert spec['y'].satisfies('@2.4')
+
+
+def test_one_package_one_of(
+        concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  y:
+    require:
+    - one_of: ["@2.4", "~shared"]
+"""
+    update_packages_config(conf_str)
+    spec = Spec('x').concretized()
+    # The concretizer only has to satisfy one of @2.4/~shared, and @2.4
+    # comes first so it is prioritized
+    assert spec['y'].satisfies('@2.4+shared')
