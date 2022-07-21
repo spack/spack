@@ -12,6 +12,7 @@ class PyNbmake(PythonPackage):
     homepage = "https://github.com/treebeardtech/nbmake"
     pypi     = "nbmake/nbmake-0.5.tar.gz"
 
+    version('1.3.3', sha256='0982e1e2c26b2fda7bac10f35b242c2b9b9b2574456975da158da05b0092888f')
     version('1.3.2', sha256='763ee648962a8706808ad3e780e314e6a79b168cf2edbb3b026987ee7bbf57be')
     version('1.3.1', sha256='e77f98e7d21e618bef1ba1c30904ce48657f934ebe359502c85a229184fbdfc8')
     version('1.3.0', sha256='49d5c59aefe45eaf8e2d8feff86c8e6de5547d823667305562364385e60d7206')
@@ -26,6 +27,7 @@ class PyNbmake(PythonPackage):
     version('0.6', sha256='20dcec145507eec664d61ab36fa248797de6348e7013c9547028077bc46acde2')
     version('0.5', sha256='da9bf1bbc377c9d1d697f99952834017c39b4983e7e482a038dec705955a8ae9')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-poetry-core@1:', type='build')
     depends_on('py-pathlib@1.0.1:1', when='@:0.8 ^python@:3.3', type=('build', 'run'))
     depends_on('py-pydantic@1.7.2:1', type=('build', 'run'))

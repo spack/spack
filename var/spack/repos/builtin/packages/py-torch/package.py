@@ -52,7 +52,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # All options are defined in CMakeLists.txt.
     # Some are listed in setup.py, but not all.
     variant('debug', default=False, description="Build with debugging support")
-    variant('caffe2', default=True, description='Build Caffe2', when='@1.7:')
+    variant('caffe2', default=False, description='Build Caffe2', when='@1.7:')
     variant('test', default=False, description='Build C++ test binaries')
     variant('cuda', default=not is_darwin, description='Use CUDA')
     variant('rocm', default=False, description='Use ROCm')
