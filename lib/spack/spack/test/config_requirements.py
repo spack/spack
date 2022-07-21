@@ -12,6 +12,9 @@ from spack.config import ConfigScope
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="Windows uses old concretizer")
+
 
 # TODO: this is entirely reused from concretize_preferences
 @pytest.fixture()
