@@ -359,12 +359,15 @@ To resolve this problem, please try the following:
 
     @property
     def autoreconf_search_path_args(self):
-        """Arguments to autoreconf to modify the search paths"""
-        search_path_args = []
-        for dep in self.spec.dependencies(deptype='build'):
-            if os.path.exists(dep.prefix.share.aclocal):
-                search_path_args.extend(['-I', dep.prefix.share.aclocal])
-        return search_path_args
+        """Add include flags for libtool if in a different prefix than automake.
+        Precondition for this method is that automake and libtool are dependencies of
+        the current spec."""
+        automake = self.spec.dependencies(name='automake', deptype='build')[0].prefix
+        libtool = self.spec.dependencies(name='libtool', deptype='build')[0].prefix
+        if os.path.samefile(automake, libtool):
+            return []
+        else:
+            return ['-I', libtool.share.aclocal]
 
     @run_after('autoreconf')
     def set_configure_or_die(self):
