@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 
 from spack.package import *
 
@@ -27,23 +28,17 @@ class Rocwmma(CMakePackage):
 
     version('5.2.0', sha256='257ccd1cf2bc1d8064e72e78d276ef7446b2cb7e2dec05ff8331bb44eff2b7cb')
 
-    amdgpu_targets = ROCmPackage.amdgpu_targets
-
-    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
-    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
-
     # gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+
     # are only targets currently supported for @5.2.0
     # releases
-    conflicts('amdgpu_target=gfx906:xnack-', when='@5.2.0')
-    conflicts('amdgpu_target=gfx908', when='@5.2.0')
-    conflicts('amdgpu_target=gfx1010', when='@5.2.0')
-    conflicts('amdgpu_target=gfx1011', when='@5.2.0')
-    conflicts('amdgpu_target=gfx1012', when='@5.2.0')
-    conflicts('amdgpu_target=gfx1030', when='@5.2.0')
-    conflicts('amdgpu_target=gfx1031', when='@5.2.0')
 
-    depends_on('cmake@3.16.8:', type='build', when='@5.2.0:')
+    amdgpu_targets = (
+        'gfx908:xnack-', 'gfx90a', 'gfx90a:xnack-', 'gfx90a:xnack+'
+    )
+    variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
+    variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
+
+    depends_on('cmake@3.16:', type='build', when='@5.2.0:')
     depends_on('cmake@3.5:', type='build')
 
     depends_on('googletest@1.10.0:', type='test')
@@ -54,6 +49,10 @@ class Rocwmma(CMakePackage):
         depends_on('hip@' + ver,                         when='@' + ver)
         depends_on('rocblas@' + ver,  type='build',  when='@' + ver)
         depends_on('rocm-openmp-extras@' + ver, type='build', when='@' + ver)
+
+    for tgt in itertools.chain(['auto'], amdgpu_targets):
+        depends_on('rocblas amdgpu_target={0}'.format(tgt),
+                   when='amdgpu_target={0}'.format(tgt))
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
@@ -72,6 +71,9 @@ class Rocwmma(CMakePackage):
             '-DOpenMP_CXX_LIB_NAMES=libomp',
             '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.so'.format(
                 self.spec['rocm-openmp-extras'].prefix)])
-        if 'auto' not in self.spec.variants['amdgpu_target']:
+
+        tgt = self.spec.variants['amdgpu_target']
+        if 'auto' not in tgt:
             args.append(self.define_from_variant('AMDGPU_TARGETS', 'amdgpu_target'))
+
         return args
