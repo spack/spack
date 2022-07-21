@@ -25,6 +25,8 @@ class Amdlibm(SConsPackage):
     # of master branch.
     # To install amdlibm from latest master branch:
     # spack install amdlibm ^amdlibm@master
+
+    version("3.2", branch="aocl-3.2")
     version("3.1", branch="aocl-3.1")
     version("3.0", branch="aocl-3.0")
     version("2.2", commit="4033e022da428125747e118ccd6fdd9cee21c470")
