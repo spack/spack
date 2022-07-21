@@ -6,39 +6,11 @@
       },
       "os_package_manager": "apk"
     },
-    "fedora:36": {
-      "bootstrap": {
-        "template": "container/fedora_36.dockerfile",
-        "image": "registry.fedoraproject.org/fedora:36"
-      },
-      "os_package_manager": "yum",
-      "build": "spack/fedora36",
-      "final": {
-        "image": "registry.fedoraproject.org/fedora:36"
-      },
-      "build_tags": {
-        "develop": "latest"
-      }
-    },
     "amazonlinux:2": {
       "bootstrap": {
         "template": "container/amazonlinux_2.dockerfile"
       },
       "os_package_manager": "yum_amazon"
-    },
-    "ubi8:latest": {
-      "bootstrap": {
-        "template": "container/rhel_ubi_8.dockerfile",
-        "image": "registry.access.redhat.com/ubi8:latest"
-      },
-      "os_package_manager": "yum",
-      "build": "spack/ubi8",
-      "final": {
-        "image": "registry.access.redhat.com/ubi8:latest"
-      },
-      "build_tags": {
-        "develop": "latest"
-      }
     },
     "centos:stream": {
       "bootstrap": {
