@@ -1,11 +1,163 @@
-commit 4ed32139a46f7c55672747417c8feb0839a062ac (HEAD -> r2.7)
-Author: Rohit Santhanam <rohit.santhanam@amd.com>
-Date:   Tue Jun 7 17:17:53 2022 +0000
-
-    ROCm fixes.
-
+diff --git a/.bazelrc b/.bazelrc
+index 3425144bf9f..f44806502de 100644
+--- a/.bazelrc
++++ b/.bazelrc
+@@ -257,6 +257,7 @@ build:tensorrt --repo_env TF_NEED_TENSORRT=1
+ 
+ build:rocm --crosstool_top=@local_config_rocm//crosstool:toolchain
+ build:rocm --define=using_rocm_hipcc=true
++build:rocm --define=tensorflow_mkldnn_contraction_kernel=0
+ build:rocm --repo_env TF_NEED_ROCM=1
+ 
+ # Options extracted from configure script
+diff --git a/configure.py b/configure.py
+index df86b099a30..6e0a730eb22 100644
+--- a/configure.py
++++ b/configure.py
+@@ -1345,8 +1345,6 @@ def main():
+ 
+   if (environ_cp.get('TF_NEED_ROCM') == '1' and environ_cp.get('ROCM_PATH')):
+     write_action_env_to_bazelrc('ROCM_PATH', environ_cp.get('ROCM_PATH'))
+-    write_action_env_to_bazelrc('ROCBLAS_TENSILE_LIBPATH',
+-                                environ_cp.get('ROCM_PATH') + '/lib/library')
+ 
+   environ_cp['TF_NEED_CUDA'] = str(
+       int(get_var(environ_cp, 'TF_NEED_CUDA', 'CUDA', False)))
+diff --git a/tensorflow/compiler/tf2xla/BUILD b/tensorflow/compiler/tf2xla/BUILD
+index 4cc82379d2e..c71d1dbefe3 100644
+--- a/tensorflow/compiler/tf2xla/BUILD
++++ b/tensorflow/compiler/tf2xla/BUILD
+@@ -876,7 +876,11 @@ cc_library(
+     hdrs = [
+         "functionalize_control_flow.h",
+     ],
+-    visibility = [":friends"],
++    visibility = [
++        ":friends",
++        "//tensorflow/core/lib/core:__pkg__",
++        "//tensorflow/core/lib/gtl:__pkg__",
++    ],
+     deps = [
+         ":functionalize_cond",
+         ":functionalize_control_flow_util",
+diff --git a/tensorflow/compiler/xla/service/gpu/ir_emitter.cc b/tensorflow/compiler/xla/service/gpu/ir_emitter.cc
+index f5889b8cd51..93b1490c7a6 100644
+--- a/tensorflow/compiler/xla/service/gpu/ir_emitter.cc
++++ b/tensorflow/compiler/xla/service/gpu/ir_emitter.cc
+@@ -290,11 +290,18 @@ bool IrEmitter::MaybeEmitDirectAtomicOperation(
+       }
+     }
+ 
++    if (IsEmittingForAMDGPU() &&
++        (element_type == F32)) /* is atomic add supported? */ {
++      EmitAMDGPUAtomicAdd(output_address, source);
++      return true;
++    }
++
+     if (is_atomic_integral) {
+       // integral + integral
+       AtomicRMW(llvm::AtomicRMWInst::Add, output_address, source,
+                 llvm::MaybeAlign(),
+-                llvm::AtomicOrdering::SequentiallyConsistent);
++                llvm::AtomicOrdering::SequentiallyConsistent,
++                DetermineSyncScope());
+       return true;
+     }
+   }
+@@ -306,7 +313,8 @@ bool IrEmitter::MaybeEmitDirectAtomicOperation(
+                       ? llvm::AtomicRMWInst::Max
+                       : llvm::AtomicRMWInst::UMax;
+     AtomicRMW(opcode, output_address, source, llvm::MaybeAlign(),
+-              llvm::AtomicOrdering::SequentiallyConsistent);
++              llvm::AtomicOrdering::SequentiallyConsistent,
++              DetermineSyncScope());
+     return true;
+   }
+ 
+@@ -316,7 +324,8 @@ bool IrEmitter::MaybeEmitDirectAtomicOperation(
+                       ? llvm::AtomicRMWInst::Min
+                       : llvm::AtomicRMWInst::UMin;
+     AtomicRMW(opcode, output_address, source, llvm::MaybeAlign(),
+-              llvm::AtomicOrdering::SequentiallyConsistent);
++              llvm::AtomicOrdering::SequentiallyConsistent,
++              DetermineSyncScope());
+     return true;
+   }
+ 
+@@ -474,7 +483,8 @@ Status IrEmitter::EmitAtomicOperationUsingCAS(const HloComputation& computation,
+   llvm::Value* ret_value = AtomicCmpXchg(
+       atomic_memory_address, cas_old_output, cas_new_output, llvm::MaybeAlign(),
+       llvm::AtomicOrdering::SequentiallyConsistent,
+-      llvm::AtomicOrdering::SequentiallyConsistent);
++      llvm::AtomicOrdering::SequentiallyConsistent,
++      DetermineSyncScope());
+ 
+   // Extract the memory value returned from atomicCAS and store it as
+   // cas_old_output.
+@@ -509,6 +519,40 @@ Status IrEmitter::EmitAtomicOperationForNestedComputation(
+                                      source_address);
+ }
+ 
++bool IrEmitter::IsEmittingForAMDGPU() const {
++  llvm::Triple target_triple = llvm::Triple(module_->getTargetTriple());
++  return target_triple.isAMDGPU();
++}
++
++void IrEmitter::EmitAMDGPUAtomicAdd(
++    llvm::Value* output_address, llvm::Value* source) {
++  CHECK(IsEmittingForAMDGPU());
++  auto output_address_type =
++      llvm::dyn_cast<llvm::PointerType>(output_address->getType());
++  CHECK_NE(output_address_type, nullptr);
++
++  auto output_ptr = (output_address_type->getPointerAddressSpace() != 3) ?
++      // the compiler will only generate a global_atomic_fadd if the pointer
++      // is in global addrspace (1)
++      b_.CreateAddrSpaceCast(
++          output_address,
++          llvm::PointerType::get(output_address_type->getPointerElementType(),
++                                 /*AddressSpace=*/1)) :
++      // adds to shared memory are always atomic.
++      output_address;
++
++  AtomicRMW(llvm::AtomicRMWInst::FAdd, output_ptr, source,
++            llvm::MaybeAlign(),
++            llvm::AtomicOrdering::SequentiallyConsistent,
++            b_.getContext().getOrInsertSyncScopeID("agent"));
++}
++
++llvm::SyncScope::ID IrEmitter::DetermineSyncScope() const {
++  return (IsEmittingForAMDGPU()) ?
++      b_.getContext().getOrInsertSyncScopeID("agent") :
++      llvm::SyncScope::System;
++}
++
+ Status IrEmitter::HandleTupleSelect(HloInstruction* tuple_select) {
+   return InternalError(
+       "Dynamic selection of tuples is not supported. Please file a bug against "
+diff --git a/tensorflow/compiler/xla/service/gpu/ir_emitter.h b/tensorflow/compiler/xla/service/gpu/ir_emitter.h
+index 798e233018d..a6f1165c393 100644
+--- a/tensorflow/compiler/xla/service/gpu/ir_emitter.h
++++ b/tensorflow/compiler/xla/service/gpu/ir_emitter.h
+@@ -220,6 +220,16 @@ class IrEmitter : public DfsHloVisitorWithDefault,
+   StatusOr<llvm::Function*> EmitAtomicFunctionForNestedComputation(
+       const HloComputation& nested_computation, llvm::Type* element_ir_type);
+ 
++  // A convenience method to determine whether or not IR is emitted for AMDGPU.
++  bool IsEmittingForAMDGPU() const;
++
++  // Emits atomic add operation for AMD GPU.
++  void EmitAMDGPUAtomicAdd(llvm::Value* output_address,
++                           llvm::Value* source);
++
++  // A convenience method to determine the proper sync scope for an atomic op.
++  llvm::SyncScope::ID DetermineSyncScope() const;
++
+   // Map nested computations to emitted IR functions. This serves as a cache so
+   // that IrEmitter does not emit multiple functions for the same
+   // HloComputation.
 diff --git a/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc b/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
-index 7b5dbf5041c..3f165e0b245 100644
+index 7b5dbf5041c..8d727821b8c 100644
 --- a/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
 +++ b/tensorflow/compiler/xla/service/gpu/llvm_gpu_backend/gpu_backend_lib.cc
 @@ -572,7 +572,7 @@ std::vector<string> GetROCDLPaths(std::string amdgpu_version,
@@ -17,63 +169,23 @@ index 7b5dbf5041c..3f165e0b245 100644
         "oclc_daz_opt_off.bc", "oclc_correctly_rounded_sqrt_on.bc",
         "oclc_unsafe_math_off.bc", "oclc_wavefrontsize64_on.bc"});
  #else
-@@ -801,11 +801,16 @@ Status AMDGPUTargetModuleLinker(llvm::Module* module, GpuVersion gpu_version,
-   TF_RETURN_IF_ERROR(
-       LinkROCDLIfNecessary(module, *amdgpu_version, device_bitcode_dir_path));
- 
--  // If ftz is enabled, set it as an attribute on every function in the module.
--  if (hlo_module_config.debug_options().xla_gpu_ftz()) {
--    for (llvm::Function& fn : *module) {
-+  // For rocm, we always enable flush to zero. (for cuda, this is determined
-+  // via environemnt variables). This deceision was based on the observation
-+  // Eugene had that the AMD GPU llvm backend has not picked up the atomic add
-+  // instructions correctly without ftz enabled. We concluded that this should
-+  // not has major impact as the hipcc path by default enables flush to zero for
-+  // compilation.
-+  for (llvm::Function& fn : *module) {
-+      // may be necessary for the compiler to generate atomics (confirm!)
-       fn.addFnAttr("denormal-fp-math-f32", "preserve-sign");
--    }
-+      fn.addFnAttr("amdgpu-unsafe-fp-atomics", "true");
-   }
- 
-   return Status::OK();
-@@ -821,17 +826,25 @@ Status AMDGPUTargetModuleLinker(llvm::Module* module, GpuVersion gpu_version,
- // related changes which have not yet been upstreamed (to the LLVM repo)
- // When that upstreaming happens (and TF LLVM pointer moves past the
- // upstream commit), the following mapping will need to change
--std::string MapGCNArchNameTokenToFeatureStr(const std::string& token) {
-+std::string MapGCNArchNameTokenToFeatureStr(const std::string& token,
-+                                            const std::string& gfx) {
-   if (token == "sramecc+") {
-     return "+sramecc";
-   } else if (token == "sramecc-") {
-+#if TF_ROCM_VERSION < 40100
-+    return "";
-+#else
-+    if(gfx=="gfx90a")
-+      return "";
-     return "-sramecc";
-+#endif
-   } else if (token == "xnack+") {
-     return "+xnack";
-   } else if (token == "xnack-") {
-     return "-xnack";
-   }
-   return "";
-+
- }
- 
- std::pair<std::string, std::string> GetFeatureStrFromGCNArchName(
-@@ -857,7 +870,7 @@ std::pair<std::string, std::string> GetFeatureStrFromGCNArchName(
-     // The rest of the tokens are the feature/targetid strings
-     if (it != tokens.begin()) {
-       std::string token(*it);
--      std::string mapped_token = MapGCNArchNameTokenToFeatureStr(token);
-+      std::string mapped_token = MapGCNArchNameTokenToFeatureStr(token, gfx);
-       mapped_tokens.push_back(mapped_token);
-     }
-   }
+@@ -735,8 +735,14 @@ StatusOr<std::vector<uint8>> EmitModuleToHsaco(
+   // Locate lld.
+   // TODO(whchung@gmail.com): change to tensorflow::ROCmRoot() after
+   // ROCm-Device-Libs PR.
+-  std::string lld_path_1 = tensorflow::io::JoinPath("/opt/rocm", "hcc/bin");
+-  std::string lld_path_2 = tensorflow::io::JoinPath("/opt/rocm", "llvm/bin");
++  std::string lld_path_1, lld_path_2;
++  if(const char* rocm_path_env = std::getenv("ROCM_PATH")) {
++    lld_path_1 = tensorflow::io::JoinPath(rocm_path_env, "hcc/bin");
++    lld_path_2 = tensorflow::io::JoinPath(rocm_path_env, "llvm/bin");
++  } else {
++    lld_path_1 = tensorflow::io::JoinPath("/opt/rocm", "hcc/bin");
++    lld_path_2 = tensorflow::io::JoinPath("/opt/rocm", "llvm/bin");
++  }
+   auto lld_program =
+       llvm::sys::findProgramByName("ld.lld", {lld_path_1, lld_path_2});
+   if (!lld_program) {
 diff --git a/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h b/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h
 index 5b1d9267c20..e0cb3ee7dc4 100644
 --- a/tensorflow/compiler/xla/service/gpu/nccl_collective_thunk.h
@@ -107,6 +219,67 @@ index abe1471b2e0..40f387bfca3 100644
  #endif
  #include "tensorflow/compiler/xla/refcounting_hash_map.h"
  #include "tensorflow/compiler/xla/service/collective_ops_utils.h"
+diff --git a/tensorflow/core/common_runtime/gpu/gpu_device_test.cc b/tensorflow/core/common_runtime/gpu/gpu_device_test.cc
+index 02a4d104ef9..aa5473bb057 100644
+--- a/tensorflow/core/common_runtime/gpu/gpu_device_test.cc
++++ b/tensorflow/core/common_runtime/gpu/gpu_device_test.cc
+@@ -159,7 +159,7 @@ TEST_F(GPUDeviceTest, CudaMallocAsync) {
+   EXPECT_EQ(status.code(), error::OK);
+ }
+ 
+-TEST_F(GPUDeviceTest, CudaMallocAsyncPreallocate) {
++TEST_F(GPUDeviceTest, DISABLED_ON_GPU_ROCM(CudaMallocAsyncPreallocate)) {
+   SessionOptions opts = MakeSessionOptions("0", 0, 1, {}, {},
+                                            /*use_cuda_malloc_async=*/true);
+   setenv("TF_CUDA_MALLOC_ASYNC_SUPPORTED_PREALLOC", "2048", 1);
+@@ -525,10 +525,10 @@ TEST_F(GPUDeviceTest, DeviceDetails) {
+   for (int i = 0; i < devices.size(); i++) {
+     std::unordered_map<string, string> details;
+     TF_ASSERT_OK(factory->GetDeviceDetails(i, &details));
+-    EXPECT_NE(details["device_name"], "");
+ #if TENSORFLOW_USE_ROCM
+     EXPECT_EQ(details.count("compute_capability"), 0);
+ #else
++    EXPECT_NE(details["device_name"], "");
+     EXPECT_NE(details["compute_capability"], "");
+ #endif
+   }
+diff --git a/tensorflow/core/kernels/gpu_prim.h b/tensorflow/core/kernels/gpu_prim.h
+index 9449147aab5..2e6df7d5b6b 100644
+--- a/tensorflow/core/kernels/gpu_prim.h
++++ b/tensorflow/core/kernels/gpu_prim.h
+@@ -80,11 +80,31 @@ struct NumericTraits<tensorflow::bfloat16>
+ }  // namespace cub
+ #elif TENSORFLOW_USE_ROCM
+ #include "rocm/include/hipcub/hipcub.hpp"
++#include "rocm/rocm_config.h"
+ namespace gpuprim = ::hipcub;
+ 
+ // Required for sorting Eigen::half and bfloat16.
+ namespace rocprim {
+ namespace detail {
++
++#if (TF_ROCM_VERSION >= 50200)
++template <>
++struct float_bit_mask<Eigen::half> {
++  static constexpr uint16_t sign_bit = 0x8000;
++  static constexpr uint16_t exponent = 0x7C00;
++  static constexpr uint16_t mantissa = 0x03FF;
++  using bit_type = uint16_t;
++};
++
++template <>
++struct float_bit_mask<Eigen::bfloat16> {
++  static constexpr uint16_t sign_bit = 0x8000;
++  static constexpr uint16_t exponent = 0x7F80;
++  static constexpr uint16_t mantissa = 0x007F;
++  using bit_type = uint16_t;
++};
++#endif
++
+ template <>
+ struct radix_key_codec_base<Eigen::half>
+     : radix_key_codec_floating<Eigen::half, uint16_t> {};
 diff --git a/tensorflow/core/kernels/nccl_ops.cc b/tensorflow/core/kernels/nccl_ops.cc
 index bc028e8197c..7b944269f24 100644
 --- a/tensorflow/core/kernels/nccl_ops.cc
@@ -123,6 +296,92 @@ index bc028e8197c..7b944269f24 100644
  #endif
  #include "tensorflow/core/framework/op_kernel.h"
  #include "tensorflow/core/nccl/nccl_manager.h"
+diff --git a/tensorflow/core/kernels/sparse/mat_mul_op.cc b/tensorflow/core/kernels/sparse/mat_mul_op.cc
+index 7f3ddd134c6..31e3c994839 100644
+--- a/tensorflow/core/kernels/sparse/mat_mul_op.cc
++++ b/tensorflow/core/kernels/sparse/mat_mul_op.cc
+@@ -729,14 +729,12 @@ namespace {
+ template <typename T>
+ struct GPUDataType;
+ 
+-// GPUDataType templates are currently not instantiated in the ROCm flow
+-// So leaving out the #elif TENSORFLOW_USE_ROCM blocks for now
+-// hipblas library is not (yet) being pulled in via rocm_configure.bzl
+-// so cannot reference tyeps from hipblas headers here
+ template <>
+ struct GPUDataType<Eigen::half> {
+ #if GOOGLE_CUDA
+   static constexpr cudaDataType_t type = CUDA_R_16F;
++#else
++  static constexpr hipDataType type = HIP_R_16F;
+ #endif
+ };
+ 
+@@ -744,6 +742,8 @@ template <>
+ struct GPUDataType<float> {
+ #if GOOGLE_CUDA
+   static constexpr cudaDataType_t type = CUDA_R_32F;
++#else
++  static constexpr hipDataType type = HIP_R_32F;
+ #endif
+ };
+ 
+@@ -751,6 +751,8 @@ template <>
+ struct GPUDataType<std::complex<float>> {
+ #if GOOGLE_CUDA
+   static constexpr cudaDataType_t type = CUDA_C_32F;
++#else
++  static constexpr hipDataType type = HIP_C_32F;
+ #endif
+ };
+ 
+@@ -758,6 +760,8 @@ template <>
+ struct GPUDataType<double> {
+ #if GOOGLE_CUDA
+   static constexpr cudaDataType_t type = CUDA_R_64F;
++#else
++  static constexpr hipDataType type = HIP_R_64F;
+ #endif
+ };
+ 
+@@ -765,6 +769,8 @@ template <>
+ struct GPUDataType<std::complex<double>> {
+ #if GOOGLE_CUDA
+   static constexpr cudaDataType_t type = CUDA_C_64F;
++#else
++  static constexpr hipDataType type = HIP_C_64F;
+ #endif
+ };
+ 
+@@ -877,16 +883,16 @@ class CSRSparseMatrixMatMul<GPUDevice, T> {
+       TF_RETURN_IF_GPUSPARSE_ERROR(wrap::hipsparseCreateCsr(
+           &matA, m, k, nnz, const_cast<int*>(a.row_ptr.data()),
+           const_cast<int*>(a.col_ind.data()), const_cast<T*>(a.values.data()),
+-          CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I, HIPSPARSE_INDEX_BASE_ZERO,
++          HIPSPARSE_INDEX_32I, HIPSPARSE_INDEX_32I, HIPSPARSE_INDEX_BASE_ZERO,
+           GPUDataType<T>::type));
+ 
+       TF_RETURN_IF_GPUSPARSE_ERROR(wrap::hipsparseCreateDnMat(
+           &matB, n, k, ldb, const_cast<T*>(b.data()), GPUDataType<T>::type,
+-          HIPSPARSE_ORDER_COL));
++          HIPSPARSE_ORDER_COLUMN));
+ 
+       TF_RETURN_IF_GPUSPARSE_ERROR(wrap::hipsparseCreateDnMat(
+           &matC, m, n, ldc, c.data(), GPUDataType<T>::type,
+-          HIPSPARSE_ORDER_COL));
++          HIPSPARSE_ORDER_COLUMN));
+ 
+       size_t bufferSize = 0;
+       TF_RETURN_IF_ERROR(cuda_sparse.SpMMBufferSize(
+@@ -899,7 +905,7 @@ class CSRSparseMatrixMatMul<GPUDevice, T> {
+       DCHECK(buffer.flat<int8>().data() != nullptr);
+ 
+       TF_RETURN_IF_ERROR(cuda_sparse.SpMM(transA, transB, &alpha, matA, matB,
+-                                          &beta, matC, CUSPARSE_MM_ALG_DEFAULT,
++                                          &beta, matC, HIPSPARSE_MM_ALG_DEFAULT,
+                                           buffer.flat<int8>().data()));
+ 
+       TF_RETURN_IF_GPUSPARSE_ERROR(wrap::hipsparseDestroyDnMat(matB));
 diff --git a/tensorflow/core/nccl/nccl_manager.h b/tensorflow/core/nccl/nccl_manager.h
 index b1d9dd62f94..776ccc504fe 100644
 --- a/tensorflow/core/nccl/nccl_manager.h
@@ -139,14 +398,128 @@ index b1d9dd62f94..776ccc504fe 100644
  #include "tensorflow/core/common_runtime/gpu_device_context.h"
  #endif
  #include "tensorflow/core/common_runtime/gpu/gpu_event_mgr.h"
+diff --git a/tensorflow/core/platform/test.h b/tensorflow/core/platform/test.h
+index d83e1bc2043..b598b6ee1e4 100644
+--- a/tensorflow/core/platform/test.h
++++ b/tensorflow/core/platform/test.h
+@@ -46,6 +46,12 @@ limitations under the License.
+ #endif
+ #include <gmock/gmock.h>
+ 
++#define DISABLED_ON_GPU_ROCM(X) X
++#if TENSORFLOW_USE_ROCM
++#undef DISABLED_ON_GPU_ROCM
++#define DISABLED_ON_GPU_ROCM(X) DISABLED_##X
++#endif  // TENSORFLOW_USE_ROCM
++
+ namespace tensorflow {
+ namespace testing {
+ 
+diff --git a/tensorflow/core/util/rocm_sparse.cc b/tensorflow/core/util/rocm_sparse.cc
+index c0eade14c50..1deefbae2e0 100644
+--- a/tensorflow/core/util/rocm_sparse.cc
++++ b/tensorflow/core/util/rocm_sparse.cc
+@@ -182,8 +182,8 @@ Status GpuSparse::Initialize() {
+ }
+ 
+ #define TF_CALL_HIPSPARSE_DTYPES(m)          \
+-  m(float, ROCM_R_32F) m(double, ROCM_R_64F) \
+-      m(std::complex<float>, ROCM_C_32F) m(std::complex<double>, ROCM_C_64F)
++  m(float, HIP_R_32F) m(double, HIP_R_64F) \
++      m(std::complex<float>, HIP_C_32F) m(std::complex<double>, HIP_C_64F)
+ 
+ // Macro that specializes a sparse method for all 4 standard
+ // numeric types.
+@@ -385,14 +385,13 @@ static inline Status Csru2csrImpl(SparseFnT op, BufferSizeFnT buffer_size_op,
+                                   const hipsparseMatDescr_t descrA,
+                                   Scalar* csrVal, const int* csrRowPtr,
+                                   int* csrColInd) {
+-  GpuSparseCsrSortingConversionInfo info;
+-  TF_RETURN_IF_ERROR(info.Initialize());
++  csru2csrInfo_t info;
+ 
+   size_t pBufferSizeInBytes = 0;
+ 
+   TF_RETURN_IF_GPUSPARSE_ERROR(
+       buffer_size_op(hipsparse_handle, m, n, nnz, AsHipComplex(csrVal),
+-                     csrRowPtr, csrColInd, info.info(), &pBufferSizeInBytes));
++                     csrRowPtr, csrColInd, info, &pBufferSizeInBytes));
+ 
+   Tensor pBuffer_t;
+   TF_RETURN_IF_ERROR(context->allocate_temp(
+@@ -403,7 +402,7 @@ static inline Status Csru2csrImpl(SparseFnT op, BufferSizeFnT buffer_size_op,
+ 
+   TF_RETURN_IF_GPUSPARSE_ERROR(op(hipsparse_handle, m, n, nnz, descrA,
+                                   AsHipComplex(csrVal), csrRowPtr, csrColInd,
+-                                  info.info(), pBuffer.data()));
++                                  info, pBuffer.data()));
+ 
+   return Status::OK();
+ }
+diff --git a/tensorflow/python/distribute/parameter_server_strategy_v2_test.py b/tensorflow/python/distribute/parameter_server_strategy_v2_test.py
+index c4fa4f82cb8..4d34c2fdf9a 100644
+--- a/tensorflow/python/distribute/parameter_server_strategy_v2_test.py
++++ b/tensorflow/python/distribute/parameter_server_strategy_v2_test.py
+@@ -24,6 +24,8 @@ import copy
+ import functools
+ import os
+ 
++os.environ["TF_NUM_INTEROP_THREADS"]="16"
++
+ from absl.testing import parameterized
+ import numpy as np
+ 
+diff --git a/tensorflow/python/framework/BUILD b/tensorflow/python/framework/BUILD
+index cc8f759e73c..07a5b92d176 100644
+--- a/tensorflow/python/framework/BUILD
++++ b/tensorflow/python/framework/BUILD
+@@ -1020,7 +1020,10 @@ cuda_py_test(
+     size = "small",
+     srcs = ["config_test.py"],
+     python_version = "PY3",
+-    tags = ["no_pip"],  # test_ops are not available in pip.
++    tags = [
++        "no_pip",  # test_ops are not available in pip.
++        "no_rocm",
++    ],
+     deps = [
+         ":config",
+         ":constant_op",
+diff --git a/tensorflow/python/kernel_tests/tridiagonal_matmul_op_test.py b/tensorflow/python/kernel_tests/tridiagonal_matmul_op_test.py
+index 3a4be581676..bdf9a1a3f57 100644
+--- a/tensorflow/python/kernel_tests/tridiagonal_matmul_op_test.py
++++ b/tensorflow/python/kernel_tests/tridiagonal_matmul_op_test.py
+@@ -196,6 +196,8 @@ class TridiagonalMulOpTest(test.TestCase):
+   def testInvalidShapesEagerGpu(self):
+     if not test.is_gpu_available():
+       self.skipTest('Test requires GPU')
++    if test.is_built_with_rocm():
++       self.skipTest('TridiagonalMatMul is not yet supported on ROCm')
+     self._testErrorWithShapesEager('Input must have rank >= 2, but got ',
+                                    [2], [2], [2], [2])
+     self._testErrorWithShapesEager(
+diff --git a/tensorflow/python/profiler/profiler_v2_test.py b/tensorflow/python/profiler/profiler_v2_test.py
+index 42fbeba1e98..15dcf91608a 100644
+--- a/tensorflow/python/profiler/profiler_v2_test.py
++++ b/tensorflow/python/profiler/profiler_v2_test.py
+@@ -45,7 +45,7 @@ class ProfilerTest(test_util.TensorFlowTestCase):
+     # Test with a bad logdir, and it correctly raises exception and deletes
+     # profiler.
+     # pylint: disable=anomalous-backslash-in-string
+-    profiler.start('/\/\/:123')
++    profiler.start('/dev/null/\/\/:123')
+     # pylint: enable=anomalous-backslash-in-string
+     with self.assertRaises(Exception):
+       profiler.stop()
 diff --git a/tensorflow/stream_executor/rocm/hipsparse_wrapper.h b/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
-index 78a01d964f2..e2179c27bd4 100644
+index 78a01d964f2..3d8693f3bfc 100644
 --- a/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
 +++ b/tensorflow/stream_executor/rocm/hipsparse_wrapper.h
-@@ -20,7 +20,11 @@ limitations under the License.
+@@ -20,7 +20,12 @@ limitations under the License.
  #ifndef TENSORFLOW_STREAM_EXECUTOR_ROCM_HIPSPARSE_WRAPPER_H_
  #define TENSORFLOW_STREAM_EXECUTOR_ROCM_HIPSPARSE_WRAPPER_H_
  
++#include "rocm/rocm_config.h"
 +#if (TF_ROCM_VERSION >= 50200)
  #include "rocm/include/hipsparse/hipsparse.h"
 +#else
@@ -174,14 +547,75 @@ index 7c71b28bd87..65776e97272 100644
  #endif
  
  #endif
+diff --git a/tensorflow/stream_executor/rocm/rocm_gpu_executor.cc b/tensorflow/stream_executor/rocm/rocm_gpu_executor.cc
+index 82787ff860f..204fac278b0 100644
+--- a/tensorflow/stream_executor/rocm/rocm_gpu_executor.cc
++++ b/tensorflow/stream_executor/rocm/rocm_gpu_executor.cc
+@@ -799,8 +799,53 @@ GpuContext* GpuExecutor::gpu_context() { return context_; }
+ // For anything more complicated/prod-focused than this, you'll likely want to
+ // turn to gsys' topology modeling.
+ static int TryToReadNumaNode(const string& pci_bus_id, int device_ordinal) {
+-  // TODO(ROCm) implement this feature in HIP
+-  return 1;
++  VLOG(2) << "trying to read NUMA node for device ordinal: " << device_ordinal;
++  static const int kUnknownNumaNode = -1;
++
++  if (pci_bus_id.empty()) {
++    LOG(INFO) << "no PCI bus ID for device ordinal: " << device_ordinal;
++    return kUnknownNumaNode;
++  }
++
++  std::string filename =
++      absl::StrFormat("/sys/bus/pci/devices/%s/numa_node", pci_bus_id);
++
++  // We have to use fopen/fread here so that the device properties can be
++  // populated before InitGoogle procedure has been completed (at which point we
++  // could use the file::* utilities).
++  FILE* file = fopen(filename.c_str(), "r");
++  if (file == nullptr) {
++    LOG(INFO) << "could not open file to read NUMA node: " << filename
++              << "\nYour kernel may have been built without NUMA support.";
++    return kUnknownNumaNode;
++  }
++
++  std::string content;
++  char buf[32];
++  size_t did_read = fread(buf, sizeof(buf[0]), sizeof(buf) - 1, file);
++  buf[did_read] = '\0';
++  content = buf;
++
++  int32_t value;
++  if (port::safe_strto32(content, &value)) {
++    if (value < 0) {  // See http://b/18228951 for details on this path.
++      LOG(INFO) << "successful NUMA node read from SysFS had negative value ("
++                << value
++                << "), but there must be at least one NUMA node"
++                   ", so returning NUMA node zero";
++      fclose(file);
++      return 0;
++    }
++    fclose(file);
++    return value;
++  }
++
++  LOG(WARNING)
++      << "could not convert SysFS file contents to integral NUMA node value: "
++      << content;
++
++  fclose(file);
++  return kUnknownNumaNode;
+ }
+ 
+ port::StatusOr<std::unique_ptr<DeviceDescription>>
 diff --git a/tensorflow/stream_executor/rocm/rocsolver_wrapper.h b/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
-index 03f2c13ff73..227b13eb551 100644
+index 03f2c13ff73..71e859d3afe 100644
 --- a/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
 +++ b/tensorflow/stream_executor/rocm/rocsolver_wrapper.h
-@@ -20,7 +20,11 @@ limitations under the License.
+@@ -20,7 +20,12 @@ limitations under the License.
  #ifndef TENSORFLOW_STREAM_EXECUTOR_ROCM_ROCSOLVER_WRAPPER_H_
  #define TENSORFLOW_STREAM_EXECUTOR_ROCM_ROCSOLVER_WRAPPER_H_
  
++#include "rocm/rocm_config.h"
 +#if (TF_ROCM_VERSION >= 50200)
  #include "rocm/include/rocsolver/rocsolver.h"
 +#else
@@ -190,6 +624,19 @@ index 03f2c13ff73..227b13eb551 100644
  #include "tensorflow/stream_executor/lib/env.h"
  #include "tensorflow/stream_executor/platform/dso_loader.h"
  #include "tensorflow/stream_executor/platform/port.h"
+diff --git a/tensorflow/tools/ci_build/gpu_build/parallel_gpu_execute.sh b/tensorflow/tools/ci_build/gpu_build/parallel_gpu_execute.sh
+index e07da00755e..19fda23aa4e 100755
+--- a/tensorflow/tools/ci_build/gpu_build/parallel_gpu_execute.sh
++++ b/tensorflow/tools/ci_build/gpu_build/parallel_gpu_execute.sh
+@@ -24,7 +24,7 @@
+ TF_GPU_COUNT=${TF_GPU_COUNT:-4}
+ TF_TESTS_PER_GPU=${TF_TESTS_PER_GPU:-8}
+ 
+-export TF_PER_DEVICE_MEMORY_LIMIT_MB=${TF_PER_DEVICE_MEMORY_LIMIT_MB:-2048}
++export TF_PER_DEVICE_MEMORY_LIMIT_MB=${TF_PER_DEVICE_MEMORY_LIMIT_MB:-4096}
+ 
+ # *******************************************************************
+ #         This section of the script is needed to
 diff --git a/third_party/gpus/find_rocm_config.py b/third_party/gpus/find_rocm_config.py
 index ce744f24c3a..a461f9205be 100644
 --- a/third_party/gpus/find_rocm_config.py
@@ -657,3 +1104,15 @@ index 8989558d023..a715fc22afc 100644
      )
  
      # Set up crosstool/
+diff --git a/third_party/llvm/workspace.bzl b/third_party/llvm/workspace.bzl
+index 7bc6b54a20f..48ada3a3d5c 100644
+--- a/third_party/llvm/workspace.bzl
++++ b/third_party/llvm/workspace.bzl
+@@ -14,6 +14,7 @@ def repo(name):
+         urls = [
+             "https://storage.googleapis.com/mirror.tensorflow.org/github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
+             "https://github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
++            "https://github.com/ROCmSoftwarePlatform/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
+         ],
+         build_file = "//third_party/llvm:BUILD.bazel",
+         patch_file = "//third_party/llvm:macos_build_fix.patch",

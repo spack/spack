@@ -358,7 +358,7 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.9.patch', when='@1.9')
     patch('contrib_cloud_1.4.patch', when='@1.4:1.8')
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
-    patch('tf_27_rocm_diff.patch', when='@2.7.0+rocm')
+    patch('tf_27_rocm_changes_to_support_without_creation_of_softlink.patch', when='@2.7.0+rocm')
 
     # needed for protobuf-3.16 and greater
     patch('example_parsing.patch', when='^protobuf@3.16:')
