@@ -81,3 +81,19 @@ packages:
     update_packages_config(conf_str)
     with pytest.raises(UnsatisfiableSpecError):
         Spec('x@1.1').concretize()
+
+
+def test_basic_requirements_are_respected(concretize_scope, test_repo):
+    s1 = Spec('x').concretized()
+    # Without any requirements/preferences, the later version is preferred
+    assert s1.satisfies('@1.1')
+
+    conf_str = """\
+packages:
+  x:
+    require: "@1.0"
+"""
+    update_packages_config(conf_str)
+    s2 = Spec('x').concretized()
+    # The requirement forces choosing the eariler version
+    assert s2.satisfies('@1.0')
