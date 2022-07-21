@@ -895,8 +895,10 @@ class SpackSolverSetup(object):
                 if not spec.name:
                     spec.name = pkg_name
                 member_id = next(self._condition_id_counter)
-                self.gen.fact(fn.condition_group_member(member_id, pkg_name, cnd_grp_id))
-                self.gen.fact(fn.condition_has_weight(member_id, requirement_weight))
+                self.gen.fact(
+                    fn.condition_group_member(member_id, pkg_name, cnd_grp_id))
+                self.gen.fact(
+                    fn.condition_has_weight(member_id, requirement_weight))
                 self.impose(member_id, spec, name=pkg_name, node=False)
                 requirement_weight += 1
             cnd_grp_id += 1
