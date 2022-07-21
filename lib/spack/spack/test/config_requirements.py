@@ -97,3 +97,18 @@ packages:
     s2 = Spec('x').concretized()
     # The requirement forces choosing the eariler version
     assert s2.satisfies('@1.0')
+
+
+def test_multi_package_requirements_are_respected(
+        concretize_scope, test_repo):
+    conf_str = """\
+packages:
+  x:
+    require: "@1.0"
+  y:
+    require: "@2.4"
+"""
+    update_packages_config(conf_str)
+    spec = Spec('x').concretized()
+    assert spec['x'].satisfies('@1.0')
+    assert spec['y'].satisfies('@2.4')
