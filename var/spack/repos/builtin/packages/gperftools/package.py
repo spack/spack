@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.package import *
 
 
@@ -26,7 +28,8 @@ class Gperftools(AutotoolsPackage):
     variant('sized_delete', default=False, description="Build sized delete operator")
     variant('dynamic_sized_delete_support', default=False, description="Try to build run-time switch for sized delete operator")
     variant('debugalloc', default=True, description="Build versions of libs with debugalloc")
-    variant('libunwind', default=True, description="Enable libunwind linking")
+    # libunwind is not supported on Darwin
+    variant('libunwind', default=sys.platform != 'darwin', description="Enable libunwind linking")
 
     depends_on("unwind", when="+libunwind")
 
