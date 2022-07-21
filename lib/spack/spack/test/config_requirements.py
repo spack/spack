@@ -33,6 +33,7 @@ def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
     spack.config.set('packages', conf['packages'], scope='concretize')
 
+
 _pkgx = ('x', """\
 class X(Package):
     version('1.1')
@@ -41,11 +42,13 @@ class X(Package):
     depends_on('y')
 """)
 
+
 _pkgy = ('y', """\
 class Y(Package):
     version('2.5')
     version('2.4')
 """)
+
 
 @pytest.fixture
 def test_repo(tmpdir, mutable_config):
@@ -67,6 +70,7 @@ repo:
     mock_repo = spack.repo.Repo(repo_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
+
 
 def test_requirements_arent_optional(concretize_scope, test_repo):
     conf_str = """\
