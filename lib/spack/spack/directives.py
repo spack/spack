@@ -508,7 +508,8 @@ def provides(*specs, **kwargs):
 
 
 @directive('patches')
-def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
+def patch(url_or_filename, level=1, when=None, working_dir=".",
+          ignore_whitespace=False, **kwargs):
     """Packages can declare patches to apply to source.  You can
     optionally provide a when spec to indicate that a particular
     patch should only be applied when the package's spec meets
@@ -520,6 +521,8 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         when (spack.spec.Spec): optional anonymous spec that specifies when to apply
             the patch
         working_dir (str): dir to change to before applying
+        ignore_whitespace (bool): if True, ignore whitespace differences
+            in patch
 
     Keyword Args:
         sha256 (str): sha256 sum of the patch, used to verify the patch
@@ -553,11 +556,11 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
         if '://' in url_or_filename:
             patch = spack.patch.UrlPatch(
                 pkg, url_or_filename, level, working_dir,
-                ordering_key=ordering_key, **kwargs)
+                ignore_whitespace, ordering_key=ordering_key, **kwargs)
         else:
             patch = spack.patch.FilePatch(
                 pkg, url_or_filename, level, working_dir,
-                ordering_key=ordering_key)
+                ignore_whitespace, ordering_key=ordering_key)
 
         cur_patches.append(patch)
 

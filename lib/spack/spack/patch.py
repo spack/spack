@@ -23,7 +23,8 @@ from spack.util.crypto import Checker, checksum
 from spack.util.executable import which, which_string
 
 
-def apply_patch(stage, patch_path, level=1, working_dir='.'):
+def apply_patch(stage, patch_path, level=1, working_dir='.',
+                ignore_whitespace=False):
     """Apply the patch at patch_path to code in the stage.
 
     Args:
@@ -32,6 +33,7 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
         level (int or None): patch level (default 1)
         working_dir (str): relative path *within* the stage to change to
             (default '.')
+        ignore_whitespace (bool): if True, ignore whitespace differences
     """
     git_utils_path = os.environ.get('PATH', '')
     if sys.platform == 'win32':
@@ -48,10 +50,17 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
     # flag is passed.
     patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
-        patch('-s',
-              '-p', str(level),
-              '-i', patch_path,
-              '-d', working_dir)
+        if ignore_whitespace:
+            patch('-s',
+                  '-p', str(level),
+                  '-i', patch_path,
+                  '-d', working_dir,
+                  '--ignore-whitespace')
+        else:
+            patch('-s',
+                  '-p', str(level),
+                  '-i', patch_path,
+                  '-d', working_dir)
 
 
 class Patch(object):
@@ -65,7 +74,8 @@ class Patch(object):
     it is the dependent's fullname.
 
     """
-    def __init__(self, pkg, path_or_url, level, working_dir):
+    def __init__(self, pkg, path_or_url, level,
+                 working_dir, ignore_whitespace):
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
             raise ValueError("Patch level needs to be a non-negative integer.")
@@ -76,6 +86,7 @@ class Patch(object):
         self.path = None  # must be set before apply()
         self.level = level
         self.working_dir = working_dir
+        self.ignore_whitespace = ignore_whitespace
 
     def fetch(self):
         """Fetch the patch in case of a UrlPatch
@@ -96,7 +107,8 @@ class Patch(object):
         if not os.path.isfile(self.path):
             raise NoSuchPatchError("No such patch: %s" % self.path)
 
-        apply_patch(stage, self.path, self.level, self.working_dir)
+        apply_patch(stage, self.path, self.level,
+                    self.working_dir, self.ignore_whitespace)
 
     @property
     def stage(self):
@@ -109,6 +121,7 @@ class Patch(object):
             'sha256': self.sha256,
             'level': self.level,
             'working_dir': self.working_dir,
+            'ignore_whitespace': self.ignore_whitespace,
         }
 
     def __eq__(self, other):
@@ -128,9 +141,10 @@ class FilePatch(Patch):
         level (int): level to pass to patch command
         working_dir (str): path within the source directory where patch
             should be applied
+        ignore_whitespace (bool): if True, ignore whitespace differences
     """
     def __init__(self, pkg, relative_path, level, working_dir,
-                 ordering_key=None):
+                 ignore_whitespace=False, ordering_key=None):
         self.relative_path = relative_path
 
         # patches may be defined by relative paths to parent classes
@@ -156,7 +170,7 @@ class FilePatch(Patch):
             msg += 'package %s.%s does not exist.' % (pkg.namespace, pkg.name)
             raise ValueError(msg)
 
-        super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
+        super(FilePatch, self).__init__(pkg, abs_path, level, working_dir, ignore_whitespace)
         self.path = abs_path
         self._sha256 = None
         self.ordering_key = ordering_key
@@ -182,10 +196,11 @@ class UrlPatch(Patch):
         level (int): level to pass to patch command
         working_dir (str): path within the source directory where patch
             should be applied
+        ignore_whitespace (bool): if True, ignore whitespace differences
     """
-    def __init__(self, pkg, url, level=1, working_dir='.', ordering_key=None,
-                 **kwargs):
-        super(UrlPatch, self).__init__(pkg, url, level, working_dir)
+    def __init__(self, pkg, url, level=1, working_dir='.', ignore_whitespace=False,
+                 ordering_key=None, **kwargs):
+        super(UrlPatch, self).__init__(pkg, url, level, working_dir, ignore_whitespace)
 
         self.url = url
         self._stage = None
@@ -292,6 +307,7 @@ def from_dict(dictionary):
             dictionary['url'],
             dictionary['level'],
             dictionary['working_dir'],
+            dictionary['ignore_whitespace'],
             sha256=dictionary['sha256'],
             archive_sha256=dictionary.get('archive_sha256'))
 
@@ -300,7 +316,8 @@ def from_dict(dictionary):
             pkg_cls,
             dictionary['relative_path'],
             dictionary['level'],
-            dictionary['working_dir'])
+            dictionary['working_dir'],
+            dictionary['ignore_whitespace'])
 
         # If the patch in the repo changes, we cannot get it back, so we
         # just check it and fail here.
