@@ -1,5 +1,0 @@
-packages:
-  openmpi:
-    require:
-    - one_of: ['%gcc', '%clang']
-    - one_of: ['@4.0.1', '@4.0.2']
