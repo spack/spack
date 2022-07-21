@@ -359,15 +359,36 @@ To resolve this problem, please try the following:
 
     @property
     def autoreconf_search_path_args(self):
-        """Add include flags for libtool if in a different prefix than automake.
-        Precondition for this method is that automake and libtool are dependencies of
-        the current spec."""
-        automake = self.spec.dependencies(name='automake', deptype='build')[0].prefix
-        libtool = self.spec.dependencies(name='libtool', deptype='build')[0].prefix
-        if os.path.samefile(automake, libtool):
-            return []
-        else:
-            return ['-I', libtool.share.aclocal]
+        """Search path includes for autoreconf: add an -I flag for all `aclocal` dirs
+        of build deps, skips the default path of automake, move external include
+        flags to the back, since they might pull in unrelated m4 files shadowing
+        spack dependencies."""
+        dirs_seen = set()
+        flags_spack, flags_external = [], []
+
+        # We don't want to add an include flag for automake's default search path.
+        automake = self.spec.dependencies(name='automake', deptype='build')[0]
+        try:
+            s = os.stat(automake.prefix.share.aclocal)
+            if stat.S_ISDIR(s.st_mode):
+                dirs_seen.add((s.st_ino, s.st_dev))
+        except OSError:
+            pass
+
+        for dep in self.spec.dependencies(deptype='build'):
+            path = dep.prefix.share.aclocal
+            # Skip non-existing aclocal paths
+            try:
+                s = os.stat(path)
+            except OSError:
+                continue
+            # Skip things seen before, as well as non-dirs.
+            if (s.st_ino, s.st_dev) in dirs_seen or not stat.S_ISDIR(s.st_mode):
+                continue
+            dirs_seen.add((s.st_ino, s.st_dev))
+            flags = flags_external if dep.external else flags_spack
+            flags.extend(['-I', path])
+        return flags_spack + flags_external
 
     @run_after('autoreconf')
     def set_configure_or_die(self):
