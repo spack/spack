@@ -41,7 +41,7 @@ class Plasma(CMakePackage):
             description="Build Lua support for tuning tile sizes")
 
     # need a Python version to generate all precisions' code in repo
-    depends_on("python", when="@develop")
+    depends_on("python", when="@develop", type="build")
 
     depends_on("lua", when="+lua")
 
