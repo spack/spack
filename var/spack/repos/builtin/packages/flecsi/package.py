@@ -105,6 +105,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('kokkos +cuda +cuda_constexpr +cuda_lambda', when='+kokkos +cuda @2.0:')
     depends_on('legion@cr', when='backend=legion @2.0:')
+    depends_on('legion+shared', when='backend=legion +shared @2.0:')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @2.0:')
     depends_on('legion +kokkos +cuda', when='backend=legion +kokkos +cuda @2.0:')
     depends_on('hdf5@1.10.7:', when='backend=legion +hdf5 @2.0:')
