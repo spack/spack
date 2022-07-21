@@ -9,8 +9,8 @@ import spack.config
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope
-from spack.spec import Spec
 from spack.solver.asp import UnsatisfiableSpecError
+from spack.spec import Spec
 
 
 # TODO: this is entirely reused from concretize_preferences
