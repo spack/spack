@@ -30,6 +30,7 @@ class Gperftools(AutotoolsPackage):
     variant('debugalloc', default=True, description="Build versions of libs with debugalloc")
     # libunwind is not supported on Darwin
     variant('libunwind', default=sys.platform != 'darwin', description="Enable libunwind linking")
+    conflicts('+libunwind platform=darwin', msg='libunwind is not supported on Darwin')
 
     depends_on("unwind", when="+libunwind")
 
