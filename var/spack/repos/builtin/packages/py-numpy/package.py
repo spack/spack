@@ -155,6 +155,9 @@ class PyNumpy(PythonPackage):
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts('%nvhpc', when='@:1.19')
 
+    # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
+    conflicts('%intel', when='@1.23.0:')
+
     def url_for_version(self, version):
         url = 'https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}'
         if version >= Version('1.23'):
