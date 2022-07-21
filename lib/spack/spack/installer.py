@@ -330,11 +330,10 @@ def _process_external_package(pkg, explicit):
 
     try:
         # Check if the package was already registered in the DB.
-        # If this is the case, then just exit.
+        # If this is the case, then only make explicit if required.
         tty.debug('{0} already registered in DB'.format(pre))
-
-        # Update the explicit state if it is necessary
-        if explicit:
+        record = spack.store.db.get_record(spec)
+        if explicit and not record.explicit:
             spack.store.db.update_explicit(spec, explicit)
 
     except KeyError:
