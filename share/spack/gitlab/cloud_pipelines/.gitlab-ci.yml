@@ -756,6 +756,7 @@ tutorial-protected-build:
     SPACK_CI_STACK_NAME: ml
 
 .ml-generate:
+  extends: .ml
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
