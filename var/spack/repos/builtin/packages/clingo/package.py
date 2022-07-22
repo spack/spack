@@ -54,7 +54,7 @@ class Clingo(CMakePackage):
         depends_on('python@3.6.0:', type=('build', 'link', 'run'), when='@5.5.0:')
         depends_on('py-cffi', type=('build', 'run'), when='@5.5.0:')
 
-    patch('python38.patch', when="@5.3:5.4")
+    patch('python38.patch', when="@5.3:5.4.0")
 
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch

@@ -631,23 +631,23 @@ class Root(CMakePackage):
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        env.prepend_path('PYTHONPATH', self.prefix.lib)
+        env.prepend_path('PYTHONPATH', self.prefix.lib.root)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('ROOTSYS', self.prefix)
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        env.prepend_path('PYTHONPATH', self.prefix.lib)
+        env.prepend_path('PYTHONPATH', self.prefix.lib.root)
         env.prepend_path('PATH', self.prefix.bin)
         env.append_path('CMAKE_MODULE_PATH', self.prefix.cmake)
         env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
-            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib.root)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set('ROOTSYS', self.prefix)
         env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        env.prepend_path('PYTHONPATH', self.prefix.lib)
+        env.prepend_path('PYTHONPATH', self.prefix.lib.root)
         env.prepend_path('PATH', self.prefix.bin)
         env.prepend_path('ROOT_INCLUDE_PATH', dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
-            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+            env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib.root)

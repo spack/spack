@@ -17,6 +17,7 @@ class PyPip(Package):
 
     maintainers = ['adamjstewart']
 
+    version('22.1.2', sha256='a3edacb89022ef5258bf61852728bf866632a394da837ca49eb4303635835f17', expand=False)
     version('21.3.1', sha256='deaf32dcd9ab821e359cd8330786bcd077604b5c5730c0b096eda46f95c24a2d', expand=False)
     version('21.1.2', sha256='f8ea1baa693b61c8ad1c1d8715e59ab2b93cd3c4769bacab84afcc4279e7a70e', expand=False)
     version('20.2',   sha256='d75f1fc98262dabf74656245c509213a5d0f52137e40e8f8ed5cc256ddd02923', expand=False)
@@ -28,6 +29,7 @@ class PyPip(Package):
     version('9.0.1',  sha256='690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0', expand=False)
 
     extends('python')
+    depends_on('python@3.7:', when='@22:', type=('build', 'run'))
     depends_on('python@3.6:', when='@21:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@19.2:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@18:', type=('build', 'run'))

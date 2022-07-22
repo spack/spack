@@ -17,6 +17,7 @@ class PyGpytorch(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('1.8.0', sha256='d6c0c77d9a61f47feac2d19456816ccea1ed48c32c72d7ea33aa13b259e2a455')
     version('1.7.0', sha256='e91cb8a1883d54f8f57cebbc0c61c227b3cd72528d8e90e770f971fc4e408538')
     version('1.6.0', sha256='08e8f1a80669dc3eee5ba237fc00c867a8858f9b186bbec8571a8cf9af36f543')
     version('1.2.1', sha256='ddd746529863d5419872610af23b1a1b0e8a29742131c9d9d2b4f9cae3c90781')

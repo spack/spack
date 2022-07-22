@@ -320,3 +320,16 @@ def test_mirror_cache_symlinks(tmpdir):
     assert os.path.exists(link_target)
     assert (os.path.normpath(link_target) ==
             os.path.join(cache.root, reference.storage_path))
+
+
+@pytest.mark.regression('31627')
+@pytest.mark.parametrize('specs,expected_specs', [
+    (['a'], ['a@1.0', 'a@2.0']),
+    (['a', 'brillig'], ['a@1.0', 'a@2.0', 'brillig@1.0.0', 'brillig@2.0.0']),
+])
+def test_get_all_versions(specs, expected_specs):
+    specs = [Spec(s) for s in specs]
+    output_list = spack.mirror.get_all_versions(specs)
+    output_list = [str(x) for x in output_list]
+    # Compare sets since order is not important
+    assert set(output_list) == set(expected_specs)
