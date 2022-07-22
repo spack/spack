@@ -24,7 +24,7 @@ spack:
 
     # ML extensions
     - py-gpytorch
-    - py-horovod frameworks=tensorflow,pytorch,mxnet,keras,spark,ray
+    - py-horovod frameworks=tensorflow,pytorch,keras
     - py-keras
     - py-pytorch-lightning
     - py-tensorboard
