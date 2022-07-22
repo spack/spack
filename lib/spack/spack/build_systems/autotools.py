@@ -363,32 +363,7 @@ To resolve this problem, please try the following:
         of build deps, skips the default path of automake, move external include
         flags to the back, since they might pull in unrelated m4 files shadowing
         spack dependencies."""
-        dirs_seen = set()
-        flags_spack, flags_external = [], []
-
-        # We don't want to add an include flag for automake's default search path.
-        automake = self.spec.dependencies(name='automake', deptype='build')[0]
-        try:
-            s = os.stat(automake.prefix.share.aclocal)
-            if stat.S_ISDIR(s.st_mode):
-                dirs_seen.add((s.st_ino, s.st_dev))
-        except OSError:
-            pass
-
-        for dep in self.spec.dependencies(deptype='build'):
-            path = dep.prefix.share.aclocal
-            # Skip non-existing aclocal paths
-            try:
-                s = os.stat(path)
-            except OSError:
-                continue
-            # Skip things seen before, as well as non-dirs.
-            if (s.st_ino, s.st_dev) in dirs_seen or not stat.S_ISDIR(s.st_mode):
-                continue
-            dirs_seen.add((s.st_ino, s.st_dev))
-            flags = flags_external if dep.external else flags_spack
-            flags.extend(['-I', path])
-        return flags_spack + flags_external
+        return _autoreconf_search_path_args(self.spec)
 
     @run_after('autoreconf')
     def set_configure_or_die(self):
@@ -692,3 +667,32 @@ To resolve this problem, please try the following:
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
     run_after('install')(PackageBase.apply_macos_rpath_fixups)
+
+
+def _autoreconf_search_path_args(spec):
+    dirs_seen = set()
+    flags_spack, flags_external = [], []
+
+    # We don't want to add an include flag for automake's default search path.
+    for automake in spec.dependencies(name='automake', deptype='build'):
+        try:
+            s = os.stat(automake.prefix.share.aclocal)
+            if stat.S_ISDIR(s.st_mode):
+                dirs_seen.add((s.st_ino, s.st_dev))
+        except OSError:
+            pass
+
+    for dep in spec.dependencies(deptype='build'):
+        path = dep.prefix.share.aclocal
+        # Skip non-existing aclocal paths
+        try:
+            s = os.stat(path)
+        except OSError:
+            continue
+        # Skip things seen before, as well as non-dirs.
+        if (s.st_ino, s.st_dev) in dirs_seen or not stat.S_ISDIR(s.st_mode):
+            continue
+        dirs_seen.add((s.st_ino, s.st_dev))
+        flags = flags_external if dep.external else flags_spack
+        flags.extend(['-I', path])
+    return flags_spack + flags_external
