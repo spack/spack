@@ -757,7 +757,8 @@ tutorial-protected-build:
 .hpctoolkit-centos7:
   extends: .hpctoolkit
   image: ghcr.io/blue42u/e4s-centos-7:latest
-  rules: - when: never
+  rules:
+  - when: never
 .hpctoolkit-fedora36:
   extends: .hpctoolkit
   image: ghcr.io/blue42u/e4s-fedora-36:latest
