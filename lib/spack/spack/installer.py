@@ -1716,6 +1716,15 @@ class PackageInstaller(object):
                 spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
 
+            except binary_distribution.NoChecksumException as exc:
+                if not task.request.install_args.get('cache_only'):
+                    # Checking hash on downloaded binary failed.
+                    err = 'Failed to install {0} due to {1}: Requeue for manual installation.'
+                    tty.error(err.format(pkg.name, exc.__class__.__name__))
+                    task.request.install_args['use_cache'] = False
+                    self._requeue_task(task)
+                    continue
+
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
                 spack.hooks.on_install_failure(task.request.pkg.spec)
