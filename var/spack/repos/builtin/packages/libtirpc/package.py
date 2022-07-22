@@ -16,6 +16,8 @@ class Libtirpc(AutotoolsPackage):
     version('1.2.6', sha256='4278e9a5181d5af9cd7885322fdecebc444f9a3da87c526e7d47f7a12a37d1cc')
     version('1.1.4', sha256='2ca529f02292e10c158562295a1ffd95d2ce8af97820e3534fe1b0e3aec7561d')
 
+    variant('gssapi', default=True, description='Enable GSS-API')
+
     depends_on('krb5')
 
     provides('rpc')
@@ -36,3 +38,12 @@ class Libtirpc(AutotoolsPackage):
         if hdrs:
             hdrs.directories = [self.prefix.include.tirpc, self.prefix.include]
         return hdrs or None
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('~gssapi'):
+            args.append('--disable-gssapi')
+
+        return args

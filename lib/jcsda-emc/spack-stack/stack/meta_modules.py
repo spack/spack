@@ -363,7 +363,7 @@ def setup_meta_modules():
                 substitutes['MODULEPREREQS']))
 
             # Environment variables; case-sensitive in spack
-            if compiler['compiler']['environment']:
+            if 'environment' in compiler['compiler'].keys() and compiler['compiler']['environment']:
                 # prepend_path
                 if 'prepend_path' in compiler['compiler']['environment'].keys():
                     for env_name in compiler['compiler']['environment']['prepend_path']:
