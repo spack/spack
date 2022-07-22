@@ -116,7 +116,8 @@ class Vasp(MakefilePackage):
                                          'makefile.include.linux_' +
                                          spec.compiler.name)
 
-        # Recent versions of vasp have renamed the makefile.include files to leave out the linux_ string
+        # Recent versions of vasp have renamed the makefile.include files 
+        # to leave out the linux_ string
         if os.path.exists(make_include):
             os.rename(make_include, 'makefile.include')
         else:
