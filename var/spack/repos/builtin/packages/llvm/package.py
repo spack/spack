@@ -367,7 +367,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch('llvm14-hwloc-ompd.patch', when='@14')
 
     # make libflags a list in openmp subproject when ~omp_as_runtime
-    patch('libomp-libflags-as-list.patch', when='@3.7:')
+    patch('libomp-libflags-as-list.patch', when='@3.7:14')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
