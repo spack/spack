@@ -2153,13 +2153,11 @@ def find_all_libraries(root, recursive=False):
         find_all_static_libraries(root, recursive=recursive)
 
 
-class WindowsRuntimeLink:
+class WindowsRuntimePath:
     """ Class representing Windows filesystem rpath analog
 
-    rpath is established for each library/executable that requires
-    dynamic linking for a package
-
-    Also in the scenario where we get a package depending on itself... how do we verify that?
+    rpath is established for each library that a package's
+    executables or libraries require dynamic linking to.
 
     """
     def __init__(self, package, link_install_prefix=True):
@@ -2176,22 +2174,20 @@ class WindowsRuntimeLink:
         self.link_install_prefix = link_install_prefix
 
     @property
-    def link_root(self):
-        """
-        root of linking location
-        """
-        if self.install:
-            return self.pkg.prefix
-        else:
-            return self.pkg.stage.source_path
-
-    @property
     def link_dest(self):
         """
-        Set of Location within the package context where symlinks need to be placed
-        to mimic runtime link paths.
+        Set of directories where package binaries are located. Symlinks
+        to libraries/binaries on which this package depends
         """
         return set(self.pkg.libs.directories)
+
+    @property
+    def internal_links(self):
+        """
+        linking that would need to be established within the package itself. Useful for links
+        against extension modules/build time executables/internal linkage
+        """
+        pass
 
     @property
     def link_targets(self):
@@ -2199,17 +2195,20 @@ class WindowsRuntimeLink:
         Set of libraries this package needs to link against during runtime
         These packages will each be symlinked into the packages lib and binary dir
         """
-        deps = self.pkg.spec.dependencies(deptype='link')
+
         dependent_libs = []
+        for path in self.pkg.rpath:
+            dependent_libs.extend(list(find_all_shared_libraries(path)))
         for extra_path in self._addl_rpaths:
-            dependent_libs.extend(find_all_shared_libraries(extra_path))
-        for dep in deps:
-            dependent_libs.extend(dep.libs)
+            dependent_libs.extend(list(find_all_shared_libraries(extra_path)))
         return set(dependent_libs)
 
     def include_additional_runtime_paths(self, *paths):
         """
         Add libraries found at the root of provided paths to runtime linking
+
+        These are libraries found outside of the typical scope of rpath linking
+        that require manual inclusion in a runtime linking scheme
 
         Args:
             *paths (str): arbitrary number of paths to be added to runtime linking
@@ -2229,6 +2228,7 @@ class WindowsRuntimeLink:
         # from build_environment.py:463
             # The top-level package is always RPATHed. It hasn't been installed yet
             # so the RPATHs are added unconditionally
+
         # this naively symlinks from lib to bin and bin to lib etc
         # in the future could be more nuanced and internal links handled
         # by package attributes
