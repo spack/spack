@@ -16,20 +16,9 @@ spack:
     all:
       target: [x86_64_v4]
   specs:
-    # ML-adjacent libraries
-    - bazel
-    - onnx
-    - py-numpy
-    - py-pandas
-    - py-scipy
-
     # Core ML libraries
-    - caffe
-    - mxnet
-    - py-chainer
     - py-scikit-learn
     - py-tensorflow
-    - py-theano
     - py-torch
     - xgboost
 
