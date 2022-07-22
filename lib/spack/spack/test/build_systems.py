@@ -12,6 +12,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
+import spack.build_systems.autotools
 import spack.environment
 import spack.platforms
 import spack.repo
@@ -353,3 +354,67 @@ def test_autotools_args_from_conditional_variant(config, mock_packages):
     s = Spec('autotools-conditional-variants-test').concretized()
     assert 'example' not in s.variants
     assert len(s.package._activate_or_not('example', 'enable', 'disable')) == 0
+
+
+def test_autoreconf_search_path_args_multiple(config, mock_packages, tmpdir):
+    """autoreconf should receive the right -I flags with search paths for m4 files
+    for build deps."""
+    spec = Spec('dttop').concretized()
+    aclocal_fst = str(tmpdir.mkdir("fst").mkdir("share").mkdir("aclocal"))
+    aclocal_snd = str(tmpdir.mkdir("snd").mkdir("share").mkdir("aclocal"))
+    build_dep_one, build_dep_two = spec.dependencies(deptype='build')
+    build_dep_one.prefix = str(tmpdir.join("fst"))
+    build_dep_two.prefix = str(tmpdir.join("snd"))
+    assert spack.build_systems.autotools._autoreconf_search_path_args(spec) == [
+        '-I', aclocal_fst, '-I', aclocal_snd
+    ]
+
+
+def test_autoreconf_search_path_args_skip_automake(config, mock_packages, tmpdir):
+    """automake's aclocal dir should not be added as -I flag as it is a default
+    3rd party dir search path, and if it's a system version it usually includes
+    m4 files shadowing spack deps."""
+    spec = Spec('dttop').concretized()
+    tmpdir.mkdir("fst").mkdir("share").mkdir("aclocal")
+    aclocal_snd = str(tmpdir.mkdir("snd").mkdir("share").mkdir("aclocal"))
+    build_dep_one, build_dep_two = spec.dependencies(deptype='build')
+    build_dep_one.name = 'automake'
+    build_dep_one.prefix = str(tmpdir.join("fst"))
+    build_dep_two.prefix = str(tmpdir.join("snd"))
+    assert spack.build_systems.autotools._autoreconf_search_path_args(spec) == [
+        '-I', aclocal_snd
+    ]
+
+
+def test_autoreconf_search_path_args_external_order(config, mock_packages, tmpdir):
+    """When a build dep is external, its -I flag should occur last"""
+    spec = Spec('dttop').concretized()
+    aclocal_fst = str(tmpdir.mkdir("fst").mkdir("share").mkdir("aclocal"))
+    aclocal_snd = str(tmpdir.mkdir("snd").mkdir("share").mkdir("aclocal"))
+    build_dep_one, build_dep_two = spec.dependencies(deptype='build')
+    build_dep_one.external_path = str(tmpdir.join("fst"))
+    build_dep_two.prefix = str(tmpdir.join("snd"))
+    assert spack.build_systems.autotools._autoreconf_search_path_args(spec) == [
+        '-I', aclocal_snd, '-I', aclocal_fst
+    ]
+
+
+def test_autoreconf_search_path_skip_nonexisting(config, mock_packages, tmpdir):
+    """Skip -I flags for non-existing directories"""
+    spec = Spec('dttop').concretized()
+    build_dep_one, build_dep_two = spec.dependencies(deptype='build')
+    build_dep_one.prefix = str(tmpdir.join("fst"))
+    build_dep_two.prefix = str(tmpdir.join("snd"))
+    assert spack.build_systems.autotools._autoreconf_search_path_args(spec) == []
+
+
+def test_autoreconf_search_path_dont_repeat(config, mock_packages, tmpdir):
+    """Do not add the same -I flag twice to keep things readable for humans"""
+    spec = Spec('dttop').concretized()
+    aclocal = str(tmpdir.mkdir("prefix").mkdir("share").mkdir("aclocal"))
+    build_dep_one, build_dep_two = spec.dependencies(deptype='build')
+    build_dep_one.external_path = str(tmpdir.join("prefix"))
+    build_dep_two.external_path = str(tmpdir.join("prefix"))
+    assert spack.build_systems.autotools._autoreconf_search_path_args(spec) == [
+        '-I', aclocal
+    ]
