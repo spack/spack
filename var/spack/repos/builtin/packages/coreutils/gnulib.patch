@@ -1,0 +1,39 @@
+From 84863a1c4dc8cca8fb0f6f670f67779cdd2d543b Mon Sep 17 00:00:00 2001
+From: Bruno Haible <bruno@clisp.org>
+Date: Sat, 30 Apr 2022 14:09:00 +0200
+Subject: [PATCH] string: Avoid syntax error on glibc systems with GCC 11.
+
+Reported by Tom Tromey <tromey@adacore.com> in
+<https://lists.gnu.org/archive/html/bug-gnulib/2022-04/msg00075.html>
+and by Satadru Pramanik <satadru@umich.edu> in
+<https://lists.gnu.org/archive/html/bug-gnulib/2022-04/msg00076.html>.
+
+* lib/string.in.h (strndup): Don't rededeclare strndup if it is defined
+as a macro.
+---
+ ChangeLog       | 10 ++++++++++
+ lib/string.in.h |  4 ++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/lib/string.in.h b/lib/string.in.h
+index b6840fa91..33160b252 100644
+--- a/lib/string.in.h
++++ b/lib/string.in.h
+@@ -583,7 +583,7 @@ _GL_FUNCDECL_RPL (strndup, char *,
+                   _GL_ATTRIBUTE_MALLOC _GL_ATTRIBUTE_DEALLOC_FREE);
+ _GL_CXXALIAS_RPL (strndup, char *, (char const *__s, size_t __n));
+ # else
+-#  if !@HAVE_DECL_STRNDUP@ || __GNUC__ >= 11
++#  if !@HAVE_DECL_STRNDUP@ || (__GNUC__ >= 11 && !defined strndup)
+ _GL_FUNCDECL_SYS (strndup, char *,
+                   (char const *__s, size_t __n)
+                   _GL_ARG_NONNULL ((1))
+@@ -593,7 +593,7 @@ _GL_CXXALIAS_SYS (strndup, char *, (char const *__s, size_t __n));
+ # endif
+ _GL_CXXALIASWARN (strndup);
+ #else
+-# if __GNUC__ >= 11
++# if __GNUC__ >= 11 && !defined strndup
+ /* For -Wmismatched-dealloc: Associate strndup with free or rpl_free.  */
+ _GL_FUNCDECL_SYS (strndup, char *,
+                   (char const *__s, size_t __n)

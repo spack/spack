@@ -29,6 +29,9 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
 
     variant("gprefix", default=False, description="prefix commands with 'g', to avoid conflicts with OS utilities")
 
+    # gnulib bug introced in commit cbdb5ea63cb5348d9ead16dc46bedda77a4c3d7d.
+    # fix is from commit 84863a1c4dc8cca8fb0f6f670f67779cdd2d543b
+    patch('gnulib.patch', when='@9.1')
     patch('https://src.fedoraproject.org/rpms/coreutils/raw/6b50cb9f/f/coreutils-8.32-ls-removed-dir.patch',
           when='@8.32 target=aarch64:',
           sha256='5878894375a8fda98150783430b30c0b7104899dc5522034ebcaf8c961183b7e')
