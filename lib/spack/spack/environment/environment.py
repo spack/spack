@@ -1985,7 +1985,8 @@ class Environment(object):
         self.new_specs = []
         self.new_installs = []
         # re-read to update properties after a write action
-        self._re_read()
+        # self._re_read()
+        spack.config.config.clear_caches()
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
         """Update YAML manifest for this environment based on changes to
