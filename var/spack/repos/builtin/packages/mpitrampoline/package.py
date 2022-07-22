@@ -17,6 +17,7 @@ class Mpitrampoline(CMakePackage):
     maintainers = ['eschnett']
 
     version('develop', branch='main')
+    version('4.2.0', sha256='92eaa864fb364752a89752d6962f2d20e248bdf69e433d76417a25cac9b8244b')
     version('4.1.2', sha256='b3095c813276eb16c11a869d9ff628c5803cc580649b43260a1c7c239e4fd36d')
     version('4.1.1', sha256='64e90e4a6b83269ff82787f7aeffe87a5c50702366cee8c48d222b475cd6864b')
     version('4.1.0', sha256='9aba72eceb0a0fd6f7617b5fa86fe35c813a131aec9732304925893f419ea902')
