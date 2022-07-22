@@ -1289,3 +1289,16 @@ def test_term_status_line():
     x.add("a")
     x.add("b")
     x.clear()
+
+
+@pytest.mark.parametrize('explicit_args,is_explicit', [
+    ({'explicit': False}, False),
+    ({'explicit': True}, True),
+    ({}, True)
+])
+def test_single_external_implicit_install(install_mockery, explicit_args, is_explicit):
+    pkg = 'trivial-install-test-package'
+    s = spack.spec.Spec(pkg).concretized()
+    s.external_path = '/usr'
+    create_installer([(s, explicit_args)]).install()
+    assert spack.store.db.get_record(pkg).explicit == is_explicit
