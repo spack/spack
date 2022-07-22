@@ -476,7 +476,7 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-% A package may have an associated "condition_group": a set of specs where
+% A package may have an associated "requirement_group": a set of specs where
 % at least one must be applied. Each spec in the group is associated
 % with a condition via asp.impose().
 { condition_holds(Y) : requirement_group_member(Y, Package, X) } :-
@@ -489,14 +489,10 @@ requirement_group_satisfied(Package, X) :-
   requirement_group_member(Y, Package, X),
   condition_holds(Y).
 
-error(2, "Cannot satisfy condition group for package '{0}'", Package) :-
+error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
   node(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
-
-% If a condition is a member of a condition group, then it has a weight
-% equal to its ID (so you can prioritize by assigning higher ID numbers
-% to less-preferred conditions)
 
 requirement_weight(Package, W) :-
   condition_holds(Y),
