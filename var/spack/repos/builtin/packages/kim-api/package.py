@@ -45,9 +45,11 @@ class KimApi(CMakePackage):
         if self.spec.satisfies('%nvhpc'):
             filter_file('-std=gnu', '',
                         'examples/simulators/simulator-model-example/CMakeLists.txt')
+
     def cmake_args(self):
         args = [
-                '-DBASH_COMPLETION_COMPLETIONSDIR={0}/bash_completion.d/'.format(self.prefix),
-                '-DZSH_COMPLETION_COMPLETIONSDIR={0}/zhs_completion.d/'.format(self.prefix)
-               ]
-    return args
+            '-DZSH_COMPLETION_COMPLETIONSDIR={0}/zhs_completion.d/'.format(self.prefix),
+            '-DBASH_COMPLETION_COMPLETIONSDIR={0}/bash_completion.d/'.format(
+                self.prefix)
+        ]
+        return args
