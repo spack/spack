@@ -435,3 +435,13 @@ environment variables:
             # overwrite all concrete explicit specs from this build
             kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
         install_specs(args, kwargs, zip(abstract_specs, specs))
+
+    env = ev.active_environment()
+    if env and (args.spec or args.specfiles):
+        # If you end up here, you have an active env but also specified specs. In this
+        # case you have not run post_install yet, so let's take care of that.
+        with env.write_transaction():
+            # write env to trigger view generation and modulefile
+            # generation
+            env.write()
+            return
