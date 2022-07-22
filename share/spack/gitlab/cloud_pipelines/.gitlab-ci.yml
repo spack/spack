@@ -755,11 +755,15 @@ tutorial-protected-build:
   variables:
     SPACK_CI_STACK_NAME: ml
 
+.ml-generate:
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
 ml-pr-generate:
-  extends: [ ".ml", ".pr-generate"]
+  extends: [ ".ml-generate", ".pr-generate"]
 
 ml-protected-generate:
-  extends: [ ".ml", ".protected-generate"]
+  extends: [ ".ml-generate", ".protected-generate"]
 
 ml-stack-pr-build:
   extends: [ ".ml", ".pr-build" ]
