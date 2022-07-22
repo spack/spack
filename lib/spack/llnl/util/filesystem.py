@@ -2179,6 +2179,123 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
 
     return LibraryList(found_libs)
 
+def find_all_shared_libraries(root, recursive=False):
+    """Convenience function that returns the list of all shared libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+    return find_libraries('*', root=root, recursive=recursive)
+
+
+def find_all_static_libraries(root, recursive=False):
+    """Convenience function that returns the list of all static libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+    return find_libraries('*', root=root, shared=False, recursive=recursive)
+
+
+def find_all_libraries(root, recursive=False):
+    """Convenience function that returns the list of all libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+
+    return find_all_shared_libraries(root, recursive=recursive) +\
+        find_all_static_libraries(root, recursive=recursive)
+
+
+class WindowsRuntimePath:
+    """ Class representing Windows filesystem rpath analog
+
+    rpath is established for each library that a package's
+    executables or libraries require dynamic linking to.
+
+    """
+    def __init__(self, package, link_install_prefix=True):
+        """
+        Args:
+            package (spack.package_base.PackageBase): Package requiring links
+            link_install_prefix (bool): Link against package's own install or stage root.
+                Packages that run their own executables during build and require rpaths to
+                the build directory during build time require this option. Default: install
+                root
+        """
+        self.pkg = package
+        self._addl_rpaths = []
+        self.link_install_prefix = link_install_prefix
+
+    @property
+    def link_dest(self):
+        """
+        Set of Location within the package context where symlinks need to be placed
+        to mimic runtime link paths.
+        """
+        return set(self.pkg.libs.directories)
+
+    @property
+    def link_targets(self):
+        """
+        Set of libraries this package needs to link against during runtime
+        These packages will each be symlinked into the packages lib and binary dir
+        """
+
+        dependent_libs = []
+        for path in self.pkg.rpath:
+            dependent_libs.extend(list(find_all_shared_libraries(path)))
+        for extra_path in self._addl_rpaths:
+            dependent_libs.extend(list(find_all_shared_libraries(extra_path)))
+        return set(dependent_libs)
+
+    def include_additional_runtime_paths(self, *paths):
+        """
+        Add libraries found at the root of provided paths to runtime linking
+
+        These are libraries found outside of the typical scope of rpath linking
+        that require manual inclusion in a runtime linking scheme
+
+        Args:
+            *paths (str): arbitrary number of paths to be added to runtime linking
+        """
+        for pth in paths:
+            self._addl_rpaths.append(pth)
+
+    def establish_runtime_link(self):
+        """
+        (sym)link packages to runtime dependencies based on RPath configuration for
+        Windows heuristics
+        """
+        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
+        # install a symlink to each dependent library
+        for link in itertools.product(self.link_dest, self.link_targets):
+            symlink(link[0], link[1])
+        # from build_environment.py:463
+            # The top-level package is always RPATHed. It hasn't been installed yet
+            # so the RPATHs are added unconditionally
+
+        # this naively symlinks from lib to bin and bin to lib etc
+        # in the future could be more nuanced and internal links handled
+        # by package attributes
+        for link in itertools.product(self.link_dest, repeat=2):
+            if link[0] != link[1]:
+                self_link_targets = find_all_shared_libraries(link[1])
+                for target in self_link_targets:
+                    symlink(link[0], target)
 
 def find_all_shared_libraries(root, recursive=False, runtime=True):
     """Convenience function that returns the list of all shared libraries found
