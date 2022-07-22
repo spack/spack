@@ -25,7 +25,6 @@ spack:
 
     # Core ML libraries
     - caffe
-    - cntk
     - mxnet
     - py-chainer
     - py-scikit-learn
