@@ -48,8 +48,9 @@ important to understand.
 **build backend**
    Libraries used to define how to build a wheel. Examples
    include `setuptools <https://setuptools.pypa.io/>`__,
-   `flit <https://flit.readthedocs.io/>`_, and
-   `poetry <https://python-poetry.org/>`_.
+   `flit <https://flit.readthedocs.io/>`_,
+   `poetry <https://python-poetry.org/>`_, and
+   `hatchling <https://hatch.pypa.io/latest/>`_.
 
 ^^^^^^^^^^^
 Downloading
@@ -325,6 +326,33 @@ listed in a ``[tool.poetry.dependencies]`` section, and use a
 for specifying the version requirements. Note that ``~=`` works
 differently in poetry than in setuptools and flit for versions that
 start with a zero.
+
+"""""""""
+hatchling
+"""""""""
+
+If the ``pyproject.toml`` lists ``hatchling.build`` as the
+``build-backend``, it uses the hatchling build system. Look for
+dependencies under the following keys:
+
+* ``requires-python``
+
+  This specifies the version of Python that is required
+
+* ``project.dependencies``
+
+  These packages are required for building and installation. You can
+  add them with ``type=('build', 'run')``.
+
+* ``project.optional-dependencies``
+
+  This section includes keys with lists of optional dependencies
+  needed to enable those features. You should add a variant that
+  optionally adds these dependencies. This variant should be ``False``
+  by default.
+
+See https://hatch.pypa.io/latest/config/dependency/ for more
+information.
 
 """"""
 wheels
@@ -645,8 +673,7 @@ are not yet in Spack, and Spack contains many Python packages that are
 not yet in Anaconda. The main advantage of Spack over Anaconda is its
 ability to choose a specific compiler and BLAS/LAPACK or MPI library.
 Spack also has better platform support for supercomputers, and can build
-optimized binaries for your specific microarchitecture. On the other hand,
-Anaconda offers Windows support.
+optimized binaries for your specific microarchitecture.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation
@@ -667,3 +694,4 @@ For more information on build backend tools, see:
 * setuptools: https://setuptools.pypa.io/
 * flit: https://flit.readthedocs.io/
 * poetry: https://python-poetry.org/
+* hatchling: https://hatch.pypa.io/latest/

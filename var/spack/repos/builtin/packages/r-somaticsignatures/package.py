@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSomaticsignatures(RPackage):
@@ -16,6 +16,7 @@ class RSomaticsignatures(RPackage):
 
     bioc = "SomaticSignatures"
 
+    version('2.32.0', commit='444d37661d147618f6830fd5de01a83ddf2a694d')
     version('2.30.0', commit='03f7ad707f6530fa7f62093f808884b6e83b0526')
     version('2.26.0', commit='9d4bed6e118ac76755ffb7abd058b09bac58a9d7')
     version('2.20.0', commit='dbedc30d92b600b3a17de596ebe38d15982c70c6')

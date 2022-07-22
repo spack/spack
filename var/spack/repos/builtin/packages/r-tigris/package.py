@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTigris(RPackage):
@@ -14,6 +14,8 @@ class RTigris(RPackage):
 
     cran = "tigris"
 
+    version('1.6.1', sha256='927e8da3f7120bcc10f0b4ded95687512693e069f082eea7aea6302a2f1b2db2')
+    version('1.6', sha256='fa14fbbaf44f5ade1cc92e6e4e4ed2e775bc7c106310711d16b0135a948a1661')
     version('1.5', sha256='5ef71ca83817ad6b97ee86d1e560e8e86ee21bdcb1807ce40c945b3213c04472')
     version('1.0', sha256='97c76568c7cf0615abcbf923a0b4387f6b8c1915b9eb42d0c34cb0f707654403')
     version('0.8.2', sha256='ed8d6ab25332c2cc800858d58324bd8264772d8a916a3f0a8d489250a7e7140e')

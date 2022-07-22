@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Atmi(CMakePackage):
@@ -15,17 +15,20 @@ class Atmi(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git      = "https://github.com/RadeonOpenCompute/atmi.git"
-    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('5.1.3', sha256='a43448d77705b2b07e1758ffe8035aa6ba146abc2167984e8cb0f1615797b341')
+    version('5.1.0', sha256='6a758f5a8332e6774cd8e14a4e5ce05e43b1e05298d817b4068c35fa1793d333')
     version('5.0.2', sha256='3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747')
     version('5.0.0', sha256='208c1773170722b60b74357e264e698df5871e9d9d490d64011e6ea76750d9cf')
     version('4.5.2', sha256='c235cfb8bdd89deafecf9123264217b8cc5577a5469e3e1f24587fa820d0792e')
     version('4.5.0', sha256='64eeb0244cedae99db7dfdb365e0ad624106cc1090a531f94885ae81e254aabf')
-    version('4.3.1', sha256='4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650')
-    version('4.3.0', sha256='1cbe0e9258ce7cce7b7ccc288335dffbac821ceb745c4f3fd48e2a258abada89')
-    version('4.2.0', sha256='c1c89c00d2dc3e764c63b2e51ff7fd5c06d5881ed56aed0adf639582d3389585')
+    version('4.3.1', sha256='4497fa6d33547b946e2a51619f2777ec36e9cff1b07fd534eb8a5ef0d8e30650', deprecated=True)
+    version('4.3.0', sha256='1cbe0e9258ce7cce7b7ccc288335dffbac821ceb745c4f3fd48e2a258abada89', deprecated=True)
+    version('4.2.0', sha256='c1c89c00d2dc3e764c63b2e51ff7fd5c06d5881ed56aed0adf639582d3389585', deprecated=True)
     version('4.1.0', sha256='b31849f86c79f90466a9d67f0a28a93c1675181e38e2a5f571ffc963e4b06f5f', deprecated=True)
     version('4.0.0', sha256='8a2e5789ee7165aff0f0669eecd23ac0a5c8a5bfbc1acd9380fe9a8ed5bffe3a', deprecated=True)
     version('3.10.0', sha256='387e87c622ec334d3ba7a2f4f015ea9a219712722f4c56c1ef572203d0d072ea', deprecated=True)
@@ -40,7 +43,8 @@ class Atmi(CMakePackage):
     depends_on('rsync')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2']:
+                '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
+                '5.1.0', '5.1.3']:
         depends_on('comgr@' + ver, type='link', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('elf', type='link', when='@' + ver)
@@ -51,9 +55,12 @@ class Atmi(CMakePackage):
     patch('0002-Remove-usr-bin-rsync-reference.patch', when='@4.0.0:')
 
     def cmake_args(self):
-        return [
+        args = [
             '-DROCM_VERSION={0}'.format(self.spec.version)
         ]
+        if self.spec.satisfies('@5.0.2:'):
+            args.append(self.define('FILE_REORG_BACKWARD_COMPATIBILITY', 'OFF'))
+        return args
 
     @run_after('install')
     def install_stub(self):

@@ -5,7 +5,7 @@
 
 import glob
 
-from spack import *
+from spack.package import *
 
 
 def oracleclient_releases():
@@ -56,6 +56,10 @@ class OracleInstantClient(Package):
             resource(name=rname, url=url, sha256=sha256, when=condition, placement=rname)
 
     depends_on('libaio', type='link')
+
+    # TODO: add URLs for macOS. Unfortunately still no native M1 support.
+    # https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html
+    conflicts('platform=darwin')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

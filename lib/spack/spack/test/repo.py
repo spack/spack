@@ -2,12 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import sys
 
 import pytest
 
-import spack.package
+import spack.package_base
 import spack.paths
 import spack.repo
 
@@ -27,14 +27,14 @@ repo:
 
 
 def test_repo_getpkg(mutable_mock_repo):
-    mutable_mock_repo.get('a')
-    mutable_mock_repo.get('builtin.mock.a')
+    mutable_mock_repo.get_pkg_class('a')
+    mutable_mock_repo.get_pkg_class('builtin.mock.a')
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo)
-    mutable_mock_repo.get('a')
-    mutable_mock_repo.get('builtin.mock.a')
+    mutable_mock_repo.get_pkg_class('a')
+    mutable_mock_repo.get_pkg_class('builtin.mock.a')
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
@@ -45,23 +45,21 @@ def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
 
 def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownNamespaceError):
-        mutable_mock_repo.get('unknown.a')
+        mutable_mock_repo.get_pkg_class('unknown.a')
 
 
 def test_repo_unknown_pkg(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get('builtin.mock.nonexistentpackage')
-
-
-def test_repo_anonymous_pkg(mutable_mock_repo):
-    with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get('+variant')
+        mutable_mock_repo.get_pkg_class('builtin.mock.nonexistentpackage')
 
 
 @pytest.mark.maybeslow
+@pytest.mark.skipif(
+    sys.version_info < (3, 5), reason="Test started failing spuriously on Python 2.7"
+)
 def test_repo_last_mtime():
     latest_mtime = max(os.path.getmtime(p.module.__file__)
-                       for p in spack.repo.path.all_packages())
+                       for p in spack.repo.path.all_package_classes())
     assert spack.repo.path.last_mtime() == latest_mtime
 
 
@@ -113,11 +111,12 @@ def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     assert hasattr(spack.pkg.builtin.mock, 'mpileaks')
     assert hasattr(spack.pkg.builtin.mock.mpileaks, 'Mpileaks')
     assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks,
-                      spack.package.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package.Package)
+                      spack.package_base.PackageMeta)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks,
+                      spack.package_base.Package)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
     from spack.pkg.builtin.mock.mpileaks import Mpileaks
-    assert isinstance(Mpileaks, spack.package.PackageMeta)
-    assert issubclass(Mpileaks, spack.package.Package)
+    assert isinstance(Mpileaks, spack.package_base.PackageMeta)
+    assert issubclass(Mpileaks, spack.package_base.Package)

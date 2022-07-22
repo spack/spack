@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libcint(CMakePackage):
@@ -16,6 +16,7 @@ class Libcint(CMakePackage):
     #
     # Versions
     #
+    version('5.1.3', sha256='a239275a0464360c904fd06e67d2e76ef1147e04bc634befb40c67d3e79b3638')
     version('3.0.13', sha256='ee64f0bc7fb6073063ac3c9bbef8951feada141e197b1a5cc389c8cccf8dc360')
     version('3.0.12', sha256='7409ef41f1465cf4c1ae9834dfc0b0585c0fdc63b55d8ee8b8a7a6d5e31f309d')
     version('3.0.11', sha256='4c9c24d4bd4791391848f19a4be5177137aca27a8e0375574101a7a1261157cf')

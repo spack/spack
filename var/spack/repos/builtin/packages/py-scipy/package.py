@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
+
 
 class PyScipy(PythonPackage):
     """SciPy (pronounced "Sigh Pie") is a Scientific Library for Python.
@@ -15,6 +17,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart', 'rgommers']
 
     version('master', branch='master')
+    version('1.8.1',  sha256='9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33')
     version('1.8.0',  sha256='31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd')
     version('1.7.3',  sha256='ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf')
     version('1.7.2',  sha256='fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711')
@@ -61,7 +64,7 @@ class PyScipy(PythonPackage):
     depends_on('py-pybind11@2.4.3:2.8', when='@1.8:', type=('build', 'link'))
     depends_on('py-pythran@0.9.11', when='@1.7.0:1.7.1', type=('build', 'link'))
     depends_on('py-pythran@0.9.12:0.9', when='@1.7.2:1.7', type=('build', 'link'))
-    depends_on('py-pythran@0.10', when='@1.8:', type=('build', 'link'))
+    depends_on('py-pythran@0.10:', when='@1.8:', type=('build', 'link'))
     # setup.py
     depends_on('py-numpy@1.5.1:+blas+lapack', when='@:0.15', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:0.17', type=('build', 'link', 'run'))
@@ -82,16 +85,24 @@ class PyScipy(PythonPackage):
     depends_on('python@3.8:3.10', when='@1.8:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
-    # NOTE: scipy picks up Blas/Lapack from numpy, see
-    # http://www.scipy.org/scipylib/building/linux.html#step-4-build-numpy-1-5-0
+    # NOTE: scipy should use the same Blas/Lapack as numpy
+    # This is achieved by calling the set_blas_lapack() and setup_build_environment()
+    # from numpy in the scipy spec
     depends_on('blas')
     depends_on('lapack')
+    # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
+    depends_on('lapack@3.4.1:', when='@1.2:')
 
     # https://github.com/scipy/scipy/issues/12860
     patch('https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd',
           sha256='5433f60831cb554101520a8f8871ac5a32c95f7a971ccd68b69049535b106780', when='@1.2:1.5.3')
 
     patch('scipy-clang.patch', when='@1.5.0:1.6.3 %clang')
+
+    @run_before('install')
+    def set_blas_lapack(self):
+        # Pick up Blas/Lapack from numpy
+        self.spec['py-numpy'].package.set_blas_lapack()
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -100,6 +111,9 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+
+        # Pick up Blas/Lapack from numpy
+        self.spec['py-numpy'].package.setup_build_environment(env)
 
     def install_options(self, spec, prefix):
         args = []

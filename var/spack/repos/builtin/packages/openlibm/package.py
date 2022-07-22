@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Openlibm(MakefilePackage):
@@ -15,6 +15,7 @@ class Openlibm(MakefilePackage):
 
     maintainers = ['haampie']
 
+    version('0.8.1', sha256='ba8a282ecd92d0033f5656bb20dfc6ea3fb83f90ba69291ac8f7beba42dcffcf')
     version('0.8.0', sha256='03620768df4ca526a63dd675c6de95a5c9d167ff59555ce57a61c6bf49e400ee')
     version('0.7.5', sha256='be983b9e1e40e696e8bbb7eb8f6376d3ca0ae675ae6d82936540385b0eeec15b')
 

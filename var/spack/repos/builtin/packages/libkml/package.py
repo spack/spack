@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -21,16 +21,13 @@ class Libkml(CMakePackage):
     variant('java', default=False, description='Build java bindings')
     variant('python', default=False, description='Build python bindings')
 
-    extends('jdk', when='+java')
+    extends('openjdk', when='+java')
     extends('python', when='+python')
 
     # See DEPENDENCIES
     depends_on('cmake@2.8:', type='build')
+    # FIXME: Can the maintainers confirm if this is a required dependency
     depends_on('boost@1.44.0:')
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on('expat@2.1.0:')
     depends_on('minizip@1.2.8:')
@@ -39,6 +36,10 @@ class Libkml(CMakePackage):
     depends_on('googletest@1.7.0:', type='link')
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries('libkmlbase', root=self.prefix, recursive=True)
 
     def cmake_args(self):
         spec = self.spec

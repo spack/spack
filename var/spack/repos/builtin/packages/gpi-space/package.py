@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class GpiSpace(CMakePackage):
@@ -24,6 +24,7 @@ class GpiSpace(CMakePackage):
     maintainers = ["mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam"]
 
     version("latest", branch="main")
+    version('22.06',   sha256='d89d8a7b574430c4f151a3768073fa44d32e5cc7606fbe0f58aeedf6f5fefc0b')
     version('22.03', sha256='b01500b9480452aee865a0ef98cf40864f847b7e22ea572f9a6f0f5ac2ae9a1a')
     version('21.12.1', sha256='6c49aca95a32e66fa1e34bef542c2f380e91f86c9c2b3b0d98921901bab7abce')
     version('21.12',  sha256='51794e2b593b8d1dc7d6310e17744842919bf44205b2cb7a79de2f2bbac3352a')
@@ -47,7 +48,7 @@ class GpiSpace(CMakePackage):
                type="build")
     depends_on("chrpath@0.13:",
                type=("build", "run"))
-    depends_on("pkgconf",
+    depends_on("pkgconfig",
                type="build")
     depends_on("boost@1.62.0:1.63.0 +atomic +chrono +coroutine +context +date_time +filesystem +iostreams +program_options +random +regex +serialization +test +timer cxxstd=14")
     depends_on("hwloc@1.10: +libudev ~shared ~libxml2")

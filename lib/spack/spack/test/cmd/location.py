@@ -27,16 +27,13 @@ env = SpackCommand('env')
 
 @pytest.fixture
 def mock_spec():
-    spec = spack.spec.Spec('externaltest').concretized()
-    pkg = spack.repo.get(spec)
-
     # Make it look like the source was actually expanded.
-    source_path = pkg.stage.source_path
+    s = spack.spec.Spec('externaltest').concretized()
+    source_path = s.package.stage.source_path
     mkdirp(source_path)
-    yield spec, pkg
-
+    yield s, s.package
     # Remove the spec from the mock stage area.
-    shutil.rmtree(pkg.stage.path)
+    shutil.rmtree(s.package.stage.path)
 
 
 def test_location_build_dir(mock_spec):

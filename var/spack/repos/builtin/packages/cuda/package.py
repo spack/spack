@@ -9,9 +9,8 @@ import re
 from glob import glob
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import LibraryList
 
-from spack import *
+from spack.package import *
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -25,6 +24,10 @@ from spack import *
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.7.0': {
+        'Linux-aarch64': ('e777839a618ca9a3d5ad42ded43a1b6392af2321a7327635a4afcc986876a21b', 'https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux_sbsa.run'),
+        'Linux-x86_64': ('087fdfcbba1f79543b1f78e43a8dfdac5f6db242d042dde820e16dc185892f26', 'https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux.run'),
+        'Linux-ppc64le': ('74a507ac54067c258e6b7c9063c98d411116ecc5c5397b1f6e6a999e86dff08a', 'https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_515.43.04_linux_ppc64le.run')},
     '11.6.2': {
         'Linux-aarch64': ('b20c014c6bba36b13c50da167ad42e9bd1cea24f3b6297b495ea129c0889f36e', 'https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_510.47.03_linux_sbsa.run'),
         'Linux-x86_64': ('99b7a73dcc52a52cef4c1fceb4a60c3015ac9b6404082c1677d9efdaba1d4593', 'https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_510.47.03_linux.run'),
@@ -37,6 +40,10 @@ _versions = {
         'Linux-aarch64': ('5898579f5e59b708520883cb161089f5e4f3426158d1e9f973c49d224085d1d2', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux_sbsa.run'),
         'Linux-x86_64': ('1783da6d63970786040980b57fa3cb6420142159fc7d0e66f8f05c4905d98c83', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run'),
         'Linux-ppc64le': ('c86b866a42baf59ddc6f1f4a79e6d77213c90749e77e574f0e0d796a749ab7d0', 'https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux_ppc64le.run')},
+    '11.5.2': {
+        'Linux-aarch64': ('31337c8bdc224fa1bd07bc4b6a745798392428118cc8ea0fa4446ee4ad47dd30', 'https://developer.download.nvidia.com/compute/cuda/11.5.2/local_installers/cuda_11.5.2_495.29.05_linux_sbsa.run'),
+        'Linux-x86_64': ('74959abf02bcba526f0a3aae322c7641b25da040ccd6236d07038f81997b73a6', 'https://developer.download.nvidia.com/compute/cuda/11.5.2/local_installers/cuda_11.5.2_495.29.05_linux.run'),
+        'Linux-ppc64le': ('45c468f430436b3e95d5e485a6ba0ec1fa2b23dc6c551c1307b79996ecf0a7ed', 'https://developer.download.nvidia.com/compute/cuda/11.5.2/local_installers/cuda_11.5.2_495.29.05_linux_ppc64le.run')},
     '11.5.1': {
         'Linux-aarch64': ('73e1d0e97c7fa686efe7e00fb1e5f179372c4eec8e14d4f44ab58d5f6cf57f63', 'https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux_sbsa.run'),
         'Linux-x86_64': ('60bea2fc0fac95574015f865355afbf599422ec2c85554f5f052b292711a4bca', 'https://developer.download.nvidia.com/compute/cuda/11.5.1/local_installers/cuda_11.5.1_495.29.05_linux.run'),
@@ -124,7 +131,7 @@ _versions = {
     '6.5.14': {
         'Linux-x86_64': ('f3e527f34f317314fe8fcd8c85f10560729069298c0f73105ba89225db69da48', 'https://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run')},
     '6.0.37': {
-        'Linux-x86_64': ('991e436c7a6c94ec67cf44204d136adfef87baa3ded270544fa211179779bc40', '//developer.download.nvidia.com/compute/cuda/6_0/rel/installers/cuda_6.0.37_linux_64.run')},
+        'Linux-x86_64': ('991e436c7a6c94ec67cf44204d136adfef87baa3ded270544fa211179779bc40', 'https://developer.download.nvidia.com/compute/cuda/6_0/rel/installers/cuda_6.0.37_linux_64.run')},
 }
 
 
@@ -242,6 +249,11 @@ class Cuda(Package):
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
         ]
+
+        if spec.satisfies('@7:'):
+            # use stage dir instead of /tmp
+            mkdir(join_path(self.stage.path, 'tmp'))
+            arguments.append('--tmpdir=%s' % join_path(self.stage.path, 'tmp'))
 
         if spec.satisfies('@10.1:'):
             arguments.append('--installpath=%s' % prefix)   # Where to install

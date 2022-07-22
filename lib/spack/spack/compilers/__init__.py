@@ -252,6 +252,13 @@ def find_new_compilers(path_hints=None, scope=None):
             merged configuration.
     """
     compilers = find_compilers(path_hints)
+    return select_new_compilers(compilers, scope)
+
+
+def select_new_compilers(compilers, scope=None):
+    """Given a list of compilers, remove those that are already defined in
+    the configuration.
+    """
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))
@@ -495,7 +502,8 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
 @llnl.util.lang.memoized
 def class_for_compiler_name(compiler_name):
     """Given a compiler module name, get the corresponding Compiler class."""
-    assert supported(compiler_name)
+    if not supported(compiler_name):
+        raise UnknownCompilerError(compiler_name)
 
     # Hack to be able to call the compiler `apple-clang` while still
     # using a valid python name for the module
@@ -765,7 +773,8 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc']) or \
+           toolchains == set(['Dpcpp', 'Oneapi']):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True
@@ -786,6 +795,13 @@ class NoCompilersError(spack.error.SpackError):
     def __init__(self):
         super(NoCompilersError, self).__init__(
             "Spack could not find any compilers!")
+
+
+class UnknownCompilerError(spack.error.SpackError):
+    def __init__(self, compiler_name):
+        super(UnknownCompilerError, self).__init__(
+            "Spack doesn't support the requested compiler: {0}"
+            .format(compiler_name))
 
 
 class NoCompilerForSpecError(spack.error.SpackError):

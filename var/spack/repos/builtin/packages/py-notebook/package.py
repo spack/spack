@@ -4,12 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyNotebook(PythonPackage):
     """Jupyter Interactive Notebook"""
 
     homepage = "https://github.com/jupyter/notebook"
     pypi = "notebook/notebook-6.1.4.tar.gz"
 
+    version('6.4.11', sha256='709b1856a564fe53054796c80e17a67262071c86bfbdfa6b96aaa346113c555a')
     version('6.4.5', sha256='872e20da9ae518bbcac3e4e0092d5bd35454e847dedb8cb9739e9f3b68406be0')
     version('6.1.4', sha256='687d01f963ea20360c0b904ee7a37c3d8cda553858c8d6e33fd0afd13e89de32')
     version('6.0.3', sha256='47a9092975c9e7965ada00b9a20f0cf637d001db60d241d479f53c0be117ad48')
@@ -35,6 +39,10 @@ class PyNotebook(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@3.5:',         type=('build', 'run'), when='@6:')
     depends_on('python@3.6:',         type=('build', 'run'), when='@6.3:')
+    depends_on('python@3.7:',         type=('build', 'run'), when='@6.4:')
+    # TODO: replace this after concretizer learns how to concretize separate build deps
+    depends_on('py-jupyter-packaging11', when='@6.4.1:', type='build')
+    # depends_on('py-jupyter-packaging@0.9:0', when='@6.4.1:', type='build')
     depends_on('py-setuptools',       type=('build', 'run'), when='@5:')
     depends_on('py-jinja2',           type=('build', 'run'))
     depends_on('py-tornado@4.0:6', type=('build', 'run'), when='@:5.7.4')
@@ -43,7 +51,6 @@ class PyNotebook(PythonPackage):
     depends_on('py-tornado@6.1:',      type=('build', 'run'), when='@6.4.5:')
     depends_on('py-pyzmq@17:',         type=('build', 'run'), when='@6:')
     depends_on('py-argon2-cffi',       type=('build', 'run'), when='@6.1:')
-    depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets',        type=('build', 'run'))
     depends_on('py-traitlets@4.2.1:', type=('build', 'run'), when='@5:')
     depends_on('py-jupyter-core',        type=('build', 'run'))
@@ -54,13 +61,16 @@ class PyNotebook(PythonPackage):
     depends_on('py-jupyter-client@5.2.0:', type=('build', 'run'), when='@5.7.0:5')
     depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6.0.0:6.0.1')
     depends_on('py-jupyter-client@5.3.4:', type=('build', 'run'), when='@6.0.2:')
+    depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-nbformat',         type=('build', 'run'))
     # https://github.com/jupyter/notebook/pull/6286
     depends_on('py-nbconvert@5:', type=('build', 'run'), when='@5.5:')
     depends_on('py-nbconvert',        type=('build', 'run'))
+    depends_on('py-nest-asyncio@1.5:', type=('build', 'run'), when='@6.4.10:')
     depends_on('py-ipykernel',        type=('build', 'run'))
     depends_on('py-send2trash',        type=('build', 'run'), when='@6:')
-    depends_on('py-send2trash@1.5.0:', type=('build', 'run'), when='@6.2.0:')
+    depends_on('py-send2trash@1.5:', type=('build', 'run'), when='@6.2.0:')
+    depends_on('py-send2trash@1.8:', type=('build', 'run'), when='@6.4.10:')
     depends_on('py-terminado@0.3.3:', type=('build', 'run'), when='@:5.7.0')
     depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-terminado@0.8.3:', type=('build', 'run'), when='@6.1:')

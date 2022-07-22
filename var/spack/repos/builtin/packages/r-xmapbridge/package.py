@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RXmapbridge(RPackage):
@@ -14,6 +14,7 @@ class RXmapbridge(RPackage):
 
     bioc = "xmapbridge"
 
+    version('1.54.0', commit='a316e2399894191646c229378fa138b7461c75ab')
     version('1.52.0', commit='fe32fcd2a83432c721eb948cb3af73dd187065f6')
     version('1.48.0', commit='1cefe6b56c6dcb1f18028b3b7d6a67d490bc9730')
     version('1.42.0', commit='d79c80dfc1a0ed3fd6d3e7a7c3a4aff778537ca9')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -21,8 +21,11 @@ class Helics(CMakePackage):
     version('develop', branch='develop', submodules=True)
     version('main', branch='main', submodules=True)
     version('master', branch='main', submodules=True)
+    version('3.2.1', sha256='9df8a7a687c7cf8ea6f157e748e57e8bf5cefa9a49a24e7c590fe9191291da95')
+    version('3.2.0', sha256='b9cec50b9e767113b2e04a5623437885f76196cc9a58287e21f5c0f62c32cca1')
     version('3.0.1', sha256='512afc18e25311477ec82804de74c47a674aa213d2173c276b6caf555b8421dd')
     version('3.0.0', sha256='928687e95d048f3f9f9d67cec4ac20866a98cbc00090a2d62abaa11c2a20958c')
+    version('2.8.1', sha256='9485091fb1bf5d0dd3b21a2641dd78051bbf5374cd823425e458053abafdfa1f')
     version('2.8.0', sha256='f2b218494407573c75561b7d4d656bc60f7592e970dd87d98c969066d76d89c1')
     version('2.7.1', sha256='872d415959e9d97069b06327410af00e7daae8dbeb9f050b26632eca924ea23c')
     version('2.7.0', sha256='ad005c0948ef4284417d429112772d0b63ebfbc62c9093c02ac10f4a333d70f4')

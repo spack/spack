@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Geos(CMakePackage):
@@ -46,6 +46,10 @@ class Geos(CMakePackage):
     patch('https://github.com/libgeos/geos/pull/461.patch?full_index=1',
           sha256='ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35',
           when='@3.8:')
+
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('geos-config'))
 
     def cmake_args(self):
         args = []

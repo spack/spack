@@ -50,7 +50,7 @@ def _show_patch(sha256):
         owner = rec['owner']
 
         if 'relative_path' in rec:
-            pkg_dir = spack.repo.get(owner).package_dir
+            pkg_dir = spack.repo.path.get_pkg_class(owner).package_dir
             path = os.path.join(pkg_dir, rec['relative_path'])
             print("    path:       %s" % path)
         else:

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCtc(RPackage):
@@ -14,6 +14,7 @@ class RCtc(RPackage):
 
     bioc = "ctc"
 
+    version('1.70.0', commit='05dc046ecfddbc1eeadf77e8f3ec0ce054794437')
     version('1.68.0', commit='c2733534ef9d948e07ea654d1998a67ed8f7a98a')
     version('1.64.0', commit='35dbe620a21056b8f69890e6f9a7c320528d8621')
     version('1.58.0', commit='c41df03ac149db20c5e337142142d61cfb9b43fb')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RApe(RPackage):
@@ -27,6 +27,7 @@ class RApe(RPackage):
 
     cran = "ape"
 
+    version('5.6-2', sha256='9b62450a0390a1f07df007d348ad4cedcd814d42cb11c5a300ed33550fd41257')
     version('5.6-1', sha256='25401e036576eed1200e15bf68879ccd85611303a3508b989e15164cd4c0f7f7')
     version('5.4-1', sha256='f0316c8e74ce900053e8b3e8c9322b9d10e7730f3be2150365f74630bee7eee4')
     version('5.3', sha256='08b0df134c523feb00a86896d1aa2a43f0f0dab20a53bc6b5d6268d867988b23')

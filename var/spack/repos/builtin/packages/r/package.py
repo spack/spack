@@ -6,7 +6,7 @@
 import os
 import re
 
-from spack import *
+from spack.package import *
 
 
 class R(AutotoolsPackage):
@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     maintainers = ['glennpj']
 
+    version('4.2.0', sha256='38eab7719b7ad095388f06aa090c5a2b202791945de60d3e2bb0eab1f5097488')
     version('4.1.3', sha256='15ff5b333c61094060b2a52e9c1d8ec55cc42dd029e39ca22abdaa909526fed6')
     version('4.1.2', sha256='2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af')
     version('4.1.1', sha256='515e03265752257d0b7036f380f82e42b46ed8473f54f25c7b67ed25bbbdd364')
@@ -209,6 +210,11 @@ class R(AutotoolsPackage):
 
         r_libs_path = ':'.join(r_libs_path)
         env.set('R_LIBS', r_libs_path)
+        # R_LIBS_USER gets set to a directory in HOME/R if it is not set, such as
+        # during package installation with the --vanilla flag. Set it to null
+        # to ensure that it does not point to a directory that may contain R
+        # packages.
+        env.set('R_LIBS_USER', '')
         env.set('R_MAKEVARS_SITE',
                 join_path(self.etcdir, 'Makeconf.spack'))
 

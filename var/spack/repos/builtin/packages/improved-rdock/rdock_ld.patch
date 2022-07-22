@@ -1,0 +1,11 @@
+--- a/build/makefile	2021-02-04 15:24:38.488425167 +0900
++++ b/build/makefile	2021-02-04 15:25:26.053775490 +0900
+@@ -61,7 +61,7 @@
+ # Environment for running rDock unit tests
+ export RBT_ROOT	= ../
+ export RBT_HOME	= ./test/RBT_HOME
+-export LD_LIBRARY_PATH = ../lib
++export LD_LIBRARY_PATH = $(shell echo $$LD_LIBRARY_PATH):../lib
+ 
+ ##################################################
+ # Main rDock build targets

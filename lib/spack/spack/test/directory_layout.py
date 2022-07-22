@@ -87,18 +87,17 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
     layout.
     """
     layout = temporary_store.layout
-    packages = list(spack.repo.path.all_packages())[:max_packages]
+    pkg_names = list(spack.repo.path.all_package_names())[:max_packages]
 
-    for pkg in packages:
-        if pkg.name.startswith('external'):
+    for name in pkg_names:
+        if name.startswith('external'):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
         try:
-            spec.concretize()
+            spec = spack.spec.Spec(name).concretized()
         except Exception:
             continue
 
@@ -118,13 +117,7 @@ def test_read_and_write_spec(temporary_store, config, mock_packages):
         # Make sure spec file can be read back in to get the original spec
         spec_from_file = layout.read_spec(spec_path)
 
-        # currently we don't store build dependency information when
-        # we write out specs to the filesystem.
-
-        # TODO: fix this when we can concretize more loosely based on
-        # TODO: what is installed. We currently omit these to
-        # TODO: increase reuse of build dependencies.
-        stored_deptypes = spack.hash_types.full_hash
+        stored_deptypes = spack.hash_types.dag_hash
         expected = spec.copy(deps=stored_deptypes)
         expected._mark_concrete()
 
@@ -177,7 +170,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
     # Create all the packages that are not in mock.
     installed_specs = {}
     for pkg_name in packages:
-        spec = spack.repo.get(pkg_name).spec
+        spec = spack.spec.Spec(pkg_name)
 
         # If a spec fails to concretize, just skip it.  If it is a
         # real error, it will be caught by concretization tests.
@@ -207,15 +200,15 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
 def test_find(temporary_store, config, mock_packages):
     """Test that finding specs within an install layout works."""
     layout = temporary_store.layout
-    packages = list(spack.repo.path.all_packages())[:max_packages]
+    package_names = list(spack.repo.path.all_package_names())[:max_packages]
 
     # Create install prefixes for all packages in the list
     installed_specs = {}
-    for pkg in packages:
-        if pkg.name.startswith('external'):
+    for name in package_names:
+        if name.startswith('external'):
             # External package tests cannot be installed
             continue
-        spec = pkg.spec.concretized()
+        spec = spack.spec.Spec(name).concretized()
         installed_specs[spec.name] = spec
         layout.create_install_directory(spec)
 

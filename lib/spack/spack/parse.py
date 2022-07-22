@@ -123,11 +123,11 @@ class Parser(object):
 
     def next_token_error(self, message):
         """Raise an error about the next token in the stream."""
-        raise ParseError(message, self.text, self.token.end)
+        raise ParseError(message, self.text[0], self.token.end)
 
     def last_token_error(self, message):
         """Raise an error about the previous token in the stream."""
-        raise ParseError(message, self.text, self.token.start)
+        raise ParseError(message, self.text[0], self.token.start)
 
     def unexpected_token(self):
         self.next_token_error("Unexpected token: '%s'" % self.next.value)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGeoquery(RPackage):
@@ -16,6 +16,7 @@ class RGeoquery(RPackage):
 
     bioc = "GEOquery"
 
+    version('2.64.2', commit='e9b7f075a4a6a952660443ca93ed392d7a4fd6d7')
     version('2.62.2', commit='1966c108fe8a58ac39ef53c3c452fd160efa526e')
     version('2.58.0', commit='6332ca3791ddcfb233b9ad75b5904b3d60f49b93')
     version('2.52.0', commit='3059331eb82ad4947c2d1bef86ff9526e70af643')
@@ -25,7 +26,6 @@ class RGeoquery(RPackage):
     version('2.42.0', commit='c26adef8d3ddbd6932a3170f2f84f6e4327641fb')
 
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-httr', type=('build', 'run'))
     depends_on('r-readr', type=('build', 'run'), when='@2.46.15:')
     depends_on('r-readr@1.3.1:', type=('build', 'run'), when='@2.50.5:')
     depends_on('r-xml2', type=('build', 'run'), when='@2.46.15:')
@@ -33,8 +33,10 @@ class RGeoquery(RPackage):
     depends_on('r-data-table', type=('build', 'run'), when='@2.62.2:')
     depends_on('r-tidyr', type=('build', 'run'), when='@2.46.15:')
     depends_on('r-magrittr', type=('build', 'run'), when='@2.46.15:')
-    depends_on('r-r-utils', type=('build', 'run'), when='@2.62.2:')
     depends_on('r-limma', type=('build', 'run'), when='@2.46.15:')
+    depends_on('r-curl', type=('build', 'run'), when='@2.64.2:')
+    depends_on('r-r-utils', type=('build', 'run'), when='@2.62.2:')
 
     depends_on('r-xml', type=('build', 'run'), when='@2.42.0')
     depends_on('r-rcurl', type=('build', 'run'), when='@2.42.0')
+    depends_on('r-httr', type=('build', 'run'), when='@:2.62.2')

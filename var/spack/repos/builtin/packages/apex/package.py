@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Apex(CMakePackage):
@@ -18,6 +18,7 @@ class Apex(CMakePackage):
 
     version('develop', branch='develop')
     version('master', branch='master')
+    version('2.5.1', sha256='c01016e6a8a3a77e1021281ae53681cb83ea7a369c346ef85d45d27bacca2fca')
     version('2.5.0', sha256='d4a95f6226985acf2143e2b779b7bba3caf823564b04826b022f1a0c31093a0f')
     version('2.4.1', sha256='055d09dd36c529ebd3bab4defbec4ad1d227c004a291faf26e77e4ab79ce470c')
     version('2.4.0', sha256='15d8957da7b37d2c684a6f0f32aef65b0b26be6558da17963cf71f3fd3cfdf2f')
@@ -54,6 +55,7 @@ class Apex(CMakePackage):
     depends_on('zlib')
     depends_on('cmake@3.10.0:', type='build')
     depends_on('binutils@2.33:+libiberty+headers', when='+binutils')
+    depends_on('gettext', when='+binutils ^binutils+nls')
     depends_on('activeharmony@4.6:', when='+activeharmony')
     depends_on('activeharmony@4.6:', when='+plugins')
     depends_on('otf2@2.1:', when='+otf2')
@@ -111,6 +113,9 @@ class Apex(CMakePackage):
 
         if '+binutils' in spec:
             args.append('-DBFD_ROOT={0}'.format(spec['binutils'].prefix))
+
+        if '+binutils ^binutils+nls' in spec:
+            args.append('-DCMAKE_SHARED_LINKER_FLAGS=-lintl')
 
         if '+otf2' in spec:
             args.append('-DOTF2_ROOT={0}'.format(spec['otf2'].prefix))

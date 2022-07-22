@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGit2r(RPackage):
@@ -15,6 +15,7 @@ class RGit2r(RPackage):
 
     cran = "git2r"
 
+    version('0.30.1', sha256='85d913ddc7659e32c1b98ebc247fa1cc1b7717a5bd413fa78ea84696986ca840')
     version('0.29.0', sha256='f8f7a181dc0ac761f2a0c4099bfd744ded01c0e0832cab32dc5b4da32accd48e')
     version('0.28.0', sha256='ce6d148d21d2c87757e98ef4474b2d09faded9b9b866f046bd26d4ca925e55f2')
     version('0.27.1', sha256='099207f180aa45ddcc443cbb22487eafd14e1cd8e5979b3476214253fd773bc0')

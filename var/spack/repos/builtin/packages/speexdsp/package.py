@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Speexdsp(AutotoolsPackage):
@@ -18,6 +18,7 @@ class Speexdsp(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('fftw-api')
 

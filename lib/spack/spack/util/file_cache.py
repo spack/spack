@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import os
 import shutil
 
@@ -81,7 +82,7 @@ class FileCache(object):
             if not os.path.isfile(cache_path):
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
-            if not os.access(cache_path, os.R_OK | os.W_OK):
+            if not os.access(cache_path, os.R_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
@@ -118,6 +119,12 @@ class FileCache(object):
         moves the file into place on top of the old file atomically.
 
         """
+        filename = self.cache_path(key)
+        if os.path.exists(filename) and not os.access(filename, os.W_OK):
+            raise CacheError(
+                "Insufficient permissions to write to file cache at {0}"
+                .format(filename))
+
         # TODO: this nested context manager adds a lot of complexity and
         # TODO: is pretty hard to reason about in llnl.util.lock. At some
         # TODO: point we should just replace it with functions and simplify
@@ -164,13 +171,17 @@ class FileCache(object):
             return sinfo.st_mtime
 
     def remove(self, key):
+        file = self.cache_path(key)
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(self.cache_path(key))
+            os.unlink(file)
+        except OSError as e:
+            # File not found is OK, so remove is idempotent.
+            if e.errno != errno.ENOENT:
+                raise
         finally:
             lock.release_write()
-            lock.cleanup()
 
 
 class CacheError(SpackError):

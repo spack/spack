@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, working_dir
+from llnl.util.filesystem import mkdirp, touch, working_dir
 
 import spack.patch
 import spack.paths
@@ -63,12 +63,13 @@ data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
      platform_url_sha,
      None)
 ])
-def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256):
+def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
     url = 'file://' + filename
-    pkg = spack.repo.get('patch')
+    s = Spec('patch').concretized()
     patch = spack.patch.UrlPatch(
-        pkg, url, sha256=sha256, archive_sha256=archive_sha256)
+        s.package, url, sha256=sha256, archive_sha256=archive_sha256
+    )
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
@@ -210,6 +211,50 @@ def test_patched_dependency(
             # Make sure the Makefile contains the patched text
             with open('Makefile') as mf:
                 assert 'Patched!' in mf.read()
+
+
+def trigger_bad_patch(pkg):
+    if not os.path.isdir(pkg.stage.source_path):
+        os.makedirs(pkg.stage.source_path)
+    bad_file = os.path.join(pkg.stage.source_path, '.spack_patch_failed')
+    touch(bad_file)
+    return bad_file
+
+
+def test_patch_failure_develop_spec_exits_gracefully(
+        mock_packages, config, install_mockery, mock_fetch, tmpdir):
+    """
+    ensure that a failing patch does not trigger exceptions
+    for develop specs
+    """
+
+    spec = Spec('patch-a-dependency '
+                '^libelf dev_path=%s' % str(tmpdir))
+    spec.concretize()
+    libelf = spec['libelf']
+    assert 'patches' in list(libelf.variants.keys())
+    pkg = libelf.package
+    with pkg.stage:
+        bad_patch_indicator = trigger_bad_patch(pkg)
+        assert os.path.isfile(bad_patch_indicator)
+        pkg.do_patch()
+    # success if no exceptions raised
+
+
+def test_patch_failure_restages(
+        mock_packages, config, install_mockery, mock_fetch):
+    """
+    ensure that a failing patch does not trigger exceptions
+    for non-develop specs and the source gets restaged
+    """
+    spec = Spec('patch-a-dependency')
+    spec.concretize()
+    pkg = spec['libelf'].package
+    with pkg.stage:
+        bad_patch_indicator = trigger_bad_patch(pkg)
+        assert os.path.isfile(bad_patch_indicator)
+        pkg.do_patch()
+        assert not os.path.isfile(bad_patch_indicator)
 
 
 def test_multiple_patched_dependencies(mock_packages, config):

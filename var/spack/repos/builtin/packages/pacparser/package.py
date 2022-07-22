@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pacparser(MakefilePackage):
@@ -12,9 +12,10 @@ class Pacparser(MakefilePackage):
     maintainers = ['iarspider']
 
     homepage = "https://pacparser.github.io/"
-    url      = "https://github.com/manugarg/pacparser/releases/download/v1.3.8/pacparser-1.3.8.tar.gz"
+    url      = "https://github.com/manugarg/pacparser/releases/download/v1.4.0/pacparser-v1.4.0.tar.gz"
     git      = "https://github.com/manugarg/pacparser.git"
 
+    version('1.4.0', sha256='2e66c5fe635cd5dcb9bccca4aced925eca712632b81bada3b63682159c0f910e')
     version('1.3.9', commit='4bbfb15c96ea0b2aede2f7371e59f66e15722d41')
     version('1.3.8', sha256='4e2872de565b2b64ffc81ba503e0eba35b3f7ef4a023ddd4a328c7b9d2cac266')
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249',
@@ -29,9 +30,10 @@ class Pacparser(MakefilePackage):
             description='Build and install python bindings')
 
     def build(self, spec, prefix):
-        make('-C', 'src')
+        make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx, '-C', 'src')
         if '+python' in spec:
-            make('-C', 'src', 'pymod')
+            make('CC="%s"' % self.compiler.cc, 'CXX="%s"' % self.compiler.cxx,
+                 '-C', 'src', 'pymod')
 
     def install(self, spec, prefix):
         make('-C', 'src', 'install', 'PREFIX=' + self.prefix)

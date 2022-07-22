@@ -15,7 +15,7 @@ __all__ = ["MockPackageMultiRepo"]
 
 
 class MockPackageBase(object):
-    """Internal base class for mocking ``spack.package.PackageBase``.
+    """Internal base class for mocking ``spack.package_base.PackageBase``.
 
     Use ``MockPackageMultiRepo.add_package()`` to create new instances.
 
@@ -32,7 +32,9 @@ class MockPackageBase(object):
 
         """
         self.spec = None
-        self._installed_upstream = False
+
+    def __call__(self, *args, **kwargs):
+        return self
 
     def provides(self, vname):
         return vname in self.provided

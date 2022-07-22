@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAnnotationdbi(RPackage):
@@ -14,6 +14,7 @@ class RAnnotationdbi(RPackage):
 
     bioc = "AnnotationDbi"
 
+    version('1.58.0', commit='05fcf7a28a6b15b195da23474d7ba89bd0cfd891')
     version('1.56.2', commit='13fdc4a93852199ca6ec120a2fe1078f9f445f67')
     version('1.52.0', commit='c4e0ca9bd65362ae9cad6a98d90f54267b0ae838')
     version('1.46.1', commit='ff260913741d0fcf9487eeb1f44a6c6968ced5b9')

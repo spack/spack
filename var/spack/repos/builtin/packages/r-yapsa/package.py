@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RYapsa(RPackage):
@@ -18,6 +18,7 @@ class RYapsa(RPackage):
 
     bioc = "YAPSA"
 
+    version('1.22.0', commit='55c2886874f154c737264ce6843089bf3565fa57')
     version('1.20.1', commit='6c3f437911859df6f6e4a9af5571c3a5aafbffb2')
     version('1.16.0', commit='f344cdb81bb886c633f9325f811912fb59d58eb1')
     version('1.10.0', commit='06af18e424868eb0f0be6c80e90cbab1eabf3d73')

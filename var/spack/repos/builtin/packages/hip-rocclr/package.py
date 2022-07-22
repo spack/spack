@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class HipRocclr(CMakePackage):
@@ -14,6 +14,7 @@ class HipRocclr(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCclr"
     git      = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
@@ -26,13 +27,15 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+    version('5.1.3', sha256='ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48')
+    version('5.1.0', sha256='f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa')
     version('5.0.2', sha256='34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e')
     version('5.0.0', sha256='6b72faf8819628a5c109b2ade515ab9009606d10f11316f0d7e4c4c998d7f724')
     version('4.5.2', sha256='6581916a3303a31f76454f12f86e020fb5e5c019f3dbb0780436a8f73792c4d1')
     version('4.5.0', sha256='ca8d6305ff0e620d9cb69ff7ac3898917db9e9b6996a7320244b48ab6511dd8e')
-    version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79')
-    version('4.3.0', sha256='8a86b4f2a1b1c7ac628262e5b11b07ff42a224e62e594a4e0683aeb616062538')
-    version('4.2.0', sha256='c57525af32c59becf56fd83cdd61f5320a95024d9baa7fb729a01e7a9fcdfd78')
+    version('4.3.1', sha256='bda52c65f03a69a9d8ab1a118d45646d76843249fb975d67e5141e63fa3acc79', deprecated=True)
+    version('4.3.0', sha256='8a86b4f2a1b1c7ac628262e5b11b07ff42a224e62e594a4e0683aeb616062538', deprecated=True)
+    version('4.2.0', sha256='c57525af32c59becf56fd83cdd61f5320a95024d9baa7fb729a01e7a9fcdfd78', deprecated=True)
     version('4.1.0', sha256='9eb1d88cfc9474979aaf29b99bcf9d3769a0f7f1f8f10660941aabf83d9eeb0c', deprecated=True)
     version('4.0.0', sha256='8db502d0f607834e3b882f939d33e8abe2f9b55ddafaf1b0c2cd29a0425ed76a', deprecated=True)
     version('3.10.0', sha256='d1ac02840c2dcb3d5fa3008fe9e313767ebe6d1dcf978a924341834ec96ebfe2', deprecated=True)
@@ -50,7 +53,7 @@ class HipRocclr(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                'master']:
+                '5.1.0', '5.1.3', 'master']:
         depends_on('hsakmt-roct@' + ver, when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, when='@' + ver)
@@ -69,6 +72,8 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ('5.1.3',  '44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31'),
+        ('5.1.0',  '362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927'),
         ('5.0.2',  '3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95'),
         ('5.0.0',  '2aa3a628b336461f83866c4e76225ef5338359e31f802987699d6308515ae1be'),
         ('4.5.2',  '96b43f314899707810db92149caf518bdb7cf39f7c0ad86e98ad687ffb0d396d'),
@@ -102,12 +107,6 @@ class HipRocclr(CMakePackage):
         when='@master'
     )
 
-    @property
-    def install_targets(self):
-        if self.spec.satisfies('@4.5.0:'):
-            return []
-        return ['install']
-
     @run_after('install')
     def deploy_missing_files(self):
         if '@3.5.0' in self.spec:
@@ -130,3 +129,8 @@ class HipRocclr(CMakePackage):
             '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
         ]
         return args
+
+    def __init__(self, spec):
+        super(HipRocclr, self).__init__(spec)
+        if self.spec.satisfies('@4.5.0:'):
+            self.phases = ['cmake', 'build']

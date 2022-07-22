@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Exago(CMakePackage, CudaPackage, ROCmPackage):
@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago'
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
-    maintainers = ['ashermancinelli', 'CameronRutherford']
+    maintainers = ['ashermancinelli', 'CameronRutherford', 'pelesh']
 
     version('1.4.1', commit='ea607c685444b5f345bfdc9a59c345f0f30adde2', submodules=True, preferred=True)
     version('1.4.0', commit='4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886', submodules=True)
@@ -25,8 +25,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     version('1.0.0', commit='230d7df2')
     version('0.99.2', commit='56961641')
     version('0.99.1', commit='0ae426c7')
-    version('master', branch='master')
+    version('master', branch='master', submodules=True)
     version('develop', branch='develop', submodules=True)
+    version('5-18-2022-snapshot', tag='5-18-2022-snapshot', submodules=True)
 
     # Progrmming model options
     variant('mpi', default=True, description='Enable/Disable MPI')
@@ -41,24 +42,18 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~hiop~ipopt', msg="ExaGO needs at least one solver enabled")
 
     # Dependencides
+    depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('cuda', when='+cuda')
     depends_on('raja', when='+raja')
 
-    depends_on('raja+cuda', when='+raja+cuda')
-    depends_on('raja+rocm', when='+raja+rocm')
     depends_on('raja@0.14.0:', when='@1.1.0: +raja')
     depends_on('umpire', when='+raja')
     depends_on('umpire@6.0.0:', when='@1.1.0: +raja')
 
     # Some allocator code in Umpire only works with static libs
     depends_on('umpire+cuda~shared', when='+raja+cuda')
-
-    # For some versions of RAJA package, camp cuda variant does not get set
-    # correctly, so we must explicitly depend on it even though we don't use
-    # camp
-    depends_on('camp+cuda', when='+raja+cuda')
 
     depends_on('cmake@3.18:', type='build')
 
@@ -68,14 +63,29 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hiop@0.5.1:', when='@1.1.0:+hiop')
     depends_on('hiop@0.5.3:', when='@1.3.0:+hiop')
 
-    depends_on('hiop+cuda', when='+hiop+cuda')
-    depends_on('hiop+rocm', when='+hiop+rocm')
     depends_on('hiop~mpi', when='+hiop~mpi')
     depends_on('hiop+mpi', when='+hiop+mpi')
 
     depends_on('petsc@3.13:3.14', when='@:1.2.99')
-    depends_on('petsc@3.16.0:', when='@1.3.0:')
+    depends_on('petsc@3.16.0:3.16', when='@1.3.0:')
     depends_on('petsc~mpi', when='~mpi')
+
+    depends_on('py-pytest', type=('build', 'run'), when='@1.4.1:')
+
+    for arch in CudaPackage.cuda_arch_values:
+        cuda_dep = "+cuda cuda_arch={0}".format(arch)
+        depends_on("hiop {0}".format(cuda_dep), when=cuda_dep)
+        depends_on("raja {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+
+        # For some versions of RAJA package, camp cuda variant does not get set
+        # correctly, so we must explicitly depend on it even though we don't use
+        # camp
+        depends_on("camp {0}".format(cuda_dep), when="+raja {0}".format(cuda_dep))
+
+    for arch in ROCmPackage.amdgpu_targets:
+        rocm_dep = "+rocm amdgpu_target={0}".format(arch)
+        depends_on("hiop {0}".format(rocm_dep), when=rocm_dep)
+        depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
 
     depends_on('ipopt', when='+ipopt')
 
@@ -121,6 +131,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
         if '+rocm' in spec:
+            args.append(self.define('CMAKE_CXX_COMPILER', spec['hip'].hipcc))
+
             rocm_arch_list = spec.variants['amdgpu_target'].value
             if rocm_arch_list[0] != 'none':
                 args.append(self.define('GPU_TARGETS', rocm_arch_list))

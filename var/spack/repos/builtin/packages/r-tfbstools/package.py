@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTfbstools(RPackage):
@@ -18,6 +18,7 @@ class RTfbstools(RPackage):
 
     bioc = "TFBSTools"
 
+    version('1.34.0', commit='7f8d0cb58a527a5d7ba94a773279f13aedca6ec7')
     version('1.32.0', commit='235505626b910de29156a07e1f990daa3b5d57d9')
     version('1.28.0', commit='15e7cf76f39ee3280a27284d58f7adef1c33f193')
     version('1.22.0', commit='613d3567fd662b65269bd200c5aa5f87ac6a4612')

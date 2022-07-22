@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack.package import *
+
 
 class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
@@ -20,6 +22,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version('main', branch='main')
 
+    version('3.17.3', sha256='5c24ade5e4b32cc04935ba0db1dafe48d633bebaaa30a3033f1e58788d37875f')
+    version('3.17.2', sha256='2313dd1ca41bf0ace68671ea6f8d4abf90011ed899f5e1e08658d3f18478359d')
+    version('3.17.1', sha256='c504609d9f532327c20b6363d6a6c7647ebd3c98acfb382c28fcd3852300ddd1')
     version('3.17.0', sha256='96d5aca684e1ce1425891a620d278773c25611cb144165a93b17531238eaaf8a')
     version('3.16.6', sha256='bfc836b52f57686b583c16ab7fae0c318a7b28141ca01656ad673c8ca23037fa')
     version('3.16.5', sha256='7de8570eeb94062752d82a83208fc2bafc77b3f515023a4c14d8ff9440e66cac')
@@ -439,10 +444,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append('--with-clanguage=C')
 
-        # Activates library support if needed (i.e. direct dependency)
-        jpeg_sp = spec['jpeg'].name if 'jpeg' in spec else 'jpeg'
-        scalapack_sp = spec['scalapack'].name if 'scalapack' in spec else 'scalapack'
-
         # to be used in the list of libraries below
         if '+fortran' in spec:
             hdf5libs = ':hl,fortran'
@@ -453,7 +454,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         # default: 'gmp', => ('gmp', 'gmp', True, True)
         # any other combination needs a full tuple
         # if not (useinc || uselib): usedir - i.e (False, False)
-        direct_dependencies = [x.name for x in spec.dependencies()]
+        direct_dependencies = []
+        for dep in spec.dependencies():
+            direct_dependencies.append(dep.name)
+            direct_dependencies.extend(
+                set(vspec.name for vspec in dep.package.virtuals_provided))
         for library in (
                 ('cuda', 'cuda', False, False),
                 ('hip', 'hip', True, False),
@@ -487,8 +492,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 ('saws', 'saws', False, False),
                 ('libyaml', 'yaml', True, True),
                 'hwloc',
-                (jpeg_sp, 'libjpeg', True, True),
-                (scalapack_sp, 'scalapack', False, True),
+                ('jpeg', 'libjpeg', True, True),
+                ('scalapack', 'scalapack', False, True),
                 'strumpack',
                 'mmg',
                 'parmmg',
@@ -544,7 +549,11 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 options.append('--with-hip-arch={0}'.format(hip_arch[0]))
             hip_pkgs = ['hipsparse', 'hipblas', 'rocsparse', 'rocsolver', 'rocblas']
             hip_ipkgs = hip_pkgs + ['rocthrust', 'rocprim']
-            hip_lpkgs = hip_pkgs + ['rocrand']
+            hip_lpkgs = hip_pkgs
+            if spec.satisfies('^rocrand@5.1:'):
+                hip_ipkgs.extend(['rocrand'])
+            else:
+                hip_lpkgs.extend(['rocrand'])
             hip_inc = ''
             hip_lib = ''
             for pkg in hip_ipkgs:

@@ -49,9 +49,6 @@ else:
     class HTMLParseError(Exception):
         pass
 
-# Timeout in seconds for web requests
-_timeout = 10
-
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -100,6 +97,9 @@ def read_from_url(url, accept_content_type=None):
 
     verify_ssl = spack.config.get('config:verify_ssl')
 
+    # Timeout in seconds for web requests
+    timeout = spack.config.get('config:connect_timeout', 10)
+
     # Don't even bother with a context unless the URL scheme is one that uses
     # SSL certs.
     if uses_ssl(url):
@@ -131,7 +131,7 @@ def read_from_url(url, accept_content_type=None):
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
         req.get_method = lambda: "HEAD"
-        resp = _urlopen(req, timeout=_timeout, context=context)
+        resp = _urlopen(req, timeout=timeout, context=context)
 
         content_type = get_header(resp.headers, 'Content-type')
 
@@ -139,7 +139,7 @@ def read_from_url(url, accept_content_type=None):
     req.get_method = lambda: "GET"
 
     try:
-        response = _urlopen(req, timeout=_timeout, context=context)
+        response = _urlopen(req, timeout=timeout, context=context)
     except URLError as err:
         raise SpackWebError('Download failed: {ERROR}'.format(
             ERROR=str(err)))
@@ -391,7 +391,7 @@ def list_url(url, recursive=False):
                 if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 
@@ -594,7 +594,7 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
-        reference_package (spack.package.Package or None): a spack package
+        reference_package (spack.package_base.Package or None): a spack package
             used as a reference for url detection.  Uses the url_for_version
             method on the package to produce reference urls which, if found,
             are preferred.

@@ -10,6 +10,7 @@ import pytest
 
 import spack.directives
 import spack.paths
+import spack.repo
 import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
@@ -19,9 +20,13 @@ datadir = os.path.join(spack.paths.test_path, "data", "unparse")
 
 def compare_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
+    content1 = content1.replace(
+        spack.repo.path.get_pkg_class(spec1.name).__name__, 'TestPackage'
+    )
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
+    content2 = content2.replace(
+        spack.repo.path.get_pkg_class(spec2.name).__name__, 'TestPackage'
+    )
     if eq:
         assert content1 == content2
     else:
@@ -30,12 +35,14 @@ def compare_sans_name(eq, spec1, spec2):
 
 def compare_hash_sans_name(eq, spec1, spec2):
     content1 = ph.canonical_source(spec1)
-    content1 = content1.replace(spec1.package.__class__.__name__, 'TestPackage')
-    hash1 = spec1.package.content_hash(content=content1)
+    pkg_cls1 = spack.repo.path.get_pkg_class(spec1.name)
+    content1 = content1.replace(pkg_cls1.__name__, 'TestPackage')
+    hash1 = pkg_cls1(spec1).content_hash(content=content1)
 
     content2 = ph.canonical_source(spec2)
-    content2 = content2.replace(spec2.package.__class__.__name__, 'TestPackage')
-    hash2 = spec2.package.content_hash(content=content2)
+    pkg_cls2 = spack.repo.path.get_pkg_class(spec2.name)
+    content2 = content2.replace(pkg_cls2.__name__, 'TestPackage')
+    hash2 = pkg_cls2(spec2).content_hash(content=content2)
 
     if eq:
         assert hash1 == hash2
@@ -93,6 +100,26 @@ def test_all_same_but_install(mock_packages, config):
 def test_content_hash_all_same_but_patch_contents(mock_packages, config):
     spec1 = Spec("hash-test1@1.1").concretized()
     spec2 = Spec("hash-test2@1.1").concretized()
+    compare_hash_sans_name(False, spec1, spec2)
+
+
+def test_content_hash_not_concretized(mock_packages, config):
+    """Check that Package.content_hash() works on abstract specs."""
+    # these are different due to the package hash
+    spec1 = Spec("hash-test1@1.1")
+    spec2 = Spec("hash-test2@1.3")
+    compare_hash_sans_name(False, spec1, spec2)
+
+    # at v1.1 these are actually the same package when @when's are removed
+    # and the name isn't considered
+    spec1 = Spec("hash-test1@1.1")
+    spec2 = Spec("hash-test2@1.1")
+    compare_hash_sans_name(True, spec1, spec2)
+
+    # these end up being different b/c we can't eliminate much of the package.py
+    # without a version.
+    spec1 = Spec("hash-test1")
+    spec2 = Spec("hash-test2")
     compare_hash_sans_name(False, spec1, spec2)
 
 

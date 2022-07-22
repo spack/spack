@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class UtilLinuxUuid(AutotoolsPackage):
@@ -46,4 +46,7 @@ class UtilLinuxUuid(AutotoolsPackage):
             '--enable-libuuid',
             '--disable-bash-completion',
         ]
+        # Fixes #31123.
+        if self.spec.satisfies('%intel'):
+            config_args.append('CFLAGS=-restrict')
         return config_args
