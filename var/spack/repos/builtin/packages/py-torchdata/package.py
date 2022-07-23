@@ -32,8 +32,8 @@ class PyTorchdata(PythonPackage):
     depends_on('py-portalocker@2:', when='@0.4:', type=('build', 'run'))
 
     # third_party/CMakeLists.txt
-    depends_on('py-pybind11')
-    depends_on('aws-sdk-cpp')
+    depends_on('py-pybind11', when='@0.4:')
+    depends_on('aws-sdk-cpp', when='@0.4:')
 
     def setup_build_environment(self, env):
         env.set('USE_SYSTEM_LIBS', 'ON')
