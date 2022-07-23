@@ -49,7 +49,7 @@ class PyPyprecice(PythonPackage):
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-packaging", when="@:2.1", type="build")
-    depends_on("py-pip", when="@:2.1", type="build")
+    depends_on("py-pip@19.0.0:", when="@:2.1", type="build")
 
     @when("@:2.1")
     def patch(self):
