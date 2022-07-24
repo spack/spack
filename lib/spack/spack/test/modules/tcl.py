@@ -361,7 +361,7 @@ class TestTcl(object):
 
         assert 'puts stderr "sentence from package"' in content
 
-        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'  # NOQA: ignore=E501
+        short_description = 'module-whatis "This package updates the context for TCL modulefiles."'
         assert short_description in content
 
     @pytest.mark.regression('4400')

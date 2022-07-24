@@ -221,8 +221,14 @@ class Dealii(CMakePackage, CudaPackage):
     # See https://github.com/symengine/symengine/issues/1516
     # TODO: uncomment when the following is fixed
     # https://github.com/spack/spack/issues/11160
-    # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
-    # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
+    # depends_on(
+    #     "symengine@0.4: build_type=Release",
+    #     when="@9.1:+symengine+trilinos^trilinos~debug"
+    # )
+    # depends_on(
+    #     "symengine@0.4: build_type=Debug",
+    #     when="@9.1:+symengine+trilinos^trilinos+debug"
+    # )
     depends_on('symengine@0.4:', when='@9.1:+symengine')
     depends_on('symengine@0.6:', when='@9.2:+symengine')
     depends_on('tbb',            when='+threads')

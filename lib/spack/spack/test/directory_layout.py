@@ -59,8 +59,10 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
     # Test separation of architecture or namespace
     spec2 = Spec('libelf').concretized()
 
-    arch_scheme = "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"   # NOQA: ignore=E501
-    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
+    arch_scheme = (
+        "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"
+    )
+    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"
     arch_ns_scheme_projections = {'all': arch_scheme,
                                   'python': ns_scheme}
     layout_arch_ns = DirectoryLayout(

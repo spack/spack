@@ -42,7 +42,11 @@ class Tcsh(AutotoolsPackage):
     fedora_patch('8a6066c901fb4fc75013dd488ba958387f00c74d', 'tcsh-6.20.00-009-fix-regexp-for-backlash-quoting-tests.patch', when='@6.20.00',  sha256='d2358c930d5ab89e5965204dded499591b42a22d0a865e2149b8c0f1446fac34')
 
     # Downstream patches
-    fedora_patch('8a6066c901fb4fc75013dd488ba958387f00c74d', 'tcsh-6.20.00-manpage-memoryuse.patch', sha256='3a4e60fe56a450632140c48acbf14d22850c1d72835bf441e3f8514d6c617a9f')  # noqa: E501
+    fedora_patch(
+        '8a6066c901fb4fc75013dd488ba958387f00c74d',
+        'tcsh-6.20.00-manpage-memoryuse.patch',
+        sha256='3a4e60fe56a450632140c48acbf14d22850c1d72835bf441e3f8514d6c617a9f',
+    )
 
     depends_on('ncurses+termlib')
 

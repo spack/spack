@@ -80,14 +80,19 @@ class Bzip2(Package, SourcewarePackage):
             kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
 
             mf = FileFilter('Makefile-libbz2_so')
-            mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'  # noqa
-                      .format(v2, v3),
-                      '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'  # noqa
-                      .format(v1, v2, v3, v3),
-                      **kwargs)
+            mf.filter(
+                '$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'.format(
+                    v2, v3
+                ),
+                (
+                    '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib '
+                    '-current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'
+                ) .format(v1, v2, v3, v3),
+                **kwargs
+            )
 
             mf.filter(
-                '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),  # noqa
+                '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),
                 '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib'
                 .format(v3), **kwargs)
             mf.filter(

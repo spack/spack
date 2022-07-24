@@ -348,8 +348,8 @@ class PackageMeta(
         if 'phases' in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
             # and add them as private attributes
-            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
-            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
+            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]
+            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):
                 attr_dict[phase_name] = InstallPhase(callback_name)
             attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
 
@@ -429,7 +429,7 @@ def on_package_attributes(**attr_dict):
             )
             if has_all_attributes:
                 has_the_right_values = all(
-                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)

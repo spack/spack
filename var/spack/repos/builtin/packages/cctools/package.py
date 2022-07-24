@@ -51,7 +51,7 @@ class Cctools(AutotoolsPackage):
     # This is a belt and suspenders solution to the problem.
     def patch(self):
         before = '#if defined(__linux__) && defined(SYS_memfd_create)'
-        after = '#if defined(__linux__) && defined(SYS_memfd_create) && defined(__NR_memfd_create)'  # noqa: E501
+        after = '#if defined(__linux__) && defined(SYS_memfd_create) && defined(__NR_memfd_create)'
         f = 'dttools/src/memfdexe.c'
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
         filter_file(before, after, f, **kwargs)

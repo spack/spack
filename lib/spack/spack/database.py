@@ -965,7 +965,7 @@ class Database(object):
                         'spec': entry.spec,
                         'directory_layout': layout,
                         'explicit': entry.explicit,
-                        'installation_time': entry.installation_time  # noqa: E501
+                        'installation_time': entry.installation_time
                     }
                     self._add(**kwargs)
                     processed_specs.add(entry.spec)

@@ -10,16 +10,21 @@ import sys
 
 import llnl.util.lock
 
+# import some llnl.util.lock names as though they're part of spack.util.lock
+from llnl.util.lock import LockError  # noqa: F401
+from llnl.util.lock import LockTimeoutError  # noqa: F401
+from llnl.util.lock import LockUpgradeError  # noqa: F401
+from llnl.util.lock import ReadTransaction  # noqa: F401
+from llnl.util.lock import WriteTransaction  # noqa: F401
+
 import spack.config
 import spack.error
 import spack.paths
 
-from llnl.util.lock import *  # noqa
-
 is_windows = sys.platform == 'win32'
 
 
-class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
+class Lock(llnl.util.lock.Lock):
     """Lock that can be disabled.
 
     This overrides the ``_lock()`` and ``_unlock()`` methods from
