@@ -25,7 +25,7 @@ is_windows = sys.platform == 'win32'
 
 def bz2_support():
     try:
-        import bz2 # noqa
+        import bz2 # noqa: F401
         return True
     except ImportError:
         return False
@@ -33,7 +33,7 @@ def bz2_support():
 
 def gzip_support():
     try:
-        import gzip # noqa
+        import gzip # noqa: F401
         return True
     except ImportError:
         return False
@@ -41,7 +41,7 @@ def gzip_support():
 
 def lzma_support():
     try:
-        import lzma  # noqa # novermin
+        import lzma  # noqa: F401 # novm
         return True
     except ImportError:
         return False
@@ -49,7 +49,7 @@ def lzma_support():
 
 def tar_support():
     try:
-        import tarfile # noqa
+        import tarfile # noqa: F401
         return True
     except ImportError:
         return False

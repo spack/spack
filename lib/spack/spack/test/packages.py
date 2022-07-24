@@ -55,13 +55,13 @@ class TestPackage(object):
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa
+        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa: F401
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock  # noqa
-        import spack.pkg.builtin.mock as m  # noqa
-        import spack.pkg.builtin.mock.mpich as mp  # noqa
-        from spack.pkg.builtin import mock  # noqa
+        import spack.pkg.builtin.mock  # noqa: F401
+        import spack.pkg.builtin.mock as m  # noqa: F401
+        import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
+        from spack.pkg.builtin import mock  # noqa: F401
 
     def test_inheritance_of_diretives(self):
         pkg_cls = spack.repo.path.get_pkg_class('simple-inheritance')
@@ -99,21 +99,21 @@ class TestPackage(object):
         assert deps == set(['extension1'])
 
     def test_import_class_from_package(self):
-        from spack.pkg.builtin.mock.mpich import Mpich  # noqa
+        from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich  # noqa
+        from spack.pkg.builtin.mock import mpich  # noqa: F401
 
     def test_import_namespace_container_modules(self):
-        import spack.pkg  # noqa
-        import spack.pkg as p  # noqa
-        import spack.pkg.builtin  # noqa
-        import spack.pkg.builtin as b  # noqa
-        import spack.pkg.builtin.mock  # noqa
-        import spack.pkg.builtin.mock as m  # noqa
-        from spack import pkg  # noqa
-        from spack.pkg import builtin  # noqa
-        from spack.pkg.builtin import mock  # noqa
+        import spack.pkg  # noqa: F401
+        import spack.pkg as p  # noqa: F401
+        import spack.pkg.builtin  # noqa: F401
+        import spack.pkg.builtin as b  # noqa: F401
+        import spack.pkg.builtin.mock  # noqa: F401
+        import spack.pkg.builtin.mock as m  # noqa: F401
+        from spack import pkg  # noqa: F401
+        from spack.pkg import builtin  # noqa: F401
+        from spack.pkg.builtin import mock  # noqa: F401
 
 
 @pytest.mark.regression('2737')

@@ -32,7 +32,7 @@ class Yambo(AutotoolsPackage):
 
     variant(
         'io', values=any_combination_of('iotk', 'etsf-io'),
-        description='Activate support for different io formats (requires network access)',  # noqa
+        description='Activate support for different io formats (requires network access)',
     )
 
     # MPI + OpenMP parallelism
@@ -76,10 +76,10 @@ class Yambo(AutotoolsPackage):
         filter_file('config/report', report_abspath, 'configure')
 
     def enable_or_disable_time(self, activated):
-        return '--enable-time-profile' if activated else '--disable-time-profile'  # noqa: E501
+        return '--enable-time-profile' if activated else '--disable-time-profile'
 
     def enable_or_disable_memory(self, activated):
-        return '--enable-memory-profile' if activated else '--disable-memory-profile'  # noqa: E501
+        return '--enable-memory-profile' if activated else '--disable-memory-profile'
 
     def enable_or_disable_openmp(self, activated):
         return '--enable-open-mp' if activated else '--disable-open-mp'

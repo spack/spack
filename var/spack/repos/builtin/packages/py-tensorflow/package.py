@@ -638,7 +638,7 @@ def protobuf_deps():
             filter_file(
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
-                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
+                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',
                 file_to_patch,
                 string=True)
 

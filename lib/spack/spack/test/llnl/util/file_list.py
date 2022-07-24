@@ -61,14 +61,26 @@ class TestLibraryList(object):
     def test_joined_and_str(self, library_list):
 
         s1 = library_list.joined()
-        expected = '/dir1/liblapack.a /dir2/libpython3.6.dylib /dir1/libblas.a /dir3/libz.so libmpi.so.20.10.1'  # noqa: E501
+        expected = " ".join([
+            "/dir1/liblapack.a",
+            "/dir2/libpython3.6.dylib",
+            "/dir1/libblas.a",
+            "/dir3/libz.so",
+            "libmpi.so.20.10.1",
+        ])
         assert s1 == expected
 
         s2 = str(library_list)
         assert s1 == s2
 
         s3 = library_list.joined(';')
-        expected = '/dir1/liblapack.a;/dir2/libpython3.6.dylib;/dir1/libblas.a;/dir3/libz.so;libmpi.so.20.10.1'  # noqa: E501
+        expected = ";".join([
+            "/dir1/liblapack.a",
+            "/dir2/libpython3.6.dylib",
+            "/dir1/libblas.a",
+            "/dir3/libz.so",
+            "libmpi.so.20.10.1",
+        ])
         assert s3 == expected
 
     def test_flags(self, library_list):
@@ -135,14 +147,26 @@ class TestHeaderList(object):
 
     def test_joined_and_str(self, header_list):
         s1 = header_list.joined()
-        expected = '/dir1/Python.h /dir2/date.time.h /dir1/pyconfig.hpp /dir3/core.hh pymem.cuh'  # noqa: E501
+        expected = " ".join([
+            "/dir1/Python.h",
+            "/dir2/date.time.h",
+            "/dir1/pyconfig.hpp",
+            "/dir3/core.hh",
+            "pymem.cuh",
+        ])
         assert s1 == expected
 
         s2 = str(header_list)
         assert s1 == s2
 
         s3 = header_list.joined(';')
-        expected = '/dir1/Python.h;/dir2/date.time.h;/dir1/pyconfig.hpp;/dir3/core.hh;pymem.cuh'  # noqa: E501
+        expected = ";".join([
+            "/dir1/Python.h",
+            "/dir2/date.time.h",
+            "/dir1/pyconfig.hpp",
+            "/dir3/core.hh",
+            "pymem.cuh",
+        ])
         assert s3 == expected
 
     def test_flags(self, header_list):
