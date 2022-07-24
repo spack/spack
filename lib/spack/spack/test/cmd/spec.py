@@ -101,7 +101,10 @@ def test_spec_parse_unquoted_flags_report():
     with pytest.raises(spack.error.SpackError) as cm:
         spec('gcc cflags=-Os -pipe')
     cm = str(cm.value)
-    assert cm.startswith('trying to set variant "pipe" in package "gcc", but the package has no such variant [happened during concretization of gcc cflags="-Os" ~pipe]')  # noqa: E501
+    assert cm.startswith(
+        'trying to set variant "pipe" in package "gcc", but the package has no such '
+        'variant [happened during concretization of gcc cflags="-Os" ~pipe]'
+    )
     assert cm.endswith('(1) cflags=-Os -pipe => cflags="-Os -pipe"')
 
 

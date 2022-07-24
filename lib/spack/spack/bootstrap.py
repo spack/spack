@@ -545,7 +545,10 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
             if b.try_import(module, abstract_spec):
                 return
 
-    assert h, 'expected at least one exception to have been raised at this point: while bootstrapping {0}'.format(module)  # noqa: E501
+    assert h, (
+        "expected at least one exception to have been raised at this point: "
+        "while bootstrapping {0}".format(module)
+    )
     msg = 'cannot bootstrap the "{0}" Python module '.format(module)
     if abstract_spec:
         msg += 'from spec "{0}" '.format(abstract_spec)
@@ -599,7 +602,10 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
                 cmd.add_default_envmod(env_mods)
                 return cmd
 
-    assert h, 'expected at least one exception to have been raised at this point: while bootstrapping {0}'.format(executables_str)  # noqa: E501
+    assert h, (
+        "expected at least one exception to have been raised at this point: "
+        "while bootstrapping {0}".format(executables_str)
+    )
     msg = 'cannot bootstrap any of the {0} executables '.format(executables_str)
     if abstract_spec:
         msg += 'from spec "{0}" '.format(abstract_spec)

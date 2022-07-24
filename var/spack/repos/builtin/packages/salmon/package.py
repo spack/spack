@@ -23,8 +23,18 @@ class Salmon(CMakePackage):
             values=('DEBUG', 'RELEASE'))
 
     depends_on('tbb')
-    depends_on('boost@1.66.0:+program_options+exception+filesystem+system+chrono+serialization+random+graph+timer+iostreams+math+thread+container', when='@:0.14.1')
-    depends_on('boost@1.72.0:+program_options+exception+filesystem+system+chrono+serialization+random+graph+timer+iostreams+math+thread+container', when='@1.4.0:')
+    depends_on(
+        'boost@1.66.0:'
+        '+program_options+exception+filesystem+system+chrono+serialization'
+        '+random+graph+timer+iostreams+math+thread+container',
+        when='@:0.14.1',
+    )
+    depends_on(
+        'boost@1.72.0:'
+        '+program_options+exception+filesystem+system+chrono+serialization'
+        '+random+graph+timer+iostreams+math+thread+container',
+        when='@1.4.0:',
+    )
     depends_on('cereal')
     depends_on('jemalloc')
     depends_on('xz')

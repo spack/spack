@@ -56,7 +56,13 @@ class Xyce(CMakePackage):
     depends_on('py-pip', type='run', when='+pymi')
     depends_on('py-pybind11@2.6.1:', type=('build', 'link'), when='+pymi')
 
-    depends_on('trilinos +amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext+explicit_template_instantiation+fortran+ifpack+isorropia+kokkos+nox+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf+epetraextexperimental+epetraextgraphreorderings')
+    depends_on(
+        'trilinos'
+        '+amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext'
+        '+explicit_template_instantiation+fortran+ifpack+isorropia+kokkos+nox'
+        '+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf'
+        '+epetraextexperimental+epetraextgraphreorderings'
+    )
     # tested versions of Trilinos for everything up to 7.4.0
     depends_on('trilinos@12.12.1:13.2.0', when='@:7.4.0')
     depends_on('trilinos gotype=all cxxstd=11', when='^trilinos@:12.15')

@@ -22,10 +22,26 @@ class Flexi(CMakePackage):
     variant('2d', default=False, description='If set to True the code will run in two-dimensional mode')
     variant('eqnsysname', default='navierstokes', values=('navierstokes', 'linearscalaradvection', 'rans_sa'), multi=False, description='Defines the equation system')
     variant('fv', default=False, description='Enables the usage of the finite volume subcell shock capturing mechanism')
-    variant('lifting', default='br1', values=('br1', 'br2'), multi=False, description='Two different lifting methods for the parabolic part of the equation system available')
+    variant(
+        'lifting',
+        default='br1',
+        values=('br1', 'br2'),
+        multi=False,
+        description=(
+            'Two different lifting methods for the parabolic part of '
+            'the equation system available'
+        )
+    )
     variant('nodetype', default='GAUSS', values=('GAUSS', 'GAUSS-LOBATTO'), multi=False, description='Space discretization basis function')
     variant('split', default=False, description='Split form of the discontinuous Galerkin operator')
-    variant('parabolic', default=True, description=' Defines, whether the parabolic part of the chosen system should be included or not')
+    variant(
+        'parabolic',
+        default=True,
+        description=(
+            'Defines whether the parabolic part of the chosen system '
+            'should be included or not'
+        )
+    )
     variant('testcase', default='default', values=('default', 'taylorgreenvortex', 'phill', 'channel', 'riemann2d'), multi=False, description='Defines the used test case')
     variant('viscosity', default='constant', values=('constant', 'sutherland', 'powerlaw'), multi=False, description='Defines modeling approach for viscosity')
     variant('eddy_viscosity', default=False, description='Enable eddy viscosity')

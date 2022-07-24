@@ -118,7 +118,12 @@ class Bazel(Package):
     version('0.1.4',  sha256='f3c395f5cd78cfef96f4008fe842f327bc8b03b77f46999387bc0ad223b5d970')
     version('0.1.1',  sha256='c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20')
 
-    variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
+    variant(
+        'nodepfail',
+        default=True,
+        description='Disable failing dependency checks due to injected absolute paths - '
+        'required for most builds using bazel with spack'
+    )
 
     depends_on('java', type=('build', 'run'))
     depends_on('java@11', when='@5.3:', type=('build', 'run'))

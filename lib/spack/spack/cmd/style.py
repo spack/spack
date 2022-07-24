@@ -384,7 +384,7 @@ def run_black(black_cmd, file_list, args):
         output = "\n".join(
             line
             for line in output.split("\n")
-            if not "DEPRECATION: Python 2 support will be removed" in line
+            if "DEPRECATION: Python 2 support will be removed" not in line
         )
 
         rewrite_and_print_output(output, args, pat, replacement)

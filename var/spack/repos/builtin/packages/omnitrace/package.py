@@ -27,8 +27,22 @@ class Omnitrace(CMakePackage):
     variant('tau', default=False, description='Enable support for using TAU markers in omnitrace instrumentation')
     variant('caliper', default=False, description='Enable support for using Caliper markers in omnitrace instrumentation')
     variant('perfetto_tools', default=False, description='Install perfetto tools (e.g. traced, perfetto)')
-    variant('mpi', default=False, description='Enable intercepting MPI functions and aggregating output during finalization (requires target application to use same MPI installation)')
-    variant('mpi_headers', default=True, description='Enable intercepting MPI functions but w/o support for aggregating output (target application can use any MPI installation)')
+    variant(
+        'mpi',
+        default=False,
+        description=(
+            'Enable intercepting MPI functions and aggregating output during finalization '
+            '(requires target application to use same MPI installation)'
+        )
+    )
+    variant(
+        'mpi_headers',
+        default=True,
+        description=(
+            'Enable intercepting MPI functions but w/o support for aggregating output '
+            '(target application can use any MPI installation)'
+        )
+    )
 
     extends('python', when='+python')
 

@@ -27,7 +27,11 @@ class Nektar(CMakePackage):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost@1.56.0: +iostreams+exception+filesystem+system+chrono+serialization+atomic+regex+math+thread+container')
+    depends_on(
+        'boost@1.56.0:'
+        '+iostreams+exception+filesystem+system+chrono+serialization'
+        '+atomic+regex+math+thread+container'
+    )
     depends_on('tinyxml', when='platform=darwin')
 
     depends_on('mpi', when='+mpi')

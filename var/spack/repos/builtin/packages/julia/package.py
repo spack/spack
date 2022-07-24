@@ -52,7 +52,11 @@ class Julia(MakefilePackage):
     # Note, we just use link_llvm_dylib so that we not only get a libLLVM,
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
-    depends_on('llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib ~internal_unwind')
+    depends_on(
+        "llvm"
+        " targets=amdgpu,bpf,nvptx,webassembly"
+        " version_suffix=jl +link_llvm_dylib ~internal_unwind"
+    )
     depends_on('libuv', when='@:1.7')
     depends_on('libuv-julia', when='@1.8:')
 

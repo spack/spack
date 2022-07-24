@@ -21,7 +21,14 @@ class R3d(CMakePackage):
     version('2018-12-19', commit='47308f68c782ed3227d3dab1eff24d41f6421f21', deprecated=True)
     version('2018-01-07', commit='d6799a582256a120ef3bd7e18959e96cba0e5495', deprecated=True)
 
-    variant("r3d_max_verts", default='0', description="Maximum number of vertices allowed in a polyhedron (versions 2021-03-10 or later)")
+    variant(
+        "r3d_max_verts",
+        default='0',
+        description=(
+            "Maximum number of vertices allowed in a polyhedron "
+            "(versions 2021-03-10 or later)"
+        )
+    )
 
     # Bypass CMake for older builds
     variant("test",  default=False, description="Build R3D regression tests (versions 2019-04-24 or earlier)")
