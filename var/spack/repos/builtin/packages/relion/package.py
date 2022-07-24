@@ -50,7 +50,14 @@ class Relion(CMakePackage, CudaPackage):
     # these new values were added in relion 3
     # do not seem to cause problems with < 3
     variant('mklfft', default=True, description='Use MKL rather than FFTW for FFT')
-    variant('allow_ctf_in_sagd', default=True, description='Allow CTF-modulation in SAGD, as specified in Claim 1 of patent US10,282,513B2')
+    variant(
+        'allow_ctf_in_sagd',
+        default=True,
+        description=(
+            'Allow CTF-modulation in SAGD, '
+            'as specified in Claim 1 of patent US10,282,513B2'
+        )
+    )
     variant('altcpu', default=False, description='Use CPU acceleration', when='~cuda')
 
     variant('external_motioncor2',

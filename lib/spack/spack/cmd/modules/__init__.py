@@ -377,9 +377,15 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
             spec_fmt += '{compiler_flags}{variants}{arch=architecture}'
             msg += '\t' + s.cformat(spec_fmt) + '\n'
         tty.error(msg.format(query=args.constraint))
-        tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
+        tty.die(
+            "In this context exactly **one** match is needed: "
+            "please specify your constraints better."
+        )
 
     except NoSpecMatches:
         msg = "the constraint '{query}' matches no package."
         tty.error(msg.format(query=args.constraint))
-        tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
+        tty.die(
+            "In this context exactly **one** match is needed: "
+            "please specify your constraints better."
+        )

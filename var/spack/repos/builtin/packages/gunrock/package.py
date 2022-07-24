@@ -32,7 +32,14 @@ class Gunrock(CMakePackage, CudaPackage):
     variant('lib',                  default=True,  description='Build main gunrock library')
     variant('shared_libs',          default=True,  description='Turn off to build for static libraries')
     variant('tests',                default=True,  description='Build functional tests / examples')
-    variant('mgpu_tests',           default=False, description='Builds Gunrock applications and enables the ctest framework for single GPU implementations')
+    variant(
+        'mgpu_tests',
+        default=False,
+        description=(
+            'Builds Gunrock applications and enables the ctest framework '
+            'for single GPU implementations'
+        )
+    )
     variant('cuda_verbose_ptxas',   default=False, description='Enable verbose output from the PTXAS assembler')
     variant('google_tests',         default=False, description='Build unit tests using googletest')
     variant('code_coverage',        default=False, description="run code coverage on Gunrock's source code")

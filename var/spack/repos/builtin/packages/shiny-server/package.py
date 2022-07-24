@@ -45,7 +45,11 @@ class ShinyServer(CMakePackage):
         bash = which('bash')
         mkdirp('build')
         bash('-c', 'bin/npm --python="$PYTHON" install')
-        bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
+        bash(
+            '-c',
+            'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js '
+            '--python="$PYTHON" rebuild'
+        )
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', join_path(self.prefix, 'shiny-server', 'bin'))

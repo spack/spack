@@ -148,7 +148,11 @@ class Scotch(CMakePackage):
                     ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
-                    'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
+                    (
+                        'ARFLAGS = -dynamiclib $(LDFLAGS) '
+                        '-Wl,-install_name -Wl,%s/$(notdir $@) '
+                        '-undefined dynamic_lookup -o '
+                    ) % prefix.lib,
                 ])
             else:
                 makefile_inc.extend([

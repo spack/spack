@@ -32,4 +32,8 @@ class Strelka(CMakePackage):
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('cmake@2.8.5:', type='build')
-    depends_on('boost@1.56.0: +program_options+exception+filesystem+system+chrono+serialization+timer+container+test+math')
+    depends_on(
+        'boost@1.56.0:'
+        '+program_options+exception+filesystem+system+chrono+serialization+timer'
+        '+container+test+math'
+    )
