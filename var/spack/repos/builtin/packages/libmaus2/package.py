@@ -20,7 +20,13 @@ class Libmaus2(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    conflicts('%gcc@:7.9', msg="libmaus2 uses std::filesystem. std::filesystem requires greater than or equal to GCC 8.")
+    conflicts(
+        '%gcc@:7.9',
+        msg=(
+            "libmaus2 uses std::filesystem. "
+            "std::filesystem requires greater than or equal to GCC 8."
+        )
+    )
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%gcc@8.0:8.9') or self.spec.satisfies('%fj'):

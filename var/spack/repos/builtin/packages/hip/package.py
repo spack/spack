@@ -130,8 +130,16 @@ class Hip(CMakePackage):
     # uses the ROCM_PATH variable again; just to be sure we set it to an empty
     # string.
     patch('0001-Make-it-possible-to-specify-the-package-folder-of-ro.patch', when='@3.5.0:4.5.3')
-    patch('0010-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.5.0.0.patch', when='@5.0.0')
-    patch('0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.5.0.2.patch', when='@5.0.2:')
+    patch(
+        '0010-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host'
+        '.5.0.0.patch',
+        when='@5.0.0'
+    )
+    patch(
+        '0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host'
+        '.5.0.2.patch',
+        when='@5.0.2:'
+    )
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@:3.9.0')
@@ -140,8 +148,16 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
     patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
-    patch('0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host.4.2.0.patch', when='@4.2.0:4.3.2')
-    patch('0009-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host_disabletests.4.5.0.patch', when='@4.5.0:4.5.3')
+    patch(
+        '0003-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host'
+        '.4.2.0.patch',
+        when='@4.2.0:4.3.2'
+    )
+    patch(
+        '0009-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host'
+        '_disabletests.4.5.0.patch',
+        when='@4.5.0:4.5.3'
+    )
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.1.0')

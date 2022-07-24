@@ -29,11 +29,21 @@ class Damaris(CMakePackage):
     variant('visit',    default=False, description='Enables the VisIt visualization plugin')
     variant('examples', default=False, description='Enables compilation and installation of the examples code')
     variant('docs',     default=False, description='Enables the building of dOxygen documentation')
-    variant('python',   default=False, description='Enables building of Python enabled Damaris library - boost::python boost::numpy needed')
+    variant(
+        'python',
+        default=False,
+        description='Enables building of Python enabled Damaris library - '
+        'boost::python boost::numpy needed'
+    )
 
     depends_on('mpi')
     depends_on('cmake@3.18.0:', type=('build'))
-    depends_on('boost +exception+locale+system+serialization+chrono+atomic+container+regex+thread+log+filesystem+date_time @1.67:')
+    depends_on(
+        'boost'
+        '+exception+locale+system+serialization+chrono+atomic'
+        '+container+regex+thread+log+filesystem+date_time'
+        '@1.67:'
+    )
     depends_on('xsd')
     depends_on('xerces-c')
     depends_on('hdf5@1.8.20:', when='+hdf5')

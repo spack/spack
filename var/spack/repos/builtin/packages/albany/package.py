@@ -54,7 +54,12 @@ class Albany(CMakePackage):
 
     # Add dependencies
     depends_on('mpi')
-    depends_on('trilinos~superlu-dist+isorropia+tempus+rythmos+teko+intrepid+intrepid2+minitensor+phalanx+nox+piro+rol+shards+stk+superlu@master')
+    depends_on(
+        'trilinos'
+        '~superlu-dist+isorropia+tempus+rythmos+teko+intrepid+intrepid2'
+        '+minitensor+phalanx+nox+piro+rol+shards+stk+superlu'
+        '@master'
+    )
 
     def cmake_args(self):
         spec = self.spec

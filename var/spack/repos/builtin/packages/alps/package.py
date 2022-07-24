@@ -5,6 +5,10 @@
 
 from spack.package import *
 
+# Refs for building from source and recipes
+# https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
+# https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
+# https://github.com/conda-forge/alps-feedstock/tree/master/recipe
 
 class Alps(CMakePackage):
     """Algorithms for Physics Simulations
@@ -17,13 +21,12 @@ class Alps(CMakePackage):
 
     version('2.3.0', sha256='e64208d1e5acdd6f569277413c4867e1fa366cf4a224570eacbf1e9939fca2d2')
 
-    # Refs for building from source and recipes
-    # https://alps.comp-phys.org/mediawiki/index.php/Building_ALPS_from_source
-    # https://github.com/easybuilders/easybuild-easyconfigs/tree/master/easybuild/easyconfigs/a/ALPS
-    # https://github.com/conda-forge/alps-feedstock/tree/master/recipe
-
     # Package failed to build with boost version >= 1.64
-    depends_on('boost@:1.63.0 +chrono +date_time +filesystem +iostreams +mpi +numpy +program_options +python +regex +serialization +system +test +thread +timer')
+    depends_on(
+        'boost@:1.63.0'
+        '+chrono +date_time +filesystem +iostreams +mpi +numpy +program_options'
+        '+python +regex +serialization +system +test +thread +timer'
+    )
     depends_on('fftw')
     depends_on('hdf5 ~mpi+hl')
     depends_on('lapack')
