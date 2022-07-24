@@ -304,5 +304,5 @@ class PathContext(tengine.Context):
 
 # Import after function definition all the modules in this package,
 # so that registration of writers will happen automatically
-import spack.container.writers.singularity  # noqa
-import spack.container.writers.docker  # noqa
+import spack.container.writers.singularity  # noqa: E402
+import spack.container.writers.docker  # noqa: E402

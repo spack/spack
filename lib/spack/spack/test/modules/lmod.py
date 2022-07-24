@@ -123,7 +123,7 @@ class TestLmod(object):
         content = modulefile_content('mpileaks platform=test target=x86_64')
 
         assert len(
-            [x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]  # NOQA: ignore=E501
+            [x for x in content if x.startswith('prepend_path("CMAKE_PREFIX_PATH"')]
         ) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 1
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
@@ -133,7 +133,7 @@ class TestLmod(object):
         )
 
         assert len(
-            [x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]  # NOQA: ignore=E501
+            [x for x in content if x.startswith('prepend-path("CMAKE_PREFIX_PATH"')]
         ) == 0
         assert len([x for x in content if 'setenv("FOO", "foo")' in x]) == 0
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 0

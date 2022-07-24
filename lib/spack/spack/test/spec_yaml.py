@@ -290,7 +290,7 @@ def test_hashes_use_no_python_dicts(module):
         def __init__(self):
             self.nodes = []
 
-        def visit_FunctionDef(self, node):  # noqa
+        def visit_FunctionDef(self, node):
             if node.name in ("to_node_dict", "to_dict", "to_dict_or_value"):
                 self.nodes.append(node)
 
@@ -306,10 +306,10 @@ def test_hashes_use_no_python_dicts(module):
                 % (self.filename, node.lineno, node.col_offset)
             )
 
-        def visit_Dict(self, node):  # noqa
+        def visit_Dict(self, node):
             self.add_error(node)
 
-        def visit_Call(self, node):  # noqa
+        def visit_Call(self, node):
             name = None
             if isinstance(node.func, ast.Name):
                 name = node.func.id

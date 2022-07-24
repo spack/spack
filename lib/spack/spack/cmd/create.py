@@ -503,7 +503,7 @@ class OctavePackageTemplate(PackageTemplate):
         # octave-octave-splines
         if not name.startswith('octave-'):
             # Make it more obvious that we are renaming the package
-            tty.msg("Changing package name from {0} to octave-{0}".format(name))  # noqa
+            tty.msg("Changing package name from {0} to octave-{0}".format(name))
             name = 'octave-{0}'.format(name)
 
         super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)

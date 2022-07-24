@@ -50,7 +50,7 @@ class Gnuplot(AutotoolsPackage):
     variant('libcerf', default=True,
             description='Build with libcerf support')
     variant('pbm',     default=False,
-            description='Enable PBM (Portable Bit Map) and other older bitmap terminals')  # NOQA: ignore=E501
+            description='Enable PBM (Portable Bit Map) and other older bitmap terminals')
     variant('qt',      default=False,
             description='Build with QT')
 

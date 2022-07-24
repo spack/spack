@@ -35,7 +35,9 @@ class Grackle(Package):
     def install(self, spec, prefix):
         template_name = '{0.architecture}-{0.compiler.name}'
         grackle_architecture = template_name.format(spec)
-        link_variables = 'MACH_AR = ar' if spec.version < Version(2.2) else 'MACH_LIBTOOL = libtool'  # NOQA: ignore=E501
+        link_variables = (
+            'MACH_AR = ar' if spec.version < Version(2.2) else 'MACH_LIBTOOL = libtool'
+        )
         substitutions = {
             '@ARCHITECTURE': grackle_architecture,
             '@CC': spec['mpi'].mpicc,

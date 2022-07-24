@@ -8,7 +8,7 @@ import sys
 
 def getpywin():
     try:
-        import win32con  # noqa
+        import win32con  # noqa: F401
     except ImportError:
         subprocess.check_call(
             [sys.executable, "-m", "pip", "-q", "install", "--upgrade", "pip"])

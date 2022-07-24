@@ -76,9 +76,13 @@ class Esmf(MakefilePackage):
 
     def url_for_version(self, version):
         if version < Version('8.0.0'):
-            return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
+            return "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_{0}/esmf_{0}_src.tar.gz".format(
+                version.underscored
+            )
         else:
-            return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(version.underscored)
+            return "https://github.com/esmf-org/esmf/archive/ESMF_{0}.tar.gz".format(
+                version.underscored
+            )
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
@@ -217,7 +221,7 @@ class Esmf(MakefilePackage):
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
-            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
+            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags
         else:
             os.environ['ESMF_LAPACK'] = 'internal'
 

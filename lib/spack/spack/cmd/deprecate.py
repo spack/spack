@@ -60,11 +60,11 @@ def setup_parser(sp):
                          help='Concretize and install deprecator spec')
     install.add_argument('-I', '--no-install-deprecator',
                          action='store_false', default=False, dest='install',
-                         help='Deprecator spec must already be installed (default)')  # noqa 501
+                         help='Deprecator spec must already be installed (default)')
 
     sp.add_argument('-l', '--link-type', type=str,
                     default='soft', choices=['soft', 'hard'],
-                    help="Type of filesystem link to use for deprecation (default soft)")  # noqa 501
+                    help="Type of filesystem link to use for deprecation (default soft)")
 
     sp.add_argument('specs', nargs=argparse.REMAINDER,
                     help="spec to deprecate and spec to use as deprecator")

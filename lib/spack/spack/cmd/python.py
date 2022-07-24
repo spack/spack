@@ -93,7 +93,7 @@ def ipython_interpreter(args):
                   % (spack.spack_version, platform.python_version(),
                      platform.system(), platform.machine()))
 
-        __name__ = "__main__"  # noqa
+        __name__ = "__main__"  # noqa: F841
         IPython.embed(module="__main__", header=header)
 
 

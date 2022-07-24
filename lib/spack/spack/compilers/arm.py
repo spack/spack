@@ -32,7 +32,7 @@ class Arm(spack.compiler.Compiler):
     # arm compilers. Output looks like this:
     #
     # $ arm<c/f>lang --version
-    # Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2) # NOQA
+    # Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)
     # Target: aarch64--linux-gnu
     # Thread model: posix
     # InstalledDir:

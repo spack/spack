@@ -160,7 +160,7 @@ def spec_externals(spec):
     one for each known external installation.
     """
     # break circular import.
-    from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules  # noqa: F401
 
     def _package(maybe_abstract_spec):
         pkg_cls = spack.repo.path.get_pkg_class(spec.name)

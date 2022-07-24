@@ -138,7 +138,7 @@ class ArpackNg(Package):
             make('test')
         make('install')
 
-    @when('@3.3.0')  # noqa
+    @when('@3.3.0')
     def install(self, spec, prefix):
         # Apparently autotools are not bootstrapped
         which('libtoolize')()

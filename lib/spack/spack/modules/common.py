@@ -784,7 +784,7 @@ class BaseContext(tengine.Context):
 
         for x in env:
             # Ensure all the tokens are valid in this context
-            msg = 'some tokens cannot be expanded in an environment variable name'  # noqa: E501
+            msg = 'some tokens cannot be expanded in an environment variable name'
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
             x.name = spec.format(x.name, transform=transform)

@@ -28,17 +28,17 @@ from spack.operating_systems.cray_frontend import CrayFrontend
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
-    ('Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)\n' # NOQA
+    ('Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2)\n'
      'Target: aarch64--linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir:\n'
-     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
+     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n',
      '19.0.0.73'),
-    ('Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n' # NOQA
+    ('Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n'
      'Target: aarch64--linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir:\n'
-     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
+     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n',
      '19.3.1.75')
 ])
 def test_arm_version_detection(version_str, expected_version):
@@ -62,7 +62,9 @@ def test_cce_version_detection(version_str, expected_version):
     ('Apple clang version 11.0.0 (clang-1100.0.33.8)\n'
      'Target: x86_64-apple-darwin18.7.0\n'
      'Thread model: posix\n'
-     'InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n',  # noqa
+     'InstalledDir: '
+     '/Applications/Xcode.app/Contents/Developer/Toolchains/'
+     'XcodeDefault.xctoolchain/usr/bin\n',
      '11.0.0'),
     ('Apple LLVM version 7.0.2 (clang-700.1.81)\n'
      'Target: x86_64-apple-darwin15.2.0\n'
@@ -79,7 +81,7 @@ def test_apple_clang_version_detection(
 @pytest.mark.regression('10191')
 @pytest.mark.parametrize('version_str,expected_version', [
     # LLVM Clang
-    ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'  # noqa
+    ('clang version 6.0.1-svn334776-1~exp1~20181018152737.116 (branches/release_60)\n'
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir: /usr/bin\n', '6.0.1'),
@@ -90,7 +92,7 @@ def test_apple_clang_version_detection(
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir: /usr/bin\n', '8.0.0'),
-    ('clang version 9.0.1-+201911131414230800840845a1eea-1~exp1~20191113231141.78\n' # noqa
+    ('clang version 9.0.1-+201911131414230800840845a1eea-1~exp1~20191113231141.78\n'
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir: /usr/bin\n', '9.0.1'),

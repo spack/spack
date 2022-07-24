@@ -55,7 +55,7 @@ class OfPrecice(Package):
         with open(config, 'w') as out:
             out.write(
                 """# Local tweaks for building
-CPLUS_INCLUDE_PATH="{precice_dir}/include/precice${{CPLUS_INCLUDE_PATH:+:}}$CPLUS_INCLUDE_PATH"  ## noqa: E501
+CPLUS_INCLUDE_PATH="{precice_dir}/include/precice${{CPLUS_INCLUDE_PATH:+:}}$CPLUS_INCLUDE_PATH"
 export CPLUS_INCLUDE_PATH
 # Local build (for user appbin, libbin)
 . ./change-userdir.sh $PWD/{user_dir}

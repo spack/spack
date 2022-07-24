@@ -270,7 +270,7 @@ def test_gather_s3_information(monkeypatch, capfd):
                             "access_pair": ("SPA", "CK"),
                             "endpoint_url": "https://127.0.0.1:8888"}
 
-    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mock_connection_data)  # noqa: E501
+    session_args, client_args = spack.util.s3.get_mirror_s3_connection_info(mock_connection_data)
 
     # Session args are used to create the S3 Session object
     assert "aws_session_token" in session_args

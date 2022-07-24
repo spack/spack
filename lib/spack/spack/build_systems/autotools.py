@@ -577,7 +577,7 @@ To resolve this problem, please try the following:
                         line = '--{0}-{1}'.format(
                             activation_word, option_value
                         )
-                        if activation_value is not None and activation_value(option_value):  # NOQA=ignore=E501
+                        if activation_value is not None and activation_value(option_value):
                             line += '={0}'.format(
                                 activation_value(option_value)
                             )
