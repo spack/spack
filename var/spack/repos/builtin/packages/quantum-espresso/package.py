@@ -95,16 +95,16 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         # cuda version >= 10.1
         conflicts("cuda@:10.0.130")
         # bugs with following nvhpcsdk versions
-        conflicts('%nvhpc@21.11:22.2', msg='Issues this with NVHPC compiler version')
+        conflicts('%nvhpc@21.11:22.2', msg='QE-GPU has issues with these NVHPC compiler versions')
         # bugs with nvhpc@22.3 in versions > 7.1 still present
         with when('@develop'):
-           conflicts('%nvhpc@22.3', msg='Issues this with NVHPC compiler version')
+           conflicts('%nvhpc@22.3', msg='Develop has issues with this NVHPC compiler version')
         with when('@7.2:'):
-           conflicts('%nvhpc@22.3', msg='Issues this with NVHPC compiler version')
+           conflicts('%nvhpc@22.3', msg='v > 7.1 has issues with this NVHPC compiler version')
         # only cmake is supported 
-        conflicts('~cmake', msg='Only CMake supported for GPU version')
+        conflicts('~cmake', msg='Only CMake supported for GPU-enabled version')
         # PGI support
-        conflicts('%pgi@:18.10', msg='PGI supported from v 19.10')
+        conflicts('%pgi@:18.10', msg='PGI supported for v >= 19.10')
 
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
