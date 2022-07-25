@@ -45,7 +45,7 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
@@ -109,6 +109,10 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
+
+def is_not_system_path(p):
+    return not is_system_path(p)
 
 
 def should_set_parallel_jobs(jobserver_support=False):
@@ -426,28 +430,31 @@ def set_wrapper_variables(pkg, env):
             list_to_modify.insert(0, item)
 
     def update_compiler_args_for_dep(dep):
-        if dep in link_deps and (not is_system_path(dep.prefix)):
+        if dep not in link_deps:
+            return
+        dep_link_dirs = list()
+
+        # Don't recursively search in system paths, only in Spack paths.
+        if is_not_system_path(dep.prefix):
             query = pkg.spec[dep.name]
-            dep_link_dirs = list()
             try:
                 dep_link_dirs.extend(query.libs.directories)
             except NoLibrariesError:
                 tty.debug("No libraries found for {0}".format(dep.name))
-
-            for default_lib_dir in ['lib', 'lib64']:
-                default_lib_prefix = os.path.join(
-                    dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
-                    dep_link_dirs.append(default_lib_prefix)
-
-            _prepend_all(link_dirs, dep_link_dirs)
-            if dep in rpath_deps:
-                _prepend_all(rpath_dirs, dep_link_dirs)
-
             try:
                 _prepend_all(include_dirs, query.headers.directories)
             except NoHeadersError:
                 tty.debug("No headers found for {0}".format(dep.name))
+
+        # Always add <prefix>/lib(64) if it's a dir.
+        for default_lib_dir in ['lib', 'lib64']:
+            default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
+            if os.path.isdir(default_lib_prefix):
+                dep_link_dirs.append(default_lib_prefix)
+
+        _prepend_all(link_dirs, dep_link_dirs)
+        if dep in rpath_deps:
+            _prepend_all(rpath_dirs, dep_link_dirs)
 
     for dspec in pkg.spec.traverse(root=False, order='post'):
         if dspec.external:
@@ -467,9 +474,10 @@ def set_wrapper_variables(pkg, env):
         lib_path = os.path.join(pkg.prefix, libdir)
         rpath_dirs.insert(0, lib_path)
 
-    link_dirs = list(dedupe(filter_system_paths(link_dirs)))
-    include_dirs = list(dedupe(filter_system_paths(include_dirs)))
-    rpath_dirs = list(dedupe(filter_system_paths(rpath_dirs)))
+    # Partition by [spack managed dirs | system dirs]
+    link_dirs = list(dedupe(stable_partition(link_dirs, is_not_system_path)))
+    include_dirs = list(dedupe(stable_partition(include_dirs, is_not_system_path)))
+    rpath_dirs = list(dedupe(stable_partition(rpath_dirs, is_not_system_path)))
 
     env.set(SPACK_LINK_DIRS, ':'.join(link_dirs))
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
@@ -711,7 +719,7 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(path_from_modules([pkg.compiler.modules[1]]))
-    return list(dedupe(filter_system_paths(rpaths)))
+    return list(dedupe(stable_partition(rpaths, is_not_system_path)))
 
 
 def get_std_cmake_args(pkg):

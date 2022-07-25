@@ -922,6 +922,21 @@ def uniq(sequence):
     return uniq_list
 
 
+def stable_partition(arr, pred):
+    """Reorders the elements in arr in such a way that all elements for which the
+    predicate `pred` returns true precede the elements for which predicate p returns
+    false. Relative order of the elements is preserved. Upon return, arr is not
+    modified, the algorith is out-of-place.
+    """
+    yes, no = [], []
+    for item in arr:
+        if pred(item):
+            yes.append(item)
+        else:
+            no.append(item)
+    return yes + no
+
+
 def star(func):
     """Unpacks arguments for use with Multiprocessing mapping functions"""
     def _wrapper(args):
