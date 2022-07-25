@@ -254,7 +254,7 @@ def test_pkg_source(mock_packages):
 
 def test_pkg_canonical_source(mock_packages):
     source = pkg("source", "multimethod")
-    assert "@when('@2.0')" in source
+    assert '@when("@2.0")' in source
     assert "Check that multimethods work with boolean values" in source
 
     canonical_1 = pkg("source", "--canonical", "multimethod@1.0")
