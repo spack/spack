@@ -530,7 +530,7 @@ class URLFetchStrategy(FetchStrategy):
                 "Failed on expand() for URL %s" % self.url)
 
         if not self.extension:
-            self.extension = extension(self.url)
+            self.extension = extension(self.archive_file)
 
         if self.stage.expanded:
             tty.debug('Source already staged to %s' % self.stage.source_path)
