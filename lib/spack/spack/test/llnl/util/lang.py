@@ -11,7 +11,14 @@ from textwrap import dedent
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
+from llnl.util.lang import (
+    dedupe,
+    match_predicate,
+    memoized,
+    pretty_date,
+    stable_args,
+    stable_partition,
+)
 
 
 @pytest.fixture()
@@ -305,3 +312,10 @@ line 280, in inner
 line 286, in test_grouped_exception
         raise TypeError('ok')
     """).format(__file__)
+
+
+def test_stable_partition():
+    stable_partition([1, 2, 3, 4, 5], lambda x: x % 2 == 0) == [2, 4, 1, 3, 5]
+    stable_partition([], lambda x: True) == []
+    stable_partition([1, 2, 3, 4, 5], lambda x: False) == [1, 2, 3, 4, 5]
+    stable_partition([1, 2, 3, 4, 5], lambda x: True) == [1, 2, 3, 4, 5]

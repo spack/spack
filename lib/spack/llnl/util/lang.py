@@ -923,10 +923,17 @@ def uniq(sequence):
 
 
 def stable_partition(arr, pred):
-    """Reorders the elements in arr in such a way that all elements for which the
-    predicate `pred` returns true precede the elements for which predicate p returns
-    false. Relative order of the elements is preserved. Upon return, arr is not
-    modified, the algorith is out-of-place.
+    """Reorders the elements in `arr` in such a way that all elements for which the
+    predicate `pred` returns true precede the elements for which predicate `pred`
+    returns false. Relative order of the elements is preserved. Upon return, `arr` is
+    not modified, the algorithm is out-of-place.
+
+    Args:
+        arr (list): constant array to be partitioned
+        pred (function): unary function mapping to bool
+
+    Returns:
+        A stably ordered copy of arr partitioned by `pred`.
     """
     yes, no = [], []
     for item in arr:
