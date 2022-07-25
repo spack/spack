@@ -77,4 +77,4 @@ def test_blame_by_git(mock_packages, capfd):
     with capfd.disabled():
         out = blame("--git", "mpich")
     assert "class Mpich" in out
-    assert '    homepage   = "http://www.mpich.org"' in out
+    assert '    homepage = "http://www.mpich.org"' in out

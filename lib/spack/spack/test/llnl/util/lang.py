@@ -306,16 +306,16 @@ def test_grouped_exception():
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 283, in test_grouped_exception
+line 290, in test_grouped_exception
         inner()
       File "{0}", \
-line 280, in inner
-        raise ValueError('wow!')
+line 287, in inner
+        raise ValueError("wow!")
 
     top-level raised TypeError: ok
       File "{0}", \
-line 286, in test_grouped_exception
-        raise TypeError('ok')
+line 293, in test_grouped_exception
+        raise TypeError("ok")
     """
         ).format(__file__)
     )
