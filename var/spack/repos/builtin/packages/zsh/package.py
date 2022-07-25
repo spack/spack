@@ -66,5 +66,5 @@ if [ -d /etc/profile.d ]; then
 fi
 """
 
-        with open('{0}/zshenv'.format(self.prefix.etc), 'w') as zshenv:
-            zshenv.write(zsh_setup)
+            with open('{0}/zshenv'.format(self.prefix.etc), 'w') as zshenv:
+                zshenv.write(zsh_setup)
