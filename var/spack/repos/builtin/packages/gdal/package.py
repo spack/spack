@@ -632,7 +632,7 @@ class Gdal(CMakePackage):
         else:
             args.extend([
                 self.with_or_without(
-                    'xml2', variant='libxml2', package='libxlm2', attribute='command'
+                    'xml2', variant='libxml2', package='libxml2', attribute='command'
                 ),
                 self.with_or_without('mongocxx', variant='mongocxx'),
                 self.with_or_without(
