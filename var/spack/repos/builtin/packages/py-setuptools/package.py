@@ -14,6 +14,9 @@ class PySetuptools(Package):
     url = "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-62.3.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/setuptools/"
 
+    maintainers = ['adamjstewart']
+
+    version('63.0.0', sha256='045aec56a3eee5c82373a70e02db8b6da9a10f7faf61ff89a14ab66c738ed370', expand=False)
     version('62.4.0', sha256='5a844ad6e190dccc67d6d7411d119c5152ce01f7c76be4d8a1eaa314501bba77', expand=False)
     version('62.3.2', sha256='68e45d17c9281ba25dc0104eadd2647172b3472d9e01f911efa57965e8d51a36', expand=False)
     version('59.4.0', sha256='feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060', expand=False)

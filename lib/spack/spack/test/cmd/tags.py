@@ -47,9 +47,8 @@ def test_tags_no_tags(monkeypatch):
 
 
 def test_tags_installed(install_mockery, mock_fetch):
-    spec = spack.spec.Spec('mpich').concretized()
-    pkg = spack.repo.get(spec)
-    pkg.do_install()
+    s = spack.spec.Spec('mpich').concretized()
+    s.package.do_install()
 
     out = tags('-i')
     for tag in ['tag1', 'tag2']:

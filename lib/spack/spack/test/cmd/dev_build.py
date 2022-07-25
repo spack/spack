@@ -262,17 +262,19 @@ def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir('leaf')
     leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0')
+    leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
-        with open(leaf_spec.package.filename, 'w') as f:
-            f.write(leaf_spec.package.original_string)
+        with open(leaf_pkg_cls.filename, 'w') as f:
+            f.write(leaf_pkg_cls.original_string)
 
     # setup dev-build-test-dependent package for dev build
     # don't concretize outside environment -- dev info will be wrong
     root_dir = tmpdir.mkdir('root')
     root_spec = spack.spec.Spec('dev-build-test-dependent@0.0.0')
+    root_pkg_cls = spack.repo.path.get_pkg_class(root_spec.name)
     with root_dir.as_cwd():
-        with open(root_spec.package.filename, 'w') as f:
-            f.write(root_spec.package.original_string)
+        with open(root_pkg_cls.filename, 'w') as f:
+            f.write(root_pkg_cls.original_string)
 
     # setup environment
     envdir = tmpdir.mkdir('env')
@@ -319,8 +321,9 @@ def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
     dep_spec = spack.spec.Spec('dev-build-test-install')
 
     with build_dir.as_cwd():
-        with open(dep_spec.package.filename, 'w') as f:
-            f.write(dep_spec.package.original_string)
+        dep_pkg_cls = spack.repo.path.get_pkg_class(dep_spec.name)
+        with open(dep_pkg_cls.filename, 'w') as f:
+            f.write(dep_pkg_cls.original_string)
 
     # setup environment
     envdir = tmpdir.mkdir('env')

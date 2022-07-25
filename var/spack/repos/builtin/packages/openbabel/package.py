@@ -23,6 +23,7 @@ class Openbabel(CMakePackage):
     version('2.4.0', tag='openbabel-2-4-0')
 
     variant('python', default=True, description='Build Python bindings')
+    variant('gui', default=True, description='Build with GUI')
 
     extends('python', when='+python')
 
@@ -62,6 +63,8 @@ class Openbabel(CMakePackage):
             ])
         else:
             args.append('-DPYTHON_BINDINGS=OFF')
+
+        args.append(self.define_from_variant('BUILD_GUI', 'gui'))
 
         args.append('-DWITH_MAEPARSER=OFF')  # maeparser is currently broken
 

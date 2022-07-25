@@ -1628,8 +1628,9 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         job_log_dir (str): Path into which build log should be copied
     """
     try:
-        job_pkg = spack.repo.get(job_spec)
-        tty.debug('job package: {0}'.format(job_pkg))
+        pkg_cls = spack.repo.path.get_pkg_class(job_spec.name)
+        job_pkg = pkg_cls(job_spec)
+        tty.debug('job package: {0.fullname}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
         build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')

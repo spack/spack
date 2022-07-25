@@ -176,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
     # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m", when="+vtkh")
+    depends_on("vtk-m@:1.7", when="+vtkh")
     depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
 
     # mfem

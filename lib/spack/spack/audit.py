@@ -281,15 +281,15 @@ def _check_build_test_callbacks(pkgs, error_cls):
     """Ensure stand-alone test method is not included in build-time callbacks"""
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
-        test_callbacks = pkg.build_time_test_callbacks
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        test_callbacks = pkg_cls.build_time_test_callbacks
 
         if test_callbacks and 'test' in test_callbacks:
             msg = ('{0} package contains "test" method in '
                    'build_time_test_callbacks')
             instr = ('Remove "test" from: [{0}]'
                      .format(', '.join(test_callbacks)))
-            errors.append(error_cls(msg.format(pkg.name), [instr]))
+            errors.append(error_cls(msg.format(pkg_name), [instr]))
 
     return errors
 
@@ -304,8 +304,8 @@ def _check_patch_urls(pkgs, error_cls):
 
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
-        for condition, patches in pkg.patches.items():
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        for condition, patches in pkg_cls.patches.items():
             for patch in patches:
                 if not isinstance(patch, spack.patch.UrlPatch):
                     continue
@@ -317,7 +317,7 @@ def _check_patch_urls(pkgs, error_cls):
                 if not patch.url.endswith(full_index_arg):
                     errors.append(error_cls(
                         "patch URL in package {0} must end with {1}".format(
-                            pkg.name, full_index_arg,
+                            pkg_cls.name, full_index_arg,
                         ),
                         [patch.url],
                     ))
@@ -331,21 +331,21 @@ def _linting_package_file(pkgs, error_cls):
     """
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
         # Does the homepage have http, and if so, does https work?
-        if pkg.homepage.startswith('http://'):
-            https = re.sub("http", "https", pkg.homepage, 1)
+        if pkg_cls.homepage.startswith('http://'):
+            https = re.sub("http", "https", pkg_cls.homepage, 1)
             try:
                 response = urlopen(https)
             except Exception as e:
                 msg = 'Error with attempting https for "{0}": '
-                errors.append(error_cls(msg.format(pkg.name), [str(e)]))
+                errors.append(error_cls(msg.format(pkg_cls.name), [str(e)]))
                 continue
 
             if response.getcode() == 200:
                 msg = 'Package "{0}" uses http but has a valid https endpoint.'
-                errors.append(msg.format(pkg.name))
+                errors.append(msg.format(pkg_cls.name))
 
     return llnl.util.lang.dedupe(errors)
 
@@ -355,10 +355,10 @@ def _unknown_variants_in_directives(pkgs, error_cls):
     """Report unknown or wrong variants in directives for this package"""
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
         # Check "conflicts" directive
-        for conflict, triggers in pkg.conflicts.items():
+        for conflict, triggers in pkg_cls.conflicts.items():
             for trigger, _ in triggers:
                 vrn = spack.spec.Spec(conflict)
                 try:
@@ -371,34 +371,34 @@ def _unknown_variants_in_directives(pkgs, error_cls):
                     # When os and target constraints can be created independently of
                     # the platform, TODO change this back to add an error.
                     errors.extend(_analyze_variants_in_directive(
-                        pkg, spack.spec.Spec(trigger),
+                        pkg_cls, spack.spec.Spec(trigger),
                         directive='conflicts', error_cls=error_cls
                     ))
                 errors.extend(_analyze_variants_in_directive(
-                    pkg, vrn, directive='conflicts', error_cls=error_cls
+                    pkg_cls, vrn, directive='conflicts', error_cls=error_cls
                 ))
 
         # Check "depends_on" directive
-        for _, triggers in pkg.dependencies.items():
+        for _, triggers in pkg_cls.dependencies.items():
             triggers = list(triggers)
             for trigger in list(triggers):
                 vrn = spack.spec.Spec(trigger)
                 errors.extend(_analyze_variants_in_directive(
-                    pkg, vrn, directive='depends_on', error_cls=error_cls
+                    pkg_cls, vrn, directive='depends_on', error_cls=error_cls
                 ))
 
         # Check "patch" directive
-        for _, triggers in pkg.provided.items():
+        for _, triggers in pkg_cls.provided.items():
             triggers = [spack.spec.Spec(x) for x in triggers]
             for vrn in triggers:
                 errors.extend(_analyze_variants_in_directive(
-                    pkg, vrn, directive='patch', error_cls=error_cls
+                    pkg_cls, vrn, directive='patch', error_cls=error_cls
                 ))
 
         # Check "resource" directive
-        for vrn in pkg.resources:
+        for vrn in pkg_cls.resources:
             errors.extend(_analyze_variants_in_directive(
-                pkg, vrn, directive='resource', error_cls=error_cls
+                pkg_cls, vrn, directive='resource', error_cls=error_cls
             ))
 
     return llnl.util.lang.dedupe(errors)
@@ -409,15 +409,15 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
     """Report unknown dependencies and wrong variants for dependencies"""
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         filename = spack.repo.path.filename_for_package_name(pkg_name)
-        for dependency_name, dependency_data in pkg.dependencies.items():
+        for dependency_name, dependency_data in pkg_cls.dependencies.items():
             # No need to analyze virtual packages
             if spack.repo.path.is_virtual(dependency_name):
                 continue
 
             try:
-                dependency_pkg = spack.repo.get(dependency_name)
+                dependency_pkg_cls = spack.repo.path.get_pkg_class(dependency_name)
             except spack.repo.UnknownPackageError:
                 # This dependency is completely missing, so report
                 # and continue the analysis
@@ -433,8 +433,8 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
                 dependency_variants = dependency_edge.spec.variants
                 for name, value in dependency_variants.items():
                     try:
-                        v, _ = dependency_pkg.variants[name]
-                        v.validate_or_raise(value, pkg=dependency_pkg)
+                        v, _ = dependency_pkg_cls.variants[name]
+                        v.validate_or_raise(value, pkg_cls=dependency_pkg_cls)
                     except Exception as e:
                         summary = (pkg_name + ": wrong variant used for a "
                                    "dependency in a 'depends_on' directive")
@@ -456,10 +456,10 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
     """Report if version constraints used in directives are not satisfiable"""
     errors = []
     for pkg_name in pkgs:
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         dependencies_to_check = []
-        for dependency_name, dependency_data in pkg.dependencies.items():
+        for dependency_name, dependency_data in pkg_cls.dependencies.items():
             # Skip virtual dependencies for the time being, check on
             # their versions can be added later
             if spack.repo.path.is_virtual(dependency_name):
@@ -470,19 +470,19 @@ def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls
             )
 
         for s in dependencies_to_check:
-            dependency_pkg = None
+            dependency_pkg_cls = None
             try:
-                dependency_pkg = spack.repo.get(s.name)
+                dependency_pkg_cls = spack.repo.path.get_pkg_class(s.name)
                 assert any(
-                    v.satisfies(s.versions) for v in list(dependency_pkg.versions)
+                    v.satisfies(s.versions) for v in list(dependency_pkg_cls.versions)
                 )
             except Exception:
                 summary = ("{0}: dependency on {1} cannot be satisfied "
                            "by known versions of {1.name}").format(pkg_name, s)
                 details = ['happening in ' + filename]
-                if dependency_pkg is not None:
+                if dependency_pkg_cls is not None:
                     details.append('known versions of {0.name} are {1}'.format(
-                        s, ', '.join([str(x) for x in dependency_pkg.versions])
+                        s, ', '.join([str(x) for x in dependency_pkg_cls.versions])
                     ))
                 errors.append(error_cls(summary=summary, details=details))
 
@@ -500,7 +500,7 @@ def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     for name, v in constraint.variants.items():
         try:
             variant, _ = pkg.variants[name]
-            variant.validate_or_raise(v, pkg=pkg)
+            variant.validate_or_raise(v, pkg_cls=pkg)
         except variant_exceptions as e:
             summary = pkg.name + ': wrong variant in "{0}" directive'
             summary = summary.format(directive)

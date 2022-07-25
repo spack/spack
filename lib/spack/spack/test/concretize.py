@@ -22,7 +22,6 @@ import spack.repo
 import spack.variant as vt
 from spack.concretize import find_spec
 from spack.spec import Spec
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.version import ver
 
 is_windows = sys.platform == 'win32'
@@ -44,7 +43,7 @@ def check_spec(abstract, concrete):
             cflag = concrete.compiler_flags[flag]
             assert set(aflag) <= set(cflag)
 
-    for name in abstract.package.variants:
+    for name in spack.repo.path.get_pkg_class(abstract.name).variants:
         assert name in concrete.variants
 
     for flag in concrete.compiler_flags.valid_compiler_flags():
@@ -356,20 +355,11 @@ class TestConcretize(object):
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
-        default_dep = ('link', 'build')
-
-        mock_repo = MockPackageMultiRepo()
-        bazpkg = mock_repo.add_package('bazpkg', [], [])
-        barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
-        mock_repo.add_package('foopkg', [barpkg], [default_dep])
-
-        with spack.repo.use_repositories(mock_repo):
-            spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
-                        ' ^barpkg os=CNL ^bazpkg os=CNL')
-            spec.concretize()
-
-            for s in spec.traverse(root=False):
-                assert s.architecture.target == spec.architecture.target
+        spec_str = ('mpileaks %gcc@4.5.0 os=CNL target=nocona'
+                    ' ^dyninst os=CNL ^callpath os=CNL')
+        spec = Spec(spec_str).concretized()
+        for s in spec.traverse(root=False):
+            assert s.architecture.target == spec.architecture.target
 
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')

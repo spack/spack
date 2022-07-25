@@ -19,6 +19,16 @@ class Multimethod(MultimethodBase):
     homepage = 'http://www.example.com/'
     url      = 'http://www.example.com/example-1.0.tar.gz'
 
+    version('5.0', '0123456789abcdef0123456789abcdef')
+    version('4.0', '0123456789abcdef0123456789abcdef')
+    version('3.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '0123456789abcdef0123456789abcdef')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+
+    variant('mpi', default=False, description='')
+
+    depends_on('mpi', when='+mpi')
+
     #
     # These functions are only valid for versions 1, 3, and 4.
     #
@@ -76,9 +86,9 @@ class Multimethod(MultimethodBase):
     def has_a_default(self):
         return 'gcc'
 
-    @when('%intel')
+    @when('%clang')
     def has_a_default(self):
-        return 'intel'
+        return 'clang'
 
     #
     # Make sure we can switch methods on different target

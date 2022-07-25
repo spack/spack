@@ -131,7 +131,7 @@ def check_module_set_name(name):
 
 _missing_modules_warning = (
     "Modules have been omitted for one or more specs, either"
-    " because they were blacklisted or because the spec is"
+    " because they were excluded or because the spec is"
     " associated with a package that is installed upstream and"
     " that installation has not generated a module file. Rerun"
     " this command with debug output enabled for more details.")
@@ -180,7 +180,7 @@ def loads(module_type, specs, args, out=None):
     for spec, mod in modules:
         if not mod:
             module_output_for_spec = (
-                '## blacklisted or missing from upstream: {0}'.format(
+                '## excluded or missing from upstream: {0}'.format(
                     spec.format()))
         else:
             d['exclude'] = '## ' if spec.name in exclude_set else ''
@@ -293,8 +293,8 @@ def refresh(module_type, specs, args):
         cls(spec, args.module_set_name) for spec in specs
         if spack.repo.path.exists(spec.name)]
 
-    # Filter blacklisted packages early
-    writers = [x for x in writers if not x.conf.blacklisted]
+    # Filter excluded packages early
+    writers = [x for x in writers if not x.conf.excluded]
 
     # Detect name clashes in module files
     file2writer = collections.defaultdict(list)

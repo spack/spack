@@ -84,9 +84,9 @@ def filter_by_name(pkgs, args):
                 if f.match(p):
                     return True
 
-                pkg = spack.repo.get(p)
-                if pkg.__doc__:
-                    return f.match(pkg.__doc__)
+                pkg_cls = spack.repo.path.get_pkg_class(p)
+                if pkg_cls.__doc__:
+                    return f.match(pkg_cls.__doc__)
                 return False
         else:
             def match(p, f):
@@ -133,7 +133,7 @@ def get_dependencies(pkg):
 @formatter
 def version_json(pkg_names, out):
     """Print all packages with their latest versions."""
-    pkgs = [spack.repo.get(name) for name in pkg_names]
+    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
 
     out.write('[\n')
 
@@ -147,14 +147,14 @@ def version_json(pkg_names, out):
         '   "maintainers": {5},\n'
         '   "dependencies": {6}'
         '}}'.format(
-            pkg.name,
-            VersionList(pkg.versions).preferred(),
-            json.dumps([str(v) for v in reversed(sorted(pkg.versions))]),
-            pkg.homepage,
-            github_url(pkg),
-            json.dumps(pkg.maintainers),
-            json.dumps(get_dependencies(pkg))
-        ) for pkg in pkgs
+            pkg_cls.name,
+            VersionList(pkg_cls.versions).preferred(),
+            json.dumps([str(v) for v in reversed(sorted(pkg_cls.versions))]),
+            pkg_cls.homepage,
+            github_url(pkg_cls),
+            json.dumps(pkg_cls.maintainers),
+            json.dumps(get_dependencies(pkg_cls))
+        ) for pkg_cls in pkg_classes
     ])
     out.write(pkg_latest)
     # important: no trailing comma in JSON arrays
@@ -172,7 +172,7 @@ def html(pkg_names, out):
     """
 
     # Read in all packages
-    pkgs = [spack.repo.get(name) for name in pkg_names]
+    pkg_classes = [spack.repo.path.get_pkg_class(name) for name in pkg_names]
 
     # Start at 2 because the title of the page from Sphinx is id1.
     span_id = 2
@@ -189,7 +189,7 @@ def html(pkg_names, out):
     # Start with the number of packages, skipping the title and intro
     # blurb, which we maintain in the RST file.
     out.write('<p>\n')
-    out.write('Spack currently has %d mainline packages:\n' % len(pkgs))
+    out.write('Spack currently has %d mainline packages:\n' % len(pkg_classes))
     out.write('</p>\n')
 
     # Table of links to all packages
@@ -209,9 +209,9 @@ def html(pkg_names, out):
     out.write('<hr class="docutils"/>\n')
 
     # Output some text for each package.
-    for pkg in pkgs:
-        out.write('<div class="section" id="%s">\n' % pkg.name)
-        head(2, span_id, pkg.name)
+    for pkg_cls in pkg_classes:
+        out.write('<div class="section" id="%s">\n' % pkg_cls.name)
+        head(2, span_id, pkg_cls.name)
         span_id += 1
 
         out.write('<dl class="docutils">\n')
@@ -219,10 +219,10 @@ def html(pkg_names, out):
         out.write('<dt>Homepage:</dt>\n')
         out.write('<dd><ul class="first last simple">\n')
 
-        if pkg.homepage:
+        if pkg_cls.homepage:
             out.write(('<li>'
                        '<a class="reference external" href="%s">%s</a>'
-                       '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
+                       '</li>\n') % (pkg_cls.homepage, escape(pkg_cls.homepage, True)))
         else:
             out.write('No homepage\n')
         out.write('</ul></dd>\n')
@@ -231,19 +231,19 @@ def html(pkg_names, out):
         out.write('<dd><ul class="first last simple">\n')
         out.write(('<li>'
                    '<a class="reference external" href="%s">%s/package.py</a>'
-                   '</li>\n') % (github_url(pkg), pkg.name))
+                   '</li>\n') % (github_url(pkg_cls), pkg_cls.name))
         out.write('</ul></dd>\n')
 
-        if pkg.versions:
+        if pkg_cls.versions:
             out.write('<dt>Versions:</dt>\n')
             out.write('<dd>\n')
             out.write(', '.join(
-                str(v) for v in reversed(sorted(pkg.versions))))
+                str(v) for v in reversed(sorted(pkg_cls.versions))))
             out.write('\n')
             out.write('</dd>\n')
 
         for deptype in spack.dependency.all_deptypes:
-            deps = pkg.dependencies_of_type(deptype)
+            deps = pkg_cls.dependencies_of_type(deptype)
             if deps:
                 out.write('<dt>%s Dependencies:</dt>\n' % deptype.capitalize())
                 out.write('<dd>\n')
@@ -256,7 +256,7 @@ def html(pkg_names, out):
 
         out.write('<dt>Description:</dt>\n')
         out.write('<dd>\n')
-        out.write(escape(pkg.format_doc(indent=2), True))
+        out.write(escape(pkg_cls.format_doc(indent=2), True))
         out.write('\n')
         out.write('</dd>\n')
         out.write('</dl>\n')

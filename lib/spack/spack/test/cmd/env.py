@@ -452,9 +452,9 @@ def test_env_repo():
     with ev.read('test'):
         concretize()
 
-    package = e.repo.get('mpileaks')
-    assert package.name == 'mpileaks'
-    assert package.namespace == 'builtin.mock'
+    pkg_cls = e.repo.get_pkg_class('mpileaks')
+    assert pkg_cls.name == 'mpileaks'
+    assert pkg_cls.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():
@@ -2898,14 +2898,8 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
     with ev.read('test') as e:
         for _, root in e.concretized_specs():
             for spec in root.traverse(root=True):
-                for task in ('.fetch', '.install'):
-                    tgt = os.path.join('prefix', task, spec.dag_hash())
-                    assert 'touch {}'.format(tgt) in all_out
-
-    # Check whether make prefix/fetch-all only fetches
-    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
-    assert '.install/' not in fetch_out
-    assert '.fetch/' in fetch_out
+                tgt = os.path.join('prefix', '.install', spec.dag_hash())
+                assert 'touch {}'.format(tgt) in all_out
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):

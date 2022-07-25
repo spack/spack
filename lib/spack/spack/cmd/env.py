@@ -559,20 +559,17 @@ def env_depfile(args):
         target_prefix = args.make_target_prefix
 
     def get_target(name):
-        # The `all`, `fetch` and `clean` targets are phony. It doesn't make sense to
+        # The `all` and `clean` targets are phony. It doesn't make sense to
         # have /abs/path/to/env/metadir/{all,clean} targets. But it *does* make
-        # sense to have a prefix like `env/all`, `env/fetch`, `env/clean` when they are
+        # sense to have a prefix like `env/all`, `env/clean` when they are
         # supposed to be included
-        if name in ('all', 'fetch-all', 'clean') and os.path.isabs(target_prefix):
+        if name in ('all', 'clean') and os.path.isabs(target_prefix):
             return name
         else:
             return os.path.join(target_prefix, name)
 
     def get_install_target(name):
         return os.path.join(target_prefix, '.install', name)
-
-    def get_fetch_target(name):
-        return os.path.join(target_prefix, '.fetch', name)
 
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
@@ -588,46 +585,30 @@ def env_depfile(args):
     # All package install targets, not just roots.
     all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
 
-    # Fetch targets for all packages in the environment, not just roots.
-    all_fetch_targets = [get_fetch_target(h) for h in hash_to_spec.keys()]
-
     buf = six.StringIO()
 
     buf.write("""SPACK ?= spack
 
-.PHONY: {} {} {}
+.PHONY: {} {}
 
 {}: {}
-
-{}: {}
-
-{}: {}
-\t@touch $@
 
 {}: {}
 \t@touch $@
 
 {}:
-\t@mkdir -p {} {}
+\t@mkdir -p {}
 
 {}: | {}
-\t$(info Fetching $(SPEC))
-\t$(SPACK) -e '{}' fetch $(SPACK_FETCH_FLAGS) /$(notdir $@) && touch $@
-
-{}: {}
 \t$(info Installing $(SPEC))
 \t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
 --no-add /$(notdir $@) && touch $@
 
-""".format(get_target('all'), get_target('fetch-all'), get_target('clean'),
+""".format(get_target('all'), get_target('clean'),
            get_target('all'), get_target('env'),
-           get_target('fetch-all'), get_target('fetch'),
            get_target('env'), ' '.join(root_install_targets),
-           get_target('fetch'), ' '.join(all_fetch_targets),
-           get_target('dirs'), get_target('.fetch'), get_target('.install'),
-           get_target('.fetch/%'), get_target('dirs'),
-           env.path,
-           get_target('.install/%'), get_target('.fetch/%'),
+           get_target('dirs'), get_target('.install'),
+           get_target('.install/%'), get_target('dirs'),
            '+' if args.jobserver else '', env.path))
 
     # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
@@ -657,11 +638,9 @@ def env_depfile(args):
     # --make-target-prefix can be any existing directory we do not control,
     # including empty string (which means deleting the containing folder
     # would delete the folder with the Makefile)
-    buf.write("{}:\n\trm -f -- {} {} {} {}\n".format(
+    buf.write("{}:\n\trm -f -- {} {}\n".format(
         get_target('clean'),
         get_target('env'),
-        get_target('fetch'),
-        ' '.join(all_fetch_targets),
         ' '.join(all_install_targets)))
 
     makefile = buf.getvalue()

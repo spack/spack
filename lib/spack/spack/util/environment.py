@@ -673,10 +673,10 @@ class EnvironmentModifications(object):
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            blacklist ([str or re]): ignore any modifications of these
+            exclude ([str or re]): ignore any modifications of these
                 variables (default: [])
-            whitelist ([str or re]): always respect modifications of these
-                variables (default: []). has precedence over blacklist.
+            include ([str or re]): always respect modifications of these
+                variables (default: []). Supersedes any excluded variables.
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
         """
@@ -687,13 +687,13 @@ class EnvironmentModifications(object):
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
-        # Prepare a whitelist and a blacklist of environment variable names
-        blacklist = kwargs.get('blacklist', [])
-        whitelist = kwargs.get('whitelist', [])
+        # Prepare include and exclude lists of environment variable names
+        exclude = kwargs.get('exclude', [])
+        include = kwargs.get('include', [])
         clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend([
+        exclude.extend([
             # Bash internals
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
@@ -706,12 +706,12 @@ class EnvironmentModifications(object):
         # Compute the environments before and after sourcing
         before = sanitize(
             environment_after_sourcing_files(os.devnull, **kwargs),
-            blacklist=blacklist, whitelist=whitelist
+            exclude=exclude, include=include
         )
         file_and_args = (filename,) + arguments
         after = sanitize(
             environment_after_sourcing_files(file_and_args, **kwargs),
-            blacklist=blacklist, whitelist=whitelist
+            exclude=exclude, include=include
         )
 
         # Delegate to the other factory
@@ -881,22 +881,6 @@ def validate(env, errstream):
         set_or_unset_not_first(variable, list_of_changes, errstream)
 
 
-def filter_environment_blacklist(env, variables):
-    """Generator that filters out any change to environment variables present in
-    the input list.
-
-    Args:
-        env: list of environment modifications
-        variables: list of variable names to be filtered
-
-    Returns:
-        items in env if they are not in variables
-    """
-    for item in env:
-        if item.name not in variables:
-            yield item
-
-
 def inspect_path(root, inspections, exclude=None):
     """Inspects ``root`` to search for the subdirectories in ``inspections``.
     Adds every path found to a list of prepend-path commands and returns it.
@@ -1060,17 +1044,15 @@ def environment_after_sourcing_files(*files, **kwargs):
     return current_environment
 
 
-def sanitize(environment, blacklist, whitelist):
+def sanitize(environment, exclude, include):
     """Returns a copy of the input dictionary where all the keys that
-    match a blacklist pattern and don't match a whitelist pattern are
+    match an excluded pattern and don't match an included pattern are
     removed.
 
     Args:
         environment (dict): input dictionary
-        blacklist (list): literals or regex patterns to be
-            blacklisted
-        whitelist (list): literals or regex patterns to be
-            whitelisted
+        exclude (list): literals or regex patterns to be excluded
+        include (list): literals or regex patterns to be included
     """
 
     def set_intersection(fullset, *args):
@@ -1088,9 +1070,9 @@ def sanitize(environment, blacklist, whitelist):
     # Don't modify input, make a copy instead
     environment = sjson.decode_json_dict(dict(environment))
 
-    # Retain (whitelist) has priority over prune (blacklist)
-    prune = set_intersection(set(environment), *blacklist)
-    prune -= set_intersection(prune, *whitelist)
+    # include supersedes any excluded items
+    prune = set_intersection(set(environment), *exclude)
+    prune -= set_intersection(prune, *include)
     for k in prune:
         environment.pop(k, None)
 

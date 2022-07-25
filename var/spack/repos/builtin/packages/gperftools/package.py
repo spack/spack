@@ -16,6 +16,7 @@ class Gperftools(AutotoolsPackage):
     url      = "https://github.com/gperftools/gperftools/releases/download/gperftools-2.7/gperftools-2.7.tar.gz"
     maintainers = ['albestro', 'eschnett', 'msimberg', 'teonnik']
 
+    version('2.10', sha256='83e3bfdd28b8bcf53222c3798d4d395d52dadbbae59e8730c4a6d31a9c3732d8')
     version('2.9.1', sha256='ea566e528605befb830671e359118c2da718f721c27225cbbc93858c7520fee3')
     version('2.8.1', sha256='12f07a8ba447f12a3ae15e6e3a6ad74de35163b787c0c7b76288d7395f2f74e0')
     version('2.7', sha256='1ee8c8699a0eff6b6a203e59b43330536b22bbcbe6448f54c7091e5efb0763c9')
@@ -36,5 +37,9 @@ class Gperftools(AutotoolsPackage):
                                        variant='dynamic_sized_delete_support')
         args += self.enable_or_disable("debugalloc")
         args += self.enable_or_disable("libunwind")
+        if self.spec.satisfies('+libunwind'):
+            args += [
+                "LDFLAGS=-lunwind"
+            ]
 
         return args

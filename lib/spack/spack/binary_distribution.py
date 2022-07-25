@@ -618,7 +618,7 @@ def get_buildfile_manifest(spec):
     Return a data structure with information about a build, including
     text_to_relocate, binary_to_relocate, binary_to_relocate_fullpath
     link_to_relocate, and other, which means it doesn't fit any of previous
-    checks (and should not be relocated). We blacklist docs (man) and
+    checks (and should not be relocated). We exclude docs (man) and
     metadata (.spack). This can be used to find a particular kind of file
     in spack, or to generate the build metadata.
     """
@@ -626,12 +626,12 @@ def get_buildfile_manifest(spec):
             "link_to_relocate": [], "other": [],
             "binary_to_relocate_fullpath": []}
 
-    blacklist = (".spack", "man")
+    exclude_list = (".spack", "man")
 
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in blacklist]
+        dirs[:] = [d for d in dirs if d not in exclude_list]
 
         # Directories may need to be relocated too.
         for directory in dirs:

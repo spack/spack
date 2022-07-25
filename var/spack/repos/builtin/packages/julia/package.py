@@ -144,7 +144,7 @@ class Julia(MakefilePackage):
 
     # Don't make julia run patchelf --set-rpath on llvm (presumably this should've
     # only applied to libllvm when it's vendored by julia).
-    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7')
+    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7.2')
 
     # Allow build with clang.
     patch('gcc-ifdef.patch', when='@1.7.0:1.7')

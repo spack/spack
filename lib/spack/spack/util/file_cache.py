@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import os
 import shutil
 
@@ -170,13 +171,17 @@ class FileCache(object):
             return sinfo.st_mtime
 
     def remove(self, key):
+        file = self.cache_path(key)
         lock = self._get_lock(key)
         try:
             lock.acquire_write()
-            os.unlink(self.cache_path(key))
+            os.unlink(file)
+        except OSError as e:
+            # File not found is OK, so remove is idempotent.
+            if e.errno != errno.ENOENT:
+                raise
         finally:
             lock.release_write()
-            lock.cleanup()
 
 
 class CacheError(SpackError):
