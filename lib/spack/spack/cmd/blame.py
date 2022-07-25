@@ -131,11 +131,21 @@ def blame(parser, args):
 
     # get git blame for the package
     with working_dir(spack.paths.prefix):
+        # ignore the great black reformatting of 2022
+        ignore_file = os.path.join(spack.paths.prefix, ".git-blame-ignore-revs")
+
         if args.view == "git":
-            git("blame", blame_file)
+            git("blame", "--ignore-revs-file", ignore_file, blame_file)
             return
         else:
-            output = git("blame", "--line-porcelain", blame_file, output=str)
+            output = git(
+                "blame",
+                "--line-porcelain",
+                "--ignore-revs-file",
+                ignore_file,
+                blame_file,
+                output=str,
+            )
             lines = output.split("\n")
 
     # Histogram authors
