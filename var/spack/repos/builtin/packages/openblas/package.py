@@ -149,6 +149,14 @@ class Openblas(MakefilePackage):
 
     depends_on('perl', type='build')
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == 'ldflags':
+            if spec.satisfies('@0.3.20 %oneapi'):
+                iflags.append('-lifcore')
+        return (iflags, None, flags)
+
     @classmethod
     def determine_version(cls, lib):
         ver = None
