@@ -79,7 +79,7 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 % a spec with a git hash version is equivalent to one with the same matched version
 version_satisfies(Package, Constraint, HashVersion) :- version_satisfies(Package, Constraint, EquivalentVersion),
   version_equivalent(Package, HashVersion, EquivalentVersion).
-#defined version_equivalent/2.
+#defined version_equivalent/3.
 
 % If something is a package, it has only one version and that must be a
 % declared version.
