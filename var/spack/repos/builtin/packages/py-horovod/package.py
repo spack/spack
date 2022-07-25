@@ -17,6 +17,14 @@ class PyHorovod(PythonPackage, CudaPackage):
     maintainers = ['adamjstewart', 'aweits', 'tgaddair']
 
     version('master', branch='master', submodules=True)
+    version('0.25.0', tag='v0.25.0', submodules=True)
+    version('0.24.3', tag='v0.24.3', submodules=True)
+    version('0.24.2', tag='v0.24.2', submodules=True)
+    version('0.24.1', tag='v0.24.1', submodules=True)
+    version('0.24.0', tag='v0.24.0', submodules=True)
+    version('0.23.0', tag='v0.23.0', submodules=True)
+    version('0.22.1', tag='v0.22.1', submodules=True)
+    version('0.22.0', tag='v0.22.0', submodules=True)
     version('0.21.3', tag='v0.21.3', submodules=True)
     version('0.21.2', tag='v0.21.2', submodules=True)
     version('0.21.1', tag='v0.21.1', submodules=True)
@@ -43,7 +51,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     # https://github.com/horovod/horovod/blob/master/docs/install.rst
     variant('frameworks', default='pytorch',
             description='Deep learning frameworks to build support for',
-            values=('tensorflow', 'pytorch', 'mxnet', 'keras', 'spark', 'ray'),
+            values=('tensorflow', 'keras', 'pytorch', 'mxnet', 'spark', 'ray'),
             multi=True)
     variant('controllers', default='mpi',
             description='Controllers to coordinate work between processes',
@@ -53,6 +61,11 @@ class PyHorovod(PythonPackage, CudaPackage):
             values=('nccl', 'mpi', 'gloo', 'ccl'), multi=False)
     variant('cuda', default=True, description='Build with CUDA')
     variant('rocm', default=False, description='Build with ROCm')
+
+    # Build dependencies
+    depends_on('cmake@3.13:', type='build', when='@0.24:')
+    depends_on('cmake@2.8.12:', type='build', when='@0.20:')
+    depends_on('pkgconfig', type='build')
 
     # Required dependencies
     depends_on('python@3.6:',    type=('build', 'run'), when='@0.20:')
@@ -66,38 +79,42 @@ class PyHorovod(PythonPackage, CudaPackage):
     # Framework dependencies
     depends_on('py-tensorflow@1.1.0:',  type=('build', 'link', 'run'), when='frameworks=tensorflow')
     depends_on('py-tensorflow@1.15:',   type=('build', 'link', 'run'), when='frameworks=tensorflow @0.20:')
-    depends_on('py-tensorflow-estimator', type=('build', 'run'), when='frameworks=tensorflow')
+    depends_on('py-tensorflow-estimator', type=('build', 'run'),       when='frameworks=tensorflow')
+    depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
     depends_on('py-torch@0.4.0:',       type=('build', 'link', 'run'), when='frameworks=pytorch')
     depends_on('py-torch@1.2:',         type=('build', 'link', 'run'), when='frameworks=pytorch @0.20:')
+    depends_on('py-torch@1.5:',         type=('build', 'link', 'run'), when='frameworks=pytorch @0.25:')
     depends_on('py-torchvision',        type=('build', 'run'),         when='frameworks=pytorch @:0.19.1')
     depends_on('py-cffi@1.4.0:',        type=('build', 'run'),         when='frameworks=pytorch')
+    depends_on('py-pytorch-lightning',  type=('build', 'run'),         when='frameworks=pytorch @0.22:0.23')
+    depends_on('py-pytorch-lightning@1.3.8', type=('build', 'run'),    when='frameworks=pytorch @0.24')
+    depends_on('py-pytorch-lightning@1.3.8:1.5.9', type=('build', 'run'), when='frameworks=pytorch @0.25:')
     depends_on('mxnet@1.4.1:+python',   type=('build', 'link', 'run'), when='frameworks=mxnet')
-    depends_on('py-keras@2.0.8,2.1.2:', type=('build', 'run'),         when='frameworks=keras')
-    depends_on('py-h5py@:2',        type=('build', 'run'),         when='frameworks=spark')
+    depends_on('py-h5py@:2',            type=('build', 'run'),         when='frameworks=spark @:0.23')
     depends_on('py-numpy',              type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-petastorm@0.8.2',    type=('build', 'run'),         when='frameworks=spark @:0.19.1')
     depends_on('py-petastorm@0.9.0:',   type=('build', 'run'),         when='frameworks=spark @0.19.2:0.21.0')
     depends_on('py-petastorm@0.9.8:',   type=('build', 'run'),         when='frameworks=spark @0.21.1:')
+    depends_on('py-petastorm@0.11:',    type=('build', 'run'),         when='frameworks=spark @0.22:')
     depends_on('py-pyarrow@0.15.0:',    type=('build', 'run'),         when='frameworks=spark')
     depends_on('py-pyspark@2.3.2:',     type=('build', 'run'),         when='frameworks=spark ^python@:3.7')
     depends_on('py-pyspark@3.0.0:',     type=('build', 'run'),         when='frameworks=spark ^python@3.8:')
+    depends_on('py-fsspec',             type=('build', 'run'),         when='frameworks=spark @0.22.1:0.24.1')
+    depends_on('py-fsspec@2021.07:',    type=('build', 'run'),         when='frameworks=spark @0.24.2:')
     depends_on('py-ray',                type=('build', 'run'),         when='frameworks=ray')
-
-    # Build dependencies
-    depends_on('cmake@2.8.12:', type='build', when='@0.20:')
-    depends_on('pkgconfig', type='build')
+    depends_on('py-aioredis@:1',        type=('build', 'run'),         when='frameworks=ray @0.23:')
 
     # Controller dependencies
     depends_on('mpi', when='controllers=mpi')
-    # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='controllers=gloo')
     depends_on('libuv@1.26:', when='controllers=gloo platform=darwin')
 
     # Tensor Operations dependencies
     depends_on('nccl@2:', when='tensor_ops=nccl')
     depends_on('mpi', when='tensor_ops=mpi')
-    # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='tensor_ops=gloo')
+    depends_on('libuv@1.26:', when='tensor_ops=gloo platform=darwin')
+    depends_on('intel-oneapi-ccl', when='tensor_ops=ccl')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -108,6 +125,11 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     # https://github.com/horovod/horovod/pull/1835
     patch('fma.patch', when='@0.19.0:0.19.1')
+
+    # Patch vendored copy of eigen to fix build on aarch64
+    # https://github.com/horovod/horovod/issues/3605
+    # https://gitlab.com/libeigen/eigen/-/commit/fd1dcb6b45a2c797ad4c4d6cc7678ee70763b4ed
+    patch('eigen.patch', when='@0.21: target=aarch64:')
 
     @property
     def import_modules(self):
@@ -124,8 +146,7 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         if 'frameworks=pytorch' in self.spec:
             modules.extend([
-                'horovod.torch', 'horovod.torch.mpi_lib',
-                'horovod.torch.elastic', 'horovod.torch.mpi_lib_impl'
+                'horovod.torch', 'horovod.torch.elastic'
             ])
 
         if 'frameworks=mxnet' in self.spec:
@@ -160,7 +181,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         # Build system
         env.set('PKG_CONFIG_EXECUTABLE',
                 self.spec['pkgconfig'].prefix.bin.join('pkg-config'))
-        if '^cmake' in self.spec:
+        if 'cmake' in self.spec:
             env.set('HOROVOD_CMAKE', self.spec['cmake'].command.path)
         env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
@@ -181,11 +202,11 @@ class PyHorovod(PythonPackage, CudaPackage):
             env.set('HOROVOD_WITHOUT_MXNET', 1)
 
         # Controllers
-        if 'controllers=mpi' in self.spec:
+        if 'controllers=mpi' in self.spec or 'tensor_ops=mpi' in self.spec:
             env.set('HOROVOD_WITH_MPI', 1)
         else:
             env.set('HOROVOD_WITHOUT_MPI', 1)
-        if 'controllers=gloo' in self.spec:
+        if 'controllers=gloo' in self.spec or 'tensor_ops=gloo' in self.spec:
             env.set('HOROVOD_WITH_GLOO', 1)
         else:
             env.set('HOROVOD_WITHOUT_GLOO', 1)
@@ -220,4 +241,4 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     def test(self):
         super(PyHorovod, self).test()
-        run_test(self.prefix.bin.horovodrun, '--check-build')
+        self.run_test(self.prefix.bin.horovodrun, '--check-build')

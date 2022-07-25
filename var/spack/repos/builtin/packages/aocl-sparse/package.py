@@ -20,6 +20,7 @@ class AoclSparse(CMakePackage):
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.2',  sha256='db7d681a8697d6ef49acf3e97e8bec35b048ce0ad74549c3b738bbdff496618f')
     version('3.1',  sha256='8536f06095c95074d4297a3d2910654085dd91bce82e116c10368a9f87e9c7b9')
     version('3.0',  sha256='1d04ba16e04c065051af916b1ed9afce50296edfa9b1513211a7378e1d6b952e')
     version('2.2',  sha256='33c2ed6622cda61d2613ee63ff12c116a6cd209c62e54307b8fde986cd65f664')

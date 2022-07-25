@@ -89,14 +89,14 @@ class Variant(object):
         self.group_validator = validator
         self.sticky = sticky
 
-    def validate_or_raise(self, vspec, pkg=None):
+    def validate_or_raise(self, vspec, pkg_cls=None):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
 
         Args:
             vspec (Variant): instance to be validated
-            pkg (spack.package_base.Package): the package that required the validation,
-                if available
+            pkg_cls (spack.package_base.Package): the package class
+                that required the validation, if available
 
         Raises:
             InconsistentValidationError: if ``vspec.name != self.name``
@@ -118,7 +118,7 @@ class Variant(object):
 
         # If the value is exclusive there must be at most one
         if not self.multi and len(value) != 1:
-            raise MultipleValuesInExclusiveVariantError(vspec, pkg)
+            raise MultipleValuesInExclusiveVariantError(vspec, pkg_cls)
 
         # Check and record the values that are not allowed
         not_allowed_values = [
@@ -126,11 +126,11 @@ class Variant(object):
             if x != '*' and self.single_value_validator(x) is False
         ]
         if not_allowed_values:
-            raise InvalidVariantValueError(self, not_allowed_values, pkg)
+            raise InvalidVariantValueError(self, not_allowed_values, pkg_cls)
 
         # Validate the group of values if needed
         if self.group_validator is not None and value != ('*',):
-            self.group_validator(pkg.name, self.name, value)
+            self.group_validator(pkg_cls.name, self.name, value)
 
     @property
     def allowed_values(self):

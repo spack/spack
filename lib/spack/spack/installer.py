@@ -49,7 +49,6 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
-import spack.monitor
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
@@ -233,6 +232,7 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
         )
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
+
     packages.append((dep.package, True))
     return packages
 
@@ -330,11 +330,10 @@ def _process_external_package(pkg, explicit):
 
     try:
         # Check if the package was already registered in the DB.
-        # If this is the case, then just exit.
+        # If this is the case, then only make explicit if required.
         tty.debug('{0} already registered in DB'.format(pre))
-
-        # Update the explicit state if it is necessary
-        if explicit:
+        record = spack.store.db.get_record(spec)
+        if explicit and not record.explicit:
             spack.store.db.update_explicit(spec, explicit)
 
     except KeyError:
@@ -1115,7 +1114,8 @@ class PackageInstaller(object):
         #
         # External and upstream packages need to get flagged as installed to
         # ensure proper status tracking for environment build.
-        not_local = _handle_external_and_upstream(request.pkg, True)
+        explicit = request.install_args.get('explicit', True)
+        not_local = _handle_external_and_upstream(request.pkg, explicit)
         if not_local:
             self._flag_installed(request.pkg)
             return
@@ -2212,7 +2212,8 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.pkg == self.request.pkg
+        return self.pkg == self.request.pkg and \
+            self.request.install_args.get('explicit', True)
 
     @property
     def key(self):

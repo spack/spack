@@ -64,11 +64,18 @@ class Hpctoolkit(AutotoolsPackage):
             description='Needed when MPICXX builds static binaries '
             'for the compute nodes.')
 
+    variant('cuda', default=False,
+            description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
+
     variant('level_zero', default=False,
             description='Support Level Zero on Intel GPUs (2022.04.15 or later).')
 
-    variant('cuda', default=False,
-            description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
+    variant('gtpin', default=False,
+            description='Support instrumenting Intel GPU kernels with Intel GT-Pin '
+            '(2022.05.15 or later, and requires level_zero).')
+
+    variant('opencl', default=False,
+            description='Support OpenCL')
 
     variant('rocm', default=False,
             description='Support ROCM on AMD GPUs (2022.04.15 or later).')
@@ -83,7 +90,7 @@ class Hpctoolkit(AutotoolsPackage):
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils +libiberty', type='link', when='@2021.00:')
+    depends_on('binutils +libiberty', type='link', when='@2021:master')
     depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020')
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
@@ -94,7 +101,8 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('elfutils+bzip2+xz~nls', type='link')
     depends_on('gotcha@1.0.3:', when='@:2020.09')
     depends_on('intel-tbb+shared')
-    depends_on('libdwarf')
+    depends_on('libdwarf', when='@:master')
+    depends_on('libiberty+pic', when='@develop')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
     depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
     depends_on('libmonitor@2021.11.08:', when='@2022.01:')
@@ -106,6 +114,10 @@ class Hpctoolkit(AutotoolsPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('oneapi-level-zero', when='+level_zero')
+    depends_on('oneapi-igc', when='+gtpin')
+    depends_on('intel-gtpin', when='+gtpin')
+    depends_on('opencl-c-headers', when='+opencl')
+
     depends_on('intel-xed+pic', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
@@ -129,6 +141,9 @@ class Hpctoolkit(AutotoolsPackage):
 
     conflicts('+cuda', when='@:2019',
               msg='cuda requires 2020.03.01 or later')
+
+    conflicts('+gtpin', when='~level_zero',
+              msg='gtpin requires level_zero')
 
     conflicts('+rocm', when='@:2022.03',
               msg='rocm requires 2022.04.15 or later')
@@ -154,13 +169,11 @@ class Hpctoolkit(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--with-binutils=%s'     % spec['binutils'].prefix,
             '--with-boost=%s'        % spec['boost'].prefix,
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
-            '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
             '--with-libunwind=%s'    % spec['libunwind'].prefix,
             '--with-xerces=%s'       % spec['xerces-c'].prefix,
@@ -168,11 +181,13 @@ class Hpctoolkit(AutotoolsPackage):
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
 
-        if '+cuda' in spec:
-            args.append('--with-cuda=%s' % spec['cuda'].prefix)
-
-        if '+level_zero' in spec:
-            args.append('--with-level0=%s' % spec['oneapi-level-zero'].prefix)
+        if spec.satisfies('@:master'):
+            args.extend([
+                '--with-binutils=%s' % spec['binutils'].prefix,
+                '--with-libdwarf=%s' % spec['libdwarf'].prefix,
+            ])
+        else:
+            args.append('--with-libiberty=%s' % spec['libiberty'].prefix)
 
         if spec.satisfies('@:2020.09'):
             args.append('--with-gotcha=%s' % spec['gotcha'].prefix)
@@ -190,6 +205,21 @@ class Hpctoolkit(AutotoolsPackage):
             args.append('--with-papi=%s' % spec['papi'].prefix)
         else:
             args.append('--with-perfmon=%s' % spec['libpfm4'].prefix)
+
+        if '+cuda' in spec:
+            args.append('--with-cuda=%s' % spec['cuda'].prefix)
+
+        if '+level_zero' in spec:
+            args.append('--with-level0=%s' % spec['oneapi-level-zero'].prefix)
+
+        if '+opencl' in spec:
+            args.append('--with-opencl=%s' % spec['opencl-c-headers'].prefix)
+
+        if '+gtpin' in spec:
+            args.extend([
+                '--with-gtpin=%s' % spec['intel-gtpin'].prefix,
+                '--with-igc=%s'   % spec['oneapi-igc'].prefix,
+            ])
 
         if spec.satisfies('+rocm'):
             args.extend([

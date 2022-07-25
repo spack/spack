@@ -14,6 +14,7 @@ class AbseilCpp(CMakePackage):
 
     maintainers = ['jcftang']
 
+    version('20220623.0', sha256='4208129b49006089ba1d6710845a45e31c59b0ab6bff9e5788a87f55c5abd602')
     version('20211102.0', sha256='dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4')
     version('20210324.2', sha256='59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f')
     version('20210324.1', sha256='441db7c09a0565376ecacf0085b2d4c2bbedde6115d7773551bc116212c2a8d6')

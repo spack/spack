@@ -391,7 +391,7 @@ def list_url(url, recursive=False):
                 if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
-        s3 = s3_util.create_s3_session(url)
+        s3 = s3_util.create_s3_session(url, connection=s3_util.get_mirror_connection(url))  # noqa: E501
         if recursive:
             return list(_iter_s3_prefix(s3, url))
 

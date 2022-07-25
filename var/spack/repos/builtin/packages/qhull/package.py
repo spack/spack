@@ -45,3 +45,9 @@ class Qhull(CMakePackage):
         else:
             return find_libraries('libqhull', self.prefix,
                                   shared=True, recursive=True)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

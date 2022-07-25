@@ -14,6 +14,7 @@ from llnl.util import tty
 
 import spack.fetch_strategy as fs
 import spack.repo
+import spack.spec
 import spack.util.crypto as crypto
 from spack.url import (
     UndetectableNameError,
@@ -147,13 +148,13 @@ def url_list(args):
     urls = set()
 
     # Gather set of URLs from all packages
-    for pkg in spack.repo.path.all_packages():
-        url = getattr(pkg, 'url', None)
-        urls = url_list_parsing(args, urls, url, pkg)
+    for pkg_cls in spack.repo.path.all_package_classes():
+        url = getattr(pkg_cls, 'url', None)
+        urls = url_list_parsing(args, urls, url, pkg_cls)
 
-        for params in pkg.versions.values():
+        for params in pkg_cls.versions.values():
             url = params.get('url', None)
-            urls = url_list_parsing(args, urls, url, pkg)
+            urls = url_list_parsing(args, urls, url, pkg_cls)
 
     # Print URLs
     for url in sorted(urls):
@@ -184,8 +185,9 @@ def url_summary(args):
     tty.msg('Generating a summary of URL parsing in Spack...')
 
     # Loop through all packages
-    for pkg in spack.repo.path.all_packages():
+    for pkg_cls in spack.repo.path.all_package_classes():
         urls = set()
+        pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
 
         url = getattr(pkg, 'url', None)
         if url:
@@ -318,19 +320,20 @@ def url_stats(args):
     version_stats = UrlStats()
     resource_stats = UrlStats()
 
-    for pkg in spack.repo.path.all_packages():
+    for pkg_cls in spack.repo.path.all_package_classes():
         npkgs += 1
 
-        for v in pkg.versions:
+        for v in pkg_cls.versions:
             try:
+                pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
                 fetcher = fs.for_package_version(pkg, v)
             except (fs.InvalidArgsError, fs.FetcherConflict):
                 continue
-            version_stats.add(pkg.name, fetcher)
+            version_stats.add(pkg_cls.name, fetcher)
 
-        for _, resources in pkg.resources.items():
+        for _, resources in pkg_cls.resources.items():
             for resource in resources:
-                resource_stats.add(pkg.name, resource.fetcher)
+                resource_stats.add(pkg_cls.name, resource.fetcher)
 
     # print a nice summary table
     tty.msg("URL stats for %d packages:" % npkgs)
@@ -390,8 +393,8 @@ def url_stats(args):
         tty.msg("Found %d issues." % total_issues)
         for issue_type, pkgs in issues.items():
             tty.msg("Package URLs with %s" % issue_type)
-            for pkg, pkg_issues in pkgs.items():
-                color.cprint("    @*C{%s}" % pkg)
+            for pkg_cls, pkg_issues in pkgs.items():
+                color.cprint("    @*C{%s}" % pkg_cls)
                 for issue in pkg_issues:
                     print("      %s" % issue)
 

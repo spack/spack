@@ -21,6 +21,7 @@ class RAcme(RPackage):
 
     bioc = "ACME"
 
+    version('2.52.0', commit='14a97c722d0201654af9e583e7e462b458c28a77')
     version('2.50.0', commit='d55a19a8c091e8ea5fd35041520107a7f7603e14')
     version('2.46.0', commit='68f45c9f7d34c28adf6a0fc4245fdf63881109de')
     version('2.40.0', commit='38499e512998d54d874a0bfdc173f4ba5de5f01a')

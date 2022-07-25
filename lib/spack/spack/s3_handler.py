@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from io import BufferedReader
+from io import BufferedReader, IOBase
 
 import six
 import six.moves.urllib.error as urllib_error
@@ -23,11 +23,15 @@ import spack.util.url as url_util
 # https://github.com/python/cpython/pull/3249
 class WrapStream(BufferedReader):
     def __init__(self, raw):
-        raw.readable = lambda: True
-        raw.writable = lambda: False
-        raw.seekable = lambda: False
-        raw.closed = False
-        raw.flush = lambda: None
+        # In botocore >=1.23.47, StreamingBody inherits from IOBase, so we
+        # only add missing attributes in older versions.
+        # https://github.com/boto/botocore/commit/a624815eabac50442ed7404f3c4f2664cd0aa784
+        if not isinstance(raw, IOBase):
+            raw.readable = lambda: True
+            raw.writable = lambda: False
+            raw.seekable = lambda: False
+            raw.closed = False
+            raw.flush = lambda: None
         super(WrapStream, self).__init__(raw)
 
     def detach(self):

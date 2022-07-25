@@ -54,7 +54,7 @@ class Clingo(CMakePackage):
         depends_on('python@3.6.0:', type=('build', 'link', 'run'), when='@5.5.0:')
         depends_on('py-cffi', type=('build', 'run'), when='@5.5.0:')
 
-    patch('python38.patch', when="@5.3:5.4")
+    patch('python38.patch', when="@5.3:5.4.0")
 
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
@@ -86,15 +86,19 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        args = [
-            '-DCLINGO_REQUIRE_PYTHON=ON',
-            '-DCLINGO_BUILD_WITH_PYTHON=ON',
-            '-DPYCLINGO_USER_INSTALL=OFF',
-            '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
-            '-DCLINGO_BUILD_WITH_LUA=OFF',
-            self.cmake_py_shared
-        ]
-        if self.spec['cmake'].satisfies('@3.16.0:'):
-            args += self.cmake_python_hints
+        args = ['-DCLINGO_BUILD_WITH_LUA=OFF']
+
+        if '+python' in self.spec:
+            args += [
+                '-DCLINGO_REQUIRE_PYTHON=ON',
+                '-DCLINGO_BUILD_WITH_PYTHON=ON',
+                '-DPYCLINGO_USER_INSTALL=OFF',
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+                self.cmake_py_shared
+            ]
+            if self.spec['cmake'].satisfies('@3.16.0:'):
+                args += self.cmake_python_hints
+        else:
+            args += ['-DCLINGO_BUILD_WITH_PYTHON=OFF']
 
         return args

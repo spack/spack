@@ -20,6 +20,8 @@ class FluxCore(AutotoolsPackage):
 
     version('master', branch='master')
 
+    version('0.40.0', sha256='b15996b6165f037e5a6c42ea277e2c1c56a4f4b6bf47334105e324dcfefbf6fa')
+    version('0.39.0', sha256='ad55529fc3f056ac167b53b5bd489167c2ef218c3c49e721ad507a8ea9c409db')
     version('0.38.0', sha256='69d150c3d48b5985bca606e1a4de12282eb76233b6b730de1a9fff4136faf65f')
     version('0.37.0', sha256='4779f739da573c02df32a834179cc0c157688f6e82bb4cd2049eb0aa59fffffc')
     version('0.36.0', sha256='04def00d8679a30f51c030791b69a536176725b19dc13e7bfc0df58d0041e975')

@@ -535,9 +535,10 @@ def graph_dot(specs, deptype='all', static=False, out=None):
     deptype = spack.dependency.canonical_deptype(deptype)
 
     def static_graph(spec, deptype):
-        pkg = spec.package
-        possible = pkg.possible_dependencies(
-            expand_virtuals=True, deptype=deptype)
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        possible = pkg_cls.possible_dependencies(
+            expand_virtuals=True, deptype=deptype
+        )
 
         nodes = set()  # elements are (node name, node label)
         edges = set()  # elements are (src key, dest key)

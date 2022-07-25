@@ -57,9 +57,8 @@ def test_checksum_interactive(
 
 
 def test_checksum_versions(mock_packages, mock_fetch, mock_stage):
-    pkg = spack.repo.get('preferred-test')
-
-    versions = [str(v) for v in pkg.versions if not v.isdevelop()]
+    pkg_cls = spack.repo.path.get_pkg_class('preferred-test')
+    versions = [str(v) for v in pkg_cls.versions if not v.isdevelop()]
     output = spack_checksum('preferred-test', versions[0])
     assert 'Found 1 version' in output
     assert 'version(' in output

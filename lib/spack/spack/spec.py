@@ -896,7 +896,7 @@ class _EdgeMap(Mapping):
 def _command_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'command' attribute.
 
-    Tries to search for ``spec.name`` in the ``spec.prefix.bin`` directory.
+    Tries to search for ``spec.name`` in the ``spec.home.bin`` directory.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -910,20 +910,21 @@ def _command_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If the command is not found
     """
-    path = os.path.join(spec.prefix.bin, spec.name)
+    home = getattr(spec.package, 'home')
+    path = os.path.join(home.bin, spec.name)
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
     else:
         msg = 'Unable to locate {0} command in {1}'
-        raise RuntimeError(msg.format(spec.name, spec.prefix.bin))
+        raise RuntimeError(msg.format(spec.name, home.bin))
 
 
 def _headers_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'headers' attribute.
 
     Tries to search for ``*.h`` files recursively starting from
-    ``spec.prefix.include``.
+    ``spec.package.home.include``.
 
     Parameters:
         descriptor (ForwardQueryToPackage): descriptor that triggered the call
@@ -937,21 +938,22 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         NoHeadersError: If no headers are found
     """
-    headers = fs.find_headers('*', root=spec.prefix.include, recursive=True)
+    home = getattr(spec.package, 'home')
+    headers = fs.find_headers('*', root=home.include, recursive=True)
 
     if headers:
         return headers
     else:
         msg = 'Unable to locate {0} headers in {1}'
         raise spack.error.NoHeadersError(
-            msg.format(spec.name, spec.prefix.include))
+            msg.format(spec.name, home))
 
 
 def _libs_default_handler(descriptor, spec, cls):
     """Default handler when looking for the 'libs' attribute.
 
     Tries to search for ``lib{spec.name}`` recursively starting from
-    ``spec.prefix``. If ``spec.name`` starts with ``lib``, searches for
+    ``spec.package.home``. If ``spec.name`` starts with ``lib``, searches for
     ``{spec.name}`` instead.
 
     Parameters:
@@ -978,6 +980,7 @@ def _libs_default_handler(descriptor, spec, cls):
     # get something like 'libabcXabc.so, but for now we consider this
     # unlikely).
     name = spec.name.replace('-', '?')
+    home = getattr(spec.package, 'home')
 
     # Avoid double 'lib' for packages whose names already start with lib
     if not name.startswith('lib'):
@@ -990,12 +993,12 @@ def _libs_default_handler(descriptor, spec, cls):
 
     for shared in search_shared:
         libs = fs.find_libraries(
-            name, spec.prefix, shared=shared, recursive=True)
+            name, home, shared=shared, recursive=True)
         if libs:
             return libs
 
     msg = 'Unable to recursively locate {0} libraries in {1}'
-    raise spack.error.NoLibrariesError(msg.format(spec.name, spec.prefix))
+    raise spack.error.NoLibrariesError(msg.format(spec.name, home))
 
 
 class ForwardQueryToPackage(object):
@@ -1116,6 +1119,9 @@ QueryState = collections.namedtuple(
 
 
 class SpecBuildInterface(lang.ObjectWrapper):
+    # home is available in the base Package so no default is needed
+    home = ForwardQueryToPackage('home', default_handler=None)
+
     command = ForwardQueryToPackage(
         'command',
         default_handler=_command_default_handler
@@ -1511,8 +1517,9 @@ class Spec(object):
 
     @property
     def package(self):
+        assert self.concrete, "Spec.package can only be called on concrete specs"
         if not self._package:
-            self._package = spack.repo.get(self)
+            self._package = spack.repo.path.get(self)
         return self._package
 
     @property
@@ -2494,8 +2501,9 @@ class Spec(object):
         assert isinstance(self.extra_attributes, Mapping), msg
 
         # Validate the spec calling a package specific method
+        pkg_cls = spack.repo.path.get_pkg_class(self.name)
         validate_fn = getattr(
-            self.package, 'validate_detected_spec', lambda x, y: None
+            pkg_cls, 'validate_detected_spec', lambda x, y: None
         )
         validate_fn(self, self.extra_attributes)
 
@@ -2723,7 +2731,8 @@ class Spec(object):
         visited_user_specs = set()
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
-            visited_user_specs.update(x.name for x in dep.package.provided)
+            pkg_cls = spack.repo.path.get_pkg_class(dep.name)
+            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -2857,10 +2866,12 @@ class Spec(object):
             for mod in compiler.modules:
                 md.load_module(mod)
 
-            # get the path from the module
-            # the package can override the default
+            # Get the path from the module the package can override the default
+            # (this is mostly needed for Cray)
+            pkg_cls = spack.repo.path.get_pkg_class(external_spec.name)
+            package = pkg_cls(external_spec)
             external_spec.external_path = getattr(
-                external_spec.package, 'external_prefix',
+                package, 'external_prefix',
                 md.path_from_modules(external_spec.external_modules)
             )
 
@@ -3371,7 +3382,7 @@ class Spec(object):
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.get(spec.fullname)
+                spack.repo.path.get_pkg_class(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -3438,8 +3449,8 @@ class Spec(object):
                 variant = pkg_variant.make_variant(value)
                 self.variants[variant_name] = variant
 
-        pkg_variant.validate_or_raise(
-            self.variants[variant_name], self.package)
+        pkg_cls = spack.repo.path.get_pkg_class(self.name)
+        pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -3627,7 +3638,9 @@ class Spec(object):
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
-                    pkg = spack.repo.get(self.fullname)
+                    # Here we might get an abstract spec
+                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
+                    pkg = pkg_cls(self)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
                     # it as a provider of this vdep.
@@ -3765,7 +3778,8 @@ class Spec(object):
             if self._patches_assigned():
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.path.patch_index
-                    patch = index.patch_for_package(sha256, self.package)
+                    pkg_cls = spack.repo.path.get_pkg_class(self.name)
+                    patch = index.patch_for_package(sha256, pkg_cls)
                     self._patches.append(patch)
 
         return self._patches
@@ -5148,9 +5162,9 @@ class SpecParser(spack.parse.Parser):
             # Note: VersionRange(x, x) is currently concrete, hence isinstance(...).
             if (
                 spec.name and spec.versions.concrete and
-                isinstance(spec.version, vn.Version) and spec.version.is_commit
+                isinstance(spec.version, vn.GitVersion)
             ):
-                spec.version.generate_commit_lookup(spec.fullname)
+                spec.version.generate_git_lookup(spec.fullname)
 
         return specs
 
