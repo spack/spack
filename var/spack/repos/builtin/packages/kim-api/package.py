@@ -48,8 +48,6 @@ class KimApi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DZSH_COMPLETION_COMPLETIONSDIR={0}/zhs_completion.d/'.format(self.prefix),
-            '-DBASH_COMPLETION_COMPLETIONSDIR={0}/bash_completion.d/'.format(
-                self.prefix)
+            '-DCMAKE_INSTALL_SYSCONFDIR={0}/etc'.format(self.prefix)
         ]
         return args
