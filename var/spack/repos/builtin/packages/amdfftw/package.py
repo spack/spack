@@ -71,6 +71,12 @@ class Amdfftw(FftwBase):
         'amd-app-opt',
         default=False,
         description='Build with amd-app-opt suppport')
+    variant(
+        'amd-dynamic-dispatcher',
+        default=False,
+        when='@3.2:',
+        description='Single portable optimized library'
+                    ' to execute on different x86 CPU architectures')
 
     depends_on('texinfo')
 
@@ -88,10 +94,6 @@ class Amdfftw(FftwBase):
         '%gcc@:7.2',
         when='@2.2:',
         msg='GCC version above 7.2 is required for AMDFFTW')
-    conflicts(
-        '+amd-fast-planner ',
-        when='+mpi',
-        msg='mpi thread is not supported with amd-fast-planner')
     conflicts(
         '+amd-fast-planner',
         when='@2.2',
@@ -176,6 +178,10 @@ class Amdfftw(FftwBase):
         '+amd-app-opt',
         when='precision=quad',
         msg='Quad precision is not supported with amd-app-opt')
+    conflicts(
+        '+amd-dynamic-dispatcher',
+        when='%aocc',
+        msg='dynamic-dispatcher is not supported by AOCC clang compiler')
 
     def configure(self, spec, prefix):
         """Configure function"""
@@ -184,6 +190,12 @@ class Amdfftw(FftwBase):
             '--prefix={0}'.format(prefix),
             '--enable-amd-opt'
         ]
+
+        # Dynamic dispatcher builds a single portable optimized library
+        # that can execute on different x86 CPU architectures.
+        # It is supported for GCC compiler and Linux based systems only.
+        if '+amd-dynamic-dispatcher' in self.spec:
+            options.append('--enable-dynamic-dispatcher')
 
         # Check if compiler is AOCC
         if '%aocc' in spec:

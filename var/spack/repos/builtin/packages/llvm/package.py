@@ -221,7 +221,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libxml2")
 
     # lldb dependencies
-    depends_on("swig", when="+lldb")
+    with when("+lldb +python"):
+        depends_on("swig")
+        depends_on("swig@2:", when="@10:")
+        depends_on("swig@3:", when="@12:")
     depends_on("libedit", when="+lldb")
     depends_on("py-six", when="@5.0.0: +lldb +python")
 
@@ -367,7 +370,12 @@ class Llvm(CMakePackage, CudaPackage):
     patch('llvm14-hwloc-ompd.patch', when='@14')
 
     # make libflags a list in openmp subproject when ~omp_as_runtime
-    patch('libomp-libflags-as-list.patch', when='@3.7:')
+    patch('libomp-libflags-as-list.patch', when='@3.7:14')
+
+    # Add missing include leading to build fail with clang
+    patch('https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch?full_index=1',
+          sha256='514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6',
+          when='@8:11')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
