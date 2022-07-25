@@ -75,7 +75,7 @@ class Patch(object):
 
     """
     def __init__(self, pkg, path_or_url, level,
-                 working_dir, ignore_whitespace):
+                 working_dir, ignore_whitespace=False):
         # validate level (must be an integer >= 0)
         if not isinstance(level, int) or not level >= 0:
             raise ValueError("Patch level needs to be a non-negative integer.")
