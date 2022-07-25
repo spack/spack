@@ -60,6 +60,13 @@ class Y(Package):
 """)
 
 
+_pkgv = ('v', """\
+class V(Package):
+    version('2.1')
+    version('2.0')
+""")
+
+
 @pytest.fixture
 def test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
@@ -71,7 +78,7 @@ repo:
 """)
 
     packages_dir = tmpdir.join('packages')
-    for (pkg_name, pkg_str) in [_pkgx, _pkgy]:
+    for (pkg_name, pkg_str) in [_pkgx, _pkgy, _pkgv]:
         pkg_dir = packages_dir.ensure(pkg_name, dir=True)
         pkg_file = pkg_dir.join('package.py')
         with open(str(pkg_file), 'w') as f:
@@ -167,6 +174,9 @@ packages:
 
 
 def test_one_package_multiple_one_of_groups(concretize_scope, test_repo):
+    """One package has two 'one_of' groups; check that both are
+       applied.
+    """
     if spack.config.get('config:concretizer') == 'original':
         pytest.skip("Original concretizer does not support configuration"
                     " requirements")
@@ -185,3 +195,31 @@ packages:
 
     s2 = Spec('y@2.4').concretized()
     assert s2.satisfies('%gcc+shared')
+
+
+def test_requirements_for_package_that_is_not_needed(
+        concretize_scope, test_repo):
+    """Specify requirements for specs that are not concretized or
+       a dependency of a concretized spec (in other words, none of
+       the requirements are used).
+    """
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
+    # Note that the exact contents aren't important since this isn't
+    # intended to be used, but the important thing is that a number of
+    # packages have requirements applied
+    conf_str = """\
+packages:
+  x:
+    require: "@1.0"
+  y:
+    require:
+    - one_of: ["@2.4%gcc", "@2.5%clang"]
+    - one_of: ["@2.5~shared", "@2.4+shared"]
+"""
+    update_packages_config(conf_str)
+
+    s1 = Spec('v').concretized()
+    assert s1.satisfies('@2.1')
