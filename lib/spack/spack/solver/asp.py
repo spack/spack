@@ -749,6 +749,8 @@ class SpackSolverSetup(object):
 
         def equivalent_versions(ver_a, ver_b):
             # test if a commit version should be equivalenced with another version
+            # only compare against version lists with a single entry since there
+            # can only be one equivalent version
             if (isinstance(ver_a, spack.version.GitVersion) and
                 not isinstance(ver_b, spack.version.GitVersion)
                 and len(ver_b.version) == 1):
