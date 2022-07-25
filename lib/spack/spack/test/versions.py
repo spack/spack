@@ -732,9 +732,14 @@ def test_version_list_with_range_and_concrete_version_is_not_concrete():
     assert v.concrete
 
 
-def test_git_hash_can_be_assigned_a_version():
-    v = Version('687bc7d40e96f497ed8dc2e18fd0479005b24cfb=develop')
-    v_equivalent = Version('develop')
+@pytest.mark.parametrize('vstring, eq_vstring',
+                         (('abc12' * 8 + '=develop', 'develop'),
+                          ('git.' + 'abc12' * 8 + '=main', 'main'),
+                          ('a' * 40 + '=develop', 'develop')
+                          ))
+def test_git_hash_can_be_assigned_a_version(vstring, eq_vstring):
+    v = Version(vstring)
+    v_equivalent = Version(eq_vstring)
     assert v.is_commit
     assert v.is_ref
     assert not v._ref_lookup
