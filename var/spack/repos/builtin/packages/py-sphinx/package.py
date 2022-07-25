@@ -14,6 +14,7 @@ class PySphinx(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('5.1.0', sha256='7893d10d9d852c16673f9b1b7e9eda1606b420b7810270294d6e4b44c0accacc')
     version('5.0.2', sha256='b18e978ea7565720f26019c702cd85c84376e948370f1cd43d60265010e1c7b0')
     version('5.0.1', sha256='f4da1187785a5bc7312cc271b0e867a93946c319d106363e102936a3d9857306')
     version('5.0.0', sha256='464d9c1bd5613bcebe76b46658763f3f3dbb184da7406e632a84596d3cd8ee90')
@@ -75,7 +76,8 @@ class PySphinx(PythonPackage):
     depends_on('py-jinja2@2.3:', type=('build', 'run'))
     depends_on('py-jinja2@2.3:2', when='@:4.0.1', type=('build', 'run'))
     depends_on('py-pygments@2.0:', type=('build', 'run'))
-    depends_on('py-docutils@0.14:0.18', when='@5:', type=('build', 'run'))
+    depends_on('py-docutils@0.14:0.19', when='@5.1:', type=('build', 'run'))
+    depends_on('py-docutils@0.14:0.18', when='@5.0', type=('build', 'run'))
     depends_on('py-docutils@0.14:0.17', when='@4', type=('build', 'run'))
     depends_on('py-docutils@0.12:0.16', when='@:3', type=('build', 'run'))
     depends_on('py-snowballstemmer@1.1:', type=('build', 'run'))
