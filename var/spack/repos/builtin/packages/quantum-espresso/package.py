@@ -104,7 +104,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         # only cmake is supported 
         conflicts('~cmake', msg='Only CMake supported for GPU-enabled version')
         # PGI support
-        conflicts('%pgi@:18.10', msg='PGI supported for v >= 19.10')
+        conflicts('%pgi@:19.9', msg='PGI supported for v >= 19.10')
 
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
