@@ -19,29 +19,29 @@ from spack.cmd.style import changed_files
 from spack.util.executable import which
 
 #: directory with sample style files
-style_data = os.path.join(spack.paths.test_path, 'data', 'style')
+style_data = os.path.join(spack.paths.test_path, "data", "style")
 
 
 style = spack.main.SpackCommand("style")
 
 
 def has_develop_branch():
-    git = which('git')
+    git = which("git")
     if not git:
         return False
-    git("show-ref", "--verify", "--quiet",
-        "refs/heads/develop", fail_on_error=False)
+    git("show-ref", "--verify", "--quiet", "refs/heads/develop", fail_on_error=False)
     return git.returncode == 0
 
 
 # spack style requires git to run -- skip the tests if it's not there
-pytestmark = pytest.mark.skipif(not has_develop_branch(),
-                                reason='requires git with develop branch')
+pytestmark = pytest.mark.skipif(
+    not has_develop_branch(), reason="requires git with develop branch"
+)
 
 # The style tools have requirements to use newer Python versions.  We simplify by
 # requiring Python 3.6 or higher to run spack style.
 skip_old_python = pytest.mark.skipif(
-    sys.version_info < (3, 6), reason='requires Python 3.6 or higher'
+    sys.version_info < (3, 6), reason="requires Python 3.6 or higher"
 )
 
 
@@ -74,11 +74,13 @@ def flake8_package_with_errors(scope="function"):
     try:
         shutil.copy(filename, tmp)
         package = FileFilter(filename)
-        package.filter("state = 'unmodified'", "state    =    'modified'", string=True)
+
+        # this is a black error (quote style and spacing before/after operator)
+        package.filter('state = "unmodified"', "state    =    'modified'", string=True)
+
+        # this is an isort error (orderign) and a flake8 error (unused import)
         package.filter(
-            "from spack.package import *",
-            "from spack.package import *\nimport os",
-            string=True
+            "from spack.package import *", "from spack.package import *\nimport os", string=True
         )
         yield filename
     finally:
@@ -88,10 +90,7 @@ def flake8_package_with_errors(scope="function"):
 def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = [
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
-        for path in changed_files()
-    ]
+    files = [os.path.join(spack.paths.prefix, os.path.normpath(path)) for path in changed_files()]
 
     # There will likely be other files that have changed
     # when these tests are run
@@ -108,11 +107,11 @@ def test_changed_files_from_git_rev_base(tmpdir, capfd):
         git("config", "user.email", "test@user.com")
         git("commit", "--allow-empty", "-m", "initial commit")
 
-        tmpdir.ensure('bin/spack')
-        assert changed_files(base="HEAD") == ['bin/spack']
-        assert changed_files(base="main") == ['bin/spack']
+        tmpdir.ensure("bin/spack")
+        assert changed_files(base="HEAD") == ["bin/spack"]
+        assert changed_files(base="main") == ["bin/spack"]
 
-        git("add", 'bin/spack')
+        git("add", "bin/spack")
         git("commit", "-m", "v1")
         assert changed_files(base="HEAD") == []
         assert changed_files(base="HEAD~") == ["bin/spack"]
@@ -138,10 +137,12 @@ def test_changed_no_base(tmpdir, capfd):
 
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
-    files = set([
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
-        for path in changed_files(all_files=True)
-    ])
+    files = set(
+        [
+            os.path.join(spack.paths.prefix, os.path.normpath(path))
+            for path in changed_files(all_files=True)
+        ]
+    )
 
     # spack has a lot of files -- check that we're in the right ballpark
     assert len(files) > 6000
@@ -180,12 +181,8 @@ def test_bad_root(tmpdir):
 
 def test_style_is_package(tmpdir):
     """Ensure the is_package() function works."""
-    assert spack.cmd.style.is_package(
-        "var/spack/repos/builtin/packages/hdf5/package.py"
-    )
-    assert spack.cmd.style.is_package(
-        "var/spack/repos/builtin/packages/zlib/package.py"
-    )
+    assert spack.cmd.style.is_package("var/spack/repos/builtin/packages/hdf5/package.py")
+    assert spack.cmd.style.is_package("var/spack/repos/builtin/packages/zlib/package.py")
     assert not spack.cmd.style.is_package("lib/spack/spack/spec.py")
     assert not spack.cmd.style.is_package("lib/spack/external/pytest.py")
 
@@ -241,10 +238,10 @@ def test_fix_style(external_style_root):
     assert not filecmp.cmp(broken_py, fixed_py)
 
     output = style(
-        "--root", str(tmpdir),
-        "--no-mypy",    # mypy doesn't fix, so skip it
+        "--root",
+        str(tmpdir),
+        "--no-mypy",  # mypy doesn't fix, so skip it
         "--no-flake8",  # flake8 doesn't fix, so skip it
-        "--black",
         "--fix",
     )
     print(output)
@@ -262,10 +259,7 @@ def test_external_root(external_style_root):
 
     # make sure tools are finding issues with external root,
     # not the real one.
-    output = style(
-        "--root-relative", "--black", "--root", str(tmpdir),
-        fail_on_error=False
-    )
+    output = style("--root-relative", "--root", str(tmpdir), fail_on_error=False)
 
     # make sure it failed
     assert style.returncode != 0
@@ -330,7 +324,7 @@ def test_style_with_errors(flake8_package_with_errors):
 @pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 @pytest.mark.skipif(not which("black"), reason="black is not installed.")
 def test_style_with_black(flake8_package_with_errors):
-    output = style("--black", flake8_package_with_errors, fail_on_error=False)
+    output = style(flake8_package_with_errors, fail_on_error=False)
     assert "black found errors" in output
     assert style.returncode != 0
     assert "spack style found errors" in output
