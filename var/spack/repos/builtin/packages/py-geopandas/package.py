@@ -20,6 +20,7 @@ class PyGeopandas(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.11.1', sha256='f0f0c8d0423d30cf81de2056d853145c4362739350a7f8f2d72cc7409ef1eca1')
     version('0.11.0', sha256='562fe7dc19a6e0f61532d654c4752f7bf46e0714990c5844fe3de3f9c99cb873')
     version('0.10.2', sha256='efbf47e70732e25c3727222019c92b39b2e0a66ebe4fe379fbe1aa43a2a871db')
     version('0.10.1', sha256='6429ee4e0cc94f26aff12139445196ef83fe17cadbe816925508a1799f60a681')
