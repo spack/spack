@@ -550,23 +550,30 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
     raise ImportError(msg)
 
 
-def ensure_executables_in_path_or_raise(executables, abstract_spec):
+def ensure_executables_in_path_or_raise(executables, abstract_spec, cmd_check=None):
     """Ensure that some executables are in path or raise.
 
     Args:
         executables (list): list of executables to be searched in the PATH,
             in order. The function exits on the first one found.
         abstract_spec (str): abstract spec that provides the executables
+        cmd_check (object): callable predicate that takes a
+            ``spack.util.executable.Executable`` command and validate it. Should return
+            ``True`` if the executable is acceptable, ``False`` otherwise.
+            Can be used to, e.g., ensure a suitable version of the command before
+            accepting for bootstrapping.
 
     Raises:
         RuntimeError: if the executables cannot be ensured to be in PATH
 
     Return:
         Executable object
+
     """
     cmd = spack.util.executable.which(*executables)
     if cmd:
-        return cmd
+        if not cmd_check or cmd_check(cmd):
+            return cmd
 
     executables_str = ", ".join(executables)
 
@@ -827,8 +834,24 @@ def black_root_spec():
 
 def ensure_black_in_path_or_raise():
     """Ensure that black is in the PATH or raise."""
-    executable, root_spec = "black", black_root_spec()
-    return ensure_executables_in_path_or_raise([executable], abstract_spec=root_spec)
+    root_spec = black_root_spec()
+
+    def check_black(black_cmd):
+        """Ensure sutable black version."""
+        try:
+            output = black_cmd("--version", output=str)
+        except Exception as e:
+            tty.debug("Error getting version of %s: %s" % (black_cmd, e))
+            return False
+
+        match = re.match("black, ([^ ]+)", output)
+        if not match:
+            return False
+
+        black_version = spack.version.Version(match.group(1))
+        return black_version.satisfies(spack.spec.Spec(root_spec).versions)
+
+    return ensure_executables_in_path_or_raise(["black"], root_spec, check_black)
 
 
 def flake8_root_spec():
