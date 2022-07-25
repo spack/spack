@@ -201,7 +201,7 @@ def test_requirements_for_package_that_is_not_needed(
         concretize_scope, test_repo):
     """Specify requirements for specs that are not concretized or
        a dependency of a concretized spec (in other words, none of
-       the requirements are used).
+       the requirements are used for the requested spec).
     """
     if spack.config.get('config:concretizer') == 'original':
         pytest.skip("Original concretizer does not support configuration"
