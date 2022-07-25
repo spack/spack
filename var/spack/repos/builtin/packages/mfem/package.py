@@ -260,7 +260,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on('strumpack+rocm amdgpu_target={0}'.format(gfx),
                    when='+strumpack+rocm amdgpu_target={0}'.format(gfx))
     # The PETSc tests in MFEM will fail if PETSc is not configured with
-    # MUMPS (and SuiteSparse in oler versions). On the other hand, PETSc built
+    # MUMPS (and SuiteSparse in older versions). On the other hand, PETSc built
     # with MUMPS is not strictly required, so we do not require it here.
     depends_on('petsc@3.8:+mpi+double+hypre', when='+petsc')
     depends_on('slepc@3.8.0:', when='+slepc')

@@ -21,8 +21,7 @@ class Gplates(CMakePackage):
     manual_download = True
 
     version('2.3.0', sha256='7d4be9d524d1fcbb6a81de29bd1d4b13133082db23f0808965c5efe30e9538ab')
-    version('2.1.0', sha256='5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07', deprecated=True)
-    version('2.0.0', sha256='1c27d3932a851153baee7cec48e57c2bbc87e4eea02f8a986882515ba4b44c0b', deprecated=True)
+    version('2.1.0', sha256='5a52242520d7e243c541e164c8417b23f4e17fcd79ed81f865b2c13628bb0e07')
 
     depends_on('cmake@3.5:', when='@2.3:', type='build')
     depends_on('cmake@2.8.8:', when='@2.1', type='build')
@@ -43,8 +42,6 @@ class Gplates(CMakePackage):
     depends_on('qt@4.4:4+opengl', when='@:2.1')
     depends_on('gdal@1.3.2:', when='@2.3:')
     depends_on('gdal@1.3.2:2', when='@2.1')
-    # GDAL's OGRSFDriverRegistrar is not compatible anymore starting with 2.0.
-    depends_on('gdal@1.3.2:1', when='@2.0')
     depends_on('cgal@4.7:', when='@2.3:')
     depends_on('cgal@3.3.1:', when='@:2.1')
     depends_on('proj@4.6:', when='@2.3:')

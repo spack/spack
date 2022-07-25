@@ -202,4 +202,4 @@ class LlvmAmdgpu(CMakePackage):
                 ]
                 cmake_args.extend(self.cmake_args())
                 cmake(*cmake_args)
-                make()
+                cmake("--build", ".")

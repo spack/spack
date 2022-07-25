@@ -24,9 +24,7 @@ class Rocsparse(CMakePackage):
     maintainers = ['srekolam', 'arjun-raj-kuppala']
     libraries = ['librocsparse']
 
-    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
-                      'gfx90a:xnack-', 'gfx90a:xnack+',
-                      'gfx1030')
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')

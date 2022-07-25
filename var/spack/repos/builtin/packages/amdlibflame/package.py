@@ -37,6 +37,7 @@ class Amdlibflame(LibflameBase):
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.2', sha256='6b5337fb668b82d0ed0a4ab4b5af4e2f72e4cedbeeb4a8b6eb9a3ef057fb749a')
     version('3.1', sha256='4520fb93fcc89161f65a40810cae0fa1f87cecb242da4a69655f502545a53426')
     version('3.0.1', sha256='5859e7b39ffbe73115dd598b035f212d36310462cf3a45e555a5087301710776')
     version('3.0', sha256='d94e08b688539748571e6d4c1ec1ce42732eac18bd75de989234983c33f01ced')
@@ -69,21 +70,32 @@ class Amdlibflame(LibflameBase):
     def configure_args(self):
         """configure_args function"""
         args = super(Amdlibflame, self).configure_args()
-        args.append("--enable-external-lapack-interfaces")
 
-        """To enabled Fortran to C calling convention for
-        complex types when compiling with aocc flang"""
-        if "@3.0: %aocc" in self.spec:
+        # From 3.2 version, amd optimized flags are encapsulated under:
+        # enable-amd-flags for gcc compiler
+        # enable-amd-aocc-flags for aocc compiler
+        if "@3.2:" in self.spec:
+            if "%gcc" in self.spec:
+                args.append("--enable-amd-flags")
+            if "%aocc" in self.spec:
+                args.append("--enable-amd-aocc-flags")
+
+        if "@:3.1" in self.spec:
+            args.append("--enable-external-lapack-interfaces")
+
+        if "@3.1" in self.spec:
+            args.append("--enable-blas-ext-gemmt")
+
+        if "@3.1 %aocc" in self.spec:
+            args.append("--enable-void-return-complex")
+
+        if "@3.0:3.1 %aocc" in self.spec:
+            """To enabled Fortran to C calling convention for
+            complex types when compiling with aocc flang"""
             args.append("--enable-f2c-dotc")
 
         if "@3.0.1: +ilp64" in self.spec:
             args.append("--enable-ilp64")
-
-        if "@3.1: %aocc" in self.spec:
-            args.append("--enable-void-return-complex")
-
-        if "@3.1: " in self.spec:
-            args.append("--enable-blas-ext-gemmt")
 
         return args
 

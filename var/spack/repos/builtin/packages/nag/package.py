@@ -28,6 +28,10 @@ class Nag(Package):
     license_vars = ['NAG_KUSARI_FILE']
     license_url = 'http://www.nag.com/doc/inun/np61/lin-mac/klicence.txt'
 
+    # The installation script erroneously revokes execute permissions for the
+    # installation directory of the man pages and therefore fails to copy all the files:
+    patch('chmod_man.patch', when='@7.0:')
+
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent
         # TODO: We currently only support x86_64
@@ -38,7 +42,7 @@ class Nag(Package):
         # Set installation directories
         os.environ['INSTALL_TO_BINDIR'] = prefix.bin
         os.environ['INSTALL_TO_LIBDIR'] = prefix.lib
-        os.environ['INSTALL_TO_MANDIR'] = prefix + '/share/man/man'
+        os.environ['INSTALL_TO_MANDIR'] = prefix.share.man.man
 
         # Run install script
         os.system('./INSTALLU.sh')

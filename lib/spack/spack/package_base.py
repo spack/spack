@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import match_predicate, memoized, nullcontext
+from llnl.util.lang import classproperty, match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -50,6 +50,7 @@ import spack.mixins
 import spack.multimethod
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.store
 import spack.url
 import spack.util.environment
@@ -207,8 +208,8 @@ class DetectablePackageMeta(object):
         # If a package has the executables or libraries  attribute then it's
         # assumed to be detectable
         if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
-            @property
-            def platform_executables(self):
+            @classmethod
+            def platform_executables(cls):
                 def to_windows_exe(exe):
                     if exe.endswith('$'):
                         exe = exe.replace('$', '%s$' % spack.util.path.win_exe_ext())
@@ -216,8 +217,8 @@ class DetectablePackageMeta(object):
                         exe += spack.util.path.win_exe_ext()
                     return exe
                 plat_exe = []
-                if hasattr(self, 'executables'):
-                    for exe in self.executables:
+                if hasattr(cls, 'executables'):
+                    for exe in cls.executables:
                         if sys.platform == 'win32':
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
@@ -396,63 +397,6 @@ class PackageMeta(
             setattr(PackageMeta, attr_name, check_list)
             return func
         return _decorator
-
-    @property
-    def package_dir(self):
-        """Directory where the package.py file lives."""
-        return os.path.abspath(os.path.dirname(self.module.__file__))
-
-    @property
-    def module(self):
-        """Module object (not just the name) that this package is defined in.
-
-        We use this to add variables to package modules.  This makes
-        install() methods easier to write (e.g., can call configure())
-        """
-        return __import__(self.__module__, fromlist=[self.__name__])
-
-    @property
-    def namespace(self):
-        """Spack namespace for the package, which identifies its repo."""
-        return spack.repo.namespace_from_fullname(self.__module__)
-
-    @property
-    def fullname(self):
-        """Name of this package, including the namespace"""
-        return '%s.%s' % (self.namespace, self.name)
-
-    @property
-    def fullnames(self):
-        """
-        Fullnames for this package and any packages from which it inherits.
-        """
-        fullnames = []
-        for cls in inspect.getmro(self):
-            namespace = getattr(cls, 'namespace', None)
-            if namespace:
-                fullnames.append('%s.%s' % (namespace, self.name))
-            if namespace == 'builtin':
-                # builtin packages cannot inherit from other repos
-                break
-        return fullnames
-
-    @property
-    def name(self):
-        """The name of this package.
-
-        The name of a package is the name of its Python module, without
-        the containing module names.
-        """
-        if self._name is None:
-            self._name = self.module.__name__
-            if '.' in self._name:
-                self._name = self._name[self._name.rindex('.') + 1:]
-        return self._name
-
-    @property
-    def global_license_dir(self):
-        """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
 
 
 def run_before(*phases):
@@ -806,7 +750,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self._fetch_time = 0.0
 
         if self.is_extension:
-            spack.repo.get(self.extendee_spec)._check_extendable()
+            pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
+            pkg_cls(self.extendee_spec)._check_extendable()
 
         super(PackageBase, self).__init__()
 
@@ -902,60 +847,60 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
-    def enum_constraints(self, visited=None):
-        """Return transitive dependency constraints on this package."""
-        if visited is None:
-            visited = set()
-        visited.add(self.name)
-
-        names = []
-        clauses = []
-
-        for name in self.dependencies:
-            if name not in visited and not spack.spec.Spec(name).virtual:
-                pkg = spack.repo.get(name)
-                dvis, dnames, dclauses = pkg.enum_constraints(visited)
-                visited |= dvis
-                names.extend(dnames)
-                clauses.extend(dclauses)
-
-        return visited
-
-    # package_dir and module are *class* properties (see PackageMeta),
-    # but to make them work on instances we need these defs as well.
-    @property
-    def package_dir(self):
+    @classproperty
+    def package_dir(cls):
         """Directory where the package.py file lives."""
-        return type(self).package_dir
+        return os.path.abspath(os.path.dirname(cls.module.__file__))
 
-    @property
-    def module(self):
-        """Module object that this package is defined in."""
-        return type(self).module
+    @classproperty
+    def module(cls):
+        """Module object (not just the name) that this package is defined in.
 
-    @property
-    def namespace(self):
+        We use this to add variables to package modules.  This makes
+        install() methods easier to write (e.g., can call configure())
+        """
+        return __import__(cls.__module__, fromlist=[cls.__name__])
+
+    @classproperty
+    def namespace(cls):
         """Spack namespace for the package, which identifies its repo."""
-        return type(self).namespace
+        return spack.repo.namespace_from_fullname(cls.__module__)
 
-    @property
-    def fullname(self):
-        """Name of this package, including namespace: namespace.name."""
-        return type(self).fullname
+    @classproperty
+    def fullname(cls):
+        """Name of this package, including the namespace"""
+        return '%s.%s' % (cls.namespace, cls.name)
 
-    @property
-    def fullnames(self):
-        return type(self).fullnames
+    @classproperty
+    def fullnames(cls):
+        """Fullnames for this package and any packages from which it inherits."""
+        fullnames = []
+        for cls in inspect.getmro(cls):
+            namespace = getattr(cls, 'namespace', None)
+            if namespace:
+                fullnames.append('%s.%s' % (namespace, cls.name))
+            if namespace == 'builtin':
+                # builtin packages cannot inherit from other repos
+                break
+        return fullnames
 
-    @property
-    def name(self):
-        """Name of this package (the module without parent modules)."""
-        return type(self).name
+    @classproperty
+    def name(cls):
+        """The name of this package.
 
-    @property
-    def global_license_dir(self):
-        """Returns the directory where global license files are stored."""
-        return type(self).global_license_dir
+        The name of a package is the name of its Python module, without
+        the containing module names.
+        """
+        if cls._name is None:
+            cls._name = cls.module.__name__
+            if '.' in cls._name:
+                cls._name = cls._name[cls._name.rindex('.') + 1:]
+        return cls._name
+
+    @classproperty
+    def global_license_dir(cls):
+        """Returns the directory where license files for all packages are stored."""
+        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
 
     @property
     def global_license_file(self):
@@ -973,8 +918,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                              " does not have a concrete version.")
         return self.spec.versions[0]
 
+    @classmethod
     @memoized
-    def version_urls(self):
+    def version_urls(cls):
         """OrderedDict of explicitly defined URLs for versions of this package.
 
         Return:
@@ -986,7 +932,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if a package only defines ``url`` at the top level.
         """
         version_urls = collections.OrderedDict()
-        for v, args in sorted(self.versions.items()):
+        for v, args in sorted(cls.versions.items()):
             if 'url' in args:
                 version_urls[v] = args['url']
         return version_urls
@@ -1026,14 +972,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def all_urls_for_version(self, version, custom_url_for_version=None):
-        """Returns all URLs derived from version_urls(), url, urls, and
+    def all_urls_for_version(self, version):
+        """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
 
-        version: class Version
-            The version for which a URL is sought.
-
-        See Class Version (version.py)
+        Args:
+            version (spack.version.Version): the version for which a URL is sought
         """
         uf = None
         if type(self).url_for_version != Package.url_for_version:
@@ -1329,7 +1273,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self._fetcher = f
         self._fetcher.set_package(self)
 
-    def dependencies_of_type(self, *deptypes):
+    @classmethod
+    def dependencies_of_type(cls, *deptypes):
         """Get dependencies that can possibly have these deptypes.
 
         This analyzes the package and determines which dependencies *can*
@@ -1339,8 +1284,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         run dependency in another.
         """
         return dict(
-            (name, conds) for name, conds in self.dependencies.items()
-            if any(dt in self.dependencies[name][cond].type
+            (name, conds) for name, conds in cls.dependencies.items()
+            if any(dt in cls.dependencies[name][cond].type
                    for cond in conds for dt in deptypes))
 
     @property
@@ -1371,8 +1316,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # TODO: do something sane here with more than one extendee
             # If it's not concrete, then return the spec from the
             # extends() directive since that is all we know so far.
-            spec, kwargs = next(iter(self.extendees.items()))
-            return spec
+            spec_str, kwargs = next(iter(self.extendees.items()))
+            return spack.spec.Spec(spec_str)
 
     @property
     def extendee_args(self):
@@ -1611,8 +1556,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.debug('Patching failed last time. Restaging.')
-            self.stage.restage()
+            if self.stage.managed_by_spack:
+                tty.debug('Patching failed last time. Restaging.')
+                self.stage.restage()
+            else:
+                # develop specs/ DIYStages may have patch failures but
+                # should never be restaged
+                msg = ('A patch failure was detected in %s.' % self.name +
+                       ' Build errors may occur due to this.')
+                tty.warn(msg)
+                return
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
@@ -2707,14 +2660,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.stage.destroy()
 
-    def format_doc(self, **kwargs):
+    @classmethod
+    def format_doc(cls, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
         indent = kwargs.get('indent', 0)
 
-        if not self.__doc__:
+        if not cls.__doc__:
             return ""
 
-        doc = re.sub(r'\s+', ' ', self.__doc__)
+        doc = re.sub(r'\s+', ' ', cls.__doc__)
         lines = textwrap.wrap(doc, 72)
         results = six.StringIO()
         for line in lines:

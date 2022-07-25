@@ -14,9 +14,18 @@ import spack.util.url as url_util
 def get_mirror_connection(url, url_type="push"):
     connection = {}
     # Try to find a mirror for potential connection information
-    for mirror in spack.mirror.MirrorCollection().values():
-        if "%s://%s" % (url.scheme, url.netloc) == mirror.push_url:
-            connection = mirror.to_dict()[url_type]
+    # Check to see if desired file starts with any of the mirror URLs
+    rebuilt_path = url_util.format(url)
+    # Gather dict of push URLS point to the value of the whole mirror
+    mirror_dict = {x.push_url: x for x in spack.mirror.MirrorCollection().values()}  # noqa: E501
+    # Ensure most specific URLs (longest) are presented first
+    mirror_url_keys = mirror_dict.keys()
+    mirror_url_keys = sorted(mirror_url_keys, key=len, reverse=True)
+    for mURL in mirror_url_keys:
+        # See if desired URL starts with the mirror's push URL
+        if rebuilt_path.startswith(mURL):
+            connection = mirror_dict[mURL].to_dict()[url_type]
+            break
     return connection
 
 
