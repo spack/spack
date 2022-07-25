@@ -930,7 +930,7 @@ def stable_partition(arr, pred):
 
     Args:
         arr (list): constant array to be partitioned
-        pred (function): unary function mapping to bool
+        pred: unary function mapping to bool
 
     Returns:
         A stably ordered copy of arr partitioned by `pred`.
