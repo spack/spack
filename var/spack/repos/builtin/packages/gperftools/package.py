@@ -29,8 +29,7 @@ class Gperftools(AutotoolsPackage):
     variant('dynamic_sized_delete_support', default=False, description="Try to build run-time switch for sized delete operator")
     variant('debugalloc', default=True, description="Build versions of libs with debugalloc")
     # libunwind is not supported on Darwin
-    variant('libunwind', default=sys.platform != 'darwin', description="Enable libunwind linking")
-    conflicts('+libunwind platform=darwin', msg='libunwind is not supported on Darwin')
+    variant('libunwind', default=True, when="platform=linux", description="Enable libunwind linking")
 
     depends_on("unwind", when="+libunwind")
 
