@@ -223,3 +223,27 @@ packages:
 
     s1 = Spec('v').concretized()
     assert s1.satisfies('@2.1')
+
+
+def test_one_of_ordering(concretize_scope, test_repo):
+    """Ensure that earlier elements of 'one_of' have higher priority.
+       This priority should override default priority (e.g. choosing
+       later versions).
+    """
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip("Original concretizer does not support configuration"
+                    " requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require:
+    - one_of: ["@2.4", "@2.5"]
+"""
+    update_packages_config(conf_str)
+
+    s1 = Spec('y').concretized()
+    assert s1.satisfies('@2.4')
+
+    s2 = Spec('y@2.5').concretized()
+    assert s2.satisfies('@2.5')
