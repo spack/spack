@@ -59,7 +59,7 @@ spack:
       # The general cuda should be set via the generic packages.yaml!
       variants: +cuda cuda_arch=70 +omp_tsan +python +link_dylib
     mvapich2:
-      variants: fabrics=mrail process_managers=slurm file_systems=gpfs
+      variants: fabrics=mrail process_managers=slurm file_systems=gpfs,ime
     pgi:
       variants: +network+nvidia+mpi
   specs:
@@ -119,7 +119,7 @@ spack:
     - libxslt
     - libzmq+libsodium%intel
     - likwid
-    - mvapich2@2.3.6
+    - mvapich2@2.3.7
     - ncurses
     - ninja
     - openscenegraph  # doesn't like to be built in a spec with LLVM
