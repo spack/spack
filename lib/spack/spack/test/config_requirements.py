@@ -152,7 +152,7 @@ packages:
     assert spec['y'].satisfies('@2.4')
 
 
-def test_one_of(concretize_scope, test_repo):
+def test_oneof(concretize_scope, test_repo):
     """'one_of' allows forcing the concretizer to satisfy one of
        the specs in the group (but not all have to be satisfied).
     """
@@ -173,7 +173,7 @@ packages:
     assert spec['y'].satisfies('@2.4+shared')
 
 
-def test_one_package_multiple_one_of_groups(concretize_scope, test_repo):
+def test_one_package_multiple_oneof_groups(concretize_scope, test_repo):
     """One package has two 'one_of' groups; check that both are
        applied.
     """
@@ -225,7 +225,7 @@ packages:
     assert s1.satisfies('@2.1')
 
 
-def test_one_of_ordering(concretize_scope, test_repo):
+def test_oneof_ordering(concretize_scope, test_repo):
     """Ensure that earlier elements of 'one_of' have higher priority.
        This priority should override default priority (e.g. choosing
        later versions).
