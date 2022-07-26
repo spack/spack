@@ -1,0 +1,30 @@
+diff -ruN spack-src/confdb/config.rpath spack-src-patched/confdb/config.rpath
+--- spack-src/confdb/config.rpath	2022-03-29 15:13:49.000000000 -0700
++++ spack-src-patched/confdb/config.rpath	2022-07-25 17:54:14.638367460 -0700
+@@ -76,7 +76,7 @@
+         ecc*)
+           wl='-Wl,'
+           ;;
+-        icc* | ifort*)
++        icc* | icx* | ifort* | ifx*)
+           wl='-Wl,'
+           ;;
+         lf95*)
+@@ -233,7 +233,7 @@
+           enable_dtags_flag="${wl}--enable-new-dtags"
+           disable_dtags_flag="${wl}--disable-new-dtags"
+         else
+-          case $cc_basename in ifort*)
++          case $cc_basename in ifort* | ifx*)
+             enable_dtags_flag="${wl}--enable-new-dtags"
+             disable_dtags_flag="${wl}--disable-new-dtags"
+             ;;
+@@ -380,7 +380,7 @@
+       ;;
+     darwin* | rhapsody*)
+       hardcode_direct=no
+-      if { case $cc_basename in ifort*) true;; *) test "$GCC" = yes;; esac; }; then
++      if { case $cc_basename in ifort* | ifx*) true;; *) test "$GCC" = yes;; esac; }; then
+         :
+       else
+         ld_shlibs=no
