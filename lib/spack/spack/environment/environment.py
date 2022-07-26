@@ -1573,11 +1573,12 @@ class Environment(object):
                     os.remove(build_log_link)
                 symlink(spec.package.build_log_path, build_log_link)
 
-    def uninstalled_specs(self):
-        """Return a list of all uninstalled (and non-dev) specs."""
-        # Do the installed check across all specs within a single
-        # DB read transaction to reduce time spent in lock acquisition.
-        uninstalled_specs = []
+    def _partition_roots_by_install_status(self):
+        """Partition root specs into those that do not have to be passed to the
+        installer, and those that should be, taking into account development
+        specs. This is done in a single read transaction per environment instead
+        of per spec."""
+        installed, uninstalled = [], []
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
@@ -1585,8 +1586,15 @@ class Environment(object):
                         spec.satisfies('dev_path=*') or
                         spec.satisfies('^dev_path=*')
                 ):
-                    uninstalled_specs.append(spec)
-        return uninstalled_specs
+                    uninstalled.append(spec)
+                else:
+                    installed.append(spec)
+        return installed, uninstalled
+
+    def uninstalled_specs(self):
+        """Return root specs that are not installed, or are installed, but
+        are development specs themselves or have those among their dependencies."""
+        return self._partition_roots_by_install_status()[1]
 
     def install_all(self, **install_args):
         """Install all concretized specs in an environment.
@@ -1604,22 +1612,21 @@ class Environment(object):
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
-        # locks, this does an initial check across all specs within a single
-        # DB read transaction to reduce time spent in this case. In the next
-        # three lines we remove any already-installed root specs from the list
-        # to install.  However, uninstalled_specs() only considers root specs,
-        # so this will allow dep specs to be unnecessarily re-installed.
-        uninstalled_roots = self.uninstalled_specs()
-        specs_to_install = specs or uninstalled_roots
-        specs_to_install = [s for s in specs_to_install
-                            if s not in self.roots() or s in uninstalled_roots]
+        # locks. As a small optimization, drop already installed root specs.
+        installed_roots, uninstalled_roots = self._partition_roots_by_install_status()
+        if specs:
+            specs_to_install = [s for s in specs if s not in installed_roots]
+            specs_dropped = [s for s in specs if s in installed_roots]
+        else:
+            specs_to_install = uninstalled_roots
+            specs_dropped = installed_roots
 
-        # ensure specs already installed are marked explicit
-        all_specs = specs or [cs for _, cs in self.concretized_specs()]
-        specs_installed = [s for s in all_specs if s.installed]
-        if specs_installed:
+        # We need to repeat the work of the installer thanks to the above optimization:
+        # Already installed root specs should be marked explicitly installed in the
+        # database.
+        if specs_dropped:
             with spack.store.db.write_transaction():  # do all in one transaction
-                for spec in specs_installed:
+                for spec in specs_dropped:
                     spack.store.db.update_explicit(spec, True)
 
         if not specs_to_install:
