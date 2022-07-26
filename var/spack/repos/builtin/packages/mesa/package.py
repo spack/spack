@@ -127,8 +127,7 @@ class Mesa(MesonPackage):
 
     patch('mesa_check_llvm_version_suffix.patch', when='@21.2.3:')
 
-    # 'auto' needed when shared llvm is built
-    @when('^llvm~shared_libs')
+    # Explicitly use the llvm-config tool
     def patch(self):
         filter_file(
             r"_llvm_method = 'auto'",

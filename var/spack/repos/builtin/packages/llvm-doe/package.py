@@ -92,12 +92,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         description="Build with split dwarf information",
     )
     variant(
-        "shared_libs",
-        default=False,
-        description="Build all components as shared libraries, faster, "
-        "less memory to build, less stable",
-    )
-    variant(
         "llvm_dylib",
         default=False,
         description="Build LLVM shared library, containing all "
@@ -172,7 +166,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
-    conflicts("+llvm_dylib", when="+shared_libs")
     conflicts("+link_llvm_dylib", when="~llvm_dylib")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
@@ -539,7 +532,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
 
         cmake_args.extend([
-            from_variant("BUILD_SHARED_LIBS", "shared_libs"),
+            define('BUILD_SHARED_LIBS', False),
             from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
             from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
             from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),
