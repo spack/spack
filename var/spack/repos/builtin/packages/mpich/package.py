@@ -140,6 +140,9 @@ with '-Wl,-commons,use_dylibs' and without
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
     )
 
+    # https://github.com/spack/spack/issues/31678
+    patch('mpich-oneapi-config-rpath.patch', when='@4.0.2 %oneapi')
+
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
