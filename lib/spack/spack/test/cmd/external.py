@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+from llnl.util.filesystem import getuid, touch
+
 import spack
 import spack.detection
 import spack.detection.path
@@ -43,7 +45,7 @@ def define_plat_exe(exe):
 
 def test_find_external_single_package(mock_executable, executables_found,
                                       _platform_executables):
-    pkgs_to_check = [spack.repo.get('cmake')]
+    pkgs_to_check = [spack.repo.path.get_pkg_class('cmake')]
     executables_found({
         mock_executable("cmake", output='echo cmake version 1.foo'):
             define_plat_exe('cmake')
@@ -59,7 +61,7 @@ def test_find_external_single_package(mock_executable, executables_found,
 
 def test_find_external_two_instances_same_package(mock_executable, executables_found,
                                                   _platform_executables):
-    pkgs_to_check = [spack.repo.get('cmake')]
+    pkgs_to_check = [spack.repo.path.get_pkg_class('cmake')]
 
     # Each of these cmake instances is created in a different prefix
     # In Windows, quoted strings are echo'd with quotes includes
@@ -192,6 +194,53 @@ def test_find_external_empty_default_manifest_dir(
     monkeypatch.setattr(spack.cray_manifest, 'default_path',
                         empty_manifest_dir)
     external('find')
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Can't chmod on Windows")
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
+def test_find_external_manifest_with_bad_permissions(
+        mutable_config, working_env, mock_executable, mutable_mock_repo,
+        _platform_executables, tmpdir, monkeypatch):
+    """The user runs 'spack external find'; the default path for storing
+    manifest files exists but with insufficient permissions. Check that
+    the command does not fail.
+    """
+    test_manifest_dir = str(tmpdir.mkdir('manifest_dir'))
+    test_manifest_file_path = os.path.join(test_manifest_dir, 'badperms.json')
+    touch(test_manifest_file_path)
+    monkeypatch.setenv('PATH', '')
+    monkeypatch.setattr(spack.cray_manifest, 'default_path',
+                        test_manifest_dir)
+    try:
+        os.chmod(test_manifest_file_path, 0)
+        output = external('find')
+        assert 'insufficient permissions' in output
+        assert 'Skipping manifest and continuing' in output
+    finally:
+        os.chmod(test_manifest_file_path, 0o700)
+
+
+def test_find_external_manifest_failure(
+        mutable_config, mutable_mock_repo, tmpdir, monkeypatch):
+    """The user runs 'spack external find'; the manifest parsing fails with
+    some exception. Ensure that the command still succeeds (i.e. moves on
+    to other external detection mechanisms).
+    """
+    # First, create an empty manifest file (without a file to read, the
+    # manifest parsing is skipped)
+    test_manifest_dir = str(tmpdir.mkdir('manifest_dir'))
+    test_manifest_file_path = os.path.join(test_manifest_dir, 'test.json')
+    touch(test_manifest_file_path)
+
+    def fail():
+        raise Exception()
+
+    monkeypatch.setattr(
+        spack.cmd.external, '_collect_and_consume_cray_manifest_files', fail)
+    monkeypatch.setenv('PATH', '')
+    output = external('find')
+    assert 'Skipping manifest and continuing' in output
 
 
 def test_find_external_nonempty_default_manifest_dir(

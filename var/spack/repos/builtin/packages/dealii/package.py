@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -26,6 +26,7 @@ class Dealii(CMakePackage, CudaPackage):
     generator = 'Ninja'
 
     version('master', branch='master')
+    version('9.4.0', sha256='238677006cd9173658e5b69cdd1861f800556982db6005a3cc5eb8329cc1e36c')
     version('9.3.3', sha256='5dfb59174b341589e92b434398a1b7cc11ad053ce2315cf673f5efc5ba271a29')
     version('9.3.2', sha256='5341d76bfd75d3402fc6907a875513efb5fe8a8b99af688d94443c492d5713e8')
     version('9.3.1', sha256='a62f4676ab2dc029892251d141427fb75cbb83cddd606019f615d0dde9c61ab8')
@@ -73,6 +74,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=True,
             description='Compile with ADOL-C')
+    variant('cgal',     default=True, when='@9.4:',
+            description='Compile with CGAL')
     variant('ginkgo',   default=True,
             description='Compile with Ginkgo')
     variant('gmsh',     default=True,
@@ -167,7 +170,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:',       when='+cuda', type='build')
     # Older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9',    when='@:8', type='build')
+    depends_on('cmake@:3.9',       when='@:8', type='build')
     depends_on('mpi',              when='+mpi')
     depends_on('python',           when='@8.5.0:+python')
 
@@ -177,6 +180,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('arborx+trilinos',  when='@9.3:+arborx+trilinos')
     depends_on('arpack-ng+mpi',    when='+arpack+mpi')
     depends_on('assimp',           when='@9.0:+assimp')
+    depends_on('cgal',             when='@9.4:+cgal')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
     depends_on('ginkgo',           when='@9.1:+ginkgo')
@@ -254,6 +258,9 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check for sufficiently modern versions
     conflicts('cxxstd=11', when='@9.3:')
+
+    conflicts('cxxstd=14', when='@9.4:+cgal',
+              msg='CGAL requires the C++ standard to be set to 17 or later.')
 
     # Interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
@@ -381,9 +388,7 @@ class Dealii(CMakePackage, CudaPackage):
         # Enforce the specified C++ standard
         if spec.variants['cxxstd'].value != 'default':
             cxxstd = spec.variants['cxxstd'].value
-            options.append(
-                self.define('DEAL_II_WITH_CXX{0}'.format(cxxstd), True)
-            )
+            cxx_flags.extend(['-std=c++{0}'.format(cxxstd)])
 
         # Performance
         # Set recommended flags for maximum (matrix-free) performance, see
@@ -441,6 +446,12 @@ class Dealii(CMakePackage, CudaPackage):
                 self.define('MPI_CXX_COMPILER', spec['mpi'].mpicxx),
                 self.define('MPI_Fortran_COMPILER', spec['mpi'].mpifc)
             ])
+            # FIXME: Fix issues with undefined references in MPI. e.g,
+            # libmpi.so: undefined reference to `opal_memchecker_base_isaddressable'
+            if '^openmpi' in spec:
+                options.extend([
+                    self.define('MPI_CXX_LINK_FLAGS', '-lopen-pal')
+                ])
             if '+cuda' in spec:
                 options.extend([
                     self.define('DEAL_II_MPI_WITH_CUDA_SUPPORT',
@@ -463,10 +474,11 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define('PYTHON_LIBRARY', python_library)
                 ])
 
-        # Simplex support
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
-        ))
+        # Simplex support (no longer experimental)
+        if spec.satisfies('@9.3.0:9.4.0'):
+            options.append(self.define_from_variant(
+                'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
+            ))
 
         # Threading
         if spec.satisfies('@9.3.0:'):
@@ -500,7 +512,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo', 'arborx'):  # 'taskflow'):
+                'symengine', 'ginkgo', 'arborx', 'cgal'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRgraphviz(RPackage):
@@ -14,6 +14,7 @@ class RRgraphviz(RPackage):
 
     bioc = "Rgraphviz"
 
+    version('2.40.0', commit='d864c9741c9177bc627cca1198673be2b1bfbc3e')
     version('2.38.0', commit='004de09a5b171211aff6cbaa1969ab8e3a5d6c61')
     version('2.34.0', commit='9746623211be794226258631992dfcccccfd7487')
     version('2.28.0', commit='c1f57c11f037c977f1d17f227f12a09a999e8c0b')

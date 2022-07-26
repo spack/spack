@@ -5,6 +5,8 @@
 import os
 import subprocess
 
+from spack.package import *
+
 
 class Fxt(AutotoolsPackage):
     """Fast User/Kernel Tracing

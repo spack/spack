@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRpostgres(RPackage):
@@ -14,6 +14,7 @@ class RRpostgres(RPackage):
 
     cran = "RPostgres"
 
+    version('1.4.4', sha256='c9cc0648c432f837fd0eb4922db4903357244d5a2cedd04ea236f249b08acdfc')
     version('1.4.3', sha256='a5be494a54b6e989fadafdc6ee2dc5c4c15bb17bacea9ad540b175c693331be2')
     version('1.3.1', sha256='f68ab095567317ec32d3faa10e5bcac400aee5aeca8d7132260d4e90f82158ea')
 

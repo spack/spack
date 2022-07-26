@@ -6,12 +6,21 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDnn(IntelOneApiLibraryPackage):
-    """Intel oneAPI DNN."""
+    """The Intel oneAPI Deep Neural Network Library (oneDNN) helps
+       developers improve productivity and enhance the performance of
+       their deep learning frameworks. It supports key data type
+       formats, including 16 and 32-bit floating point, bfloat16, and
+       8-bit integers and implements rich operators, including
+       convolution, matrix multiplication, pooling, batch
+       normalization, activation functions, recurrent neural network
+       (RNN) cells, and long short-term memory (LSTM) cells.
+
+    """
 
     maintainers = ['rscohn2']
 
@@ -55,10 +64,11 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'include')
+        include_path = join_path(self.component_prefix,
+                                 'cpu_dpcpp_gpu_dpcpp', 'include')
         return find_headers('dnnl', include_path)
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_path, 'cpu_dpcpp_gpu_dpcpp', 'lib')
+        lib_path = join_path(self.component_prefix, 'cpu_dpcpp_gpu_dpcpp', 'lib')
         return find_libraries(['libdnnl', 'libmkldnn'], root=lib_path, shared=True)

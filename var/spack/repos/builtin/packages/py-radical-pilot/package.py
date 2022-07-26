@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyRadicalPilot(PythonPackage):
@@ -13,11 +13,14 @@ class PyRadicalPilot(PythonPackage):
 
     homepage = 'https://radical-cybertools.github.io'
     git      = 'https://github.com/radical-cybertools/radical.pilot.git'
-    pypi     = 'radical.pilot/radical.pilot-1.11.2.tar.gz'
+    pypi     = 'radical.pilot/radical.pilot-1.14.0.tar.gz'
 
     maintainers = ['andre-merzky']
 
     version('develop', branch='devel')
+    version('1.14.0',  sha256='462471065de25f6d6e8baee705790828444c2eebb2073f5faf67a8da800d15a9')
+    version('1.13.0',  sha256='5bd9eef1884ccca09c242ab6d1361588a442d9cd980613c66604ba140786bde5')
+    version('1.12.0',  sha256='a266355d30d838f20b6cac190ce589ca919acd41883ad06aec62386239475133')
     version('1.11.2',  sha256='9d239f747589b8ae5d6faaea90ea5304b6f230a1edfd8d4efb440bc3799c8a9d')
     version('1.10.2',  sha256='56e9d8b1ce7ed05eff471d7df660e4940f485027e5f353aa36fd17425846a499')
     version('1.10.1',  sha256='003f4c519b991bded31693026b69dd51547a5a69a5f94355dc8beff766524b3c')
@@ -28,11 +31,16 @@ class PyRadicalPilot(PythonPackage):
 
     depends_on('py-radical-utils',        type=('build', 'run'))
     depends_on('py-radical-saga',         type=('build', 'run'))
+    depends_on('py-radical-gtod',         type=('build', 'run'), when='@1.14:')
 
-    depends_on('py-radical-utils@1.8.4:', type=('build', 'run'), when='@1.11:')
-    depends_on('py-radical-saga@1.8.0:',  type=('build', 'run'), when='@1.11:')
+    depends_on('py-radical-utils@1.12:',  type=('build', 'run'), when='@1.12:')
+    depends_on('py-radical-saga@1.12:',   type=('build', 'run'), when='@1.12:')
+
+    depends_on('py-radical-utils@1.8.4:1.11', type=('build', 'run'), when='@1.11')
+    depends_on('py-radical-saga@1.8:1.11',    type=('build', 'run'), when='@1.11')
 
     depends_on('python@3.6:',             type=('build', 'run'))
+    depends_on('py-dill',                 type=('build', 'run'), when='@1.14:')
     depends_on('py-pymongo@:3',           type=('build', 'run'))
     depends_on('py-setproctitle',         type=('build', 'run'))
     depends_on('py-setuptools',           type='build')

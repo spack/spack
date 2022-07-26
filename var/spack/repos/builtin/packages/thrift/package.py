@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -18,8 +18,11 @@ class Thrift(Package):
     """
 
     homepage = "https://thrift.apache.org"
-    url      = "http://apache.mirrors.ionfish.org/thrift/0.11.0/thrift-0.11.0.tar.gz"
+    url      = "http://archive.apache.org/dist/thrift/0.16.0/thrift-0.16.0.tar.gz"
+    list_url = "http://archive.apache.org/dist/thrift/"
+    list_depth = 1
 
+    version('0.16.0', sha256='f460b5c1ca30d8918ff95ea3eb6291b3951cf518553566088f3f2be8981f6209')
     version('0.13.0', sha256='7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179')
     version('0.12.0', sha256='c336099532b765a6815173f62df0ed897528a9d551837d627c1f87fadad90428')
     version('0.11.0', sha256='c4ad38b6cb4a3498310d405a91fef37b9a8e79a50cd0968148ee2524d2fa60c2')
@@ -63,6 +66,10 @@ class Thrift(Package):
 
     depends_on('zlib', when='+c')
     depends_on('libevent', when='+c')
+
+    patch('https://github.com/apache/thrift/pull/2511.patch?full_index=1',
+          sha256='8523c97eccb31b084241b4061db830c4ef940042b37ba8ddfdcdd23d92325b89',
+          when='@0.16.0')
 
     def setup_build_environment(self, env):
         if '+pic' in self.spec:

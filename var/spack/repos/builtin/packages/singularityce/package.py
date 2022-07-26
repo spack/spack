@@ -8,7 +8,7 @@ import shutil
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class SingularityBase(MakefilePackage):

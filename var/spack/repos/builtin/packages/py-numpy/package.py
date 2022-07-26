@@ -6,7 +6,7 @@
 import platform
 import subprocess
 
-from spack import *
+from spack.package import *
 
 
 class PyNumpy(PythonPackage):
@@ -17,12 +17,14 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    pypi = "numpy/numpy-1.19.4.zip"
+    pypi = "numpy/numpy-1.23.0.tar.gz"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.23.1', sha256='d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624')
+    version('1.23.0', sha256='bd3fa4fe2e38533d5336e1272fc4e765cabbbde144309ccee8675509d5cd7b05')
     version('1.22.4', sha256='425b390e4619f58d8526b3dcf656dde069133ae5c240229821f01b5f44ea07af')
     version('1.22.3', sha256='dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18')
     version('1.22.2', sha256='076aee5a3763d41da6bef9565fdf3cb987606f567cd8b104aded2b38b7b47abf')
@@ -115,6 +117,7 @@ class PyNumpy(PythonPackage):
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
     depends_on('py-pytest', when='@1.15:', type='test')
     depends_on('py-hypothesis', when='@1.19:', type='test')
+    depends_on('py-typing-extensions@4.2:', when='@1.23:', type='test')
 
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
@@ -151,6 +154,17 @@ class PyNumpy(PythonPackage):
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts('%nvhpc', when='@:1.19')
+
+    # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
+    conflicts('%intel', when='@1.23.0:')
+
+    def url_for_version(self, version):
+        url = 'https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}'
+        if version >= Version('1.23'):
+            ext = 'tar.gz'
+        else:
+            ext = 'zip'
+        return url.format(version, ext)
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
@@ -228,7 +242,7 @@ class PyNumpy(PythonPackage):
         # Tell numpy where to find BLAS/LAPACK libraries
         with open('site.cfg', 'w') as f:
             if '^intel-mkl' in spec or \
-               '^intel-parallel-studio+mkl' or \
+               '^intel-parallel-studio+mkl' in spec or \
                '^intel-oneapi-mkl' in spec:
                 f.write('[mkl]\n')
                 # FIXME: as of @1.11.2, numpy does not work with separately
@@ -247,7 +261,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^blis' in spec:
+            if '^blis' in spec or \
+               '^amdblis' in spec:
                 f.write('[blis]\n')
                 f.write('libraries = {0}\n'.format(blas_lib_names))
                 write_library_dirs(f, blas_lib_dirs)
@@ -259,7 +274,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^libflame' in spec:
+            if '^libflame' in spec or \
+               '^amdlibflame' in spec:
                 f.write('[flame]\n')
                 f.write('libraries = {0}\n'.format(lapack_lib_names))
                 write_library_dirs(f, lapack_lib_dirs)
@@ -276,8 +292,9 @@ class PyNumpy(PythonPackage):
                 f.write('libraries = {0}\n'.format(lapackblas_lib_names))
                 write_library_dirs(f, lapackblas_lib_dirs)
 
-            if '^netlib-lapack' in spec:
-                # netlib requires blas and lapack listed
+            if '^netlib-lapack' in spec or \
+               '^cray-libsci' in spec:
+                # netlib and Cray require blas and lapack listed
                 # separately so that scipy can find them
                 if spec.satisfies('+blas'):
                     f.write('[blas]\n')
@@ -317,7 +334,6 @@ class PyNumpy(PythonPackage):
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
-
         # https://numpy.org/devdocs/user/building.html#blas
         if 'blas' not in spec:
             blas = ''
@@ -325,7 +341,8 @@ class PyNumpy(PythonPackage):
                 spec['blas'].name == 'intel-parallel-studio' or \
                 spec['blas'].name == 'intel-oneapi-mkl':
             blas = 'mkl'
-        elif spec['blas'].name == 'blis':
+        elif spec['blas'].name == 'blis' or \
+                spec['blas'].name == 'amdblis':
             blas = 'blis'
         elif spec['blas'].name == 'openblas':
             blas = 'openblas'
@@ -347,7 +364,8 @@ class PyNumpy(PythonPackage):
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'
-        elif spec['lapack'].name == 'libflame':
+        elif spec['lapack'].name == 'libflame' or \
+                spec['lapack'].name == 'amdlibflame':
             lapack = 'flame'
         elif spec['lapack'].name == 'atlas':
             lapack = 'atlas'

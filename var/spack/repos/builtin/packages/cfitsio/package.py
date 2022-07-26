@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Cfitsio(AutotoolsPackage):
@@ -14,6 +14,7 @@ class Cfitsio(AutotoolsPackage):
     homepage = 'https://heasarc.gsfc.nasa.gov/fitsio/'
     url      = 'https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-3.49.tar.gz'
 
+    version('4.1.0', sha256='b367c695d2831958e7166921c3b356d5dfa51b1ecee505b97416ba39d1b6c17a')
     version('4.0.0', sha256='b2a8efba0b9f86d3e1bd619f662a476ec18112b4f27cc441cc680a4e3777425e')
     version('3.49', sha256='5b65a20d5c53494ec8f638267fca4a629836b7ac8dd0ef0266834eab270ed4b3')
     version('3.48', sha256='91b48ffef544eb8ea3908543052331072c99bf09ceb139cb3c6977fc3e47aac1')

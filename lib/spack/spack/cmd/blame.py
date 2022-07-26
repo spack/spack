@@ -99,8 +99,8 @@ def blame(parser, args):
             blame_file = path
 
     if not blame_file:
-        pkg = spack.repo.get(args.package_or_file)
-        blame_file = pkg.module.__file__.rstrip('c')  # .pyc -> .py
+        pkg_cls = spack.repo.path.get_pkg_class(args.package_or_file)
+        blame_file = pkg_cls.module.__file__.rstrip('c')  # .pyc -> .py
 
     # get git blame for the package
     with working_dir(spack.paths.prefix):

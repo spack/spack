@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class IntelGtpin(Package):
@@ -32,9 +32,12 @@ class IntelGtpin(Package):
     """
 
     homepage = "https://www.intel.com/content/www/us/en/developer/articles/tool/gtpin.html"
-    url = "https://downloadmirror.intel.com/686383/external-gtpin-2.19-linux.tar.xz"
+    url = "https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz"
 
     maintainers = ['rashawnlk']
+
+    version('3.0', sha256='8a8a238ab9937d85e4cc5a5c15a79cad0e4aa306b57e5d72dad3e09230a4cdab',
+            url='https://downloadmirror.intel.com/730598/external-release-gtpin-3.0-linux.tar.xz')
 
     version('2.19', sha256='996cdfbcf7fbe736407d063e0ed1794e51bf31a72b50cf733a407af71118a304',
             url='https://downloadmirror.intel.com/686383/external-gtpin-2.19-linux.tar.xz')

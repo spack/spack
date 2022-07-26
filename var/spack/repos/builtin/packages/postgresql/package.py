@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Postgresql(AutotoolsPackage):
@@ -57,6 +57,10 @@ class Postgresql(AutotoolsPackage):
     depends_on('perl', when='+perl')
     depends_on('python', when='+python')
     depends_on('libxml2', when='+xml')
+
+    @property
+    def command(self):
+        return Exectuable(self.prefix.bin.pg_config)
 
     def configure_args(self):
         config_args = ["--with-openssl"]

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Tools to produce reports of spec installations"""
 import codecs
 import collections
@@ -15,7 +14,7 @@ import llnl.util.lang
 
 import spack.build_environment
 import spack.fetch_strategy
-import spack.package
+import spack.package_base
 from spack.install_test import TestSuite
 from spack.reporter import Reporter
 from spack.reporters.cdash import CDash
@@ -131,7 +130,7 @@ class InfoCollector(object):
             """
             @functools.wraps(do_fn)
             def wrapper(instance, *args, **kwargs):
-                if isinstance(instance, spack.package.PackageBase):
+                if isinstance(instance, spack.package_base.PackageBase):
                     pkg = instance
                 elif hasattr(args[0], 'pkg'):
                     pkg = args[0].pkg
@@ -281,9 +280,9 @@ class collect_info(object):
                              .format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
-    def __call__(self, type, dir=os.getcwd()):
+    def __call__(self, type, dir=None):
         self.type = type
-        self.dir = dir
+        self.dir = dir or os.getcwd()
         return self
 
     def concretization_report(self, msg):

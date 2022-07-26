@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRmpfr(RPackage):
@@ -17,6 +17,7 @@ class RRmpfr(RPackage):
 
     cran = "Rmpfr"
 
+    version('0.8-9', sha256='cfee5ab47d49c6433c372a267f7d849c8f7c61a84e00d08afb047eaafcdbbc8a')
     version('0.8-7', sha256='93c2db785ff705dcfc6fa7f0373c2426cdc2ef72ceb5b294edeb2952775f57d2')
     version('0.8-2', sha256='74f6af1738b2cd21e7f2564b4cc2c84d5473a3745ba88ec76355d07fdd61f700')
     version('0.7-2', sha256='ec1da6ec5292ea6ac95495c6a299591d367e520ae324719817fb884c865603ff')
@@ -31,4 +32,4 @@ class RRmpfr(RPackage):
     depends_on('r-gmp@0.6-1:', type=('build', 'run'), when='@0.8-2:')
     depends_on('gmp@4.2.3:')
     depends_on('mpfr@3.0.0:')
-    depends_on('texlive', type='build')
+    depends_on('texlive@2019:', type='build')

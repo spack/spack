@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xcfun(CMakePackage):
@@ -14,6 +14,8 @@ class Xcfun(CMakePackage):
 
     maintainers = ['robertodr', 'bast']
 
+    version('2.1.1',
+            sha256='8b602df74c7be83d501532565deafd1b7881946d94789122f24c309a669298ab')
     version('2.1.0',
             sha256='64aac8c933cc129ce6326f3827e342abfd10b94ea4a302aaca9f10d342ad7656')
     version('2.0.2',

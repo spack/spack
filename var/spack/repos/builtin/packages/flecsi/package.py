@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Flecsi(CMakePackage, CudaPackage):
@@ -67,7 +67,10 @@ class Flecsi(CMakePackage, CudaPackage):
     # All Current FleCSI Releases
     for level in ('low', 'medium', 'high'):
         depends_on('caliper@2.0.1~adiak~libdw', when='@:1.9 caliper_detail=%s' % level)
-        depends_on('caliper@2.4.0~libdw', when='@2.0: caliper_detail=%s' % level)
+        depends_on('caliper', when='@2.0: caliper_detail=%s' % level)
+        conflicts('caliper@2.6', when='@2.0: caliper_detail=%s' % level)
+        conflicts('caliper@2.7', when='@2.0: caliper_detail=%s' % level)
+
     depends_on('graphviz', when='+graphviz')
     depends_on('hdf5+hl+mpi', when='+hdf5')
     depends_on('metis@5.1.0:')
@@ -102,6 +105,7 @@ class Flecsi(CMakePackage, CudaPackage):
     depends_on('kokkos@3.2.00:', when='+kokkos @2.0:')
     depends_on('kokkos +cuda +cuda_constexpr +cuda_lambda', when='+kokkos +cuda @2.0:')
     depends_on('legion@cr', when='backend=legion @2.0:')
+    depends_on('legion+shared', when='backend=legion +shared @2.0:')
     depends_on('legion+hdf5', when='backend=legion +hdf5 @2.0:')
     depends_on('legion +kokkos +cuda', when='backend=legion +kokkos +cuda @2.0:')
     depends_on('hdf5@1.10.7:', when='backend=legion +hdf5 @2.0:')

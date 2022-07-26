@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Wget(AutotoolsPackage, GNUMirrorPackage):
@@ -52,6 +52,10 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     depends_on('valgrind', type='test')
 
     build_directory = 'spack-build'
+
+    # gnulib bug introced in commit cbdb5ea63cb5348d9ead16dc46bedda77a4c3d7d
+    # fix is from commit 84863a1c4dc8cca8fb0f6f670f67779cdd2d543b
+    patch('gnulib.patch', when='@1.21.3')
 
     def configure_args(self):
         spec = self.spec

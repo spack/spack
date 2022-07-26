@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPyarrow(PythonPackage, CudaPackage):
@@ -54,7 +54,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+cuda' + v, when='+cuda' + v)
         depends_on('arrow+orc' + v, when='+orc' + v)
 
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch('for_aarch64.patch', when='@0 target=aarch64:')
 
     def install_options(self, spec, prefix):
         args = []

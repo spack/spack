@@ -6,7 +6,7 @@
 import subprocess
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class NodeJs(Package):
@@ -78,10 +78,10 @@ class NodeJs(Package):
         if sys.platform == 'darwin':
             process_pipe = subprocess.Popen(["which", "libtool"],
                                             stdout=subprocess.PIPE)
-            result_which = process_pipe.communicate()[0]
+            result_which = process_pipe.communicate()[0].strip()
             process_pipe = subprocess.Popen(["whereis", "libtool"],
                                             stdout=subprocess.PIPE)
-            result_whereis = process_pipe.communicate()[0]
+            result_whereis = process_pipe.communicate()[0].strip().split()[-1]
             assert result_which == result_whereis, (
                 'On OSX the system libtool must be used. Please'
                 '(temporarily) remove \n %s or its link to libtool from'

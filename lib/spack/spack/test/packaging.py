@@ -21,7 +21,7 @@ from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -54,9 +54,8 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
-    pspec = Spec("patchelf")
-    pspec.concretize()
-    pkg = spack.repo.get(pspec)
+    pspec = Spec("patchelf").concretized()
+    pkg = pspec.package
     fake_fetchify(pkg.fetcher, pkg)
     mkdirp(os.path.join(pkg.prefix, "bin"))
     patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
@@ -575,10 +574,10 @@ def mock_download():
     def fake_fn(self):
         return fetcher
 
-    orig_fn = spack.package.PackageBase.fetcher
-    spack.package.PackageBase.fetcher = fake_fn
+    orig_fn = spack.package_base.PackageBase.fetcher
+    spack.package_base.PackageBase.fetcher = fake_fn
     yield
-    spack.package.PackageBase.fetcher = orig_fn
+    spack.package_base.PackageBase.fetcher = orig_fn
 
 
 @pytest.mark.parametrize("manual,instr", [(False, False), (False, True),
@@ -598,7 +597,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
 
     pkg.manual_download = manual
     if instr:
-        monkeypatch.setattr(spack.package.PackageBase, 'download_instr',
+        monkeypatch.setattr(spack.package_base.PackageBase, 'download_instr',
                             _instr)
 
     expected = pkg.download_instr if manual else 'All fetchers failed'
@@ -616,7 +615,7 @@ def fetching_not_allowed(monkeypatch):
             raise Exception("Sources are fetched but shouldn't have been")
     fetcher = FetchStrategyComposite()
     fetcher.append(FetchingNotAllowed())
-    monkeypatch.setattr(spack.package.PackageBase, 'fetcher', fetcher)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'fetcher', fetcher)
 
 
 def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):

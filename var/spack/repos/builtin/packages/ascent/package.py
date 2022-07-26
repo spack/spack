@@ -12,7 +12,7 @@ from os import environ as env
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -26,6 +26,16 @@ def cmake_cache_entry(name, value, vtype=None):
         else:
             vtype = "PATH"
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
+
+
+def propagate_cuda_arch(package, spec=None):
+    if not spec:
+        spec = ''
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on('{0} +cuda cuda_arch={1}'
+                   .format(package, cuda_arch),
+                   when='{0} +cuda cuda_arch={1}'
+                        .format(spec, cuda_arch))
 
 
 class Ascent(CMakePackage, CudaPackage):
@@ -107,19 +117,13 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding ADIOS2 more reliably
     # https://github.com/Alpine-DAV/ascent/pull/922
     patch('ascent-find-adios2-pr922.patch', when='@0.8.0')
+    # patch for finding Conduit python more reliably
+    # https://github.com/Alpine-DAV/ascent/pull/935
+    patch('ascent-find-conduit-python-pr935.patch', when='@0.8.0')
 
     ##########################################################################
     # package dependencies
     ###########################################################################
-    def propagate_cuda_arch(package, spec=None):
-        if not spec:
-            spec = ''
-        for cuda_arch in CudaPackage.cuda_arch_values:
-            depends_on('{0} +cuda cuda_arch={1}'
-                       .format(package, cuda_arch),
-                       when='{0} +cuda cuda_arch={1}'
-                            .format(spec, cuda_arch))
-
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type='build')
 
@@ -172,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage):
     depends_on("vtk-h+shared", when="+vtkh+shared")
     depends_on("vtk-h~shared", when="+vtkh~shared")
     # When using VTK-h ascent also needs VTK-m
-    depends_on("vtk-m", when="+vtkh")
+    depends_on("vtk-m@:1.7", when="+vtkh")
     depends_on("vtk-m+testlib", when="+vtkh+test^vtk-m")
 
     # mfem

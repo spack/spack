@@ -8,7 +8,7 @@ These tests check Spec DAG operations using dummy packages.
 import pytest
 
 import spack.error
-import spack.package
+import spack.package_base
 import spack.util.hash as hashutil
 from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.spec import Spec
@@ -42,13 +42,13 @@ def set_dependency(saved_deps, monkeypatch):
         """
         spec = Spec(spec)
         # Save original dependencies before making any changes.
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         if pkg_name not in saved_deps:
-            saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
+            saved_deps[pkg_name] = (pkg_cls, pkg_cls.dependencies.copy())
 
-        cond = Spec(pkg.name)
-        dependency = Dependency(pkg, spec, type=deptypes)
-        monkeypatch.setitem(pkg.dependencies, spec.name, {cond: dependency})
+        cond = Spec(pkg_cls.name)
+        dependency = Dependency(pkg_cls, spec, type=deptypes)
+        monkeypatch.setitem(pkg_cls.dependencies, spec.name, {cond: dependency})
     return _mock
 
 

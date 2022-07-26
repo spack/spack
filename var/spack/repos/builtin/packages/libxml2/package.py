@@ -5,7 +5,7 @@
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Libxml2(AutotoolsPackage):
@@ -53,6 +53,10 @@ class Libxml2(AutotoolsPackage):
 
     patch('nvhpc-configure.patch', when='%nvhpc')
     patch('nvhpc-elfgcchack.patch', when='%nvhpc')
+
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('xml2-config'))
 
     @property
     def headers(self):

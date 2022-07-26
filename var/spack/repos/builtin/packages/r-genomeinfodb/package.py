@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenomeinfodb(RPackage):
@@ -17,6 +17,7 @@ class RGenomeinfodb(RPackage):
 
     bioc = "GenomeInfoDb"
 
+    version('1.32.2', commit='2e40af38f00ee86d2c83d140e234c1349baa27de')
     version('1.30.1', commit='bf8b385a2ffcecf9b41e581794056f267895863d')
     version('1.26.2', commit='96dd27a7e3ef476790b1475aab50dbbed7df67a2')
     version('1.20.0', commit='ea771e3b429ef17fb912fb37333556c6f77f2265')

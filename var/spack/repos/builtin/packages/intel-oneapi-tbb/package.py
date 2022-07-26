@@ -6,12 +6,17 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description
 class IntelOneapiTbb(IntelOneApiLibraryPackage):
-    """Intel oneAPI TBB."""
+    """Intel oneAPI Threading Building Blocks (oneTBB) is a flexible
+       performance library that simplifies the work of adding
+       parallelism to complex applications across accelerated
+       architectures, even if you are not a threading expert.
+
+    """
 
     maintainers = ['rscohn2']
 

@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.package import *
+
 
 class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object
@@ -168,6 +170,10 @@ class Hdf(AutotoolsPackage):
                 'FFLAGS=-fallow-argument-mismatch',
                 'FCFLAGS=-fallow-argument-mismatch']
             )
+
+        # https://forum.hdfgroup.org/t/help-building-hdf4-with-clang-error-implicit-declaration-of-function-test-mgr-szip-is-invalid-in-c99/7680
+        if self.spec.satisfies('@:4.2.15 %apple-clang'):
+            config_args.append('CFLAGS=-Wno-error=implicit-function-declaration')
 
         return config_args
 

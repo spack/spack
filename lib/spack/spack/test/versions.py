@@ -14,10 +14,17 @@ import pytest
 
 from llnl.util.filesystem import working_dir
 
-import spack.package
+import spack.package_base
 import spack.spec
 from spack.util.executable import which
-from spack.version import Version, VersionList, VersionRange, ver
+from spack.version import (
+    GitVersion,
+    Version,
+    VersionBase,
+    VersionList,
+    VersionRange,
+    ver,
+)
 
 
 def assert_ver_lt(a, b):
@@ -520,7 +527,7 @@ def test_repr_and_str():
 
     def check_repr_and_str(vrs):
         a = Version(vrs)
-        assert repr(a) == "Version('" + vrs + "')"
+        assert repr(a) == "VersionBase('" + vrs + "')"
         b = eval(repr(a))
         assert a == b
         assert str(a) == vrs
@@ -544,19 +551,19 @@ def test_get_item():
     assert isinstance(a[1], int)
     # Test slicing
     b = a[0:2]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('0.1')
-    assert repr(b) == "Version('0.1')"
+    assert repr(b) == "VersionBase('0.1')"
     assert str(b) == '0.1'
     b = a[0:3]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('0.1_2')
-    assert repr(b) == "Version('0.1_2')"
+    assert repr(b) == "VersionBase('0.1_2')"
     assert str(b) == '0.1_2'
     b = a[1:]
-    assert isinstance(b, Version)
+    assert isinstance(b, VersionBase)
     assert b == Version('1_2-3')
-    assert repr(b) == "Version('1_2-3')"
+    assert repr(b) == "VersionBase('1_2-3')"
     assert str(b) == '1_2-3'
     # Raise TypeError on tuples
     with pytest.raises(TypeError):
@@ -590,14 +597,14 @@ def test_invalid_versions(version_str):
                     reason="Not supported on Windows (yet)")
 def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package.PackageBase, 'git', 'file://%s' % repo_path,
+    monkeypatch.setattr(spack.package_base.PackageBase, 'git', 'file://%s' % repo_path,
                         raising=False)
 
     for commit in commits:
         spec = spack.spec.Spec('git-test-commit@%s' % commit)
         version = spec.version
         comparator = [str(v) if not isinstance(v, int) else v
-                      for v in version._cmp(version.commit_lookup)]
+                      for v in version._cmp(version.ref_lookup)]
 
         with working_dir(repo_path):
             which('git')('checkout', commit)
@@ -614,7 +621,7 @@ def test_git_hash_comparisons(
     """Check that hashes compare properly to versions
     """
     repo_path, filename, commits = mock_git_version_info
-    monkeypatch.setattr(spack.package.PackageBase,
+    monkeypatch.setattr(spack.package_base.PackageBase,
                         'git', 'file://%s' % repo_path,
                         raising=False)
 
@@ -635,6 +642,43 @@ def test_git_hash_comparisons(
     spec4.concretize()
     assert spec4.satisfies('@1.1')
     assert spec4.satisfies('@1.0:1.2')
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+def test_git_ref_comparisons(
+        mock_git_version_info, install_mockery, mock_packages, monkeypatch):
+    """Check that hashes compare properly to versions
+    """
+    repo_path, filename, commits = mock_git_version_info
+    monkeypatch.setattr(spack.package_base.PackageBase,
+                        'git', 'file://%s' % repo_path,
+                        raising=False)
+
+    # Spec based on tag v1.0
+    spec_tag = spack.spec.Spec('git-test-commit@git.v1.0')
+    spec_tag.concretize()
+    assert spec_tag.satisfies('@1.0')
+    assert not spec_tag.satisfies('@1.1:')
+    assert str(spec_tag.version) == 'git.v1.0'
+
+    # Spec based on branch 1.x
+    spec_branch = spack.spec.Spec('git-test-commit@git.1.x')
+    spec_branch.concretize()
+    assert spec_branch.satisfies('@1.2')
+    assert spec_branch.satisfies('@1.1:1.3')
+    assert str(spec_branch.version) == 'git.1.x'
+
+
+@pytest.mark.parametrize('string,git', [
+    ('1.2.9', False),
+    ('gitmain', False),
+    ('git.foo', True),
+    ('git.abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd', True),
+    ('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd', True),
+])
+def test_version_git_vs_base(string, git):
+    assert isinstance(Version(string), GitVersion) == git
 
 
 def test_version_range_nonempty():

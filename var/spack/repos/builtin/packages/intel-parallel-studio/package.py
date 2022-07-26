@@ -3,11 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelParallelStudio(IntelPackage):
-    """Intel Parallel Studio."""
+    """This is an earlier version of Intel parallel software development
+       tools and has now been replaced by the Intel oneAPI Toolkits.
+
+    """
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 

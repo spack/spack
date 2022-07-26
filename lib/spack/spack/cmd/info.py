@@ -18,7 +18,7 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.package import has_test_method, preferred_version
+from spack.package_base import has_test_method, preferred_version
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -269,14 +269,14 @@ def print_tests(pkg):
     names = []
     pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
     if has_test_method(pkg_cls):
-        pkg_base = spack.package.PackageBase
+        pkg_base = spack.package_base.PackageBase
         test_pkgs = [str(cls.test) for cls in inspect.getmro(pkg_cls) if
                      issubclass(cls, pkg_base) and cls.test != pkg_base.test]
         test_pkgs = list(set(test_pkgs))
         names.extend([(test.split()[1]).lower() for test in test_pkgs])
 
     # TODO Refactor START
-    # Use code from package.py's test_process IF this functionality is
+    # Use code from package_base.py's test_process IF this functionality is
     # accepted.
     v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
 
@@ -292,10 +292,9 @@ def print_tests(pkg):
     v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
     for v_spec in v_specs:
         try:
-            pkg = v_spec.package
-            pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+            pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
             if has_test_method(pkg_cls):
-                names.append('{0}.test'.format(pkg.name.lower()))
+                names.append('{0}.test'.format(pkg_cls.name.lower()))
         except spack.repo.UnknownPackageError:
             pass
 
@@ -386,7 +385,9 @@ def print_virtuals(pkg):
 
 
 def info(parser, args):
-    pkg = spack.repo.get(args.package)
+    spec = spack.spec.Spec(args.package)
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
 
     # Output core package information
     header = section_title(

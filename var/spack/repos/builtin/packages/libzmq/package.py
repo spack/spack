@@ -5,6 +5,8 @@
 
 import sys
 
+from spack.package import *
+
 
 class Libzmq(AutotoolsPackage):
     """The ZMQ networking/concurrency library and core API"""
@@ -41,19 +43,25 @@ class Libzmq(AutotoolsPackage):
             description="Use strlcpy from libbsd " +
                         "(will use own implementation if false)")
 
+    variant("libunwind", default=False,
+            description="Build with libunwind support")
+
     depends_on("libsodium", when='+libsodium')
     depends_on("libsodium@:1.0.3", when='+libsodium@:4.1.2')
 
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('libtool', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
     depends_on('pkgconfig', type='build')
     depends_on('docbook-xml', type='build', when='+docs')
     depends_on('docbook-xsl', type='build', when='+docs')
 
     depends_on('libbsd', when='+libbsd')
 
+    depends_on('libunwind', when='+libunwind')
+
     conflicts('%gcc@8:', when='@:4.2.2')
+    conflicts('%gcc@12:', when='@4.3.2:4.3.4')
 
     # Fix aggressive compiler warning false positive
     patch('https://github.com/zeromq/libzmq/commit/92b2c38a2c51a1942a380c7ee08147f7b1ca6845.patch?full_index=1', sha256='310b8aa57a8ea77b7ac74debb3bf928cbafdef5e7ca35beaac5d9c61c7edd239', when='@4.2.3:4.3.4 %gcc@11:')
@@ -65,7 +73,7 @@ class Libzmq(AutotoolsPackage):
             url = "https://github.com/zeromq/libzmq/releases/download/v{0}/zeromq-{0}.tar.gz"
         return url.format(version)
 
-    @when('@develop')
+    @when('@master')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
@@ -75,6 +83,7 @@ class Libzmq(AutotoolsPackage):
 
         config_args.extend(self.enable_or_disable("drafts"))
         config_args.extend(self.enable_or_disable("libbsd"))
+        config_args.extend(self.enable_or_disable("libunwind"))
 
         if '+libsodium' in self.spec:
             config_args.append('--with-libsodium')

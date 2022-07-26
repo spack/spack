@@ -6,7 +6,7 @@
 import re
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Curl(AutotoolsPackage):
@@ -138,6 +138,10 @@ class Curl(AutotoolsPackage):
             # TODO: Determine TLS backend if needed.
             # TODO: Determine more variants.
             return variants
+
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.join('curl-config'))
 
     def configure_args(self):
         spec = self.spec

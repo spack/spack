@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNanotime(RPackage):
@@ -16,6 +16,7 @@ class RNanotime(RPackage):
 
     cran = "nanotime"
 
+    version('0.3.6', sha256='df751a5cb11ca9ac8762cd1e33bc73e7d20fde9339d2c46bc6f85873388568df')
     version('0.3.5', sha256='44deaae58452bacea4855d018212593811401c2afc460ffb11905479013923a0')
     version('0.3.2', sha256='9ef53c3bca01b605a9519190117988e170e63865327007c90b05d31fe7f22b1d')
     version('0.2.4', sha256='2dfb7e7435fec59634b87563a215467e7793e2711e302749c0533901c74eb184')

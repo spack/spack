@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RShortread(RPackage):
@@ -18,6 +18,7 @@ class RShortread(RPackage):
 
     bioc = "ShortRead"
 
+    version('1.54.0', commit='a1082a335120860d019aa0065a975d41890351f7')
     version('1.52.0', commit='4d7304d7b5a0ca5c904c0b919d6c95599db72a39')
     version('1.48.0', commit='ba44cd2517bc0e6f46d2cfcfce393f86eec814d0')
     version('1.42.0', commit='daa2576a48278460caf87f42c022c796652f4908')

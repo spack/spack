@@ -5,8 +5,9 @@
 
 import glob
 import os
+import re
 
-from spack import *
+from spack.package import *
 
 
 class Rocrand(CMakePackage):
@@ -15,10 +16,13 @@ class Rocrand(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
     git      = "https://github.com/ROCmSoftwarePlatform/rocRAND.git"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.0.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-5.1.3.tar.gz"
+    tags     = ['rocm']
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
+    libraries = ['librocrand']
 
+    version('5.1.3', sha256='4a19e1bcb60955a02a73ad64594c23886d6749afe06b0104e2b877dbe02c8d1c')
     version('5.1.0', sha256='0c6f114a775d0b38be71f3f621a10bde2104a1f655d5d68c5fecb79b8b51a815')
     version('5.0.2', sha256='2dbce2a7fb273c2f9456c002adf3a510b9ec79f2ff32dfccdd59948f3ddb1505')
     version('5.0.0', sha256='356a03a74d6d5df3ae2d38da07929f23d90bb4dee71f88792c25c25069e673bc')
@@ -35,9 +39,7 @@ class Rocrand(CMakePackage):
     version('3.7.0', sha256='5e43fe07afe2c7327a692b3b580875bae6e6ee790e044c053fffafbfcbc14860', deprecated=True)
     version('3.5.0', sha256='592865a45e7ef55ad9d7eddc8082df69eacfd2c1f3e9c57810eb336b15cd5732', deprecated=True)
 
-    amdgpu_targets = ('gfx803', 'gfx900:xnack-', 'gfx906:xnack-', 'gfx908:xnack-',
-                      'gfx90a:xnack-', 'gfx90a:xnack+',
-                      'gfx1030')
+    amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('build_type', default='Release', values=("Release", "Debug", "RelWithDebInfo"), description='CMake build type')
@@ -52,11 +54,11 @@ class Rocrand(CMakePackage):
              branch='develop',
              destination='',
              placement='hiprand',
-             when='@5.1.0')
+             when='@5.1.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0', '5.0.2',
-                '5.1.0']:
+                '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('rocm-cmake@%s:' % ver, type='build', when='@' + ver)
 
@@ -118,6 +120,18 @@ class Rocrand(CMakePackage):
                 for header_file in hiprand_includes:
                     os.symlink(join_path('../../include/hiprand',
                                header_file), header_file)
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [

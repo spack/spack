@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCner(RPackage):
@@ -14,6 +14,7 @@ class RCner(RPackage):
 
     bioc = "CNEr"
 
+    version('1.32.0', commit='1c92f3d7f3dccf76ab7d54f286117b09bc470b8f')
     version('1.30.0', commit='e682f2a7c8ebb561c872cf51a58ba36eed341187')
     version('1.26.0', commit='e5e582da6feeae0618c4460f16ece724215e3b20')
     version('1.20.0', commit='9c25d8e8f6f5fd8a5311f554c86e7ca1140a4ca5')

@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Emacs(AutotoolsPackage, GNUMirrorPackage):
@@ -16,6 +16,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
     version('master', branch='master')
+    version('28.1', sha256='1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28')
     version('27.2', sha256='80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73')
     version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')

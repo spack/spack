@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 # typical working line with extrae 3.0.1
@@ -84,7 +84,7 @@ class Extrae(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         if '^intel-oneapi-mpi' in spec:
-            mpiroot = spec['mpi'].component_path
+            mpiroot = spec['mpi'].component_prefix
         else:
             mpiroot = spec['mpi'].prefix
 

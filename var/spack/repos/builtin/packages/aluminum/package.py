@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
@@ -19,6 +19,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/Aluminum"
     url      = "https://github.com/LLNL/Aluminum/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/Aluminum.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 
@@ -125,5 +126,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
                     ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
+                args.extend([
+                    '-DCMAKE_HIP_ARCHITECTURES=%s' % arch_str,
+                    '-DAMDGPU_TARGETS=%s' % arch_str,
+                    '-DGPU_TARGETS=%s' % arch_str,
+                ])
 
         return args

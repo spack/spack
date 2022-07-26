@@ -87,9 +87,7 @@ def dev_build(self, args):
 
     # Forces the build to run out of the source directory.
     spec.constrain('dev_path=%s' % source_path)
-
     spec.concretize()
-    package = spack.repo.get(spec)
 
     if spec.installed:
         tty.error("Already installed in %s" % spec.prefix)
@@ -109,7 +107,7 @@ def dev_build(self, args):
     elif args.test == 'root':
         tests = [spec.name for spec in specs]
 
-    package.do_install(
+    spec.package.do_install(
         tests=tests,
         make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
@@ -122,5 +120,5 @@ def dev_build(self, args):
 
     # drop into the build environment of the package?
     if args.shell is not None:
-        spack.build_environment.setup_package(package, dirty=False)
+        spack.build_environment.setup_package(spec.package, dirty=False)
         os.execvp(args.shell, [args.shell])

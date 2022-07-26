@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Grass(AutotoolsPackage):
@@ -20,6 +20,7 @@ class Grass(AutotoolsPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('8.2.0', sha256='621c3304a563be19c0220ae28f931a5e9ba74a53218c5556cd3f7fbfcca33a80')
     version('7.8.5', sha256='a359bb665524ecccb643335d70f5436b1c84ffb6a0e428b78dffebacd983ff37')
     version('7.8.2', sha256='33576f7078f805b39ca20c2fa416ac79c64260c0581072a6dc7d813f53aa9abb')
     version('7.8.1', sha256='6ae578fd67afcce7abec4ba4505dcc55b3d2dfe0ca46b99d966cb148c654abb3')

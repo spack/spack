@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class ROligoclasses(RPackage):
@@ -15,6 +15,7 @@ class ROligoclasses(RPackage):
 
     bioc = "oligoClasses"
 
+    version('1.58.0', commit='5544e937913bb0df54c66d738d279c38efeb30cd')
     version('1.56.0', commit='6e6c7b4ba54095d1d3c44c081839f57af9261cbf')
     version('1.52.0', commit='7995efbd2d26b8fa950830d62db92bdaf5cbeeea')
     version('1.46.0', commit='325684f66fc92f778098f24bcfbef0ce3da9717c')

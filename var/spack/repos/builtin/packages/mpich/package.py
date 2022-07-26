@@ -7,7 +7,7 @@ import os
 import re
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
@@ -163,23 +163,6 @@ with '-Wl,-commons,use_dylibs' and without
           sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
-    # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
-    # applied by MPICH starting version 3.1.
-    patch('nag_libtool_2.4.2_0.patch', when='@:3.0%nag')
-
-    # This patch for Libtool 2.4.2 fixes the problem with '-pthread' flag and
-    # enables convenience libraries for NAG. Starting version 3.1, the order of
-    # checks for FC and F77 is changed, therefore we need to apply the patch in
-    # two steps (the patch files can be merged once the support for versions
-    # 3.1 and older is dropped).
-    patch('nag_libtool_2.4.2_1.patch', when='@:3.1.3%nag')
-    patch('nag_libtool_2.4.2_2.patch', when='@:3.1.3%nag')
-
-    # This patch for Libtool 2.4.6 does the same as the previous two. The
-    # problem is not fixed upstream yet and the upper version constraint is
-    # given just to avoid application of the patch to the develop version.
-    patch('nag_libtool_2.4.6.patch', when='@3.1.4:3.3%nag')
-
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
@@ -248,17 +231,6 @@ with '-Wl,-commons,use_dylibs' and without
     # see https://github.com/pmodels/mpich/pull/5031
     conflicts('%clang@:7', when='@3.4:3.4.1')
 
-    @run_after('configure')
-    def patch_cce(self):
-        # Configure misinterprets output from the cce compiler
-        # Patching configure instead should be possible, but a first
-        # implementation failed in obscure ways that were not worth
-        # tracking down when this worked
-        if self.spec.satisfies('%cce'):
-            filter_file('-L -L', '', 'config.lt', string=True)
-            filter_file('-L -L', '', 'libtool', string=True)
-            filter_file('-L -L', '', 'config.status', string=True)
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
@@ -267,13 +239,13 @@ with '-Wl,-commons,use_dylibs' and without
 
     @classmethod
     def determine_variants(cls, exes, version):
-        def get_spack_compiler_spec(path):
-            spack_compilers = spack.compilers.find_compilers([path])
+        def get_spack_compiler_spec(compiler):
+            spack_compilers = spack.compilers.find_compilers(
+                [os.path.dirname(compiler)])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if (spack_compiler.cc and
-                        os.path.dirname(spack_compiler.cc) == path):
+                if (spack_compiler.cc and spack_compiler.cc == compiler):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -356,10 +328,11 @@ with '-Wl,-commons,use_dylibs' and without
                 variants += '+hcoll'
 
             match = re.search(r'MPICH CC:\s+(\S+)', output)
-            compiler_spec = get_spack_compiler_spec(
-                os.path.dirname(match.group(1)))
-            if compiler_spec:
-                variants.append('%' + str(compiler_spec))
+            if match:
+                compiler = match.group(1)
+                compiler_spec = get_spack_compiler_spec(compiler)
+                if compiler_spec:
+                    variants.append('%' + str(compiler_spec))
             results.append(' '.join(variants))
         return results
 

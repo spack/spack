@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Onnx(CMakePackage):
@@ -18,7 +18,11 @@ class Onnx(CMakePackage):
     git      = "https://github.com/onnx/onnx.git"
 
     version('master', branch='master')
-    version('1.10.1', sha256='cb2fe3e0c9bba128a5790a565d81be30f4b5571eaca5418fb19df8d2d0f11ce2')
+    version('1.12.0', sha256='052ad3d5dad358a33606e0fc89483f8150bb0655c99b12a43aa58b5b7f0cc507')
+    version('1.11.0', sha256='a20f2d9df805b16ac75ab4da0a230d3d1c304127d719e5c66a4e6df514e7f6c0')  # py-torch@1.12:
+    version('1.10.2', sha256='520b3aa34272cc215e2eb41385f58adf01750d88858d4722563edca8410c5dc9')
+    version('1.10.1_2021-10-08', commit='85546f8c44e627f8ff1181725d03cc49f675e44f')  # py-torch@1.11
+    version('1.10.1', sha256='cb2fe3e0c9bba128a5790a565d81be30f4b5571eaca5418fb19df8d2d0f11ce2')  # py-torch@1.10
     version('1.10.0', sha256='705a27ee076713b8c755911913c9ffa8f96b95fc3a8568ed0b8e1dd954d67147')
     version('1.9.0', sha256='61d459a5f30604cabec352574119a6685dfd43bfa757cfbff52be9471d5b8ea0')
     version('1.8.0_2020-11-03', commit='54c38e6eaf557b844e70cebc00f39ced3321e9ad')  # py-torch@1.8:1.9

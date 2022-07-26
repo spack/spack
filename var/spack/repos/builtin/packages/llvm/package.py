@@ -11,6 +11,7 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.util.executable
+from spack.package import *
 
 
 class Llvm(CMakePackage, CudaPackage):
@@ -35,6 +36,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
+    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055')
+    version('14.0.5', sha256='a4a57f029cb81f04618e05853f05fc2d21b64353c760977d8e7799bf7218a23a')
     version('14.0.4', sha256='1333236f9bee38658762076be4236cb5ebf15ae9b7f2bfce6946b96ae962dc73')
     version('14.0.3', sha256='0e1d049b050127ecf6286107e9a4400b0550f841d5d2288b9d31fd32ed0683d5')
     version('14.0.2', sha256='ca52232b3451c8e017f00eb882277707c13e30fac1271ec97015f6d0eeb383d1')
@@ -175,6 +178,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant("python", default=False, description="Install python bindings")
 
     variant('version_suffix', default='none', description="Add a symbol suffix")
+    variant('shlib_symbol_version', default='none', description="Add shared library symbol version", when='@13:')
     variant('z3', default=False, description='Use Z3 for the clang static analyzer')
 
     provides('libllvm@14', when='@14.0.0:14')
@@ -217,7 +221,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("libxml2")
 
     # lldb dependencies
-    depends_on("swig", when="+lldb")
+    with when("+lldb +python"):
+        depends_on("swig")
+        depends_on("swig@2:", when="@10:")
+        depends_on("swig@3:", when="@12:")
     depends_on("libedit", when="+lldb")
     depends_on("py-six", when="@5.0.0: +lldb +python")
 
@@ -363,7 +370,12 @@ class Llvm(CMakePackage, CudaPackage):
     patch('llvm14-hwloc-ompd.patch', when='@14')
 
     # make libflags a list in openmp subproject when ~omp_as_runtime
-    patch('libomp-libflags-as-list.patch', when='@3.7:')
+    patch('libomp-libflags-as-list.patch', when='@3.7:14')
+
+    # Add missing include leading to build fail with clang
+    patch('https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch?full_index=1',
+          sha256='514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6',
+          when='@8:11')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -573,6 +585,11 @@ class Llvm(CMakePackage, CudaPackage):
         version_suffix = spec.variants['version_suffix'].value
         if version_suffix != 'none':
             cmake_args.append(define('LLVM_VERSION_SUFFIX', version_suffix))
+
+        shlib_symbol_version = spec.variants.get('shlib_symbol_version', None)
+        if shlib_symbol_version is not None and shlib_symbol_version.value != 'none':
+            cmake_args.append(define('LLVM_SHLIB_SYMBOL_VERSION',
+                              shlib_symbol_version.value))
 
         if python.version >= Version("3"):
             cmake_args.append(define("Python3_EXECUTABLE", python.command.path))

@@ -771,9 +771,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             mirrors_to_check = {
                 'override': remote_mirror_override
             }
-        else:
-            spack.mirror.add(
-                'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
+
+        # If we have a remote override and we want generate pipeline using
+        # --check-index-only, then the override mirror needs to be added to
+        # the configured mirrors when bindist.update() is run, or else we
+        # won't fetch its index and include in our local cache.
+        spack.mirror.add(
+            'ci_pr_mirror', remote_mirror_override, cfg.default_modify_scope())
 
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
@@ -819,7 +823,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         user_artifacts_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
-    # (including the per-PR mirror we may have just added above).
+    # (including the override mirror we may have just added above).
     try:
         bindist.binary_index.update()
     except bindist.FetchCacheError as e:
@@ -853,8 +857,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     finally:
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
-            if spack_pipeline_type != 'spack_protected_branch':
-                spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
+            spack.mirror.remove('ci_pr_mirror', cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -1625,8 +1628,9 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         job_log_dir (str): Path into which build log should be copied
     """
     try:
-        job_pkg = spack.repo.get(job_spec)
-        tty.debug('job package: {0}'.format(job_pkg))
+        pkg_cls = spack.repo.path.get_pkg_class(job_spec.name)
+        job_pkg = pkg_cls(job_spec)
+        tty.debug('job package: {0.fullname}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
         build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')

@@ -9,7 +9,6 @@ import llnl.util.tty
 
 import spack.container
 import spack.container.images
-import spack.monitor
 
 description = ("creates recipes to build images for different"
                " container runtimes")
@@ -18,7 +17,6 @@ level = "long"
 
 
 def setup_parser(subparser):
-    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
     subparser.add_argument(
         '--list-os', action='store_true', default=False,
         help='list all the OS that can be used in the bootstrap phase and exit'
@@ -46,14 +44,5 @@ def containerize(parser, args):
         raise ValueError(msg.format(config_file))
 
     config = spack.container.validate(config_file)
-
-    # If we have a monitor request, add monitor metadata to config
-    if args.use_monitor:
-        config['spack']['monitor'] = {
-            "host": args.monitor_host,
-            "keep_going": args.monitor_keep_going,
-            "prefix": args.monitor_prefix,
-            "tags": args.monitor_tags
-        }
     recipe = spack.container.recipe(config, last_phase=args.last_stage)
     print(recipe)

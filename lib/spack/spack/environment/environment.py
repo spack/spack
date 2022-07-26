@@ -1113,8 +1113,13 @@ class Environment(object):
             # "steal" the source code via staging API
             abspath = os.path.normpath(os.path.join(self.path, path))
 
-            stage = spec.package.stage
-            stage.steal_source(abspath)
+            # Stage, at the moment, requires a concrete Spec, since it needs the
+            # dag_hash for the stage dir name. Below though we ask for a stage
+            # to be created, to copy it afterwards somewhere else. It would be
+            # better if we can create the `source_path` directly into its final
+            # destination.
+            pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+            pkg_cls(spec).stage.steal_source(abspath)
 
         # If it wasn't already in the list, append it
         self.dev_specs[spec.name] = {'path': path, 'spec': str(spec)}
@@ -1612,9 +1617,10 @@ class Environment(object):
         # ensure specs already installed are marked explicit
         all_specs = specs or [cs for _, cs in self.concretized_specs()]
         specs_installed = [s for s in all_specs if s.installed]
-        with spack.store.db.write_transaction():  # do all in one transaction
-            for spec in specs_installed:
-                spack.store.db.update_explicit(spec, True)
+        if specs_installed:
+            with spack.store.db.write_transaction():  # do all in one transaction
+                for spec in specs_installed:
+                    spack.store.db.update_explicit(spec, True)
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')

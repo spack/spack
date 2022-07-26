@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
@@ -24,6 +24,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('develop', branch='master')
+    version('2.25.0', sha256='f9fc8371d91239fca694284dab17175bfda3821d7b7a871fd2e8f9d5930f303c')
     version('2.24.0', sha256='f480e61fc25bf533fc201fdf79ec440be79bb8117650627d1f25151e8be2fdb5')
     version('2.23.0', sha256='8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2')
     version('2.22.1', sha256='c1e7761b907c2ee0098091b69797e9be977bff8b7fd0479dc20cad42f45c4084')

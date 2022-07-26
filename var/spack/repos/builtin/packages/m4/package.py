@@ -6,6 +6,8 @@
 import os
 import re
 
+from spack.package import *
+
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
@@ -42,6 +44,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     variant('sigsegv', default=True,
             description="Build the libsigsegv dependency")
 
+    depends_on('diffutils', type='build')
     depends_on('libsigsegv', when='+sigsegv')
 
     build_directory = 'spack-build'

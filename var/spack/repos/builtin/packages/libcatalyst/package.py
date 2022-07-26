@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libcatalyst(CMakePackage):
@@ -16,7 +16,7 @@ class Libcatalyst(CMakePackage):
     maintainers = ['mathstuf']
 
     # master as of 2021-05-12
-    version('8456ccd6015142b5a7705f79471361d4f5644fa7', sha256='5a01f12b271d9d9e9b89f31d45a5f4b8426904483639d38754893adfd3547bab')
+    version('2021-05-12', sha256='5a01f12b271d9d9e9b89f31d45a5f4b8426904483639d38754893adfd3547bab')
 
     variant('mpi', default=False, description='Enable MPI support')
     variant('python3', default=False, description='Enable Python3 support')

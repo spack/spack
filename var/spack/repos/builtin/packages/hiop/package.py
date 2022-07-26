@@ -7,7 +7,7 @@ import os
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Hiop(CMakePackage, CudaPackage, ROCmPackage):
@@ -95,6 +95,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     for (magma_v, hiop_v) in magma_ver_constraints:
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+cuda'.format(hiop_v))
         depends_on('magma@{0}:'.format(magma_v), when='@{0}:+rocm'.format(hiop_v))
+
+    depends_on('cuda@11:', when='@develop:+cuda')
 
     depends_on('raja', when='+raja')
     depends_on('raja+openmp', when='+raja~cuda~rocm')

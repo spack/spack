@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAffyio(RPackage):
@@ -15,6 +15,7 @@ class RAffyio(RPackage):
 
     bioc = "affyio"
 
+    version('1.66.0', commit='3a0b90704fc46cddd99a72b985a6bdb348f69b50')
     version('1.64.0', commit='aa7ce48f3f4110431f6f488d45961fde4019ffb0')
     version('1.60.0', commit='ee20528b32700e99768da48143d6d45c9a7bbe91')
     version('1.54.0', commit='c0e306e1805a556a1074d1af1acdd18e0a04477f')

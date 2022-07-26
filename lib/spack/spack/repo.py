@@ -202,17 +202,11 @@ class RepoLoader(_PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
-    #: Spack packages were originally expected to call `from spack import *`
-    #: themselves, but it became difficult to manage and imports in the Spack
-    #: core the top-level namespace polluted by package symbols this way.  To
-    #: solve this, the top-level ``spack`` package contains very few symbols
-    #: of its own, and importing ``*`` is essentially a no-op.  The common
-    #: routines and directives that packages need are now in ``spack.pkgkit``,
-    #: and the import system forces packages to automatically include
-    #: this. This way, old packages that call ``from spack import *`` will
-    #: continue to work without modification, but it's no longer required.
+    #: Spack packages are expected to call `from spack.package import *`
+    #: themselves, but we are allowing a deprecation period before breaking
+    #: external repos that don't do this yet.
     _package_prepend = ('from __future__ import absolute_import;'
-                        'from spack.pkgkit import *')
+                        'from spack.package import *')
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo
@@ -450,10 +444,10 @@ def is_package_file(filename):
     # Package files are named `package.py` and are not in lib/spack/spack
     # We have to remove the file extension because it can be .py and can be
     # .pyc depending on context, and can differ between the files
-    import spack.package  # break cycle
+    import spack.package_base  # break cycle
     filename_noext = os.path.splitext(filename)[0]
     packagebase_filename_noext = os.path.splitext(
-        inspect.getfile(spack.package.PackageBase))[0]
+        inspect.getfile(spack.package_base.PackageBase))[0]
     return (filename_noext != packagebase_filename_noext and
             os.path.basename(filename_noext) == 'package')
 
@@ -868,10 +862,6 @@ class RepoPath(object):
             r |= set(repo.packages_with_tags(*tags))
         return sorted(r)
 
-    def all_packages(self):
-        for name in self.all_package_names():
-            yield self.get(name)
-
     def all_package_classes(self):
         for name in self.all_package_names():
             yield self.get_pkg_class(name)
@@ -915,7 +905,9 @@ class RepoPath(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [pkg_cls(spack.spec.Spec(pkg_cls.name))
+                for pkg_cls in self.all_package_classes()
+                if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)]
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -951,9 +943,10 @@ class RepoPath(object):
         # that can operate on packages that don't exist yet.
         return self.first_repo()
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "RepoPath.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
@@ -1113,9 +1106,10 @@ class Repo(object):
             tty.die("Error reading %s when opening %s"
                     % (self.config_file, self.root))
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "Repo.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
@@ -1205,7 +1199,9 @@ class Repo(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [pkg_cls(spack.spec.Spec(pkg_cls.name))
+                for pkg_cls in self.all_package_classes()
+                if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)]
 
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
@@ -1246,15 +1242,6 @@ class Repo(object):
             v &= set(index[t])
 
         return sorted(v)
-
-    def all_packages(self):
-        """Iterator over all packages in the repository.
-
-        Use this with care, because loading packages is slow.
-
-        """
-        for name in self.all_package_names():
-            yield self.get(name)
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.
@@ -1402,11 +1389,6 @@ path = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
 sys.meta_path.append(ReposFinder())
-
-
-def get(spec):
-    """Convenience wrapper around ``spack.repo.get()``."""
-    return path.get(spec)
 
 
 def all_package_names(include_virtuals=False):

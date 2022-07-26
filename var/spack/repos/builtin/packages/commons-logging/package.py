@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class CommonsLogging(Package):
@@ -25,7 +25,7 @@ class CommonsLogging(Package):
     version('1.1.3', sha256='9e7093c93529792563b5c19ab5cccb73ef4ca7d82b886bdec6d0af182ba9908a')
     version('1.1.1', sha256='88c721d66f570a87f710a2449f0e3bffea86489d9dd2fa70b805104c4f8d69e6')
 
-    extends('jdk')
+    extends('openjdk')
     depends_on('java', type='run')
 
     def install(self, spec, prefix):

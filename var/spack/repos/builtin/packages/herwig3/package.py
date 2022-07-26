@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -15,6 +15,7 @@ class Herwig3(AutotoolsPackage):
 
     tags = ['hep']
 
+    version('7.2.3', sha256='5599899379b01b09e331a2426d78d39b7f6ec126db2543e9d340aefe6aa50f84')
     version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686')
 
     depends_on('autoconf', type='build')
@@ -24,6 +25,8 @@ class Herwig3(AutotoolsPackage):
     depends_on('lhapdf')
     depends_on('lhapdfsets')
     depends_on('thepeg@2.2.1', when='@7.2.1')
+    depends_on('thepeg@2.2.3', when='@7.2.3')
+    depends_on('evtgen')
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
@@ -54,7 +57,8 @@ class Herwig3(AutotoolsPackage):
                 '--with-openloops=' + self.spec['openloops'].prefix,
                 '--with-gosam-contrib=' + self.spec['gosam-contrib'].prefix,
                 '--with-njet=' + self.spec['njet'].prefix,
-                '--with-vbfnlo=' + self.spec['vbfnlo'].prefix]
+                '--with-vbfnlo=' + self.spec['vbfnlo'].prefix,
+                '--with-evtgen=' + self.spec['evtgen'].prefix]
 
         if self.spec.satisfies('^python@2.7.0:2.7'):
             args.append('--with-gosam=' + self.spec['gosam'].prefix)

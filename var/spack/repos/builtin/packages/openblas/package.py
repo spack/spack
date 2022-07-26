@@ -6,9 +6,7 @@
 import os
 import re
 
-from llnl.util.filesystem import library_extensions
-
-from spack import *
+from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
@@ -70,6 +68,9 @@ class Openblas(MakefilePackage):
     provides('lapack')
     provides('lapack@3.9.1:', when='@0.3.15:')
     provides('lapack@3.7.0', when='@0.2.20')
+
+    # https://github.com/spack/spack/issues/31732
+    patch('f_check-oneapi.patch', when='@0.3.20 %oneapi')
 
     # OpenBLAS >=3.0 has an official way to disable internal parallel builds
     patch('make.patch', when='@0.2.16:0.2.20')

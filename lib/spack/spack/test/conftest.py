@@ -35,7 +35,7 @@ import spack.config
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
-import spack.package
+import spack.package_base
 import spack.package_prefs
 import spack.paths
 import spack.platforms
@@ -532,7 +532,7 @@ def _pkg_install_fn(pkg, spec, prefix):
 
 @pytest.fixture
 def mock_pkg_install(monkeypatch):
-    monkeypatch.setattr(spack.package.PackageBase, 'install',
+    monkeypatch.setattr(spack.package_base.PackageBase, 'install',
                         _pkg_install_fn, raising=False)
 
 
@@ -751,8 +751,7 @@ def _populate(mock_db):
     """
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True, explicit=True)
+        s.package.do_install(fake=True, explicit=True)
 
     _install('mpileaks ^mpich')
     _install('mpileaks ^mpich2')
@@ -934,7 +933,7 @@ def mock_fetch(mock_archive, monkeypatch):
     mock_fetcher.append(URLFetchStrategy(mock_archive.url))
 
     monkeypatch.setattr(
-        spack.package.PackageBase, 'fetcher', mock_fetcher)
+        spack.package_base.PackageBase, 'fetcher', mock_fetcher)
 
 
 class MockLayout(object):
@@ -1004,7 +1003,7 @@ class ConfigUpdate(object):
 
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request):
+def module_configuration(monkeypatch, request, mutable_config):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -1019,6 +1018,8 @@ def module_configuration(monkeypatch, request):
         spack.paths.test_path, 'data', 'modules', writer_key
     )
 
+    # ConfigUpdate, when called, will modify configuration, so we need to use
+    # the mutable_config fixture
     return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
 
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTseries(RPackage):
@@ -11,6 +11,7 @@ class RTseries(RPackage):
 
     cran = "tseries"
 
+    version('0.10-51', sha256='a55f20704883710ab58ea479e20cf0f263c50d54282f693793cda4af664c207f')
     version('0.10-49', sha256='45bf26d8f41f12a72954bbe5fb6f4da6cc4ef29ee075c49fe7cc8456926c14ba')
     version('0.10-48', sha256='53bd22708c936205c5f839a10f2e302524d2cc54dc309e7d885ebd081ccb4471')
     version('0.10-47', sha256='202377df56806fe611c2e12c4d9732c71b71220726e2defa7e568d2b5b62fb7b')

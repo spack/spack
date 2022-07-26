@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyNumexpr(PythonPackage):
@@ -23,5 +23,6 @@ class PyNumexpr(PythonPackage):
 
     depends_on('python@2.7:', when='@2.7.3:', type=('build', 'run'))
     depends_on('python@2.6:', when='@:2.7.2', type=('build', 'run'))
-    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    # https://github.com/pydata/numexpr/issues/397
+    depends_on('py-numpy@1.7:1.22', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Goma(CMakePackage):
@@ -16,10 +16,11 @@ class Goma(CMakePackage):
 
     maintainers = ['wortiz']
 
+    version('7.1.1', commit='4bebca85ab3840709b44f63502893af6453710e8')
     version('7.0.4', commit='27b2cb2477fa92f9457597f588c137de2572ef69')
     version('7.0.0', commit='5166896f273e5853e1f32885e20f68317b24979c')
+    version('release', branch='release')
     version('main', branch='main')
-    version('develop', branch='develop')
 
     # Problem size variants
     variant('max_conc', default='4', values=('4', '8', '10', '15', '20'),
@@ -30,9 +31,11 @@ class Goma(CMakePackage):
             description="Set internal maximum number of active equations")
     variant('mde', default='27', values=('8', '9', '10', '16', '20', '27', '54'),
             description="Set internal maximum DOF per element")
+    variant('max_number_matls', default='9', values=('9', '10', '15', '20', '25', '30', '45', '50', '55'),
+            description="Set internal maximum number of materials")
 
     # Floating point checks
-    variant('check_finite', default=True, description="Enable finite computation check")
+    variant('check_finite', default=False, description="Enable finite computation check")
     variant('fpe', default=False, description="Enable floating point exception")
 
     # Optional third party libraries
@@ -65,6 +68,7 @@ class Goma(CMakePackage):
             self.define_from_variant('MAX_EXTERNAL_FIELD', 'max_external_field'))
         args.append(self.define_from_variant('MAX_PROB_VAR', 'max_prob_var'))
         args.append(self.define_from_variant('MDE', 'mde'))
+        args.append(self.define_from_variant('MAX_NUMBER_MATLS', 'max_number_matls'))
 
         # Floating point error checks
         args.append(self.define_from_variant('CHECK_FINITE', 'check_finite'))

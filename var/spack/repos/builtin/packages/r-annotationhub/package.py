@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAnnotationhub(RPackage):
@@ -20,6 +20,7 @@ class RAnnotationhub(RPackage):
 
     bioc = "AnnotationHub"
 
+    version('3.4.0', commit='e74e54ca44f50c2c15c60f8620e3d1721f8f5b6d')
     version('3.2.1', commit='ad1dfe86f0b0ea4711cc9cdb89e073e8794ec9aa')
     version('2.22.0', commit='3ab7dceebbc31ac14ca931f66c662cf9538b7d0a')
     version('2.16.1', commit='f8cefaae603b782e1c1ad277a3fb89d44e3aa1ed')

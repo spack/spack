@@ -29,7 +29,7 @@ import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.database
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.spec
 import spack.store
@@ -401,10 +401,8 @@ def _check_remove_and_add_package(database, spec):
 
 
 def _mock_install(spec):
-    s = spack.spec.Spec(spec)
-    s.concretize()
-    pkg = spack.repo.get(s)
-    pkg.do_install(fake=True)
+    s = spack.spec.Spec(spec).concretized()
+    s.package.do_install(fake=True)
 
 
 def _mock_remove(spec):
@@ -792,7 +790,7 @@ def test_uninstall_by_spec(mutable_database):
     with mutable_database.write_transaction():
         for spec in mutable_database.query():
             if spec.installed:
-                spack.package.PackageBase.uninstall_by_spec(spec, force=True)
+                spack.package_base.PackageBase.uninstall_by_spec(spec, force=True)
             else:
                 mutable_database.remove(spec)
     assert len(mutable_database.query()) == 0
