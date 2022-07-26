@@ -48,6 +48,7 @@ from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
+import spack.url
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -529,8 +530,9 @@ class URLFetchStrategy(FetchStrategy):
                 "Couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
+        # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = extension(self.archive_file)
+            self.extension = spack.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug('Source already staged to %s' % self.stage.source_path)
