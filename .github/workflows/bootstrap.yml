@@ -60,6 +60,38 @@ jobs:
           spack -d solve zlib
           tree ~/.spack/bootstrap/store/
 
+  fedora-style:
+    runs-on: ubuntu-latest
+    container: "fedora:latest"
+    if: github.repository == 'spack/spack'
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch unzip which xz python3 python3-devel tree \
+              cmake bison bison-devel libstdc++-static
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Setup non-root user
+        run: |
+          # See [1] below
+          git config --global --add safe.directory /__w/spack/spack
+          useradd spack-test && mkdir -p ~spack-test
+          chown -R spack-test . ~spack-test
+      - name: Setup repo
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+      - name: Bootstrap Python dependencies for spack style
+        shell: runuser -u spack-test -- bash {0}
+        run: |
+          source share/spack/setup-env.sh
+          spack style
+          tree ~/.spack/bootstrap/store/
+
   ubuntu-clingo-sources:
     runs-on: ubuntu-latest
     container: "ubuntu:latest"
