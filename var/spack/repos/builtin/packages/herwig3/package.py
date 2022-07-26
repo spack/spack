@@ -22,7 +22,7 @@ class Herwig3(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('lhapdf')
-    depends_on('lhapdfsets')
+    depends_on('lhapdfsets', type='build')
     depends_on('thepeg@2.2.1', when='@7.2.1')
 
     # TODO: replace this with an explicit list of components of Boost,
