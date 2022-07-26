@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import socket
 
 from spack.package import *
@@ -68,6 +69,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
+    depends_on("rocprim", when="+rocm")
     with when("+rocm @0.12.0:"):
         depends_on("camp+rocm")
         for arch in ROCmPackage.amdgpu_targets:
@@ -120,6 +122,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            # there is only one dir like this, but the version component is unknown
+            entries.append(
+                cmake_cache_path(
+                    "HIP_CLANG_INCLUDE_PATH",
+                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+                )
+            )
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
