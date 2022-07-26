@@ -24,6 +24,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-p', '--path', dest='path',
         help="path to stage package, does not add to spack tree")
+    arguments.add_concretizer_args(subparser)
 
 
 def stage(parser, args):

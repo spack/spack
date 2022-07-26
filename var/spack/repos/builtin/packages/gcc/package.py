@@ -299,6 +299,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('https://raw.githubusercontent.com/Homebrew/formula-patches/22dec3fc/gcc/gcc-11.3.0-arm.diff',
               sha256='e02006b7ec917cc1390645d95735a6a866caed0dfe506d5bef742f7862cab218',
               when='@11.3.0 target=aarch64:')
+        conflicts('+bootstrap', when='@11.3.0 target=aarch64:')
 
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.

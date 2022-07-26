@@ -70,21 +70,32 @@ class Amdlibflame(LibflameBase):
     def configure_args(self):
         """configure_args function"""
         args = super(Amdlibflame, self).configure_args()
-        args.append("--enable-external-lapack-interfaces")
 
-        """To enabled Fortran to C calling convention for
-        complex types when compiling with aocc flang"""
-        if "@3.0: %aocc" in self.spec:
+        # From 3.2 version, amd optimized flags are encapsulated under:
+        # enable-amd-flags for gcc compiler
+        # enable-amd-aocc-flags for aocc compiler
+        if "@3.2:" in self.spec:
+            if "%gcc" in self.spec:
+                args.append("--enable-amd-flags")
+            if "%aocc" in self.spec:
+                args.append("--enable-amd-aocc-flags")
+
+        if "@:3.1" in self.spec:
+            args.append("--enable-external-lapack-interfaces")
+
+        if "@3.1" in self.spec:
+            args.append("--enable-blas-ext-gemmt")
+
+        if "@3.1 %aocc" in self.spec:
+            args.append("--enable-void-return-complex")
+
+        if "@3.0:3.1 %aocc" in self.spec:
+            """To enabled Fortran to C calling convention for
+            complex types when compiling with aocc flang"""
             args.append("--enable-f2c-dotc")
 
         if "@3.0.1: +ilp64" in self.spec:
             args.append("--enable-ilp64")
-
-        if "@3.1: %aocc" in self.spec:
-            args.append("--enable-void-return-complex")
-
-        if "@3.1: " in self.spec:
-            args.append("--enable-blas-ext-gemmt")
 
         return args
 
