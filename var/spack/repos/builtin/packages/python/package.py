@@ -28,7 +28,6 @@ from spack.util.prefix import Prefix
 is_windows = sys.platform == 'win32'
 
 
-
 class Python(Package):
     """The Python programming language."""
 
