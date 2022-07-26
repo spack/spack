@@ -36,7 +36,7 @@ class Python(Package):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "varioustoxins"]
+    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "varioustoxins", "pradyunsg"]
 
     phases = ["configure", "build", "install"]
 

@@ -32,7 +32,7 @@ class PythonPackage(PackageBase):
     #: Package name, version, and extension on PyPI
     pypi = None  # type: Optional[str]
 
-    maintainers = ["adamjstewart"]
+    maintainers = ["adamjstewart", "pradyunsg"]
 
     # Default phases
     phases = ["install"]
