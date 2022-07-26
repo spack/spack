@@ -92,6 +92,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("%nag")
         conflicts("%xl")
         conflicts("%xl_r")
+        conflicts('@:6.6')
         # cuda version >= 10.1
         conflicts("cuda@:10.0.130")
         # bugs with following nvhpcsdk versions
@@ -387,22 +388,14 @@ class QuantumEspresso(CMakePackage, CudaPackage):
             self.define_from_variant('QE_ENABLE_CUDA', 'cuda'),
             self.define_from_variant('QE_ENABLE_PROFILE_NVTX', 'nvtx'),
             self.define_from_variant('QE_ENABLE_MPI_GPU_AWARE', 'mpigpu'),
-            #self.define_from_variant('NVFORTRAN_CUDA_CC', 'cuda_arch')
         ]
 
         if '+cuda' in self.spec:
             cmake_args.append(self.define('QE_ENABLE_OPENACC', True))
-            cuda_arch = spec.variants['cuda_arch'].value
-            print(cuda_arch)
-            if cuda_arch[0] != 'none':
-                cmake_args.append('-DNVFORTRAN_CUDA_CC={0}'.format(cuda_arch))
 
         # QE prefers taking MPI compiler wrappers as CMake compilers.
         if '+mpi' in spec:
             cmake_args.append(self.define('CMAKE_C_COMPILER', spec['mpi'].mpicc))
-            # Define pgi wrapper
-            #if '^spectrum-mpi' in spec:
-            #   spec['mpi'].mpifc = 'mpipgifort'
             cmake_args.append(self.define('CMAKE_Fortran_COMPILER', spec['mpi'].mpifc))
 
         if not spec.satisfies("hdf5=none"):
