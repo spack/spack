@@ -51,7 +51,7 @@ class Sqlite(AutotoolsPackage):
     variant('dynamic_extensions', default=True, description='Support loadable extensions')
     variant('rtree', default=True, description='Build with Rtree module')
 
-    if not self.spec.satisfies('platform=windows'):
+    if not spec.satisfies('platform=windows'):
         depends_on('readline')
         depends_on('zlib')
 
