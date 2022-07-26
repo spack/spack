@@ -401,6 +401,7 @@ class Cmake(Package):
         """Called before cmake packages's install() methods."""
 
         module.cmake = Executable(self.spec.prefix.bin.cmake)
+        module.ctest = Executable(self.spec.prefix.bin.ctest)
 
     def test(self):
         """Perform smoke tests on the installed package."""
