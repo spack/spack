@@ -18,20 +18,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
                                 reason="Windows uses old concretizer")
 
 
-# TODO: this is entirely reused from concretize_preferences
-@pytest.fixture()
-def concretize_scope(mutable_config, tmpdir):
-    """Adds a scope for concretization preferences"""
-    tmpdir.ensure_dir('concretize')
-    mutable_config.push_scope(
-        ConfigScope('concretize', str(tmpdir.join('concretize'))))
-
-    yield
-
-    mutable_config.pop_scope()
-    spack.repo.path._provider_index = None
-
-
 def update_packages_config(conf_str):
     conf = syaml.load_config(conf_str)
     spack.config.set('packages', conf['packages'], scope='concretize')

@@ -18,19 +18,6 @@ from spack.version import Version
 
 
 @pytest.fixture()
-def concretize_scope(mutable_config, tmpdir):
-    """Adds a scope for concretization preferences"""
-    tmpdir.ensure_dir('concretize')
-    mutable_config.push_scope(
-        ConfigScope('concretize', str(tmpdir.join('concretize'))))
-
-    yield
-
-    mutable_config.pop_scope()
-    spack.repo.path._provider_index = None
-
-
-@pytest.fixture()
 def configure_permissions():
     conf = syaml.load_config("""\
 all:
