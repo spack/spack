@@ -69,3 +69,6 @@ class Ninja(Package):
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):
             symlink("ninja", "ninja-build")
+
+    def setup_dependent_package(self, module, dspec):
+        module.ninja = Executable(self.spec.prefix.bin.ninja)

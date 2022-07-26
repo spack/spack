@@ -533,8 +533,6 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
-    m.scons = MakeExecutable("scons", jobs)
-    m.ninja = MakeExecutable("ninja", jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
@@ -542,9 +540,6 @@ def _set_variables_for_single_module(pkg, module):
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
-
-    m.meson = Executable("meson")
-    m.ctest = MakeExecutable("ctest", jobs)
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
