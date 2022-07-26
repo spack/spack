@@ -57,7 +57,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws-aarch64" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws-aarch64-rebuild-with-abs-sonames" }
 
   gitlab-ci:
 
