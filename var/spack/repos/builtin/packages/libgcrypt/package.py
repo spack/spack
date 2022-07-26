@@ -14,6 +14,8 @@ class Libgcrypt(AutotoolsPackage):
 
     maintainers = ['alalazo']
 
+    version('1.10.1', sha256='ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de')
+    version('1.10.0', sha256='6a00f5c05caa4c4acc120c46b63857da0d4ff61dc4b4b03933fa8d46013fae81')
     version('1.9.4', sha256='ea849c83a72454e3ed4267697e8ca03390aee972ab421e7df69dfe42b65caaf7')
     version('1.9.3', sha256='97ebe4f94e2f7e35b752194ce15a0f3c66324e0ff6af26659bbfb5ff2ec328fd')
     version('1.9.2', sha256='b2c10d091513b271e47177274607b1ffba3d95b188bbfa8797f948aec9053c5a')
