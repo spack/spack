@@ -69,19 +69,19 @@ spack:
     mappings:
       - match: ['os=centos7']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/e4s-centos-7:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-centos-7@sha256:58e07ab977f25197097c19d675de747253aa4142b179ca069f9093798f983f74", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=fedora36']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/e4s-fedora-36:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-fedora-36@sha256:7958bb775eaccdac5d91f8871cafc16090dab01ab40a0c6b2fb83d54bca44513", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=opensuse_leap15']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/e4s-leap-15:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-leap-15@sha256:d78a8b0f176476a2c308d14542c31ed40875638259609e38e1b98aa8a592d436", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=rocky8']
         runner-attributes:
-          image: { "name": "ghcr.io/blue42u/e4s-rockylinux-8:latest", "entrypoint": [""] }
+          image: { "name": "ghcr.io/blue42u/e4s-rockylinux-8@sha256:a948309d818856a5bd2e9657e31fb3137b6ff05690adaaa8e4be9817cfb93678", "entrypoint": [""] }
           tags: ["spack", "x86_64_v3"]
       - match: ['os=ubuntu20.04']
         runner-attributes:

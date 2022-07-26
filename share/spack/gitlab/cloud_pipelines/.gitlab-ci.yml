@@ -756,16 +756,16 @@ tutorial-protected-build:
     SPACK_CI_STACK_NAME: hpctoolkit
 # .hpctoolkit-centos7:
 #   extends: .hpctoolkit
-#   image: ghcr.io/blue42u/e4s-centos-7:latest
+#   image: ghcr.io/blue42u/e4s-centos-7@sha256:58e07ab977f25197097c19d675de747253aa4142b179ca069f9093798f983f74
 .hpctoolkit-fedora36:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-fedora-36:latest
+  image: ghcr.io/blue42u/e4s-fedora-36@sha256:7958bb775eaccdac5d91f8871cafc16090dab01ab40a0c6b2fb83d54bca44513
 .hpctoolkit-leap15:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-leap-15:latest
+  image: ghcr.io/blue42u/e4s-leap-15@sha256:d78a8b0f176476a2c308d14542c31ed40875638259609e38e1b98aa8a592d436
 .hpctoolkit-rockylinux8:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-rockylinux-8:latest
+  image: ghcr.io/blue42u/e4s-rockylinux-8@sha256:a948309d818856a5bd2e9657e31fb3137b6ff05690adaaa8e4be9817cfb93678
 .hpctoolkit-ubuntu20.04:
   extends: .hpctoolkit
   image: ghcr.io/spack/e4s-ubuntu-20.04:v2022-03-21
