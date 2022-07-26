@@ -24,6 +24,6 @@ class Msmpi(Package):
     def url_for_version(self, version):
         return 'https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe'
 
-    def install(self):
+    def install(self, spec, prefix):
         installer = Executable('msmpisetup.exe')
         installer()
