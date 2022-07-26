@@ -85,6 +85,7 @@ spack:
   - gmp
   - gptune
   - hdf5 +fortran +hl +shared
+  - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
   - hpx networking=mpi
