@@ -35,7 +35,7 @@ class Cabana(CMakePackage):
     variant('arborx', default=False, description='Build with ArborX support')
     variant('heffte', default=False, description='Build with heFFTe support')
     variant('hypre', default=False, description='Build with HYPRE support')
-    variant('cajita', default=False, description='Build with Cajita support')
+    variant('cajita', default=False, description='Build Cajita subpackage')
 
     depends_on("cmake@3.9:", type='build')
     depends_on("googletest", type='build')
