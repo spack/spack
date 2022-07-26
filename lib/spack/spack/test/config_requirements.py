@@ -10,7 +10,6 @@ import pytest
 import spack.config
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigScope
 from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 

@@ -12,7 +12,7 @@ import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
-from spack.config import ConfigError, ConfigScope
+from spack.config import ConfigError
 from spack.spec import Spec
 from spack.version import Version
 
