@@ -92,7 +92,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("%nag")
         conflicts("%xl")
         conflicts("%xl_r")
-        conflicts('@:6.6')
+        conflicts('@:6.5')
         # cuda version >= 10.1
         conflicts("cuda@:10.0.130")
         # bugs with following nvhpcsdk versions
