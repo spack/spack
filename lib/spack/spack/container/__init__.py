@@ -55,13 +55,13 @@ def validate(configuration_file):
             warnings.warn(msg.format(subsection, configuration_file))
             env_dict.pop(subsection)
 
-    # Set the default value of the concretization strategy to "together" and
+    # Set the default value of the concretization strategy to unify and
     # warn if the user explicitly set another value
-    env_dict.setdefault('concretization', 'together')
-    if env_dict['concretization'] != 'together':
-        msg = ('the "concretization" attribute of the environment is set '
-               'to "{0}" [the advised value is instead "together"]')
-        warnings.warn(msg.format(env_dict['concretization']))
+    env_dict.setdefault('concretizer', {'unify': True})
+    if not env_dict['concretizer']['unify'] is True:
+        warnings.warn('"concretizer:unify" is not set to "true", which means the '
+                      'generated image may contain different variants of the same '
+                      'packages. Set to "true" to get a consistent set of packages.')
 
     # Check if the install tree was explicitly set to a custom value and warn
     # that it will be overridden

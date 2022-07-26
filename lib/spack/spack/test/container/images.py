@@ -31,7 +31,7 @@ def test_package_info(image):
 
 @pytest.mark.parametrize('extra_config,expected_msg', [
     ({'modules': {'enable': ['tcl']}}, 'the subsection "modules" in'),
-    ({'concretization': 'separately'}, 'the "concretization" attribute'),
+    ({'concretizer': {'unify': False}}, '"concretizer:unify" is not set to "true"'),
     ({'config': {'install_tree': '/some/dir'}},
      'the "config:install_tree" attribute has been set'),
     ({'view': '/some/dir'}, 'the "view" attribute has been set')
