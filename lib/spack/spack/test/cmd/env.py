@@ -145,17 +145,32 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
-def test_env_uninstalled_specs(install_mockery, mock_fetch):
+def test_env_specs_partition(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
     e.concretize()
-    assert any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+
+    # Single not installed root spec.
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 0
+    assert len(roots_to_install) == 1
+    assert roots_to_install[0].name == 'cmake-client'
+
+    # Single installed root.
     e.install_all()
-    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 1
+    assert roots_already_installed[0].name == 'cmake-client'
+    assert len(roots_to_install) == 0
+
+    # One installed root, one not installed root.
     e.add('mpileaks')
     e.concretize()
-    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
-    assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 1
+    assert len(roots_to_install) == 1
+    assert roots_already_installed[0].name == 'cmake-client'
+    assert roots_to_install[0].name == 'mpileaks'
 
 
 def test_env_install_all(install_mockery, mock_fetch):
