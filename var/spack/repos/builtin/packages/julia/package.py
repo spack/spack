@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.version import ver
 
 
@@ -26,9 +26,12 @@ class Julia(MakefilePackage):
     maintainers = ['glennpj', 'vchuravy', 'haampie']
 
     version('master', branch='master')
+    version('1.8.0-rc1', sha256='ed0395880c32c48a284b115279d27d79ab1ca6fb53a4b97a8d25eba54ec97306')
+    version('1.7.3', sha256='06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306', preferred=True)
     version('1.7.2', sha256='0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef')
     version('1.7.1', sha256='17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e')
     version('1.7.0', sha256='8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4')
+    version('1.6.6', sha256='a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090', preferred=True)
     version('1.6.5', sha256='b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb')
     version('1.6.4', sha256='a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4')
 
@@ -50,7 +53,21 @@ class Julia(MakefilePackage):
     # but also so that llvm-config --libfiles gives only the dylib. Without
     # it it also gives static libraries, and breaks Julia's build.
     depends_on('llvm targets=amdgpu,bpf,nvptx,webassembly version_suffix=jl +link_llvm_dylib ~internal_unwind')
-    depends_on('libuv')
+    depends_on('libuv', when='@:1.7')
+    depends_on('libuv-julia', when='@1.8:')
+
+    with when('@1.8.0:1.8'):
+        # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
+        # openlibm.so.4, libblastrampoline.so.5, libgit2.so.1.3, libnghttp2.so.14,
+        # libcurl.so.4
+        depends_on('libblastrampoline@5.1.0:5')
+        depends_on('libgit2@1.3.0:1.3')
+        depends_on('libssh2@1.10.0:1.10')
+        depends_on('libuv-julia@1.44.1')
+        depends_on('llvm@13.0.1 shlib_symbol_version=jl')
+        depends_on('mbedtls@2.28.0:2.28')
+        depends_on('openlibm@0.8.1:0.8', when='+openlibm')
+        depends_on('nghttp2@1.47.0:1.47')
 
     with when('@1.7.0:1.7'):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.13, mbedcrypto.so.5, mbedx509.so.1
@@ -74,16 +91,16 @@ class Julia(MakefilePackage):
         depends_on('openlibm@0.7.0:0.7', when='+openlibm')
 
     # Patches for llvm
-    depends_on('llvm', patches='llvm7-symver-jlprefix.patch')
+    depends_on('llvm', patches='llvm7-symver-jlprefix.patch', when='@:1.7')
     depends_on('llvm', when='^llvm@11.0.1', patches=patch(
         'https://raw.githubusercontent.com/spack/patches/0b543955683a903d711a3e95ff29a4ce3951ca13/julia/llvm-11.0.1-julia-1.6.patch',
         sha256='8866ee0595272b826b72d173301a2e625855e80680a84af837f1ed6db4657f42'))
     depends_on('llvm', when='^llvm@12.0.1', patches=patch(
         'https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch',
         sha256='10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4'))
-    depends_on('llvm', when='^llvm@13.0.0', patches=patch(
-        'https://github.com/JuliaLang/llvm-project/compare/d7b669b3a30345cfcdb2fde2af6f48aa4b94845d...6ced34d2b63487a88184c3c468ceda166d10abba.patch',
-        sha256='92f022176ab85ded517a9b7aa04df47e19a5def88f291e0c31100128823166c1'))
+    depends_on('llvm', when='^llvm@13.0.1', patches=patch(
+        'https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch',
+        sha256='45f72c59ae5cf45461e9cd8b224ca49b739d885c79b3786026433c6c22f83b5f'))
 
     # Patches for libuv
     depends_on('libuv', when='^libuv@1.39.0', patches=patch(
@@ -127,7 +144,14 @@ class Julia(MakefilePackage):
 
     # Don't make julia run patchelf --set-rpath on llvm (presumably this should've
     # only applied to libllvm when it's vendored by julia).
-    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7')
+    patch('revert-fix-rpath-of-libllvm.patch', when='@1.7.0:1.7.2')
+
+    # Allow build with clang.
+    patch('gcc-ifdef.patch', when='@1.7.0:1.7')
+
+    # Make sure Julia sets -DNDEBUG when including LLVM header files.
+    patch('llvm-NDEBUG.patch', when='@1.7.0:1.7')
+    patch('llvm-NDEBUG-1.8.patch', when='@1.8.0:1.8')
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it
@@ -171,6 +195,8 @@ class Julia(MakefilePackage):
         # LLVM compatible name for the JIT
         julia_cpu_target = get_best_target(spec.target, 'clang', spec['llvm'].version)
 
+        libuv = 'libuv-julia' if '^libuv-julia' in spec else 'libuv'
+
         options = [
             'prefix:={0}'.format(prefix),
             'MARCH:={0}'.format(march),
@@ -206,13 +232,16 @@ class Julia(MakefilePackage):
             'USE_BLAS64:=1',
             'LIBBLASNAME:={0}'.format(libblas),
             'LIBLAPACKNAME:={0}'.format(liblapack),
-            'override LIBUV:={0}'.format(spec['libuv'].libs.libraries[0]),
-            'override LIBUV_INC:={0}'.format(spec['libuv'].headers.directories[0]),
+            'override LIBUV:={0}'.format(spec[libuv].libs.libraries[0]),
+            'override LIBUV_INC:={0}'.format(spec[libuv].headers.directories[0]),
             'override USE_LLVM_SHLIB:=1',
             # make rebuilds a bit faster for now, not sure if this should be kept
             'JULIA_PRECOMPILE:={0}'.format(
                 '1' if spec.variants['precompile'].value else '0'),
         ]
+
+        options.append('USEGCC:={}'.format('1' if '%gcc' in spec else '0'))
+        options.append('USECLANG:={}'.format('1' if '%clang' in spec else '0'))
 
         # libm or openlibm?
         if spec.variants['openlibm'].value:

@@ -3,17 +3,33 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Nano(AutotoolsPackage):
     """Tiny little text editor"""
 
     homepage = "https://www.nano-editor.org"
-    url      = "https://www.nano-editor.org/dist/v4/nano-4.9.tar.xz"
+    url      = "https://www.nano-editor.org/dist/v6/nano-6.3.tar.xz"
     list_url = "https://www.nano-editor.org/dist/"
     list_depth = 1
 
+    # 6.x
+    version('6.3', sha256='eb532da4985672730b500f685dbaab885a466d08fbbf7415832b95805e6f8687')
+    version('6.2', sha256='2bca1804bead6aaf4ad791f756e4749bb55ed860eec105a97fba864bc6a77cb3')
+    version('6.1', sha256='3d57ec893fbfded12665b7f0d563d74431fc43abeaccacedea23b66af704db40')
+    version('6.0', sha256='93ac8cb68b4ad10e0aaeb80a2dd15c5bb89eb665a4844f7ad01c67efcb169ea2')
+    # 5.x
+    version('5.9', sha256='757db8cda4bb2873599e47783af463e3b547a627b0cabb30ea7bf71fb4c24937')
+    version('5.8', sha256='e43b63db2f78336e2aa123e8d015dbabc1720a15361714bfd4b1bb4e5e87768c')
+    version('5.7', sha256='d4b181cc2ec11def3711b4649e34f2be7a668e70ab506860514031d069cccafa')
+    version('5.6', sha256='fce183e4a7034d07d219c79aa2f579005d1fd49f156db6e50f53543a87637a32')
+    version('5.5', sha256='390b81bf9b41ff736db997aede4d1f60b4453fbd75a519a4ddb645f6fd687e4a')
+    version('5.4', sha256='fe993408b22286355809ce48ebecc4444d19af8203ed4959d269969112ed86e9')
+    version('5.3', sha256='c5c1cbcf622d9a96b6030d66409ed12b204e8bc01ef5e6554ebbe6fb1d734352')
+    version('5.2', sha256='32c2da43e1ae9a5e43437d8c6e1ec0388af870c7762c479e5bffb5f292bda7e1')
+    version('5.1', sha256='9efc46f341404d60095d16fc4f0419fc84b6e4eaeaf6ebce605d0465d92a6ee6')
+    version('5.0', sha256='7c0d94be69cd066f20df2868a2da02f7b1d416ce8d47c0850a8bd270897caa36')
     # 4.x
     version('4.9', sha256='0e399729d105cb1a587b4140db5cf1b23215a0886a42b215efa98137164233a6')
     version('4.8', sha256='c348f61c68ab1d573b308398212a09cd68c60fbee20f01a5bd4b50071a258e63')

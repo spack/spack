@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -14,6 +14,7 @@ class Highfive(CMakePackage):
     homepage = "https://github.com/BlueBrain/HighFive"
     url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
 
+    version('2.4.1', sha256='6826471ef5c645ebf947d29574b302991525a8a8ff1ef687aba7311d9a0ea36f')
     version('2.3.1', sha256='41728a1204bdfcdcef8cbc3ddffe5d744c5331434ce3dcef35614b831234fcd7')
     version('2.3',   sha256='7da6815646eb4294f210cec6be24c9234d7d6ceb2bf92a01129fbba6583c5349')
     version('2.2.2', sha256='5bfb356705c6feb9d46a0507573028b289083ec4b4607a6f36187cb916f085a7')

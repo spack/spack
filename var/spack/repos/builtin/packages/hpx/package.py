@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -15,12 +15,14 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://hpx.stellar-group.org/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
-    maintainers = ['msimberg', 'albestro', 'teonnik']
+    git = "https://github.com/STEllAR-GROUP/hpx.git"
+    maintainers = ['msimberg', 'albestro', 'teonnik', 'hkaiser']
 
     tags = ['e4s']
 
-    version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
-    version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('master', branch='master')
+    version('stable', tag='stable')
+    version('1.8.0', sha256='93f147ab7cf0ab4161f37680ea720d3baeb86540a95382f2fb591645b2a9b135')
     version('1.7.1', sha256='008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b')
     version('1.7.0', sha256='05099b860410aa5d8a10d6915b1a8818733aa1aa2d5f2b9774730ca7e6de5fac')
     version('1.6.0', sha256='4ab715613c1e1808edc93451781cc9bc98feec4e422ccd4322858a680f6d9017')
@@ -45,7 +47,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         'malloc', default='tcmalloc',
         description='Define which allocator will be linked in',
-        values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
+        values=('system', 'jemalloc', 'mimalloc', 'tbbmalloc', 'tcmalloc')
     )
 
     variant('max_cpu_count', default='64',
@@ -85,6 +87,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     # Other dependecies
     depends_on('hwloc')
     depends_on(Boost.with_default_variants)
+    depends_on('boost +context', when='+generic_coroutines')
     for cxxstd in cxxstds:
         depends_on(
             "boost cxxstd={0}".format(map_cxxstd(cxxstd)),
@@ -99,6 +102,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
+    depends_on('mimalloc', when='malloc=mimalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
 
     depends_on('mpi', when='networking=mpi')
@@ -111,13 +115,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
 
-    # Restrictions for stable/master
-    with when("@master"):
-        conflicts("cxxstd=14")
-        depends_on("cuda@11:", when="+cuda")
-
-    with when("@stable"):
-        conflicts("cxxstd=14")
+    # Restrictions for 1.8.X
+    with when('@1.8:'):
+        conflicts('cxxstd=14')
+        conflicts('%gcc@:7')
+        conflicts('%clang@:8')
         depends_on("cuda@11:", when="+cuda")
 
     # Restrictions for 1.7.X
@@ -151,6 +153,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     # C++17. Starting with CUDA 11.3 they compile again.
     conflicts("asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
 
+    # Starting from ROCm 5.0.0 hipcc miscompiles asio 1.17.0 and newer
+    conflicts("asio@1.17.0:", when="+rocm ^hip@5:")
+
     # Boost and HIP don't work together in certain versions:
     # https://github.com/boostorg/config/issues/392. Boost 1.78.0 and HPX 1.8.0
     # both include a fix.
@@ -171,6 +176,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches APEX
     patch('git_external.patch', when='@1.3.0 instrumentation=apex')
+    patch('mimalloc_no_version_requirement.patch', when='@:1.8 malloc=mimalloc')
 
     def instrumentation_args(self):
         args = []

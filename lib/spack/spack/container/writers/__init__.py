@@ -171,32 +171,13 @@ class PathContext(tengine.Context):
     def paths(self):
         """Important paths in the image"""
         Paths = collections.namedtuple('Paths', [
-            'environment', 'store', 'view'
+            'environment', 'store', 'hidden_view', 'view'
         ])
         return Paths(
             environment='/opt/spack-environment',
             store='/opt/software',
+            hidden_view='/opt/._view',
             view='/opt/view'
-        )
-
-    @tengine.context_property
-    def monitor(self):
-        """Enable using spack monitor during build."""
-        Monitor = collections.namedtuple('Monitor', [
-            'enabled', 'host', 'prefix', 'keep_going', 'tags'
-        ])
-        monitor = self.config.get("monitor")
-
-        # If we don't have a monitor group, cut out early.
-        if not monitor:
-            return Monitor(False, None, None, None, None)
-
-        return Monitor(
-            enabled=True,
-            host=monitor.get('host'),
-            prefix=monitor.get('prefix'),
-            keep_going=monitor.get("keep_going"),
-            tags=monitor.get('tags')
         )
 
     @tengine.context_property
@@ -207,8 +188,6 @@ class PathContext(tengine.Context):
         # Copy in the part of spack.yaml prescribed in the configuration file
         manifest = copy.deepcopy(self.config)
         manifest.pop('container')
-        if "monitor" in manifest:
-            manifest.pop("monitor")
 
         # Ensure that a few paths are where they need to be
         manifest.setdefault('config', syaml.syaml_dict())

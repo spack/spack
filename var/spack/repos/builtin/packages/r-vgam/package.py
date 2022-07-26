@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RVgam(RPackage):
@@ -28,6 +28,7 @@ class RVgam(RPackage):
 
     cran = "VGAM"
 
+    version('1.1-6', sha256='446a61bac5dd4794e05d20c2f3901eec54afac52c6e23ce2787c5575170dd417')
     version('1.1-5', sha256='30190b150f3e5478137d288a45f575b2654ad7c29254b0a1fe5c954ee010a1bb')
     version('1.1-1', sha256='de192bd65a7e8818728008de8e60e6dd3b61a13616c887a43e0ccc8147c7da52')
     version('1.0-6', sha256='121820a167411e847b41bdcb0028b55842d0ccc0c3471755c67449837e0fe3b9')

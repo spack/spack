@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Unixodbc(AutotoolsPackage):
@@ -18,3 +18,7 @@ class Unixodbc(AutotoolsPackage):
 
     depends_on('iconv')
     depends_on('libtool')
+
+    @property
+    def libs(self):
+        return find_libraries('libodbc', root=self.prefix, recursive=True)

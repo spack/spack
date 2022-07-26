@@ -6,7 +6,7 @@
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class CBlosc(CMakePackage):
@@ -37,6 +37,10 @@ class CBlosc(CMakePackage):
 
     patch('gcc.patch', when="@1.12.1:1.17.0")
     patch('test_forksafe.patch', when='@1.15.0:1.17.0%intel')
+
+    @property
+    def libs(self):
+        return find_libraries('libblosc', root=self.prefix, recursive=True)
 
     def cmake_args(self):
         args = []

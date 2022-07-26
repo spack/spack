@@ -11,17 +11,17 @@ import re
 import subprocess
 import sys
 from shutil import copy
+from typing import Dict, List
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
-    copy_tree,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import dedupe, match_predicate
 
-from spack import *
 from spack.build_environment import dso_suffix
+from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 
@@ -42,14 +42,16 @@ class Python(Package):
 
     #: phase
     install_targets = ['install']
-    build_targets = []
+    build_targets = []  # type: List[str]
 
+    version('3.10.5', sha256='18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d')
     version('3.10.4', sha256='f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28')
     version('3.10.3', sha256='5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b')
     version('3.10.2', sha256='3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97')
     version('3.10.1', sha256='b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3')
     version('3.10.0', sha256='c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758')
-    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8', preferred=True)
+    version('3.9.13', sha256='829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44', preferred=True)
+    version('3.9.12', sha256='70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8')
     version('3.9.11', sha256='3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112')
     version('3.9.10', sha256='1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e')
     version('3.9.9',  sha256='2cc7b67c1f3f66c571acc42479cdf691d8ed6b47bee12c9b68430413a17a44ea')
@@ -62,6 +64,7 @@ class Python(Package):
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
+    version('3.8.13', sha256='903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4')
     version('3.8.12', sha256='316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a')
     version('3.8.11', sha256='b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393')
     version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65')
@@ -75,6 +78,7 @@ class Python(Package):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.13', sha256='e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5')
     version('3.7.12', sha256='33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46')
     version('3.7.11', sha256='b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a')
     version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
@@ -275,7 +279,7 @@ class Python(Package):
               msg='Python 2.7 is too old for Apple Silicon')
 
     # Used to cache various attributes that are expensive to compute
-    _config_vars = {}
+    _config_vars = {}  # type: Dict[str, Dict[str, str]]
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
@@ -576,6 +580,8 @@ class Python(Package):
         if spec.satisfies('@2.7.13:2.8,3.5.3:', strict=True) \
                 and '+optimizations' in spec:
             config_args.append('--enable-optimizations')
+            config_args.append('--with-lto')
+            config_args.append('--with-computed-gotos')
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
@@ -943,6 +949,7 @@ config.update(get_paths())
             version = self.version.up_to(2)
             config = {
                 # get_config_vars
+                'BINDIR': self.prefix.bin,
                 'CC': 'cc',
                 'CXX': 'c++',
                 'INCLUDEPY': self.prefix.include.join('python{}').format(version),
@@ -1014,16 +1021,13 @@ config.update(get_paths())
         """
         return Prefix(self.config_vars['prefix'])
 
-    @property
-    def libs(self):
-        # Spack installs libraries into lib, except on openSUSE where it
-        # installs them into lib64. If the user is using an externally
-        # installed package, it may be in either lib or lib64, so we need
-        # to ask Python where its LIBDIR is.
+    def find_library(self, library):
+        # Spack installs libraries into lib, except on openSUSE where it installs them
+        # into lib64. If the user is using an externally installed package, it may be
+        # in either lib or lib64, so we need to ask Python where its LIBDIR is.
         libdir = self.config_vars['LIBDIR']
 
-        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
-        # in LBPL
+        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be in LBPL
         # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
         libpl = self.config_vars['LIBPL']
 
@@ -1039,50 +1043,74 @@ config.update(get_paths())
         else:
             macos_developerdir = ''
 
-        if '+shared' in self.spec:
-            ldlibrary = self.config_vars['LDLIBRARY']
-            win_bin_dir = self.config_vars['BINDIR']
-            if os.path.exists(os.path.join(libdir, ldlibrary)):
-                return LibraryList(os.path.join(libdir, ldlibrary))
-            elif os.path.exists(os.path.join(libpl, ldlibrary)):
-                return LibraryList(os.path.join(libpl, ldlibrary))
-            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
-                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
-            elif macos_developerdir and \
-                    os.path.exists(os.path.join(macos_developerdir, ldlibrary)):
-                return LibraryList(os.path.join(macos_developerdir, ldlibrary))
-            elif is_windows and \
-                    os.path.exists(os.path.join(win_bin_dir, ldlibrary)):
-                return LibraryList(os.path.join(win_bin_dir, ldlibrary))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(ldlibrary, libdir))
-        else:
-            library = self.config_vars['LIBRARY']
+        # Windows libraries are installed directly to BINDIR
+        win_bin_dir = self.config_vars['BINDIR']
 
-            if os.path.exists(os.path.join(libdir, library)):
-                return LibraryList(os.path.join(libdir, library))
-            elif os.path.exists(os.path.join(frameworkprefix, library)):
-                return LibraryList(os.path.join(frameworkprefix, library))
-            else:
-                msg = 'Unable to locate {0} libraries in {1}'
-                raise RuntimeError(msg.format(library, libdir))
+        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        for directory in directories:
+            path = os.path.join(directory, library)
+            if os.path.exists(path):
+                return LibraryList(path)
+
+    @property
+    def libs(self):
+        # The +shared variant isn't always reliable, as `spack external find`
+        # currently can't detect it. If +shared, prefer the shared libraries, but check
+        # for static if those aren't found. Vice versa for ~shared.
+
+        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        # static binary but installs shared libraries, so sysconfig reports
+        # libpythonX.Y.a but only libpythonX.Y.so exists.
+        shared_libs = [
+            self.config_vars['LDLIBRARY'],
+            'libpython{}.{}'.format(self.version.up_to(2), dso_suffix),
+        ]
+        static_libs = [
+            self.config_vars['LIBRARY'],
+            'libpython{}.a'.format(self.version.up_to(2)),
+        ]
+        if '+shared' in self.spec:
+            libraries = shared_libs + static_libs
+        else:
+            libraries = static_libs + shared_libs
+        libraries = dedupe(libraries)
+
+        for library in libraries:
+            lib = self.find_library(library)
+            if lib:
+                return lib
+
+        msg = 'Unable to locate {} libraries in {}'
+        libdir = self.config_vars['LIBDIR']
+        raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
 
     @property
     def headers(self):
+        directory = self.config_vars['include']
         config_h = self.config_vars['config_h_filename']
 
         if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
-            headers = find_headers(
-                'pyconfig', self.prefix.include, recursive=True)
-            config_h = headers[0]
+            headers = find_headers('pyconfig', directory)
+            if headers:
+                config_h = headers[0]
+            else:
+                msg = 'Unable to locate {} headers in {}'
+                raise spack.error.NoHeadersError(msg.format(self.name, directory))
 
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
     # https://docs.python.org/3/library/sysconfig.html#installation-paths
+    # https://discuss.python.org/t/understanding-site-packages-directories/12959
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py
+    # https://github.com/pypa/installer/pull/103
+
+    # NOTE: XCode Python's sysconfing module was incorrectly patched, and hard-codes
+    # everything to be installed in /Library/Python. Therefore, we need to use a
+    # fallback in the following methods. For more information, see:
+    # https://github.com/pypa/pip/blob/22.1/src/pip/_internal/locations/__init__.py#L486
 
     @property
     def platlib(self):
@@ -1099,8 +1127,12 @@ config.update(get_paths())
         Returns:
             str: platform-specific site-packages directory
         """
-        return self.config_vars['platlib'].replace(
-            self.config_vars['platbase'] + os.sep, ''
+        prefix = self.config_vars['platbase'] + os.sep
+        path = self.config_vars['platlib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib64', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -1117,8 +1149,12 @@ config.update(get_paths())
         Returns:
             str: platform-independent site-packages directory
         """
-        return self.config_vars['purelib'].replace(
-            self.config_vars['base'] + os.sep, ''
+        prefix = self.config_vars['base'] + os.sep
+        path = self.config_vars['purelib']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join(
+            'lib', 'python{}'.format(self.version.up_to(2)), 'site-packages'
         )
 
     @property
@@ -1137,9 +1173,11 @@ config.update(get_paths())
         Returns:
             str: platform-independent header file directory
         """
-        return self.config_vars['include'].replace(
-            self.config_vars['installed_base'] + os.sep, ''
-        )
+        prefix = self.config_vars['installed_base'] + os.sep
+        path = self.config_vars['include']
+        if path.startswith(prefix):
+            return path.replace(prefix, '')
+        return os.path.join('include', 'python{}'.format(self.version.up_to(2)))
 
     @property
     def easy_install_file(self):
@@ -1259,10 +1297,9 @@ config.update(get_paths())
 
         module.python = self.command
 
+        module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
-
-        self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:

@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
@@ -18,6 +18,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://github.com/LLNL/DiHydrogen.git"
     url      = "https://github.com/LLNL/DiHydrogen/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/DiHydrogen.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 
@@ -72,6 +73,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+        depends_on('nvshmem cuda_arch=%s' % arch, when='+nvshmem +cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
@@ -207,6 +209,11 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
                     ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
                 )
+                args.extend([
+                    '-DCMAKE_HIP_ARCHITECTURES=%s' % arch_str,
+                    '-DAMDGPU_TARGETS=%s' % arch_str,
+                    '-DGPU_TARGETS=%s' % arch_str,
+                ])
 
         if self.spec.satisfies('^essl'):
             # IF IBM ESSL is used it needs help finding the proper LAPACK libraries

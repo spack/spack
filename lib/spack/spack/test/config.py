@@ -18,6 +18,7 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.paths
+import spack.repo
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -1155,6 +1156,20 @@ def test_bad_path_double_override(config):
                        match='Meaningless second override'):
         with spack.config.override('bad::double:override::directive', ''):
             pass
+
+
+def test_license_dir_config(mutable_config, mock_packages):
+    """Ensure license directory is customizable"""
+    expected_dir = spack.paths.default_license_dir
+    assert spack.config.get("config:license_dir") == expected_dir
+    assert spack.package.Package.global_license_dir == expected_dir
+    assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
+
+    rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
+    spack.config.set("config:license_dir", rel_path)
+    assert spack.config.get("config:license_dir") == rel_path
+    assert spack.package.Package.global_license_dir == rel_path
+    assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
 
 
 @pytest.mark.regression('22547')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGenomicalignments(RPackage):
@@ -16,6 +16,7 @@ class RGenomicalignments(RPackage):
 
     bioc = "GenomicAlignments"
 
+    version('1.32.0', commit='7a660a914a04e2eb0758082b6f64c4124a887ef3')
     version('1.30.0', commit='2d2c5fce3529c2962fdcefd736d8b7f7c0ec2d54')
     version('1.26.0', commit='6c74c74ee53efcd880171126366fee4bd72357bc')
     version('1.20.1', commit='9dce402071e4cd945de7ff82ea574c79993625fd')

@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import itertools
+import re
 
-from spack import *
+from spack.package import *
 
 
 class Rocsolver(CMakePackage):
@@ -15,26 +16,30 @@ class Rocsolver(CMakePackage):
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
+    tags     = ['rocm']
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
+    maintainers = ['cgmb', 'srekolam', 'arjun-raj-kuppala', 'haampie']
+    libraries = ['librocsolver']
 
-    amdgpu_targets = (
-        'gfx803', 'gfx900', 'gfx906:xnack-', 'gfx908:xnack-',
-        'gfx90a:xnack-', 'gfx90a:xnack+', 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030'
-    )
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+
     variant('amdgpu_target', values=auto_or_any_combination_of(*amdgpu_targets))
     variant('optimal', default=True,
             description='This option improves performance at the cost of increased binary \
             size and compile time by adding specialized kernels \
             for small matrix sizes')
 
+    version('develop', branch='develop')
+    version('master', branch='master')
+    version('5.1.3', sha256='5a8f3b95ac9a131c31538196e954ea53b863009c092cce0c0ef869a0cd5dd554')
+    version('5.1.0', sha256='88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831')
     version('5.0.2', sha256='298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688')
     version('5.0.0', sha256='d444ad5348eb8a2c04646ceae6923467a0e775441f2c73150892e228e585b2e1')
     version('4.5.2', sha256='4639322bd1e77fedfdeb9032633bde6211a0b1cc16a612db7754f873f18a492f')
     version('4.5.0', sha256='0295862da941f31f4d43b19195b79331bd17f5968032f75c89d2791a6f8c1e8c')
-    version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f')
-    version('4.3.0', sha256='63cc88dd285c0fe01ec2394321ec3b4e1e59bb98ce05b06e4b4d8fadcf1ff028')
-    version('4.2.0', sha256='e9ef72d7c29e7c36bf02be63a64ca23b444e1ca71751749f7d66647873d9fdea')
+    version('4.3.1', sha256='c6e7468d7041718ce6e1c7f50ec80a552439ac9cfed2dc3f753ae417dda5724f', deprecated=True)
+    version('4.3.0', sha256='63cc88dd285c0fe01ec2394321ec3b4e1e59bb98ce05b06e4b4d8fadcf1ff028', deprecated=True)
+    version('4.2.0', sha256='e9ef72d7c29e7c36bf02be63a64ca23b444e1ca71751749f7d66647873d9fdea', deprecated=True)
     version('4.1.0', sha256='da5cc800dabf7367b02b73c93780b2967f112bb45232e4b06e5fd07b4d5b8d88', deprecated=True)
     version('4.0.0', sha256='be9a52644c276813f76d78f2c11eddaf8c2d7f9dd04f4570f23d328ad30d5880', deprecated=True)
     version('3.10.0', sha256='bc72483656b6b23a1e321913a580ca460da3bc5976404647536a01857f178dd2', deprecated=True)
@@ -56,16 +61,38 @@ class Rocsolver(CMakePackage):
 
     def check(self):
         exe = join_path(self.build_directory, 'clients', 'staging', 'rocsolver-test')
-        self.run_test(exe, options=['--gtest_filter=checkin*'])
+        self.run_test(exe, options=['--gtest_filter=checkin*-*known_bug*'])
+
+    depends_on('hip@4.1.0:', when='@4.1.0:')
+    depends_on('rocm-cmake@master', type='build', when='@master:')
+    depends_on('rocm-cmake@4.5.0:', type='build', when='@4.5.0:')
+    depends_on('rocm-cmake@4.3.0:', type='build', when='@4.3.0:')
+    depends_on('rocm-cmake@3.5.0:', type='build')
+
+    for ver in ['master', 'develop']:
+        depends_on('rocblas@' + ver, when='@' + ver)
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', '4.3.0', '4.3.1', '4.5.0', '4.5.2', '5.0.0',
-                '5.0.2']:
+                '5.0.2', '5.1.0', '5.1.3']:
         depends_on('hip@' + ver, when='@' + ver)
-        for tgt in itertools.chain(['auto'], amdgpu_targets):
-            depends_on('rocblas@{0} amdgpu_target={1}'.format(ver, tgt),
-                       when='@{0} amdgpu_target={1}'.format(ver, tgt))
-        depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
+        depends_on('rocblas@' + ver, when='@' + ver)
+
+    for tgt in itertools.chain(['auto'], amdgpu_targets):
+        depends_on('rocblas amdgpu_target={0}'.format(tgt),
+                   when='amdgpu_target={0}'.format(tgt))
+
+    @classmethod
+    def determine_version(cls, lib):
+        match = re.search(r'lib\S*\.so\.\d+\.\d+\.(\d)(\d\d)(\d\d)',
+                          lib)
+        if match:
+            ver = '{0}.{1}.{2}'.format(int(match.group(1)),
+                                       int(match.group(2)),
+                                       int(match.group(3)))
+        else:
+            ver = None
+        return ver
 
     def cmake_args(self):
         args = [
@@ -97,6 +124,9 @@ class Rocsolver(CMakePackage):
 
         if self.spec.satisfies('@4.5.0:'):
             args.append(self.define('ROCSOLVER_EMBED_FMT', 'ON'))
+
+        if self.spec.satisfies('@5.2.0:'):
+            args.append(self.define('BUILD_FILE_REORG_BACKWARD_COMPATIBILITY', 'ON'))
 
         return args
 

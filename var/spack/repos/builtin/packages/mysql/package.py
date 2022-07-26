@@ -6,7 +6,7 @@
 import os
 import tempfile
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.boost import Boost
 
 
@@ -16,6 +16,7 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
+    version('8.0.29', sha256='512170fa6f78a694d6f18d197e999d2716ee68dc541d7644dd922a3663407266')
     version('8.0.19', sha256='a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834')
     version('8.0.18', sha256='4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8')
     version('8.0.17', sha256='c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6')
@@ -81,11 +82,16 @@ class Mysql(CMakePackage):
 
     # Each version of MySQL requires a specific version of boost
     # See BOOST_PACKAGE_NAME in cmake/boost.cmake
-    # 8.0.19+
-    depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19: cxxstd=98')
-    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=11')
-    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19: cxxstd=14')
-    depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19: cxxstd=17')
+    # 8.0.29
+    depends_on('boost@1.77.0 cxxstd=98', type='build', when='@8.0.29 cxxstd=98')
+    depends_on('boost@1.77.0 cxxstd=11', type='build', when='@8.0.29 cxxstd=11')
+    depends_on('boost@1.77.0 cxxstd=14', type='build', when='@8.0.29 cxxstd=14')
+    depends_on('boost@1.77.0 cxxstd=17', type='build', when='@8.0.29 cxxstd=17')
+    # 8.0.19
+    depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19 cxxstd=98')
+    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19 cxxstd=11')
+    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19 cxxstd=14')
+    depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19 cxxstd=17')
     # 8.0.16--8.0.18
     depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16:8.0.18 cxxstd=98')
     depends_on('boost@1.69.0 cxxstd=11', type='build', when='@8.0.16:8.0.18 cxxstd=11')
@@ -128,6 +134,14 @@ class Mysql(CMakePackage):
     depends_on('cyrus-sasl', when='@:5.7')
 
     patch('fix-no-server-5.5.patch', level=1, when='@5.5.0:5.5')
+
+    @property
+    def command(self):
+        return Executable(self.prefix.bin.mysql_config)
+
+    @property
+    def libs(self):
+        return find_libraries('libmysqlclient', root=self.prefix, recursive=True)
 
     def url_for_version(self, version):
         url = "https://dev.mysql.com/get/Downloads/MySQL-{0}/mysql-{1}.tar.gz"

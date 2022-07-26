@@ -24,5 +24,4 @@ def restage(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
-        package = spack.repo.get(spec)
-        package.do_restage()
+        spec.package.do_restage()

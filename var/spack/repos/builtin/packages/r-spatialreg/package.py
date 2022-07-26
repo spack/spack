@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSpatialreg(RPackage):
@@ -33,6 +33,7 @@ class RSpatialreg(RPackage):
 
     cran = "spatialreg"
 
+    version('1.2-3', sha256='09e0e65f043975d5c1d4be99ef9f29cf0790e962dcde9b7e45a7027d268fce22')
     version('1.2-1', sha256='4c40b6b331aa8818254633cfb80d4b9a03b2b6fac2c0104b3b99201d447ba081')
     version('1.1-5', sha256='ddbf0773bad2e99b306116ae99a57bf29eecf723d1735820935a6fb7f331b27d')
     version('1.1-3', sha256='7609cdfcdfe427d2643a0db6b5360be3f6d60ede8229436ab52092d1c9cf0480')

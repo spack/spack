@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyFastjsonschema(PythonPackage):
     """Fast JSON schema validator for Python."""
 

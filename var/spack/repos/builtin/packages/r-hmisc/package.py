@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RHmisc(RPackage):
@@ -17,6 +17,7 @@ class RHmisc(RPackage):
 
     cran = "Hmisc"
 
+    version('4.7-0', sha256='29ec2d9ca11c790c350e93323126bef4f498c69c41c31bb335fd04671e0f87bd')
     version('4.6-0', sha256='2c1ce906b2333c6dc946dc7f10b74cfa552bce2b12dbebf295d143163562a1ad')
     version('4.4-2', sha256='490ac64dd8558868e7c6fdd9523af102e17ea536c450d62c48b04155279bfbc8')
     version('4.4-0', sha256='f16ecf4c5ee2202d51f426282a54f8000ffa8b9747c3e910205f34f878556ec7')

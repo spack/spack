@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Nekrs(Package, CudaPackage, ROCmPackage):

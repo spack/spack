@@ -7,10 +7,10 @@ import os
 import re
 import sys
 
-from spack import *
+from spack.package import *
 
 
-class Mpich(AutotoolsPackage):
+class Mpich(AutotoolsPackage, CudaPackage, ROCmPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -94,7 +94,43 @@ with '-Wl,-commons,use_dylibs' and without
 '-Wl,-flat_namespace'.'''
     )
 
-    provides('mpi@:3.1')
+    variant('vci', default=False, when='@4: device=ch4',
+            description='Enable multiple VCI (virtual communication '
+                        'interface) critical sections to improve performance '
+                        'of applications that do heavy concurrent MPI'
+                        'communications. Set MPIR_CVAR_CH4_NUM_VCIS=<N> to '
+                        'enable multiple vcis at runtime.')
+
+    variant(
+        'datatype-engine',
+        default='auto',
+        description='controls the datatype engine to use',
+        values=('dataloop', 'yaksa', 'auto'),
+        when='@3.4:',
+        multi=False
+    )
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=auto')
+    depends_on('yaksa', when='@4.0: device=ch4 datatype-engine=yaksa')
+    depends_on('yaksa+cuda', when='+cuda ^yaksa')
+    depends_on('yaksa+rocm', when='+rocm ^yaksa')
+    conflicts('datatype-engine=yaksa', when='device=ch3')
+
+    variant('hcoll', default=False,
+            description='Enable support for Mellanox HCOLL accelerated '
+                        'collective operations library',
+            when='@3.3: device=ch4 netmod=ucx')
+    depends_on('hcoll', when='+hcoll')
+
+    # Todo: cuda can be a conditional variant, but it does not seem to work when
+    # overriding the variant from CudaPackage.
+    conflicts('+cuda', when='@:3.3')
+    conflicts('+cuda', when='device=ch3')
+    conflicts('+rocm', when='@:4.0')
+    conflicts('+rocm', when='device=ch3')
+    conflicts('+cuda', when='+rocm', msg='CUDA must be disabled to support ROCm')
+
+    provides('mpi@:4.0')
+    provides('mpi@:3.1', when='@:3.2')
     provides('mpi@:3.0', when='@:3.1')
     provides('mpi@:2.2', when='@:1.2')
     provides('mpi@:2.1', when='@:1.1')
@@ -127,23 +163,6 @@ with '-Wl,-commons,use_dylibs' and without
           sha256='5f48d2dd8cc9f681cf710b864f0d9b00c599f573a75b1e1391de0a3d697eba2d',
           when='@3.3:3.3.0')
 
-    # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
-    # applied by MPICH starting version 3.1.
-    patch('nag_libtool_2.4.2_0.patch', when='@:3.0%nag')
-
-    # This patch for Libtool 2.4.2 fixes the problem with '-pthread' flag and
-    # enables convenience libraries for NAG. Starting version 3.1, the order of
-    # checks for FC and F77 is changed, therefore we need to apply the patch in
-    # two steps (the patch files can be merged once the support for versions
-    # 3.1 and older is dropped).
-    patch('nag_libtool_2.4.2_1.patch', when='@:3.1.3%nag')
-    patch('nag_libtool_2.4.2_2.patch', when='@:3.1.3%nag')
-
-    # This patch for Libtool 2.4.6 does the same as the previous two. The
-    # problem is not fixed upstream yet and the upper version constraint is
-    # given just to avoid application of the patch to the develop version.
-    patch('nag_libtool_2.4.6.patch', when='@3.1.4:3.3%nag')
-
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
@@ -156,6 +175,7 @@ with '-Wl,-commons,use_dylibs' and without
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
     depends_on('ucx', when='netmod=ucx')
+    depends_on('mxm', when='netmod=mxm')
 
     # The dependencies on libpciaccess and libxml2 come from the embedded
     # hwloc, which, before version 3.3, was used only for Hydra.
@@ -211,17 +231,6 @@ with '-Wl,-commons,use_dylibs' and without
     # see https://github.com/pmodels/mpich/pull/5031
     conflicts('%clang@:7', when='@3.4:3.4.1')
 
-    @run_after('configure')
-    def patch_cce(self):
-        # Configure misinterprets output from the cce compiler
-        # Patching configure instead should be possible, but a first
-        # implementation failed in obscure ways that were not worth
-        # tracking down when this worked
-        if self.spec.satisfies('%cce'):
-            filter_file('-L -L', '', 'config.lt', string=True)
-            filter_file('-L -L', '', 'libtool', string=True)
-            filter_file('-L -L', '', 'config.status', string=True)
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
@@ -230,13 +239,13 @@ with '-Wl,-commons,use_dylibs' and without
 
     @classmethod
     def determine_variants(cls, exes, version):
-        def get_spack_compiler_spec(path):
-            spack_compilers = spack.compilers.find_compilers([path])
+        def get_spack_compiler_spec(compiler):
+            spack_compilers = spack.compilers.find_compilers(
+                [os.path.dirname(compiler)])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
-                if (spack_compiler.cc and
-                        os.path.dirname(spack_compiler.cc) == path):
+                if (spack_compiler.cc and spack_compiler.cc == compiler):
                     actual_compiler = spack_compiler
                     break
             return actual_compiler.spec if actual_compiler else None
@@ -315,11 +324,15 @@ with '-Wl,-commons,use_dylibs' and without
             if match:
                 variants.append('netmod=' + match.group(1))
 
+            if re.search(r'--with-hcoll', output):
+                variants += '+hcoll'
+
             match = re.search(r'MPICH CC:\s+(\S+)', output)
-            compiler_spec = get_spack_compiler_spec(
-                os.path.dirname(match.group(1)))
-            if compiler_spec:
-                variants.append('%' + str(compiler_spec))
+            if match:
+                compiler = match.group(1)
+                compiler_spec = get_spack_compiler_spec(compiler)
+                if compiler_spec:
+                    variants.append('%' + str(compiler_spec))
             results.append(' '.join(variants))
         return results
 
@@ -330,11 +343,14 @@ with '-Wl,-commons,use_dylibs' and without
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
         if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            env.set('FCFLAGS', '-fallow-argument-mismatch')
 
         if 'pmi=cray' in self.spec:
             env.set(
@@ -430,7 +446,6 @@ with '-Wl,-commons,use_dylibs' and without
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--without-cuda',
             '--disable-silent-rules',
             '--enable-shared',
             '--with-hwloc-prefix={0}'.format(
@@ -439,7 +454,9 @@ with '-Wl,-commons,use_dylibs' and without
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without'),
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
-                                                spec else 'yes')
+                                                spec else 'yes'),
+            '--with-yaksa={0}'.format(
+                spec['yaksa'].prefix if '^yaksa' in spec else 'embedded'),
         ]
 
         if '~fortran' in spec:
@@ -464,6 +481,18 @@ with '-Wl,-commons,use_dylibs' and without
             config_args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
         elif 'pmi=cray' in spec:
             config_args.append('--with-pmi=cray')
+
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+        elif spec.satisfies('@:3.3,3.4.4:'):
+            # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
+            # (see https://github.com/pmodels/mpich/pull/5060):
+            config_args.append('--without-cuda')
+
+        if '+rocm' in spec:
+            config_args.append('--with-hip={0}'.format(spec['hip'].prefix))
+        else:
+            config_args.append('--without-hip')
 
         # setup device configuration
         device_config = ''
@@ -506,6 +535,20 @@ with '-Wl,-commons,use_dylibs' and without
 
         if '+two_level_namespace' in spec:
             config_args.append('--enable-two-level-namespace')
+
+        if '+vci' in spec:
+            config_args.append('--enable-thread-cs=per-vci')
+            config_args.append('--with-ch4-max-vcis=default')
+
+        if 'datatype-engine=yaksa' in spec:
+            config_args.append('--with-datatype-engine=yaksa')
+        elif 'datatype-engine=dataloop' in spec:
+            config_args.append('--with-datatype-engine=dataloop')
+        elif 'datatype-engine=auto' in spec:
+            config_args.append('--with-datatye-engine=auto')
+
+        if '+hcoll' in spec:
+            config_args.append('--with-hcoll=' + spec['hcoll'].prefix)
 
         return config_args
 

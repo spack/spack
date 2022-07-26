@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
@@ -15,6 +15,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://libelemental.org"
     url      = "https://github.com/LLNL/Elemental/archive/v1.0.1.tar.gz"
     git      = "https://github.com/LLNL/Elemental.git"
+    tags     = ['ecp', 'radiuss']
 
     maintainers = ['bvanessen']
 
@@ -200,6 +201,11 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     ' -g -fsized-deallocation -fPIC {1}'
                     ' -std=c++17'.format(arch_str, cxxflags_str)
                 )
+                args.extend([
+                    '-DCMAKE_HIP_ARCHITECTURES=%s' % arch_str,
+                    '-DAMDGPU_TARGETS=%s' % arch_str,
+                    '-DGPU_TARGETS=%s' % arch_str,
+                ])
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang +openmp platform=darwin'):

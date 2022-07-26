@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGlue(RPackage):
@@ -17,6 +17,7 @@ class RGlue(RPackage):
 
     cran = "glue"
 
+    version('1.6.2', sha256='9da518f12be584c90e75fe8e07f711ee3f6fc0d03d817f72c25dc0f66499fdbf')
     version('1.6.1', sha256='318c2f9544f1204216009f512793c44d6bbe178ff2012f56fa5ffb5e1da978db')
     version('1.6.0', sha256='77bef37ef2c47aad6188ea772880591c5763cce4b1c256e10e68e7c3ec6b4338')
     version('1.4.2', sha256='9f7354132a26e9a876428fa87629b9aaddcd558f9932328e6ac065b95b8ef7ad')

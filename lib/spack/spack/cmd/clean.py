@@ -58,6 +58,21 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ['specs'])
 
 
+def remove_python_cache():
+    for directory in [lib_path, var_path]:
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                if f.endswith('.pyc') or f.endswith('.pyo'):
+                    fname = os.path.join(root, f)
+                    tty.debug('Removing {0}'.format(fname))
+                    os.remove(fname)
+            for d in dirs:
+                if d == '__pycache__':
+                    dname = os.path.join(root, d)
+                    tty.debug('Removing {0}'.format(dname))
+                    shutil.rmtree(dname)
+
+
 def clean(parser, args):
     # If nothing was set, activate the default
     if not any([args.specs, args.stage, args.downloads, args.failures,
@@ -70,8 +85,7 @@ def clean(parser, args):
         for spec in specs:
             msg = 'Cleaning build stage [{0}]'
             tty.msg(msg.format(spec.short_spec))
-            package = spack.repo.get(spec)
-            package.do_clean()
+            spec.package.do_clean()
 
     if args.stage:
         tty.msg('Removing all temporary build stages')
@@ -95,18 +109,7 @@ def clean(parser, args):
 
     if args.python_cache:
         tty.msg('Removing python cache files')
-        for directory in [lib_path, var_path]:
-            for root, dirs, files in os.walk(directory):
-                for f in files:
-                    if f.endswith('.pyc') or f.endswith('.pyo'):
-                        fname = os.path.join(root, f)
-                        tty.debug('Removing {0}'.format(fname))
-                        os.remove(fname)
-                for d in dirs:
-                    if d == '__pycache__':
-                        dname = os.path.join(root, d)
-                        tty.debug('Removing {0}'.format(dname))
-                        shutil.rmtree(dname)
+        remove_python_cache()
 
     if args.bootstrap:
         bootstrap_prefix = spack.util.path.canonicalize_path(

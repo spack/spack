@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAbaenrichment(RPackage):
@@ -24,6 +24,7 @@ class RAbaenrichment(RPackage):
 
     bioc = "ABAEnrichment"
 
+    version('1.26.0', commit='33df9e162aec07e2aae92cc058cbfb33720ba4b4')
     version('1.24.0', commit='5d20752263ae8f18ea5f5a6cfbdd5921a0f236d7')
     version('1.20.0', commit='608433a0b07e6dd99915dc536a038d960f1be1d5')
     version('1.14.1', commit='e1ebfb5de816b924af16675a5ba9ed1a6b527b23')

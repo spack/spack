@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Warpx(CMakePackage):
@@ -17,7 +17,7 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.04.tar.gz"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/22.05.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
@@ -25,6 +25,9 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('22.07', sha256='0286adc788136cb78033cb1678d38d36e42265bcfd3d0c361a9bcc2cfcdf241b')
+    version('22.06', sha256='e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9')
+    version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
     version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
     version('22.03', sha256='ddbef760c8000f2f827dfb097ca3359e7aecbea8766bec5c3a91ee28d3641564')
     version('22.02', sha256='d74b593d6f396e037970c5fbe10c2e5d71d557a99c97d40e4255226bc6c26e42')
@@ -131,7 +134,28 @@ class Warpx(CMakePackage):
     # The symbolic aliases for our +lib target were missing in the install
     # location
     # https://github.com/ECP-WarpX/WarpX/pull/2626
-    patch('2626.patch', when='@21.12')
+    patch('https://github.com/ECP-WarpX/WarpX/pull/2626.patch?full_index=1',
+          sha256='a431d4664049d6dcb6454166d6a948d8069322a111816ca5ce01553800607544',
+          when='@21.12')
+
+    # Workaround for AMReX<=22.06 no-MPI Gather
+    # https://github.com/ECP-WarpX/WarpX/pull/3134
+    # https://github.com/AMReX-Codes/amrex/pull/2793
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3134.patch?full_index=1',
+          sha256='b786ce64a3c2c2b96ff2e635f0ee48532e4ae7ad9637dbf03f11c0768c290690',
+          when='@22.02:22.05')
+
+    # Forgot to install ABLASTR library
+    # https://github.com/ECP-WarpX/WarpX/pull/3141
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3141.patch?full_index=1',
+          sha256='dab6fb44556ee1fd466a4cb0e20f89bde1ce445c9a51a2c0f59d1740863b5e7d',
+          when='@22.04,22.05')
+
+    # Fix failing 1D CUDA build
+    # https://github.com/ECP-WarpX/WarpX/pull/3162
+    patch('https://github.com/ECP-WarpX/WarpX/pull/3162.patch?full_index=1',
+          sha256='0ae573d1390ed8063f84e3402d30d34e522e65dc5dfeea3d07e165127ab373e9',
+          when='@22.06')
 
     def cmake_args(self):
         spec = self.spec
@@ -167,10 +191,15 @@ class Warpx(CMakePackage):
     def libs(self):
         libsuffix = {'1': '1d', '2': '2d', '3': '3d', 'rz': 'rz'}
         dims = self.spec.variants['dims'].value
-        return find_libraries(
+        libs = find_libraries(
             ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
             shared=True
         )
+        libs += find_libraries(
+            ['libablastr'], root=self.prefix, recursive=True,
+            shared=self.spec.variants['shared']
+        )
+        return libs
 
     # WarpX has many examples to serve as a suitable smoke check. One
     # that is typical was chosen here
@@ -192,6 +221,9 @@ class Warpx(CMakePackage):
         # test openPMD output if compiled in
         if '+openpmd' in spec:
             cli_args.append('diag1.format=openpmd')
+            # RZ: New openPMD thetaMode output
+            if dims == 'rz' and spec.satisfies('@22.04:'):
+                cli_args.append('diag1.fields_to_plot=Er Et Ez Br Bt Bz jr jt jz rho')
         return cli_args
 
     def check(self):

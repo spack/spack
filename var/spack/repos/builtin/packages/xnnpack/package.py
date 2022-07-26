@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xnnpack(CMakePackage):
@@ -14,6 +14,8 @@ class Xnnpack(CMakePackage):
     git      = "https://github.com/google/XNNPACK.git"
 
     version('master', branch='master')
+    version('2022-02-16', commit='ae108ef49aa5623b896fc93d4298c49d1750d9ba')  # py-torch@1.12
+    version('2021-06-21', commit='79cd5f9e18ad0925ac9a050b00ea5a36230072db')  # py-torch@1.10:1.11
     version('2021-02-22', commit='55d53a4e7079d38e90acd75dd9e4f9e781d2da35')  # py-torch@1.8:1.9
     version('2020-03-23', commit='1b354636b5942826547055252f3b359b54acff95')  # py-torch@1.6:1.7
     version('2020-02-24', commit='7493bfb9d412e59529bcbced6a902d44cfa8ea1c')  # py-torch@1.5

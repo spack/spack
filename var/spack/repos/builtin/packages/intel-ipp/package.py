@@ -3,11 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelIpp(IntelPackage):
-    """Intel Integrated Performance Primitives."""
+    """Intel Integrated Performance Primitives. This package has been
+       replaced by intel-oneapi-ipp.
+
+    """
+
+    maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 

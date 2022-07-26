@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAlpine(RPackage):
@@ -14,6 +14,7 @@ class RAlpine(RPackage):
 
     bioc = "alpine"
 
+    version('1.22.0', commit='6107a82962f07e0434e93f261cd375eaaa171d91')
     version('1.20.0', commit='9348ef14128aa6be10cca1987736ddbc385df7e9')
     version('1.16.0', commit='aee397774ac6cd17ad45dc05be14c526647f3c13')
     version('1.10.0', commit='bf22597eb2c6c6aaa26900ed4ece96ce7256e77c')

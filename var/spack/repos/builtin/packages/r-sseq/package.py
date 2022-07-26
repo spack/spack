@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSseq(RPackage):
@@ -23,6 +23,7 @@ class RSseq(RPackage):
 
     bioc = "sSeq"
 
+    version('1.34.0', commit='882bea1664f55d85550a7185cbd4a0108c35df36')
     version('1.32.0', commit='c0d3c305755d888f64d334a4ab5fa54c623054cf')
     version('1.28.0', commit='401f6805628bdf6579cc0e643b7ed54319f024be')
     version('1.22.0', commit='fa3895c9578edddca17b5d13a2678ee5830b85cc')

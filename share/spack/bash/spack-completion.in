@@ -134,7 +134,7 @@ _bash_completion_spack() {
     # Make sure function exists before calling it
     local rgx #this dance is necessary to cover bash and zsh regex
     rgx="$subfunction.*function.* "
-    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
+    if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))

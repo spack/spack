@@ -74,7 +74,8 @@ def executables_in_path(path_hints=None):
 
 
 def libraries_in_ld_library_path(path_hints=None):
-    """Get the paths of all libraries available from LD_LIBRARY_PATH.
+    """Get the paths of all libraries available from LD_LIBRARY_PATH,
+    LIBRARY_PATH, DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -85,9 +86,15 @@ def libraries_in_ld_library_path(path_hints=None):
 
     Args:
         path_hints (list): list of paths to be searched. If None the list will be
-            constructed based on the LD_LIBRARY_PATH environment variable.
+            constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
+            DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
+            variables.
     """
-    path_hints = path_hints or spack.util.environment.get_path('LD_LIBRARY_PATH')
+    path_hints = path_hints or \
+        spack.util.environment.get_path('LIBRARY_PATH') + \
+        spack.util.environment.get_path('LD_LIBRARY_PATH') + \
+        spack.util.environment.get_path('DYLD_LIBRARY_PATH') + \
+        spack.util.environment.get_path('DYLD_FALLBACK_LIBRARY_PATH')
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
@@ -213,7 +220,7 @@ def by_executable(packages_to_check, path_hints=None):
     searching by path.
 
     Args:
-        packages_to_check (list): list of packages to be detected
+        packages_to_check (list): list of package classes to be detected
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
@@ -221,7 +228,7 @@ def by_executable(packages_to_check, path_hints=None):
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
-            for exe in pkg.platform_executables:
+            for exe in pkg.platform_executables():
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
         path_hints.extend(compute_windows_program_path_for_package(pkg))

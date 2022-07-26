@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyDatacube(PythonPackage):
@@ -40,7 +40,7 @@ class PyDatacube(PythonPackage):
     depends_on('py-netcdf4', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-psycopg2', type=('build', 'run'))
-    depends_on('py-lark-parser@0.6.7:', type=('build', 'run'))
+    depends_on('py-lark@0.6.7:', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-rasterio@1.0.2:', type=('build', 'run'))

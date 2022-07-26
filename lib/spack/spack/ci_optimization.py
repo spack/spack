@@ -308,8 +308,7 @@ def optimizer(yaml):
     # try factoring out commonly repeated portions
     common_job = {
         'variables': {
-            'SPACK_COMPILER_ACTION': 'NONE',
-            'SPACK_RELATED_BUILDS_CDASH': ''
+            'SPACK_COMPILER_ACTION': 'NONE'
         },
 
         'after_script': ['rm -rf "./spack"'],

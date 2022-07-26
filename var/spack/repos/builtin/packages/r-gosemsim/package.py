@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RGosemsim(RPackage):
@@ -19,6 +19,7 @@ class RGosemsim(RPackage):
 
     bioc = "GOSemSim"
 
+    version('2.22.0', commit='fd74aeba2371ebf9db0595cf18674441bdac9618')
     version('2.20.0', commit='fa82442aaa4ad1a8dacc05ee2c54f5e5e770a794')
     version('2.16.1', commit='92f1d567f3584fe488f434abce87c2e1950081c0')
     version('2.10.0', commit='5db1ecbf2f8d870430d6e587609327d05ba3ad7b')

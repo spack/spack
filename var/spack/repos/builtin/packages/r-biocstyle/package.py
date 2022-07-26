@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RBiocstyle(RPackage):
@@ -14,6 +14,7 @@ class RBiocstyle(RPackage):
 
     bioc = "BiocStyle"
 
+    version('2.24.0', commit='53095b534b7e6c80a33a67b5f2db0db8f00db902')
     version('2.22.0', commit='86250b637afa3a3463fac939b99c0402b47876ea')
     version('2.18.1', commit='956f0654e8e18882ba09305742401128c9c7d47d')
     version('2.12.0', commit='0fba3fe6e6a38504f9aadcd3dc95bb83d7e92498')

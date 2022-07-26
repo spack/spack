@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAllelicimbalance(RPackage):
@@ -14,6 +14,7 @@ class RAllelicimbalance(RPackage):
 
     bioc = "AllelicImbalance"
 
+    version('1.34.0', commit='290708ccc4ceae1fbb9e9257cb254916449d389b')
     version('1.32.0', commit='428ab8c96bb15fab45e4084da25f98b01b9d60b6')
     version('1.28.0', commit='ac5d13c9ee0935bf9500ee542792644e752a1fde')
     version('1.22.0', commit='04692e367e8c6aac475d06adfd7cfa629baab05a')

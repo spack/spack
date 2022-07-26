@@ -5,7 +5,7 @@
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 
 class Hpctoolkit(AutotoolsPackage):
@@ -26,6 +26,8 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('2022.05.15', commit='8ac72d9963c4ed7b7f56acb65feb02fbce353479')
+    version('2022.04.15', commit='a92fdad29fc180cc522a9087bba9554a829ee002')
     version('2022.01.15', commit='0238e9a052a696707e4e65b2269f342baad728ae')
     version('2021.10.15', commit='a8f289e4dc87ff98e05cfc105978c09eb2f5ea16')
     version('2021.05.15', commit='004ea0c2aea6a261e7d5d216c24f8a703fc6c408')
@@ -35,9 +37,9 @@ class Hpctoolkit(AutotoolsPackage):
     version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
     version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
     version('2019.12.28', commit='b4e1877ff96069fd8ed0fdf0e36283a5b4b62240')
-    version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
-    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
-    version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')
+    version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c', deprecated=True)
+    version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc', deprecated=True)
+    version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9', deprecated=True)
 
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
@@ -65,9 +67,18 @@ class Hpctoolkit(AutotoolsPackage):
     variant('cuda', default=False,
             description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
 
+    variant('level_zero', default=False,
+            description='Support Level Zero on Intel GPUs (2022.04.15 or later).')
+
+    variant('gtpin', default=False,
+            description='Support instrumenting Intel GPU kernels with Intel GT-Pin '
+            '(2022.05.15 or later, and requires level_zero).')
+
+    variant('opencl', default=False,
+            description='Support OpenCL')
+
     variant('rocm', default=False,
-            description='Support ROCM on AMD GPUs, requires ROCM as '
-            'external packages (2021.03.01 or later).')
+            description='Support ROCM on AMD GPUs (2022.04.15 or later).')
 
     variant('debug', default=False,
             description='Build in debug (develop) mode.')
@@ -79,36 +90,45 @@ class Hpctoolkit(AutotoolsPackage):
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils +libiberty', type='link', when='@2021.00:')
+    depends_on('binutils +libiberty', type='link', when='@2021:master')
     depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020')
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03')
     depends_on('boost' + boost_libs)
     depends_on('bzip2+shared', type='link')
-    depends_on('dyninst@10.2.0:', when='@2021.00:')
+    depends_on('dyninst@12.1.0:', when='@2022.0:')
+    depends_on('dyninst@10.2.0:', when='@2021.0:2021.12')
     depends_on('dyninst@9.3.2:', when='@:2020')
     depends_on('elfutils+bzip2+xz~nls', type='link')
-    depends_on('gotcha@1.0.3:')
+    depends_on('gotcha@1.0.3:', when='@:2020.09')
     depends_on('intel-tbb+shared')
-    depends_on('libdwarf')
+    depends_on('libdwarf', when='@:master')
+    depends_on('libiberty+pic', when='@develop')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
     depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020')
+    depends_on('libmonitor@2021.11.08:', when='@2022.01:')
     depends_on('libunwind@1.4: +xz+pic')
-    depends_on('mbedtls+pic')
+    depends_on('mbedtls+pic', when='@:2022.03')
     depends_on('xerces-c transcoder=iconv')
     depends_on('xz+pic', type='link')
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
-    depends_on('intel-xed', when='target=x86_64:')
+    depends_on('oneapi-level-zero', when='+level_zero')
+    depends_on('oneapi-igc', when='+gtpin')
+    depends_on('intel-gtpin', when='+gtpin')
+    depends_on('opencl-c-headers', when='+opencl')
+
+    depends_on('intel-xed+pic', when='target=x86_64:')
     depends_on('memkind', type=('build', 'run'), when='@2021.05.01:')
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
     depends_on('mpi', when='+mpi')
     depends_on('hpcviewer', type='run', when='+viewer')
 
-    depends_on('hip', when='+rocm')
-    depends_on('rocm-dbgapi', when='+rocm')
-    depends_on('roctracer-dev', when='+rocm')
+    depends_on('hip@4.5:', when='+rocm')
+    depends_on('hsa-rocr-dev@4.5:', when='+rocm')
+    depends_on('roctracer-dev@4.5:', when='+rocm')
+    depends_on('rocprofiler-dev@4.5:', when='+rocm')
 
     conflicts('%gcc@:4.7', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
@@ -122,8 +142,11 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('+cuda', when='@:2019',
               msg='cuda requires 2020.03.01 or later')
 
-    conflicts('+rocm', when='@:2020',
-              msg='rocm requires 2021.03.01 or later')
+    conflicts('+gtpin', when='~level_zero',
+              msg='gtpin requires level_zero')
+
+    conflicts('+rocm', when='@:2022.03',
+              msg='rocm requires 2022.04.15 or later')
 
     conflicts('^binutils@2.35:2.35.1',
               msg='avoid binutils 2.35 and 2.35.1 (spews errors)')
@@ -135,33 +158,45 @@ class Hpctoolkit(AutotoolsPackage):
           sha256='c8371b929f45dafae37d2ef17880fcfb86de893beebaec501a282bc04b61ef64',
           when='@2019.08.01:2021.03 %gcc@11.0:')
 
+    # Change python to python3 for some old revs that use a script
+    # with /usr/bin/env python.
+    depends_on('python@3.4:', type='build', when='@2020.03:2020.08')
+    patch('python3.patch', when='@2020.03:2020.08')
+
     flag_handler = AutotoolsPackage.build_system_flags
 
     def configure_args(self):
         spec = self.spec
 
         args = [
-            '--with-binutils=%s'     % spec['binutils'].prefix,
             '--with-boost=%s'        % spec['boost'].prefix,
             '--with-bzip=%s'         % spec['bzip2'].prefix,
             '--with-dyninst=%s'      % spec['dyninst'].prefix,
             '--with-elfutils=%s'     % spec['elfutils'].prefix,
-            '--with-gotcha=%s'       % spec['gotcha'].prefix,
             '--with-tbb=%s'          % spec['intel-tbb'].prefix,
-            '--with-libdwarf=%s'     % spec['libdwarf'].prefix,
             '--with-libmonitor=%s'   % spec['libmonitor'].prefix,
             '--with-libunwind=%s'    % spec['libunwind'].prefix,
-            '--with-mbedtls=%s'      % spec['mbedtls'].prefix,
             '--with-xerces=%s'       % spec['xerces-c'].prefix,
             '--with-lzma=%s'         % spec['xz'].prefix,
             '--with-zlib=%s'         % spec['zlib'].prefix,
         ]
 
-        if '+cuda' in spec:
-            args.append('--with-cuda=%s' % spec['cuda'].prefix)
+        if spec.satisfies('@:master'):
+            args.extend([
+                '--with-binutils=%s' % spec['binutils'].prefix,
+                '--with-libdwarf=%s' % spec['libdwarf'].prefix,
+            ])
+        else:
+            args.append('--with-libiberty=%s' % spec['libiberty'].prefix)
+
+        if spec.satisfies('@:2020.09'):
+            args.append('--with-gotcha=%s' % spec['gotcha'].prefix)
 
         if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
+
+        if spec.satisfies('@:2022.03'):
+            args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
 
         if spec.satisfies('@2021.05.01:'):
             args.append('--with-memkind=%s' % spec['memkind'].prefix)
@@ -171,11 +206,27 @@ class Hpctoolkit(AutotoolsPackage):
         else:
             args.append('--with-perfmon=%s' % spec['libpfm4'].prefix)
 
+        if '+cuda' in spec:
+            args.append('--with-cuda=%s' % spec['cuda'].prefix)
+
+        if '+level_zero' in spec:
+            args.append('--with-level0=%s' % spec['oneapi-level-zero'].prefix)
+
+        if '+opencl' in spec:
+            args.append('--with-opencl=%s' % spec['opencl-c-headers'].prefix)
+
+        if '+gtpin' in spec:
+            args.extend([
+                '--with-gtpin=%s' % spec['intel-gtpin'].prefix,
+                '--with-igc=%s'   % spec['oneapi-igc'].prefix,
+            ])
+
         if spec.satisfies('+rocm'):
             args.extend([
                 '--with-rocm-hip=%s'    % spec['hip'].prefix,
-                '--with-rocm-dbgapi=%s' % spec['rocm-dbgapi'].prefix,
+                '--with-rocm-hsa=%s'    % spec['hsa-rocr-dev'].prefix,
                 '--with-rocm-tracer=%s' % spec['roctracer-dev'].prefix,
+                '--with-rocm-profiler=%s' % spec['rocprofiler-dev'].prefix,
             ])
 
         # MPI options for hpcprof-mpi.
@@ -211,8 +262,8 @@ class Hpctoolkit(AutotoolsPackage):
     # Build tests (spack install --run-tests).  Disable the default
     # spack tests and run autotools 'make check', but only from the
     # tests directory.
-    build_time_test_callbacks = []
-    install_time_test_callbacks = []
+    build_time_test_callbacks = []  # type: List[str]
+    install_time_test_callbacks = []  # type: List[str]
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Hto4l(MakefilePackage):
@@ -31,6 +31,9 @@ class Hto4l(MakefilePackage):
         filter_file(r'-mkdir \$\(LIBDIR\) \$\(BINDIR\) \$\(INCLUDEDIR\)',
                     '-mkdir -p $(LIBDIR) $(BINDIR) $(INCLUDEDIR)',
                     'LoopTools-2.10/makefile-lxplus')
+
+    def edit(self, spec, prefix):
+        env['GSL_HOME'] = self.spec['gsl'].prefix
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
