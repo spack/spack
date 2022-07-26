@@ -66,6 +66,8 @@ class Cabana(CMakePackage):
     depends_on("heffte@2.1.0", when="@master+heffte")
     depends_on('mpi', when='+mpi')
 
+    conflicts("+cajita ~mpi")
+
     conflicts("+rocm", when="@:0.2.0")
     conflicts("+sycl", when="@:0.3.0")
 
