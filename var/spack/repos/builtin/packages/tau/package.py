@@ -155,7 +155,7 @@ class Tau(Package):
         if not compiler_path and self.compiler.cc_names[0] == "gcc":
             compiler_path = os.environ.get('GCC_PATH', '')
             if compiler_path:
-                compiler_path = compiler_path+"/bin/"
+                compiler_path = compiler_path + "/bin/"
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
         compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
