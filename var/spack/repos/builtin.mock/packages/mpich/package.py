@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.util.executable import Executable
+
+ninja = Executable('ninja')  # to appease ninja test
 
 
 class Mpich(Package):
