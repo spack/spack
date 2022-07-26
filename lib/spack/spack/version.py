@@ -1112,7 +1112,6 @@ class CommitLookup(object):
     Version.is_ref returns True to allow for comparisons between git refs
     and versions as represented by tags in the git repository.
     """
-
     def __init__(self, pkg_name):
         self.pkg_name = pkg_name
 

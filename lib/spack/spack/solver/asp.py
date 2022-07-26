@@ -754,7 +754,7 @@ class SpackSolverSetup(object):
             if (isinstance(ver_a, spack.version.GitVersion) and
                 not isinstance(ver_b, spack.version.GitVersion)
                 and len(ver_b.version) == 1):
-                return ver_a.ref_version == ver_b.version[0]
+                return spack.version.Version(ver_a.ref_version) == ver_b
             return False
 
         pkg = packagize(pkg)
@@ -773,10 +773,13 @@ class SpackSolverSetup(object):
                 version_origin_str[declared_version.origin]
             ))
 
-        for v1, v2 in zip(most_to_least_preferred, most_to_least_preferred[::-1]):
-            if equivalent_versions(v1.version, v2.version):
-                self.gen.fact(
-                    fn.version_equivalent(pkg.name, v1.version, v2.version))
+        for v1 in most_to_least_preferred:
+            for v2 in most_to_least_preferred:
+                if v1 == v2:
+                    pass
+                if equivalent_versions(v1.version, v2.version):
+                    self.gen.fact(
+                        fn.version_equivalent(pkg.name, v1.version, v2.version))
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]

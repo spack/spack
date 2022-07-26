@@ -1816,3 +1816,5 @@ class TestConcretize(object):
         s = Spec('depends-on-develop ^develop-branch-version@%s=develop' % hash)
         c = s.concretized()
         assert hash in str(c)
+        assert s.satisfies('@develop')
+        assert s.satisfies('@10:')
