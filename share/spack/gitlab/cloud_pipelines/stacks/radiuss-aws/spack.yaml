@@ -56,7 +56,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws-noexist" }
 
   gitlab-ci:
 
