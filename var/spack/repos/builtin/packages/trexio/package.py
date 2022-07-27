@@ -31,6 +31,8 @@ class Trexio(AutotoolsPackage):
 
     version('master', branch='master')
     version('2.0.0', sha256='6eeef2da44259718b43991eedae4b20d4f90044e38f3b44a8beea52c38b14cb4')
+    version('2.1.0', sha256='6eeef2da44259718b43991eedae4b20d4f90044e38f3b44a8beea52c38b14cb4')
+    version('2.2.0', sha256='6eeef2da44259718b43991eedae4b20d4f90044e38f3b44a8beea52c38b14cb4')
 
     variant('hdf5', default=True, description='Enable HDF5 support')
 
@@ -38,30 +40,18 @@ class Trexio(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
-
     depends_on("m4", type='build')
+
     depends_on("hdf5@1.8:+hl", when='+hdf5')
 
     # This patch is needed to append -lhdf5_hl to $LIBS because by default
-    # ./configure cannot properly compile the hdf5_hl test (AC_HAVE_LIBRARY) and thus does not link it.
+    # ./configure cannot properly compile the hdf5_hl test (AC_HAVE_LIBRARY)
+    # within the Spack env and thus does not link against it.
     def configure_args(self):
-        cflags = []
-        cppflags = []
-        ldflags = []
         libs = []
-
-        hdf5_hl = self.spec['hdf5:hl']
-        #ldflags.append(hdf5_hl.libs.search_flags)
-        #libs.append(hdf5_hl.libs.link_flags)
         libs.append('-lhdf5_hl')
- 
-        config_args = []
 
-        config_args.append('CFLAGS=' + ' '.join(cflags))
-        config_args.append('CPPFLAGS=' + ' '.join(cppflags))
-        config_args.append('LDFLAGS=' + ' '.join(ldflags))
+        config_args = []
         config_args.append('LIBS=' + ' '.join(libs))
 
         return config_args
-
-
