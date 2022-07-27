@@ -72,31 +72,25 @@ class Cabana(CMakePackage):
     conflicts("+sycl", when="@:0.3.0")
 
     def cmake_args(self):
-        options = [
-            '-DCabana_ENABLE_TESTING=ON',
-            '-DBUILD_SHARED_LIBS=%s' % (
-                'On' if '+shared'  in self.spec else 'Off')
-        ]
+        options = ['-DCabana_ENABLE_TESTING=ON',
+                   self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
-        # Enable Cabana submodules based on flags above
-        if '+hypre' in self.spec:
-            options.append('-DCabana_REQUIRE_HYPRE=ON')
-        if '+heffte' in self.spec:
-            options.append('-DCabana_REQUIRE_HEFFTE=ON')
-
-        options.append(self.define_from_variant('Cabana_ENABLE_CAJITA', 'cajita'))
+        enable = ['CAJITA']
+        require = ['ARBORX', 'HEFFTE', 'HYPRE']
 
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
         if self.spec.satisfies('@:0.2.0'):
-            backends = {'serial': 'Serial',
-                        'openmp': 'OpenMP',
-                        'cuda': 'Cuda'}
-            for backend in backends:
-                cbn_option = 'Cabana_ENABLE_' + backends[backend]
-                options.append(self.define_from_variant(cbn_option, backend))
-
+            enable += ['Serial', 'OpenMP', 'Cuda']
+        # MPI was changed from ENABLE to REQUIRE in 0.4.0
         if self.spec.satisfies('@:0.3.0'):
-            options.append(self.define_from_variant('Cabana_ENABLE_MPI', 'mpi'))
+            enable += ['MPI']
+        else:
+            require += ['MPI']
+
+        for category, cname in zip([enable, require], ["ENABLE", "REQUIRE"]):
+            for var in category:
+                cbn_option = 'Cabana_{0}_{1}'.format(cname, var)
+                options.append(self.define_from_variant(cbn_option, var.lower()))
 
         return options
