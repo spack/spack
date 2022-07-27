@@ -149,6 +149,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('tgeo', default=False, description='Build the TGeo plugin', when='+identification')
 
     # Variants that only affect Acts examples for now
+    variant('edm4hep', default=False, description='Build the EDM4hep examples', when='@19.4.0: +examples')
     variant('geant4', default=False, description='Build the Geant4-based examples', when='@0.23: +examples')
     variant('hepmc3', default=False, description='Build the HepMC3-based examples', when='@0.23: +examples')
     variant('pythia8', default=False, description='Build the Pythia8-based examples', when='@0.23: +examples')
@@ -166,6 +167,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on('cmake @3.14:', type='build')
     depends_on('dd4hep @1.11: +dddetectors +ddrec', when='+dd4hep')
     depends_on('dd4hep +ddg4', when='+dd4hep +geant4 +examples')
+    depends_on('edm4hep @0.4.1:', when='+edm4hep')
     depends_on('eigen @3.3.7:', when='@15.1:')
     depends_on('eigen @3.3.7:3.3.99', when='@:15.0')
     depends_on('geant4', when='+fatras_geant4')
@@ -228,6 +230,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
+            example_cmake_variant("EDM4HEP", "edm4hep"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("FATRAS_GEANT4", "fatras_geant4"),
