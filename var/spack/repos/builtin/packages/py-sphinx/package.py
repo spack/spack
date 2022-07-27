@@ -14,6 +14,7 @@ class PySphinx(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('5.1.1', sha256='ba3224a4e206e1fbdecf98a4fae4992ef9b24b85ebf7b584bb340156eaf08d89')
     version('5.1.0', sha256='7893d10d9d852c16673f9b1b7e9eda1606b420b7810270294d6e4b44c0accacc')
     version('5.0.2', sha256='b18e978ea7565720f26019c702cd85c84376e948370f1cd43d60265010e1c7b0')
     version('5.0.1', sha256='f4da1187785a5bc7312cc271b0e867a93946c319d106363e102936a3d9857306')
