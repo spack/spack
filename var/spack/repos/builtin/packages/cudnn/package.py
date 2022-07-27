@@ -234,6 +234,9 @@ class Cudnn(Package):
             version(long_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuDNN version
             cuda_req = 'cuda@{0}.0:{0}'.format(cuda_ver)
+            if cuda_ver == '11.6':
+                # cudnn with cuda 11.6 is upward compatible to newer cuda 11, see: https://docs.nvidia.com/deeplearning/cudnn/support-matrix/index.html#fntarg_2
+                cuda_req = 'cuda@11.0:11.999'
             cudnn_ver_req = '@{0}'.format(long_ver)
             depends_on(cuda_req, when=cudnn_ver_req)
 
