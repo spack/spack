@@ -196,6 +196,7 @@ spack:
   - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
+  - slate +rocm amdgpu_target=gfx90a
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
   - strumpack ~slate +rocm amdgpu_target=gfx90a
   - superlu-dist +rocm amdgpu_target=gfx90a
