@@ -36,6 +36,9 @@ class Cabana(CMakePackage):
     variant('heffte', default=False, description='Build with heFFTe support')
     variant('hypre', default=False, description='Build with HYPRE support')
     variant('cajita', default=False, description='Build Cajita subpackage')
+    variant('testing', default=False, description='Build unit tests')
+    variant('examples', default=False, description='Build tutorial examples')
+    variant('performance_testing', default=False, description='Build performance tests')
 
     depends_on("cmake@3.9:", type='build')
     depends_on("googletest", type='build')
@@ -72,10 +75,9 @@ class Cabana(CMakePackage):
     conflicts("+sycl", when="@:0.3.0")
 
     def cmake_args(self):
-        options = ['-DCabana_ENABLE_TESTING=ON',
-                   self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
+        options = [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
-        enable = ['CAJITA']
+        enable = ['CAJITA', 'TESTING', 'EXAMPLES', 'PERFORMANCE_TESTING']
         require = ['ARBORX', 'HEFFTE', 'HYPRE']
 
         # These variables were removed in 0.3.0 (where backends are
