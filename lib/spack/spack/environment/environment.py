@@ -5,10 +5,10 @@
 import collections
 import contextlib
 import copy
-import stat
 import os
 import re
 import shutil
+import stat
 import sys
 import time
 
@@ -18,6 +18,8 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import rename
+from llnl.util.lang import dedupe
+from llnl.util.symlink import symlink
 
 import spack.bootstrap
 import spack.compilers
@@ -51,15 +53,13 @@ from spack.spec_list import InvalidSpecConstraintError, SpecList
 from spack.util.path import substitute_path_variables
 from spack.variant import UnknownVariantError
 
-
-from llnl.util.lang import dedupe
-from llnl.util.symlink import symlink
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
 
 
-import spack.util.parallel
 import spack.concretize
+import spack.util.parallel
+
 #: currently activated environment
 _active_environment = None
 
