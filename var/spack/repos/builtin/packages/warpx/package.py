@@ -87,6 +87,8 @@ class Warpx(CMakePackage):
             description='Enable tiny profiling features')
 
     depends_on('sensei@4.0.0:', when='@22.07: +sensei')
+    conflicts('+sensei', when='@:22.06',
+              msg='WarpX supports SENSEI 4.0+ with 22.07 and newer')
 
     depends_on('ascent', when='+ascent')
     depends_on('ascent +cuda', when='+ascent compute=cuda')
