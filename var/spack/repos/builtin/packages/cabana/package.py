@@ -35,6 +35,7 @@ class Cabana(CMakePackage):
     variant('arborx', default=False, description='Build with ArborX support')
     variant('heffte', default=False, description='Build with heFFTe support')
     variant('hypre', default=False, description='Build with HYPRE support')
+    variant('cajita', default=False, description='Build Cajita subpackage')
 
     depends_on("cmake@3.9:", type='build')
     depends_on("googletest", type='build')
@@ -65,6 +66,8 @@ class Cabana(CMakePackage):
     depends_on("heffte@2.1.0", when="@master+heffte")
     depends_on('mpi', when='+mpi')
 
+    conflicts("+cajita ~mpi")
+
     conflicts("+rocm", when="@:0.2.0")
     conflicts("+sycl", when="@:0.3.0")
 
@@ -80,6 +83,8 @@ class Cabana(CMakePackage):
             options.append('-DCabana_REQUIRE_HYPRE=ON')
         if '+heffte' in self.spec:
             options.append('-DCabana_REQUIRE_HEFFTE=ON')
+
+        options.append(self.define_from_variant('Cabana_ENABLE_CAJITA', 'cajita'))
 
         # These variables were removed in 0.3.0 (where backends are
         # automatically used from Kokkos)
