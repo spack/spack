@@ -16,15 +16,16 @@ class Omnitrace(CMakePackage):
     maintainers = ['jrmadsen']
 
     version('main', branch='main', submodules=True)
+    version('1.3.0', commit='4dd144a32c8b83c44e132ef53f2b44fe4b4d5569', submodules=True)
     version('1.2.0', commit='f82845388aab108ed1d1fc404f433a0def391bb3', submodules=True)
 
-    variant('rocm', default=True, description='Enable ROCm API and kernel tracing support')
+    variant('rocm', default=True, description='Enable ROCm API, kernel tracing, and GPU HW counters support')
     variant('strip', default=False, description='Faster binary instrumentation, worse debugging')
-    variant('python', default=False, description='Enable Python support')
-    variant('papi', default=True, description='Enable PAPI support')
+    variant('python', default=False, description='Enable support for Python function profiling and API')
+    variant('papi', default=True, description='Enable HW counters support via PAPI')
     variant('ompt', default=True, description='Enable OpenMP Tools support')
-    variant('tau', default=False, description='Enable TAU support')
-    variant('caliper', default=False, description='Enable Caliper support')
+    variant('tau', default=False, description='Enable support for using TAU markers in omnitrace instrumentation')
+    variant('caliper', default=False, description='Enable support for using Caliper markers in omnitrace instrumentation')
     variant('perfetto_tools', default=False, description='Install perfetto tools (e.g. traced, perfetto)')
     variant('mpi', default=False, description='Enable intercepting MPI functions and aggregating output during finalization (requires target application to use same MPI installation)')
     variant('mpi_headers', default=True, description='Enable intercepting MPI functions but w/o support for aggregating output (target application can use any MPI installation)')
@@ -40,6 +41,7 @@ class Omnitrace(CMakePackage):
     depends_on('hip', when='+rocm')
     depends_on('rocm-smi-lib', when='+rocm')
     depends_on('roctracer-dev', when='+rocm')
+    depends_on('rocprofiler-dev', when='@1.3.0: +rocm')
     depends_on('papi+shared', when='+papi')
     depends_on('mpi', when='+mpi')
     depends_on('tau', when='+tau')
@@ -67,8 +69,10 @@ class Omnitrace(CMakePackage):
             self.define_from_variant('OMNITRACE_USE_MPI', 'mpi'),
             self.define_from_variant('OMNITRACE_USE_OMPT', 'ompt'),
             self.define_from_variant('OMNITRACE_USE_PAPI', 'papi'),
+            self.define_from_variant('OMNITRACE_USE_RCCL', 'rocm'),
             self.define_from_variant('OMNITRACE_USE_ROCM_SMI', 'rocm'),
             self.define_from_variant('OMNITRACE_USE_ROCTRACER', 'rocm'),
+            self.define_from_variant('OMNITRACE_USE_ROCPROFILER', 'rocm'),
             self.define_from_variant('OMNITRACE_USE_PYTHON', 'python'),
             self.define_from_variant('OMNITRACE_USE_MPI_HEADERS', 'mpi_headers'),
             self.define_from_variant('OMNITRACE_STRIP_LIBRARIES', 'strip'),
