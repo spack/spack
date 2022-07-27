@@ -251,7 +251,11 @@ class Acts(CMakePackage, CudaPackage):
         ]
 
         log_failure_threshold = spec.variants['log_failure_threshold'].value
-        args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
+        if spec.satisfies('@19.4.0:'):
+            args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
+            args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
+        else:
+            args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
 
         if spec.satisfies('+autodiff'):
             args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
