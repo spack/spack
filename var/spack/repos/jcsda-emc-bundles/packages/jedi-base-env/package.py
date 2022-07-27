@@ -40,6 +40,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('netcdf-cxx4',                    type='run')
     depends_on('nlohmann-json',                  type='run')
     depends_on('nlohmann-json-schema-validator', type='run')
+    depends_on('odc',                            type='run')
     depends_on('py-eccodes',                     type='run')
     depends_on('py-h5py',                        type='run')
     depends_on('py-netcdf4',                     type='run')
