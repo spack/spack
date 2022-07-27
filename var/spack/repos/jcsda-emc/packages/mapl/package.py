@@ -84,7 +84,8 @@ class Mapl(CMakePackage):
         ]
 
         if self.spec.satisfies('@2.22.0:'):
-            args.append(self.define('CMAKE_MODULE_PATH', self.spec['esmf'].prefix.cmake))
+            args.append(self.define('CMAKE_MODULE_PATH',
+                        self.spec['esmf'].prefix.cmake))
 
         # Compatibility flags for gfortran
         fflags = []
