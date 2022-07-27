@@ -1,0 +1,20 @@
+diff -u ./src/CMake/FindHDF5.cmake.orig ./src/CMake/FindHDF5.cmake
+--- ./src/CMake/FindHDF5.cmake.orig	2022-07-19 10:58:59.764308000 -0700
++++ ./src/CMake/FindHDF5.cmake	2022-07-19 10:59:24.850296000 -0700
+@@ -15,7 +15,7 @@
+ #
+ #****************************************************************************/
+ 
+-# Use the HDF5_DIR hint from the config-site .cmake file 
++# Use the HDF5_DIR hint from the config-site .cmake file
+ 
+ INCLUDE(${VISIT_SOURCE_DIR}/CMake/SetUpThirdParty.cmake)
+ 
+@@ -42,6 +42,6 @@
+ ELSE()
+   SET_UP_THIRD_PARTY(HDF5 LIBS hdf5)
+   IF(VISIT_PARALLEL)
+-      SET_UP_THIRD_PARTY(HDF5_MPI LIBS hdf5_mpi)
++      SET_UP_THIRD_PARTY(HDF5_MPI LIBS hdf5)
+   ENDIF(VISIT_PARALLEL)
+ ENDIF()

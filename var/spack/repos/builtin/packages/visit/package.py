@@ -69,6 +69,7 @@ class Visit(CMakePackage):
     executables = ['^visit$']
 
     version('develop', branch='develop')
+    version('3.3.0', sha256='1a7485146133ac5f1e330d9029697750046ef8d9e9de23a6c2a3685c1c5f4aac')
     version('3.2.2', sha256='d19ac24c622a3bc0a71bc9cd6e5c9860e43f39e3279672129278b6ebce8d0ead')
     version('3.2.1', sha256='779d59564c63f31fcbfeff24b14ddd6ac941b3bb7d671d31765a770d193f02e8')
     version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
@@ -85,10 +86,11 @@ class Visit(CMakePackage):
     variant('python', default=True, description='Enable Python support')
     variant('mpi',    default=True, description='Enable parallel engine')
 
-    patch('spack-changes-3.1.patch', when="@3.1.0:,develop")
+    patch('spack-changes-3.1.patch', when="@3.1.0:3.2.2")
     patch('spack-changes-3.0.1.patch', when="@3.0.1")
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
-    patch('parallel-hdf5.patch', when='+hdf5+mpi')
+    patch('parallel-hdf5.patch', when='@3.0.1:3.2.2+hdf5+mpi')
+    patch('parallel-hdf5-3.3.patch', when='@3.3.0:+hdf5+mpi')
 
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts('+gui', when='+osmesa')
