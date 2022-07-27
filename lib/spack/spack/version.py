@@ -45,7 +45,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
-VALID_VERSION = re.compile(r'^[=A-Za-z0-9_.-]+$')
+VALID_VERSION = re.compile(r'^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$')
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r'^[a-f0-9]{40}$')

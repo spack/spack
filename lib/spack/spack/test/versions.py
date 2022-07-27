@@ -585,7 +585,8 @@ def test_list_highest():
 @pytest.mark.parametrize('version_str', [
     "foo 1.2.0",
     "!",
-    "1!2"
+    "1!2",
+    "=1.2.0"
 ])
 def test_invalid_versions(version_str):
     """Ensure invalid versions are rejected with a ValueError"""
