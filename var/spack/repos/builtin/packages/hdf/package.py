@@ -191,6 +191,15 @@ class Hdf(AutotoolsPackage):
                          self.extra_install_tests)
 
     @run_after('install')
+    def remove_ncgen_ncdump(self):
+        """Remove binaries ncdump and ncgen. These get built and
+        installed even if the netCDF API is turned off (known bug)."""
+        if self.spec.satisfies('~netcdf'):
+            exes_to_remove = ['ncdump', 'ncgen']
+            for exe in exes_to_remove:
+                os.remove(os.path.join(self.prefix.bin, exe))
+
+    @run_after('install')
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
@@ -200,7 +209,11 @@ class Hdf(AutotoolsPackage):
         """Perform version checks on selected installed package binaries."""
         spec_vers_str = 'Version {0}'.format(self.spec.version.up_to(2))
 
-        exes = ['hdfimport', 'hrepack', 'ncdump', 'ncgen']
+        # ncdump and ncgen are removed when the netCDF API isn't built
+        exes = ['hdfimport', 'hrepack']
+        if self.spec.satisfies('+netcdf'):
+            exes += ['ncdump', 'ncgen']
+
         for exe in exes:
             reason = 'test: ensuring version of {0} is {1}' \
                 .format(exe, spec_vers_str)
