@@ -2243,10 +2243,18 @@ class WindowsRuntimePath:
     @property
     def link_dest(self):
         """
-        Set of Location within the package context where symlinks need to be placed
-        to mimic runtime link paths.
+        Set of directories where package binaries are located. Symlinks
+        to libraries/binaries on which this package depends
         """
         return set(self.pkg.libs.directories)
+
+    @property
+    def internal_links(self):
+        """
+        linking that would need to be established within the package itself. Useful for links
+        against extension modules/build time executables/internal linkage
+        """
+        pass
 
     @property
     def link_targets(self):
