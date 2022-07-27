@@ -31,6 +31,7 @@ class Bufr(CMakePackage):
     patch('cmakelists-apple-llvm-ranlib.patch', when='@:11.6.0')
 
     variant('python', default=False, description='Enable Python interface?')
+    variant('shared', default=True, description='Build shared libraries')
     extends('python', when='+python')
 
     depends_on('python@3:', type=('build', 'run'), when='+python')
@@ -40,7 +41,8 @@ class Bufr(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant('ENABLE_PYTHON', 'python')
+            self.define_from_variant('ENABLE_PYTHON', 'python'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ]
 
         return args
@@ -68,8 +70,9 @@ class Bufr(CMakePackage):
 
     def _setup_bufr_environment(self, env, suffix):
         libname = 'libbufr_{0}'.format(suffix)
+        shared = True if '+shared' in self.spec else False
         lib = find_libraries(libname, root=self.prefix,
-                             shared=False, recursive=True)
+                             shared=shared, recursive=True)
 
         lib_envname = 'BUFR_LIB{0}'.format(suffix)
         inc_envname = 'BUFR_INC{0}'.format(suffix)
@@ -81,7 +84,7 @@ class Bufr(CMakePackage):
         # Bufr has _DA (dynamic allocation) libs in versions <= 11.5.0
         if self.spec.satisfies('@:11.5.0'):
             da_lib = find_libraries(libname + "_DA", root=self.prefix,
-                                    shared=False, recursive=True)
+                                    shared=shared, recursive=True)
             env.set(lib_envname + '_DA', da_lib[0])
             env.set(inc_envname + '_DA', include_dir)
 
