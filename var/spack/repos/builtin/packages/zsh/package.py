@@ -27,16 +27,44 @@ class Zsh(AutotoolsPackage):
     # although the name of the option has evolved since then.
     variant('skip-tcsetpgrp-test', default=True,
             description="Skip configure's tcsetpgrp test")
+    variant('etcdir', default=False,
+            description='enable etc dir local to install, for global zsh scripts')
+    variant('lmod', default=False,
+            description='setup zshrc env for lmod support')
 
     depends_on("pcre")
     depends_on("ncurses")
 
+    conflicts('+lmod', when='~etcdir', msg='local etc required to setup env for lmod')
+
     def configure_args(self):
+        args = []
+
         if '+skip-tcsetpgrp-test' in self.spec:
             # assert that we have a functional tcsetpgrp
-            args = ['--with-tcsetpgrp']
-        else:
-            # let configure run it's test and see what's what
-            args = []
+            args.append('--with-tcsetpgrp')
+
+        if '+etcdir' in self.spec:
+            # enable etc dir under install prefix
+            mkdirp(self.prefix.etc)
+            args.append('--enable-etcdir={0}'.format(self.prefix.etc))
 
         return args
+
+    @run_after('install')
+    def setup_zshenv(self):
+        if '+lmod' in self.spec:
+            zsh_setup = """
+if [ -d /etc/profile.d ]; then
+  setopt no_nomatch
+  for i in /etc/profile.d/*.sh; do
+    if [ -r $i ]; then
+      . $i
+    fi
+  done
+  setopt nomatch
+fi
+"""
+
+            with open('{0}/zshenv'.format(self.prefix.etc), 'w') as zshenv:
+                zshenv.write(zsh_setup)
