@@ -48,6 +48,7 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-morphio',       type='run', when='@2.6.0:')
     # Scipy is optional. Latest won't build well %intel, only @1.5.4 will
     depends_on('py-scipy',         type='run', when='+all_deps@2.5.3:')
+    depends_on('py-psutil',        type='run', when='@2.12.0:')
 
     @run_after('install')
     def install_files(self):
