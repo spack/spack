@@ -15,6 +15,7 @@ class Itensor(MakefilePackage):
     homepage = "https://itensor.org/index.html"
     url      = "https://github.com/ITensor/ITensor/archive/v3.1.6.tar.gz"
 
+    version('3.1.11', sha256='bc6c48d34c4d4281d15116d7d95d7e6e2b6878b9a60ce33372b8967a96826e95')
     version('3.1.10', sha256='68c149e23a1ab936ef8175ea11fedc0ec64031c3686ede93c3a5ab0c893774f6')
     version('3.1.9', sha256='4dd71b251b63fb7775ef854212df6f1d5d3ac4d6d1905dc03b1e6d2a0a620a17')
     version('3.1.8', sha256='9dae666baa6f9317fa1ca96c6229c6e62bbbb690e5ee7345f3781948903839f4')
@@ -35,7 +36,7 @@ class Itensor(MakefilePackage):
     variant('shared', default=False, description='Also build dynamic libraries.')
 
     depends_on('lapack')
-    depends_on('hdf5+hl', when='+hdf5')
+    depends_on('hdf5@:1.10+hl', when='+hdf5')
 
     conflicts('^openblas threads=none', when='+openmp')
     conflicts('^openblas threads=pthreads', when='+openmp')
