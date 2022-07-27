@@ -101,6 +101,9 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
                          'one can mark openssl as an external package, to '
                          'avoid compiling openssl entirely.'))
     variant('docs', default=False, description='Install docs and manpages')
+    variant('shared', default=False, description="Build shared library version")
+    with when('platform=windows'):
+        variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
@@ -156,6 +159,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
+        # Make a flag for shared library builds
         base_args = ['--prefix=%s' % prefix,
                      '--openssldir=%s'
                      % join_path(prefix, 'etc', 'openssl')]
@@ -188,6 +192,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
+
+        if spec.satisfies('+dynamic'):
+            # This variant only makes sense for Windows
+            if spec.satisfies('platform=windows'):
+                filter_file(r'MT', 'MD', 'makefile')
 
         if spec.satisfies('platform=windows'):
             host_make = nmake
