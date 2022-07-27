@@ -111,6 +111,8 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies('@:1.4 %gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+            if self.spec.satisfies('^py-numpy@1.16:1.17'):
+                env.set('NPY_DISTUTILS_APPEND_FLAGS', '1')
 
         # Pick up Blas/Lapack from numpy
         self.spec['py-numpy'].package.setup_build_environment(env)
