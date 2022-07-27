@@ -19,6 +19,7 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ['adamjstewart', 'aweits']
     import_modules = ['tensorflow']
 
+    version('2.9.1',  sha256='6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc')
     version('2.7.0',  sha256='bb124905c7fdacd81e7c842b287c169bbf377d29c74c9dacc04f96c9793747bb')
     version('2.6.2',  sha256='e68c1d346fc3d529653530ca346b2c62f5b31bd4fcca7ffc9c65bb39ab2f6ed3')
     version('2.6.1',  sha256='8e457f617bc2eb43de2a51900e7922b60a8107e2524b2576438f1acccee1d043')
@@ -118,8 +119,9 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@3.7.2:4.99.0',  type='build', when='@2.7:')
-    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3:2.6')
+    depends_on('bazel@4.2.2:5.99.0',  type='build', when='@2.9.0:2.9')
+    depends_on('bazel@3.7.2:4.99.0',  type='build', when='@2.7.0:2.7')
+    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3.0:2.6')
     depends_on('bazel@2.0.0',         type='build', when='@2.2.0:2.2')
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
@@ -148,7 +150,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-future', type='build', when='^python@:2')
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
-    depends_on('py-absl-py@0.4:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-absl-py@1.0.0:', type=('build', 'run'), when='@2.9.0:')
+    depends_on('py-absl-py@0.4:', type=('build', 'run'), when='@2.7.0:2.7')
     depends_on('py-absl-py@0.10:0', type=('build', 'run'), when='@2.4.0:2.6')
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:2.3')
     depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:1.11')
@@ -158,7 +161,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:2.1')
     depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
     depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
-    depends_on('py-libclang@9.0.1:', type=('build', 'run'), when='@2.7:')
+    depends_on('py-libclang@13.0.0:', type=('build', 'run'), when='@2.9.0:')
+    depends_on('py-libclang@9.0.1:', type=('build', 'run'), when='@2.7.0:2.7')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
     depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
     depends_on('py-gast@0.2.1:0.4', type=('build', 'run'), when='@2.7:')
@@ -190,7 +194,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:2.0')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11.0:1.11')
     # https://github.com/tensorflow/tensorflow/issues/40688
-    depends_on('py-numpy@1.14.5:',      type=('build', 'run'), when='@2.7:')
+    depends_on('py-numpy@1.20.0:',      type=('build', 'run'), when='@2.9.0:')
+    depends_on('py-numpy@1.14.5:',      type=('build', 'run'), when='@2.7.0:2.7')
     depends_on('py-numpy@1.19.2:1.19',  type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-numpy@1.16.0:1.18',  type=('build', 'run'), when='@1.13.2,1.15:2.3')
     depends_on('py-numpy@1.14.5:1.18',  type=('build', 'run'), when='@1.12.1,1.14.0')
@@ -203,7 +208,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-numpy@1.9.2:',        type=('build', 'run'), when='@0.5.0')
     depends_on('py-opt-einsum@3.3.0:3.3', type=('build', 'run'), when='@2.4.0:2.6')
     depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:2.3,2.7:')
-    depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.3:')
+    depends_on('py-protobuf@3.9.2:3.20', type=('build', 'run'), when='@2.3.0:')
+    depends_on('py-packaging', type=('build', 'run'), when='@2.9.0:')
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'), when='@2.1:2.2')
     depends_on('py-protobuf@3.6.1:', type=('build', 'run'), when='@1.12:2.0')
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'), when='@1.10:1.11')
@@ -228,6 +234,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-tensorboard@2.5.0:2.5', type=('build', 'run'), when='@2.5')
     depends_on('py-tensorboard@2.6.0:2.6', type=('build', 'run'), when='@2.6')
     depends_on('py-tensorboard@2.7.0:2.7', type=('build', 'run'), when='@2.7')
+    depends_on('py-tensorboard@2.9.0:2.9', type=('build', 'run'), when='@2.9')
 
     depends_on('py-termcolor@1.1.0:1.1', type=('build', 'run'), when='@2.4:2.6')
     depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:2.3,2.7:')
@@ -263,7 +270,8 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cuda@:10.2', when='+cuda @:2.3')
-    depends_on('cuda@:11.4', when='+cuda @2.4:')
+    depends_on('cuda@:11.4', when='+cuda @2.4:2.7')
+    depends_on('cuda@:11.7', when='+cuda @2.9:')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn@:6', when='@0.5:0.6 +cuda')
     depends_on('cudnn@:7', when='@0.7:2.2 +cuda')
@@ -345,7 +353,7 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
     # needed for protobuf-3.16 and greater
-    patch('example_parsing.patch', when='^protobuf@3.16:')
+    patch('example_parsing.patch', when='@:2.7 ^protobuf@3.16:')
 
     # allow linker to be found in PATH
     # https://github.com/tensorflow/tensorflow/issues/39263
