@@ -90,6 +90,7 @@ class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+adiak', '@:2.1')
     conflicts('+libdw', '@:2.4')
     conflicts('+rocm',  '@:2.7')
+    conflicts('+rocm+cuda')
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
