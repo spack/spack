@@ -154,6 +154,13 @@ class Llvm(CMakePackage, CudaPackage):
         multi=True
     )
     variant(
+        "experimental_targets",
+        default="none",
+        description=("What experimental targets to build"),
+        values=("none", "arc", "directx", "loongarch", "m68k", "spirv"),
+        multi=True
+    )
+    variant(
         "build_type",
         default="Release",
         description="CMake build type",
@@ -671,6 +678,10 @@ class Llvm(CMakePackage, CudaPackage):
             "LLVM_TARGETS_TO_BUILD",
             get_llvm_targets_to_build(spec)))
 
+        cmake_args.append(define(
+            "LLVM_EXPERIMENTAL_TARGETS_TO_BUILD",
+            get_llvm_experimental_targets_to_build(spec)))
+
         cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
 
         if self.compiler.name == "gcc":
@@ -793,5 +804,25 @@ def get_llvm_targets_to_build(spec):
         llvm_targets.add("Sparc")
     elif spec.target.family in ("ppc64", "ppc64le", "ppc", "ppcle"):
         llvm_targets.add("PowerPC")
+
+    return list(llvm_targets)
+
+def get_llvm_experimental_targets_to_build(spec):
+    targets = spec.variants['experimental_targets'].value
+
+    # Convert targets variant values to CMake LLVM_EXPERIMENTAL_TARGETS_TO_BUILD array.
+    spack_to_cmake = {
+        "arc": "ARC",
+        "csky": "CSKY",
+        "directx": "DirectX",
+        "loongarch": "LoongArch",
+        "m68k": "M68k",
+        "spirv": "SPIRV"
+    }
+
+    if 'none' in targets:
+        llvm_targets = set()
+    else:
+        llvm_targets = set(spack_to_cmake[target] for target in targets)
 
     return list(llvm_targets)
