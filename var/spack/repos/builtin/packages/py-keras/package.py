@@ -16,6 +16,7 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras"
     url = 'https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz'
 
+    version('2.9.0', sha256='90226eaa0337573304f3e5ab44d4d9e3a65fe002776c5cbd0f65b738152c1084')
     version('2.7.0', sha256='7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04')
     version('2.6.0', sha256='15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae')
     version('2.5.0', commit='9c266106163390f173625c4e7b1ccb03ae145ffc')
@@ -59,6 +60,7 @@ class PyKeras(PythonPackage):
     depends_on('py-tensorflow@2.5.0:2.5', type=('build', 'run'), when='@2.5.0:2.5')
     depends_on('py-tensorflow@2.6.0:2.6', type=('build', 'run'), when='@2.6.0:2.6')
     depends_on('py-tensorflow@2.7.0:2.7', type=('build', 'run'), when='@2.7.0:2.7')
+    depends_on('py-tensorflow@2.9.0:2.9', type=('build', 'run'), when='@2.9.0:2.9')
     depends_on('bazel', type='build', when='@2.5.0:')
     depends_on('protobuf', type='build', when='@2.5.0:')
 
