@@ -59,7 +59,6 @@ spack_env_var = 'SPACK_ENV'
 import spack.concretize
 import spack.util.parallel
 
-
 #: currently activated environment
 _active_environment = None
 
