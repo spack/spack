@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import sys
 
 from spack.package import *
 
@@ -24,11 +25,17 @@ class Bzip2(Package, SourcewarePackage):
     version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
     version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
-    variant('shared', default=True, description='Enables the build of shared libraries.')
+    variant('shared', default=(sys.platform != 'win32'),
+            description='Enables the build of shared libraries.')
     variant('pic', default=False, description='Build static libraries with PIC')
     variant('debug', default=False, description='Enable debug symbols and disable optimization')
 
-    depends_on('diffutils', type='build')
+    # makefile.msc doesn't provide a shared recipe
+    conflicts('+shared', when='platform=windows',
+              msg='Windows makefile has no recipe for shared builds, use ~shared.')
+
+    if sys != 'win32':
+        depends_on('diffutils', type='build')
 
     @classmethod
     def determine_version(cls, exe):
@@ -55,9 +62,10 @@ class Bzip2(Package, SourcewarePackage):
 
     def patch(self):
         if self.spec.satisfies('+debug'):
-            for makefile in ['Makefile', 'Makefile-libbz2_so']:
+            for makefile in ['Makefile', 'Makefile-libbz2_so', 'makefile.msc']:
                 filter_file(r'-O ', '-O0 ', makefile)
                 filter_file(r'-O2 ', '-O0 ', makefile)
+                filter_file(r'-Ox ', '-O0 ', makefile)
 
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
@@ -104,8 +112,23 @@ class Bzip2(Package, SourcewarePackage):
             make('-f', 'Makefile-libbz2_so')
 
         # Build the static library and everything else
-        make()
-        make('install', 'PREFIX={0}'.format(prefix))
+        if self.spec.satisfies('platform=windows'):
+            # Build step
+            nmake = Executable('nmake.exe')
+            nmake('-f', 'makefile.msc')
+            # Install step
+            mkdirp(self.prefix.include)
+            mkdirp(self.prefix.lib)
+            mkdirp(self.prefix.bin)
+            mkdirp(self.prefix.man)
+            mkdirp(self.prefix.man.man1)
+            install('*.h', self.prefix.include)
+            install('*.lib', self.prefix.lib)
+            install('*.exe', self.prefix.bin)
+            install('*.1', self.prefix.man.man1)
+        else:
+            make()
+            make('install', 'PREFIX={0}'.format(prefix))
 
         if '+shared' in spec:
             install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
@@ -125,7 +148,9 @@ class Bzip2(Package, SourcewarePackage):
                 for libname in (lib, lib1, lib2):
                     symlink(lib3, libname)
 
-        with working_dir(prefix.bin):
-            force_remove('bunzip2', 'bzcat')
-            symlink('bzip2', 'bunzip2')
-            symlink('bzip2', 'bzcat')
+        # These files won't be in a Windows installation
+        if not self.spec.satisfies('platform=windows'):
+            with working_dir(prefix.bin):
+                force_remove('bunzip2', 'bzcat')
+                symlink('bzip2', 'bunzip2')
+                symlink('bzip2', 'bzcat')

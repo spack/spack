@@ -48,8 +48,9 @@ class Sqlite(AutotoolsPackage):
     variant('dynamic_extensions', default=True, description='Support loadable extensions')
     variant('rtree', default=True, description='Build with Rtree module')
 
-    depends_on('readline')
-    depends_on('zlib')
+    if not spec.satisfies('platform=windows'):
+        depends_on('readline')
+        depends_on('zlib')
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25')

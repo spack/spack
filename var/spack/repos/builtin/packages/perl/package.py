@@ -14,7 +14,6 @@
 import os
 import platform
 import re
-import sys
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
@@ -23,7 +22,7 @@ from llnl.util.symlink import symlink
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
-is_windows = sys.platform == 'win32'
+is_windows = str(spack.platforms.host()) == 'windows'
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -329,8 +328,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
             env.prepend_path('PERL5LIB', perl_lib_path)
-        if is_windows:
-            env.append_path('PATH', self.prefix.bin)
+            if is_windows:
+                env.append_path('PATH', self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self._setup_dependent_env(env, dependent_spec,
@@ -361,10 +360,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             mkdirp(module.perl_lib_dir)
 
     def setup_build_environment(self, env):
-        if is_windows:
-            env.append_path('PATH', self.prefix.bin)
-            return
-
         spec = self.spec
 
         if (spec.satisfies('@:5.34 platform=darwin')
