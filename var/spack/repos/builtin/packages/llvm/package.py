@@ -807,6 +807,7 @@ def get_llvm_targets_to_build(spec):
 
     return list(llvm_targets)
 
+
 def get_llvm_experimental_targets_to_build(spec):
     targets = spec.variants['experimental_targets'].value
 
