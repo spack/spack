@@ -235,7 +235,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False, when='@1.5.4:2',
             description='Enable MPI_THREAD_MULTIPLE support')
-    variant('pmi', default=False, when='@1.5.5:4', description='Enable PMI support')
+    variant('pmi', default=False, when='@1.5.5:4 schedulers=slurm', description='Enable PMI support')
     variant('wrapper-rpath', default=True, when='@1.7.4:',
             description='Enable rpath support in the wrappers')
     variant('cxx', default=False, when='@:4',
@@ -683,7 +683,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             'builtin-atomics', variant='atomics'
         ))
 
-        if spec.satisfies('+pmi schedulers=slurm'):
+        if spec.satisfies('+pmi'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
         else:
             config_args.extend(self.with_or_without('pmi'))

@@ -5,6 +5,7 @@
 import os
 from typing import Optional
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
@@ -41,10 +42,10 @@ class RacketPackage(PackageBase):
     name = None  # type: Optional[str]
     parallel = True
 
-    @property
-    def homepage(self):
-        if self.pkgs:
-            return 'https://pkgs.racket-lang.org/package/{0}'.format(self.name)
+    @lang.classproperty
+    def homepage(cls):
+        if cls.pkgs:
+            return 'https://pkgs.racket-lang.org/package/{0}'.format(cls.name)
 
     @property
     def build_directory(self):

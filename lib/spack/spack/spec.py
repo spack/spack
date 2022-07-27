@@ -1517,8 +1517,9 @@ class Spec(object):
 
     @property
     def package(self):
+        assert self.concrete, "Spec.package can only be called on concrete specs"
         if not self._package:
-            self._package = spack.repo.get(self)
+            self._package = spack.repo.path.get(self)
         return self._package
 
     @property
@@ -2500,8 +2501,9 @@ class Spec(object):
         assert isinstance(self.extra_attributes, Mapping), msg
 
         # Validate the spec calling a package specific method
+        pkg_cls = spack.repo.path.get_pkg_class(self.name)
         validate_fn = getattr(
-            self.package, 'validate_detected_spec', lambda x, y: None
+            pkg_cls, 'validate_detected_spec', lambda x, y: None
         )
         validate_fn(self, self.extra_attributes)
 
@@ -2729,7 +2731,8 @@ class Spec(object):
         visited_user_specs = set()
         for dep in self.traverse():
             visited_user_specs.add(dep.name)
-            visited_user_specs.update(x.name for x in dep.package.provided)
+            pkg_cls = spack.repo.path.get_pkg_class(dep.name)
+            visited_user_specs.update(x.name for x in pkg_cls(dep).provided)
 
         extra = set(user_spec_deps.keys()).difference(visited_user_specs)
         if extra:
@@ -2863,10 +2866,12 @@ class Spec(object):
             for mod in compiler.modules:
                 md.load_module(mod)
 
-            # get the path from the module
-            # the package can override the default
+            # Get the path from the module the package can override the default
+            # (this is mostly needed for Cray)
+            pkg_cls = spack.repo.path.get_pkg_class(external_spec.name)
+            package = pkg_cls(external_spec)
             external_spec.external_path = getattr(
-                external_spec.package, 'external_prefix',
+                package, 'external_prefix',
                 md.path_from_modules(external_spec.external_modules)
             )
 
@@ -3377,7 +3382,7 @@ class Spec(object):
         for spec in self.traverse():
             # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
-                spack.repo.get(spec.fullname)
+                spack.repo.path.get_pkg_class(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -3444,8 +3449,8 @@ class Spec(object):
                 variant = pkg_variant.make_variant(value)
                 self.variants[variant_name] = variant
 
-        pkg_variant.validate_or_raise(
-            self.variants[variant_name], self.package)
+        pkg_cls = spack.repo.path.get_pkg_class(self.name)
+        pkg_variant.validate_or_raise(self.variants[variant_name], pkg_cls)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -3633,7 +3638,9 @@ class Spec(object):
             # A concrete provider can satisfy a virtual dependency.
             if not self.virtual and other.virtual:
                 try:
-                    pkg = spack.repo.get(self.fullname)
+                    # Here we might get an abstract spec
+                    pkg_cls = spack.repo.path.get_pkg_class(self.fullname)
+                    pkg = pkg_cls(self)
                 except spack.repo.UnknownEntityError:
                     # If we can't get package info on this spec, don't treat
                     # it as a provider of this vdep.
@@ -3771,7 +3778,8 @@ class Spec(object):
             if self._patches_assigned():
                 for sha256 in self.variants["patches"]._patches_in_order_of_appearance:
                     index = spack.repo.path.patch_index
-                    patch = index.patch_for_package(sha256, self.package)
+                    pkg_cls = spack.repo.path.get_pkg_class(self.name)
+                    patch = index.patch_for_package(sha256, pkg_cls)
                     self._patches.append(patch)
 
         return self._patches

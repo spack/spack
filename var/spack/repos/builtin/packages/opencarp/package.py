@@ -40,8 +40,8 @@ class Opencarp(CMakePackage):
     depends_on('zlib')
     depends_on('perl')
 
-    depends_on('py-carputils')
-    depends_on('meshtool')
+    depends_on('py-carputils', when='+carputils')
+    depends_on('meshtool', when='+meshtool')
     # Use specific versions of carputils and meshtool for releases
     for ver in ['10.0', '9.0', '8.2', '7.0', '8.1']:
         depends_on('py-carputils@oc' + ver, when='@' + ver + ' +carputils')

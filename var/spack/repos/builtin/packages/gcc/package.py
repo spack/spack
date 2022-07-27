@@ -11,6 +11,7 @@ import sys
 from archspec.cpu import UnsupportedMicroarchitecture
 
 import llnl.util.tty as tty
+from llnl.util.lang import classproperty
 
 import spack.platforms
 import spack.util.executable
@@ -298,6 +299,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         patch('https://raw.githubusercontent.com/Homebrew/formula-patches/22dec3fc/gcc/gcc-11.3.0-arm.diff',
               sha256='e02006b7ec917cc1390645d95735a6a866caed0dfe506d5bef742f7862cab218',
               when='@11.3.0 target=aarch64:')
+        conflicts('+bootstrap', when='@11.3.0 target=aarch64:')
 
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
@@ -351,8 +353,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
-    @property
-    def executables(self):
+    @classproperty
+    def executables(cls):
         names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
         suffixes = [r'', r'-mp-\d+\.\d', r'-\d+\.\d', r'-\d+', r'\d\d']
         return [r''.join(x) for x in itertools.product(names, suffixes)]

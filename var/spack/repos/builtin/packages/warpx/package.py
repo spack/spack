@@ -25,6 +25,7 @@ class Warpx(CMakePackage):
 
     # NOTE: if you update the versions here, also see py-warpx
     version('develop', branch='development')
+    version('22.07', sha256='0286adc788136cb78033cb1678d38d36e42265bcfd3d0c361a9bcc2cfcdf241b')
     version('22.06', sha256='e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9')
     version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
     version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
@@ -46,7 +47,9 @@ class Warpx(CMakePackage):
     variant('app', default=True,
             description='Build the WarpX executable application')
     variant('ascent', default=False,
-            description='Enable Ascent in situ vis')
+            description='Enable Ascent in situ visualization')
+    variant('sensei', default=False,
+            description='Enable SENSEI in situ visualization')
     variant('compute',
             default='omp',
             values=('omp', 'cuda', 'hip', 'sycl', 'noacc'),
@@ -83,11 +86,12 @@ class Warpx(CMakePackage):
     variant('tprof', default=True,
             description='Enable tiny profiling features')
 
+    depends_on('sensei@4.0.0:', when='@22.07: +sensei')
+    conflicts('+sensei', when='@:22.06',
+              msg='WarpX supports SENSEI 4.0+ with 22.07 and newer')
+
     depends_on('ascent', when='+ascent')
-    # note: ~shared is only needed until the new concretizer is in and
-    #       honors the conflict inside the Ascent package to find this
-    #       automatically
-    depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
+    depends_on('ascent +cuda', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
@@ -165,6 +169,7 @@ class Warpx(CMakePackage):
             # variants
             self.define_from_variant('WarpX_APP', 'app'),
             self.define_from_variant('WarpX_ASCENT', 'ascent'),
+            self.define_from_variant('WarpX_SENSEI', 'sensei'),
             '-DWarpX_COMPUTE={0}'.format(
                 spec.variants['compute'].value.upper()),
             '-DWarpX_DIMS={0}'.format(
@@ -183,6 +188,10 @@ class Warpx(CMakePackage):
 
         with when('+openpmd'):
             args.append('-DWarpX_openpmd_internal=OFF')
+
+        if '+sensei' in spec:
+            args.append(self.define('SENSEI_DIR',
+                        join_path(spec['sensei'].prefix.lib, 'cmake')))
 
         return args
 

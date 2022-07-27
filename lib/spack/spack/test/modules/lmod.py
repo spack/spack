@@ -110,10 +110,16 @@ class TestLmod(object):
 
         assert len([x for x in content if 'depends_on(' in x]) == 5
 
-    def test_alter_environment(self, modulefile_content, module_configuration):
+    # DEPRECATED: remove blacklist in v0.20
+    @pytest.mark.parametrize(
+        "config_name", ["alter_environment", "blacklist_environment"]
+    )
+    def test_alter_environment(
+            self, modulefile_content, module_configuration, config_name
+    ):
         """Tests modifications to run-time environment."""
 
-        module_configuration('alter_environment')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks platform=test target=x86_64')
 
         assert len(
@@ -145,10 +151,11 @@ class TestLmod(object):
             elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
                 assert line.endswith('"bar", ";")')
 
-    def test_blacklist(self, modulefile_content, module_configuration):
-        """Tests blacklisting the generation of selected modules."""
+    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+    def test_exclude(self, modulefile_content, module_configuration, config_name):
+        """Tests excluding the generation of selected modules."""
 
-        module_configuration('blacklist')
+        module_configuration(config_name)
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if 'depends_on(' in x]) == 1

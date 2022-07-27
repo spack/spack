@@ -1072,3 +1072,15 @@ class GroupedExceptionForwarder(object):
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
         return True
+
+
+class classproperty(object):
+    """Non-data descriptor to evaluate a class-level property. The function that performs
+    the evaluation is injected at creation time and take an instance (could be None) and
+    an owner (i.e. the class that originated the instance)
+    """
+    def __init__(self, callback):
+        self.callback = callback
+
+    def __get__(self, instance, owner):
+        return self.callback(owner)

@@ -18,6 +18,7 @@ class Kraken2(Package):
 
     maintainers = ['rberg2']
 
+    version('2.1.2', sha256='e5f431e8bc3d5493a79e1d8125f4aacbad24f9ea2cc9657b66da06a32bef6ff3')
     version('2.1.1', sha256='8f3e928cdb32b9e8e6f55b44703d1557b2a5fc3f30f63e8d16e465e19a81dee4')
     version('2.0.8-beta', sha256='f2a91fc57a40b3e87df8ac2ea7c0ff1060cc9295c95de417ee53249ee3f7ad8e')
     version('2.0.7-beta', sha256='baa160f5aef73327e1a79e6d1c54b64b2fcdaee0be31b456f7bc411d1897a744')
