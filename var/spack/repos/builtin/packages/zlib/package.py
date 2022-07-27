@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
+# Although zlib comes with a configure script, it does not use Autotools
+# The AutotoolsPackage causes zlib to fail to build with PGI
 import glob
 import os
 
 from spack.package import *
 
 
-# Although zlib comes with a configure script, it does not use Autotools
-# The AutotoolsPackage causes zlib to fail to build with PGI
 class Zlib(Package):
     """A free, general-purpose, legally unencumbered lossless
     data-compression library.
@@ -73,7 +74,7 @@ class Zlib(Package):
 
     def install(self, spec, prefix):
         if 'platform=windows' in self.spec:
-            nmake('-f', 'win32\\Makefile.msc')
+            nmake('-f' 'win32\\Makefile.msc')
             self.win_install()
         else:
             config_args = []
