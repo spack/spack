@@ -32,11 +32,21 @@ class Mapl(CMakePackage):
     version('2.7.1', sha256='8239fdbebd2caa47a232c24927f7a91196704e35c8b7909e1bbbefccf0647ea6')
 
     # Versions later than 3.14 remove FindESMF.cmake
-    # from ESMA_CMake.
+    # from ESMA_CMake. This works with mapl@2.22.0:
     resource(
         name='esma_cmake',
         git='https://github.com/GEOS-ESM/ESMA_cmake.git',
-        tag='v3.17.0')
+        tag='v3.17.0',
+        when='@2.22.0:')
+    resource(
+        name='esma_cmake',
+        git='https://github.com/GEOS-ESM/ESMA_cmake.git',
+        tag='v3.13.0',
+        when='@:2.12.3')
+
+    # Patch to configure Apple M1 chip in x86_64 Rosetta 2 emulator mode
+    # Needed for versions earlier than 3.14 of ESMA_cmake only.
+    patch('esma_cmake_apple_m1_rosetta.patch', when='@:2.12.3')
 
     # Patch to add missing NetCDF C target in various CMakeLists.txt
     patch('mapl-2.12.3-netcdf-c.patch', when='@:2.12.3')
@@ -71,8 +81,11 @@ class Mapl(CMakePackage):
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-            '-DCMAKE_MODULE_PATH=%s' % self.spec['esmf'].prefix.cmake,
         ]
+
+        if self.spec.satisfies('@2.22.0:'):
+            args.append(self.define('CMAKE_MODULE_PATH',
+                        self.spec['esmf'].prefix.cmake))
 
         # Compatibility flags for gfortran
         fflags = []
