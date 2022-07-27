@@ -1,11 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 TUNE_VARIANTS = (
     'none',
@@ -54,9 +55,11 @@ class Libint(AutotoolsPackage):
     depends_on('autoconf@2.52:', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('python', type='build')
 
     # Libint 2 dependencies
-    depends_on('boost', when='@2:')
+    # Fixme: Can maintainers please confirm that this is a required dependency
+    depends_on(Boost.with_default_variants, when='@2:')
     depends_on('gmp', when='@2:')
 
     for tvariant in TUNE_VARIANTS[1:]:
@@ -74,7 +77,13 @@ class Libint(AutotoolsPackage):
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
     def autoreconf(self, spec, prefix):
-        which('bash')('autogen.sh')
+        if self.spec.satisfies("@2:"):
+            which('bash')('autogen.sh')
+        else:
+            # Fall back since autogen is not available
+            libtoolize()
+            aclocal('-I', 'lib/autoconf')
+            autoconf()
 
         if '@2.6.0:' in spec:
             # skip tarball creation and removal of dir with generated code
@@ -103,9 +112,14 @@ class Libint(AutotoolsPackage):
     def configure_args(self):
 
         config_args = [
-            '--enable-shared',
-            '--with-boost={0}'.format(self.spec['boost'].prefix)
+            '--enable-shared'
         ]
+
+        if self.spec.satisfies("@2:"):
+            # --with-boost option available only from version 2 and above
+            config_args.extend([
+                '--with-boost={0}'.format(self.spec['boost'].prefix)
+            ])
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):

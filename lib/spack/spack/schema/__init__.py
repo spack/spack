@@ -1,8 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module contains jsonschema files for all of Spack's YAML formats."""
+
+import warnings
 
 import six
 
@@ -49,10 +51,12 @@ def _make_validator():
             msg = msg_str_or_func.format(properties=deprecated_properties)
         else:
             msg = msg_str_or_func(instance, deprecated_properties)
+            if msg is None:
+                return
 
         is_error = deprecated['error']
         if not is_error:
-            llnl.util.tty.warn(msg)
+            warnings.warn(msg)
         else:
             import jsonschema
             yield jsonschema.ValidationError(msg)

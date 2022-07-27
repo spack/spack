@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import platform
 import subprocess
 
-from spack import *
+from spack.package import *
 
 
 class PyNumpy(PythonPackage):
@@ -17,12 +17,21 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    pypi = "numpy/numpy-1.19.4.zip"
+    pypi = "numpy/numpy-1.23.0.tar.gz"
     git      = "https://github.com/numpy/numpy.git"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'rgommers']
 
     version('main', branch='main')
+    version('1.23.1', sha256='d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624')
+    version('1.23.0', sha256='bd3fa4fe2e38533d5336e1272fc4e765cabbbde144309ccee8675509d5cd7b05')
+    version('1.22.4', sha256='425b390e4619f58d8526b3dcf656dde069133ae5c240229821f01b5f44ea07af')
+    version('1.22.3', sha256='dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18')
+    version('1.22.2', sha256='076aee5a3763d41da6bef9565fdf3cb987606f567cd8b104aded2b38b7b47abf')
+    version('1.22.1', sha256='e348ccf5bc5235fc405ab19d53bec215bb373300e5523c7b476cc0da8a5e9973')
+    version('1.22.0', sha256='a955e4128ac36797aaffd49ab44ec74a71c11d6938df83b1285492d277db5397')
+    version('1.21.6', sha256='ecb55251139706669fdec2ff073c98ef8e9a84473e51e716211b41aa0f18e656')
+    version('1.21.5', sha256='6a5928bc6241264dce5ed509e66f33676fc97f464e7a919edc672fb5532221ee')
     version('1.21.4', sha256='e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0')
     version('1.21.3', sha256='63571bb7897a584ca3249c86dd01c10bcb5fe4296e3568b2e9c1a55356b6410e')
     version('1.21.2', sha256='423216d8afc5923b15df86037c6053bf030d15cc9e3224206ef868c2d63dd6dc')
@@ -87,24 +96,28 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'), when='@:1.15')
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16')
-    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:1.18')
-    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19')
-    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:1.21.1')
-    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.21.2:')
+    depends_on('python@2.7:2.8,3.4:3.6', type=('build', 'link', 'run'), when='@:1.13')
+    depends_on('python@2.7:2.8,3.4:3.8', type=('build', 'link', 'run'), when='@1.14:1.15')
+    depends_on('python@2.7:2.8,3.5:3.9', type=('build', 'link', 'run'), when='@1.16')
+    depends_on('python@3.5:3.9', type=('build', 'link', 'run'), when='@1.17:1.18')
+    depends_on('python@3.6:3.10', type=('build', 'link', 'run'), when='@1.19')
+    depends_on('python@3.7:3.10', type=('build', 'link', 'run'), when='@1.20:1.21')
+    depends_on('python@3.8:', type=('build', 'link', 'run'), when='@1.22:')
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@:59', when='@:1.22.1', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
-    depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
-    depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
-    depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
-    depends_on('py-cython@0.29.24:', when='@1.21.2:', type='build')
+    depends_on('py-cython@0.29.13:2', when='@1.18.0:', type='build')
+    depends_on('py-cython@0.29.14:2', when='@1.18.1:', type='build')
+    depends_on('py-cython@0.29.21:2', when='@1.19.1:', type='build')
+    depends_on('py-cython@0.29.24:2', when='@1.21.2:', type='build')
+    depends_on('py-cython@0.29.30:2', when='@1.22.4:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
     depends_on('py-pytest', when='@1.15:', type='test')
     depends_on('py-hypothesis', when='@1.19:', type='test')
+    depends_on('py-typing-extensions@4.2:', when='@1.23:', type='test')
 
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
@@ -122,6 +135,16 @@ class PyNumpy(PythonPackage):
     patch('check_executables4.patch', when='@1.14.0:1.15.4')
     patch('check_executables5.patch', when='@:1.13.3')
 
+    # Backport bug fix for f2py's define for threading when building with Mingw
+    patch('https://github.com/numpy/numpy/pull/20881.patch?full_index=1',
+          sha256='802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a',
+          when='@1.20.3:1.22.1')
+    # Patch to update compiler flags.
+    # See https://github.com/spack/spack/issues/30373
+    patch('https://github.com/numpy/numpy/pull/21448.patch?full_index=1',
+          sha256='e9508c3b3a1e1a24669014a0c1b9f3b009a149ea3886cf711eaef2a32b247fdb',
+          when='@1.22.0:1.22.3')
+
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts('%gcc@11:', when='@1.21.0')
@@ -131,6 +154,17 @@ class PyNumpy(PythonPackage):
 
     # NVHPC support added in https://github.com/numpy/numpy/pull/17344
     conflicts('%nvhpc', when='@:1.19')
+
+    # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
+    conflicts('%intel', when='@1.23.0:')
+
+    def url_for_version(self, version):
+        url = 'https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}'
+        if version >= Version('1.23'):
+            ext = 'tar.gz'
+        else:
+            ext = 'zip'
+        return url.format(version, ext)
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
@@ -161,7 +195,7 @@ class PyNumpy(PythonPackage):
 
         return (flags, None, None)
 
-    @run_before('build')
+    @run_before('install')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
         # https://github.com/numpy/numpy/blob/master/site.cfg.example
@@ -208,7 +242,7 @@ class PyNumpy(PythonPackage):
         # Tell numpy where to find BLAS/LAPACK libraries
         with open('site.cfg', 'w') as f:
             if '^intel-mkl' in spec or \
-               '^intel-parallel-studio+mkl' or \
+               '^intel-parallel-studio+mkl' in spec or \
                '^intel-oneapi-mkl' in spec:
                 f.write('[mkl]\n')
                 # FIXME: as of @1.11.2, numpy does not work with separately
@@ -227,7 +261,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^blis' in spec:
+            if '^blis' in spec or \
+               '^amdblis' in spec:
                 f.write('[blis]\n')
                 f.write('libraries = {0}\n'.format(blas_lib_names))
                 write_library_dirs(f, blas_lib_dirs)
@@ -239,7 +274,8 @@ class PyNumpy(PythonPackage):
                 write_library_dirs(f, lapackblas_lib_dirs)
                 f.write('include_dirs = {0}\n'.format(lapackblas_header_dirs))
 
-            if '^libflame' in spec:
+            if '^libflame' in spec or \
+               '^amdlibflame' in spec:
                 f.write('[flame]\n')
                 f.write('libraries = {0}\n'.format(lapack_lib_names))
                 write_library_dirs(f, lapack_lib_dirs)
@@ -256,8 +292,9 @@ class PyNumpy(PythonPackage):
                 f.write('libraries = {0}\n'.format(lapackblas_lib_names))
                 write_library_dirs(f, lapackblas_lib_dirs)
 
-            if '^netlib-lapack' in spec:
-                # netlib requires blas and lapack listed
+            if '^netlib-lapack' in spec or \
+               '^cray-libsci' in spec:
+                # netlib and Cray require blas and lapack listed
                 # separately so that scipy can find them
                 if spec.satisfies('+blas'):
                     f.write('[blas]\n')
@@ -297,7 +334,6 @@ class PyNumpy(PythonPackage):
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
-
         # https://numpy.org/devdocs/user/building.html#blas
         if 'blas' not in spec:
             blas = ''
@@ -305,7 +341,8 @@ class PyNumpy(PythonPackage):
                 spec['blas'].name == 'intel-parallel-studio' or \
                 spec['blas'].name == 'intel-oneapi-mkl':
             blas = 'mkl'
-        elif spec['blas'].name == 'blis':
+        elif spec['blas'].name == 'blis' or \
+                spec['blas'].name == 'amdblis':
             blas = 'blis'
         elif spec['blas'].name == 'openblas':
             blas = 'openblas'
@@ -327,7 +364,8 @@ class PyNumpy(PythonPackage):
             lapack = 'mkl'
         elif spec['lapack'].name == 'openblas':
             lapack = 'openblas'
-        elif spec['lapack'].name == 'libflame':
+        elif spec['lapack'].name == 'libflame' or \
+                spec['lapack'].name == 'amdlibflame':
             lapack = 'flame'
         elif spec['lapack'].name == 'atlas':
             lapack = 'atlas'
@@ -337,20 +375,6 @@ class PyNumpy(PythonPackage):
             lapack = 'lapack'
 
         env.set('NPY_LAPACK_ORDER', lapack)
-
-    def build_args(self, spec, prefix):
-        args = []
-
-        # From NumPy 1.10.0 on it's possible to do a parallel build.
-        # https://numpy.org/devdocs/user/building.html#parallel-builds
-        if self.version >= Version('1.10.0'):
-            # But Parallel build in Python 3.5+ is broken.  See:
-            # https://github.com/spack/spack/issues/7927
-            # https://github.com/scipy/scipy/issues/7112
-            if spec['python'].version < Version('3.5'):
-                args = ['-j', str(make_jobs)]
-
-        return args
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

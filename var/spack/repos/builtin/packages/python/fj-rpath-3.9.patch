@@ -1,0 +1,11 @@
+--- spack-src/Lib/distutils/unixccompiler.py.org	2022-01-31 14:42:34.000000000 +0900
++++ spack-src/Lib/distutils/unixccompiler.py	2022-01-31 14:43:19.000000000 +0900
+@@ -212,7 +212,7 @@
+ 
+     def _is_gcc(self, compiler_name):
+         # clang uses same syntax for rpath as gcc
+-        return any(name in compiler_name for name in ("gcc", "g++", "clang"))
++        return any(name in compiler_name for name in ("gcc", "g++", "clang", "fcc", "FCC"))
+ 
+     def runtime_library_dir_option(self, dir):
+         # XXX Hackish, at the very least.  See Python bug #445902:

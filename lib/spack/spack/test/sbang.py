@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import filecmp
 import os
 import shutil
 import stat
+import sys
 import tempfile
 
 import pytest
@@ -19,7 +20,16 @@ import llnl.util.filesystem as fs
 import spack.hooks.sbang as sbang
 import spack.paths
 import spack.store
+import spack.util.spack_yaml as syaml
 from spack.util.executable import which
+
+if sys.platform != 'win32':
+    import grp
+
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 too_long = sbang.system_shebang_limit + 1
 
@@ -256,7 +266,34 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
     assert oct(not_writable_mode) == oct(st.st_mode)
 
 
-def check_sbang_installation():
+@pytest.fixture(scope='function')
+def configure_group_perms():
+    conf = syaml.load_config("""\
+all:
+  permissions:
+    read: world
+    write: group
+    group: {0}
+""".format(grp.getgrgid(os.getegid()).gr_name))
+    spack.config.set('packages', conf, scope='user')
+
+    yield
+
+
+@pytest.fixture(scope='function')
+def configure_user_perms():
+    conf = syaml.load_config("""\
+all:
+  permissions:
+    read: world
+    write: user
+""")
+    spack.config.set('packages', conf, scope='user')
+
+    yield
+
+
+def check_sbang_installation(group=False):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
     assert sbang_path.startswith(spack.store.store.unpadded_root)
@@ -264,14 +301,22 @@ def check_sbang_installation():
     assert os.path.exists(sbang_path)
     assert fs.is_exe(sbang_path)
 
-    status = os.stat(sbang_path)
-    assert (status.st_mode & 0o777) == 0o755
-
     status = os.stat(sbang_bin_dir)
-    assert (status.st_mode & 0o777) == 0o755
+    mode = (status.st_mode & 0o777)
+    if group:
+        assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
+    else:
+        assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
+
+    status = os.stat(sbang_path)
+    mode = (status.st_mode & 0o777)
+    if group:
+        assert mode == 0o775, 'Unexpected {0}'.format(oct(mode))
+    else:
+        assert mode == 0o755, 'Unexpected {0}'.format(oct(mode))
 
 
-def test_install_sbang(install_mockery):
+def run_test_install_sbang(group):
     sbang_path = sbang.sbang_install_path()
     sbang_bin_dir = os.path.dirname(sbang_path)
 
@@ -279,7 +324,7 @@ def test_install_sbang(install_mockery):
     assert not os.path.exists(sbang_bin_dir)
 
     sbang.install_sbang()
-    check_sbang_installation()
+    check_sbang_installation(group)
 
     # put an invalid file in for sbang
     fs.mkdirp(sbang_bin_dir)
@@ -287,11 +332,19 @@ def test_install_sbang(install_mockery):
         f.write("foo")
 
     sbang.install_sbang()
-    check_sbang_installation()
+    check_sbang_installation(group)
 
     # install again and make sure sbang is still fine
     sbang.install_sbang()
-    check_sbang_installation()
+    check_sbang_installation(group)
+
+
+def test_install_group_sbang(install_mockery, configure_group_perms):
+    run_test_install_sbang(True)
+
+
+def test_install_user_sbang(install_mockery, configure_user_perms):
+    run_test_install_sbang(False)
 
 
 def test_install_sbang_too_long(tmpdir):

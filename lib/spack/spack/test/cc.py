@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ This test checks that the Spack cc compiler wrapper is parsing
 arguments correctly.
 """
 import os
+import sys
 
 import pytest
 
@@ -101,8 +102,11 @@ common_compile_args = (
     test_args_without_paths
 )
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope='function')
 def wrapper_environment():
     with set_env(
             SPACK_CC=real_cc,

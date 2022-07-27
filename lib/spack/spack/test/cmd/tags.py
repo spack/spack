@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,9 +47,8 @@ def test_tags_no_tags(monkeypatch):
 
 
 def test_tags_installed(install_mockery, mock_fetch):
-    spec = spack.spec.Spec('mpich').concretized()
-    pkg = spack.repo.get(spec)
-    pkg.do_install()
+    s = spack.spec.Spec('mpich').concretized()
+    s.package.do_install()
 
     out = tags('-i')
     for tag in ['tag1', 'tag2']:

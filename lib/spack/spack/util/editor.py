@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ import spack.config
 from spack.util.executable import which_string
 
 #: editors to try if VISUAL and EDITOR are not set
-_default_editors = ['vim', 'vi', 'emacs', 'nano']
+_default_editors = ['vim', 'vi', 'emacs', 'nano', 'notepad']
 
 
 def _find_exe_from_env_var(var):
@@ -41,6 +41,7 @@ def _find_exe_from_env_var(var):
 
     # split env var into executable and args if needed
     args = shlex.split(str(exe))
+
     if not args:
         return None, []
 
@@ -121,7 +122,7 @@ def editor(*args, **kwargs):
     # trying them all -- if we get here and one fails, something is
     # probably much more deeply wrong with the environment.
     exe = which_string(*_default_editors)
-    if try_exec(exe, [exe] + list(args)):
+    if exe and try_exec(exe, [exe] + list(args)):
         return
 
     # Fail if nothing could be found

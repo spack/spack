@@ -13,8 +13,9 @@ altgraph.Graph - Base Graph class
   #--Nathan Denny, May 27, 1999
 """
 
-from altgraph import GraphError
 from collections import deque
+
+from altgraph import GraphError
 
 
 class Graph(object):
@@ -58,8 +59,10 @@ class Graph(object):
                     raise GraphError("Cannot create edge from %s" % (item,))
 
     def __repr__(self):
-        return '<Graph: %d nodes, %d edges>' % (
-            self.number_of_nodes(), self.number_of_edges())
+        return "<Graph: %d nodes, %d edges>" % (
+            self.number_of_nodes(),
+            self.number_of_edges(),
+        )
 
     def add_node(self, node, node_data=None):
         """
@@ -111,7 +114,7 @@ class Graph(object):
             self.nodes[tail_id][0].append(edge)
             self.nodes[head_id][1].append(edge)
         except KeyError:
-            raise GraphError('Invalid nodes %s -> %s' % (head_id, tail_id))
+            raise GraphError("Invalid nodes %s -> %s" % (head_id, tail_id))
 
         # store edge information
         self.edges[edge] = (head_id, tail_id, edge_data)
@@ -124,13 +127,12 @@ class Graph(object):
         time.
         """
         try:
-            head_id, tail_id, edge_data = \
-                self.hidden_edges[edge] = self.edges[edge]
+            head_id, tail_id, edge_data = self.hidden_edges[edge] = self.edges[edge]
             self.nodes[tail_id][0].remove(edge)
             self.nodes[head_id][1].remove(edge)
             del self.edges[edge]
         except KeyError:
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
     def hide_node(self, node):
         """
@@ -144,7 +146,7 @@ class Graph(object):
                 self.hide_edge(edge)
             del self.nodes[node]
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def restore_node(self, node):
         """
@@ -157,7 +159,7 @@ class Graph(object):
                 self.restore_edge(edge)
             del self.hidden_nodes[node]
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def restore_edge(self, edge):
         """
@@ -170,7 +172,7 @@ class Graph(object):
             self.edges[edge] = head_id, tail_id, data
             del self.hidden_edges[edge]
         except KeyError:
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
     def restore_all_edges(self):
         """
@@ -203,7 +205,7 @@ class Graph(object):
             head, tail, data = self.edges[edge]
         except KeyError:
             head, tail = None, None
-            raise GraphError('Invalid edge %s' % edge)
+            raise GraphError("Invalid edge %s" % edge)
 
         return (head, tail)
 
@@ -339,7 +341,7 @@ class Graph(object):
         try:
             return list(self.nodes[node][1])
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def inc_edges(self, node):
         """
@@ -348,7 +350,7 @@ class Graph(object):
         try:
             return list(self.nodes[node][0])
         except KeyError:
-            raise GraphError('Invalid node %s' % node)
+            raise GraphError("Invalid node %s" % node)
 
     def all_edges(self, node):
         """
@@ -488,7 +490,7 @@ class Graph(object):
         The forward parameter specifies whether it is a forward or backward
         traversal.
         """
-        visited, stack = set([start]), deque([start])
+        visited, stack = {start}, deque([start])
 
         if forward:
             get_edges = self.out_edges
@@ -515,7 +517,7 @@ class Graph(object):
         condition callback is only called when node_data is not None.
         """
 
-        visited, stack = set([start]), deque([start])
+        visited, stack = {start}, deque([start])
 
         if forward:
             get_edges = self.out_edges
@@ -547,7 +549,7 @@ class Graph(object):
         traversal.  Returns a list of tuples where the first value is the hop
         value the second value is the node id.
         """
-        queue, visited = deque([(start, 0)]), set([start])
+        queue, visited = deque([(start, 0)]), {start}
 
         # the direction of the bfs depends on the edges that are sampled
         if forward:

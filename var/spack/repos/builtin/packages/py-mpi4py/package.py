@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyMpi4py(PythonPackage):
@@ -32,10 +32,6 @@ class PyMpi4py(PythonPackage):
     depends_on('py-cython@0.27.0:', when='@master', type='build')
     depends_on('py-3to2', when='@3.1: ^python@:2', type='build')
 
-    def build_args(self, spec, prefix):
+    @when('@3.1:')
+    def install_options(self, spec, prefix):
         return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
-
-    @property
-    def headers(self):
-        headers = find_all_headers(self.prefix.lib)
-        return headers

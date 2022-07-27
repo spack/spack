@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
+import sys
+
 import pytest
 
 import spack.bootstrap
@@ -59,6 +62,22 @@ def test_raising_exception_if_bootstrap_disabled(mutable_config):
         spack.bootstrap.store_path()
 
 
+def test_raising_exception_module_importable():
+    with pytest.raises(
+        ImportError,
+        match='cannot bootstrap the "asdf" Python module',
+    ):
+        spack.bootstrap.ensure_module_importable_or_raise("asdf")
+
+
+def test_raising_exception_executables_in_path():
+    with pytest.raises(
+        RuntimeError,
+        match="cannot bootstrap any of the asdf, fdsa executables",
+    ):
+        spack.bootstrap.ensure_executables_in_path_or_raise(["asdf", "fdsa"], "python")
+
+
 @pytest.mark.regression('25603')
 def test_bootstrap_deactivates_environments(active_mock_environment):
     assert spack.environment.active_environment() == active_mock_environment
@@ -70,15 +89,15 @@ def test_bootstrap_deactivates_environments(active_mock_environment):
 @pytest.mark.regression('25805')
 def test_bootstrap_disables_modulefile_generation(mutable_config):
     # Be sure to enable both lmod and tcl in modules.yaml
-    spack.config.set('modules:enable', ['tcl', 'lmod'])
+    spack.config.set('modules:default:enable', ['tcl', 'lmod'])
 
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
     with spack.bootstrap.ensure_bootstrap_configuration():
-        assert 'tcl' not in spack.config.get('modules:enable')
-        assert 'lmod' not in spack.config.get('modules:enable')
-    assert 'tcl' in spack.config.get('modules:enable')
-    assert 'lmod' in spack.config.get('modules:enable')
+        assert 'tcl' not in spack.config.get('modules:default:enable')
+        assert 'lmod' not in spack.config.get('modules:default:enable')
+    assert 'tcl' in spack.config.get('modules:default:enable')
+    assert 'lmod' in spack.config.get('modules:default:enable')
 
 
 @pytest.mark.regression('25992')
@@ -103,16 +122,8 @@ def test_bootstrap_search_for_compilers_with_environment_active(
 
 @pytest.mark.regression('26189')
 def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
-    # Mock the command line scope
     expected_dir = '/tmp/test'
-    internal_scope = spack.config.InternalConfigScope(
-        name='command_line', data={
-            'config': {
-                'test_stage': expected_dir
-            }
-        }
-    )
-    spack.config.config.push_scope(internal_scope)
+    spack.config.set("config:test_stage", expected_dir, scope="command_line")
 
     assert spack.config.get('config:test_stage') == expected_dir
     with spack.bootstrap.ensure_bootstrap_configuration():
@@ -139,4 +150,50 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == '/tmp/store'
+        assert str(spack.store.root) == os.sep + os.path.join('tmp', 'store')
+
+
+def test_nested_use_of_context_manager(mutable_config):
+    """Test nested use of the context manager"""
+    user_config = spack.config.config
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        assert spack.config.config != user_config
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            assert spack.config.config != user_config
+    assert spack.config.config == user_config
+
+
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+@pytest.mark.parametrize('expected_missing', [False, True])
+def test_status_function_find_files(
+        mutable_config, mock_executable, tmpdir, monkeypatch, expected_missing
+):
+    if not expected_missing:
+        mock_executable('foo', 'echo Hello WWorld!')
+
+    monkeypatch.setattr(
+        spack.bootstrap, '_optional_requirements',
+        lambda: [spack.bootstrap._required_system_executable('foo', 'NOT FOUND')]
+    )
+    monkeypatch.setenv('PATH', str(tmpdir.join('bin')))
+
+    _, missing = spack.bootstrap.status_message('optional')
+    assert missing is expected_missing
+
+
+@pytest.mark.regression('31042')
+def test_source_is_disabled(mutable_config):
+    # Get the configuration dictionary of the current bootstrapping source
+    conf = next(iter(spack.bootstrap.bootstrapping_sources()))
+
+    # The source is not explicitly enabled or disabled, so the following
+    # call should raise to skip using it for bootstrapping
+    with pytest.raises(ValueError):
+        spack.bootstrap.source_is_enabled_or_raise(conf)
+
+    # Try to explicitly disable the source and verify that the behavior
+    # is the same as above
+    spack.config.add('bootstrap:trusted:{0}:{1}'.format(conf['name'], False))
+    with pytest.raises(ValueError):
+        spack.bootstrap.source_is_enabled_or_raise(conf)

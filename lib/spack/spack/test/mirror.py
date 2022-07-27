@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
 import os
+import sys
 
 import pytest
 
@@ -13,11 +14,15 @@ from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 import spack.mirror
 import spack.repo
 import spack.util.executable
+import spack.util.spack_json as sjson
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
+from spack.util.spack_yaml import SpackYAMLError
 
-pytestmark = pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')
+pytestmark = [pytest.mark.skipif(sys.platform == "win32",
+                                 reason="does not run on windows"),
+              pytest.mark.usefixtures('mutable_config', 'mutable_mock_repo')]
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
@@ -34,18 +39,14 @@ def set_up_package(name, repository, url_attr):
     2. Point the package's version args at that repo.
     """
     # Set up packages to point at mock repos.
-    spec = Spec(name)
-    spec.concretize()
-    # Get the package and fix its fetch args to point to a mock repo
-    pkg = spack.repo.get(spec)
-
+    s = Spec(name).concretized()
     repos[name] = repository
 
     # change the fetch args of the first (only) version.
-    assert len(pkg.versions) == 1
-    v = next(iter(pkg.versions))
+    assert len(s.package.versions) == 1
 
-    pkg.versions[v][url_attr] = repository.url
+    v = next(iter(s.package.versions))
+    s.package.versions[v][url_attr] = repository.url
 
 
 def check_mirror():
@@ -149,8 +150,102 @@ def test_all_mirror(
     repos.clear()
 
 
+@pytest.mark.parametrize(
+    "mirror",
+    [
+        spack.mirror.Mirror(
+            'https://example.com/fetch',
+            'https://example.com/push',
+        ),
+    ],
+)
+def test_roundtrip_mirror(mirror):
+    mirror_yaml = mirror.to_yaml()
+    assert spack.mirror.Mirror.from_yaml(mirror_yaml) == mirror
+    mirror_json = mirror.to_json()
+    assert spack.mirror.Mirror.from_json(mirror_json) == mirror
+
+
+@pytest.mark.parametrize(
+    "invalid_yaml",
+    [
+        "playing_playlist: {{ action }} playlist {{ playlist_name }}"
+    ]
+)
+def test_invalid_yaml_mirror(invalid_yaml):
+    with pytest.raises(SpackYAMLError) as e:
+        spack.mirror.Mirror.from_yaml(invalid_yaml)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing YAML mirror:")
+    assert invalid_yaml in exc_msg
+
+
+@pytest.mark.parametrize(
+    "invalid_json, error_message",
+    [
+        ("{13:", "Expecting property name")
+    ]
+)
+def test_invalid_json_mirror(invalid_json, error_message):
+    with pytest.raises(sjson.SpackJSONError) as e:
+        spack.mirror.Mirror.from_json(invalid_json)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing JSON mirror:")
+    assert error_message in exc_msg
+
+
+@pytest.mark.parametrize(
+    "mirror_collection",
+    [
+        spack.mirror.MirrorCollection(
+            mirrors={
+                'example-mirror': spack.mirror.Mirror(
+                    'https://example.com/fetch',
+                    'https://example.com/push',
+                ).to_dict(),
+            },
+        ),
+    ],
+)
+def test_roundtrip_mirror_collection(mirror_collection):
+    mirror_collection_yaml = mirror_collection.to_yaml()
+    assert (spack.mirror.MirrorCollection.from_yaml(mirror_collection_yaml) ==
+            mirror_collection)
+    mirror_collection_json = mirror_collection.to_json()
+    assert (spack.mirror.MirrorCollection.from_json(mirror_collection_json) ==
+            mirror_collection)
+
+
+@pytest.mark.parametrize(
+    "invalid_yaml",
+    [
+        "playing_playlist: {{ action }} playlist {{ playlist_name }}"
+    ]
+)
+def test_invalid_yaml_mirror_collection(invalid_yaml):
+    with pytest.raises(SpackYAMLError) as e:
+        spack.mirror.MirrorCollection.from_yaml(invalid_yaml)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing YAML mirror collection:")
+    assert invalid_yaml in exc_msg
+
+
+@pytest.mark.parametrize(
+    "invalid_json, error_message",
+    [
+        ("{13:", "Expecting property name")
+    ]
+)
+def test_invalid_json_mirror_collection(invalid_json, error_message):
+    with pytest.raises(sjson.SpackJSONError) as e:
+        spack.mirror.MirrorCollection.from_json(invalid_json)
+    exc_msg = str(e.value)
+    assert exc_msg.startswith("error parsing JSON mirror collection:")
+    assert error_message in exc_msg
+
+
 def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
-    spec = Spec('trivial-install-test-package@nonexistingversion')
+    spec = Spec('trivial-install-test-package@nonexistingversion').concretized()
     fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
     spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
 
@@ -225,3 +320,16 @@ def test_mirror_cache_symlinks(tmpdir):
     assert os.path.exists(link_target)
     assert (os.path.normpath(link_target) ==
             os.path.join(cache.root, reference.storage_path))
+
+
+@pytest.mark.regression('31627')
+@pytest.mark.parametrize('specs,expected_specs', [
+    (['a'], ['a@1.0', 'a@2.0']),
+    (['a', 'brillig'], ['a@1.0', 'a@2.0', 'brillig@1.0.0', 'brillig@2.0.0']),
+])
+def test_get_all_versions(specs, expected_specs):
+    specs = [Spec(s) for s in specs]
+    output_list = spack.mirror.get_all_versions(specs)
+    output_list = [str(x) for x in output_list]
+    # Compare sets since order is not important
+    assert set(output_list) == set(expected_specs)

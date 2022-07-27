@@ -1,16 +1,15 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-# ispc requires <gnu/stubs-32.h>, e.g. from
-# glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
-
-
 import re
 
-from spack import *
+from spack.package import *
+
+# ispc requires <gnu/stubs-32.h>, e.g. from
+# glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
 
 
 class Ispc(CMakePackage):

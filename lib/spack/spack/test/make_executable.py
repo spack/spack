@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,18 @@ This just tests whether the right args are getting passed to make.
 """
 import os
 import shutil
+import sys
 import tempfile
 import unittest
 
+import pytest
+
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="MakeExecutable \
+                                        not supported on Windows")
 
 
 class MakeExecutableTest(unittest.TestCase):

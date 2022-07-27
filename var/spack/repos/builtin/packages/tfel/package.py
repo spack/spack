@@ -1,14 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
+
 # Maintainer comments:
 # 18/12/2018: fix python detection
-
-from spack import *
-
-
 class Tfel(CMakePackage):
     """
     The TFEL project is a collaborative development of CEA
@@ -128,8 +127,10 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
+    depends_on('py-numpy', when='+python_bindings',
+               type=('build', 'link', 'run'))
     # As boost+py has py runtime dependency, boost+py needs types link and run as well:
-    depends_on('boost+python+numpy', when='+python_bindings',
+    depends_on('boost+python+numpy+exception+container', when='+python_bindings',
                type=('build', 'link', 'run'))
 
     extends('python', when='+python_bindings')

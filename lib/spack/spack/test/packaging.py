@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,16 @@ import platform
 import re
 import shutil
 import stat
+import sys
 
 import pytest
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.symlink import symlink
 
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.store
 import spack.util.gpg
@@ -38,6 +40,9 @@ from spack.relocate import (
 )
 from spack.spec import Spec
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
@@ -49,9 +54,8 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
-    pspec = Spec("patchelf")
-    pspec.concretize()
-    pkg = spack.repo.get(pspec)
+    pspec = Spec("patchelf").concretized()
+    pkg = pspec.package
     fake_fetchify(pkg.fetcher, pkg)
     mkdirp(os.path.join(pkg.prefix, "bin"))
     patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
@@ -79,7 +83,7 @@ echo $PATH"""
 
     # Create an absolute symlink
     linkname = os.path.join(spec.prefix, "link_to_dummy.txt")
-    os.symlink(filename, linkname)
+    symlink(filename, linkname)
 
     # Create the build cache  and
     # put it directly into the mirror
@@ -232,8 +236,8 @@ def test_relocate_links(tmpdir):
         with open(new_binname, 'w') as f:
             f.write('\n')
         os.utime(new_binname, None)
-        os.symlink(old_binname, new_linkname)
-        os.symlink('/usr/lib/libc.so', new_linkname2)
+        symlink(old_binname, new_linkname)
+        symlink('/usr/lib/libc.so', new_linkname2)
         relocate_links(filenames, old_layout_root,
                        old_install_prefix, new_install_prefix)
         assert os.readlink(new_linkname) == new_binname
@@ -570,10 +574,10 @@ def mock_download():
     def fake_fn(self):
         return fetcher
 
-    orig_fn = spack.package.PackageBase.fetcher
-    spack.package.PackageBase.fetcher = fake_fn
+    orig_fn = spack.package_base.PackageBase.fetcher
+    spack.package_base.PackageBase.fetcher = fake_fn
     yield
-    spack.package.PackageBase.fetcher = orig_fn
+    spack.package_base.PackageBase.fetcher = orig_fn
 
 
 @pytest.mark.parametrize("manual,instr", [(False, False), (False, True),
@@ -593,7 +597,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual,
 
     pkg.manual_download = manual
     if instr:
-        monkeypatch.setattr(spack.package.PackageBase, 'download_instr',
+        monkeypatch.setattr(spack.package_base.PackageBase, 'download_instr',
                             _instr)
 
     expected = pkg.download_instr if manual else 'All fetchers failed'
@@ -611,7 +615,7 @@ def fetching_not_allowed(monkeypatch):
             raise Exception("Sources are fetched but shouldn't have been")
     fetcher = FetchStrategyComposite()
     fetcher.append(FetchingNotAllowed())
-    monkeypatch.setattr(spack.package.PackageBase, 'fetcher', fetcher)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'fetcher', fetcher)
 
 
 def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):

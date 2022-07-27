@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
 import re
+import sys
 
 import pytest
 
@@ -14,6 +15,9 @@ import spack.modules
 import spack.store
 
 module = spack.main.SpackCommand('module')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 #: make sure module files are generated for all the tests here
@@ -145,16 +149,20 @@ def test_find_recursive():
 
 
 @pytest.mark.db
-def test_find_recursive_blacklisted(database, module_configuration):
-    module_configuration('blacklist')
+# DEPRECATED: remove blacklist in v0.20
+@pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+def test_find_recursive_excluded(database, module_configuration, config_name):
+    module_configuration(config_name)
 
     module('lmod', 'refresh', '-y', '--delete-tree')
     module('lmod', 'find', '-r', 'mpileaks ^mpich')
 
 
 @pytest.mark.db
-def test_loads_recursive_blacklisted(database, module_configuration):
-    module_configuration('blacklist')
+# DEPRECATED: remove blacklist in v0.20
+@pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+def test_loads_recursive_excluded(database, module_configuration, config_name):
+    module_configuration(config_name)
 
     module('lmod', 'refresh', '-y', '--delete-tree')
     output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
@@ -162,7 +170,7 @@ def test_loads_recursive_blacklisted(database, module_configuration):
 
     assert any(re.match(r'[^#]*module load.*mpileaks', ln) for ln in lines)
     assert not any(re.match(r'[^#]module load.*callpath', ln) for ln in lines)
-    assert any(re.match(r'## blacklisted or missing.*callpath', ln)
+    assert any(re.match(r'## excluded or missing.*callpath', ln)
                for ln in lines)
 
     # TODO: currently there is no way to separate stdout and stderr when
@@ -178,10 +186,18 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 
 @pytest.mark.db
 def test_setdefault_command(
-        mutable_database, module_configuration
+        mutable_database, mutable_config
 ):
-    module_configuration('autoload_direct')
-
+    data = {
+        'default': {
+            'enable': ['lmod'],
+            'lmod': {
+                'core_compilers': ['clang@3.3'],
+                'hierarchy': ['mpi']
+            }
+        }
+    }
+    spack.config.set('modules', data)
     # Install two different versions of a package
     other_spec, preferred = 'a@1.0', 'a@2.0'
 

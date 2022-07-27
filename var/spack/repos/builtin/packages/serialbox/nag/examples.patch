@@ -1,0 +1,27 @@
+# This patch is applicable starting version 2.3.1
+--- a/examples/fortran/simple/m_ser.F90
++++ b/examples/fortran/simple/m_ser.F90
+@@ -38 +38 @@ USE utils_ppser, ONLY:  &
+-    REAL(KIND=8), DIMENSION(:,:,:) :: a
++    REAL(KIND=SELECTED_REAL_KIND(15)), DIMENSION(:,:,:) :: a
+@@ -59 +59 @@ USE utils_ppser, ONLY:  &
+-    REAL(KIND=8), DIMENSION(:,:,:) :: a
++    REAL(KIND=SELECTED_REAL_KIND(15)), DIMENSION(:,:,:) :: a
+@@ -91,2 +91,2 @@ USE utils_ppser, ONLY:  &
+-    REAL(KIND=8), DIMENSION(:,:,:) :: a
+-    REAL(KIND=8) :: rprecision
++    REAL(KIND=SELECTED_REAL_KIND(15)), DIMENSION(:,:,:) :: a
++    REAL(KIND=SELECTED_REAL_KIND(15)) :: rprecision
+@@ -97 +97 @@ USE utils_ppser, ONLY:  &
+-          prefix_ref='SerialboxTest',rprecision=rprecision,rperturb=1.0e-5_8)
++          prefix_ref='SerialboxTest',rprecision=rprecision,rperturb=REAL(1.0e-5,SELECTED_REAL_KIND(15)))
+--- a/examples/fortran/simple/main_consumer.F90
++++ b/examples/fortran/simple/main_consumer.F90
+@@ -14 +14 @@ PROGRAM main_consumer
+-  REAL(KIND=8), DIMENSION(5,5,5) :: a
++  REAL(KIND=SELECTED_REAL_KIND(15)), DIMENSION(5,5,5) :: a
+--- a/examples/fortran/simple/main_producer.F90
++++ b/examples/fortran/simple/main_producer.F90
+@@ -14 +14 @@ PROGRAM main_producer
+-  REAL(KIND=8), DIMENSION(5,5,5) :: a
++  REAL(KIND=SELECTED_REAL_KIND(15)), DIMENSION(5,5,5) :: a

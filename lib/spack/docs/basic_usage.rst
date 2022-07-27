@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -192,29 +192,32 @@ you can use them to customize an installation in :ref:`sec-specs`.
 Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+By default, when you run ``spack install``, Spack tries hard to reuse existing installations
+as dependencies, either from a local store or from remote buildcaches if configured.
+This minimizes unwanted rebuilds of common dependencies, in particular if
+you update Spack frequently.
 
-   The ``--reuse`` option described here is experimental, and it will
-   likely be replaced with a different option and configuration settings
-   in the next Spack release.
-
-By default, when you run ``spack install``, Spack tries to build a new
-version of the package you asked for, along with updated versions of
-its dependencies.  This gets you the latest versions and configurations,
-but it can result in unwanted rebuilds if you update Spack frequently.
-
-If you want Spack to try hard to reuse existing installations as dependencies,
-you can add the ``--reuse`` option:
+In case you want the latest versions and configurations to be installed instead,
+you can add the ``--fresh`` option:
 
 .. code-block:: console
 
-   $ spack install --reuse mpich
+   $ spack install --fresh mpich
 
-This will not do anything if ``mpich`` is already installed.  If ``mpich``
-is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
-the ``mpich`` will be build with the installed versions, if possible.
-You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
+Reusing installations in this mode is "accidental", and happening only if
+there's a match between existing installations and what Spack would have installed
+anyhow.
+
+You can use the ``spack spec -I mpich`` command to see what
 will be reused and what will be built before you install.
+
+You can configure Spack to use the ``--fresh`` behavior by default in
+``concretizer.yaml``:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse: false
 
 .. _cmd-spack-uninstall:
 
@@ -1280,7 +1283,7 @@ Normally users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
 values will be detected automatically.  If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
-target), see :ref:`concretization-preferences`.
+target), see :ref:`package-preferences`.
 
 .. admonition:: Cray machines
 
@@ -1720,8 +1723,8 @@ Activating Extensions in a View
 
 Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
-See :ref:`filesystem-views` for a more in-depth description of views and
-:ref:`cmd-spack-view` for usage of the ``spack view`` command.
+See :ref:`configuring_environment_views` for a more in-depth description
+of views.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions Globally

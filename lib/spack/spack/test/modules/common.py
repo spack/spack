@@ -1,19 +1,24 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import collections
 import os
 import stat
+import sys
 
 import pytest
 
 import spack.error
 import spack.modules.tcl
+import spack.package_base
+import spack.schema.modules
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_update_dictionary_extending_list():
@@ -41,20 +46,6 @@ def test_update_dictionary_extending_list():
     assert len(target['foo']) == 4
     assert len(target['bar']) == 4
     assert target['baz'] == 'foobaz'
-
-
-@pytest.fixture()
-def mock_module_filename(monkeypatch, tmpdir):
-    filename = str(tmpdir.join('module'))
-    # Set for both module types so we can test both
-    monkeypatch.setattr(spack.modules.lmod.LmodFileLayout,
-                        'filename',
-                        filename)
-    monkeypatch.setattr(spack.modules.tcl.TclFileLayout,
-                        'filename',
-                        filename)
-
-    yield filename
 
 
 @pytest.fixture()
@@ -204,9 +195,7 @@ module_index:
     )
     upstream_index = UpstreamModuleIndex(mock_db, module_indices)
 
-    MockPackage = collections.namedtuple('MockPackage', ['installed_upstream'])
-    setattr(s1, "package", MockPackage(True))
-
+    setattr(s1, "installed_upstream", True)
     try:
         old_index = spack.modules.common.upstream_module_index
         spack.modules.common.upstream_module_index = upstream_index
@@ -217,31 +206,56 @@ module_index:
         spack.modules.common.upstream_module_index = old_index
 
 
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
-                                            monkeypatch):
-    # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-
-    # Get the package
-    pkg = spec.package
+@pytest.mark.regression('14347')
+def test_load_installed_package_not_in_repo(
+        install_mockery, mock_fetch, monkeypatch
+):
+    """Test that installed packages that have been removed are still loadable"""
+    spec = Spec('trivial-install-test-package').concretized()
+    spec.package.do_install()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError(
             'Repo package access is disabled for test')
 
-    try:
-        pkg.do_install()
+    # Mock deletion of the package
+    spec._package = None
+    monkeypatch.setattr(spack.repo.path, 'get', find_nothing)
+    with pytest.raises(spack.repo.UnknownPackageError):
+        spec.package
 
-        spec._package = None
-        monkeypatch.setattr(spack.repo, 'get', find_nothing)
-        with pytest.raises(spack.repo.UnknownPackageError):
-            spec.package
+    module_path = spack.modules.common.get_module('tcl', spec, True)
+    assert module_path
 
-        module_path = spack.modules.common.get_module('tcl', spec, True)
-        assert module_path
-        pkg.do_uninstall()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+    spack.package_base.PackageBase.uninstall_by_spec(spec)
+
+
+# DEPRECATED: remove blacklist in v0.20
+@pytest.mark.parametrize("module_type, old_config,new_config", [
+    ("tcl",  "blacklist.yaml",             "exclude.yaml"),
+    ("tcl",  "blacklist_implicits.yaml",   "exclude_implicits.yaml"),
+    ("tcl",  "blacklist_environment.yaml", "alter_environment.yaml"),
+    ("lmod", "blacklist.yaml",             "exclude.yaml"),
+    ("lmod", "blacklist_environment.yaml", "alter_environment.yaml"),
+])
+def test_exclude_include_update(module_type, old_config, new_config):
+    module_test_data_root = os.path.join(
+        spack.paths.test_path, 'data', 'modules', module_type
+    )
+    with open(os.path.join(module_test_data_root, old_config)) as f:
+        old_yaml = syaml.load(f)
+    with open(os.path.join(module_test_data_root, new_config)) as f:
+        new_yaml = syaml.load(f)
+
+    # ensure file that needs updating is translated to the right thing.
+    assert spack.schema.modules.update_keys(
+        old_yaml, spack.schema.modules.exclude_include_translations
+    )
+    assert new_yaml == old_yaml
+
+    # ensure a file that doesn't need updates doesn't get updated
+    original_new_yaml = new_yaml.copy()
+    assert not spack.schema.modules.update_keys(
+        new_yaml, spack.schema.modules.exclude_include_translations
+    )
+    original_new_yaml == new_yaml

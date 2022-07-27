@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,11 +92,6 @@ def checksum(hashlib_algo, filename, **kwargs):
     """Returns a hex digest of the filename generated using an
        algorithm from hashlib.
     """
-    if isinstance(hashlib_algo, str):
-        if hashlib_algo not in hashes:
-            raise ValueError("Invalid hash algorithm: ", hashlib_algo)
-        hashlib_algo = hash_fun_for_algo(hashlib_algo)
-
     block_size = kwargs.get('block_size', 2**20)
     hasher = hashlib_algo()
     with open(filename, 'rb') as file:

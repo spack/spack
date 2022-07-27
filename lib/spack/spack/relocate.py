@@ -1,20 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
 import multiprocessing.pool
 import os
 import re
 import shutil
-from collections import defaultdict
 
 import macholib.mach_o
 import macholib.MachO
-from ordereddict_backport import OrderedDict
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.symlink import symlink
 
+import spack.bootstrap
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -76,32 +77,16 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 
 def _patchelf():
-    """Return the full path to the patchelf binary, if available, else None.
-
-    Search first the current PATH for patchelf. If not found, try to look
-    if the default patchelf spec is installed and if not install it.
-
-    Return None on Darwin or if patchelf cannot be found.
-    """
-    # Check if patchelf is already in the PATH
-    patchelf = executable.which('patchelf')
-    if patchelf is not None:
-        return patchelf.path
-
-    # Check if patchelf spec is installed
-    spec = spack.spec.Spec('patchelf')
-    spec._old_concretize(deprecation_warning=False)
-    exe_path = os.path.join(spec.prefix.bin, "patchelf")
-    if spec.package.installed and os.path.exists(exe_path):
-        return exe_path
-
-    # Skip darwin
+    """Return the full path to the patchelf binary, if available, else None."""
     if is_macos:
         return None
 
-    # Install the spec and return its path
-    spec.package.do_install()
-    return exe_path if os.path.exists(exe_path) else None
+    patchelf = executable.which('patchelf')
+    if patchelf is None:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+    return patchelf.path
 
 
 def _elf_rpaths_for(path):
@@ -448,8 +433,9 @@ def needs_binary_relocation(m_type, m_subtype):
         m_type (str): MIME type of the file
         m_subtype (str): MIME subtype of the file
     """
+    subtypes = ('x-executable', 'x-sharedlib', 'x-mach-binary', 'x-pie-executable')
     if m_type == 'application':
-        if m_subtype in ('x-executable', 'x-sharedlib', 'x-mach-binary'):
+        if m_subtype in subtypes:
             return True
     return False
 
@@ -699,7 +685,7 @@ def make_link_relative(new_links, orig_links):
         target = os.readlink(orig_link)
         relative_target = os.path.relpath(target, os.path.dirname(orig_link))
         os.unlink(new_link)
-        os.symlink(relative_target, new_link)
+        symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
@@ -780,7 +766,7 @@ def relocate_links(links, orig_layout_root,
                 orig_install_prefix, new_install_prefix, link_target
             )
             os.unlink(abs_link)
-            os.symlink(link_target, abs_link)
+            symlink(link_target, abs_link)
 
         # If the link is absolute and has not been relocated then
         # warn the user about that
@@ -807,7 +793,7 @@ def relocate_text(files, prefixes, concurrency=32):
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
 
-    compiled_prefixes = OrderedDict({})
+    compiled_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -845,7 +831,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
-    byte_prefixes = OrderedDict({})
+    byte_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
@@ -1032,7 +1018,7 @@ def fixup_macos_rpath(root, filename):
     # Convert rpaths list to (name -> number of occurrences)
     add_rpaths = set()
     del_rpaths = set()
-    rpaths = defaultdict(int)
+    rpaths = collections.defaultdict(int)
     for rpath in rpath_list:
         rpaths[rpath] += 1
 

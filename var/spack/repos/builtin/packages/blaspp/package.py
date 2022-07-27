@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
@@ -19,6 +19,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
+    version('2022.05.00', sha256='696277859bc1bd9c0aeb0cb170a1e259765c0a86af49b20afa0ffcbabc3e207e')
     version('2021.04.01', sha256='11fc7b7e725086532ada58c0de53f30e480c2a06f1497b8081ea6d8f97e26150')
     version('2020.10.02', sha256='36e45bb5a8793ba5d7bc7c34fc263f91f92b0946634682937041221a6bf1a150')
     version('2020.10.01', sha256='1a05dbc46caf797d59a7c189216b876fdb1b2ff3e2eb48f1e6ca4b2756c59153')
@@ -53,13 +54,19 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
             if '+rocm' in spec:
                 backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
-        return [
+
+        args = [
             '-Dbuild_tests=%s'       % self.run_tests,
             '-Duse_openmp=%s'        % ('+openmp' in spec),
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             backend_config,
             '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
         ]
+
+        if spec['blas'].name == 'cray-libsci':
+            args.append(self.define('BLA_VENDOR', 'CRAY'))
+
+        return args
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.

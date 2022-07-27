@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd.common.arguments as arguments
 import spack.repo
+import spack.spec
 from spack.version import infinity_versions, ver
 
 description = "list available versions of a package"
@@ -39,7 +40,9 @@ def setup_parser(subparser):
 
 
 def versions(parser, args):
-    pkg = spack.repo.get(args.package)
+    spec = spack.spec.Spec(args.package)
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
 
     safe_versions = pkg.versions
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 import subprocess
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class NodeJs(Package):
@@ -17,6 +17,8 @@ class NodeJs(Package):
     url      = "https://nodejs.org/dist/v13.5.0/node-v13.5.0.tar.gz"
     list_url = "https://nodejs.org/dist/"
     list_depth = 1
+
+    maintainers = ['cosmicexplorer']
 
     # Current (latest features)
     version('15.3.0',  sha256='cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2')
@@ -76,10 +78,10 @@ class NodeJs(Package):
         if sys.platform == 'darwin':
             process_pipe = subprocess.Popen(["which", "libtool"],
                                             stdout=subprocess.PIPE)
-            result_which = process_pipe.communicate()[0]
+            result_which = process_pipe.communicate()[0].strip()
             process_pipe = subprocess.Popen(["whereis", "libtool"],
                                             stdout=subprocess.PIPE)
-            result_whereis = process_pipe.communicate()[0]
+            result_whereis = process_pipe.communicate()[0].strip().split()[-1]
             assert result_which == result_whereis, (
                 'On OSX the system libtool must be used. Please'
                 '(temporarily) remove \n %s or its link to libtool from'

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,8 @@
 import re
 import sys
 
-from spack import *
 from spack.operating_systems.mac_os import macos_version
+from spack.package import *
 
 
 class Bison(AutotoolsPackage, GNUMirrorPackage):
@@ -17,6 +17,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/bison/"
     gnu_mirror_path = "bison/bison-3.6.4.tar.gz"
+
+    tags = ['build-tools']
 
     executables = ['^bison$']
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,8 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import warnings
+
 import spack.schema.environment
 import spack.schema.projections
 
@@ -16,13 +18,17 @@ import spack.schema.projections
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
-             r'blacklist|projections|naming_scheme|core_compilers|all|' \
-             r'defaults)(^\w[\w-]*)'
+spec_regex = (
+    r'(?!hierarchy|core_specs|verbose|hash_length|defaults|'
+    r'whitelist|blacklist|'  # DEPRECATED: remove in 0.20.
+    r'include|exclude|'      # use these more inclusive/consistent options
+    r'projections|naming_scheme|core_compilers|all)(^\w[\w-]*)'
+
+)
 
 #: Matches a valid name for a module set
-# Banned names are valid entries at that level in the previous schema
-set_regex = r'(?!enable|lmod|tcl|dotkit|prefix_inspections)^\w[\w-]*'
+valid_module_set_name = r'^(?!arch_folder$|lmod$|roots$|enable$|prefix_inspections$|'\
+                        r'tcl$|use_view$)\w[\w-]*$'
 
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r'^[\^@%+~]'
@@ -48,7 +54,16 @@ module_file_configuration = {
             'default': {},
             'additionalProperties': False,
             'properties': {
+                # DEPRECATED: remove in 0.20.
                 'environment_blacklist': {
+                    'type': 'array',
+                    'default': [],
+                    'items': {
+                        'type': 'string'
+                    }
+                },
+                # use exclude_env_vars instead
+                'exclude_env_vars': {
                     'type': 'array',
                     'default': [],
                     'items': {
@@ -93,9 +108,17 @@ module_type_configuration = {
                 'minimum': 0,
                 'default': 7
             },
+            # DEPRECATED: remove in 0.20.
             'whitelist': array_of_strings,
             'blacklist': array_of_strings,
             'blacklist_implicits': {
+                'type': 'boolean',
+                'default': False
+            },
+            # whitelist/blacklist have been replaced with include/exclude
+            'include': array_of_strings,
+            'exclude': array_of_strings,
+            'exclude_implicits': {
                 'type': 'boolean',
                 'default': False
             },
@@ -117,24 +140,12 @@ module_type_configuration = {
 }
 
 
-#: The "real" module properties -- the actual configuration parameters.
-#: They are separate from ``properties`` because they can appear both
-#: at the top level of a Spack ``modules:`` config (old, deprecated format),
-#: and within a named module set (new format with multiple module sets).
 module_config_properties = {
     'use_view': {'anyOf': [
         {'type': 'string'},
         {'type': 'boolean'}
     ]},
     'arch_folder': {'type': 'boolean'},
-    'prefix_inspections': {
-        'type': 'object',
-        'additionalProperties': False,
-        'patternProperties': {
-            # prefix-relative path to be inspected for existence
-            r'^[\w-]*': array_of_strings
-        }
-    },
     'roots': {
         'type': 'object',
         'properties': {
@@ -147,15 +158,8 @@ module_config_properties = {
         'default': [],
         'items': {
             'type': 'string',
-            'enum': ['tcl', 'dotkit', 'lmod']
-        },
-        'deprecatedProperties': {
-            'properties': ['dotkit'],
-            'message': 'cannot enable "dotkit" in modules.yaml '
-            '[support for "dotkit" has been dropped '
-            'in v0.13.0]',
-            'error': False
-        },
+            'enum': ['tcl', 'lmod']
+        }
     },
     'lmod': {
         'allOf': [
@@ -178,40 +182,54 @@ module_config_properties = {
             {}  # Specific tcl extensions
         ]
     },
-    'dotkit': {
-        'allOf': [
-            # Base configuration
-            module_type_configuration,
-            {}  # Specific dotkit extensions
-        ]
+    'prefix_inspections': {
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            # prefix-relative path to be inspected for existence
+            r'^[\w-]*': array_of_strings
+        }
     },
 }
+
+
+def deprecation_msg_default_module_set(instance, props):
+    return (
+        'Top-level properties "{0}" in module config are ignored as of Spack v0.18. '
+        'They should be set on the "default" module set. Run\n\n'
+        '\t$ spack config update modules\n\n'
+        'to update the file to the new format'.format('", "'.join(instance))
+    )
 
 
 # Properties for inclusion into other schemas (requires definitions)
 properties = {
     'modules': {
         'type': 'object',
-        'patternProperties': {
-            set_regex: {
+        'additionalProperties': False,
+        'properties': {
+            'prefix_inspections': {
                 'type': 'object',
-                'default': {},
                 'additionalProperties': False,
-                'properties': module_config_properties,
-                'deprecatedProperties': {
-                    'properties': ['dotkit'],
-                    'message': 'the "dotkit" section in modules.yaml has no effect'
-                    ' [support for "dotkit" has been dropped in v0.13.0]',
-                    'error': False
+                'patternProperties': {
+                    # prefix-relative path to be inspected for existence
+                    r'^[\w-]*': array_of_strings
                 }
             },
         },
-        # Available here for backwards compatibility
-        'properties': module_config_properties,
+        'patternProperties': {
+            valid_module_set_name: {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': module_config_properties
+            },
+            # Deprecated top-level keys (ignored in 0.18 with a warning)
+            '^(arch_folder|lmod|roots|enable|tcl|use_view)$': {}
+        },
         'deprecatedProperties': {
-            'properties': ['dotkit'],
-            'message': 'the "dotkit" section in modules.yaml has no effect'
-            ' [support for "dotkit" has been dropped in v0.13.0]',
+            'properties': ['arch_folder', 'lmod', 'roots', 'enable', 'tcl', 'use_view'],
+            'message': deprecation_msg_default_module_set,
             'error': False
         }
     }
@@ -219,9 +237,100 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
+    '$schema': 'http://json-schema.org/draft-07/schema#',
     'title': 'Spack module file configuration file schema',
     'type': 'object',
     'additionalProperties': False,
     'properties': properties,
 }
+
+
+# deprecated keys and their replacements
+exclude_include_translations = {
+    "whitelist": "include",
+    "blacklist": "exclude",
+    "blacklist_implicits": "exclude_implicits",
+    "environment_blacklist": "exclude_env_vars",
+}
+
+
+def update_keys(data, key_translations):
+    """Change blacklist/whitelist to exclude/include.
+
+    Arguments:
+        data (dict): data from a valid modules configuration.
+        key_translations (dict): A dictionary of keys to translate to
+            their respective values.
+
+    Return:
+        (bool) whether anything was changed in data
+    """
+    changed = False
+
+    if isinstance(data, dict):
+        keys = list(data.keys())
+        for key in keys:
+            value = data[key]
+
+            translation = key_translations.get(key)
+            if translation:
+                data[translation] = data.pop(key)
+                changed = True
+
+            changed |= update_keys(value, key_translations)
+
+    elif isinstance(data, list):
+        for elt in data:
+            changed |= update_keys(elt, key_translations)
+
+    return changed
+
+
+def update_default_module_set(data):
+    """Update module configuration to move top-level keys inside default module set.
+
+    This change was introduced in v0.18 (see 99083f1706 or #28659).
+    """
+    changed = False
+
+    deprecated_top_level_keys = ('arch_folder', 'lmod', 'roots', 'enable',
+                                 'tcl', 'use_view')
+
+    # Don't update when we already have a default module set
+    if 'default' in data:
+        if any(key in data for key in deprecated_top_level_keys):
+            warnings.warn('Did not move top-level module properties into "default" '
+                          'module set, because the "default" module set is already '
+                          'defined')
+        return changed
+
+    default = {}
+
+    # Move deprecated top-level keys under "default" module set.
+    for key in deprecated_top_level_keys:
+        if key in data:
+            default[key] = data.pop(key)
+
+    if default:
+        changed = True
+        data['default'] = default
+
+    return changed
+
+
+def update(data):
+    """Update the data in place to remove deprecated properties.
+
+    Args:
+        data (dict): dictionary to be updated
+
+    Returns:
+        True if data was changed, False otherwise
+    """
+    # deprecated top-level module config (everything in default module set)
+    changed = update_default_module_set(data)
+
+    # translate blacklist/whitelist to exclude/include
+    changed |= update_keys(data, exclude_include_translations)
+
+    return changed

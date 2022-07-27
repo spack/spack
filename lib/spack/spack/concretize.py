@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,12 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
+import functools
 import os.path
 import platform
 import tempfile
 from contextlib import contextmanager
 from itertools import chain
-
-from functools_backport import reverse_order
 
 import archspec.cpu
 
@@ -46,6 +45,23 @@ from spack.version import Version, VersionList, VersionRange, ver
 
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
+
+
+@functools.total_ordering
+class reverse_order(object):
+    """Helper for creating key functions.
+
+       This is a wrapper that inverts the sense of the natural
+       comparisons on the object.
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return other.value == self.value
+
+    def __lt__(self, other):
+        return other.value < self.value
 
 
 class Concretizer(object):
@@ -130,11 +146,11 @@ class Concretizer(object):
 
         # Use a sort key to order the results
         return sorted(usable, key=lambda spec: (
-            not spec.external,                            # prefer externals
-            pref_key(spec),                               # respect prefs
-            spec.name,                                    # group by name
-            reverse_order(spec.versions),                 # latest version
-            spec                                          # natural order
+            not spec.external,             # prefer externals
+            pref_key(spec),                # respect prefs
+            spec.name,                     # group by name
+            reverse_order(spec.versions),  # latest version
+            spec                           # natural order
         ))
 
     def choose_virtual_or_external(self, spec):
@@ -685,7 +701,7 @@ def find_spec(spec, condition, default=None):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse(deptypes=all):
+    for relative in spec.root.traverse(deptype='all'):
         if relative is spec:
             continue
         if id(relative) in visited:
@@ -732,11 +748,11 @@ def concretize_specs_together(*abstract_specs, **kwargs):
 
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
     import spack.solver.asp
-    concretization_kwargs = {
-        'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
-    }
-    result = spack.solver.asp.solve(abstract_specs, **concretization_kwargs)
+
+    solver = spack.solver.asp.Solver()
+    solver.tests = kwargs.get('tests', False)
+
+    result = solver.solve(abstract_specs)
     result.raise_if_unsat()
     return [s.copy() for s in result.specs]
 
@@ -772,15 +788,10 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
     abstract_specs = [spack.spec.Spec(s) for s in abstract_specs]
     concretization_repository = make_concretization_repository(abstract_specs)
 
-    concretization_kwargs = {
-        'tests': kwargs.get('tests', False),
-        'reuse': kwargs.get('reuse', False)
-    }
-
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize(**concretization_kwargs)
+        concretization_root.concretize(tests=kwargs.get("tests", False))
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs

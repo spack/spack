@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ def test_package_info(image):
 
 @pytest.mark.parametrize('extra_config,expected_msg', [
     ({'modules': {'enable': ['tcl']}}, 'the subsection "modules" in'),
-    ({'concretization': 'separately'}, 'the "concretization" attribute'),
+    ({'concretizer': {'unify': False}}, '"concretizer:unify" is not set to "true"'),
     ({'config': {'install_tree': '/some/dir'}},
      'the "config:install_tree" attribute has been set'),
     ({'view': '/some/dir'}, 'the "view" attribute has been set')

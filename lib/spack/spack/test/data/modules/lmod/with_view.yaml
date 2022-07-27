@@ -2,5 +2,7 @@ enable:
   - lmod
 use_view: default
 lmod:
+  all:
+    autoload: none
   core_compilers:
     - 'clang@3.3'

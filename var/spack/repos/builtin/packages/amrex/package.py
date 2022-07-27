@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Amrex(CMakePackage, CudaPackage, ROCmPackage):
@@ -12,14 +12,24 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/releases/download/21.11/amrex-21.11.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/22.07/amrex-22.07.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
+
+    test_requires_compiler = True
 
     tags = ['ecp', 'e4s']
 
-    maintainers = ['WeiqunZhang', 'asalmgren']
+    maintainers = ['WeiqunZhang', 'asalmgren', 'etpalmer63']
 
     version('develop', branch='development')
+    version('22.07', sha256='7df433c780ab8429362df8d6d995c95d87a7c3f31ab81d5b0f416203dece086d')
+    version('22.06', sha256='d8aa58e72c86a3da9a7be5a5947294fd3eaac6b233f563366f9e000d833726db')
+    version('22.05', sha256='a760c7ca12915ca56b60d1f3c44103185db21ec2b8c01bc7b6762ff9c84e3f53')
+    version('22.04', sha256='c33f5bdbc1ca21d8dd34b494a9c6c67a7eda4f42403cec3a7c13963f9140ebcf')
+    version('22.03', sha256='2a67233e55f20b937e2da97f1ed3ab0666e12ef283b4d14c9456ebf21f36b77c')
+    version('22.02', sha256='5d8dd3fa3c416b04e70188e06b7e8fc2838d78b43a2cf33a285184c77f0c1e1e')
+    version('22.01', sha256='857df5b2fa8e3010b8856b81879a5be32ba7cc2e575474256eae7ef815b8354d')
+    version('21.12', sha256='439f9ebf2b440fc739a7976f3ade188ec3e1de5f51a0b151e6b8dda36fa67278')
     version('21.11', sha256='2edb72d7cf7e86340fcaceb325368560957bcd952fd34cd501bfdf038e1338a4')
     version('21.10', sha256='a11954c03b1ec26c26b676460dc5de5195469e813b70fbcea6dfdefeafaf5407')
     version('21.09', sha256='983b41d93bf9417c032080fd2ec7c04d0d2b820e613a076bd07566aa5a8aa4bd')
@@ -73,6 +83,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build particle classes')
     variant('plotfile_tools', default=False,
             description='Build plotfile_tools like fcompare')
+    variant('tiny_profile', default=False,
+            description='Enable tiny profiling')
     variant('hdf5',  default=False,
             description='Enable HDF5-based I/O')
     variant('hypre', default=False,
@@ -87,18 +99,25 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08:20.11 +sundials')
-    depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07: +sundials')
+    depends_on('sundials@5.7.0: +ARKODE +CVODE', when='@21.07:22.04 +sundials')
+    depends_on('sundials@6.0.0: +ARKODE +CVODE', when='@22.05: +sundials')
     for arch in CudaPackage.cuda_arch_values:
-        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07: +sundials +cuda cuda_arch=%s' % arch)
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@21.07:22.04 +sundials +cuda cuda_arch=%s' % arch)
+        depends_on('sundials@6.0.0: +ARKODE +CVODE +cuda cuda_arch=%s' % arch, when='@22.05: +sundials +cuda cuda_arch=%s' % arch)
     for tgt in ROCmPackage.amdgpu_targets:
-        depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07: +sundials +rocm amdgpu_target=%s' % tgt)
-    depends_on('cuda@9.0.0:', when='+cuda')
+        depends_on('sundials@5.7.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@21.07:22.04 +sundials +rocm amdgpu_target=%s' % tgt)
+        depends_on('sundials@6.0.0: +ARKODE +CVODE +rocm amdgpu_target=%s' % tgt, when='@22.05: +sundials +rocm amdgpu_target=%s' % tgt)
+
+    depends_on('cuda@9.0.0:', when='@:22.04 +cuda')
+    depends_on('cuda@10.0.0:', when='@22.05: +cuda')
     depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10')
-    depends_on('cmake@3.13:', type='build', when='@18.11:')
+    depends_on('cmake@3.13:', type='build', when='@18.11:19.03')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
+    depends_on('cmake@3.17:', type='build', when='@22.06:')
+    depends_on('cmake@3.20:', type='build', when='+rocm')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
     depends_on('rocprim', type='build', when='@21.05: +rocm')
@@ -177,11 +196,11 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
             self.define_from_variant('AMReX_FORTRAN_INTERFACES', 'fortran'),
             self.define_from_variant('AMReX_EB', 'eb'),
-            self.define_from_variant('AMReX_LINEAR_SOLVERS',
-                                     'linear_solvers'),
+            self.define_from_variant('AMReX_LINEAR_SOLVERS', 'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
             self.define_from_variant('AMReX_PLOTFILE_TOOLS', 'plotfile_tools'),
+            self.define_from_variant('AMReX_TINY_PROFILE', 'tiny_profile'),
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
@@ -242,3 +261,57 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        else:
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
+
+    @run_after('build')
+    def setup_smoke_test(self):
+        """Skip setup smoke tests for AMReX versions less than 21.12."""
+        if self.spec.satisfies('@:21.11'):
+            return
+
+        self.cache_extra_test_sources(['Tests'])
+
+        # TODO: Remove once self.spec['cmake'] is available here
+        self.cmake_bin(set=True)
+
+    def test(self):
+        """Skip smoke tests for AMReX versions less than 21.12."""
+        if self.spec.satisfies('@:21.11'):
+            print("SKIPPED: Stand-alone tests not supported for this version of AMReX.")
+            return
+
+        """Perform smoke tests on installed package."""
+        # TODO: Remove/replace once self.spec['cmake'] is available here
+        cmake_bin = self.cmake_bin(set=False)
+
+        args = []
+        args.append('-S./cache/amrex/Tests/SpackSmokeTest')
+        args.append('-DAMReX_ROOT=' + self.prefix)
+        args.append('-DMPI_C_COMPILER=' + self.spec['mpi'].mpicc)
+        args.append('-DMPI_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+        args.extend(self.cmake_args())
+        self.run_test(cmake_bin,
+                      args,
+                      purpose='Configure with CMake')
+
+        self.run_test('make', [], purpose='Compile')
+
+        self.run_test('install_test',
+                      ['./cache/amrex/Tests/Amr/Advection_AmrCore/Exec/inputs-ci'],
+                      ['finalized'],
+                      installed=False,
+                      purpose='AMReX Stand-Alone Smoke Test -- AmrCore',
+                      skip_missing=False)

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import glob
 import os
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class Ncl(Package):
@@ -79,7 +79,7 @@ class Ncl(Package):
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
     # statement.
-    depends_on('hdf5+szip')
+    depends_on('hdf5@:1.10+szip')
     depends_on('szip')
 
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
@@ -90,7 +90,7 @@ class Ncl(Package):
 
     # Some of the optional dependencies according to the manual:
     depends_on('hdf', when='+hdf4')
-    depends_on('gdal+proj@:2.4', when='+gdal')
+    depends_on('gdal@:2.4', when='+gdal')
     depends_on('udunits', when='+udunits2')
 
     # We need src files of triangle to appear in ncl's src tree if we want
