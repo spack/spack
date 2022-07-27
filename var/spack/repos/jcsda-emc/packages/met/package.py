@@ -101,8 +101,8 @@ class Met(AutotoolsPackage):
         if '+grib2' in spec:
             g2c = spec['g2c']
             shared_g2c = True if '+shared' in g2c else False
-            g2c_libdir = find_libraries('libg2c', root=g2c.prefix,
-                                        shared=shared_g2c, recursive=True).directories[0]
+            g2c_libdir = find_libraries('libg2c', root=g2c.prefix, shared=shared_g2c,
+                                        recursive=True).directories[0]
             env.set('MET_GRIB2CLIB', g2c_libdir)
             env.set('MET_GRIB2CINC', g2c.prefix.include)
             env.set('GRIB2CLIB_NAME', '-lg2c')
