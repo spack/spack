@@ -131,8 +131,9 @@ which is useful for CI pipeline troubleshooting""")
         help='(with environment) only install already concretized specs')
     subparser.add_argument(
         '--no-add', action='store_true', default=False,
-        help="""(with environment) only install specs provided as argument
-if they are already in the concretized environment""")
+        help="""(with environment) partially install an environment, limiting
+to concrete specs in the environment matching the arguments.
+Non-roots remain installed implicitly.""")
     subparser.add_argument(
         '-f', '--file', action='append', default=[],
         dest='specfiles', metavar='SPEC_YAML_FILE',
