@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import re
+import sys
 from tempfile import NamedTemporaryFile
 
 import spack.platforms
@@ -51,7 +52,7 @@ class Sqlite(AutotoolsPackage):
     variant('dynamic_extensions', default=True, description='Support loadable extensions')
     variant('rtree', default=True, description='Build with Rtree module')
 
-    if not spec.satisfies('platform=windows'):
+    if not sys.platform == 'win32':
         depends_on('readline')
         depends_on('zlib')
 
