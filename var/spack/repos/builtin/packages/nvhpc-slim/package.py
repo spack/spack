@@ -21,6 +21,10 @@ from spack.util.prefix import Prefix
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '22.7': {
+        'Linux-aarch64': ('3e47c613a6558718c850d00edd700ee85b930807812ab02974773d8a5ed13147', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_aarch64_cuda_11.7.tar.gz'),
+        'Linux-ppc64le': ('cfd885b09fd965a7191f080d6f345c19c9faf149719780d4299fc0e50c05d4c1', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_ppc64le_cuda_11.7.tar.gz'),
+        'Linux-x86_64': ('d536b937d1b2b3cdb74f7fb63dad3df7918b94338f0c2602b8f3f06fc7fb9655', 'https://developer.download.nvidia.com/hpc-sdk/22.7/nvhpc_2022_227_Linux_x86_64_cuda_11.7.tar.gz')},
     '22.5': {
         'Linux-aarch64': ('ed22c8b38ac9a40a4093eba4837a60f6903e5616d88b6753b3ed7d5b5d686804', 'https://developer.download.nvidia.com/hpc-sdk/22.5/nvhpc_2022_225_Linux_aarch64_cuda_11.7.tar.gz'),
         'Linux-ppc64le': ('1b9eb464f268870a8adec8c939d95faa80f4788aeb1c95010082ef6d4b5baae2', 'https://developer.download.nvidia.com/hpc-sdk/22.5/nvhpc_2022_225_Linux_ppc64le_cuda_11.7.tar.gz'),
@@ -119,8 +123,10 @@ class NvhpcSlim(Package):
     provides('lapack',      when='+lapack')
     provides('mpi',         when='+mpi')
 
-    # These version numbers are found by matching version.{json,txt} with those in
-    # cuda-toolkit.
+    # These version numbers are found by matching version.{json,txt} with those
+    # in cuda-toolkit. See also the version table in the release notes at
+    # https://docs.nvidia.com/hpc-sdk/hpc-sdk-release-notes/index.html
+    provides('cuda@11.7.0', when='@22.7')
     provides('cuda@11.7.0', when='@22.5')
     provides('cuda@11.6.1', when='@22.3')
     provides('cuda@11.6.0', when='@22.2')
