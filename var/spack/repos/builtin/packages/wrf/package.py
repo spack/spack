@@ -77,6 +77,13 @@ class Wrf(Package):
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
     version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
 
+    resource(name='elec',
+             url='https://master.dl.sourceforge.net/project/wrfelec/WRFV3911_elec.beta_release.01.tgz',
+             sha256='eaaece04711a2883f39349f0857468b42af1a6f8d0985759ce5dfde4058316b4',
+             when='@3.9.1.1+elec',
+             destination='.'
+             )
+
     variant(
         "build_type",
         default="dmpar",
@@ -117,6 +124,25 @@ class Wrf(Package):
         when="@4:"
     )
 
+    variant(
+        "elec",
+        default=False,
+        description="Compile support for the storm electrification package"
+        + "for the WRF-ARW"
+    )
+
+    conflicts("@4.0:", when="+elec",
+              msg="WRF_ELEC is only supported in V3.9.1.1")
+
+    conflicts("build_type=serial", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
+    conflicts("build_type=smpar", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
+    conflicts("build_type=dm+sm", when="+elec",
+              msg="WRF_ELEC only supports dmpar")
+
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
     patch("patches/3.9/add_aarch64.patch", when="@3.9.1.1")
@@ -124,6 +150,12 @@ class Wrf(Package):
     patch("patches/3.9/configure_aocc_3.0.patch", when="@3.9.1.1 %aocc@3.0.0")
     patch("patches/3.9/configure_aocc_3.1.patch", when="@3.9.1.1 %aocc@3.1.0")
     patch("patches/3.9/fujitsu.patch", when="@3.9.1.1 %fj")
+
+    patch("https://ccad.unc.edu.ar/files/add_elec_support.patch",
+          sha256="3caf160be9db90c8dd8ce1b7ccc23ba5a788b3dbc538fe15610839b07d7d2d26", when="@3.9.1.1+elec")
+    # WRF-ELEC modifies some of the WRF codebase
+    patch("https://ccad.unc.edu.ar/files/add_elec_changes.patch",
+          sha256="193a8ea9d0be9eba86d71863d2ffaddd5e77c75727bdb195bd75c053dbf4d01c", when="@3.9.1.1+elec")
 
     # These patches deal with netcdf & netcdf-fortran being two diff things
     # Patches are based on:
@@ -190,6 +222,8 @@ class Wrf(Package):
     depends_on("time", type=("build"))
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
+    depends_on("boxmg4wrf", type="build", when="+elec")
+    depends_on("tar", type="build", when="+elec")
     phases = ["configure", "build", "install"]
 
     def setup_run_environment(self, env):
@@ -210,15 +244,19 @@ class Wrf(Package):
         env.set("JASPERINC", self.spec["jasper"].prefix.include)
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
-        if self.spec.satisfies("%gcc@10:"):
-            args = "-w -O2 -fallow-argument-mismatch -fallow-invalid-boz"
-            env.set("FCFLAGS", args)
-            env.set("FFLAGS", args)
-
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path('PATH', ancestor(self.compiler.cc))
+
+        if self.spec.satisfies("+elec"):
+            env.set("WRF_ELEC", 1)
+            env.set("BOXMGLIBDIR", self.spec["boxmg4wrf"].prefix)
+
+    def flag_handler(self, name, flags):
+        if name in ['fcflags', 'fflags'] and self.spec.satisfies("%gcc@10:"):
+            flags.append('-w -O2 -fallow-argument-mismatch -fallow-invalid-boz')
+        return(flags, None, None)
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -228,7 +266,6 @@ class Wrf(Package):
         filter_file("^#!/bin/csh", "#!/usr/bin/env csh", *files)
 
     def answer_configure_question(self, outputbuf):
-
         # Platform options question:
         if "Please select from among the following" in outputbuf:
             options = collect_platform_options(outputbuf)
@@ -275,9 +312,9 @@ class Wrf(Package):
             config = FileFilter(join_path('arch', 'configure.defaults'))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
-            config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
+            config.filter(r'^DM_FC.*mpif90 -f90=\$\(SFC\)',
                           'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
-            config.filter('^DM_CC.*mpicc -cc=$(SCC)',
+            config.filter(r'^DM_CC.*mpicc -cc=\$\(SCC\)',
                           'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
         if self.spec.satisfies("%aocc"):
@@ -296,8 +333,14 @@ class Wrf(Package):
             config.filter('^DM_CC.*mpicc',
                           'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
 
-    def configure(self, spec, prefix):
+    @run_before('configure')
+    def untar(self):
+        if self.spec.satisfies("+elec"):
+            tar = which('tar')
+            tar('-xvf', 'WRFV3911_elec/elec.tgz', '--wildcards',
+                '*.F', 'elec/Makefile', 'elec/depend.elec')
 
+    def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()
 
@@ -359,8 +402,13 @@ class Wrf(Package):
         csh_bin = self.spec["tcsh"].prefix.bin.csh
         csh = Executable(csh_bin)
 
-        # num of compile jobs capped at 20 in wrf
-        num_jobs = str(min(int(make_jobs), 10))
+        # WRF-ELEC as of version 3.9.1.1 WILL fail if compiled with more than
+        # 2 parallel instances
+        if self.spec.satisfies("+elec"):
+            num_jobs = str(2)
+        else:
+            # num of compile jobs capped at 20 in wrf
+            num_jobs = str(min(int(make_jobs), 20))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`
