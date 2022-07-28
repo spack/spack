@@ -1643,7 +1643,9 @@ class Environment(object):
 
         installs = []
         for spec in specs_to_install:
-            installs.append((spec.package, install_args))
+            pkg_install_args = install_args.copy()
+            pkg_install_args['explicit'] = spec in self.roots()
+            installs.append((spec.package, pkg_install_args))
 
         try:
             builder = PackageInstaller(installs)
