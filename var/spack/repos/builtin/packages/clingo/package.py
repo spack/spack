@@ -6,6 +6,7 @@
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
 
+import os
 
 class Clingo(CMakePackage):
     """Clingo: A grounder and solver for logic programs
@@ -71,10 +72,11 @@ class Clingo(CMakePackage):
         current spec is the one found by CMake find_package(Python, ...)
         """
         python = self.spec['python']
-        return [
-            self.define('Python_EXECUTABLE', str(python.command)),
-            self.define('Python_INCLUDE_DIR', python.package.config_vars['include'])
-        ]
+        include_dir = python.package.config_vars['include']
+        hints = [self.define('Python_EXECUTABLE', str(python.command))]
+        if os.path.exists(include_dir):
+            hints.append(self.define('Python_INCLUDE_DIR', include_dir))
+        return hints
 
     @property
     def cmake_py_shared(self):
