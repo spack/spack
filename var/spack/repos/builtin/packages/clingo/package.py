@@ -74,8 +74,8 @@ class Clingo(CMakePackage):
         """
         python = self.spec["python"]
         return [
-            self.define("Python_EXECUTABLE", str(python.command)),
-            self.define("Python_INCLUDE_DIR", python.package.config_vars["include"]),
+            self.define("Python_EXECUTABLE", python.command),
+            self.define("Python_INCLUDE_DIR", python.headers.directories[0]),
         ]
 
     @property
