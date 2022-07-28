@@ -29,9 +29,13 @@ class Bufr(CMakePackage):
 
     # Patch to not add '-c' to ranlib flags when using llvm-ranlib on Apple systems
     patch('cmakelists-apple-llvm-ranlib.patch', when='@:11.6.0')
+    # C test does not explicity link to -lm causing DSO error when building shared libs
+    patch('c-tests-libm.patch', when='@11.5.0:11.7.0')
 
     variant('python', default=False, description='Enable Python interface?')
     variant('shared', default=True, description='Build shared libraries')
+    variant('tests', default=False, description='Build tests')
+
     extends('python', when='+python')
 
     depends_on('python@3:', type=('build', 'run'), when='+python')
@@ -43,6 +47,7 @@ class Bufr(CMakePackage):
         args = [
             self.define_from_variant('ENABLE_PYTHON', 'python'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_TESTS', 'tests'),
         ]
 
         return args
