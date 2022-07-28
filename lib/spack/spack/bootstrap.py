@@ -221,19 +221,18 @@ def _executables_in_store(executables, query_spec, query_info=None):
     installed_specs = spack.store.db.query(query_spec, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.bin
-            # IF we have a "bin" directory and it contains
-            # the executables we are looking for
-            if (
-                os.path.exists(bin_dir)
-                and os.path.isdir(bin_dir)
-                and spack.util.executable.which_string(*executables, path=bin_dir)
-            ):
-                spack.util.environment.path_put_first("PATH", [bin_dir])
-                if query_info is not None:
-                    query_info["command"] = spack.util.executable.which(*executables, path=bin_dir)
-                    query_info["spec"] = concrete_spec
-                return True
+            for bin_dir in [concrete_spec.prefix.bin, concrete_spec.prefix.local.bin]:
+                # IF we have a "bin" directory and it contains
+                # the executables we are looking for
+                if (os.path.exists(bin_dir) and os.path.isdir(bin_dir) and
+                        spack.util.executable.which_string(*executables, path=bin_dir)):
+                    spack.util.environment.path_put_first('PATH', [bin_dir])
+                    if query_info is not None:
+                        query_info['command'] = spack.util.executable.which(
+                            *executables, path=bin_dir
+                        )
+                        query_info['spec'] = concrete_spec
+                    return True
     return False
 
 
