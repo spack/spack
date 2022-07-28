@@ -221,7 +221,7 @@ def _executables_in_store(executables, query_spec, query_info=None):
     installed_specs = spack.store.db.query(query_spec, installed=True)
     if installed_specs:
         for concrete_spec in installed_specs:
-            bin_dir = concrete_spec.prefix.local.bin
+            bin_dir = concrete_spec.prefix.bin
             # IF we have a "bin" directory and it contains
             # the executables we are looking for
             if (
