@@ -47,7 +47,9 @@ class Warpx(CMakePackage):
     variant('app', default=True,
             description='Build the WarpX executable application')
     variant('ascent', default=False,
-            description='Enable Ascent in situ vis')
+            description='Enable Ascent in situ visualization')
+    variant('sensei', default=False,
+            description='Enable SENSEI in situ visualization')
     variant('compute',
             default='omp',
             values=('omp', 'cuda', 'hip', 'sycl', 'noacc'),
@@ -84,11 +86,12 @@ class Warpx(CMakePackage):
     variant('tprof', default=True,
             description='Enable tiny profiling features')
 
+    depends_on('sensei@4.0.0:', when='@22.07: +sensei')
+    conflicts('+sensei', when='@:22.06',
+              msg='WarpX supports SENSEI 4.0+ with 22.07 and newer')
+
     depends_on('ascent', when='+ascent')
-    # note: ~shared is only needed until the new concretizer is in and
-    #       honors the conflict inside the Ascent package to find this
-    #       automatically
-    depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
+    depends_on('ascent +cuda', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
@@ -166,6 +169,7 @@ class Warpx(CMakePackage):
             # variants
             self.define_from_variant('WarpX_APP', 'app'),
             self.define_from_variant('WarpX_ASCENT', 'ascent'),
+            self.define_from_variant('WarpX_SENSEI', 'sensei'),
             '-DWarpX_COMPUTE={0}'.format(
                 spec.variants['compute'].value.upper()),
             '-DWarpX_DIMS={0}'.format(
@@ -184,6 +188,10 @@ class Warpx(CMakePackage):
 
         with when('+openpmd'):
             args.append('-DWarpX_openpmd_internal=OFF')
+
+        if '+sensei' in spec:
+            args.append(self.define('SENSEI_DIR',
+                        join_path(spec['sensei'].prefix.lib, 'cmake')))
 
         return args
 
