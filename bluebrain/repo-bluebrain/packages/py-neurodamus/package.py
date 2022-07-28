@@ -13,6 +13,7 @@ class PyNeurodamus(PythonPackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-py.git"
 
     version('develop', branch='main', submodules=True)
+    version('2.12.1',  tag='2.12.1', submodules=True)
     version('2.12.0',  tag='2.12.0', submodules=True)
     version('2.11.3',  tag='2.11.3', submodules=True)
     version('2.11.2',  tag='2.11.2', submodules=True)
@@ -48,7 +49,7 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-morphio',       type='run', when='@2.6.0:')
     # Scipy is optional. Latest won't build well %intel, only @1.5.4 will
     depends_on('py-scipy',         type='run', when='+all_deps@2.5.3:')
-    depends_on('py-psutil',        type='run', when='@2.12.0:')
+    depends_on('py-psutil',        type='run', when='@2.12.1:')
 
     @run_after('install')
     def install_files(self):
