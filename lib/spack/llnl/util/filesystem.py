@@ -1968,12 +1968,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the library
-    if is_windows:
-        if shared:
-            suffixes = ['dll']
-        else:
-            suffixes = ['lib']
-    elif shared:
+    if shared:
         # Used on both Linux and macOS
         suffixes = ['so']
         if sys.platform == 'darwin':
