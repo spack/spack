@@ -369,6 +369,20 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
+class WindowsPackageMixin(object):
+    """Collection of functionality surrounding Windows runtime linking
+    feature. This is essentially meaningless for all other platforms
+    due to their use of RPATH. All methods within this class are no-ops on
+    non Windows. Packages can customize and manipulate this class as
+    they would a genuine RPATH, i.e. adding directories that contain
+    runtime binary dependencies"""
+
+    fs.
+
+    @property
+    def win_runtime_link(self):
+
+
 class PackageViewMixin(object):
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
