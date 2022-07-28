@@ -377,7 +377,7 @@ def _iter_s3_prefix(client, url, num_entries=1024):
 def _iter_local_prefix(path):
     for root, _, files in os.walk(path):
         for f in files:
-            yield os.path.relpath(os.path.join(root, f), path)
+            yield os.path.relpath(root.joinpath( f), path)
 
 
 def list_url(url, recursive=False):
@@ -388,7 +388,7 @@ def list_url(url, recursive=False):
         if recursive:
             return list(_iter_local_prefix(local_path))
         return [subpath for subpath in os.listdir(local_path)
-                if os.path.join(local_path, subpath.is_file())]
+                if local_path.joinpath( subpath.is_file())]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)

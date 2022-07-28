@@ -100,7 +100,7 @@ def hello_world(tmpdir):
         gcc = spack.util.executable.which('gcc')
         executable = source.dirpath('main.x')
         # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if x.is_absolute() else os.path.join('$ORIGIN', x)
+        rpaths = [x if x.is_absolute() else Path('$ORIGIN').joinpath( x)
                   for x in rpaths]
         rpath_str = ':'.join(rpaths)
         opts = [
@@ -245,7 +245,7 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 
 @pytest.mark.parametrize('start_path,path_root,paths,expected', [
     ('/usr/bin/test', '/usr', ['/usr/lib', '/usr/lib64', '/opt/local/lib'],
-     [os.path.join('$ORIGIN', '..', 'lib'), os.path.join('$ORIGIN', '..', 'lib64'),
+     [Path('$ORIGIN').joinpath( '..', 'lib'), Path('$ORIGIN').joinpath( '..', 'lib64'),
      '/opt/local/lib'])
 ])
 def test_make_relative_paths(start_path, path_root, paths, expected):
@@ -258,7 +258,7 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     [os.sep + os.path.join('usr', 'lib'), os.sep + os.path.join('usr', 'lib64'),
+     [os.sep + Path('usr').joinpath( 'lib'), os.sep + Path('usr').joinpath( 'lib64'),
       '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),

@@ -23,10 +23,10 @@ class Xl(Compiler):
     fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('xl', 'xlc'),
-                  'cxx': os.path.join('xl', 'xlc++'),
-                  'f77': os.path.join('xl', 'xlf'),
-                  'fc': os.path.join('xl', 'xlf90')}
+    link_paths = {'cc': Path('xl').joinpath( 'xlc'),
+                  'cxx': Path('xl').joinpath( 'xlc++'),
+                  'f77': Path('xl').joinpath( 'xlf'),
+                  'fc': Path('xl').joinpath( 'xlf90')}
 
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'

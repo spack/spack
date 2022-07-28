@@ -293,7 +293,7 @@ def test_replace_paths(tmpdir):
         mkdirp(oldlibdir_d)
         prefix2hash[str(oldprefix_d)] = hash_d
 
-        oldprefix_local = os.path.join('%s' % tmpdir, 'usr', 'local')
+        oldprefix_local = Path('%s' % tmpdir, 'usr').joinpath( 'local')
         oldlibdir_local = os.path.join('%s' % oldprefix_local, 'lib')
         mkdirp(oldlibdir_local)
         prefix2hash[str(oldprefix_local)] = hash_loco
@@ -339,7 +339,7 @@ def test_replace_paths(tmpdir):
         mkdirp(libdir_d)
         hash2prefix[hash_d] = str(prefix_d)
 
-        prefix_local = os.path.join('%s' % tmpdir, 'usr', 'local')
+        prefix_local = Path('%s' % tmpdir, 'usr').joinpath( 'local')
         libdir_local = os.path.join(prefix_local, 'lib')
         mkdirp(libdir_local)
         hash2prefix[hash_loco] = str(prefix_local)

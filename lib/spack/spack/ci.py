@@ -532,7 +532,7 @@ def _format_job_needs(phase_name, strip_compilers, dep_jobs,
 def get_change_revisions():
     """If this is a git repo get the revisions to use when checking
     for changed packages and spack core modules."""
-    git_dir = os.path.join(spack.paths.prefix, '.git')
+    git_dir = spack.paths.prefix.joinpath('.git')
     if git_dir.exists() and git_dir.is_dir():
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
@@ -778,7 +778,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get('CI_PROJECT_DIR', Path.cwd())
-        pipeline_artifacts_dir = os.path.join(proj_dir, 'jobs_scratch_dir')
+        pipeline_artifacts_dir = proj_dir.joinpath('jobs_scratch_dir')
 
     pipeline_artifacts_dir = pipeline_artifacts_dir.resolve()
     concrete_env_dir = os.path.join(
@@ -790,14 +790,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     if not concrete_env_dir.exists():
         os.makedirs(concrete_env_dir)
     shutil.copyfile(env.manifest_path,
-                    os.path.join(concrete_env_dir, 'spack.yaml'))
+                    concrete_env_dir.joinpath('spack.yaml'))
     shutil.copyfile(env.lock_path,
-                    os.path.join(concrete_env_dir, 'spack.lock'))
+                    concrete_env_dir.joinpath('spack.lock'))
 
-    job_log_dir = os.path.join(pipeline_artifacts_dir, 'logs')
-    job_repro_dir = os.path.join(pipeline_artifacts_dir, 'reproduction')
-    local_mirror_dir = os.path.join(pipeline_artifacts_dir, 'mirror')
-    user_artifacts_dir = os.path.join(pipeline_artifacts_dir, 'user_data')
+    job_log_dir = pipeline_artifacts_dir.joinpath('logs')
+    job_repro_dir = pipeline_artifacts_dir.joinpath('reproduction')
+    local_mirror_dir = pipeline_artifacts_dir.joinpath('mirror')
+    user_artifacts_dir = pipeline_artifacts_dir.joinpath('user_data')
 
     # We communicate relative paths to the downstream jobs to avoid issues in
     # situations where the CI_PROJECT_DIR varies between the pipeline
@@ -1105,7 +1105,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(
                         local_mirror_dir, 'build_cache')
-                    artifact_paths.extend([os.path.join(bc_root, p) for p in [
+                    artifact_paths.extend([bc_root.joinpath(p) for p in [
                         bindist.tarball_name(release_spec, '.spec.json'),
                         bindist.tarball_directory_name(release_spec),
                     ]])
@@ -1433,7 +1433,7 @@ def import_signing_key(base64_signing_key):
         decoded_key = decoded_key.decode('utf8')
 
     with TemporaryDirectory() as tmpdir:
-        sign_key_path = os.path.join(tmpdir, 'signing_key')
+        sign_key_path = tmpdir.joinpath('signing_key')
         with open(sign_key_path, 'w') as fd:
             fd.write(decoded_key)
 
@@ -1629,7 +1629,7 @@ def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
         tty.debug('job package: {0}'.format(job_pkg))
         stage_dir = job_pkg.stage.path
         tty.debug('stage dir: {0}'.format(stage_dir))
-        build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
+        build_out_src = stage_dir.joinpath('spack-build-out.txt')
         build_out_dst = os.path.join(
             job_log_dir, 'spack-build-out.txt')
         tty.debug('Copying build log ({0}) to artifacts ({1})'.format(
@@ -1673,7 +1673,7 @@ def download_and_extract_artifacts(url, work_dir):
             response_code)
         raise SpackError(msg)
 
-    artifacts_zip_path = os.path.join(work_dir, 'artifacts.zip')
+    artifacts_zip_path = work_dir.joinpath('artifacts.zip')
 
     if not work_dir.exists():
         os.makedirs(work_dir)
@@ -1691,7 +1691,7 @@ def download_and_extract_artifacts(url, work_dir):
 def get_spack_info():
     """ If spack is running from a git repo, return the most recent git log
         entry, otherwise, return a string containing the spack version. """
-    git_path = os.path.join(spack.paths.prefix, ".git")
+    git_path = spack.paths.prefix.joinpath(".git")
     if git_path.exists():
         git = exe.which("git")
         if git:
@@ -1728,7 +1728,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
     print('checkout_commit: {0}'.format(checkout_commit))
     print('merge_commit: {0}'.format(merge_commit))
 
-    dot_git_path = os.path.join(spack.paths.prefix, ".git")
+    dot_git_path = spack.paths.prefix.joinpath(".git")
     if not dot_git_path.exists():
         tty.error('Unable to find the path to your local spack clone')
         return False
@@ -1770,7 +1770,7 @@ def setup_spack_repro_version(repro_dir, checkout_commit, merge_commit=None):
 
     # Finally, attempt to put the cloned repo into the same state used during
     # the pipeline build job
-    repro_spack_path = os.path.join(repro_dir, 'spack')
+    repro_spack_path = repro_dir.joinpath('spack')
     with fs.working_dir(repro_spack_path):
         co_out = git("checkout", checkout_commit,
                      output=str, error=os.devnull,
@@ -1892,7 +1892,7 @@ def reproduce_ci_job(url, work_dir):
         mount_as_dir = '/work'
         if repro_details:
             mount_as_dir = repro_details['ci_project_dir']
-            mounted_repro_dir = os.path.join(mount_as_dir, rel_repro_dir)
+            mounted_repro_dir = mount_as_dir.joinpath(rel_repro_dir)
 
         # We will also try to clone spack from your local checkout and
         # reproduce the state present during the CI build, and put that into
@@ -1978,7 +1978,7 @@ def reproduce_ci_job(url, work_dir):
             mounted_repro_dir if job_image else repro_dir))
     inst_list.append('    - Run the install script\n\n')
     inst_list.append('        $ {0}\n'.format(
-        os.path.join(mounted_repro_dir, 'install.sh')
+        mounted_repro_dir.joinpath('install.sh')
         if job_image else install_script))
 
     print(''.join(inst_list))

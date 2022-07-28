@@ -14,20 +14,20 @@ from spack.version import ver
 
 #: compiler symlink mappings for mixed f77 compilers
 f77_mapping = [
-    ('gfortran', os.path.join('clang', 'gfortran')),
-    ('xlf_r', os.path.join('xl_r', 'xlf_r')),
-    ('xlf', os.path.join('xl', 'xlf')),
-    ('pgfortran', os.path.join('pgi', 'pgfortran')),
-    ('ifort', os.path.join('intel', 'ifort'))
+    ('gfortran', Path('clang').joinpath( 'gfortran')),
+    ('xlf_r', Path('xl_r').joinpath( 'xlf_r')),
+    ('xlf', Path('xl').joinpath( 'xlf')),
+    ('pgfortran', Path('pgi').joinpath( 'pgfortran')),
+    ('ifort', Path('intel').joinpath( 'ifort'))
 ]
 
 #: compiler symlink mappings for mixed f90/fc compilers
 fc_mapping = [
-    ('gfortran', os.path.join('clang', 'gfortran')),
-    ('xlf90_r', os.path.join('xl_r', 'xlf90_r')),
-    ('xlf90', os.path.join('xl', 'xlf90')),
-    ('pgfortran', os.path.join('pgi', 'pgfortran')),
-    ('ifort', os.path.join('intel', 'ifort'))
+    ('gfortran', Path('clang').joinpath( 'gfortran')),
+    ('xlf90_r', Path('xl_r').joinpath( 'xlf90_r')),
+    ('xlf90', Path('xl').joinpath( 'xlf90')),
+    ('pgfortran', Path('pgi').joinpath( 'pgfortran')),
+    ('ifort', Path('intel').joinpath( 'ifort'))
 ]
 
 
@@ -61,8 +61,8 @@ class Clang(Compiler):
     @property
     def link_paths(self):
         # clang links are always the same
-        link_paths = {'cc': os.path.join('clang', 'clang'),
-                      'cxx': os.path.join('clang', 'clang++')}
+        link_paths = {'cc': Path('clang').joinpath( 'clang'),
+                      'cxx': Path('clang').joinpath( 'clang++')}
 
         # fortran links need to look at the actual compiler names from
         # compilers.yaml to figure out which named symlink to use
@@ -71,14 +71,14 @@ class Clang(Compiler):
                 link_paths['f77'] = link_path
                 break
         else:
-            link_paths['f77'] = os.path.join('clang', 'flang')
+            link_paths['f77'] = Path('clang').joinpath( 'flang')
 
         for compiler_name, link_path in fc_mapping:
             if self.fc and compiler_name in self.fc:
                 link_paths['fc'] = link_path
                 break
         else:
-            link_paths['fc'] = os.path.join('clang', 'flang')
+            link_paths['fc'] = Path('clang').joinpath( 'flang')
 
         return link_paths
 

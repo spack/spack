@@ -81,8 +81,8 @@ def _try_import_from_store(module, query_spec, query_info=None):
     for candidate_spec in installed_specs:
         pkg = candidate_spec['python'].package
         module_paths = {
-            os.path.join(candidate_spec.prefix, pkg.purelib),
-            os.path.join(candidate_spec.prefix, pkg.platlib),
+            candidate_spec.prefix.joinpath(pkg.purelib),
+            candidate_spec.prefix.joinpath(pkg.platlib),
         }
         sys.path.extend(module_paths)
 
@@ -229,7 +229,7 @@ class _BootstrapperBase(object):
             return self.url
 
         # Otherwise, it's a relative path
-        return spack.util.url.format(os.path.join(self.metadata_dir, self.url))
+        return spack.util.url.format(self.metadata_dir.joinpath(self.url))
 
     @property
     def mirror_scope(self):
@@ -270,7 +270,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
         """Return metadata about the given package."""
         json_filename = '{0}.json'.format(package_name)
         json_dir = self.metadata_dir
-        json_path = os.path.join(json_dir, json_filename)
+        json_path = json_dir.joinpath(json_filename)
         with open(json_path) as f:
             data = json.load(f)
         return data
@@ -622,7 +622,7 @@ def _bootstrap_config_scopes():
     for name, path in configuration_paths:
         platform = spack.platforms.host().name
         platform_scope = spack.config.ConfigScope(
-            '/'.join([name, platform]), os.path.join(path, platform)
+            '/'.join([name, platform]), path.joinpath(platform)
         )
         generic_scope = spack.config.ConfigScope(name, path)
         config_scopes.extend([generic_scope, platform_scope])
@@ -738,14 +738,14 @@ def _root_path():
 def _store_path():
     bootstrap_root_path = _root_path()
     return spack.util.path.canonicalize_path(
-        os.path.join(bootstrap_root_path, 'store')
+        bootstrap_root_path.joinpath('store')
     )
 
 
 def _config_path():
     bootstrap_root_path = _root_path()
     return spack.util.path.canonicalize_path(
-        os.path.join(bootstrap_root_path, 'config')
+        bootstrap_root_path.joinpath('config')
     )
 
 
@@ -1020,7 +1020,7 @@ def bootstrapping_sources(scope=None):
     for entry in source_configs:
         current = copy.copy(entry)
         metadata_dir = spack.util.path.canonicalize_path(entry['metadata'])
-        metadata_yaml = os.path.join(metadata_dir, METADATA_YAML_FILENAME)
+        metadata_yaml = metadata_dir.joinpath(METADATA_YAML_FILENAME)
         with open(metadata_yaml) as f:
             current.update(spack.util.spack_yaml.load(f))
         list_of_sources.append(current)

@@ -249,7 +249,7 @@ def test_get_command_paths(config):
     ext_paths = []
     expected_cmd_paths = []
     for ext in extensions:
-        ext_path = os.path.join('my', 'path', 'to', 'spack-' + ext)
+        ext_path = Path('my').joinpath( 'path', 'to', 'spack-' + ext)
         ext_paths.append(ext_path)
         path = os.path.join(ext_path, spack.cmd.python_name(ext), 'cmd')
         path = path.resolve()
@@ -261,7 +261,7 @@ def test_get_command_paths(config):
 
 def test_variable_in_extension_path(config, working_env):
     """Test variables in extension paths."""
-    os.environ['_MY_VAR'] = os.path.join('my', 'var')
+    os.environ['_MY_VAR'] = Path('my').joinpath( 'var')
     ext_paths = [
         os.path.join("~", "${_MY_VAR}", "spack-extension-1")
     ]

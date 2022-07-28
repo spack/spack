@@ -88,7 +88,7 @@ all_schemas.update(dict((key, spack.schema.env.schema)
 
 #: Path to the default configuration
 configuration_defaults_path = (
-    'defaults', os.path.join(spack.paths.etc_path, 'defaults')
+    'defaults', spack.paths.etc_path.joinpath( 'defaults')
 )
 
 #: Hard-coded default values for some key configuration options.
@@ -142,7 +142,7 @@ class ConfigScope(object):
 
     def get_section_filename(self, section):
         _validate_section_name(section)
-        return os.path.join(self.path, "%s.yaml" % section)
+        return self.path.joinpath( "%s.yaml" % section)
 
     def get_section(self, section):
         if section not in self.sections:
@@ -289,7 +289,7 @@ class SingleFileScope(ConfigScope):
             parent = self.path.parent
             mkdirp(parent)
 
-            tmp = os.path.join(parent, '.%s.tmp' % self.path.name)
+            tmp = parent.joinpath( '.%s.tmp' % self.path.name)
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
@@ -756,8 +756,8 @@ command_line_scopes = []  # type: List[str]
 def _add_platform_scope(cfg, scope_type, name, path):
     """Add a platform-specific subdirectory for the current platform."""
     platform = spack.platforms.host().name
-    plat_name = os.path.join(name, platform)
-    plat_path = os.path.join(path, platform)
+    plat_name = name.joinpath( platform)
+    plat_path = path.joinpath( platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
 
@@ -936,8 +936,8 @@ def set(path, value, scope=None):
 
 
 def add_default_platform_scope(platform):
-    plat_name = os.path.join('defaults', platform)
-    plat_path = os.path.join(configuration_defaults_path[1], platform)
+    plat_name = Path('defaults').joinpath( platform)
+    plat_path = configuration_defaults_path[1].joinpath( platform)
     config.push_scope(ConfigScope(plat_name, plat_path))
 
 

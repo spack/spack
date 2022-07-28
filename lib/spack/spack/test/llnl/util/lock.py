@@ -105,8 +105,8 @@ system.
 """
 locations = [
     tempfile.gettempdir(),
-    os.path.join('/nfs/tmp2/', getpass.getuser()),
-    os.path.join('/p/lscratch*/', getpass.getuser()),
+    Path('/nfs/tmp2/').joinpath( getpass.getuser()),
+    Path('/p/lscratch*/').joinpath( getpass.getuser()),
 ]
 
 """This is the longest a failed multiproc test will take.

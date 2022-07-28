@@ -82,7 +82,7 @@ class SourceMergeVisitor(object):
         """
         Register a directory if dst / rel_path is not blocked by a file or ignored.
         """
-        proj_rel_path = os.path.join(self.projection, rel_path)
+        proj_rel_path = self.projection.joinpath(rel_path)
 
         if self.ignore(rel_path):
             # Don't recurse when dir is ignored.
@@ -92,8 +92,8 @@ class SourceMergeVisitor(object):
             src_a_root, src_a_relpath = self.files[proj_rel_path]
             self.fatal_conflicts.append(MergeConflict(
                 dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+                src_a=src_a_root.joinpath(src_a_relpath),
+                src_b=root.joinpath(rel_path)))
             return False
         elif proj_rel_path in self.directories:
             # No new directory, carry on.
@@ -127,7 +127,7 @@ class SourceMergeVisitor(object):
             handle_as_dir = False
         else:
             # Only follow symlinked dirs when pointing deeper
-            src = os.path.join(root, rel_path)
+            src = root.joinpath(rel_path)
             real_parent = os.path.realpath(src.parent)
             real_child = os.path.realpath(src)
             handle_as_dir = real_child.startswith(real_parent)
@@ -142,7 +142,7 @@ class SourceMergeVisitor(object):
         pass
 
     def visit_file(self, root, rel_path, depth):
-        proj_rel_path = os.path.join(self.projection, rel_path)
+        proj_rel_path = self.projection.joinpath(rel_path)
 
         if self.ignore(rel_path):
             pass
@@ -151,15 +151,15 @@ class SourceMergeVisitor(object):
             src_a_root, src_a_relpath = self.directories[proj_rel_path]
             self.fatal_conflicts.append(MergeConflict(
                 dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+                src_a=src_a_root.joinpath(src_a_relpath),
+                src_b=root.joinpath(rel_path)))
         elif proj_rel_path in self.files:
             # In some cases we can resolve file-file conflicts
             src_a_root, src_a_relpath = self.files[proj_rel_path]
             self.file_conflicts.append(MergeConflict(
                 dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+                src_a=src_a_root.joinpath(src_a_relpath),
+                src_b=root.joinpath(rel_path)))
         else:
             # Otherwise register this file to be linked.
             self.files[proj_rel_path] = (root, rel_path)
@@ -176,7 +176,7 @@ class SourceMergeVisitor(object):
         # it consists of, and check whether that's causing conflicts.
         path = ''
         for part in self.projection.split(os.sep):
-            path = os.path.join(path, part)
+            path = path.joinpath(part)
             if path not in self.files:
                 self.directories[path] = ('<projection>', path)
             else:
@@ -184,8 +184,8 @@ class SourceMergeVisitor(object):
                 src_a_root, src_a_relpath = self.files[path]
                 self.fatal_conflicts.append(MergeConflict(
                     dst=path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join('<projection>', path)))
+                    src_a=src_a_root.joinpath(src_a_relpath),
+                    src_b=Path('<projection>').joinpath(path)))
 
 
 class DestinationMergeVisitor(object):
@@ -212,8 +212,8 @@ class DestinationMergeVisitor(object):
             src_a_root, src_a_relpath = self.src.files[rel_path]
             self.src.fatal_conflicts.append(MergeConflict(
                 rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+                src_a_root.joinpath(src_a_relpath),
+                root.joinpath(rel_path)))
             return False
 
         # If destination dir was also a src dir, remove the mkdir
@@ -240,15 +240,15 @@ class DestinationMergeVisitor(object):
             src_a_root, src_a_relpath = self.src.directories[rel_path]
             self.src.fatal_conflicts.append(MergeConflict(
                 rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+                src_a_root.joinpath(src_a_relpath),
+                root.joinpath(rel_path)))
 
         if rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
             self.src.fatal_conflicts.append(MergeConflict(
                 rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+                src_a_root.joinpath(src_a_relpath),
+                root.joinpath(rel_path)))
 
         # Never descend into symlinked target dirs.
         return False
@@ -262,15 +262,15 @@ class DestinationMergeVisitor(object):
             src_a_root, src_a_relpath = self.src.directories[rel_path]
             self.src.fatal_conflicts.append(MergeConflict(
                 rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+                src_a_root.joinpath(src_a_relpath),
+                root.joinpath(rel_path)))
 
         elif rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
             self.src.fatal_conflicts.append(MergeConflict(
                 rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+                src_a_root.joinpath(src_a_relpath),
+                root.joinpath(rel_path)))
 
 
 class LinkTree(object):
@@ -336,7 +336,7 @@ class LinkTree(object):
 
                 # mark empty directories so they aren't removed on unmerge.
                 if not os.listdir(dest):
-                    marker = os.path.join(dest, empty_file_name)
+                    marker = dest.joinpath(empty_file_name)
                     touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
@@ -353,7 +353,7 @@ class LinkTree(object):
                     shutil.rmtree(dest, ignore_errors=True)
 
                 # remove empty dir marker if present.
-                marker = os.path.join(dest, empty_file_name)
+                marker = dest.joinpath(empty_file_name)
                 if marker.exists():
                     marker.unlink()
 

@@ -495,7 +495,7 @@ class TestConcretize(object):
         spec = Spec('externaltool%gcc')
         spec.concretize()
         assert spec['externaltool'].external_path == \
-            os.path.sep + os.path.join('path', 'to', 'external_tool')
+            os.path.sep + Path('path').joinpath( 'to', 'external_tool')
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
@@ -525,9 +525,9 @@ class TestConcretize(object):
         spec = Spec('externaltest')
         spec.concretize()
         assert spec['externaltool'].external_path == \
-            os.path.sep + os.path.join('path', 'to', 'external_tool')
+            os.path.sep + Path('path').joinpath( 'to', 'external_tool')
         assert spec['stuff'].external_path == \
-            os.path.sep + os.path.join('path', 'to', 'external_virtual_gcc')
+            os.path.sep + Path('path').joinpath( 'to', 'external_virtual_gcc')
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 

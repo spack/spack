@@ -24,10 +24,10 @@ class Intel(Compiler):
     fc_names = ['ifort']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('intel', 'icc'),
-                  'cxx': os.path.join('intel', 'icpc'),
-                  'f77': os.path.join('intel', 'ifort'),
-                  'fc': os.path.join('intel', 'ifort')}
+    link_paths = {'cc': Path('intel').joinpath( 'icc'),
+                  'cxx': Path('intel').joinpath( 'icpc'),
+                  'f77': Path('intel').joinpath( 'ifort'),
+                  'fc': Path('intel').joinpath( 'ifort')}
 
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'

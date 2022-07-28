@@ -30,10 +30,10 @@ class Gcc(spack.compiler.Compiler):
     suffixes = [r'-mp-\d+(?:\.\d+)?', r'-\d+(?:\.\d+)?', r'\d\d']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('gcc', 'gcc'),
-                  'cxx': os.path.join('gcc', 'g++'),
-                  'f77': os.path.join('gcc', 'gfortran'),
-                  'fc': os.path.join('gcc', 'gfortran')}
+    link_paths = {'cc': Path('gcc').joinpath( 'gcc'),
+                  'cxx': Path('gcc').joinpath( 'g++'),
+                  'f77': Path('gcc').joinpath( 'gfortran'),
+                  'fc': Path('gcc').joinpath( 'gfortran')}
 
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'

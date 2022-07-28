@@ -244,7 +244,7 @@ def test_spack_paths_before_module_paths(
     s.concretize()
     pkg = s.package
 
-    module_path = os.path.join('path', 'to', 'module')
+    module_path = Path('path').joinpath( 'to', 'module')
 
     def _set_wrong_cc(x):
         os.environ['PATH'] = module_path + os.pathsep + os.environ['PATH']
@@ -258,7 +258,7 @@ def test_spack_paths_before_module_paths(
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, os.path.join('lib', 'spack', 'env'))
+    spack_path = os.path.join(spack.paths.prefix, Path('lib').joinpath( 'spack', 'env'))
 
     paths = os.environ['PATH'].split(os.pathsep)
 

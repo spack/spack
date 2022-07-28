@@ -25,7 +25,7 @@ class Dpcpp(spack.compilers.oneapi.Oneapi):
     cxx_names = ['dpcpp']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('oneapi', 'icx'),
-                  'cxx': os.path.join('oneapi', 'dpcpp'),
-                  'f77': os.path.join('oneapi', 'ifx'),
-                  'fc': os.path.join('oneapi', 'ifx')}
+    link_paths = {'cc': Path('oneapi').joinpath( 'icx'),
+                  'cxx': Path('oneapi').joinpath( 'dpcpp'),
+                  'f77': Path('oneapi').joinpath( 'ifx'),
+                  'fc': Path('oneapi').joinpath( 'ifx')}

@@ -287,7 +287,7 @@ class YamlFilesystemView(FilesystemView):
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
-        self.projections_path = os.path.join(self._root, _projections_path)
+        self.projections_path = self._root.joinpath( _projections_path))
         if not self.projections:
             # Read projections file from view
             self.projections = self.read_projections()

@@ -29,10 +29,10 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': os.path.join('cce', 'cc'),
-                  'cxx': os.path.join('cce', 'case-insensitive', 'CC'),
-                  'f77': os.path.join('cce', 'ftn'),
-                  'fc': os.path.join('cce', 'ftn')}
+    link_paths = {'cc': Path('cce').joinpath( 'cc'),
+                  'cxx': Path('cce').joinpath( 'case-insensitive', 'CC'),
+                  'f77': Path('cce').joinpath( 'ftn'),
+                  'fc': Path('cce').joinpath( 'ftn')}
 
     @property
     def is_clang_based(self):

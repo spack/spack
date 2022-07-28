@@ -736,14 +736,14 @@ def test_external_entries_in_db(mutable_database):
 
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == os.sep + \
-        os.path.join('path', 'to', 'external_tool')
+        Path('path').joinpath( 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
     rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == os.sep + \
-        os.path.join('path', 'to', 'external_tool')
+        Path('path').joinpath( 'to', 'external_tool')
     assert not rec.spec.external_modules
     assert rec.explicit is True
 

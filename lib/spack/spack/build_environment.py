@@ -275,16 +275,16 @@ def set_compiler_environment_variables(pkg, env):
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
-        env.set('CC', os.path.join(link_dir, compiler.link_paths['cc']))
+        env.set('CC', link_dir.joinpath(compiler.link_paths['cc']))
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
-        env.set('CXX', os.path.join(link_dir, compiler.link_paths['cxx']))
+        env.set('CXX', link_dir.joinpath(compiler.link_paths['cxx']))
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
-        env.set('F77', os.path.join(link_dir, compiler.link_paths['f77']))
+        env.set('F77', link_dir.joinpath(compiler.link_paths['f77']))
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
-        env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
+        env.set('FC', link_dir.joinpath(compiler.link_paths['fc']))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
@@ -388,7 +388,7 @@ def set_wrapper_variables(pkg, env):
         pkg.compiler.link_paths['cc'].parent)
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
-        ci = os.path.join(item, 'case-insensitive')
+        ci = item.joinpath('case-insensitive')
         if ci.is_dir():
             env_paths.append(ci)
 
@@ -464,7 +464,7 @@ def set_wrapper_variables(pkg, env):
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
     # not be created for the install).
     for libdir in ['lib64', 'lib']:
-        lib_path = os.path.join(pkg.prefix, libdir)
+        lib_path = pkg.prefix.joinpath(libdir)
         rpath_dirs.insert(0, lib_path)
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
@@ -547,10 +547,10 @@ def _set_variables_for_single_module(pkg, module):
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
-    m.spack_cc = os.path.join(link_dir, pkg.compiler.link_paths['cc'])
-    m.spack_cxx = os.path.join(link_dir, pkg.compiler.link_paths['cxx'])
-    m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
-    m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
+    m.spack_cc = link_dir.joinpath(pkg.compiler.link_paths['cc'])
+    m.spack_cxx = link_dir.joinpath(pkg.compiler.link_paths['cxx'])
+    m.spack_f77 = link_dir.joinpath(pkg.compiler.link_paths['f77'])
+    m.spack_fc = link_dir.joinpath(pkg.compiler.link_paths['fc'])
 
     # Emulate some shell commands for convenience
     m.pwd = os.getcwd
@@ -868,7 +868,7 @@ def _make_runnable(pkg, env):
     prefix = pkg.prefix
 
     for dirname in ['bin', 'bin64']:
-        bin_dir = os.path.join(prefix, dirname)
+        bin_dir = prefix.joinpath(dirname)
         if bin_dir.is_dir():
             env.prepend_path('PATH', bin_dir)
 
@@ -965,7 +965,7 @@ def modifications_from_dependencies(
             env.prepend_path('CMAKE_PREFIX_PATH', prefix)
 
             for directory in ('lib', 'lib64', 'share'):
-                pcdir = os.path.join(prefix, directory, 'pkgconfig')
+                pcdir = prefix.joinpath( directory, 'pkgconfig'))
                 if pcdir.is_dir():
                     env.prepend_path('PKG_CONFIG_PATH', pcdir)
 

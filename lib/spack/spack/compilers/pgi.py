@@ -23,10 +23,10 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('pgi', 'pgcc'),
-                  'cxx': os.path.join('pgi', 'pgc++'),
-                  'f77': os.path.join('pgi', 'pgfortran'),
-                  'fc': os.path.join('pgi', 'pgfortran')}
+    link_paths = {'cc': Path('pgi').joinpath( 'pgcc'),
+                  'cxx': Path('pgi').joinpath( 'pgc++'),
+                  'f77': Path('pgi').joinpath( 'pgfortran'),
+                  'fc': Path('pgi').joinpath( 'pgfortran')}
 
     PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'

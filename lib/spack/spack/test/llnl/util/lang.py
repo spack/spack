@@ -26,7 +26,7 @@ def module_path(tmpdir):
 import os.path
 
 value = 1
-path = os.path.join('/usr', 'bin')
+path = Path('/usr').joinpath( 'bin')
 """
     m.write(content)
 
@@ -141,14 +141,14 @@ def test_load_modules_from_file(module_path):
     foo = llnl.util.lang.load_module_from_file('foo', module_path)
     assert 'foo' in sys.modules
     assert foo.value == 1
-    assert foo.path == os.path.join('/usr', 'bin')
+    assert foo.path == Path('/usr').joinpath( 'bin')
 
     # Check that the module is not reloaded a second time on subsequent calls
     foo.value = 2
     foo = llnl.util.lang.load_module_from_file('foo', module_path)
     assert 'foo' in sys.modules
     assert foo.value == 2
-    assert foo.path == os.path.join('/usr', 'bin')
+    assert foo.path == Path('/usr').joinpath( 'bin')
 
 
 def test_uniq():

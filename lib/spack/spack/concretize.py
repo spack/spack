@@ -89,7 +89,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
+        path = os.path.normpath(env.path.joinpath( dev_info['path'])))
 
         if 'dev_path' in spec.variants:
             assert spec.variants['dev_path'].value == path
@@ -768,7 +768,7 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
         debug_msg = '[CONCRETIZATION]: Creating helper repository in {0}'
         tty.debug(debug_msg.format(repo_path))
 
-        pkg_dir = os.path.join(repo_path, 'packages', 'concretizationroot')
+        pkg_dir = repo_path.joinpath( 'packages', 'concretizationroot'))
         fs.mkdirp(pkg_dir)
         environment = spack.tengine.make_environment()
         template = environment.get_template('misc/coconcretization.pyt')
@@ -780,7 +780,7 @@ def _concretize_specs_together_original(*abstract_specs, **kwargs):
                        for spec in abstract_specs
                        for dep in spec.traverse(root=True)]
 
-        with open(os.path.join(pkg_dir, 'package.py'), 'w') as f:
+        with open(pkg_dir.joinpath( 'package.py'), 'w') as f:)
             f.write(template.render(specs=[str(s) for s in split_specs]))
 
         return spack.repo.Repo(repo_path)

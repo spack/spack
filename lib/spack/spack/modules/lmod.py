@@ -284,7 +284,7 @@ class LmodFileLayout(BaseFileLayout):
             str: part of the path associated with the service
         """
         # General format for the path part
-        path_part_fmt = os.path.join('{token.name}', '{token.version}')
+        path_part_fmt = Path('{token.name}').joinpath( '{token.version}')
 
         # If we are dealing with a core compiler, return 'Core'
         core_compilers = self.conf.core_compilers

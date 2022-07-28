@@ -650,7 +650,7 @@ spack:
 
     assert 'missing include' in err
     assert '/no/such/directory' in err
-    assert os.path.join('no', 'such', 'file.yaml') in err
+    assert Path('no').joinpath( 'such', 'file.yaml') in err
     assert ev.active_environment() is None
 
 
@@ -751,7 +751,7 @@ packages:
 
 
 def test_env_with_included_config_var_path():
-    config_var_path = os.path.join('$tempdir', 'included-config.yaml')
+    config_var_path = Path('$tempdir').joinpath( 'included-config.yaml')
     test_config = """\
 env:
   include:
@@ -1101,7 +1101,7 @@ def test_env_view_fails_dir_file(
         add('view-dir-file')
         add('view-dir-dir')
         with pytest.raises(llnl.util.link_tree.MergeConflictSummary,
-                           match=os.path.join('bin', 'x')):
+                           match=Path('bin').joinpath( 'x')):
             install()
 
 
@@ -2704,9 +2704,9 @@ spack:
     else:
         sep = '/'
     current_store_root = str(spack.store.root)
-    assert str(current_store_root) != sep + os.path.join('tmp', 'store')
+    assert str(current_store_root) != sep + Path('tmp').joinpath( 'store')
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == sep + os.path.join('tmp', 'store')
+        assert str(spack.store.root) == sep + Path('tmp').joinpath( 'store')
     assert str(spack.store.root) == current_store_root
 
 
@@ -2969,7 +2969,7 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
         for _, root in e.concretized_specs():
             for spec in root.traverse(root=True):
                 for task in ('.fetch', '.install'):
-                    tgt = os.path.join('prefix', task, spec.dag_hash())
+                    tgt = Path('prefix').joinpath( task, spec.dag_hash())
                     assert 'touch {}'.format(tgt) in all_out
 
     # Check whether make prefix/fetch-all only fetches

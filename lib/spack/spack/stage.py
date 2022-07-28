@@ -141,7 +141,7 @@ def _resolve_paths(candidates):
     for path in candidates:
         # Remove the extra `$user` node from a `$tempdir/$user` entry for
         # hosts that automatically append `$user` to `$tempdir`.
-        if path.startswith(os.path.join('$tempdir', '$user')) and tmp_has_usr:
+        if path.startswith(Path('$tempdir').joinpath( '$user')) and tmp_has_usr:
             path = path.replace("/$user", "", 1)
 
         # Ensure the path is unique per user.

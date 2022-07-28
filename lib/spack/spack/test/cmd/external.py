@@ -176,7 +176,7 @@ def test_find_external_no_manifest(
     """
     monkeypatch.setenv('PATH', '')
     monkeypatch.setattr(spack.cray_manifest, 'default_path',
-                        os.path.join('a', 'path', 'that', 'doesnt', 'exist'))
+                        Path('a').joinpath( 'path', 'that', 'doesnt', 'exist'))
     external('find')
 
 

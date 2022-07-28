@@ -345,63 +345,63 @@ class MockEnv(object):
 def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     prefix = spack.paths.prefix.lstrip('/')
     assert cross_plat_join(
-        os.sep + os.path.join('foo', 'bar', 'baz'), prefix
+        os.sep + Path('foo').joinpath( 'bar', 'baz'), prefix
     ) == spack_path.canonicalize_path('/foo/bar/baz/$spack')
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join('foo', 'bar', 'baz')
+        spack.paths.prefix, Path('foo').joinpath( 'bar', 'baz')
     ) == spack_path.canonicalize_path('$spack/foo/bar/baz/')
 
     assert cross_plat_join(
-        os.sep + os.path.join('foo', 'bar', 'baz'),
-        prefix, os.path.join('foo', 'bar', 'baz')
+        os.sep + Path('foo').joinpath( 'bar', 'baz'),
+        prefix, Path('foo').joinpath( 'bar', 'baz')
     ) == spack_path.canonicalize_path('/foo/bar/baz/$spack/foo/bar/baz/')
 
     assert cross_plat_join(
-        os.sep + os.path.join('foo', 'bar', 'baz'), prefix
+        os.sep + Path('foo').joinpath( 'bar', 'baz'), prefix
     ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}')
 
     assert cross_plat_join(
-        spack.paths.prefix, os.path.join('foo', 'bar', 'baz')
+        spack.paths.prefix, Path('foo').joinpath( 'bar', 'baz')
     ) == spack_path.canonicalize_path('${spack}/foo/bar/baz/')
 
     assert cross_plat_join(
-        os.sep + os.path.join('foo', 'bar', 'baz'),
-        prefix, os.path.join('foo', 'bar', 'baz')
+        os.sep + Path('foo').joinpath( 'bar', 'baz'),
+        prefix, Path('foo').joinpath( 'bar', 'baz')
     ) == spack_path.canonicalize_path('/foo/bar/baz/${spack}/foo/bar/baz/')
 
     assert cross_plat_join(
-        os.sep + os.path.join('foo', 'bar', 'baz'),
-        prefix, os.path.join('foo', 'bar', 'baz')
+        os.sep + Path('foo').joinpath( 'bar', 'baz'),
+        prefix, Path('foo').joinpath( 'bar', 'baz')
     ) != spack_path.canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
 
     # $env replacement is a no-op when no environment is active
     assert spack_path.canonicalize_path(
-        os.sep + os.path.join('foo', 'bar', 'baz', '$env')
-    ) == os.sep + os.path.join('foo', 'bar', 'baz', '$env')
+        os.sep + Path('foo').joinpath( 'bar', 'baz', '$env')
+    ) == os.sep + Path('foo').joinpath( 'bar', 'baz', '$env')
 
     # Fake an active environment and $env is replaced properly
-    fake_env_path = os.sep + os.path.join('quux', 'quuux')
+    fake_env_path = os.sep + Path('quux').joinpath( 'quuux')
     monkeypatch.setattr(ev, 'active_environment',
                         lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'
-    ) == os.path.join(fake_env_path, os.path.join('foo', 'bar', 'baz'))
+    ) == os.path.join(fake_env_path, Path('foo').joinpath( 'bar', 'baz'))
 
     # relative paths without source information are relative to cwd
     assert spack_path.canonicalize_path(
-        os.path.join('foo', 'bar', 'baz')
-    ) == os.path.join('foo', 'bar', 'baz').resolve()
+        Path('foo').joinpath( 'bar', 'baz')
+    ) == Path('foo').joinpath( 'bar', 'baz').resolve()
 
     # relative paths with source information are relative to the file
     spack.config.set(
         'modules:default',
-        {'roots': {'lmod': os.path.join('foo', 'bar', 'baz')}}, scope='low')
+        {'roots': {'lmod': Path('foo').joinpath( 'bar', 'baz')}}, scope='low')
     spack.config.config.clear_caches()
     path = spack.config.get('modules:default:roots:lmod')
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes['low'].path,
-                     os.path.join('foo', 'bar', 'baz')))
+                     Path('foo').joinpath( 'bar', 'baz')))
 
 
 packages_merge_low = {
@@ -450,17 +450,17 @@ def test_merge_with_defaults(mock_low_high_config, write_config_file):
 
 def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
-    assert os.sep + os.path.join('foo', 'bar') + os.sep \
+    assert os.sep + Path('foo').joinpath( 'bar') + os.sep \
            + user + os.sep \
            + 'baz' == spack_path.canonicalize_path(
-        os.sep + os.path.join('foo', 'bar', '$user', 'baz')
+        os.sep + Path('foo').joinpath( 'bar', '$user', 'baz')
     )
 
 
 def test_substitute_user_cache(mock_low_high_config):
     user_cache_path = spack.paths.user_cache_path
     assert user_cache_path + os.sep + 'baz' == spack_path.canonicalize_path(
-        os.path.join('$user_cache_path', 'baz')
+        Path('$user_cache_path').joinpath( 'baz')
     )
 
 
@@ -468,8 +468,8 @@ def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == spack_path.canonicalize_path('$tempdir')
     assert tempdir + os.sep + \
-        os.path.join('foo', 'bar', 'baz') == spack_path.canonicalize_path(
-            os.path.join('$tempdir', 'foo', 'bar', 'baz')
+        Path('foo').joinpath( 'bar', 'baz') == spack_path.canonicalize_path(
+            Path('$tempdir').joinpath( 'foo', 'bar', 'baz')
         )
 
 
@@ -1217,7 +1217,7 @@ def test_system_config_path_is_overridable(working_env):
 
 def test_system_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ['SPACK_SYSTEM_CONFIG_PATH'] = ''
-    assert os.sep + os.path.join('etc', 'spack') == \
+    assert os.sep + Path('etc').joinpath( 'spack') == \
         spack.paths._get_system_config_path()
 
 

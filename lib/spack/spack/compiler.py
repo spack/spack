@@ -399,8 +399,8 @@ class Compiler(object):
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
-            fout = os.path.join(tmpdir, 'output')
-            fin = os.path.join(tmpdir, 'main.c')
+            fout = tmpdir.joinpath( 'output'))
+            fin = tmpdir.joinpath( 'main.c'))
 
             with open(fin, 'w+') as csource:
                 csource.write(

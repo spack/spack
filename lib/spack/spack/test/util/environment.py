@@ -126,8 +126,8 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
 
 def test_reverse_environment_modifications(working_env):
     start_env = {
-        'PREPEND_PATH': os.sep + os.path.join('path', 'to', 'prepend', 'to'),
-        'APPEND_PATH': os.sep + os.path.join('path', 'to', 'append', 'to'),
+        'PREPEND_PATH': os.sep + Path('path').joinpath( 'to', 'prepend', 'to'),
+        'APPEND_PATH': os.sep + Path('path').joinpath( 'to', 'append', 'to'),
         'UNSET': 'var_to_unset',
         'APPEND_FLAGS': 'flags to append to',
     }

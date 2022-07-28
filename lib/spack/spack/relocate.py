@@ -139,7 +139,7 @@ def _make_relative(reference_file, path_root, paths):
     for path in paths:
         if pattern.match(path):
             rel = os.path.relpath(path, start=start_directory)
-            path = os.path.join('$ORIGIN', rel)
+            path = Path('$ORIGIN').joinpath( rel)
 
         relative_paths.append(path)
 
@@ -203,13 +203,13 @@ def macho_make_paths_relative(path_name, old_layout_root,
     for rpath in rpaths:
         if re.match(old_layout_root, rpath):
             rel = os.path.relpath(rpath, start=path_name.parent)
-            paths_to_paths[rpath] = os.path.join('@loader_path', '%s' % rel)
+            paths_to_paths[rpath] = Path('@loader_path').joinpath( '%s' % rel)
         else:
             paths_to_paths[rpath] = rpath
     for dep in deps:
         if re.match(old_layout_root, dep):
             rel = os.path.relpath(dep, start=path_name.parent)
-            paths_to_paths[dep] = os.path.join('@loader_path', '%s' % rel)
+            paths_to_paths[dep] = Path('@loader_path').joinpath( '%s' % rel)
         else:
             paths_to_paths[dep] = dep
     return paths_to_paths

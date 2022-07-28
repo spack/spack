@@ -284,7 +284,7 @@ def test_installed_upstream_external(install_upstream, mock_fetch):
         new_dependency = dependent['externaltool']
         assert new_dependency.external
         assert new_dependency.prefix == \
-            os.path.sep + os.path.join('path', 'to', 'external_tool')
+            os.path.sep + Path('path').joinpath( 'to', 'external_tool')
 
         dependent.package.do_install()
 

@@ -23,10 +23,10 @@ class Arm(spack.compiler.Compiler):
     fc_names = ['armflang']
 
     # Named wrapper links within lib/spack/env
-    link_paths = {'cc': os.path.join('arm', 'armclang'),
-                  'cxx': os.path.join('arm', 'armclang++'),
-                  'f77': os.path.join('arm', 'armflang'),
-                  'fc': os.path.join('arm', 'armflang')}
+    link_paths = {'cc': Path('arm').joinpath( 'armclang'),
+                  'cxx': Path('arm').joinpath( 'armclang++'),
+                  'f77': Path('arm').joinpath( 'armflang'),
+                  'fc': Path('arm').joinpath( 'armflang')}
 
     # The ``--version`` option seems to be the most consistent one for
     # arm compilers. Output looks like this:

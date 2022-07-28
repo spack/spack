@@ -39,7 +39,7 @@ BINARY_METADATA = {
     'description': ('Buildcache copied from a public tarball available on Github.'
                     'The sha256 checksum of binaries is checked before installation.'),
     'info': {
-        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR),
+        'url': Path('..').joinpath( '..', LOCAL_MIRROR_DIR),
         'homepage': 'https://github.com/spack/spack-bootstrap-mirrors',
         'releases': 'https://github.com/spack/spack-bootstrap-mirrors/releases',
         'tarball': BINARY_TARBALL
@@ -54,7 +54,7 @@ SOURCE_METADATA = {
     'type': 'install',
     'description': 'Mirror with software needed to bootstrap Spack',
     'info': {
-        'url': os.path.join('..', '..', LOCAL_MIRROR_DIR)
+        'url': Path('..').joinpath( '..', LOCAL_MIRROR_DIR)
     }
 }
 
@@ -408,7 +408,7 @@ def _mirror(args):
         llnl.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):
-        metadata_rel_dir = os.path.join('metadata', subdir)
+        metadata_rel_dir = Path('metadata').joinpath( subdir)
         metadata_yaml = os.path.join(
             args.root_dir, metadata_rel_dir, 'metadata.yaml'
         )
