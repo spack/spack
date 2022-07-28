@@ -11,7 +11,14 @@ from textwrap import dedent
 import pytest
 
 import llnl.util.lang
-from llnl.util.lang import dedupe, match_predicate, memoized, pretty_date, stable_args
+from llnl.util.lang import (
+    dedupe,
+    match_predicate,
+    memoized,
+    pretty_date,
+    stable_args,
+    stable_partition,
+)
 
 
 @pytest.fixture()
@@ -294,14 +301,21 @@ def test_grouped_exception():
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 283, in test_grouped_exception
+line 290, in test_grouped_exception
         inner()
       File "{0}", \
-line 280, in inner
+line 287, in inner
         raise ValueError('wow!')
 
     top-level raised TypeError: ok
       File "{0}", \
-line 286, in test_grouped_exception
+line 293, in test_grouped_exception
         raise TypeError('ok')
     """).format(__file__)
+
+
+def test_stable_partition():
+    stable_partition([1, 2, 3, 4, 5], lambda x: x % 2 == 0) == [2, 4, 1, 3, 5]
+    stable_partition([], lambda x: True) == []
+    stable_partition([1, 2, 3, 4, 5], lambda x: False) == [1, 2, 3, 4, 5]
+    stable_partition([1, 2, 3, 4, 5], lambda x: True) == [1, 2, 3, 4, 5]
