@@ -22,6 +22,8 @@ class ArmForge(Package):
     #       versions (and checksums) based on the target platform shows up
 
     if platform.machine() == "aarch64":
+        version("22.0.3", sha256="ee460b33a7c94c1dccc400a9b6565d22d1dce76739342c8a768d878777f0f35a")
+        version("22.0.2", sha256="8b78c9db5582ebdf18584e7baa170a2ae22a995aaf441c0957d80c49c732c37b")
         version("22.0.1", sha256="89237d85cdecf6481c1aa72f3a7c60145ff2f1efcf588aa382b98ee8046d1bd5")
         version("22.0",   sha256="30328b3f92d3284c632c196690a36bce8f3c83b17f2c810deb31797a9ac69432")
         version("21.1.3", sha256="4a4ff7372aad5a31fc9e18b7b6c493691ab37d8d44a3158584e62d1ab82b0eeb")
@@ -33,6 +35,8 @@ class ArmForge(Package):
         version("21.0.1", sha256="bb76207b47079db843f189f604cffd00cffa49963c3e515092b67392047b92d2")
         version("21.0",   sha256="2bcc745d0049d6b25c77c97b2d7bad7b4f804180972a2306a8599ce41f6a4573")
     elif platform.machine() == "ppc64le":
+        version("22.0.3", sha256="de2debac40b6cfc61868237d4c04ab929fe26fdeecaee017f948426047fe0f07")
+        version("22.0.2", sha256="bb61e202974ce997510af4ca5ea1a9d0e0fc7850682cbfee052768717636cfa6")
         version("22.0.1", sha256="7499462f2f24a556b504c10e56cce61d8e29630ac99aa7a9a59f60e7ce474877")
         version("22.0",   sha256="dbe1248ba683b2b1374c888805c608252daade47f904fb91a4a4803bf11ea5fa")
         version("21.1.3", sha256="eecbc5686d60994c5468b2d7cd37bebe5d9ac0ba37bd1f98fbfc69b071db541e")
@@ -44,6 +48,8 @@ class ArmForge(Package):
         version("21.0.1", sha256="fa9c1fbb115d34533f4dc449cb49c7eca0472205973ed1e9ab5ccd916c85a6f9")
         version("21.0",   sha256="60cfa7dd1cd131ec85e67cb660f2f84cf30bb700d8979cae1f5f88af658fd249")
     elif platform.machine() == "x86_64":
+        version("22.0.3", sha256="4dc8d0bb3923810cf78279dd446d5a529af523271111249b795cef01f86bd0fd")
+        version("22.0.2", sha256="3db0c3993d1db617f850c48d25c9239f06a018c895ea305786a7ad836a44496d")
         version("22.0.1", sha256="8f8a61c159665d3de3bc5334ed97bdb4966bfbdb91b65d32d162d489eb2219ac")
         version("22.0",   sha256="4e63758bd474e9640700673625eb2adfe2bdf875eaacfe67862d184ae08f542f")
         version("21.1.3", sha256="03dc82f1d075deb6f08d1e3e6592dc9b630d406c08a1316d89c436b5874f3407")

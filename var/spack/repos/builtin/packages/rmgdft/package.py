@@ -16,6 +16,8 @@ class Rmgdft(CMakePackage):
     maintainers = ['elbriggs']
     tags = ['ecp', 'ecp-apps']
     version('master', branch='master')
+    version('4.3.1', tag='v4.3.1')
+    version('4.3.0', tag='v4.3.0')
     version('4.2.2', tag='v4.2.2')
     version('4.2.1', tag='v4.2.1')
 
@@ -45,7 +47,8 @@ class Rmgdft(CMakePackage):
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
     depends_on('cmake', type='build')
-    depends_on('boost@1.66.0:')
+    depends_on('boost+filesystem+iostreams+thread+program_options+system', type='build')
+    depends_on('boost@1.61.0:1.71.0')
     depends_on('fftw-api@3')
     depends_on('mpi')
     depends_on('hdf5')

@@ -15,6 +15,7 @@ class PyWheel(Package):
 
     maintainers = ['adamjstewart']
 
+    version('0.37.1', sha256='4bdcd7d840138086126cd09254dc6195fb4fc6f01c050a1d7236f2630db1d22a', expand=False)
     version('0.37.0', sha256='21014b2bd93c6d0034b6ba5d35e4eb284340e09d63c59aef6fc14b0f346146fd', expand=False)
     version('0.36.2', sha256='78b5b185f0e5763c26ca1e324373aadd49182ca90e825f7853f4b2509215dc0e', expand=False)
     version('0.35.1', sha256='497add53525d16c173c2c1c733b8f655510e909ea78cc0e29d374243544b77a2', expand=False)

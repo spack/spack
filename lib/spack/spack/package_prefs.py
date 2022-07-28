@@ -138,8 +138,8 @@ class PackagePrefs(object):
     @classmethod
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
-        for pkg in (pkg_name, 'all'):
-            variants = spack.config.get('packages').get(pkg, {}).get(
+        for pkg_cls in (pkg_name, 'all'):
+            variants = spack.config.get('packages').get(pkg_cls, {}).get(
                 'variants', '')
             if variants:
                 break
@@ -149,21 +149,26 @@ class PackagePrefs(object):
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package
-        pkg = spack.repo.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict((name, variant) for name, variant in spec.variants.items()
-                    if name in pkg.variants)
+                    if name in pkg_cls.variants)
 
 
 def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
-       one for each known external installation."""
+    one for each known external installation.
+    """
     # break circular import.
     from spack.util.module_cmd import path_from_modules  # NOQA: ignore=F401
 
+    def _package(maybe_abstract_spec):
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        return pkg_cls(maybe_abstract_spec)
+
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
-    names |= set(vspec.name for vspec in spec.package.virtuals_provided)
+    names |= set(vspec.name for vspec in _package(spec).virtuals_provided)
 
     external_specs = []
     for name in names:
@@ -190,17 +195,21 @@ def spec_externals(spec):
 
 
 def is_spec_buildable(spec):
-    """Return true if the spec pkgspec is configured as buildable"""
+    """Return true if the spec is configured as buildable"""
 
     allpkgs = spack.config.get('packages')
     all_buildable = allpkgs.get('all', {}).get('buildable', True)
+
+    def _package(s):
+        pkg_cls = spack.repo.path.get_pkg_class(s.name)
+        return pkg_cls(s)
 
     # Get the list of names for which all_buildable is overridden
     reverse = [name for name, entry in allpkgs.items()
                if entry.get('buildable', all_buildable) != all_buildable]
     # Does this spec override all_buildable
     spec_reversed = (spec.name in reverse or
-                     any(spec.package.provides(name) for name in reverse))
+                     any(_package(spec).provides(name) for name in reverse))
     return not all_buildable if spec_reversed else all_buildable
 
 

@@ -1310,13 +1310,16 @@ class SpackSolverSetup(object):
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
+                        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
                         try:
-                            variant_def, _ = spec.package.variants[vname]
+                            variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
                             msg = 'variant "{0}" not found in package "{1}"'
                             raise RuntimeError(msg.format(vname, spec.name))
                         else:
-                            variant_def.validate_or_raise(variant, spec.package)
+                            variant_def.validate_or_raise(
+                                variant, spack.repo.path.get_pkg_class(spec.name)
+                            )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 
@@ -1391,7 +1394,7 @@ class SpackSolverSetup(object):
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         for pkg_name in possible_pkgs:
-            pkg = spack.repo.get(pkg_name)
+            pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -1404,7 +1407,7 @@ class SpackSolverSetup(object):
                 return info.get('preferred', False), not version.isdevelop(), version
 
             for idx, item in enumerate(sorted(
-                    pkg.versions.items(), key=key_fn, reverse=True
+                    pkg_cls.versions.items(), key=key_fn, reverse=True
             )):
                 v, version_info = item
                 self.possible_versions[pkg_name].add(v)

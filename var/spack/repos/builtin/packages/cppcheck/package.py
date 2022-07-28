@@ -6,10 +6,12 @@
 from spack.package import *
 
 
-class Cppcheck(MakefilePackage):
+class Cppcheck(CMakePackage):
     """A tool for static C/C++ code analysis."""
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
+
+    maintainers = ['white238']
 
     version('2.8', sha256='a5ed97a99173d2952cd93fcb028a3405a7b3b992e7168e2ae9d527b991770203')
     version('2.7', sha256='ac74c0973c46a052760f4ff7ca6a84616ca5795510542d195a6f122c53079291')
@@ -24,17 +26,26 @@ class Cppcheck(MakefilePackage):
     version('1.72', sha256='9460b184ff2d8dd15344f3e2f42f634c86e4dd3303e1e9b3f13dc67536aab420')
     version('1.68', sha256='add6e5e12b05ca02b356cd0ec7420ae0dcafddeaef183b4dfbdef59c617349b1')
 
+    variant('rules', default=False, description="Enable rules (requires PCRE)")
     variant('htmlreport', default=False, description="Install cppcheck-htmlreport")
 
+    depends_on('pcre', when='+rules', type='build')
     depends_on('py-pygments', when='+htmlreport', type='run')
 
-    def build(self, spec, prefix):
-        make('CFGDIR={0}'.format(prefix.cfg))
+    def cmake_args(self):
+        args = []
+
+        if self.run_tests is False:
+            args.append('-DBUILD_TESTS=OFF')
+        else:
+            args.append('-DBUILD_TESTS=ON')
+
+        args.append(self.define_from_variant('HAVE_RULES', 'rules'))
+
+        return args
 
     def install(self, spec, prefix):
+        super(Cppcheck, self).install(spec, prefix)
         # Manually install the final cppcheck binary
-        mkdirp(prefix.bin)
-        install('cppcheck', prefix.bin)
-        install_tree('cfg', prefix.cfg)
         if spec.satisfies('+htmlreport'):
             install('htmlreport/cppcheck-htmlreport', prefix.bin)

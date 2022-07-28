@@ -14,7 +14,9 @@ class Interproscan(Package):
 
     homepage = "https://www.ebi.ac.uk/interpro/interproscan.html"
     url      = "https://github.com/ebi-pf-team/interproscan/archive/5.36-75.0.tar.gz"
+    maintainers = ['snehring']
 
+    version('5.56-89.0', sha256='75e6a8f86ca17356a2f77f75b07d6d8fb7b397c9575f6e9716b64983e490b230')
     version('5.38-76.0', sha256='cb191ff8eee275689b789167a57b368ea5c06bbcd36b4de23e8bbbbdc0fc7434')
     version('5.36-75.0', sha256='383d7431e47c985056c856ceb6d4dcf7ed2559a4a3d5c210c01ce3975875addb')
     version('4.8',

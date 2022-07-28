@@ -31,7 +31,7 @@ class PyTensorflowHub(Package):
     depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
 
     patch("https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch?full_index=1",
-          sha256="a825b2dd96d8f1ff1aaf2e4c9e2cbb52d3d75609909fce960e1cfa681040c4c3",
+          sha256="c8b59d17511a8ebd2a58717723b9b77514a12b43bb2e6acec6d0c1062df6e457",
           when="@:0.12")
 
     def install(self, spec, prefix):

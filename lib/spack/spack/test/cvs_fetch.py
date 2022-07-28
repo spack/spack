@@ -9,8 +9,6 @@ import pytest
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
-import spack.config
-import spack.repo
 from spack.fetch_strategy import CvsFetchStrategy
 from spack.spec import Spec
 from spack.stage import Stage
@@ -47,16 +45,14 @@ def test_fetch(
     get_date = mock_cvs_repository.get_date
 
     # Construct the package under test
-    spec = Spec('cvs-test')
-    spec.concretize()
-    pkg = spack.repo.get(spec)
-    pkg.versions[ver('cvs')] = test.args
+    spec = Spec('cvs-test').concretized()
+    spec.package.versions[ver('cvs')] = test.args
 
     # Enter the stage directory and check some properties
-    with pkg.stage:
-        pkg.do_stage()
+    with spec.package.stage:
+        spec.package.do_stage()
 
-        with working_dir(pkg.stage.source_path):
+        with working_dir(spec.package.stage.source_path):
             # Check branch
             if test.branch is not None:
                 assert get_branch() == test.branch
@@ -65,8 +61,8 @@ def test_fetch(
             if test.date is not None:
                 assert get_date() <= test.date
 
-            file_path = os.path.join(pkg.stage.source_path, test.file)
-            assert os.path.isdir(pkg.stage.source_path)
+            file_path = os.path.join(spec.package.stage.source_path, test.file)
+            assert os.path.isdir(spec.package.stage.source_path)
             assert os.path.isfile(file_path)
 
             os.unlink(file_path)
@@ -75,10 +71,10 @@ def test_fetch(
             untracked_file = 'foobarbaz'
             touch(untracked_file)
             assert os.path.isfile(untracked_file)
-            pkg.do_restage()
+            spec.package.do_restage()
             assert not os.path.isfile(untracked_file)
 
-            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isdir(spec.package.stage.source_path)
             assert os.path.isfile(file_path)
 
 

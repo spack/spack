@@ -85,13 +85,13 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
 
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
-    pkg = spack.repo.get('trivial-pkg-with-valid-hash')
-    local_url_basename = os.path.basename(pkg.url)
+    s = spack.spec.Spec('trivial-pkg-with-valid-hash').concretized()
+    local_url_basename = os.path.basename(s.package.url)
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, 'w') as f:
-        f.write(pkg.hashed_content)
+        f.write(s.package.hashed_content)
     local_url = "file://" + local_path
-    pkg.versions[spack.version.Version('1.0')]['url'] = local_url
+    s.package.versions[spack.version.Version('1.0')]['url'] = local_url
 
 
 def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config,

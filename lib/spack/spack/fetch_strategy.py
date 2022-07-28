@@ -48,6 +48,7 @@ from llnl.util.symlink import symlink
 
 import spack.config
 import spack.error
+import spack.url
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
@@ -337,9 +338,7 @@ class URLFetchStrategy(FetchStrategy):
                 continue
 
             try:
-                partial_file, save_file = self._fetch_from_url(url)
-                if save_file and (partial_file is not None):
-                    llnl.util.filesystem.rename(partial_file, save_file)
+                self._fetch_from_url(url)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -389,9 +388,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def _fetch_urllib(self, url):
-        save_file = None
-        if self.stage.save_filename:
-            save_file = self.stage.save_filename
+        save_file = self.stage.save_filename
         tty.msg('Fetching {0}'.format(url))
 
         # Run urllib but grab the mime type from the http headers
@@ -401,16 +398,18 @@ class URLFetchStrategy(FetchStrategy):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
-            if save_file and os.path.exists(save_file):
+            if os.path.lexists(save_file):
                 os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
+
+        if os.path.lexists(save_file):
+            os.remove(save_file)
 
         with open(save_file, 'wb') as _open_file:
             shutil.copyfileobj(response, _open_file)
 
         self._check_headers(str(headers))
-        return None, save_file
 
     @_needs_stage
     def _fetch_curl(self, url):
@@ -471,7 +470,7 @@ class URLFetchStrategy(FetchStrategy):
             if self.archive_file:
                 os.remove(self.archive_file)
 
-            if partial_file and os.path.exists(partial_file):
+            if partial_file and os.path.lexists(partial_file):
                 os.remove(partial_file)
 
             if curl.returncode == 22:
@@ -498,7 +497,9 @@ class URLFetchStrategy(FetchStrategy):
                     "Curl failed with error %d" % curl.returncode)
 
         self._check_headers(headers)
-        return partial_file, save_file
+
+        if save_file and (partial_file is not None):
+            fs.rename(partial_file, save_file)
 
     @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
@@ -529,8 +530,9 @@ class URLFetchStrategy(FetchStrategy):
                 "Couldn't find archive file",
                 "Failed on expand() for URL %s" % self.url)
 
+        # TODO: replace this by mime check.
         if not self.extension:
-            self.extension = extension(self.url)
+            self.extension = spack.url.determine_url_file_extension(self.url)
 
         if self.stage.expanded:
             tty.debug('Source already staged to %s' % self.stage.source_path)
@@ -613,7 +615,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
 
         # remove old symlink if one is there.
         filename = self.stage.save_filename
-        if os.path.exists(filename):
+        if os.path.lexists(filename):
             os.remove(filename)
 
         # Symlink to local cached archive.

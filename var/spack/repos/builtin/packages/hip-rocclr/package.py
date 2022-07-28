@@ -107,12 +107,6 @@ class HipRocclr(CMakePackage):
         when='@master'
     )
 
-    @property
-    def install_targets(self):
-        if self.spec.satisfies('@4.5.0:'):
-            return []
-        return ['install']
-
     @run_after('install')
     def deploy_missing_files(self):
         if '@3.5.0' in self.spec:
@@ -135,3 +129,8 @@ class HipRocclr(CMakePackage):
             '-DOPENCL_DIR={0}/opencl-on-vdi'.format(self.stage.source_path)
         ]
         return args
+
+    def __init__(self, spec):
+        super(HipRocclr, self).__init__(spec)
+        if self.spec.satisfies('@4.5.0:'):
+            self.phases = ['cmake', 'build']

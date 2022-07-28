@@ -10,7 +10,10 @@ import pytest
 
 import spack.error
 import spack.modules.tcl
+import spack.package_base
+import spack.schema.modules
 import spack.spec
+import spack.util.spack_yaml as syaml
 from spack.modules.common import UpstreamModuleIndex
 from spack.spec import Spec
 
@@ -203,31 +206,56 @@ module_index:
         spack.modules.common.upstream_module_index = old_index
 
 
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
-                                            monkeypatch):
-    # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-
-    # Get the package
-    pkg = spec.package
+@pytest.mark.regression('14347')
+def test_load_installed_package_not_in_repo(
+        install_mockery, mock_fetch, monkeypatch
+):
+    """Test that installed packages that have been removed are still loadable"""
+    spec = Spec('trivial-install-test-package').concretized()
+    spec.package.do_install()
 
     def find_nothing(*args):
         raise spack.repo.UnknownPackageError(
             'Repo package access is disabled for test')
 
-    try:
-        pkg.do_install()
+    # Mock deletion of the package
+    spec._package = None
+    monkeypatch.setattr(spack.repo.path, 'get', find_nothing)
+    with pytest.raises(spack.repo.UnknownPackageError):
+        spec.package
 
-        spec._package = None
-        monkeypatch.setattr(spack.repo, 'get', find_nothing)
-        with pytest.raises(spack.repo.UnknownPackageError):
-            spec.package
+    module_path = spack.modules.common.get_module('tcl', spec, True)
+    assert module_path
 
-        module_path = spack.modules.common.get_module('tcl', spec, True)
-        assert module_path
-        pkg.do_uninstall()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+    spack.package_base.PackageBase.uninstall_by_spec(spec)
+
+
+# DEPRECATED: remove blacklist in v0.20
+@pytest.mark.parametrize("module_type, old_config,new_config", [
+    ("tcl",  "blacklist.yaml",             "exclude.yaml"),
+    ("tcl",  "blacklist_implicits.yaml",   "exclude_implicits.yaml"),
+    ("tcl",  "blacklist_environment.yaml", "alter_environment.yaml"),
+    ("lmod", "blacklist.yaml",             "exclude.yaml"),
+    ("lmod", "blacklist_environment.yaml", "alter_environment.yaml"),
+])
+def test_exclude_include_update(module_type, old_config, new_config):
+    module_test_data_root = os.path.join(
+        spack.paths.test_path, 'data', 'modules', module_type
+    )
+    with open(os.path.join(module_test_data_root, old_config)) as f:
+        old_yaml = syaml.load(f)
+    with open(os.path.join(module_test_data_root, new_config)) as f:
+        new_yaml = syaml.load(f)
+
+    # ensure file that needs updating is translated to the right thing.
+    assert spack.schema.modules.update_keys(
+        old_yaml, spack.schema.modules.exclude_include_translations
+    )
+    assert new_yaml == old_yaml
+
+    # ensure a file that doesn't need updates doesn't get updated
+    original_new_yaml = new_yaml.copy()
+    assert not spack.schema.modules.update_keys(
+        new_yaml, spack.schema.modules.exclude_include_translations
+    )
+    original_new_yaml == new_yaml

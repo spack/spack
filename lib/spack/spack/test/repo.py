@@ -27,14 +27,14 @@ repo:
 
 
 def test_repo_getpkg(mutable_mock_repo):
-    mutable_mock_repo.get('a')
-    mutable_mock_repo.get('builtin.mock.a')
+    mutable_mock_repo.get_pkg_class('a')
+    mutable_mock_repo.get_pkg_class('builtin.mock.a')
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo)
-    mutable_mock_repo.get('a')
-    mutable_mock_repo.get('builtin.mock.a')
+    mutable_mock_repo.get_pkg_class('a')
+    mutable_mock_repo.get_pkg_class('builtin.mock.a')
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
@@ -45,17 +45,12 @@ def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
 
 def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownNamespaceError):
-        mutable_mock_repo.get('unknown.a')
+        mutable_mock_repo.get_pkg_class('unknown.a')
 
 
 def test_repo_unknown_pkg(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get('builtin.mock.nonexistentpackage')
-
-
-def test_repo_anonymous_pkg(mutable_mock_repo):
-    with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get('+variant')
+        mutable_mock_repo.get_pkg_class('builtin.mock.nonexistentpackage')
 
 
 @pytest.mark.maybeslow
@@ -64,7 +59,7 @@ def test_repo_anonymous_pkg(mutable_mock_repo):
 )
 def test_repo_last_mtime():
     latest_mtime = max(os.path.getmtime(p.module.__file__)
-                       for p in spack.repo.path.all_packages())
+                       for p in spack.repo.path.all_package_classes())
     assert spack.repo.path.last_mtime() == latest_mtime
 
 

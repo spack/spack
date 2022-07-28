@@ -55,9 +55,12 @@ def test_write_and_remove_cache_file(file_cache):
 
     file_cache.remove('test.yaml')
 
-    # After removal both the file and the lock file should not exist
+    # After removal the file should not exist
     assert not os.path.exists(file_cache.cache_path('test.yaml'))
-    assert not os.path.exists(file_cache._lock_path('test.yaml'))
+
+    # Whether the lock file exists is more of an implementation detail, on Linux they
+    # continue to exist, on Windows they don't.
+    # assert os.path.exists(file_cache._lock_path('test.yaml'))
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
@@ -94,3 +97,10 @@ def test_cache_write_readonly_cache_fails(file_cache):
 
     with pytest.raises(CacheError, match='Insufficient permissions to write'):
         file_cache.write_transaction(filename)
+
+
+@pytest.mark.regression('31475')
+def test_delete_is_idempotent(file_cache):
+    """Deleting a non-existent key should be idempotent, to simplify life when
+    running delete with multiple processes"""
+    file_cache.remove('test.yaml')
