@@ -1106,8 +1106,8 @@ config.update(get_paths())
         if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
-            # If not, one of these settings should contain the right directory
-            for var in ["INCLUDEPY", "CONFINCLUDEPY", "INCLUDEDIR", "CONFINCLUDEDIR"]:
+            # If not, one of these config vars should contain the right directory
+            for var in ["INCLUDEPY", "CONFINCLUDEPY"]:
                 headers = find_headers("pyconfig", self.config_vars[var])
                 if headers:
                     config_h = headers[0]
