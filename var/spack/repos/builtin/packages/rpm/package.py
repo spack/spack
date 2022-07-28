@@ -41,6 +41,12 @@ class Rpm(AutotoolsPackage):
     variant('openmp', default=True, description="OpenMP multithreading support")
     variant('nls', default=False, description='Enable native language support')
 
+    # RPM is a Linux tool and it has deep assunmptions about the Linux file system
+    # hierarchy which are not satisfied by MacOS. Even if could be made to compile,
+    # it would not run correctly. Plus MacOS has its own package management system
+    # which is different than RPM and so no one really wants RPM on MacOS.
+    conflicts('platform=darwin', msg='does not build on macOS')
+
     # Always required
     depends_on('popt')
     extends('python', when='+python')
