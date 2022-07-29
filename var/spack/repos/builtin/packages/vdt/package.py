@@ -24,7 +24,7 @@ class Vdt(CMakePackage):
     variant('preload', default=False,
             description='Create in the library the symbols to preload the library')
 
-    depends_on('python', when='build')
+    depends_on('python', type='build')
 
     @property
     def build_directory(self):
@@ -42,12 +42,14 @@ class Vdt(CMakePackage):
         elif spec.satisfies('target=ppc64le:'):
             disable_features.add('fma')
 
-        options = []
+        args = [
+            self.define_from_variant('PRELOAD'),
+            self.define('PYTHON_EXECUTABLE', spec['python'].command),
+        ]
         for f in ['sse', 'avx', 'avx2', 'fma', 'neon']:
-            options.append(self.define(
+            args.append(self.define(
                 f.upper(),
                 f not in disable_features and f in self.spec.target
             ))
 
-        options.append(self.define_from_variant('PRELOAD'))
-        return options
+        return args
