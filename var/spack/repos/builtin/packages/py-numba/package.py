@@ -30,7 +30,7 @@ class PyNumba(PythonPackage):
     depends_on('python@3.6:3.8', type=('build', 'run'), when='@0.48:0.51')
     depends_on('python@3.3:3.7', type=('build', 'run'), when='@0.40.1:0.47')
     depends_on('python@3.3:3.6', type=('build', 'run'), when='@:0.35.0')
-    depends_on('py-numpy@1.18:1.22', type=('build', 'run'), when='@0.55.0:')
+    depends_on('py-numpy@1.18:1.22', type=('build', 'run'), when='@0.55.2:')
     depends_on('py-numpy@1.18:1.21', type=('build', 'run'), when='@0.55.0:0.55.1')
     depends_on('py-numpy@1.17:1.20', type=('build', 'run'), when='@0.54')
     # set upper bound for py-numpy the same as newer release
@@ -38,8 +38,8 @@ class PyNumba(PythonPackage):
     depends_on('py-numpy@1.10:1.20', type=('build', 'run'), when='@:0.47')
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-llvmlite@0.39', type=('build', 'run'), when='@0.56.0')
-    depends_on('py-llvmlite@0.38', type=('build', 'run'), when='@0.55.1:0.55')
+    depends_on('py-llvmlite@0.39', type=('build', 'run'), when='@0.56')
+    depends_on('py-llvmlite@0.38', type=('build', 'run'), when='@0.55')
     depends_on('py-llvmlite@0.37', type=('build', 'run'), when='@0.54.0')
     depends_on('py-llvmlite@0.34', type=('build', 'run'), when='@0.51.1')
     depends_on('py-llvmlite@0.33', type=('build', 'run'), when='@0.50.1')
