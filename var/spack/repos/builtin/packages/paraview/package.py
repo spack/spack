@@ -150,10 +150,13 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
-    depends_on('osmesa', when='+osmesa')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
-    depends_on('libxt', when='~osmesa platform=linux')
+    depends_on('glew')
+    depends_on('osmesa', when='+osmesa')
+    for p in ['linux', 'cray']:
+        depends_on('glx', when='~osmesa platform={}'.format(p))
+        depends_on('libxt', when='~osmesa platform={}'.format(p))
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
@@ -388,7 +391,6 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DPARAVIEW_ENABLE_EXAMPLES:BOOL=%s' % variant_bool(
                     '+examples'),
                 '-DVTK_MODULE_USE_EXTERNAL_ParaView_cgns=OFF',
-                '-DVTK_MODULE_USE_EXTERNAL_VTK_glew=OFF',
                 '-DVTK_MODULE_USE_EXTERNAL_VTK_gl2ps=OFF',
                 '-DVTK_MODULE_USE_EXTERNAL_VTK_libharu=OFF',
                 '-DVTK_MODULE_USE_EXTERNAL_VTK_utf8=OFF'])
@@ -401,7 +403,6 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
                 '-DVTK_USE_SYSTEM_CGNS:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
-                '-DVTK_USE_SYSTEM_GLEW:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_ICET:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_LIBHARU:BOOL=OFF',
