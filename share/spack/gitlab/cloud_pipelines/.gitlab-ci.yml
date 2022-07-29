@@ -293,6 +293,43 @@ e4s-protected-build:
       job: e4s-protected-generate
 
 ########################################
+# E4S OneAPI Pipeline
+########################################
+.e4s-oneapi:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-oneapi
+
+e4s-oneapi-pr-generate:
+  extends: [ ".e4s-oneapi", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-protected-generate:
+  extends: [ ".e4s-oneapi", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-pr-build:
+  extends: [ ".e4s-oneapi", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-pr-generate
+
+e4s-oneapi-protected-build:
+  extends: [ ".e4s-oneapi", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-protected-generate
+
+########################################
 # E4S on Power
 ########################################
 # .power-e4s-generate-tags-and-image:
