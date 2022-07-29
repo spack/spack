@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('36.6', sha256='8fc7be0ce32f99cc6b0be4ebbb246f4bb5008ffbf0c012cb39c0aff813dce6af')
     version('36.5', sha256='593e0316118411a5c5fde5d4d87cbfc3d2bb748a8c72a66f4025498fcbdb0f7e')
     version('36.4', sha256='1a5c27cdc21ec136b47f5805406c92268163393c821107a24dbb47bd88e4b97d')
     version('36.3', sha256='9ac228d8609416afe4dea6445c6b3ccebac6fab1e46121fcc3a056e24a5d6640')
@@ -29,8 +30,8 @@ class Gaudi(CMakePackage):
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
     version('32.2', sha256='e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e')
-    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
-    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
+    version('31.0', commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
+    version('30.5', commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
 
     maintainers = ['drbenmorgan', "vvolkl"]
 
