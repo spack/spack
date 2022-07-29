@@ -143,6 +143,7 @@ spack:
   - papyrus
   - parallel-netcdf
   - parsec ~cuda
+  - pdt
   - petsc
   - plasma
   - plumed
@@ -199,7 +200,6 @@ spack:
   #- nrm@0.1.0                                        # py-numpy@1.23.1
   #- openpmd-api@0.14.4                               # adios2
   #- paraview@5.10.1 +qt                              # binutils
-  #- pdt                                              # pdt
   #- phist@1.9.5                                      # phist
   #- pruners-ninja@1.0.1                              # pruners-ninja
   #- py-libensemble@0.9.1                             # py-numpy@1.23.1
@@ -224,7 +224,7 @@ spack:
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
-  # pdt: make[2]: libpdb.a: Command not found
+  # parallel-netcdf: checking if Fortran "integer*1" is ... configure: error: Could not link conftestf.o and conftest.o
   # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
   # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
   # py-numpy@1.23.1: numpy/distutils/checks/cpu_avx512_knm.c:22:9: error: implicit declaration of function '_mm512_4fmadd_ps' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
@@ -264,6 +264,10 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - export PATH=/bootstrap/runner/view/bin:${PATH}
+      - . /bootstrap/runner/install/linux-ubuntu20.04-x86_64/gcc-9.4.0/lmod-8.7.2-ri26z7qy6ixtgpsqinswx3w6tuggluv5/lmod/8.7.2/init/bash
+      - module use /opt/intel/oneapi/modulefiles
+      - module load compiler
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
