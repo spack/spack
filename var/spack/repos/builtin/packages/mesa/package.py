@@ -18,8 +18,9 @@ class Mesa(MesonPackage):
     git = "https://gitlab.freedesktop.org/mesa/mesa.git"
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
-    version('master', tag='master')
-    version('22.0.2', sha256='df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885', preferred=True)
+    version('main', tag='main')
+    version('22.1.2', sha256='df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885', preferred=True)
+    version('22.0.2', sha256='df4fa560dcce6680133067cd15b0505fc424ca703244ce9ab247c74d2fab6885')
     version('21.3.8', sha256='e70d273bdc53a4e931871bb5550ba3900e6a3deab2fff64184107c33e92d9da7')
     version('21.3.7', sha256='b4fa9db7aa61bf209ef0b40bef83080999d86ad98df8b8b4fada7c128a1efc3d')
     version('21.3.1', sha256='2b0dc2540cb192525741d00f706dbc4586349185dafc65729c7fda0800cc474d')
@@ -71,10 +72,12 @@ class Mesa(MesonPackage):
     )
 
     # Front ends
-    variant('osmesa', default=True, description="Enable the OSMesa frontend.")
+    variant('osmesa', default=True, description="Enable the OSMesa frontend.",
+            when='+opengl')
 
     is_linux = sys.platform.startswith('linux')
-    variant('glx', default=is_linux, description="Enable the GLX frontend.")
+    variant('glx', default=is_linux, description="Enable the GLX frontend.",
+            when='+opengl')
 
     # TODO: effectively deal with EGL.  The implications of this have not been
     # worked through yet
@@ -89,14 +92,16 @@ class Mesa(MesonPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
-    provides('glx@1.4', when='+glx')
+    provides('libglx', when='+glx')
+
     # provides('egl@1.5', when='+egl')
-    provides('osmesa', when='+osmesa')
+    provides('libosmesa', when='+osmesa')
 
     # Variant dependencies
-    depends_on('libllvm@6:', when='+llvm')
-    depends_on('libllvm@:13', when='@:21 +llvm')
+    with when('+llvm'):
+        depends_on('libllvm@6:')
+        depends_on('libllvm@:11', when='@:20')
+        depends_on('libllvm@:12', when='@:21')
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
@@ -119,11 +124,10 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
-    # https://gitlab.freedesktop.org/mesa/mesa/-/issues/5455
-    conflicts('llvm@13.0.0:', when='@:21.3.1 +llvm')
-
     # requires native to be added to llvm_modules when using gallium swrast
-    patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
+    patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577',
+          sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73',
+          when='@21.0.0:21.0.3')
 
     patch('mesa_check_llvm_version_suffix.patch', when='@21.2.3:')
 
@@ -260,43 +264,29 @@ class Mesa(MesonPackage):
         return args
 
     @property
-    def libs(self):
-        spec = self.spec
-        libs_to_seek = set()
-
-        if '+osmesa' in spec:
-            libs_to_seek.add('libOSMesa')
-
-        if '+glx' in spec:
-            libs_to_seek.add('libGL')
-
-        if '+opengl' in spec:
-            libs_to_seek.add('libGL')
-
-        if '+opengles' in spec:
-            libs_to_seek.add('libGLES')
-            libs_to_seek.add('libGLES2')
-
-        if libs_to_seek:
-            return find_libraries(list(libs_to_seek),
-                                  root=self.spec.prefix,
-                                  recursive=True)
-        return LibraryList()
+    def libglx_headers(self):
+        return find_headers('GL/glx',
+                            root=self.spec.prefix.include,
+                            recursive=False)
 
     @property
-    def osmesa_libs(self):
-        return find_libraries('libOSMesa',
-                              root=self.spec.prefix,
-                              recursive=True)
-
-    @property
-    def glx_libs(self):
+    def libglx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
                               recursive=True)
 
     @property
-    def gl_libs(self):
-        return find_libraries('libGL',
+    def libosmesa_headers(self):
+        return find_headers('GL/osmesa',
+                            root=self.spec.prefix.include,
+                            recursive=False)
+
+    @property
+    def libosmesa_libs(self):
+        if 'platform=windows' in self.spec:
+            lib_name = 'osmesa'
+        else:
+            lib_name = 'libOSMesa'
+        return find_libraries(lib_name,
                               root=self.spec.prefix,
                               recursive=True)

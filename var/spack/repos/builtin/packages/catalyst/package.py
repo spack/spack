@@ -79,8 +79,8 @@ class Catalyst(CMakePackage):
     depends_on('py-mpi4py', when='+python3', type=('build', 'run'))
 
     depends_on('gl@3.2:', when='+rendering')
-    depends_on('osmesa', when='+rendering+osmesa')
-    depends_on('glx', when='+rendering~osmesa')
+    depends_on('osmesa', when='+osmesa')
+    depends_on('glx', when='~osmesa')
     depends_on('cmake@3.3:', type='build')
 
     @when('@5.5.0:5.5.2')

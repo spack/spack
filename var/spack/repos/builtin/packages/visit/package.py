@@ -10,19 +10,7 @@ from spack.package import *
 
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
-       animation and analysis tool. See comments in VisIt's package.py
-       for tips about building VisIt with spack. Building VisIt with
-       Spack is still experimental and many standard features are likely
-       disabled
-       LINUX-------------------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
-       LINUX-W/O-OPENGL--------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
-       ^mesa+opengl
-       MACOS-------------------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
-       ^qt~framework
-
+       animation and analysis tool.
     """
     ############################
     # Suggestions for building:
@@ -92,96 +80,11 @@ class Visit(CMakePackage):
     patch('parallel-hdf5.patch', when='@3.0.1:3.2.2+hdf5+mpi')
     patch('parallel-hdf5-3.3.patch', when='@3.3.0:+hdf5+mpi')
 
+    # Fix pthread and librt link errors
+    patch('visit32-missing-link-libs.patch', when='@3.2')
+
     # Exactly one of 'gui' or 'osmesa' has to be enabled
     conflicts('+gui', when='+osmesa')
-
-    #############################################
-    # Full List of dependencies from build_visit
-    #############################################
-    # cyrush note:
-    #  I added these here to give folks details
-    #  to help eventually build up to full
-    #  support for visit
-    #############################################
-    # =====================================
-    # core:
-    # =====================================
-    #  cmake (build)
-    #  vtk
-    #  qt
-    #  qwt
-    #  python
-    #  mpi
-    #
-    # =====================================
-    # rendering (optional):
-    # =====================================
-    # icet
-    # vtk-m
-    # vtk-h
-    # llvm
-    # mesagl
-    # osmesa
-    # tbb
-    # embree
-    # ispc
-    # ospray
-    #
-    # =====================================
-    # python modules:
-    # =====================================
-    # numpy
-    # pillow
-    # mpi4py
-    # seedme
-    # sphinx (build, docs)
-    # sphinx rtd theme (build, docs)
-    # pyqt (visit support deprecated)
-    # pyside (note: we want pyside 2)
-    #
-    # =====================================
-    # testing related:
-    # =====================================
-    # p7zip (build, test)
-    #
-    # =====================================
-    # io libs:
-    # =====================================
-    # adios
-    # adios2
-    # advio
-    # boost
-    # boxlib
-    # cfitsio
-    # cgns
-    # conduit
-    # damaris
-    # fastbit
-    # fastquery
-    # gdal
-    # h5part
-    # hdf4
-    # hdf5
-    # mdsplus
-    # mfem
-    # mili
-    # moab
-    # mxml
-    # nektarpp
-    # netcdf
-    # openexr
-    # pidx
-    # silo
-    # stripack
-    # szip
-    # tbb
-    # uintah
-    # xdmf
-    # xercesc
-    # xsd
-    # zlib
-    #
-    # =====================================
 
     depends_on('cmake@3.14.7:', type='build')
     depends_on('ninja', type='build')
@@ -197,14 +100,14 @@ class Visit(CMakePackage):
     depends_on('vtk ~mpi', when='~mpi')
 
     # Necessary VTK patches
-    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')])
+    depends_on('vtk', patches=[patch('vtk_compiler_visibility.patch')],
+               when='^vtk@8')
     depends_on('vtk', patches=[patch('vtk_rendering_opengl2_x11.patch')],
-               when='~osmesa platform=linux')
+               when='~osmesa platform=linux ^vtk@8')
     depends_on('vtk', patches=[patch('vtk_wrapping_python_x11.patch')],
-               when='+python')
+               when='+python ^vtk@8')
 
-    depends_on('glu', when='~osmesa')
-    depends_on('mesa-glu+osmesa', when='+osmesa')
+    depends_on('glu')
 
     # VisIt doesn't work with later versions of qt.
     depends_on('qt+gui+opengl@5:5.14', when='+gui')
@@ -258,12 +161,18 @@ class Visit(CMakePackage):
             if '+hdf5' in self.spec and '@1.10:' in self.spec['hdf5']:
                 flags.append('-DH5_USE_18_API')
 
+        elif name == 'ldlibs':
+            # Python support is missing a pthread dependency
+            if '@3 +python' in self.spec:
+                flags.append('-lpthread')
+
         return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
+            self.define('CMAKE_SKIP_COMPATIBILITY_TESTS', True),
             self.define('CMAKE_POSITION_INDEPENDENT_CODE', True),
             self.define('VTK_MAJOR_VERSION', spec['vtk'].version[0]),
             self.define('VTK_MINOR_VERSION', spec['vtk'].version[1]),
@@ -271,7 +180,7 @@ class Visit(CMakePackage):
             self.define('VISIT_ZLIB_DIR', spec['zlib'].prefix),
             self.define('VISIT_USE_GLEW', False),
             self.define('VISIT_CONFIG_SITE', 'NONE'),
-            self.define('VISIT_INSTALL_THIRD_PARTY', True),
+            self.define('VISIT_INSTALL_THIRD_PARTY', False),
         ]
 
         if '@3.1: platform=darwin' in spec:
@@ -305,14 +214,27 @@ class Visit(CMakePackage):
                 self.define('VISIT_ENGINE_ONLY', True),
             ])
 
-        # No idea why this is actually needed
-        if '^mesa' in spec:
-            args.append(self.define('VISIT_MESAGL_DIR', spec['mesa'].prefix))
-            if '+llvm' in spec['mesa']:
-                args.append(self.define('VISIT_LLVM_DIR', spec['libllvm'].prefix))
+        # OpenGL args
+        args.extend([
+            self.define('VISIT_USE_X', 'glx' in spec),
+            self.define('VISIT_MESAGL_DIR', 'IGNORE'),
+            self.define('VISIT_OPENGL_DIR', 'IGNORE'),
+            self.define('VISIT_OSMESA_DIR', 'IGNORE'),
+            self.define('OpenGL_GL_PREFERENCE', 'LEGACY'),
+            self.define('OPENGL_INCLUDE_DIR', spec['gl'].headers.directories[0]),
+            self.define('OPENGL_glu_LIBRARY', spec['glu'].libs[0]),
+        ])
+        if '+osmesa' in spec:
+            args.extend([
+                self.define('HAVE_OSMESA', True),
+                self.define('OSMESA_LIBRARIES', spec['osmesa'].libs[0]),
+                self.define('OPENGL_gl_LIBRARY', spec['osmesa'].libs[0]),
+            ])
+        else:
+            args.append(self.define('OPENGL_gl_LIBRARY', spec['gl'].libs[0]))
 
         if '+hdf5' in spec:
-            args.append(self.define('VISIT_HDF5_DIR', spec['hdf5'].prefix))
+            args.append(self.define('HDF5_DIR', spec['hdf5'].prefix))
             if '+mpi' in spec and '+mpi' in spec['hdf5']:
                 args.append(self.define('VISIT_HDF5_MPI_DIR', spec['hdf5'].prefix))
 

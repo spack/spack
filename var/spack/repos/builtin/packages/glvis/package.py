@@ -124,7 +124,7 @@ class Glvis(MakefilePackage):
                      'SDL_DIR={0}'.format(spec['sdl2'].prefix),
                      'GLEW_DIR={0}'.format(spec['glew'].prefix),
                      'FREETYPE_DIR={0}'.format(spec['freetype'].prefix),
-                     'OPENGL_DIR={0}'.format(spec['gl'].prefix)]
+                     'OPENGL_DIR={0}'.format(spec['gl'].home)]
 
             if 'screenshots=png' in spec:
                 args += ['GLVIS_USE_LIBPNG=YES', 'GLVIS_USE_LIBTIFF=NO']
@@ -140,7 +140,7 @@ class Glvis(MakefilePackage):
 
             args += ['GL_OPTS=-I{0} -I{1} -I{2}'.format(
                 spec['libx11'].prefix.include,
-                spec['gl'].prefix.include,
+                spec['gl'].home.include,
                 spec['glu'].prefix.include),
                 'GL_LIBS={0}'.format(gl_libs.ld_flags)]
 

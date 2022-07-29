@@ -52,7 +52,7 @@ class RRgl(RPackage):
     def configure_args(self):
         args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
                 '--x-libraries=%s' % self.spec['libx11'].prefix.lib,
-                '--with-gl-includes=%s' % self.spec['gl'].prefix.include,
-                '--with-gl-libraries=%s' % self.spec['gl'].prefix.lib,
-                '--with-gl-prefix=%s' % self.spec['gl'].prefix]
+                '--with-gl-includes=%s' % self.spec['gl'].headers.directories[0],
+                '--with-gl-libraries=%s' % self.spec['gl'].libs.directories[0],
+                '--with-gl-prefix=%s' % self.spec['gl'].home]
         return args

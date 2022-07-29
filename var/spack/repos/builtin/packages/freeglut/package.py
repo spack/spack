@@ -17,15 +17,23 @@ class Freeglut(CMakePackage, SourceforgePackage):
     version('3.2.1', sha256='d4000e02102acaf259998c870e25214739d1f16f67f99cb35e4f46841399da68')
     version('3.0.0', sha256='2a43be8515b01ea82bcfa17d29ae0d40bd128342f0930cd1f375f1ff999f76a2')
 
-    depends_on('pkgconfig', type='build')
+    variant('shared', default=True, description='Build shared libs instead of static')
+
     depends_on('gl')
     depends_on('glu')
-    depends_on('libx11')
-    depends_on('libxrandr')
-    depends_on('libxi')
-    depends_on('libxxf86vm')
-    depends_on('xrandr')
-    depends_on('inputproto')
+
+    # FreeGLUT does not support OSMesa
+    conflicts('osmesa')
+
+    # FreeGLUT only works with GLX on linux (cray is also linux)
+    with when('platform=linux'):
+        depends_on('glx')
+        depends_on('libx11')
+        depends_on('libxi')
+    with when('platform=cray'):
+        depends_on('glx')
+        depends_on('libx11')
+        depends_on('libxi')
 
     # freeglut 3.2.1 fails to build with -fno-common (default with newer compilers)
     # see https://bugs.gentoo.org/705840 and https://github.com/dcnieho/FreeGLUT/pull/76
@@ -40,12 +48,19 @@ class Freeglut(CMakePackage, SourceforgePackage):
           when="@3.2.1 %aocc@2.3.0:")
 
     def cmake_args(self):
-        return [
-            '-DFREEGLUT_BUILD_DEMOS=OFF',
-            '-DOPENGL_gl_LIBRARY=' + self.spec['gl'].libs[0],
-            '-DOPENGL_glu_LIBRARY=' + self.spec['glu'].libs[0],
-            '-DX11_X11_LIB=' + self.spec['libx11'].libs[0],
-            '-DX11_Xrandr_LIB=' + self.spec['libxrandr'].libs[0],
-            '-DX11_Xi_LIB=' + self.spec['libxi'].libs[0],
-            '-DX11_Xxf86vm_LIB=' + self.spec['libxxf86vm'].libs[0],
+        spec = self.spec
+        args = [
+            self.define('FREEGLUT_BUILD_DEMOS', False),
+            self.define('FREEGLUT_GLES', False),
+            self.define('FREEGLUT_WAYLAND', False),
+            self.define('FREEGLUT_BUILD_SHARED_LIBS', '+shared' in spec),
+            self.define('FREEGLUT_BUILD_STATIC_LIBS', '~shared' in spec),
+            self.define('OpenGL_GL_PREFERENCE', 'LEGACY'),
+            self.define('OPENGL_INCLUDE_DIR', spec['gl'].headers.directories[0]),
+            self.define('OPENGL_gl_LIBRARY', spec['gl'].libs[0]),
+            self.define('OPENGL_opengl_LIBRARY', 'IGNORE'),
+            self.define('OPENGL_glx_LIBRARY', 'IGNORE'),
+            self.define('OPENGL_egl_LIBRARY', 'IGNORE'),
         ]
+
+        return args
