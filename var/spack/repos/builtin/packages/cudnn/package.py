@@ -237,7 +237,7 @@ class Cudnn(Package):
             # https://docs.nvidia.com/deeplearning/cudnn/support-matrix/index.html#fntarg_2
             if Version(cuda_ver) >= Version('11'):
                 cuda_ver = Version(cuda_ver).up_to(1)
-            depends_on('cuda@{}'.format(cuda_ver), when='@{}'.format(cudnn_ver))
+            depends_on('cuda@{}'.format(cuda_ver), when='@{}'.format(long_ver))
 
     def url_for_version(self, version):
         # Get the system and machine arch for building the file path
