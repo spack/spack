@@ -150,8 +150,9 @@ class MacOs(OperatingSystem):
         # only used the minor component)
         part = 1 if version >= Version('11') else 2
 
-        name = mac_releases.get(str(version.up_to(part)), "macos")
-        super(MacOs, self).__init__(name, version.up_to(2))
+        mac_ver = str(version.up_to(part))
+        name = mac_releases.get(mac_ver, "macos")
+        super(MacOs, self).__init__(name, mac_ver)
 
     def __str__(self):
         return self.name
