@@ -27,6 +27,7 @@ class PyWarpx(PythonPackage):
 
     # NOTE: if you update the versions here, also see warpx
     version('develop', branch='development')
+    version('22.07', sha256='0286adc788136cb78033cb1678d38d36e42265bcfd3d0c361a9bcc2cfcdf241b')
     version('22.06', sha256='e78398e215d3fc6bc5984f5d1c2ddeac290dcbc8a8e9d196e828ef6299187db9')
     version('22.05', sha256='2fa69e6a4db36459b67bf663e8fbf56191f6c8c25dc76301dbd02a36f9b50479')
     version('22.04', sha256='9234d12e28b323cb250d3d2cefee0b36246bd8a1d1eb48e386f41977251c028f')
@@ -46,7 +47,7 @@ class PyWarpx(PythonPackage):
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['22.06', '22.05', '22.04', '22.03', '22.02', '22.01',
+    for v in ['22.07', '22.06', '22.05', '22.04', '22.03', '22.02', '22.01',
               '21.12', '21.11', '21.10', '21.09', '21.08', '21.07', '21.06',
               '21.05', '21.04',
               'develop']:

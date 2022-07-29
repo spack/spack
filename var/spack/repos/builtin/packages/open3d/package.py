@@ -27,7 +27,9 @@ class Open3d(CMakePackage, CudaPackage):
     depends_on('llvm@7:+clang+libcxx')
     depends_on('eigen')
     depends_on('flann')
-    # depends_on('fmt')
+    # https://github.com/isl-org/Open3D/issues/4360
+    # https://github.com/isl-org/Open3D/pull/5303
+    depends_on('fmt@:7')
     depends_on('glew')
     depends_on('glfw')
     # depends_on('imgui')
@@ -70,7 +72,7 @@ class Open3d(CMakePackage, CudaPackage):
             # https://github.com/isl-org/Open3D/issues/4360
             self.define('USE_SYSTEM_EIGEN3', True),
             self.define('USE_SYSTEM_FLANN', True),
-            # self.define('USE_SYSTEM_FMT', True),
+            self.define('USE_SYSTEM_FMT', True),
             self.define('USE_SYSTEM_GLEW', True),
             self.define('USE_SYSTEM_GLFW', True),
             # self.define('USE_SYSTEM_IMGUI', True),

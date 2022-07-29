@@ -31,5 +31,4 @@ def patch(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
-        package = spack.repo.get(spec)
-        package.do_patch()
+        spec.package.do_patch()

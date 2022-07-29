@@ -751,8 +751,7 @@ def _populate(mock_db):
     """
     def _install(spec):
         s = spack.spec.Spec(spec).concretized()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True, explicit=True)
+        s.package.do_install(fake=True, explicit=True)
 
     _install('mpileaks ^mpich')
     _install('mpileaks ^mpich2')
@@ -1004,7 +1003,7 @@ class ConfigUpdate(object):
 
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request):
+def module_configuration(monkeypatch, request, mutable_config):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -1019,6 +1018,8 @@ def module_configuration(monkeypatch, request):
         spack.paths.test_path, 'data', 'modules', writer_key
     )
 
+    # ConfigUpdate, when called, will modify configuration, so we need to use
+    # the mutable_config fixture
     return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
 
 

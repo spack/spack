@@ -25,7 +25,7 @@ class Giflib(MakefilePackage, SourceforgePackage):
     # https://sourceforge.net/p/giflib/bugs/133/
     patch('https://sourceforge.net/p/giflib/bugs/_discuss/thread/4e811ad29b/c323/attachment/Makefile.patch',
           sha256='a94e7bdd8840a31cecacc301684dfdbf7b98773ad824aeaab611fabfdc513036',
-          level=0, when='@5.2:')
+          level=0, when='@5.2: platform=darwin')
     patch('bsd-head.patch')
 
     def prefix_and_libversion_args(self):

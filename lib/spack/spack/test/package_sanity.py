@@ -19,6 +19,7 @@ import spack.fetch_strategy
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.spec
 import spack.util.crypto as crypto
 import spack.util.executable as executable
 import spack.util.package_hash as ph
@@ -28,7 +29,7 @@ import spack.variant
 def check_repo():
     """Get all packages in the builtin repo to make sure they work."""
     for name in spack.repo.all_package_names():
-        spack.repo.get(name)
+        spack.repo.path.get_pkg_class(name)
 
 
 @pytest.mark.maybeslow
@@ -40,7 +41,8 @@ def test_get_all_packages():
 def test_packages_are_pickleable():
     failed_to_pickle = list()
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
+        pkg_cls = spack.repo.path.get_pkg_class(name)
+        pkg = pkg_cls(spack.spec.Spec(name))
         try:
             pickle.dumps(pkg)
         except Exception:
@@ -54,7 +56,8 @@ def test_packages_are_pickleable():
                 ', '.join(failed_to_pickle))
 
         for name in failed_to_pickle:
-            pkg = spack.repo.get(name)
+            pkg_cls = spack.repo.path.get_pkg_class(name)
+            pkg = pkg_cls(spack.spec.Spec(name))
             pickle.dumps(pkg)
 
 
@@ -91,12 +94,9 @@ def test_repo_getpkg_names_and_classes():
     print(names)
     classes = spack.repo.path.all_package_classes()
     print(list(classes))
-    pkgs = spack.repo.path.all_packages()
-    print(list(pkgs))
 
-    for name, cls, pkg in zip(names, classes, pkgs):
+    for name, cls in zip(names, classes):
         assert cls.name == name
-        assert pkg.name == name
 
 
 def test_get_all_mock_packages():
@@ -132,7 +132,8 @@ def test_all_virtual_packages_have_default_providers():
 def test_package_version_consistency():
     """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
+        pkg_cls = spack.repo.path.get_pkg_class(name)
+        pkg = pkg_cls(spack.spec.Spec(name))
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
             assert spack.fetch_strategy.for_package_version(pkg, version)
@@ -164,10 +165,9 @@ def test_no_fixme():
 
 def test_docstring():
     """Ensure that every package has a docstring."""
-
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.get(name)
-        assert pkg.__doc__
+        pkg_cls = spack.repo.path.get_pkg_class(name)
+        assert pkg_cls.__doc__
 
 
 def test_all_packages_use_sha256_checksums():
@@ -175,7 +175,8 @@ def test_all_packages_use_sha256_checksums():
 
     errors = []
     for name in spack.repo.all_package_names():
-        pkg = spack.repo.path.get(name)
+        pkg_cls = spack.repo.path.get_pkg_class(name)
+        pkg = pkg_cls(spack.spec.Spec(name))
 
         # for now, don't enforce on packages that require manual downloads
         # TODO: eventually fix these, too.
@@ -214,11 +215,11 @@ def test_api_for_build_and_run_environment():
     run environment, and not the old one.
     """
     failing = []
-    for pkg in spack.repo.path.all_packages():
-        add_to_list = (hasattr(pkg, 'setup_environment') or
-                       hasattr(pkg, 'setup_dependent_environment'))
+    for pkg_cls in spack.repo.path.all_package_classes():
+        add_to_list = (hasattr(pkg_cls, 'setup_environment') or
+                       hasattr(pkg_cls, 'setup_dependent_environment'))
         if add_to_list:
-            failing.append(pkg)
+            failing.append(pkg_cls)
 
     msg = ('there are {0} packages using the old API to set build '
            'and run environment [{1}], for further information see '
@@ -246,7 +247,8 @@ def test_prs_update_old_api():
     for file in changed_package_files:
         if 'builtin.mock' not in file:  # don't restrict packages for tests
             name = os.path.basename(os.path.dirname(file))
-            pkg = spack.repo.get(name)
+            pkg_cls = spack.repo.path.get_pkg_class(name)
+            pkg = pkg_cls(spack.spec.Spec(name))
 
             failed = (hasattr(pkg, 'setup_environment') or
                       hasattr(pkg, 'setup_dependent_environment'))
@@ -279,8 +281,8 @@ def test_all_dependencies_exist():
 def test_variant_defaults_are_parsable_from_cli():
     """Ensures that variant defaults are parsable from cli."""
     failing = []
-    for pkg in spack.repo.path.all_packages():
-        for variant_name, entry in pkg.variants.items():
+    for pkg_cls in spack.repo.path.all_package_classes():
+        for variant_name, entry in pkg_cls.variants.items():
             variant, _ = entry
             default_is_parsable = (
                 # Permitting a default that is an instance on 'int' permits
@@ -289,18 +291,18 @@ def test_variant_defaults_are_parsable_from_cli():
                 isinstance(variant.default, int) or variant.default
             )
             if not default_is_parsable:
-                failing.append((pkg.name, variant_name))
+                failing.append((pkg_cls.name, variant_name))
     assert not failing
 
 
 def test_variant_defaults_listed_explicitly_in_values():
     failing = []
-    for pkg in spack.repo.path.all_packages():
-        for variant_name, entry in pkg.variants.items():
+    for pkg_cls in spack.repo.path.all_package_classes():
+        for variant_name, entry in pkg_cls.variants.items():
             variant, _ = entry
             vspec = variant.make_default()
             try:
-                variant.validate_or_raise(vspec, pkg=pkg)
+                variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
             except spack.variant.InvalidVariantValueError:
-                failing.append((pkg.name, variant.name))
+                failing.append((pkg_cls.name, variant.name))
     assert not failing

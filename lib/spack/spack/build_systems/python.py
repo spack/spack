@@ -19,7 +19,7 @@ from llnl.util.filesystem import (
     same_path,
     working_dir,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError
@@ -77,24 +77,21 @@ class PythonPackage(PackageBase):
             '--no-index',
         ]
 
-    @property
-    def homepage(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
+    @classproperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
             return 'https://pypi.org/project/' + name + '/'
 
-    @property
-    def url(self):
-        if self.pypi:
-            return (
-                'https://files.pythonhosted.org/packages/source/'
-                + self.pypi[0] + '/' + self.pypi
-            )
+    @classproperty
+    def url(cls):
+        if cls.pypi:
+            return 'https://files.pythonhosted.org/packages/source/' + cls.pypi[0] + '/' + cls.pypi
 
-    @property
-    def list_url(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
+    @classproperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
             return 'https://pypi.org/simple/' + name + '/'
 
     @property

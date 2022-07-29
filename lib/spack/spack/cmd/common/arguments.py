@@ -403,4 +403,4 @@ def add_s3_connection_args(subparser, add_help):
         default=None)
     subparser.add_argument(
         '--s3-endpoint-url',
-        help="Access Token to use to connect to this S3 mirror")
+        help="Endpoint URL to use to connect to this S3 mirror")

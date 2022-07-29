@@ -5,7 +5,6 @@
 
 
 import os
-import sys
 
 from spack.package import *
 from spack.pkg.builtin.boost import Boost
@@ -48,12 +47,12 @@ class Vtk(CMakePackage):
     patch('gcc.patch', when='@6.1.0')
     # patch to fix some missing stl includes
     # which lead to build errors on newer compilers
-    # version range to be updated once the linked patch is released
-    patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
-          when="@9:", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
 
-    # We cannot build with both osmesa and qt prior to VTK 8.1
-    conflicts('+osmesa', when='@:8.0 +qt')
+    patch('https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff',
+          when="@9:9.0", sha256='0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d')
+
+    # We cannot build with both osmesa and qt in spack
+    conflicts('+osmesa', when='+qt')
 
     extends('python', when='+python')
 
@@ -87,12 +86,12 @@ class Vtk(CMakePackage):
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
 
-    if sys.platform != 'darwin':
-        depends_on('glx', when='~osmesa')
-        depends_on('libxt', when='~osmesa')
+    with when('~osmesa'):
+        depends_on('glx', when='platform=linux')
+        depends_on('glx', when='platform=cray')
+        depends_on('libxt', when='platform=linux')
+        depends_on('libxt', when='platform=cray')
 
-    # Note: it is recommended to use mesa+llvm, if possible.
-    # mesa default is software rendering, llvm makes it faster
     depends_on('osmesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
@@ -236,7 +235,7 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_MPI=ON'
                 ])
         else:
-            '-DVTK_USE_MPI=OFF'
+            cmake_args.append('-DVTK_USE_MPI=OFF')
 
         if '+ffmpeg' in spec:
             if spec.satisfies('@:8'):
@@ -337,9 +336,6 @@ class Vtk(CMakePackage):
 
         cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
 
-        if spec.satisfies('@:8.1.0') and '+osmesa' not in spec:
-            cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
-
         if '+osmesa' in spec:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
@@ -352,12 +348,12 @@ class Vtk(CMakePackage):
                 # This option is gone in VTK 8.1.2
                 cmake_args.append('-DOpenGL_GL_PREFERENCE:STRING=LEGACY')
 
-            if 'darwin' in spec.architecture:
+            if 'platform=darwin' in spec:
                 cmake_args.extend([
                     '-DVTK_USE_X:BOOL=OFF',
                     '-DVTK_USE_COCOA:BOOL=ON'])
 
-            elif 'linux' in spec.architecture:
+            elif 'platform=linux' in spec:
                 cmake_args.extend([
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])

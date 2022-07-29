@@ -36,12 +36,9 @@ class Memsurfer(PythonPackage):
     depends_on('cgal@4.13 +shared~core~demos~imageio')
 
     # vtk needs to know whether to build with mesa or opengl
-    vtk_conf = '~ffmpeg~mpi+opengl2~qt~xdmf+python'
-    depends_on('vtk@8.1.2 ' + vtk_conf + ' ~osmesa', when='~osmesa')
-    depends_on('vtk@8.1.2 ' + vtk_conf + ' +osmesa', when='+osmesa')
-
-    # needed only to resolve the conflict between the default and netcdf's spec
-    depends_on('hdf5 +hl')
+    depends_on('vtk@8.1.2 ~ffmpeg~mpi+opengl2~qt~xdmf+python')
+    depends_on('vtk ~osmesa', when='~osmesa')
+    depends_on('vtk +osmesa', when='+osmesa')
 
     # memsurfer's setup needs path to these deps to build extension modules
     def setup_build_environment(self, env):

@@ -14,6 +14,8 @@ class Hdf5VolAsync(CMakePackage):
 
     maintainers = ['hyoklee', 'houjun', 'jeanbez']
 
+    tags = ['e4s']
+
     version('develop', branch='develop')
     version('1.2', tag='v1.2')
     version('1.1', tag='v1.1')

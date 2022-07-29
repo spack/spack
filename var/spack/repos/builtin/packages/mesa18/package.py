@@ -64,9 +64,8 @@ class Mesa18(AutotoolsPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5')
-    provides('glx@1.4', when='+glx')
-    provides('osmesa', when='+osmesa')
+    provides('libglx', when='+glx')
+    provides('libosmesa', when='+osmesa')
 
     # Variant dependencies
     depends_on('libllvm@6:10', when='+llvm')
@@ -189,43 +188,49 @@ class Mesa18(AutotoolsPackage):
     def libs(self):
         spec = self.spec
         libs_to_seek = set()
-
-        if '+osmesa' in spec:
-            libs_to_seek.add('libOSMesa')
-
-        if '+glx' in spec:
+        if 'platform=windows' in spec:
+            libs_to_seek.add('opengl32')
+            if '+osmesa' in spec:
+                libs_to_seek.add('osmesa')
+        else:
             libs_to_seek.add('libGL')
-
-        libs_to_seek.add('libGL')
-
+            if '+osmesa' in spec:
+                libs_to_seek.add('libOSMesa')
+            if '+glx' in spec:
+                libs_to_seek.add('libGL')
         if '+opengles' in spec:
-            libs_to_seek.add('libGLES')
-            libs_to_seek.add('libGLES2')
+            libs_to_seek.add('libGLESv1_CM')
+            libs_to_seek.add('libGLESv2')
 
-        if libs_to_seek:
-            return find_libraries(list(libs_to_seek),
-                                  root=self.spec.prefix,
-                                  shared=True,
-                                  recursive=True)
-        return LibraryList()
-
-    @property
-    def osmesa_libs(self):
-        return find_libraries('libOSMesa',
+        return find_libraries(list(libs_to_seek),
                               root=self.spec.prefix,
                               shared=True,
                               recursive=True)
 
     @property
-    def glx_libs(self):
+    def libglx_headers(self):
+        return find_headers('GL/glx',
+                            root=self.spec.prefix.include,
+                            recursive=False)
+
+    @property
+    def libglx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared=True,
                               recursive=True)
 
     @property
-    def gl_libs(self):
-        return find_libraries('libGL',
+    def libosmesa_headers(self):
+        return find_headers('GL/osmesa',
+                            root=self.spec.prefix.include,
+                            recursive=False)
+
+    @property
+    def libosmesa_libs(self):
+        if 'platform=windows' in self.spec:
+            lib_name = 'osmesa'
+        else:
+            lib_name = 'libOSMesa'
+        return find_libraries(lib_name,
                               root=self.spec.prefix,
-                              shared=True,
                               recursive=True)

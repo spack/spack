@@ -12,6 +12,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.repo
+import spack.spec
 import spack.stage
 import spack.util.crypto
 from spack.package_base import preferred_version
@@ -54,7 +55,8 @@ def checksum(parser, args):
         tty.die("`spack checksum` accepts package names, not URLs.")
 
     # Get the package we're going to generate checksums for
-    pkg = spack.repo.get(args.package)
+    pkg_cls = spack.repo.path.get_pkg_class(args.package)
+    pkg = pkg_cls(spack.spec.Spec(args.package))
 
     url_dict = {}
     versions = args.versions

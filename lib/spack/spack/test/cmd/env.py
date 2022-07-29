@@ -145,17 +145,32 @@ def test_concretize():
     assert any(x.name == 'mpileaks' for x in env_specs)
 
 
-def test_env_uninstalled_specs(install_mockery, mock_fetch):
+def test_env_specs_partition(install_mockery, mock_fetch):
     e = ev.create('test')
     e.add('cmake-client')
     e.concretize()
-    assert any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+
+    # Single not installed root spec.
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 0
+    assert len(roots_to_install) == 1
+    assert roots_to_install[0].name == 'cmake-client'
+
+    # Single installed root.
     e.install_all()
-    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 1
+    assert roots_already_installed[0].name == 'cmake-client'
+    assert len(roots_to_install) == 0
+
+    # One installed root, one not installed root.
     e.add('mpileaks')
     e.concretize()
-    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
-    assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
+    roots_already_installed, roots_to_install = e._partition_roots_by_install_status()
+    assert len(roots_already_installed) == 1
+    assert len(roots_to_install) == 1
+    assert roots_already_installed[0].name == 'cmake-client'
+    assert roots_to_install[0].name == 'mpileaks'
 
 
 def test_env_install_all(install_mockery, mock_fetch):
@@ -452,9 +467,9 @@ def test_env_repo():
     with ev.read('test'):
         concretize()
 
-    package = e.repo.get('mpileaks')
-    assert package.name == 'mpileaks'
-    assert package.namespace == 'builtin.mock'
+    pkg_cls = e.repo.get_pkg_class('mpileaks')
+    assert pkg_cls.name == 'mpileaks'
+    assert pkg_cls.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():
@@ -2898,14 +2913,8 @@ def test_environment_depfile_makefile(tmpdir, mock_packages):
     with ev.read('test') as e:
         for _, root in e.concretized_specs():
             for spec in root.traverse(root=True):
-                for task in ('.fetch', '.install'):
-                    tgt = os.path.join('prefix', task, spec.dag_hash())
-                    assert 'touch {}'.format(tgt) in all_out
-
-    # Check whether make prefix/fetch-all only fetches
-    fetch_out = make('prefix/fetch-all', '-n', '-f', makefile, output=str)
-    assert '.install/' not in fetch_out
-    assert '.fetch/' in fetch_out
+                tgt = os.path.join('prefix', '.install', spec.dag_hash())
+                assert 'touch {}'.format(tgt) in all_out
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):

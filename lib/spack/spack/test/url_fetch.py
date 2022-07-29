@@ -156,20 +156,16 @@ def test_fetch(
     checksum = algo.hexdigest()
 
     # Get a spec and tweak the test package with new chcecksum params
-    spec = Spec('url-test')
-    spec.concretize()
-
-    pkg = spack.repo.get('url-test')
-    pkg.url = mock_archive.url
-    pkg.versions[ver('test')] = {checksum_type: checksum, 'url': pkg.url}
-    pkg.spec = spec
+    s = Spec('url-test').concretized()
+    s.package.url = mock_archive.url
+    s.package.versions[ver('test')] = {checksum_type: checksum, 'url': s.package.url}
 
     # Enter the stage directory and check some properties
-    with pkg.stage:
+    with s.package.stage:
         with spack.config.override('config:verify_ssl', secure):
             with spack.config.override('config:url_fetch_method', _fetch_method):
-                pkg.do_stage()
-        with working_dir(pkg.stage.source_path):
+                s.package.do_stage()
+        with working_dir(s.package.stage.source_path):
             assert os.path.exists('configure')
             assert is_exe('configure')
 
@@ -206,15 +202,14 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     have checksums in the package.
     """
     with spack.config.override('config:url_fetch_method', _fetch_method):
-        specification = Spec(spec).concretized()
-        pkg = spack.repo.get(specification)
-        fetch_strategy = fs.from_list_url(pkg)
+        s = Spec(spec).concretized()
+        fetch_strategy = fs.from_list_url(s.package)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
-        pkg.fetch_options = {'timeout': 60}
-        fetch_strategy = fs.from_list_url(pkg)
+        s.package.fetch_options = {'timeout': 60}
+        fetch_strategy = fs.from_list_url(s.package)
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
@@ -243,26 +238,22 @@ def test_new_version_from_list_url(
 
     """Test non-specific URLs from the url-list-test package."""
     with spack.config.override("config:url_fetch_method", _fetch_method):
-        pkg = spack.repo.get("url-list-test")
-
-        spec = Spec("url-list-test @%s" % requested_version).concretized()
-        pkg = spack.repo.get(spec)
-        fetch_strategy = fs.from_list_url(pkg)
+        s = Spec("url-list-test @%s" % requested_version).concretized()
+        fetch_strategy = fs.from_list_url(s.package)
 
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == tarball
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
-        pkg.fetch_options = {"timeout": 60}
-        fetch_strategy = fs.from_list_url(pkg)
+        s.package.fetch_options = {"timeout": 60}
+        fetch_strategy = fs.from_list_url(s.package)
         assert fetch_strategy.extra_options == {"timeout": 60}
 
 
 def test_nosource_from_list_url(mock_packages, config):
     """This test confirms BundlePackages do not have list url."""
-    pkg = spack.repo.get('nosource')
-
-    fetch_strategy = fs.from_list_url(pkg)
+    s = Spec('nosource').concretized()
+    fetch_strategy = fs.from_list_url(s.package)
     assert fetch_strategy is None
 
 

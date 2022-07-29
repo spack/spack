@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -20,6 +22,7 @@ class Xgboost(CMakePackage, CudaPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master', submodules=True)
+    version('1.6.1', tag='v1.6.1', submodules=True)
     version('1.5.2', tag='v1.5.2', submodules=True)
     version('1.3.3', tag='v1.3.3', submodules=True)
 
@@ -34,6 +37,7 @@ class Xgboost(CMakePackage, CudaPackage):
     depends_on('cuda@10:11.4', when='@:1.5.0+cuda')
     depends_on('nccl', when='+nccl')
     depends_on('llvm-openmp', when='%apple-clang +openmp')
+    depends_on('hwloc', when='%clang')
 
     conflicts('%gcc@:4', msg='GCC version must be at least 5.0!')
     conflicts('+nccl', when='~cuda', msg='NCCL requires CUDA')
@@ -58,5 +62,23 @@ class Xgboost(CMakePackage, CudaPackage):
 
         if '@1.5: ^cuda@11.4:' in self.spec:
             args.append(self.define('BUILD_WITH_CUDA_CUB', True))
+
+        if self.spec.satisfies('+openmp%clang'):
+            OpenMP_C_FLAGS = "-fopenmp=libomp"
+            OpenMP_C_LIB_NAMES = "libomp"
+            args += [
+                self.define('OpenMP_C_FLAGS', OpenMP_C_FLAGS),
+                self.define('OpenMP_C_LIB_NAMES', OpenMP_C_LIB_NAMES),
+                self.define('OpenMP_CXX_FLAGS', OpenMP_C_FLAGS),
+                self.define('OpenMP_CXX_LIB_NAMES', OpenMP_C_LIB_NAMES),
+            ]
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args += [
+                self.define('OpenMP_libomp_LIBRARY',
+                            find_libraries('libomp', root=clang_root,
+                                           shared=True, recursive=True))
+            ]
 
         return args

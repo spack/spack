@@ -18,7 +18,6 @@ class PyTorchvision(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('main', branch='main')
-    version('master', branch='main', deprecated=True)
     version('0.13.0', sha256='2fe9139150800820d02c867a0b64b7c7fbc964d48d76fae235d6ef9215eabcf4')
     version('0.12.0', sha256='99e6d3d304184895ff4f6152e2d2ec1cbec89b3e057d9c940ae0125546b04e91')
     version('0.11.3', sha256='b4c51d27589783e6e6941ecaa67b55f6f41633874ec37f80b64a0c92c3196e0c')
@@ -62,7 +61,7 @@ class PyTorchvision(PythonPackage):
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
 
     # https://github.com/pytorch/vision#installation
-    depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@master', when='@main', type=('build', 'link', 'run'))
     depends_on('py-torch@1.12.0', when='@0.13.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.11.0', when='@0.12.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.10.2', when='@0.11.3', type=('build', 'link', 'run'))
@@ -123,6 +122,11 @@ class PyTorchvision(PythonPackage):
         env.set('TORCHVISION_LIBRARY', ':'.join(library))
         env.set('CPATH', ':'.join(include))
         env.set('LIBRARY_PATH', ':'.join(library))
+
+        # By default, version is read from `version.txt`, but this includes an `a0`
+        # suffix used for alpha builds. Override the version for stable releases.
+        if not self.spec.satisfies('@main'):
+            env.set('BUILD_VERSION', self.version)
 
         if '+cuda' in self.spec['py-torch']:
             env.set('FORCE_CUDA', 1)

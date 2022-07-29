@@ -54,6 +54,34 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 
 
+def get_deprecated(dictionary, name, old_name, default):
+    """Get a deprecated property from a ``dict``.
+
+    Arguments:
+        dictionary (dict): dictionary to get a value from.
+        name (str): New name for the property. If present, supersedes ``old_name``.
+        old_name (str): Deprecated name for the property. If present, a warning
+            is printed.
+        default (object): value to return if neither name is found.
+    """
+    value = default
+
+    # always warn if old name is present
+    if old_name in dictionary:
+        value = dictionary.get(old_name, value)
+        main_msg = "`{}:` is deprecated in module config and will be removed in v0.20."
+        details = (
+            "Use `{}:` instead. You can run `spack config update` to translate your "
+            "configuration files automatically."
+        )
+        tty.warn(main_msg.format(old_name), details.format(name))
+
+    # name overrides old name if present
+    value = dictionary.get(name, value)
+
+    return value
+
+
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
@@ -351,14 +379,14 @@ def get_module(
 
     Retrieve the module file for the given spec if it is available. If the
     module is not available, this will raise an exception unless the module
-    is blacklisted or if the spec is installed upstream.
+    is excluded or if the spec is installed upstream.
 
     Args:
         module_type: the type of module we want to retrieve (e.g. lmod)
         spec: refers to the installed package that we want to retrieve a module
             for
-        required: if the module is required but blacklisted, this function will
-            print a debug message. If a module is missing but not blacklisted,
+        required: if the module is required but excluded, this function will
+            print a debug message. If a module is missing but not excluded,
             then an exception is raised (regardless of whether it is required)
         get_full_path: if ``True``, this returns the full path to the module.
             Otherwise, this returns the module name.
@@ -386,13 +414,13 @@ def get_module(
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
-            if not writer.conf.blacklisted:
+            if not writer.conf.excluded:
                 err_msg = "No module available for package {0} at {1}".format(
                     spec, writer.layout.filename
                 )
                 raise ModuleNotFoundError(err_msg)
             elif required:
-                tty.debug("The module configuration has blacklisted {0}: "
+                tty.debug("The module configuration has excluded {0}: "
                           "omitting it".format(spec))
             else:
                 return None
@@ -483,26 +511,30 @@ class BaseConfiguration(object):
         return None
 
     @property
-    def blacklisted(self):
-        """Returns True if the module has been blacklisted,
-        False otherwise.
-        """
+    def excluded(self):
+        """Returns True if the module has been excluded, False otherwise."""
+
         # A few variables for convenience of writing the method
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Compute the list of whitelist rules that match
-        wlrules = conf.get('whitelist', [])
-        whitelist_matches = [x for x in wlrules if spec.satisfies(x)]
+        # Compute the list of include rules that match
+        # DEPRECATED: remove 'whitelist' in v0.20
+        include_rules = get_deprecated(conf, "include", "whitelist", [])
+        include_matches = [x for x in include_rules if spec.satisfies(x)]
 
-        # Compute the list of blacklist rules that match
-        blrules = conf.get('blacklist', [])
-        blacklist_matches = [x for x in blrules if spec.satisfies(x)]
+        # Compute the list of exclude rules that match
+        # DEPRECATED: remove 'blacklist' in v0.20
+        exclude_rules = get_deprecated(conf, "exclude", "blacklist", [])
+        exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
 
-        # Should I blacklist the module because it's implicit?
-        blacklist_implicits = conf.get('blacklist_implicits')
+        # Should I exclude the module because it's implicit?
+        # DEPRECATED: remove 'blacklist_implicits' in v0.20
+        exclude_implicits = get_deprecated(
+            conf, "exclude_implicits", "blacklist_implicits", None
+        )
         installed_implicitly = not spec._installed_explicitly()
-        blacklisted_as_implicit = blacklist_implicits and installed_implicitly
+        excluded_as_implicit = exclude_implicits and installed_implicitly
 
         def debug_info(line_header, match_list):
             if match_list:
@@ -511,15 +543,15 @@ class BaseConfiguration(object):
                 for rule in match_list:
                     tty.debug('\t\tmatches rule: {0}'.format(rule))
 
-        debug_info('WHITELIST', whitelist_matches)
-        debug_info('BLACKLIST', blacklist_matches)
+        debug_info('INCLUDE', include_matches)
+        debug_info('EXCLUDE', exclude_matches)
 
-        if blacklisted_as_implicit:
-            msg = '\tBLACKLISTED_AS_IMPLICIT : {0}'.format(spec.cshort_spec)
+        if excluded_as_implicit:
+            msg = '\tEXCLUDED_AS_IMPLICIT : {0}'.format(spec.cshort_spec)
             tty.debug(msg)
 
-        is_blacklisted = blacklist_matches or blacklisted_as_implicit
-        if not whitelist_matches and is_blacklisted:
+        is_excluded = exclude_matches or excluded_as_implicit
+        if not include_matches and is_excluded:
             return True
 
         return False
@@ -544,17 +576,22 @@ class BaseConfiguration(object):
         return self._create_list_for('prerequisites')
 
     @property
-    def environment_blacklist(self):
+    def exclude_env_vars(self):
         """List of variables that should be left unmodified."""
-        return self.conf.get('filter', {}).get('environment_blacklist', {})
+        filter = self.conf.get('filter', {})
+
+        # DEPRECATED: remove in v0.20
+        return get_deprecated(
+            filter, "exclude_env_vars", "environment_blacklist", {}
+        )
 
     def _create_list_for(self, what):
-        whitelist = []
+        include = []
         for item in self.conf[what]:
             conf = type(self)(item, self.name)
-            if not conf.blacklisted:
-                whitelist.append(item)
-        return whitelist
+            if not conf.excluded:
+                include.append(item)
+        return include
 
     @property
     def verbose(self):
@@ -733,8 +770,8 @@ class BaseContext(tengine.Context):
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
 
-        # List of variables that are blacklisted in modules.yaml
-        blacklist = self.conf.environment_blacklist
+        # List of variables that are excluded in modules.yaml
+        exclude = self.conf.exclude_env_vars
 
         # We may have tokens to substitute in environment commands
 
@@ -758,7 +795,7 @@ class BaseContext(tengine.Context):
                 pass
             x.name = str(x.name).replace('-', '_')
 
-        return [(type(x).__name__, x) for x in env if x.name not in blacklist]
+        return [(type(x).__name__, x) for x in env if x.name not in exclude]
 
     @tengine.context_property
     def autoload(self):
@@ -831,9 +868,9 @@ class BaseModuleFileWriter(object):
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
         """
-        # Return immediately if the module is blacklisted
-        if self.conf.blacklisted:
-            msg = '\tNOT WRITING: {0} [BLACKLISTED]'
+        # Return immediately if the module is excluded
+        if self.conf.excluded:
+            msg = '\tNOT WRITING: {0} [EXCLUDED]'
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 

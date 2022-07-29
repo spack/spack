@@ -90,7 +90,7 @@ class Ncl(Package):
 
     # Some of the optional dependencies according to the manual:
     depends_on('hdf', when='+hdf4')
-    depends_on('gdal+proj@:2.4', when='+gdal')
+    depends_on('gdal@:2.4', when='+gdal')
     depends_on('udunits', when='+udunits2')
 
     # We need src files of triangle to appear in ncl's src tree if we want

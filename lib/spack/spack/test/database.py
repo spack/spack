@@ -401,10 +401,8 @@ def _check_remove_and_add_package(database, spec):
 
 
 def _mock_install(spec):
-    s = spack.spec.Spec(spec)
-    s.concretize()
-    pkg = spack.repo.get(s)
-    pkg.do_install(fake=True)
+    s = spack.spec.Spec(spec).concretized()
+    s.package.do_install(fake=True)
 
 
 def _mock_remove(spec):

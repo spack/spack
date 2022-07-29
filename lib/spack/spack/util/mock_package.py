@@ -33,6 +33,9 @@ class MockPackageBase(object):
         """
         self.spec = None
 
+    def __call__(self, *args, **kwargs):
+        return self
+
     def provides(self, vname):
         return vname in self.provided
 

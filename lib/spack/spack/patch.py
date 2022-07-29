@@ -284,11 +284,11 @@ def from_dict(dictionary):
     owner = dictionary.get('owner')
     if 'owner' not in dictionary:
         raise ValueError('Invalid patch dictionary: %s' % dictionary)
-    pkg = spack.repo.get(owner)
+    pkg_cls = spack.repo.path.get_pkg_class(owner)
 
     if 'url' in dictionary:
         return UrlPatch(
-            pkg,
+            pkg_cls,
             dictionary['url'],
             dictionary['level'],
             dictionary['working_dir'],
@@ -297,7 +297,7 @@ def from_dict(dictionary):
 
     elif 'relative_path' in dictionary:
         patch = FilePatch(
-            pkg,
+            pkg_cls,
             dictionary['relative_path'],
             dictionary['level'],
             dictionary['working_dir'])
@@ -404,8 +404,8 @@ class PatchCache(object):
             del self.index[sha256]
 
         # update the index with per-package patch indexes
-        pkg = spack.repo.get(pkg_fullname)
-        partial_index = self._index_patches(pkg)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_fullname)
+        partial_index = self._index_patches(pkg_cls)
         for sha256, package_to_patch in partial_index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)
@@ -432,10 +432,10 @@ class PatchCache(object):
             for cond, dependency in conditions.items():
                 for pcond, patch_list in dependency.patches.items():
                     for patch in patch_list:
-                        dspec = spack.repo.get(dependency.spec.name)
+                        dspec_cls = spack.repo.path.get_pkg_class(dependency.spec.name)
                         patch_dict = patch.to_dict()
                         patch_dict.pop('sha256')  # save some space
-                        index[patch.sha256] = {dspec.fullname: patch_dict}
+                        index[patch.sha256] = {dspec_cls.fullname: patch_dict}
 
         return index
 
