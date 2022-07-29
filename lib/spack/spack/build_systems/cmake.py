@@ -179,6 +179,7 @@ class CMakePackage(PackageBase):
             define("CMAKE_INSTALL_PREFIX", convert_to_posix_path(pkg.prefix)),
             define("CMAKE_BUILD_TYPE", build_type),
             define("BUILD_TESTING", pkg.run_tests),
+            define("CMAKE_INSTALL_LIBDIR", "lib"),
         ]
 
         # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
