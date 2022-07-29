@@ -109,7 +109,7 @@ class Gaudi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("BUILD_TESTING", self.run_tests or ),
+            self.define("BUILD_TESTING", self.run_tests or self.spec.satisfies('+examples')),
             self.define_from_variant("GAUDI_USE_AIDA",       "aida"),
             self.define_from_variant("GAUDI_USE_CPPUNIT",    "cppunit"),
             self.define_from_variant("GAUDI_USE_GPERFTOOLS", "gperftools"),
