@@ -122,6 +122,7 @@ class MacOs(OperatingSystem):
         will use a generic "macos" version string until Spack is updated.
         """
         mac_releases = {
+<<<<<<< HEAD
             "10.0": "cheetah",
             "10.1": "puma",
             "10.2": "jaguar",
@@ -141,6 +142,7 @@ class MacOs(OperatingSystem):
             "10.16": "bigsur",
             "11": "bigsur",
             "12": "monterey",
+            "13": "ventura",
         }
 
         version = macos_version()
