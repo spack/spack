@@ -141,6 +141,7 @@ spack:
   - openmpi
   - papi
   - papyrus
+  - parallel-netcdf
   - parsec ~cuda
   - petsc
   - plasma
@@ -197,7 +198,6 @@ spack:
   #- hpx@1.7.1 networking=mpi                         # boost@1.79.0
   #- nrm@0.1.0                                        # py-numpy@1.23.1
   #- openpmd-api@0.14.4                               # adios2
-  #- parallel-netcdf@1.12.2                           # parallel-netcdf
   #- paraview@5.10.1 +qt                              # binutils
   #- pdt                                              # pdt
   #- phist@1.9.5                                      # phist
@@ -224,7 +224,6 @@ spack:
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
-  # parallel-netcdf: checking if Fortran "integer*1" is ... configure: error: Could not link conftestf.o and conftest.o
   # pdt: make[2]: libpdb.a: Command not found
   # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
   # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
