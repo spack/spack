@@ -24,6 +24,8 @@ class Vdt(CMakePackage):
     variant('preload', default=False,
             description='Create in the library the symbols to preload the library')
 
+    depends_on('python', when='build')
+
     @property
     def build_directory(self):
         d = join_path(self.stage.path, 'spack-build')
