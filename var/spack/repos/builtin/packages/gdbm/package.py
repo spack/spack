@@ -29,15 +29,18 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version("1.9.1", sha256="6025852637772b0699f2294b5f14fd4a084bca3c8161d29d64d1f30d6d1a9aed")
     version("1.9", sha256="f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57")
 
-    depends_on("readline")
+    variant("nls", default=True, description="Use Native Language Support")
+
+    depends_on("readline", when="@1.13:")
+    depends_on("gettext", when="+nls")
 
     patch("macOS.patch", when="@1.21 platform=darwin")
-    patch("gdbm.patch", when="@:1.18 %gcc@10:")
-    patch("gdbm.patch", when="@:1.18 %clang@11:")
-    patch("gdbm.patch", when="@:1.18 %cce@11:")
-    patch("gdbm.patch", when="@:1.18 %aocc@2:")
-    patch("gdbm.patch", when="@:1.18 %oneapi")
-    patch("gdbm.patch", when="@:1.18 %arm@21:")
+    patch("gdbm.patch", when="@1.11:1.18 %gcc@10:")
+    patch("gdbm.patch", when="@1.11:1.18 %clang@11:")
+    patch("gdbm.patch", when="@1.11:1.18 %cce@11:")
+    patch("gdbm.patch", when="@1.11:1.18 %aocc@2:")
+    patch("gdbm.patch", when="@1.11:1.18 %oneapi")
+    patch("gdbm.patch", when="@1.11:1.18 %arm@21:")
 
     def configure_args(self):
 
@@ -46,4 +49,6 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
         #   https://patchwork.ozlabs.org/patch/771300/
         #   https://stackoverflow.com/questions/5582211
         #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
-        return ["--enable-libgdbm-compat", "CPPFLAGS=-D_GNU_SOURCE"]
+        args = ["--enable-libgdbm-compat", "CPPFLAGS=-D_GNU_SOURCE"]
+        args.extend(self.enable_or_disable("nls"))
+        return args
