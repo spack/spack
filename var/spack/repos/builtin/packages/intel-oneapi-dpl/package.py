@@ -6,17 +6,29 @@
 
 import platform
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelOneapiDpl(IntelOneApiLibraryPackage):
-    """Intel oneAPI DPL."""
+    """The Intel oneAPI DPC++ Library (oneDPL) is a companion to the Intel
+       oneAPI DPC++/C++ Compiler and provides an alternative for C++
+       developers who create heterogeneous applications and
+       solutions. Its APIs are based on familiar standards-C++ STL,
+       Parallel STL (PSTL), Boost.Compute, and SYCL*-to maximize
+       productivity and performance across CPUs, GPUs, and FPGAs.
+
+    """
 
     maintainers = ['rscohn2']
 
     homepage = 'https://github.com/oneapi-src/oneDPL'
 
     if platform.system() == 'Linux':
+        version('2021.7.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18752/l_oneDPL_p_2021.7.0.631_offline.sh',
+                sha256='1e2d735d5eccfe8058e18f96d733eda8de5b7a07d613447b7d483fd3f9cec600',
+                expand=False)
         version('2021.6.0',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/18372/l_oneDPL_p_2021.6.0.501_offline.sh',
                 sha256='0225f133a6c38b36d08635986870284a958e5286c55ca4b56a4058bd736f8f4f',
@@ -36,7 +48,7 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_path, 'linux', 'include')
+        include_path = join_path(self.component_prefix, 'linux', 'include')
         headers = find_headers('*', include_path, recursive=True)
         # Force this directory to be added to include path, even
         # though no files are here because all includes are relative

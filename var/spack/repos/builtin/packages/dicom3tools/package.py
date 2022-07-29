@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dicom3tools(MakefilePackage):
@@ -51,6 +51,14 @@ class Dicom3tools(MakefilePackage):
         uid_root = spec.variants['uid_root'].value
         configure = Executable(join_path('.', 'Configure'))
         configure()
+
+        if spec.satisfies('%fj'):
+            filter_file('#define UseStandardHeadersWithoutExtension 0',
+                        '#define UseStandardHeadersWithoutExtension 1',
+                        'config/generic.cf')
+            filter_file('#define EmitUsingStdNameSpace 0',
+                        '#define EmitUsingStdNameSpace 1',
+                        'config/generic.cf')
 
         imake = which('imake')
         imake('-I./config', '-DDefaultUIDRoot={0}'.format(uid_root))

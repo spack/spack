@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from spack import *
+from llnl.util import tty
+
+from spack.package import *
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
@@ -13,7 +15,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/kokkos/kokkos"
     git      = "https://github.com/kokkos/kokkos.git"
-    url      = "https://github.com/kokkos/kokkos/archive/3.5.00.tar.gz"
+    url      = "https://github.com/kokkos/kokkos/archive/3.6.00.tar.gz"
 
     tags = ['e4s']
 
@@ -23,6 +25,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master',  branch='master')
     version('develop', branch='develop')
+    version('3.6.01', sha256='1b80a70c5d641da9fefbbb652e857d7c7a76a0ebad1f477c253853e209deb8db')
+    version('3.6.00', sha256='53b11fffb53c5d48da5418893ac7bc814ca2fde9c86074bdfeaa967598c918f4')
     version('3.5.00', sha256='748f06aed63b1e77e3653cd2f896ef0d2c64cb2e2d896d9e5a57fec3ff0244ff')
     version('3.4.01', sha256='146d5e233228e75ef59ca497e8f5872d9b272cb93e8e9cdfe05ad34a23f483d1')
     version('3.4.00', sha256='2e4438f9e4767442d8a55e65d000cc9cde92277d415ab4913a96cd3ad901d317')
@@ -43,9 +47,14 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
         'sycl': [False, 'Whether to build the SYCL backend'],
+        'openmptarget': [False, 'Whether to build the OpenMPTarget backend']
     }
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
+    conflicts("+openmptarget", when="@:3.5")
+
+    # https://github.com/spack/spack/issues/29052
+    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -133,6 +142,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "72": 'volta72',
         "75": 'turing75',
         "80": 'ampere80',
+        "86": 'ampere86',
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
@@ -151,6 +161,18 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         if arch not in amdgpu_arch_map:
             conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
                       msg=amd_support_conflict_msg.format(arch))
+
+    intel_gpu_arches = (
+        'intel_gen',
+        'intel_gen9',
+        'intel_gen11',
+        'intel_gen12lp',
+        'intel_dg1',
+        'intel_xehp',
+        'intel_pvc'
+    )
+    variant("intel_gpu_arch", default='none', values=('none',) + intel_gpu_arches,
+            description="Intel GPU architecture")
 
     devices_values = list(devices_variants.keys())
     for dev in devices_variants:
@@ -187,9 +209,23 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="std=17 ^cuda@:10")
     conflicts("+cuda", when="std=20")
 
+    # SYCL and OpenMPTarget require C++17 or higher
+    for stdver in stds[:stds.index('17')]:
+        conflicts('+sycl', when='std={0}'.format(stdver),
+                  msg='SYCL requires C++17 or higher')
+        conflicts("+openmptarget", when='std={0}'.format(stdver),
+                  msg='OpenMPTarget requires C++17 or higher')
+
     # HPX should use the same C++ standard
     for std in stds:
         depends_on('hpx cxxstd={0}'.format(std), when='+hpx std={0}'.format(std))
+
+    # HPX version constraints
+    depends_on("hpx@:1.6", when="@:3.5 +hpx")
+    depends_on("hpx@1.7:", when="@3.6: +hpx")
+
+    # Patches
+    patch("hpx_profiling_fences.patch", when="@3.5.00 +hpx")
 
     variant('shared', default=True, description='Build shared libraries')
 
@@ -266,6 +302,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                         raise SpackError("Unsupported target: {0}".format(
                             amdgpu_target))
 
+        if self.spec.variants['intel_gpu_arch'].value != 'none':
+            spack_microarches.append(self.spec.variants['intel_gpu_arch'].value)
+
         for arch in spack_microarches:
             options.append(self.define("Kokkos_ARCH_" + arch.upper(), True))
 
@@ -288,7 +327,21 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    test_script_relative_path = "scripts/spack_test"
+    test_script_relative_path = join_path('scripts', 'spack_test')
+
+    # TODO: Replace this method and its 'get' use for cmake path with
+    #   join_path(self.spec['cmake'].prefix.bin, 'cmake') once stand-alone
+    #   tests can access build dependencies through self.spec['cmake'].
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path."""
+        filepath = join_path(self.install_test_root, 'cmake_bin_path.txt')
+        if set:
+            with open(filepath, 'w') as out_file:
+                cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+                out_file.write('{0}\n'.format(cmake_bin))
+        elif os.path.isfile(filepath):
+            with open(filepath, 'r') as in_file:
+                return in_file.read().strip()
 
     @run_after('install')
     def setup_build_tests(self):
@@ -307,28 +360,43 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                       "-DSPACK_PACKAGE_INSTALL_DIR:PATH={0}".format(self.prefix)]
         cmake(*cmake_args)
         self.cache_extra_test_sources(cmake_out_path)
+        self.cmake_bin(set=True)
 
-    def build_tests(self):
+    def build_tests(self, cmake_path):
         """Build test."""
-        cmake_path = join_path(self.install_test_root,
-                               self.test_script_relative_path, 'out')
-        cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path]
-        cmake(*cmake_args)
-        make()
+        cmake_bin = self.cmake_bin(set=False)
 
-    def run_tests(self):
+        if not cmake_bin:
+            tty.msg('Skipping kokkos test: cmake_bin_path.txt not found')
+            return
+
+        cmake_args = [cmake_path, '-DEXECUTABLE_OUTPUT_PATH=' + cmake_path]
+
+        if not self.run_test(cmake_bin,
+                             options=cmake_args,
+                             purpose='Generate the Makefile'):
+            tty.warn('Skipping kokkos test: failed to generate Makefile')
+            return
+
+        if not self.run_test('make',
+                             purpose='Build test software'):
+            tty.warn('Skipping kokkos test: failed to build test')
+
+    def run_tests(self, cmake_path):
         """Run test."""
-        reason = 'Checking ability to execute.'
-        run_path = join_path(self.install_test_root,
-                             self.test_script_relative_path, 'out')
-        self.run_test('make', [run_path, 'test'], [], installed=False, purpose=reason)
+        if not self.run_test('make',
+                             options=[cmake_path, 'test'],
+                             purpose='Checking ability to execute.'):
+            tty.warn('Failed to run kokkos test')
 
     def test(self):
         # Skip if unsupported version
-        cmake_path = join_path(self.install_test_root,
+        cmake_path = join_path(self.test_suite.current_test_cache_dir,
                                self.test_script_relative_path, 'out')
+
         if not os.path.exists(cmake_path):
-            print('Skipping smoke tests: {0} is missing'.format(cmake_path))
+            tty.warn('Skipping smoke tests: {0} is missing'.format(cmake_path))
             return
-        self.build_tests()
-        self.run_tests()
+
+        self.build_tests(cmake_path)
+        self.run_tests(cmake_path)

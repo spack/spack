@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Slate(CMakePackage, CudaPackage, ROCmPackage):
@@ -24,6 +24,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2022.06.00', sha256='4da23f3c3c51fde65120f80df2b2f703aee1910389c08f971804aa77d11ac027')
+    version('2022.05.00', sha256='960f61ec2a4e1fa5504e3e4bdd8f62e607936f27a8fd66f340d15119706df588')
     version('2021.05.02', sha256='29667a9e869e41fbc22af1ae2bcd425d79b4094bbb3f21c411888e7adc5d12e3')
     version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
@@ -32,6 +34,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     variant('openmp', default=True, description='Build with OpenMP support.')
     variant('shared', default=True, description='Build shared library')
 
+    # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
+    depends_on('cmake', type='run')
+
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('blaspp ~cuda', when='~cuda')
@@ -39,10 +44,12 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blaspp ~rocm', when='~rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('blaspp +rocm amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    depends_on('lapackpp@2022.05.00', when='@2022.05.00:')
     depends_on('lapackpp@2021.04.00:', when='@2021.05.01:')
     depends_on('lapackpp@2020.10.02', when='@2020.10.00')
     depends_on('lapackpp@master', when='@master')
     depends_on('scalapack')
+    depends_on('hipify-clang', when='@:2021.05.02 +rocm ^hip@5:')
 
     cpp_17_msg = 'Requires C++17 compiler support'
     conflicts('%gcc@:5', msg=cpp_17_msg)
@@ -72,28 +79,32 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
 
-    examples_src_dir = 'examples'
-
     @run_after('install')
     def cache_test_sources(self):
+        if self.spec.satisfies('@2020.10.00'):
+            return
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies('@master'):
-            self.cache_extra_test_sources([self.examples_src_dir])
+        self.cache_extra_test_sources(['examples'])
 
     def test(self):
-        if not self.spec.satisfies('@master') or '+mpi' not in self.spec:
-            print('Skipping: stand-alone tests only run on master with +mpi')
+        if self.spec.satisfies('@2020.10.00') or '+mpi' not in self.spec:
+            print('Skipping: stand-alone tests')
             return
 
-        test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        test_bld_dir = join_path(test_dir, 'build')
-        with working_dir(test_bld_dir, create=True):
-            cmake('..')
+        test_dir = join_path(self.test_suite.current_test_cache_dir,
+                             'examples', 'build')
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec['cmake'].prefix.bin, 'cmake')
+            prefixes = ';'.join([self.spec['blaspp'].prefix,
+                                 self.spec['lapackpp'].prefix,
+                                 self.spec['mpi'].prefix,
+                                 ])
+            self.run_test(cmake_bin, ['-DCMAKE_PREFIX_PATH=' + prefixes, '..'])
             make()
             test_args = ['-n', '4', './ex05_blas']
-            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
-            if mpiexe_f:
-                self.run_test(mpiexe_f.command, test_args,
-                              purpose='SLATE smoke test')
+            mpi_path = self.spec['mpi'].prefix.bin
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec', path=mpi_path)
+            self.run_test(mpiexe_f.command, test_args,
+                          purpose='SLATE smoke test')
             make('clean')

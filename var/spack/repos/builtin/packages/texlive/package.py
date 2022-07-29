@@ -8,7 +8,7 @@ import platform
 import re
 import tempfile
 
-from spack import *
+from spack.package import *
 
 
 class Texlive(AutotoolsPackage):
@@ -31,11 +31,17 @@ class Texlive(AutotoolsPackage):
     # connection at install time and the package versions could change over
     # time. It is better to use a version built from tarballs, as defined with
     # the "releases" below.
-    version('live', sha256='74eac0855e1e40c8db4f28b24ef354bd7263c1f76031bdc02b52156b572b7a1d',
-            url='ftp://tug.org/historic/systems/texlive/2021/install-tl-unx.tar.gz')
+    version('live', sha256='e67edec49df6b7c4a987a7d5a9b31bcf41258220f9ac841c7a836080cd334fb5',
+            url='ftp://tug.org/historic/systems/texlive/2022/install-tl-unx.tar.gz', deprecated=True)
 
     # Add information for new versions below.
     releases = [
+        {
+            'version': '20220321',
+            'year': '2022',
+            'sha256_source': '5ffa3485e51eb2c4490496450fc69b9d7bd7cb9e53357d92db4bcd4fd6179b56',
+            'sha256_texmf': '372b2b07b1f7d1dd12766cfc7f6656e22c34a5a20d03c1fe80510129361a3f16',
+        },
         {
             'version': '20210325',
             'year': '2021',

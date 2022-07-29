@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RPosterior(RPackage):
@@ -19,9 +19,10 @@ class RPosterior(RPackage):
     lightweight implementations of state of the art posterior inference
     diagnostics. References: Vehtari et al. (2021) <doi:10.1214/20-BA1221>."""
 
-    homepage = "https://mc-stan.org/posterior/"
-    cran     = "posterior"
+    cran = "posterior"
 
+    version('1.2.1', sha256='b757e06885a1f21e7ad8f5a3feaecbe0a71ae8d766e4aec4c3aa2183a810afe1')
+    version('1.2.0', sha256='2ba01711a98448acc939cf506d22e8ee4cf680cdcea873226671fa8ae6934386')
     version('1.1.0', sha256='eff6262dbcc1bf18337f535b0c75ba2fe360322e8b170c466e24ed3ee76cf4d2')
 
     depends_on('r@3.2.0:', type=('build', 'run'))

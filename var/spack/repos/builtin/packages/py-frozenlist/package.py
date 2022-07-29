@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class PyFrozenlist(PythonPackage):
@@ -13,6 +13,7 @@ class PyFrozenlist(PythonPackage):
     homepage = "https://github.com/aio-libs/frozenlist"
     pypi     = "frozenlist/frozenlist-1.2.0.tar.gz"
 
+    version('1.3.0', sha256='ce6f2ba0edb7b0c1d8976565298ad2deba6f8064d2bebb6ffce2ca896eb35b0b')
     version('1.2.0', sha256='68201be60ac56aff972dc18085800b6ee07973c49103a8aba669dee3d71079de')
 
     depends_on('python@3.6:', type=('build', 'run'))

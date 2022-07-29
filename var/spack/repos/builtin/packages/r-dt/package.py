@@ -3,20 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDt(RPackage):
-    """A Wrapper of the JavaScript Library 'DataTables'
+    """A Wrapper of the JavaScript Library 'DataTables'.
 
     Data objects in R can be rendered as HTML tables using the JavaScript
     library 'DataTables' (typically via R Markdown or Shiny). The 'DataTables'
     library has been included in this R package. The package name 'DT' is an
     abbreviation of 'DataTables'."""
 
-    homepage = "https://rstudio.github.io/DT"
     cran = "DT"
 
+    version('0.23', sha256='360ae2fcb1141125a1b16448570fc37d14c4dd3f78a872c26df4fda1787cdc70')
     version('0.20', sha256='c66d7f49ec101fdbb91c6d26c06fb1373f9ebdefe29fe99f2ae1a641220aba9f')
     version('0.17', sha256='e3430292421dcc2b6ad5f2deda729f0603da4eb31f86d071833e6e11abf3fb56')
     version('0.13', sha256='79a073fe96980ce150d790ab76133c9e80bd463270c34d149c03934a622d63b5')
@@ -30,8 +30,8 @@ class RDt(RPackage):
 
     depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
     depends_on('r-htmlwidgets@1.3:', type=('build', 'run'))
-    depends_on('r-jsonlite@0.9.16:', when='@0.8:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', type=('build', 'run'), when='@0.8:')
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-crosstalk', type=('build', 'run'))
-    depends_on('r-jquerylib', when='@0.19:', type=('build', 'run'))
-    depends_on('r-promises', when='@0.5:', type=('build', 'run'))
+    depends_on('r-jquerylib', type=('build', 'run'), when='@0.19:')
+    depends_on('r-promises', type=('build', 'run'), when='@0.5:')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Talass(CMakePackage):
@@ -15,7 +15,7 @@ class Talass(CMakePackage):
     alone."""
 
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
-    git      = "git@bitbucket.org:cedmav/talass.git"
+    git      = "ssh://git@bitbucket.org/cedmav/talass.git"
 
     version('2018-10-29', commit='5d459c0dd89e733fa301391908a5b79fe2850ad7')
 

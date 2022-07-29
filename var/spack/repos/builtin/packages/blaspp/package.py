@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
@@ -19,6 +19,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
+    version('2022.05.00', sha256='696277859bc1bd9c0aeb0cb170a1e259765c0a86af49b20afa0ffcbabc3e207e')
     version('2021.04.01', sha256='11fc7b7e725086532ada58c0de53f30e480c2a06f1497b8081ea6d8f97e26150')
     version('2020.10.02', sha256='36e45bb5a8793ba5d7bc7c34fc263f91f92b0946634682937041221a6bf1a150')
     version('2020.10.01', sha256='1a05dbc46caf797d59a7c189216b876fdb1b2ff3e2eb48f1e6ca4b2756c59153')

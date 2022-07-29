@@ -9,16 +9,21 @@ on:
     branches:
       - develop
       - releases/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  cancel-in-progress: true
+
 jobs:
   # Validate that the code can be run on all the Python versions
   # supported by Spack
   validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
@@ -31,12 +36,12 @@ jobs:
   style:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python packages
       run: |
         pip install --upgrade pip six setuptools types-six
@@ -57,7 +62,7 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       if: ${{ github.event_name == 'push' }}
       with:
         fetch-depth: 0
@@ -96,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
         concretizer: ['clingo']
         include:
         - python-version: 2.7
@@ -106,10 +111,10 @@ jobs:
         - python-version: 3.9
           concretizer: original
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -127,6 +132,10 @@ jobs:
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
               pip install --upgrade flake8 isort>=4.3.5 mypy>=0.900 black
           fi
+    - name: Pin pathlib for Python 2.7
+      if: ${{ matrix.python-version == 2.7 }}
+      run: |
+          pip install -U pathlib2==2.3.6
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -158,7 +167,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -167,12 +176,12 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -196,7 +205,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
@@ -214,7 +223,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -233,12 +242,12 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -270,7 +279,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
@@ -282,10 +291,10 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -316,7 +325,7 @@ jobs:
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
           $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
         fi
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml
@@ -327,10 +336,10 @@ jobs:
     needs: [ validate, style, changes ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
-    - uses: actions/setup-python@f38219332975fe8f9c04cca981d674bf22aea1d3 # @v2
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: Install Python packages
       run: |
         pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2
@@ -341,12 +350,12 @@ jobs:
           coverage run $(which spack) audit packages
           coverage combine
           coverage xml
-    - name: Package audits (wwithout coverage)
+    - name: Package audits (without coverage)
       if: ${{ needs.changes.outputs.with_coverage == 'false' }}
       run: |
           . share/spack/setup-env.sh
           $(which spack) audit packages
-    - uses: codecov/codecov-action@f32b3a3741e1053eb607407145bc9619351dc93b # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,audits

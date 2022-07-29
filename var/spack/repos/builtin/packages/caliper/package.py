@@ -8,10 +8,10 @@ import sys
 
 from llnl.util import tty
 
-from spack import *
+from spack.package import *
 
 
-class Caliper(CMakePackage, CudaPackage):
+class Caliper(CMakePackage, CudaPackage, ROCmPackage):
     """Caliper is a program instrumentation and performance measurement
     framework. It is designed as a performance analysis toolbox in a
     library, allowing one to bake performance analysis capabilities
@@ -20,7 +20,7 @@ class Caliper(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
-    url      = "https://github.com/LLNL/Caliper/archive/v2.7.0.tar.gz"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.8.0.tar.gz"
     tags     = ['e4s', 'radiuss']
 
     maintainers = ["daboehme"]
@@ -28,6 +28,7 @@ class Caliper(CMakePackage, CudaPackage):
     test_requires_compiler = True
 
     version('master', branch='master')
+    version('2.8.0', sha256='17807b364b5ac4b05997ead41bd173e773f9a26ff573ff2fe61e0e70eab496e4')
     version('2.7.0', sha256='b3bf290ec2692284c6b4f54cc0c507b5700c536571d3e1a66e56626618024b2b')
     version('2.6.0', sha256='6efcd3e4845cc9a6169e0d934840766b12182c6d09aa3ceca4ae776e23b6360f')
     version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
@@ -85,9 +86,11 @@ class Caliper(CMakePackage, CudaPackage):
     depends_on('python', type='build')
 
     # sosflow support not yet in 2.0
-    conflicts('+sosflow', '@2.0.0:2.5')
+    conflicts('+sosflow', '@2.0.0:2.8')
     conflicts('+adiak', '@:2.1')
     conflicts('+libdw', '@:2.4')
+    conflicts('+rocm',  '@:2.7')
+    conflicts('+rocm+cuda')
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
@@ -99,16 +102,20 @@ class Caliper(CMakePackage, CudaPackage):
                 spec['python'].command.path),
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
-            '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
-            '-DWITH_ADIAK=%s'    % ('On' if '+adiak'    in spec else 'Off'),
-            '-DWITH_GOTCHA=%s'   % ('On' if '+gotcha'   in spec else 'Off'),
-            '-DWITH_PAPI=%s'     % ('On' if '+papi'     in spec else 'Off'),
-            '-DWITH_LIBDW=%s'    % ('On' if '+libdw'    in spec else 'Off'),
-            '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
-            '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
-            '-DWITH_SAMPLER=%s'  % ('On' if '+sampler'  in spec else 'Off'),
-            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
-            '-DWITH_FORTRAN=%s'  % ('On' if '+fortran'  in spec else 'Off')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('WITH_ADIAK',     'adiak'),
+            self.define_from_variant('WITH_GOTCHA',    'gotcha'),
+            self.define_from_variant('WITH_PAPI',      'papi'),
+            self.define_from_variant('WITH_LIBDW',     'libdw'),
+            self.define_from_variant('WITH_LIBPFM',    'libpfm'),
+            self.define_from_variant('WITH_SOSFLOW',   'sosflow'),
+            self.define_from_variant('WITH_SAMPLER',   'sampler'),
+            self.define_from_variant('WITH_MPI',       'mpi'),
+            self.define_from_variant('WITH_FORTRAN',   'fortran'),
+            self.define_from_variant('WITH_CUPTI',     'cuda'),
+            self.define_from_variant('WITH_NVTX',      'cuda'),
+            self.define_from_variant('WITH_ROCTRACER', 'rocm'),
+            self.define_from_variant('WITH_ROCTX',     'rocm')
         ]
 
         if '+papi' in spec:
@@ -137,11 +144,9 @@ class Caliper(CMakePackage, CudaPackage):
             # technically only works with cuda 10.2+, otherwise cupti is in
             # ${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI
             args.append('-DCUPTI_PREFIX=%s' % spec['cuda'].prefix)
-            args.append('-DWITH_NVTX=On')
-            args.append('-DWITH_CUPTI=On')
-        else:
-            args.append('-DWITH_NVTX=Off')
-            args.append('-DWITH_CUPTI=Off')
+
+        if '+rocm' in spec:
+            args.append('-DROCM_PREFIX=%s' % spec['hsa-rocr-dev'].prefix)
 
         return args
 
@@ -154,30 +159,36 @@ class Caliper(CMakePackage, CudaPackage):
     def run_cxx_example_test(self):
         """Run stand alone test: cxx_example"""
 
-        test_dir = join_path(self.test_suite.current_test_cache_dir, 'examples', 'apps')
-
-        if not os.path.isfile(join_path(test_dir, 'cxx-example.cpp')):
-            tty.msg('Skipping caliper test: file does not exist')
-            return
-
+        test_dir = self.test_suite.current_test_cache_dir.examples.apps
         exe = 'cxx-example'
+        source_file = 'cxx-example.cpp'
+
+        if not os.path.isfile(join_path(test_dir, source_file)):
+            tty.warn('Skipping caliper test:'
+                     '{0} does not exist'.format(source_file))
+            return
 
         if os.path.exists(self.prefix.lib):
             lib_dir = self.prefix.lib
         else:
             lib_dir = self.prefix.lib64
 
-        self.run_test(exe='gcc',
-                      options=['{0}'.format(join_path(test_dir, 'cxx-example.cpp')),
-                               '-L{0}'.format(lib_dir),
-                               '-I{0}'.format(self.prefix.include),
-                               '-std=c++11', '-lcaliper', '-lstdc++', '-o', exe],
-                      purpose='test: compile {0} example'.format(exe),
-                      work_dir=test_dir)
+        options = ['-L{0}'.format(lib_dir),
+                   '-I{0}'.format(self.prefix.include),
+                   '{0}'.format(join_path(test_dir, source_file)),
+                   '-o', exe, '-std=c++11', '-lcaliper', '-lstdc++']
 
-        self.run_test(exe,
-                      purpose='test: run {0} example'.format(exe),
-                      work_dir=test_dir)
+        if not self.run_test(exe=os.environ['CXX'],
+                             options=options,
+                             purpose='test: compile {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to compile example')
+            return
+
+        if not self.run_test(exe,
+                             purpose='test: run {0} example'.format(exe),
+                             work_dir=test_dir):
+            tty.warn('Skipping caliper test: failed to run example')
 
     def test(self):
         self.run_cxx_example_test()

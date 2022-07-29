@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Thepeg(AutotoolsPackage):
@@ -16,6 +16,7 @@ class Thepeg(AutotoolsPackage):
 
     # The commented out versions exist, but may need patches
     # and/or recipe changes
+    version('2.2.3', sha256='f21473197a761fc32917b08a8d24d2bfaf93ff57f3441fd605da99ac9de5d50b')
     version('2.2.1', sha256='63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f')
     version('2.2.0', sha256='d3e1474811b7d9f61a4a98db1e9d60d8ef8f913a50de4cae4dc2cc4f98e6fbf8')
     # version('2.1.7', sha256='2e15727afc1fbfb158fa42ded31c4b1e5b51c25ed6bb66a38233e1fc594329c8')
@@ -65,12 +66,13 @@ class Thepeg(AutotoolsPackage):
     conflicts('hepmc=3', when='@:2.1', msg='HepMC3 support was added in 2.2.0')
     depends_on('fastjet', when='@2.0.0:')
     depends_on('rivet', when='@2.0.3:')
-    depends_on('boost', when='@2.1.1:')
+    depends_on('boost +test', when='@2.1.1:')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('zlib')
 
     variant('hepmc', default='2', values=('2', '3'), description='HepMC interface to build ')
 
@@ -78,6 +80,7 @@ class Thepeg(AutotoolsPackage):
 
     def configure_args(self):
         args = ['--with-gsl=' + self.spec['gsl'].prefix, '--without-javagui']
+        args += ['--with-zlib=' + self.spec['zlib'].prefix]
 
         if self.spec.satisfies('@:1.8'):
             args += ['--with-LHAPDF=' + self.spec['lhapdf'].prefix]

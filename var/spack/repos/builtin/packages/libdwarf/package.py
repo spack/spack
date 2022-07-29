@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack import *
+from spack.package import *
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']

@@ -77,7 +77,7 @@
 
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
-from spack.package import PackageBase
+from spack.package_base import PackageBase
 
 
 class ROCmPackage(PackageBase):
@@ -90,9 +90,10 @@ class ROCmPackage(PackageBase):
     # https://llvm.org/docs/AMDGPUUsage.html
     # Possible architectures
     amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx90a', 'gfx1010',
-        'gfx1011', 'gfx1012'
+        'gfx701', 'gfx801', 'gfx802', 'gfx803', 'gfx900', 'gfx900:xnack-',
+        'gfx906', 'gfx908', 'gfx90a',
+        'gfx906:xnack-', 'gfx908:xnack-', 'gfx90a:xnack-', 'gfx90a:xnack+',
+        'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030', 'gfx1031',
     )
 
     variant('rocm', default=False, description='Enable ROCm support')
@@ -111,10 +112,6 @@ class ROCmPackage(PackageBase):
 
     # need amd gpu type for rocm builds
     conflicts('amdgpu_target=none', when='+rocm')
-
-    # Make sure amdgpu_targets cannot be used without +rocm
-    for value in amdgpu_targets:
-        conflicts('~rocm', when='amdgpu_target=' + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case

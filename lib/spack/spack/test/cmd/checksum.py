@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import sys
 
 import pytest
 
@@ -29,6 +30,8 @@ def test_checksum_args(arguments, expected):
     assert check == expected
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('arguments,expected', [
     (['--batch', 'preferred-test'], 'version of preferred-test'),
     (['--latest', 'preferred-test'], 'Found 1 version'),
@@ -40,6 +43,8 @@ def test_checksum(arguments, expected, mock_packages, mock_stage):
     assert 'version(' in output
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_checksum_interactive(
         mock_packages, mock_fetch, mock_stage, monkeypatch):
     def _get_number(*args, **kwargs):
@@ -52,9 +57,8 @@ def test_checksum_interactive(
 
 
 def test_checksum_versions(mock_packages, mock_fetch, mock_stage):
-    pkg = spack.repo.get('preferred-test')
-
-    versions = [str(v) for v in pkg.versions if not v.isdevelop()]
+    pkg_cls = spack.repo.path.get_pkg_class('preferred-test')
+    versions = [str(v) for v in pkg_cls.versions if not v.isdevelop()]
     output = spack_checksum('preferred-test', versions[0])
     assert 'Found 1 version' in output
     assert 'version(' in output

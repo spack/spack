@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class CrayFftw(Package):
@@ -18,11 +18,12 @@ class CrayFftw(Package):
        need to load cray-mpich before cray-fftw.
        """
 
-    homepage = "https://docs.nersc.gov/development/libraries/fftw/"
+    homepage = "https://support.hpe.com/"
     has_code = False    # Skip attempts to fetch source that is not available
 
-    maintainers = ['haampie']
+    maintainers = ['haampie', 'lukebroskop']
 
+    version('3.3.8.12')
     version('3.3.8.8')
     version('3.3.8.7')
 

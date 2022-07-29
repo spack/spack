@@ -6,7 +6,7 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class Texinfo(AutotoolsPackage, GNUMirrorPackage):
@@ -20,6 +20,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "texinfo/texinfo-6.0.tar.gz"
 
     executables = ['^info$']
+
+    tags = ['build-tools']
 
     version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
     version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')

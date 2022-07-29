@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Cpuinfo(CMakePackage):
@@ -48,4 +48,7 @@ class Cpuinfo(CMakePackage):
                         join_path(self.stage.source_path, 'deps', 'googletest')),
             self.define('GOOGLEBENCHMARK_SOURCE_DIR',
                         join_path(self.stage.source_path, 'deps', 'googlebenchmark')),
+            self.define('CPUINFO_BUILD_UNIT_TESTS', self.run_tests),
+            self.define('CPUINFO_BUILD_MOCK_TESTS', self.run_tests),
+            self.define('CPUINFO_BUILD_BENCHMARKS', self.run_tests),
         ]

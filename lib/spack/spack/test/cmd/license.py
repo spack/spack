@@ -5,6 +5,9 @@
 
 import os.path
 import re
+import sys
+
+import pytest
 
 from llnl.util.filesystem import mkdirp, touch
 
@@ -13,6 +16,9 @@ import spack.paths
 from spack.main import SpackCommand
 
 license = SpackCommand('license')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_list_files():

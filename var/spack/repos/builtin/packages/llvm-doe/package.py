@@ -11,6 +11,7 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.util.executable
+from spack.package import *
 
 
 class LlvmDoe(CMakePackage, CudaPackage):
@@ -32,7 +33,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
     version('doe', branch='doe', preferred=True)
     version('upstream', branch='llvm.org/main')
     version('bolt', branch='bolt/main')
-    version('clacc', branch='clacc/master')
+    version('develop.clacc', branch='clacc/main')
     version('pragma-clang-loop', branch='sollve/pragma-clang-loop')
     version('pragma-omp-tile', branch='sollve/pragma-omp-tile')
     version('13.0.0', branch='llvm.org/llvmorg-13.0.0')
@@ -89,12 +90,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
         "split_dwarf",
         default=False,
         description="Build with split dwarf information",
-    )
-    variant(
-        "shared_libs",
-        default=False,
-        description="Build all components as shared libraries, faster, "
-        "less memory to build, less stable",
     )
     variant(
         "llvm_dylib",
@@ -171,7 +166,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
     # gold support, required for some features
     depends_on("binutils+gold+ld+plugins", when="+gold")
 
-    conflicts("+llvm_dylib", when="+shared_libs")
     conflicts("+link_llvm_dylib", when="~llvm_dylib")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
@@ -538,7 +532,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
 
         cmake_args.extend([
-            from_variant("BUILD_SHARED_LIBS", "shared_libs"),
+            define('BUILD_SHARED_LIBS', False),
             from_variant("LLVM_BUILD_LLVM_DYLIB", "llvm_dylib"),
             from_variant("LLVM_LINK_LLVM_DYLIB", "link_llvm_dylib"),
             from_variant("LLVM_USE_SPLIT_DWARF", "split_dwarf"),

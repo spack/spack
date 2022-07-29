@@ -6,7 +6,7 @@
 import glob
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):
@@ -24,6 +24,7 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
     git      = "git://sourceware.org/git/valgrind.git"
 
     version('develop', branch='master')
+    version('3.19.0', sha256='dd5e34486f1a483ff7be7300cc16b4d6b24690987877c3278d797534d6738f02')
     version('3.18.1', sha256='00859aa13a772eddf7822225f4b46ee0d39afbe071d32778da4d99984081f7f5')
     version('3.18.0', sha256='8da880f76592fe8284db98e68f6dc9095485bc2ecc88bc05b7df1f278ae7f657')
     version('3.17.0', sha256='ad3aec668e813e40f238995f60796d9590eee64a16dff88421430630e69285a2')
@@ -44,6 +45,8 @@ class Valgrind(AutotoolsPackage, SourcewarePackage):
             description='Sets --enable-only64bit option for valgrind')
     variant('ubsan', default=False,
             description='Activates ubsan support for valgrind')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     conflicts('+ubsan', when='%apple-clang',
               msg="""
@@ -52,7 +55,7 @@ Otherwise with (Apple's) clang there is a linker error:
 clang: error: unknown argument: '-static-libubsan'
 """)
     depends_on('mpi', when='+mpi')
-    depends_on('boost', when='+boost')
+    depends_on('boost+exception+chrono+system+atomic+thread', when='+boost')
 
     depends_on("autoconf", type='build', when='@develop')
     depends_on("automake", type='build', when='@develop')
@@ -67,12 +70,13 @@ clang: error: unknown argument: '-static-libubsan'
 
     def configure_args(self):
         spec = self.spec
-        options = []
+        options = self.enable_or_disable('libs')
         if spec.satisfies('+ubsan'):
             options.append('--enable-ubsan')
         if spec.satisfies('+only64bit'):
             options.append('--enable-only64bit')
-
+        if spec.satisfies('~mpi'):
+            options.append('--without-mpicc')
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')
         return options

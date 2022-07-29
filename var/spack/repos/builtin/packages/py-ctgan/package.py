@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyCtgan(PythonPackage):
@@ -25,5 +25,5 @@ class PyCtgan(PythonPackage):
     depends_on('py-pandas@1.1.3:1',                 type=('build', 'run'))
     depends_on('py-scikit-learn@0.24:1',            type=('build', 'run'))
     depends_on('py-torch@1.8.0:1',                  type=('build', 'run'))
-    depends_on('py-torchvision@0.9',                type=('build', 'run'))
+    depends_on('py-torchvision@0.9:0',              type=('build', 'run'))
     depends_on('py-rdt@0.6.1:0.6',                  type=('build', 'run'))

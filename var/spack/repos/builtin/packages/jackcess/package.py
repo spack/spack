@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Jackcess(Package):
@@ -17,7 +17,7 @@ class Jackcess(Package):
     version('1.2.14.3', sha256='a6fab0c4b5daf23dcf7fd309ee4ffc6df12ff982510c094e45442adf88712787', expand=False,
             url='https://sourceforge.net/projects/jackcess/files/jackcess/Older%20Releases/1.2.14.3/jackcess-1.2.14.3.jar')
 
-    extends('jdk')
+    extends('openjdk')
     depends_on('java', type='run')
     depends_on('commons-lang@2.6', when='@2.1.12', type='run')
     depends_on('commons-lang@2.4', when='@1.2.14.3', type='run')

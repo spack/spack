@@ -6,7 +6,7 @@
 import os
 import platform
 
-from spack import *
+from spack.package import *
 
 
 class IbmJava(Package):
@@ -61,10 +61,6 @@ class IbmJava(Package):
         return url
 
     @property
-    def home(self):
-        return self.prefix
-
-    @property
     def libs(self):
         return find_libraries(['libjvm'], root=self.home, recursive=True)
 
@@ -73,9 +69,6 @@ class IbmJava(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('JAVA_HOME', self.home)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        self.spec.home = self.home
 
     def install(self, spec, prefix):
         archive = os.path.basename(self.stage.archive_file)

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 
 import pytest
 
@@ -10,30 +11,34 @@ import spack.cmd.create
 import spack.stage
 import spack.util.executable
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.fixture(
     scope='function',
     params=[
-        ('configure',      'autotools'),
-        ('CMakeLists.txt', 'cmake'),
-        ('project.pro',    'qmake'),
-        ('pom.xml',        'maven'),
-        ('SConstruct',     'scons'),
-        ('waf',            'waf'),
-        ('setup.py',       'python'),
-        ('NAMESPACE',      'r'),
-        ('WORKSPACE',      'bazel'),
-        ('Makefile.PL',    'perlmake'),
-        ('Build.PL',       'perlbuild'),
-        ('foo.gemspec',    'ruby'),
-        ('Rakefile',       'ruby'),
-        ('setup.rb',       'ruby'),
-        ('GNUmakefile',    'makefile'),
-        ('makefile',       'makefile'),
-        ('Makefile',       'makefile'),
-        ('meson.build',    'meson'),
-        ('configure.py',   'sip'),
-        ('foobar',         'generic')
+        ('configure',       'autotools'),
+        ('CMakeLists.txt',  'cmake'),
+        ('project.pro',     'qmake'),
+        ('pom.xml',         'maven'),
+        ('SConstruct',      'scons'),
+        ('waf',             'waf'),
+        ('argbah.rockspec', 'lua'),
+        ('setup.py',        'python'),
+        ('NAMESPACE',       'r'),
+        ('WORKSPACE',       'bazel'),
+        ('Makefile.PL',     'perlmake'),
+        ('Build.PL',        'perlbuild'),
+        ('foo.gemspec',     'ruby'),
+        ('Rakefile',        'ruby'),
+        ('setup.rb',        'ruby'),
+        ('GNUmakefile',     'makefile'),
+        ('makefile',        'makefile'),
+        ('Makefile',        'makefile'),
+        ('meson.build',     'meson'),
+        ('configure.py',    'sip'),
+        ('foobar',          'generic')
     ]
 )
 def url_and_build_system(request, tmpdir):

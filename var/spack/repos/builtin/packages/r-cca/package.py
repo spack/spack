@@ -4,11 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class RCca(RPackage):
-    """Provides a set of functions that extend the 'cancor' function
-    with new numerical and graphical outputs. It also include a
-    regularized extension of the canonical correlation analysis to
-    deal with datasets with more variables than observations."""
+    """Canonical Correlation Analysis.
+
+    Provides a set of functions that extend the 'cancor' function with new
+    numerical and graphical outputs. It also include a regularized extension of
+    the canonical correlation analysis to deal with datasets with more
+    variables than observations."""
 
     cran = 'CCA'
 

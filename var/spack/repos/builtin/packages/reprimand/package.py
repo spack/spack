@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Reprimand(MesonPackage):
@@ -13,12 +13,13 @@ class Reprimand(MesonPackage):
     in quasi-conservative formulations. Further, it provides a general
     framework for handling matter equations of state."""
 
-    homepage = "https://www.atlas.aei.uni-hannover.de/holohome/wolfgang.kastaun/doc/reprimand/latest/index.html"
+    homepage = "https://wokast.github.io/RePrimAnd/index.html"
     url      = "https://github.com/wokast/RePrimAnd/archive/refs/tags/v1.3.tar.gz"
 
     maintainers = ['eschnett']
 
     version('develop', git='https://github.com/wokast/RePrimAnd', branch='public')
+    version('1.4', sha256='260730696175fa21d35d1a92df2c68b69243bb617083c82616efcb4720d557e8')
     version('1.3', sha256='8e9f05b1f065a876d1405562285a9f64d1b31c4a436d5a6bb1f023212b40314e')
 
     # Add missing #include statments; see
@@ -28,7 +29,7 @@ class Reprimand(MesonPackage):
     variant('python', default=False, description='Enable Python bindings')
     variant('shared', default=True, description='Build shared library')
 
-    depends_on('boost')
+    depends_on('boost +json +math +test')
     depends_on('gsl')
     depends_on('hdf5')
     depends_on('python', when='+python')

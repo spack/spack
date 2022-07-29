@@ -6,26 +6,30 @@ import inspect
 import os
 import re
 import shutil
+from typing import Optional
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
     filter_file,
     find,
-    get_filetype,
+    find_all_headers,
+    find_libraries,
+    is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
     working_dir,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
-from spack.package import PackageBase, run_after
+from spack.error import NoHeadersError, NoLibrariesError
+from spack.package_base import PackageBase, run_after
 
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using pip."""
     #: Package name, version, and extension on PyPI
-    pypi = None
+    pypi = None  # type: Optional[str]
 
     maintainers = ['adamjstewart']
 
@@ -46,7 +50,7 @@ class PythonPackage(PackageBase):
     # package manually
     depends_on('py-wheel', type='build')
 
-    py_namespace = None
+    py_namespace = None  # type: Optional[str]
 
     @staticmethod
     def _std_args(cls):
@@ -73,24 +77,21 @@ class PythonPackage(PackageBase):
             '--no-index',
         ]
 
-    @property
-    def homepage(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
+    @classproperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
             return 'https://pypi.org/project/' + name + '/'
 
-    @property
-    def url(self):
-        if self.pypi:
-            return (
-                'https://files.pythonhosted.org/packages/source/'
-                + self.pypi[0] + '/' + self.pypi
-            )
+    @classproperty
+    def url(cls):
+        if cls.pypi:
+            return 'https://files.pythonhosted.org/packages/source/' + cls.pypi[0] + '/' + cls.pypi
 
-    @property
-    def list_url(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
+    @classproperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split('/')[0]
             return 'https://pypi.org/simple/' + name + '/'
 
     @property
@@ -177,6 +178,37 @@ class PythonPackage(PackageBase):
         with working_dir(self.build_directory):
             pip(*args)
 
+    @property
+    def headers(self):
+        """Discover header files in platlib."""
+
+        # Headers may be in either location
+        include = inspect.getmodule(self).include
+        platlib = inspect.getmodule(self).platlib
+        headers = find_all_headers(include) + find_all_headers(platlib)
+
+        if headers:
+            return headers
+
+        msg = 'Unable to locate {} headers in {} or {}'
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+
+    @property
+    def libs(self):
+        """Discover libraries in platlib."""
+
+        # Remove py- prefix in package name
+        library = 'lib' + self.spec.name[3:].replace('-', '?')
+        root = inspect.getmodule(self).platlib
+
+        for shared in [True, False]:
+            libs = find_libraries(library, root, shared=shared, recursive=True)
+            if libs:
+                return libs
+
+        msg = 'Unable to recursively locate {} libraries in {}'
+        raise NoLibrariesError(msg.format(self.spec.name, root))
+
     # Testing
 
     def test(self):
@@ -216,7 +248,7 @@ class PythonPackage(PackageBase):
 
         return conflicts
 
-    def add_files_to_view(self, view, merge_map):
+    def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
@@ -230,7 +262,7 @@ class PythonPackage(PackageBase):
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
-                is_script = 'script' in get_filetype(src)
+                is_script = is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
                     filter_file(
                         python_prefix, os.path.abspath(

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAnalysispageserver(RPackage):
@@ -13,8 +13,7 @@ class RAnalysispageserver(RPackage):
        AnalysisPageServer is a modular system that enables sharing of
        customizable R analyses via the web."""
 
-    homepage = "https://bioconductor.org/packages/AnalysisPageServer"
-    git      = "https://git.bioconductor.org/packages/AnalysisPageServer.git"
+    bioc = "AnalysisPageServer"
 
     version('1.18.1', commit='08bd85e872d3f2b0c1fa148cf30bcd2d1a29b630')
     version('1.16.0', commit='67b063523f80e2af1d26262367ff50f34e195174')

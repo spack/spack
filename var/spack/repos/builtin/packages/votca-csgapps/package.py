@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class VotcaCsgapps(CMakePackage):
@@ -33,4 +33,4 @@ class VotcaCsgapps(CMakePackage):
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
               "1.6.3", "1.6.4"]:
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
-    depends_on("boost")
+    depends_on("boost+exception+math+serialization+container")

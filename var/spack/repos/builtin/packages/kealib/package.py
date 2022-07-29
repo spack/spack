@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Kealib(CMakePackage):
@@ -23,12 +23,13 @@ class Kealib(CMakePackage):
     Development work on this project has been funded by Landcare Research.
     """
     homepage = "http://www.kealib.org/"
-    url      = "https://github.com/ubarsc/kealib/releases/download/kealib-1.4.12/kealib-1.4.12.tar.gz"
+    url      = "https://github.com/ubarsc/kealib/releases/download/kealib-1.4.15/kealib-1.4.15.tar.gz"
     git      = "https://github.com/ubarsc/kealib"
 
-    maintainers = ['gillins']
+    maintainers = ['gillins', 'neilflood', 'petebunting']
 
     version('develop', git=git)
+    version('1.4.15', sha256='40f2573c00f005f93c1fa88f1f13bfbd485cbc7a9b3f1c706931e69bff17dae4')
     version('1.4.12', sha256='0b100e36b3e25e57487aa197d7be47f22e1b30afb16a57fdaa5f877696ec321e')
     version('1.4.11', sha256='3d64cdec560c7a338ccb38e3a456db4e3b176ac62f945daa6e332e60fe4eca90')
     version('1.4.10', sha256='b1bd2d6834d2fe09ba456fce77f7a9452b406dbe302f7ef1aabe924e45e6bb5e')
@@ -40,6 +41,13 @@ class Kealib(CMakePackage):
     depends_on('hdf5+cxx+hl')
 
     patch('cmake.patch', when='@1.4.7')
+
+    @property
+    def command(self):
+        exe = 'kea-config'
+        if self.spec.satisfies('platform=windows'):
+            exe += '.bat'
+        return Executable(self.prefix.bin.join(exe))
 
     @property
     def root_cmakelists_dir(self):
@@ -62,3 +70,8 @@ class Kealib(CMakePackage):
                 '-DHDF5_LIB_PATH={0}'.format(
                     spec['hdf5'].libs.directories[0])
             ]
+
+    @property
+    def libs(self):
+        return find_libraries('libkea', self.prefix,
+                              shared=True, recursive=True)

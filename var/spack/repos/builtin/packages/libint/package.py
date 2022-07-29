@@ -5,7 +5,8 @@
 
 import os
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 TUNE_VARIANTS = (
     'none',
@@ -54,9 +55,11 @@ class Libint(AutotoolsPackage):
     depends_on('autoconf@2.52:', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
+    depends_on('python', type='build')
 
     # Libint 2 dependencies
-    depends_on('boost', when='@2:')
+    # Fixme: Can maintainers please confirm that this is a required dependency
+    depends_on(Boost.with_default_variants, when='@2:')
     depends_on('gmp', when='@2:')
 
     for tvariant in TUNE_VARIANTS[1:]:

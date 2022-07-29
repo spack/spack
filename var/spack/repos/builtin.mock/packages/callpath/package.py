@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Callpath(Package):
@@ -22,5 +22,5 @@ class Callpath(Package):
         make()
         make("install")
 
-    def setup_environment(self, senv, renv):
-        renv.set('FOOBAR', self.name)
+    def setup_run_environment(self, env):
+        env.set('FOOBAR', self.name)

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sfcio(CMakePackage):
@@ -25,3 +25,9 @@ class Sfcio(CMakePackage):
         for suffix in ('4', ''):
             env.set('SFCIO_LIB' + suffix, lib[0])
             env.set('SFCIO_INC' + suffix, join_path(self.prefix, 'include'))
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%fj'):
+            if name == 'fflags':
+                flags.append('-Free')
+        return (None, None, flags)

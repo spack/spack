@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyAts(PythonPackage):
@@ -17,6 +17,7 @@ class PyAts(PythonPackage):
     maintainers = ['white238']
 
     version('main', branch='main')
+    version('7.0.105', tag='7.0.105')
     version('7.0.100', tag='7.0.100')
     version('7.0.5', tag='7.0.5')
 

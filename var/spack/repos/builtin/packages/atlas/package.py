@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
 
@@ -50,6 +50,7 @@ class Atlas(Package):
 
     provides('blas')
     provides('lapack')
+    provides('lapack@3.6.1')
 
     parallel = False
 

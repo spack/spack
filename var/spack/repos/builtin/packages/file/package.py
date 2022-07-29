@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.package import *
 
 
 class File(AutotoolsPackage):
@@ -17,6 +17,8 @@ class File(AutotoolsPackage):
 
     maintainers = ['sethrj']
 
+    version('5.42', sha256='c076fb4d029c74073f15c43361ef572cfb868407d347190ba834af3b1639b0e4')
+    version('5.41', sha256='13e532c7b364f7d57e23dfeea3147103150cb90593a57af86c10e4f6e411603f')
     version('5.40', sha256='167321f43c148a553f68a0ea7f579821ef3b11c27b8cbe158e4df897e4a5dd57')
     version('5.39', sha256='f05d286a76d9556243d0cb05814929c2ecf3a5ba07963f8f70bfaaa70517fad1')
     version('5.38', sha256='593c2ffc2ab349c5aea0f55fedfe4d681737b6b62376a9b3ad1e77b2cc19fa34')

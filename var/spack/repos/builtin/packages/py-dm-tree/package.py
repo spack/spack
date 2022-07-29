@@ -5,6 +5,8 @@
 
 import tempfile
 
+from spack.package import *
+
 
 class PyDmTree(PythonPackage):
     """tree is a library for working with nested data structures. In a
@@ -28,7 +30,7 @@ class PyDmTree(PythonPackage):
         remove_linked_tree(self.tmp_path)
 
     def patch(self):
-        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        self.tmp_path = tempfile.mkdtemp(prefix='spack')
         env['TEST_TMPDIR'] = self.tmp_path
         env['HOME'] = self.tmp_path
         args = [

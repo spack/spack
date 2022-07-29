@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Karma(Package):
@@ -20,8 +20,6 @@ class Karma(Package):
 
     depends_on('libx11', type=('build', 'run'))
     depends_on('libxaw', type=('build', 'run'))
-
-    phases = ['install']
 
     resource(
         name='karma-linux',

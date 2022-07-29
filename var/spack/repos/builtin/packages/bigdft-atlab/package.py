@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class BigdftAtlab(AutotoolsPackage):
@@ -28,8 +28,6 @@ class BigdftAtlab(AutotoolsPackage):
 
     for vers in ['1.8.1', '1.8.2', '1.8.3', '1.9.0', '1.9.1', '1.9.2', 'develop']:
         depends_on('bigdft-futile@{0}'.format(vers), when='@{0}'.format(vers))
-
-    phases = ['autoreconf', 'configure', 'build', 'install']
 
     build_directory = "atlab"
 

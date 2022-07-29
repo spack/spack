@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
@@ -21,10 +23,10 @@ class Xl(Compiler):
     fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': 'xl/xlc',
-                  'cxx': 'xl/xlc++',
-                  'f77': 'xl/xlf',
-                  'fc': 'xl/xlf90'}
+    link_paths = {'cc': os.path.join('xl', 'xlc'),
+                  'cxx': os.path.join('xl', 'xlc++'),
+                  'f77': os.path.join('xl', 'xlf'),
+                  'fc': os.path.join('xl', 'xlf90')}
 
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'

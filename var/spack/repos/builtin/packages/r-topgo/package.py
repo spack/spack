@@ -3,20 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTopgo(RPackage):
-    """Enrichment Analysis for Gene Ontology
+    """Enrichment Analysis for Gene Ontology.
 
        topGO package provides tools for testing GO terms while accounting for
        the topology of the GO graph. Different test statistics and different
        methods for eliminating local similarities and dependencies between GO
        terms can be implemented and applied."""
 
-    homepage = "https://bioconductor.org/packages/topGO"
-    git      = "https://git.bioconductor.org/packages/topGO.git"
+    bioc = "topGO"
 
+    version('2.48.0', commit='a47f0079319c7d74db4aeda6399e06f12a34b585')
+    version('2.46.0', commit='2bfa9dff41fff261aa6188f8368aebd6e8250b18')
     version('2.42.0', commit='3a33cf53883de45bda506953303e1809ab982adc')
     version('2.36.0', commit='c2f6c187b41c4aa44cc92ac781fdd878491a4019')
     version('2.34.0', commit='44cb5eaba515b365b7b2a8c22df0a45883db6b4d')

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sratoolkit(Package):
@@ -12,10 +12,11 @@ class Sratoolkit(Package):
        format."""
 
     homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
-    url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.10.9/sratoolkit.2.10.9-centos_linux64.tar.gz"
+    url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.0/sratoolkit.3.0.0-centos_linux64.tar.gz"
 
     maintainers = ['robqiao']
 
+    version('3.0.0', sha256='89d11fc284e32d38b6639c551df6d658075cd268913f8ba2af65026e4a161dfe')
     version('2.10.9', sha256='2c849b4b9865737ff17732e3befa70718616ce31cac98e8a61b1c5ed5a6514c5')
     version('2.10.7', sha256='b3f319974f0c7a318554d6383a13dd30f7d447533d92b6fd3bd057d3524e0140')
     version('2.9.6', sha256='faab687c822d0c02956f73f35e04875dde420ce9f602b88bbf3f2e8d79a17155')

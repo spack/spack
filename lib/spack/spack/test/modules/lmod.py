@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
+import sys
 
 import pytest
 
@@ -19,6 +20,9 @@ install = spack.main.SpackCommand('install')
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 @pytest.fixture(params=[
@@ -106,10 +110,16 @@ class TestLmod(object):
 
         assert len([x for x in content if 'depends_on(' in x]) == 5
 
-    def test_alter_environment(self, modulefile_content, module_configuration):
+    # DEPRECATED: remove blacklist in v0.20
+    @pytest.mark.parametrize(
+        "config_name", ["alter_environment", "blacklist_environment"]
+    )
+    def test_alter_environment(
+            self, modulefile_content, module_configuration, config_name
+    ):
         """Tests modifications to run-time environment."""
 
-        module_configuration('alter_environment')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks platform=test target=x86_64')
 
         assert len(
@@ -141,10 +151,11 @@ class TestLmod(object):
             elif re.match(r'[a-z]+_path\("SEMICOLON"', line):
                 assert line.endswith('"bar", ";")')
 
-    def test_blacklist(self, modulefile_content, module_configuration):
-        """Tests blacklisting the generation of selected modules."""
+    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+    def test_exclude(self, modulefile_content, module_configuration, config_name):
+        """Tests excluding the generation of selected modules."""
 
-        module_configuration('blacklist')
+        module_configuration(config_name)
         content = modulefile_content(mpileaks_spec_string)
 
         assert len([x for x in content if 'depends_on(' in x]) == 1
@@ -308,23 +319,6 @@ class TestLmod(object):
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
-
-    def test_config_backwards_compat(self, mutable_config):
-        settings = {
-            'enable': ['lmod'],
-            'lmod': {
-                'core_compilers': ['%gcc@0.0.0']
-            }
-        }
-
-        spack.config.set('modules:default', settings)
-        new_format = spack.modules.lmod.configuration('default')
-
-        spack.config.set('modules', settings)
-        old_format = spack.modules.lmod.configuration('default')
-
-        assert old_format == new_format
-        assert old_format == settings['lmod']
 
     def test_modules_relative_to_view(
         self, tmpdir, modulefile_content, module_configuration, install_mockery,

@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
 
 
@@ -30,14 +31,16 @@ class CrayLibsci(Package):
 
     provides("blas")
     provides("lapack")
-    provides("scalapack")
+    provides("scalapack", when="+mpi")
 
     canonical_names = {
         'gcc': 'GNU',
         'cce': 'CRAY',
         'intel': 'INTEL',
         'clang': 'ALLINEA',
-        'aocc': 'AOCC'
+        'aocc': 'AOCC',
+        'nvhpc': 'NVIDIA',
+        'rocmcc': 'AMD'
     }
 
     @property

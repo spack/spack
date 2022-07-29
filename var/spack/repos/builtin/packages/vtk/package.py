@@ -7,7 +7,8 @@
 import os
 import sys
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Vtk(CMakePackage):
@@ -99,6 +100,11 @@ class Vtk(CMakePackage):
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants, when='+xdmf')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('mpi', when='+mpi')
 
@@ -108,8 +114,9 @@ class Vtk(CMakePackage):
     depends_on('freetype @:2.10.2', when='@:9.0.1')
     depends_on('freetype')
     depends_on('glew')
-    # set hl variant explicitly, similar to issue #7145
-    depends_on('hdf5+hl')
+    depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@1.8:', when='@8:9.0')
     depends_on('hdf5@1.10:', when='@9.1:')
     depends_on('jpeg')
     depends_on('jsoncpp')
@@ -154,6 +161,15 @@ class Vtk(CMakePackage):
         # VTK has some trouble finding freetype unless it is set in
         # the environment
         env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
+
+        # Force API compatibility with HDF5
+        if '+hdf5' in self.spec:
+            if '@9.1:' in self.spec:
+                env.append_flags('CFLAGS', '-DH5_USE_110_API')
+                env.append_flags('CXXFLAGS', '-DH5_USE_110_API')
+            elif '@8:' in self.spec:
+                env.append_flags('CFLAGS', '-DH5_USE_18_API')
+                env.append_flags('CXXFLAGS', '-DH5_USE_18_API')
 
     def cmake_args(self):
         spec = self.spec

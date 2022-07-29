@@ -391,7 +391,8 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     storage path of the resource associated with the specified ``fetcher``."""
     ext = None
     if spec:
-        versions = spec.package.versions.get(spec.package.version, {})
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        versions = pkg_cls.versions.get(spec.version, {})
         ext = versions.get('extension', None)
     # If the spec does not explicitly specify an extension (the default case),
     # then try to determine it automatically. An extension can only be
@@ -420,18 +421,16 @@ def get_all_versions(specs):
     version, this information will be omitted in the new set; for example; the
     new set of specs will not include variant settings.
     """
-
     version_specs = []
     for spec in specs:
-        pkg = spec.package
-
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
         # Skip any package that has no known versions.
-        if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
+        if not pkg_cls.versions:
+            tty.msg("No safe (checksummed) versions for package %s" % pkg_cls.name)
             continue
 
-        for version in pkg.versions:
-            version_spec = spack.spec.Spec(pkg.name)
+        for version in pkg_cls.versions:
+            version_spec = spack.spec.Spec(pkg_cls.name)
             version_spec.versions = VersionList([version])
             version_specs.append(version_spec)
 
@@ -638,6 +637,10 @@ class MirrorStats(object):
 
 
 def _add_single_spec(spec, mirror, mirror_stats):
+    # Ensure that the spec is concrete, since we'll stage it later
+    if not spec.concrete:
+        spec = spec.concretized()
+
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))

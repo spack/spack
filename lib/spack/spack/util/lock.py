@@ -6,6 +6,7 @@
 """Wrapper for ``llnl.util.lock`` allows locking to be enabled/disabled."""
 import os
 import stat
+import sys
 
 import llnl.util.lock
 
@@ -14,6 +15,8 @@ import spack.error
 import spack.paths
 
 from llnl.util.lock import *  # noqa
+
+is_windows = sys.platform == 'win32'
 
 
 class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
@@ -25,7 +28,7 @@ class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     """
     def __init__(self, *args, **kwargs):
         super(Lock, self).__init__(*args, **kwargs)
-        self._enable = spack.config.get('config:locks', True)
+        self._enable = spack.config.get('config:locks', not is_windows)
 
     def _lock(self, op, timeout=0):
         if self._enable:
@@ -41,6 +44,10 @@ class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     def _debug(self, *args):
         if self._enable:
             super(Lock, self)._debug(*args)
+
+    def cleanup(self, *args):
+        if self._enable:
+            super(Lock, self).cleanup(*args)
 
 
 def check_lock_safety(path):

@@ -31,7 +31,15 @@ def checksum_type(request):
 @pytest.fixture
 def pkg_factory():
     Pkg = collections.namedtuple(
-        'Pkg', ['url_for_version', 'urls', 'url', 'versions', 'fetch_options']
+        "Pkg", [
+            "url_for_version",
+            "all_urls_for_version",
+            "find_valid_url_for_version",
+            "urls",
+            "url",
+            "versions",
+            "fetch_options",
+        ]
     )
 
     def factory(url, urls, fetch_options={}):
@@ -40,8 +48,16 @@ def pkg_factory():
             main_url = url or urls[0]
             return spack.url.substitute_version(main_url, v)
 
+        def fn_urls(v):
+            urls_loc = urls or [url]
+            return [spack.url.substitute_version(u, v) for u in urls_loc]
+
         return Pkg(
-            url_for_version=fn, url=url, urls=urls,
+            find_valid_url_for_version=fn,
+            url_for_version=fn,
+            all_urls_for_version=fn_urls,
+            url=url,
+            urls=(urls,),
             versions=collections.defaultdict(dict),
             fetch_options=fetch_options
         )
@@ -111,12 +127,16 @@ def test_archive_file_errors(tmpdir, mock_archive, _fetch_method):
                 fetcher._fetch_from_url('file:///does-not-exist')
 
 
+files = [('.tar.gz', 'z'), ('.tgz', 'z')]
+if sys.platform != "win32":
+    files += [('.tar.bz2', 'j'), ('.tbz2', 'j'),
+              ('.tar.xz', 'J'), ('.txz', 'J')]
+
+
 @pytest.mark.parametrize('secure', [True, False])
 @pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
 @pytest.mark.parametrize('mock_archive',
-                         [('.tar.gz', 'z'), ('.tgz', 'z'),
-                          ('.tar.bz2', 'j'), ('.tbz2', 'j'),
-                          ('.tar.xz', 'J'), ('.txz', 'J')],
+                         files,
                          indirect=True)
 def test_fetch(
         mock_archive,
@@ -136,20 +156,16 @@ def test_fetch(
     checksum = algo.hexdigest()
 
     # Get a spec and tweak the test package with new chcecksum params
-    spec = Spec('url-test')
-    spec.concretize()
-
-    pkg = spack.repo.get('url-test')
-    pkg.url = mock_archive.url
-    pkg.versions[ver('test')] = {checksum_type: checksum, 'url': pkg.url}
-    pkg.spec = spec
+    s = Spec('url-test').concretized()
+    s.package.url = mock_archive.url
+    s.package.versions[ver('test')] = {checksum_type: checksum, 'url': s.package.url}
 
     # Enter the stage directory and check some properties
-    with pkg.stage:
+    with s.package.stage:
         with spack.config.override('config:verify_ssl', secure):
             with spack.config.override('config:url_fetch_method', _fetch_method):
-                pkg.do_stage()
-        with working_dir(pkg.stage.source_path):
+                s.package.do_stage()
+        with working_dir(s.package.stage.source_path):
             assert os.path.exists('configure')
             assert is_exe('configure')
 
@@ -159,6 +175,9 @@ def test_fetch(
             assert 'echo Building...' in contents
 
 
+# TODO-27021
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('spec,url,digest', [
     ('url-list-test @0.0.0', 'foo-0.0.0.tar.gz', '00000000000000000000000000000000'),
     ('url-list-test @1.0.0', 'foo-1.0.0.tar.gz', '00000000000000000000000000000100'),
@@ -183,41 +202,58 @@ def test_from_list_url(mock_packages, config, spec, url, digest, _fetch_method):
     have checksums in the package.
     """
     with spack.config.override('config:url_fetch_method', _fetch_method):
-        specification = Spec(spec).concretized()
-        pkg = spack.repo.get(specification)
-        fetch_strategy = fs.from_list_url(pkg)
+        s = Spec(spec).concretized()
+        fetch_strategy = fs.from_list_url(s.package)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
-        pkg.fetch_options = {'timeout': 60}
-        fetch_strategy = fs.from_list_url(pkg)
+        s.package.fetch_options = {'timeout': 60}
+        fetch_strategy = fs.from_list_url(s.package)
         assert fetch_strategy.extra_options == {'timeout': 60}
 
 
-@pytest.mark.parametrize('_fetch_method', ['curl', 'urllib'])
-def test_from_list_url_unspecified(mock_packages, config, _fetch_method):
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
+@pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
+@pytest.mark.parametrize("requested_version,tarball,digest", [
+    # This version is in the web data path (test/data/web/4.html), but not in the
+    # url-list-test package. We expect Spack to generate a URL with the new version.
+    ("4.5.0", "foo-4.5.0.tar.gz", None),
+    # This version is in web data path and not in the package file, BUT the 2.0.0b2
+    # version in the package file satisfies 2.0.0, so Spack will use the known version.
+    # TODO: this is *probably* not what the user wants, but it's here as an example
+    # TODO: for that reason. We can't express "exactly 2.0.0" right now, and we don't
+    # TODO: have special cases that would make 2.0.0b2 less than 2.0.0. We should
+    # TODO: probably revisit this in our versioning scheme.
+    ("2.0.0", "foo-2.0.0b2.tar.gz", "000000000000000000000000000200b2"),
+])
+def test_new_version_from_list_url(
+        mock_packages, config, _fetch_method, requested_version, tarball, digest
+):
+    if spack.config.get('config:concretizer') == 'original':
+        pytest.skip(
+            "Original concretizer doesn't resolve concrete versions to known ones"
+        )
+
     """Test non-specific URLs from the url-list-test package."""
-    with spack.config.override('config:url_fetch_method', _fetch_method):
-        pkg = spack.repo.get('url-list-test')
+    with spack.config.override("config:url_fetch_method", _fetch_method):
+        s = Spec("url-list-test @%s" % requested_version).concretized()
+        fetch_strategy = fs.from_list_url(s.package)
 
-        spec = Spec('url-list-test @2.0.0').concretized()
-        pkg = spack.repo.get(spec)
-        fetch_strategy = fs.from_list_url(pkg)
         assert isinstance(fetch_strategy, fs.URLFetchStrategy)
-        assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
-        assert fetch_strategy.digest is None
+        assert os.path.basename(fetch_strategy.url) == tarball
+        assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
-        pkg.fetch_options = {'timeout': 60}
-        fetch_strategy = fs.from_list_url(pkg)
-        assert fetch_strategy.extra_options == {'timeout': 60}
+        s.package.fetch_options = {"timeout": 60}
+        fetch_strategy = fs.from_list_url(s.package)
+        assert fetch_strategy.extra_options == {"timeout": 60}
 
 
 def test_nosource_from_list_url(mock_packages, config):
     """This test confirms BundlePackages do not have list url."""
-    pkg = spack.repo.get('nosource')
-
-    fetch_strategy = fs.from_list_url(pkg)
+    s = Spec('nosource').concretized()
+    fetch_strategy = fs.from_list_url(s.package)
     assert fetch_strategy is None
 
 

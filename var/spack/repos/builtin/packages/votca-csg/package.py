@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class VotcaCsg(CMakePackage):
@@ -38,6 +38,6 @@ class VotcaCsg(CMakePackage):
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
               "1.6.3", "1.6.4", "2021", "2021.1", "2021.2", "stable"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
-    depends_on("boost")
+    depends_on("boost+exception+filesystem+system+serialization+container+math+regex")
     depends_on("gromacs~mpi@5.1:2019")
     depends_on("hdf5~mpi")

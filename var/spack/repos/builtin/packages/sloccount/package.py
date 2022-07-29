@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Sloccount(MakefilePackage):
     """SLOCCount is a set of tools for counting physical Source Lines of Code
     (SLOC) in a large number of languages of a potentially large set of
@@ -16,6 +19,7 @@ class Sloccount(MakefilePackage):
 
     # md5sum needed at run-time
     depends_on('coreutils', type=('build', 'run'))
+    depends_on('flex', type='build')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')

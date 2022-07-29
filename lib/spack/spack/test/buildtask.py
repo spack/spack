@@ -14,11 +14,11 @@ def test_build_task_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
         inst.BuildTask('abc', None, False, 0, 0, 0, [])
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='must have a concrete spec'):
-        inst.BuildTask(pkg, None, False, 0, 0, 0, [])
-
     spec = spack.spec.Spec('trivial-install-test-package')
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    with pytest.raises(ValueError, match='must have a concrete spec'):
+        inst.BuildTask(pkg_cls(spec), None, False, 0, 0, 0, [])
+
     spec.concretize()
     assert spec.concrete
     with pytest.raises(ValueError, match='must have a build request'):

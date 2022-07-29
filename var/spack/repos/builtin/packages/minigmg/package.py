@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Minigmg(Package):
     """miniGMG is a compact benchmark for understanding the performance
     challenges associated with geometric multigrid solvers
@@ -41,9 +44,7 @@ class Minigmg(Package):
     # Replaces inline with inline static, for correct syntax
     patch('inline_static.patch')
 
-    phases = ['build', 'install']
-
-    def build(self, spec, prefix):
+    def install(self, spec, prefix):
 
         cc = Executable(spec['mpi'].mpicc)
 
@@ -92,7 +93,6 @@ class Minigmg(Package):
 
         cc(*args)
 
-    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('run.miniGMG', prefix.bin)
         mkdir(prefix.jobs)

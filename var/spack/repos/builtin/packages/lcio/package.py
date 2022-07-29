@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Lcio(CMakePackage):
@@ -19,6 +19,7 @@ class Lcio(CMakePackage):
     maintainers = ['gaede', 'vvolkl']
 
     version('master', branch='master')
+    version('2.17.1', sha256='e7e4e4399a53680dfb8cc497e7f59633a96361f8f9435d1b044a90fd3ad97ab7')
     version('2.17',   sha256='a81e07790443f0e2d9abb18bc3b5f2929edbc8d8e4f307f931679eaa39bb044a')
     version('2.16.1', sha256='992a649f864785e62fe12d7a638b2696c91f9535881de33f22b3cceabcdcdbaf')
     version('2.16',   sha256='aff7707750d821f31cbae3d7529fd8e22457f48d759e834ec01aa9389b5dbf1a')
@@ -36,7 +37,7 @@ class Lcio(CMakePackage):
 
     variant('cxxstd',
             default='17',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
     variant("jar", default=False,
@@ -50,6 +51,10 @@ class Lcio(CMakePackage):
     depends_on('sio@0.1:', when='@2.16:')
 
     depends_on('root@6.04:', when="+rootdict")
+    depends_on('root@6.04: cxxstd=11', when="+rootdict cxxstd=11")
+    depends_on('root@6.04: cxxstd=14', when="+rootdict cxxstd=14")
+    depends_on('root@6.04: cxxstd=17', when="+rootdict cxxstd=17")
+    depends_on('root@6.04: cxxstd=20', when="+rootdict cxxstd=20")
     depends_on('openjdk', when="+jar")
     # build error with +termlib, to be investigated
     depends_on('ncurses~termlib', when="+examples")
@@ -99,7 +104,15 @@ class Lcio(CMakePackage):
     def install_source(self):
         # these files are needed for the python bindings and root to
         # find the headers
+        if self.spec.version > Version('2.17'):
+            # This has been fixed upstream
+            return
+
         install_tree('src/cpp/include/pre-generated/',
                      self.prefix.include + '/pre-generated')
         install('src/cpp/include/IOIMPL/LCEventLazyImpl.h',
                 self.prefix.include + '/IOIMPL/')
+        install('src/cpp/include/SIO/SIOHandlerMgr.h',
+                self.prefix.include + '/SIO/')
+        install('src/cpp/include/SIO/SIOObjectHandler.h',
+                self.prefix.include + '/SIO/')

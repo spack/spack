@@ -26,9 +26,15 @@ import spack.platforms
 import spack.spec
 import spack.util.executable as executable
 import spack.util.spack_json as sjson
+from spack.util.path import path_to_os_path, system_path_filter
 
-system_paths = ['/', '/usr', '/usr/local']
-suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64']
+is_windows = sys.platform == 'win32'
+
+system_paths = ['/', '/usr', '/usr/local'] if \
+    not is_windows else ['C:\\', 'C:\\Program Files',
+                         'C:\\Program Files (x86)', 'C:\\Users',
+                         'C:\\ProgramData']
+suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64'] if not is_windows else []
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
     system_paths
 
@@ -36,7 +42,8 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
-    'fish': 'set -gx {0} {1};\n'
+    'fish': 'set -gx {0} {1};\n',
+    'bat': 'set "{0}={1}"\n'
 }
 
 
@@ -44,6 +51,7 @@ _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
     'fish': 'set -e {0};\n',
+    'bat': 'set "{0}="\n'
 }
 
 
@@ -83,7 +91,7 @@ def prune_duplicate_paths(paths):
 def get_path(name):
     path = os.environ.get(name, "").strip()
     if path:
-        return path.split(":")
+        return path.split(os.pathsep)
     else:
         return []
 
@@ -96,7 +104,7 @@ def env_flag(name):
 
 
 def path_set(var_name, directories):
-    path_str = ":".join(str(dir) for dir in directories)
+    path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
 
@@ -104,7 +112,7 @@ def path_put_first(var_name, directories):
     """Puts the provided directories first in the path, adding them
        if they're not already there.
     """
-    path = os.environ.get(var_name, "").split(':')
+    path = os.environ.get(var_name, "").split(os.pathsep)
 
     for dir in directories:
         if dir in path:
@@ -128,6 +136,7 @@ def env_var_to_source_line(var, val):
     return source_line
 
 
+@system_path_filter(arg_slice=slice(1))
 def dump_environment(path, environment=None):
     """Dump an environment dictionary to a source-able file."""
     use_env = environment or os.environ
@@ -141,6 +150,7 @@ def dump_environment(path, environment=None):
                                     '\n']))
 
 
+@system_path_filter(arg_slice=slice(1))
 def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
     cPickle.dump(dict(environment if environment else os.environ),
@@ -214,7 +224,7 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'separator': self.separator}
 
         self.args.update(kwargs)
@@ -234,7 +244,7 @@ class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'value': value, 'separator': self.separator}
         self.args.update(kwargs)
 
@@ -305,7 +315,7 @@ class AppendPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories.append(os.path.normpath(self.value))
+        directories.append(path_to_os_path(os.path.normpath(self.value)).pop())
         env[self.name] = self.separator.join(directories)
 
 
@@ -317,7 +327,8 @@ class PrependPath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(self.value)] + directories
+        directories = [path_to_os_path(os.path.normpath(self.value)).pop()] \
+            + directories
         env[self.name] = self.separator.join(directories)
 
 
@@ -329,8 +340,9 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
+        directories = [path_to_os_path(os.path.normpath(x)).pop()
+                       for x in directories
+                       if x != path_to_os_path(os.path.normpath(self.value)).pop()]
         env[self.name] = self.separator.join(directories)
 
 
@@ -341,8 +353,8 @@ class DeprioritizeSystemPaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = deprioritize_system_paths([os.path.normpath(x)
-                                                 for x in directories])
+        directories = deprioritize_system_paths(
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories])
         env[self.name] = self.separator.join(directories)
 
 
@@ -354,7 +366,7 @@ class PruneDuplicatePaths(NameModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = prune_duplicate_paths([os.path.normpath(x)
+        directories = prune_duplicate_paths([path_to_os_path(os.path.normpath(x)).pop()
                                              for x in directories])
         env[self.name] = self.separator.join(directories)
 
@@ -634,8 +646,13 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(
-                        name, cmd_quote(new_env[name]))
+                    if sys.platform != "win32":
+                        cmd = _shell_set_strings[shell].format(
+                            name, cmd_quote(new_env[name]))
+                    else:
+                        cmd = _shell_set_strings[shell].format(
+                            name, new_env[name])
+                    cmds += cmd
         return cmds
 
     @staticmethod
@@ -656,10 +673,10 @@ class EnvironmentModifications(object):
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
-            blacklist ([str or re]): ignore any modifications of these
+            exclude ([str or re]): ignore any modifications of these
                 variables (default: [])
-            whitelist ([str or re]): always respect modifications of these
-                variables (default: []). has precedence over blacklist.
+            include ([str or re]): always respect modifications of these
+                variables (default: []). Supersedes any excluded variables.
             clean (bool): in addition to removing empty entries,
                 also remove duplicate entries (default: False).
         """
@@ -670,13 +687,13 @@ class EnvironmentModifications(object):
             msg = 'Trying to source non-existing file: {0}'.format(filename)
             raise RuntimeError(msg)
 
-        # Prepare a whitelist and a blacklist of environment variable names
-        blacklist = kwargs.get('blacklist', [])
-        whitelist = kwargs.get('whitelist', [])
+        # Prepare include and exclude lists of environment variable names
+        exclude = kwargs.get('exclude', [])
+        include = kwargs.get('include', [])
         clean = kwargs.get('clean', False)
 
         # Other variables unrelated to sourcing a file
-        blacklist.extend([
+        exclude.extend([
             # Bash internals
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
@@ -689,12 +706,12 @@ class EnvironmentModifications(object):
         # Compute the environments before and after sourcing
         before = sanitize(
             environment_after_sourcing_files(os.devnull, **kwargs),
-            blacklist=blacklist, whitelist=whitelist
+            exclude=exclude, include=include
         )
         file_and_args = (filename,) + arguments
         after = sanitize(
             environment_after_sourcing_files(file_and_args, **kwargs),
-            blacklist=blacklist, whitelist=whitelist
+            exclude=exclude, include=include
         )
 
         # Delegate to the other factory
@@ -815,13 +832,13 @@ class EnvironmentModifications(object):
         return env
 
 
-def concatenate_paths(paths, separator=':'):
+def concatenate_paths(paths, separator=os.pathsep):
     """Concatenates an iterable of paths into a string of paths separated by
     separator, defaulting to colon.
 
     Args:
         paths: iterable of paths
-        separator: the separator to use, default ':'
+        separator: the separator to use, default ';' windows, ':' otherwise
 
     Returns:
         string
@@ -862,22 +879,6 @@ def validate(env, errstream):
     modifications = env.group_by_name()
     for variable, list_of_changes in sorted(modifications.items()):
         set_or_unset_not_first(variable, list_of_changes, errstream)
-
-
-def filter_environment_blacklist(env, variables):
-    """Generator that filters out any change to environment variables present in
-    the input list.
-
-    Args:
-        env: list of environment modifications
-        variables: list of variable names to be filtered
-
-    Returns:
-        items in env if they are not in variables
-    """
-    for item in env:
-        if item.name not in variables:
-            yield item
 
 
 def inspect_path(root, inspections, exclude=None):
@@ -1043,17 +1044,15 @@ def environment_after_sourcing_files(*files, **kwargs):
     return current_environment
 
 
-def sanitize(environment, blacklist, whitelist):
+def sanitize(environment, exclude, include):
     """Returns a copy of the input dictionary where all the keys that
-    match a blacklist pattern and don't match a whitelist pattern are
+    match an excluded pattern and don't match an included pattern are
     removed.
 
     Args:
         environment (dict): input dictionary
-        blacklist (list): literals or regex patterns to be
-            blacklisted
-        whitelist (list): literals or regex patterns to be
-            whitelisted
+        exclude (list): literals or regex patterns to be excluded
+        include (list): literals or regex patterns to be included
     """
 
     def set_intersection(fullset, *args):
@@ -1071,9 +1070,9 @@ def sanitize(environment, blacklist, whitelist):
     # Don't modify input, make a copy instead
     environment = sjson.decode_json_dict(dict(environment))
 
-    # Retain (whitelist) has priority over prune (blacklist)
-    prune = set_intersection(set(environment), *blacklist)
-    prune -= set_intersection(prune, *whitelist)
+    # include supersedes any excluded items
+    prune = set_intersection(set(environment), *exclude)
+    prune -= set_intersection(prune, *include)
     for k in prune:
         environment.pop(k, None)
 
