@@ -14,15 +14,15 @@ class Opengl(BundlePackage):
 
     homepage = "https://www.opengl.org/"
 
-    version('4.5')
+    version("4.5")
 
     # This should really be when='platform=linux' but can't because of a
     # current bug in when and how ArchSpecs are constructed
-    if sys.platform.startswith('linux'):
-        provides('libglx')
-        executables = ['^glxinfo$']
+    if sys.platform.startswith("linux"):
+        provides("libglx")
+        executables = ["^glxinfo$"]
     else:  # windows and mac
-        provides('gl@4.5')
+        provides("gl@4.5")
 
     @classmethod
     def determine_version(cls, exe):
@@ -88,23 +88,19 @@ class Opengl(BundlePackage):
 
     @property
     def gl_headers(self):
-        if 'platform=darwin':
-            header_name = 'OpenGL/gl.h'
+        if "platform=darwin":
+            header_name = "OpenGL/gl.h"
         else:
-            header_name = 'GL/gl.h'
-        return find_headers(header_name,
-                            root=self.prefix,
-                            recursive=True)
+            header_name = "GL/gl.h"
+        return find_headers(header_name, root=self.prefix, recursive=True)
 
     @property
     def gl_libs(self):
         spec = self.spec
-        if 'platform=windows' in spec:
-            lib_name = 'opengl32'
-        elif 'platform=darwin' in spec:
-            lib_name = 'libOpenGL'
+        if "platform=windows" in spec:
+            lib_name = "opengl32"
+        elif "platform=darwin" in spec:
+            lib_name = "libOpenGL"
         else:  # linux and cray
-            lib_name = 'libGL'
-        return find_libraries(lib_name,
-                              root=self.prefix,
-                              recursive=True)
+            lib_name = "libGL"
+        return find_libraries(lib_name, root=self.prefix, recursive=True)

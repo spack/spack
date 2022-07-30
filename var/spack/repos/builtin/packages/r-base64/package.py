@@ -15,6 +15,6 @@ class RBase64(RPackage):
 
     cran = "base64"
 
-    version('2.0', sha256='8e259c2b12446197d1152b83a81bab84ccb5a5b77021a9b5645dd4c63c804bd1')
+    version("2.0", sha256="8e259c2b12446197d1152b83a81bab84ccb5a5b77021a9b5645dd4c63c804bd1")
 
-    depends_on('r-openssl', type=('build', 'run'))
+    depends_on("r-openssl", type=("build", "run"))

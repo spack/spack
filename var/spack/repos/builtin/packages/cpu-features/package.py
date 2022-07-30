@@ -10,14 +10,12 @@ class CpuFeatures(CMakePackage):
     """A cross platform C99 library to get cpu features at runtime."""
 
     homepage = "https://github.com/google/cpu_features"
-    git      = "https://github.com/google/cpu_features.git"
+    git = "https://github.com/google/cpu_features.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('cmake@3.0.0:', type='build')
+    depends_on("cmake@3.0.0:", type="build")
 
     def cmake_args(self):
-        args = [
-            '-DBUILD_TESTING:BOOL=OFF'
-        ]
+        args = ["-DBUILD_TESTING:BOOL=OFF"]
         return args

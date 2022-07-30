@@ -10,12 +10,12 @@ class ModifiesRunEnv(Package):
     """Dependency package which needs to make shell modifications to run"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
     def setup_run_environment(self, env):
-        env.set('DEPENDENCY_ENV_VAR', '1')
+        env.set("DEPENDENCY_ENV_VAR", "1")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

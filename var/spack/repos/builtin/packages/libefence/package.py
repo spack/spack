@@ -14,15 +14,19 @@ class Libefence(MakefilePackage):
     code that caused the error."""
 
     homepage = "https://packages.debian.org/unstable/electric-fence"
-    url      = "https://deb.debian.org/debian/pool/main/e/electric-fence/electric-fence_2.2.6.tar.gz"
+    url = "https://deb.debian.org/debian/pool/main/e/electric-fence/electric-fence_2.2.6.tar.gz"
 
-    maintainers = ['cessenat']
+    maintainers = ["cessenat"]
 
-    version('2.2.6', sha256='a949e0dedb06cbcd444566cce1457223f2c41abd3513f21663f30f19ccc48e24')
+    version("2.2.6", sha256="a949e0dedb06cbcd444566cce1457223f2c41abd3513f21663f30f19ccc48e24")
 
     def build(self, spec, prefix):
         make()
 
     def install(self, spec, prefix):
-        make('install', 'LIB_INSTALL_DIR=' + prefix.lib,
-             'MAN_INSTALL_DIR=' + prefix.man.man3, parallel=False)
+        make(
+            "install",
+            "LIB_INSTALL_DIR=" + prefix.lib,
+            "MAN_INSTALL_DIR=" + prefix.man.man3,
+            parallel=False,
+        )

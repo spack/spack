@@ -15,4 +15,4 @@ class REmmli(RPackage):
 
     cran = "EMMLi"
 
-    version('0.0.3', sha256='57c04953200d2253bc90b0035dc590179d1b959768bfa7fdac92b6bcbf9f66ac')
+    version("0.0.3", sha256="57c04953200d2253bc90b0035dc590179d1b959768bfa7fdac92b6bcbf9f66ac")

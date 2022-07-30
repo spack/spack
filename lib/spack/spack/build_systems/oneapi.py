@@ -22,9 +22,9 @@ from spack.util.executable import Executable
 class IntelOneApiPackage(Package):
     """Base class for Intel oneAPI packages."""
 
-    homepage = 'https://software.intel.com/oneapi'
+    homepage = "https://software.intel.com/oneapi"
 
-    phases = ['install']
+    phases = ["install"]
 
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
@@ -55,7 +55,7 @@ class IntelOneApiPackage(Package):
     def install_component(self, installer_path):
         """Shared install method for all oneapi packages."""
 
-        if platform.system() == 'Linux':
+        if platform.system() == "Linux":
             # Intel installer assumes and enforces that all components
             # are installed into a single prefix. Spack wants to
             # install each component in a separate prefix. The
@@ -69,28 +69,35 @@ class IntelOneApiPackage(Package):
             # with other install depends on the userid. For root, we
             # delete the installercache before and after install. For
             # non root we redefine the HOME environment variable.
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+            if getpass.getuser() == "root":
+                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
 
-            bash = Executable('bash')
+            bash = Executable("bash")
 
             # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env('HOME', self.prefix)
+            bash.add_default_env("HOME", self.prefix)
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
-            bash.add_default_env('XDG_RUNTIME_DIR',
-                                 join_path(self.stage.path, 'runtime'))
+            bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
 
-            bash(installer_path,
-                 '-s', '-a', '-s', '--action', 'install',
-                 '--eula', 'accept',
-                 '--install-dir', self.prefix)
+            bash(
+                installer_path,
+                "-s",
+                "-a",
+                "-s",
+                "--action",
+                "install",
+                "--eula",
+                "accept",
+                "--install-dir",
+                self.prefix,
+            )
 
-            if getpass.getuser() == 'root':
-                shutil.rmtree('/var/intel/installercache', ignore_errors=True)
+            if getpass.getuser() == "root":
+                shutil.rmtree("/var/intel/installercache", ignore_errors=True)
 
         # Some installers have a bug and do not return an error code when failing
         if not isdir(join_path(self.prefix, self.component_dir)):
-            raise RuntimeError('install failed')
+            raise RuntimeError("install failed")
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -101,8 +108,11 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
-        env.extend(EnvironmentModifications.from_sourcing_file(
-            join_path(self.component_prefix, 'env', 'vars.sh')))
+        env.extend(
+            EnvironmentModifications.from_sourcing_file(
+                join_path(self.component_prefix, "env", "vars.sh")
+            )
+        )
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
@@ -116,14 +126,14 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
     @property
     def headers(self):
-        include_path = join_path(self.component_prefix, 'include')
-        return find_headers('*', include_path, recursive=True)
+        include_path = join_path(self.component_prefix, "include")
+        return find_headers("*", include_path, recursive=True)
 
     @property
     def libs(self):
-        lib_path = join_path(self.component_prefix, 'lib', 'intel64')
+        lib_path = join_path(self.component_prefix, "lib", "intel64")
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
-        return find_libraries('*', root=lib_path, shared=True, recursive=True)
+        return find_libraries("*", root=lib_path, shared=True, recursive=True)
 
 
 class IntelOneApiStaticLibraryList(object):
@@ -151,9 +161,10 @@ class IntelOneApiStaticLibraryList(object):
 
     @property
     def link_flags(self):
-        return '-Wl,--start-group {0} -Wl,--end-group {1}'.format(
-            ' '.join(self.static_libs.libraries), self.dynamic_libs.link_flags)
+        return "-Wl,--start-group {0} -Wl,--end-group {1}".format(
+            " ".join(self.static_libs.libraries), self.dynamic_libs.link_flags
+        )
 
     @property
     def ld_flags(self):
-        return '{0} {1}'.format(self.search_flags, self.link_flags)
+        return "{0} {1}".format(self.search_flags, self.link_flags)

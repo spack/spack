@@ -20,9 +20,9 @@ class RInfluencer(RPackage):
 
     cran = "influenceR"
 
-    version('0.1.0.1', sha256='63c46f1175fced33fb1b78d4d56e37fbee09b408945b0106dac36e3344cd4766')
-    version('0.1.0', sha256='4fc9324179bd8896875fc0e879a8a96b9ef2a6cf42a296c3b7b4d9098519e98a')
+    version("0.1.0.1", sha256="63c46f1175fced33fb1b78d4d56e37fbee09b408945b0106dac36e3344cd4766")
+    version("0.1.0", sha256="4fc9324179bd8896875fc0e879a8a96b9ef2a6cf42a296c3b7b4d9098519e98a")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-igraph@1.0.1:', type=('build', 'run'))
-    depends_on('r-matrix@1.1-4:', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-igraph@1.0.1:", type=("build", "run"))
+    depends_on("r-matrix@1.1-4:", type=("build", "run"))

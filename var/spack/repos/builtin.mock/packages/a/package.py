@@ -10,37 +10,32 @@ class A(AutotoolsPackage):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', 'abcdef0123456789abcdef0123456789')
-
-    variant(
-        'foo', description='',
-        values=any_combination_of('bar', 'baz', 'fee').with_default('bar'),
-    )
+    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("2.0", "abcdef0123456789abcdef0123456789")
 
     variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
+        "foo",
+        description="",
+        values=any_combination_of("bar", "baz", "fee").with_default("bar"),
     )
 
-    variant('lorem_ipsum', description='', default=False)
+    variant("foobar", values=("bar", "baz", "fee"), default="bar", description="", multi=False)
 
-    variant('bvv', default=True, description='The good old BV variant')
+    variant("lorem_ipsum", description="", default=False)
 
-    depends_on('b', when='foobar=bar')
-    depends_on('test-dependency', type='test')
+    variant("bvv", default=True, description="The good old BV variant")
+
+    depends_on("b", when="foobar=bar")
+    depends_on("test-dependency", type="test")
 
     parallel = False
 
     def with_or_without_fee(self, activated):
         if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
+            return "--no-fee"
+        return "--fee-all-the-time"
 
     def autoreconf(self, spec, prefix):
         pass

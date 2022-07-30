@@ -16,4 +16,6 @@ class RLpsolveapi(RPackage):
 
     cran = "lpSolveAPI"
 
-    version('5.5.2.0-17.7', sha256='9ebc8e45ad73eb51e0b25049598a5bc758370cf89508e2328cf4bd93d68d55bb')
+    version(
+        "5.5.2.0-17.7", sha256="9ebc8e45ad73eb51e0b25049598a5bc758370cf89508e2328cf4bd93d68d55bb"
+    )

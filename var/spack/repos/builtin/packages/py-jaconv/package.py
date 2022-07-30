@@ -12,8 +12,8 @@ class PyJaconv(PythonPackage):
     Zenkaku (full-width character)"""
 
     homepage = "https://github.com/ikegami-yukino/jaconv"
-    pypi     = "jaconv/jaconv-0.3.tar.gz"
+    pypi = "jaconv/jaconv-0.3.tar.gz"
 
-    version('0.3', sha256='cc70c796c19a6765598c03eac59d1399a555a9a8839cc70e540ec26f0ec3e66e')
+    version("0.3", sha256="cc70c796c19a6765598c03eac59d1399a555a9a8839cc70e540ec26f0ec3e66e")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

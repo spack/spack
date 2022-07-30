@@ -13,17 +13,17 @@ from .test import Test
 from .windows import Windows
 
 __all__ = [
-    'Platform',
-    'Cray',
-    'Darwin',
-    'Linux',
-    'Test',
-    'Windows',
-    'platforms',
-    'host',
-    'by_name',
-    'reset',
-    'prevent_cray_detection'
+    "Platform",
+    "Cray",
+    "Darwin",
+    "Linux",
+    "Test",
+    "Windows",
+    "platforms",
+    "host",
+    "by_name",
+    "reset",
+    "prevent_cray_detection",
 ]
 
 #: The "real" platform of the host running Spack. This should not be changed
@@ -40,6 +40,7 @@ class _PickleableCallable(object):
     _platform or _all_platforms. Lambda or nested functions are
     not pickleable.
     """
+
     def __init__(self, return_value):
         self.return_value = return_value
 

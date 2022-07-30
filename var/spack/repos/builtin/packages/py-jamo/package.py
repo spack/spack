@@ -12,9 +12,9 @@ class PyJamo(PythonPackage):
     and jamo."""
 
     homepage = "https://github.com/jdongian/python-jamo"
-    pypi     = "jamo/jamo-0.4.1.tar.gz"
+    pypi = "jamo/jamo-0.4.1.tar.gz"
 
-    version('0.4.1', sha256='ea65cf9d35338d0e0af48d75ff426d8a369b0ebde6f07051c3ac37256f56d025')
+    version("0.4.1", sha256="ea65cf9d35338d0e0af48d75ff426d8a369b0ebde6f07051c3ac37256f56d025")
 
-    depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

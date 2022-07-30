@@ -12,15 +12,14 @@ import llnl.util.filesystem as fs
 import spack.install_test
 import spack.spec
 
-pytestmark = pytest.mark.skipif(sys.platform == 'win32',
-                                reason="Tests fail on Windows")
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
 
 def test_test_log_pathname(mock_packages, config):
     """Ensure test log path is reasonable."""
-    spec = spack.spec.Spec('libdwarf').concretized()
+    spec = spack.spec.Spec("libdwarf").concretized()
 
-    test_name = 'test_name'
+    test_name = "test_name"
 
     test_suite = spack.install_test.TestSuite([spec], test_name)
     logfile = test_suite.log_file_for_spec(spec)
@@ -31,9 +30,9 @@ def test_test_log_pathname(mock_packages, config):
 
 def test_test_ensure_stage(mock_test_stage):
     """Make sure test stage directory is properly set up."""
-    spec = spack.spec.Spec('libdwarf').concretized()
+    spec = spack.spec.Spec("libdwarf").concretized()
 
-    test_name = 'test_name'
+    test_name = "test_name"
 
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
@@ -44,16 +43,16 @@ def test_test_ensure_stage(mock_test_stage):
 
 def test_write_test_result(mock_packages, mock_test_stage):
     """Ensure test results written to a results file."""
-    spec = spack.spec.Spec('libdwarf').concretized()
-    result = 'TEST'
-    test_name = 'write-test'
+    spec = spack.spec.Spec("libdwarf").concretized()
+    result = "TEST"
+    test_name = "write-test"
 
     test_suite = spack.install_test.TestSuite([spec], test_name)
     test_suite.ensure_stage()
     results_file = test_suite.results_file
     test_suite.write_test_result(spec, result)
 
-    with open(results_file, 'r') as f:
+    with open(results_file, "r") as f:
         lines = f.readlines()
         assert len(lines) == 1
 
@@ -64,9 +63,9 @@ def test_write_test_result(mock_packages, mock_test_stage):
 
 def test_do_test(mock_packages, install_mockery, mock_test_stage):
     """Perform a stand-alone test with files to copy."""
-    spec = spack.spec.Spec('trivial-smoke-test').concretized()
-    test_name = 'test_do_test'
-    test_filename = 'test_file.in'
+    spec = spack.spec.Spec("trivial-smoke-test").concretized()
+    test_name = "test_do_test"
+    test_filename = "test_file.in"
 
     pkg = spec.package
     pkg.create_extra_test_source()
@@ -78,10 +77,8 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
 
     # Save off target paths for current spec since test suite processing
     # assumes testing multiple specs.
-    cached_filename = fs.join_path(test_suite.current_test_cache_dir,
-                                   pkg.test_source_filename)
-    data_filename = fs.join_path(test_suite.current_test_data_dir,
-                                 test_filename)
+    cached_filename = fs.join_path(test_suite.current_test_cache_dir, pkg.test_source_filename)
+    data_filename = fs.join_path(test_suite.current_test_data_dir, test_filename)
 
     # Run the test, making sure to retain the test stage directory
     # so we can ensure the files were copied.
@@ -91,15 +88,17 @@ def test_do_test(mock_packages, install_mockery, mock_test_stage):
     assert os.path.exists(data_filename)
 
 
-@pytest.mark.parametrize('arguments,status,msg', [
-    ({}, 'SKIPPED', 'Skipped'),
-    ({'externals': True}, 'NO-TESTS', 'No tests'),
-])
-def test_test_external(mock_packages, install_mockery, mock_test_stage,
-                       arguments, status, msg):
+@pytest.mark.parametrize(
+    "arguments,status,msg",
+    [
+        ({}, "SKIPPED", "Skipped"),
+        ({"externals": True}, "NO-TESTS", "No tests"),
+    ],
+)
+def test_test_external(mock_packages, install_mockery, mock_test_stage, arguments, status, msg):
     def ensure_results(filename, expected):
         assert os.path.exists(filename)
-        with open(filename, 'r') as fd:
+        with open(filename, "r") as fd:
             lines = fd.readlines()
             have = False
             for line in lines:
@@ -108,9 +107,9 @@ def test_test_external(mock_packages, install_mockery, mock_test_stage,
                     break
             assert have
 
-    name = 'trivial-smoke-test'
+    name = "trivial-smoke-test"
     spec = spack.spec.Spec(name).concretized()
-    spec.external_path = '/path/to/external/{0}'.format(name)
+    spec.external_path = "/path/to/external/{0}".format(name)
 
     test_suite = spack.install_test.TestSuite([spec])
     test_suite(**arguments)
@@ -127,8 +126,8 @@ def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
         with pytest.raises(spack.install_test.TestSuiteSpecError):
             _ = test_suite.current_test_data_dir
 
-    spec = spack.spec.Spec('libelf').concretized()
-    test_suite = spack.install_test.TestSuite([spec], 'test-cache')
+    spec = spack.spec.Spec("libelf").concretized()
+    test_suite = spack.install_test.TestSuite([spec], "test-cache")
 
     # Check no current specs yield failure
     ensure_current_cache_fail(test_suite)
@@ -145,8 +144,8 @@ def test_test_stage_caches(mock_packages, install_mockery, mock_test_stage):
 
 
 def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
-    spec = spack.spec.Spec('libelf').concretized()
-    test_suite = spack.install_test.TestSuite([spec], 'test-dups')
+    spec = spack.spec.Spec("libelf").concretized()
+    test_suite = spack.install_test.TestSuite([spec], "test-dups")
     (test_suite.specs[0]).package.test_suite = test_suite
 
     with pytest.raises(spack.install_test.TestSuiteFailure):
@@ -154,16 +153,16 @@ def test_test_spec_run_once(mock_packages, install_mockery, mock_test_stage):
 
 
 def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
-    spec = spack.spec.Spec('simple-standalone-test').concretized()
+    spec = spack.spec.Spec("simple-standalone-test").concretized()
     test_suite = spack.install_test.TestSuite([spec])
 
     test_suite(verbose=True)
     passed, msg = False, False
-    with open(test_suite.log_file_for_spec(spec), 'r') as fd:
+    with open(test_suite.log_file_for_spec(spec), "r") as fd:
         for line in fd:
-            if 'simple stand-alone test' in line:
+            if "simple stand-alone test" in line:
                 msg = True
-            elif 'PASSED' in line:
+            elif "PASSED" in line:
                 passed = True
 
     assert msg
@@ -171,19 +170,19 @@ def test_test_spec_verbose(mock_packages, install_mockery, mock_test_stage):
 
 
 def test_get_test_suite():
-    assert not spack.install_test.get_test_suite('nothing')
+    assert not spack.install_test.get_test_suite("nothing")
 
 
 def test_get_test_suite_no_name(mock_packages, mock_test_stage):
     with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
-        spack.install_test.get_test_suite('')
+        spack.install_test.get_test_suite("")
 
-    assert 'name is required' in str(exc_info)
+    assert "name is required" in str(exc_info)
 
 
 def test_get_test_suite_too_many(mock_packages, mock_test_stage):
     test_suites = []
-    name = 'duplicate-alias'
+    name = "duplicate-alias"
 
     def add_suite(package):
         spec = spack.spec.Spec(package).concretized()
@@ -192,11 +191,11 @@ def test_get_test_suite_too_many(mock_packages, mock_test_stage):
         spack.install_test.write_test_suite_file(suite)
         test_suites.append(suite)
 
-    add_suite('libdwarf')
+    add_suite("libdwarf")
     suite = spack.install_test.get_test_suite(name)
     assert suite.alias == name
 
-    add_suite('libelf')
+    add_suite("libelf")
     with pytest.raises(spack.install_test.TestSuiteNameError) as exc_info:
         spack.install_test.get_test_suite(name)
-    assert 'many suites named' in str(exc_info)
+    assert "many suites named" in str(exc_info)

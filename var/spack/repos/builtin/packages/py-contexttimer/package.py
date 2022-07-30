@@ -14,8 +14,8 @@ class PyContexttimer(PythonPackage):
     """
 
     homepage = "https://github.com/brouberol/contexttimer"
-    pypi     = "contexttimer/contexttimer-0.3.3.tar.gz"
+    pypi = "contexttimer/contexttimer-0.3.3.tar.gz"
 
-    version('0.3.3', sha256='35a1efd389af3f1ca509f33ff23e17d98b66c8fde5ba2a4eb8a8b7fa456598a5')
+    version("0.3.3", sha256="35a1efd389af3f1ca509f33ff23e17d98b66c8fde5ba2a4eb8a8b7fa456598a5")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

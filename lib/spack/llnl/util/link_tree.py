@@ -16,9 +16,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, touch, traverse_tree
 from llnl.util.symlink import islink, symlink
 
-__all__ = ['LinkTree']
+__all__ = ["LinkTree"]
 
-empty_file_name = '.spack-empty'
+empty_file_name = ".spack-empty"
 
 
 def remove_link(src, dest):
@@ -38,6 +38,7 @@ class MergeConflict:
 
         project(src_a) == project(src_b) == dst
     """
+
     def __init__(self, dst, src_a=None, src_b=None):
         self.dst = dst
         self.src_a = src_a
@@ -51,13 +52,14 @@ class SourceMergeVisitor(object):
     - A list of files to link in dst
     - A list of merge conflicts in dst/
     """
+
     def __init__(self, ignore=None):
         self.ignore = ignore if ignore is not None else lambda f: False
 
         # When mapping <src root> to <dst root>/<projection>, we need
         # to prepend the <projection> bit to the relative path in the
         # destination dir.
-        self.projection = ''
+        self.projection = ""
 
         # When a file blocks another file, the conflict can sometimes
         # be resolved / ignored (e.g. <prefix>/LICENSE or
@@ -88,10 +90,13 @@ class SourceMergeVisitor(object):
         elif proj_rel_path in self.files:
             # Can't create a dir where a file is.
             src_a_root, src_a_relpath = self.files[proj_rel_path]
-            self.fatal_conflicts.append(MergeConflict(
-                dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+            self.fatal_conflicts.append(
+                MergeConflict(
+                    dst=proj_rel_path,
+                    src_a=os.path.join(src_a_root, src_a_relpath),
+                    src_b=os.path.join(root, rel_path),
+                )
+            )
             return False
         elif proj_rel_path in self.directories:
             # No new directory, carry on.
@@ -147,17 +152,23 @@ class SourceMergeVisitor(object):
         elif proj_rel_path in self.directories:
             # Can't create a file where a dir is; fatal error
             src_a_root, src_a_relpath = self.directories[proj_rel_path]
-            self.fatal_conflicts.append(MergeConflict(
-                dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+            self.fatal_conflicts.append(
+                MergeConflict(
+                    dst=proj_rel_path,
+                    src_a=os.path.join(src_a_root, src_a_relpath),
+                    src_b=os.path.join(root, rel_path),
+                )
+            )
         elif proj_rel_path in self.files:
             # In some cases we can resolve file-file conflicts
             src_a_root, src_a_relpath = self.files[proj_rel_path]
-            self.file_conflicts.append(MergeConflict(
-                dst=proj_rel_path,
-                src_a=os.path.join(src_a_root, src_a_relpath),
-                src_b=os.path.join(root, rel_path)))
+            self.file_conflicts.append(
+                MergeConflict(
+                    dst=proj_rel_path,
+                    src_a=os.path.join(src_a_root, src_a_relpath),
+                    src_b=os.path.join(root, rel_path),
+                )
+            )
         else:
             # Otherwise register this file to be linked.
             self.files[proj_rel_path] = (root, rel_path)
@@ -166,24 +177,27 @@ class SourceMergeVisitor(object):
         self.projection = os.path.normpath(projection)
 
         # Todo, is this how to check in general for empty projection?
-        if self.projection == '.':
-            self.projection = ''
+        if self.projection == ".":
+            self.projection = ""
             return
 
         # If there is a projection, we'll also create the directories
         # it consists of, and check whether that's causing conflicts.
-        path = ''
+        path = ""
         for part in self.projection.split(os.sep):
             path = os.path.join(path, part)
             if path not in self.files:
-                self.directories[path] = ('<projection>', path)
+                self.directories[path] = ("<projection>", path)
             else:
                 # Can't create a dir where a file is.
                 src_a_root, src_a_relpath = self.files[path]
-                self.fatal_conflicts.append(MergeConflict(
-                    dst=path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join('<projection>', path)))
+                self.fatal_conflicts.append(
+                    MergeConflict(
+                        dst=path,
+                        src_a=os.path.join(src_a_root, src_a_relpath),
+                        src_b=os.path.join("<projection>", path),
+                    )
+                )
 
 
 class DestinationMergeVisitor(object):
@@ -200,6 +214,7 @@ class DestinationMergeVisitor(object):
     in the target prefix will never be merged with
     directories in the sources directories.
     """
+
     def __init__(self, source_merge_visitor):
         self.src = source_merge_visitor
 
@@ -208,10 +223,11 @@ class DestinationMergeVisitor(object):
         # and don't traverse deeper
         if rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(MergeConflict(
-                rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+            self.src.fatal_conflicts.append(
+                MergeConflict(
+                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
+                )
+            )
             return False
 
         # If destination dir was also a src dir, remove the mkdir
@@ -236,17 +252,19 @@ class DestinationMergeVisitor(object):
         # Always conflict
         if rel_path in self.src.directories:
             src_a_root, src_a_relpath = self.src.directories[rel_path]
-            self.src.fatal_conflicts.append(MergeConflict(
-                rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+            self.src.fatal_conflicts.append(
+                MergeConflict(
+                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
+                )
+            )
 
         if rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(MergeConflict(
-                rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+            self.src.fatal_conflicts.append(
+                MergeConflict(
+                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
+                )
+            )
 
         # Never descend into symlinked target dirs.
         return False
@@ -258,17 +276,19 @@ class DestinationMergeVisitor(object):
         # Can't merge a file if target already exists
         if rel_path in self.src.directories:
             src_a_root, src_a_relpath = self.src.directories[rel_path]
-            self.src.fatal_conflicts.append(MergeConflict(
-                rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+            self.src.fatal_conflicts.append(
+                MergeConflict(
+                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
+                )
+            )
 
         elif rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(MergeConflict(
-                rel_path,
-                os.path.join(src_a_root, src_a_relpath),
-                os.path.join(root, rel_path)))
+            self.src.fatal_conflicts.append(
+                MergeConflict(
+                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
+                )
+            )
 
 
 class LinkTree(object):
@@ -281,30 +301,31 @@ class LinkTree(object):
     symlinked to, to prevent the source directory from ever being
     modified.
     """
+
     def __init__(self, source_root):
         if not os.path.exists(source_root):
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
 
-    def find_conflict(self, dest_root, ignore=None,
-                      ignore_file_conflicts=False):
+    def find_conflict(self, dest_root, ignore=None, ignore_file_conflicts=False):
         """Returns the first file in dest that conflicts with src"""
         ignore = ignore or (lambda x: False)
         conflicts = self.find_dir_conflicts(dest_root, ignore)
 
         if not ignore_file_conflicts:
             conflicts.extend(
-                dst for src, dst
-                in self.get_file_map(dest_root, ignore).items()
-                if os.path.exists(dst))
+                dst
+                for src, dst in self.get_file_map(dest_root, ignore).items()
+                if os.path.exists(dst)
+            )
 
         if conflicts:
             return conflicts[0]
 
     def find_dir_conflicts(self, dest_root, ignore):
         conflicts = []
-        kwargs = {'follow_nonexisting': False, 'ignore': ignore}
+        kwargs = {"follow_nonexisting": False, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
@@ -315,7 +336,7 @@ class LinkTree(object):
 
     def get_file_map(self, dest_root, ignore):
         merge_map = {}
-        kwargs = {'follow_nonexisting': True, 'ignore': ignore}
+        kwargs = {"follow_nonexisting": True, "ignore": ignore}
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if not os.path.isdir(src):
                 merge_map[src] = dest
@@ -337,8 +358,7 @@ class LinkTree(object):
                     touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(
-                self._root, dest_root, ignore=ignore, order='post'):
+        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore, order="post"):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
                     continue
@@ -354,8 +374,7 @@ class LinkTree(object):
                 if os.path.exists(marker):
                     os.remove(marker)
 
-    def merge(self, dest_root, ignore_conflicts=False, ignore=None,
-              link=symlink, relative=False):
+    def merge(self, dest_root, ignore_conflicts=False, ignore=None, link=symlink, relative=False):
         """Link all files in src into dest, creating directories
            if necessary.
 
@@ -377,7 +396,8 @@ class LinkTree(object):
             ignore = lambda x: False
 
         conflict = self.find_conflict(
-            dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts)
+            dest_root, ignore=ignore, ignore_file_conflicts=ignore_conflicts
+        )
         if conflict:
             raise SingleMergeConflictError(conflict)
 
@@ -416,8 +436,7 @@ class MergeConflictError(Exception):
 
 class SingleMergeConflictError(MergeConflictError):
     def __init__(self, path):
-        super(MergeConflictError, self).__init__(
-            "Package merge blocked by file: %s" % path)
+        super(MergeConflictError, self).__init__("Package merge blocked by file: %s" % path)
 
 
 class MergeConflictSummary(MergeConflictError):
@@ -430,5 +449,6 @@ class MergeConflictSummary(MergeConflictError):
         # show the first 3 merge conflicts.
         for conflict in conflicts[:3]:
             msg += "\n    `{0}` and `{1}` both project to `{2}`".format(
-                conflict.src_a, conflict.src_b, conflict.dst)
+                conflict.src_a, conflict.src_b, conflict.dst
+            )
         super(MergeConflictSummary, self).__init__(msg)

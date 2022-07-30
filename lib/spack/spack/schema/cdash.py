@@ -12,15 +12,15 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'cdash': {
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['build-group', 'url', 'project', 'site'],
-        'patternProperties': {
-            r'build-group': {'type': 'string'},
-            r'url': {'type': 'string'},
-            r'project': {'type': 'string'},
-            r'site': {'type': 'string'},
+    "cdash": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["build-group", "url", "project", "site"],
+        "patternProperties": {
+            r"build-group": {"type": "string"},
+            r"url": {"type": "string"},
+            r"project": {"type": "string"},
+            r"site": {"type": "string"},
         },
     },
 }
@@ -28,9 +28,9 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack cdash configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack cdash configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

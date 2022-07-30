@@ -24,18 +24,13 @@ class LinsysV(MakefilePackage):
     depends_on("scalapack", type="link")
 
     def patch(self):
-        math_libs = (
-            self.spec["lapack"].libs
-            + self.spec["blas"].libs
-            + self.spec["scalapack"].libs
-        )
+        math_libs = self.spec["lapack"].libs + self.spec["blas"].libs + self.spec["scalapack"].libs
         makefile = FileFilter("Makefile")
         if self.spec.satisfies("%gcc"):
             makefile.filter(r"^ENV\s+=\sK", "#ENV=K")
             makefile.filter(r"^#ENV\s+=\sGCC", "ENV=GCC")
             makefile.filter(r"^MKL\s+=\s1", "MKL=0")
-            makefile.filter(r"^CC\s+=\smpicc",
-                            "CC={0}".format(self.spec["mpi"].mpicc))
+            makefile.filter(r"^CC\s+=\smpicc", "CC={0}".format(self.spec["mpi"].mpicc))
             makefile.filter(
                 r"^LIBS\s+=\s-lscalapack\s-lblacs\s-llapack\s-lblas",
                 "LIBS={0}".format(math_libs.ld_flags) + " -lm",
@@ -44,15 +39,10 @@ class LinsysV(MakefilePackage):
             makefile.filter(r"^#ENV\s+=\sK", "ENV=K")
             makefile.filter(r"^ENV\s+=\sGCC", "#ENV=GCC")
             makefile.filter(r"^MKL\s+=\s1", "MKL=0")
-            makefile.filter(
-                r"^CC\s+=\smpifccpx",
-                "CC={0}".format(self.spec["mpi"].mpicc)
-            )
+            makefile.filter(r"^CC\s+=\smpifccpx", "CC={0}".format(self.spec["mpi"].mpicc))
             makefile.filter(
                 r"^CFLAGS\s+=\s-Kfast,openmp",
-                "CFLAGS=-Ofast -fstrict-aliasing {0}".format(
-                    self.compiler.openmp_flag
-                ),
+                "CFLAGS=-Ofast -fstrict-aliasing {0}".format(self.compiler.openmp_flag),
             )
             makefile.filter(
                 r"^LIBS\s+=\s-SCALAPACK\s-SSL2BLAMP",
@@ -61,8 +51,7 @@ class LinsysV(MakefilePackage):
         elif self.spec.satisfies("%intel"):
             makefile.filter(r"^ENV\s+=\sGCC", "#ENV=GCC")
             makefile.filter(r"^ENV\s+=\sICC", "ENV=ICC")
-            makefile.filter(r"^C\s+=\smpiicc",
-                            "CC={0}".format(self.spec["mpi"].mpicc))
+            makefile.filter(r"^C\s+=\smpiicc", "CC={0}".format(self.spec["mpi"].mpicc))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

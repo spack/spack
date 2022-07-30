@@ -26,8 +26,8 @@ class RRocr(RPackage):
 
     cran = "ROCR"
 
-    version('1.0-11', sha256='57385a773220a3aaef5b221a68b2d9c2a94794d4f9e9fc3c1eb9521767debb2a')
-    version('1.0-7', sha256='e7ef710f847e441a48b20fdc781dbc1377f5a060a5ee635234053f7a2a435ec9')
+    version("1.0-11", sha256="57385a773220a3aaef5b221a68b2d9c2a94794d4f9e9fc3c1eb9521767debb2a")
+    version("1.0-7", sha256="e7ef710f847e441a48b20fdc781dbc1377f5a060a5ee635234053f7a2a435ec9")
 
-    depends_on('r@3.6:', type=('build', 'run'), when='@1.0-11:')
-    depends_on('r-gplots', type=('build', 'run'))
+    depends_on("r@3.6:", type=("build", "run"), when="@1.0-11:")
+    depends_on("r-gplots", type=("build", "run"))

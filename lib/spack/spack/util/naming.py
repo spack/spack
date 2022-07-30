@@ -15,51 +15,52 @@ from six import StringIO
 import spack.error
 
 __all__ = [
-    'mod_to_class',
-    'spack_module_to_python_module',
-    'valid_module_name',
-    'valid_fully_qualified_module_name',
-    'validate_fully_qualified_module_name',
-    'validate_module_name',
-    'possible_spack_module_names',
-    'simplify_name',
-    'NamespaceTrie']
+    "mod_to_class",
+    "spack_module_to_python_module",
+    "valid_module_name",
+    "valid_fully_qualified_module_name",
+    "validate_fully_qualified_module_name",
+    "validate_module_name",
+    "possible_spack_module_names",
+    "simplify_name",
+    "NamespaceTrie",
+]
 
 # Valid module names can contain '-' but can't start with it.
-_valid_module_re = r'^\w[\w-]*$'
+_valid_module_re = r"^\w[\w-]*$"
 
 # Valid module names can contain '-' but can't start with it.
-_valid_fully_qualified_module_re = r'^(\w[\w-]*)(\.\w[\w-]*)*$'
+_valid_fully_qualified_module_re = r"^(\w[\w-]*)(\.\w[\w-]*)*$"
 
 
 def mod_to_class(mod_name):
     """Convert a name from module style to class name style.  Spack mostly
-       follows `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
+    follows `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
 
-          * Module and package names use lowercase_with_underscores.
-          * Class names use the CapWords convention.
+       * Module and package names use lowercase_with_underscores.
+       * Class names use the CapWords convention.
 
-       Regular source code follows these convetions.  Spack is a bit
-       more liberal with its Package names and Compiler names:
+    Regular source code follows these convetions.  Spack is a bit
+    more liberal with its Package names and Compiler names:
 
-          * They can contain '-' as well as '_', but cannot start with '-'.
-          * They can start with numbers, e.g. "3proxy".
+       * They can contain '-' as well as '_', but cannot start with '-'.
+       * They can start with numbers, e.g. "3proxy".
 
-       This function converts from the module convention to the class
-       convention by removing _ and - and converting surrounding
-       lowercase text to CapWords.  If mod_name starts with a number,
-       the class name returned will be prepended with '_' to make a
-       valid Python identifier.
+    This function converts from the module convention to the class
+    convention by removing _ and - and converting surrounding
+    lowercase text to CapWords.  If mod_name starts with a number,
+    the class name returned will be prepended with '_' to make a
+    valid Python identifier.
     """
     validate_module_name(mod_name)
 
-    class_name = re.sub(r'[-_]+', '-', mod_name)
-    class_name = string.capwords(class_name, '-')
-    class_name = class_name.replace('-', '')
+    class_name = re.sub(r"[-_]+", "-", mod_name)
+    class_name = string.capwords(class_name, "-")
+    class_name = class_name.replace("-", "")
 
     # If a class starts with a number, prefix it with Number_ to make it
     # a valid Python class name.
-    if re.match(r'^[0-9]', class_name):
+    if re.match(r"^[0-9]", class_name):
         class_name = "_%s" % class_name
 
     return class_name
@@ -67,27 +68,27 @@ def mod_to_class(mod_name):
 
 def spack_module_to_python_module(mod_name):
     """Given a Spack module name, returns the name by which it can be
-       imported in Python.
+    imported in Python.
     """
-    if re.match(r'[0-9]', mod_name):
-        mod_name = 'num' + mod_name
+    if re.match(r"[0-9]", mod_name):
+        mod_name = "num" + mod_name
 
-    return mod_name.replace('-', '_')
+    return mod_name.replace("-", "_")
 
 
 def possible_spack_module_names(python_mod_name):
     """Given a Python module name, return a list of all possible spack module
-       names that could correspond to it."""
-    mod_name = re.sub(r'^num(\d)', r'\1', python_mod_name)
+    names that could correspond to it."""
+    mod_name = re.sub(r"^num(\d)", r"\1", python_mod_name)
 
-    parts = re.split(r'(_)', mod_name)
-    options = [['_', '-']] * mod_name.count('_')
+    parts = re.split(r"(_)", mod_name)
+    options = [["_", "-"]] * mod_name.count("_")
 
     results = []
     for subs in itertools.product(*options):
         s = list(parts)
         s[1::2] = subs
-        results.append(''.join(s))
+        results.append("".join(s))
 
     return results
 
@@ -112,7 +113,7 @@ def simplify_name(name):
 
     # Rename Intel downloads
     # e.g. l_daal, l_ipp, l_mkl -> daal, ipp, mkl
-    if name.startswith('l_'):
+    if name.startswith("l_"):
         name = name[2:]
 
     # Convert UPPERCASE to lowercase
@@ -121,21 +122,21 @@ def simplify_name(name):
 
     # Replace '_' and '.' with '-'
     # e.g. backports.ssl_match_hostname -> backports-ssl-match-hostname
-    name = name.replace('_', '-')
-    name = name.replace('.', '-')
+    name = name.replace("_", "-")
+    name = name.replace(".", "-")
 
     # Replace "++" with "pp" and "+" with "-plus"
     # e.g. gtk+   -> gtk-plus
     # e.g. voro++ -> voropp
-    name = name.replace('++', 'pp')
-    name = name.replace('+', '-plus')
+    name = name.replace("++", "pp")
+    name = name.replace("+", "-plus")
 
     # Simplify Lua package names
     # We don't want "lua" to occur multiple times in the name
-    name = re.sub('^(lua)([^-])', r'\1-\2', name)
+    name = re.sub("^(lua)([^-])", r"\1-\2", name)
 
     # Simplify Bio++ package names
-    name = re.sub('^(bpp)([^-])', r'\1-\2', name)
+    name = re.sub("^(bpp)([^-])", r"\1-\2", name)
 
     return name
 
@@ -166,8 +167,7 @@ class InvalidModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad module name."""
 
     def __init__(self, name):
-        super(InvalidModuleNameError, self).__init__(
-            "Invalid module name: " + name)
+        super(InvalidModuleNameError, self).__init__("Invalid module name: " + name)
         self.name = name
 
 
@@ -176,18 +176,17 @@ class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
 
     def __init__(self, name):
         super(InvalidFullyQualifiedModuleNameError, self).__init__(
-            "Invalid fully qualified package name: " + name)
+            "Invalid fully qualified package name: " + name
+        )
         self.name = name
 
 
 class NamespaceTrie(object):
-
     class Element(object):
-
         def __init__(self, value):
             self.value = value
 
-    def __init__(self, separator='.'):
+    def __init__(self, separator="."):
         self._subspaces = {}
         self._value = None
         self._sep = separator
@@ -220,7 +219,7 @@ class NamespaceTrie(object):
 
     def is_prefix(self, namespace):
         """True if the namespace has a value, or if it's the prefix of one that
-           does."""
+        does."""
         first, sep, rest = namespace.partition(self._sep)
         if not first:
             return True
@@ -254,11 +253,11 @@ class NamespaceTrie(object):
         return self.has_value(namespace)
 
     def _str_helper(self, stream, level=0):
-        indent = (level * '    ')
+        indent = level * "    "
         for name in sorted(self._subspaces):
-            stream.write(indent + name + '\n')
+            stream.write(indent + name + "\n")
             if self._value:
-                stream.write(indent + '  ' + repr(self._value.value))
+                stream.write(indent + "  " + repr(self._value.value))
             stream.write(self._subspaces[name]._str_helper(stream, level + 1))
 
     def __str__(self):

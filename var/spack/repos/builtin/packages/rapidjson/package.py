@@ -20,18 +20,18 @@ class Rapidjson(CMakePackage):
     version("1.0.1", sha256="a9003ad5c6384896ed4fd1f4a42af108e88e1b582261766df32d717ba744ee73")
     version("1.0.0", sha256="4189b32b9c285f34b37ffe4c0fd5627c1e59c2444daacffe5a96fdfbf08d139b")
 
-    variant('doc', default=False, description='Build and install documentation')
+    variant("doc", default=False, description="Build and install documentation")
 
-    depends_on('doxygen+graphviz', when='+doc')
+    depends_on("doxygen+graphviz", when="+doc")
 
     # -march=native causes issues on ARM, with older GCC, and with Fujitsu
     # Spack injects the appropriate optimization flags anyway
     # https://github.com/Tencent/rapidjson/issues/1816
-    patch('no_march-1.2.patch', when='@1.2')
-    patch('no_march-1.1.patch', when='@1.1')
-    patch('no_march-1.0.patch', when='@1.0')
+    patch("no_march-1.2.patch", when="@1.2")
+    patch("no_march-1.1.patch", when="@1.1")
+    patch("no_march-1.0.patch", when="@1.0")
 
     def cmake_args(self):
         args = []
-        args.append(self.define_from_variant('RAPIDJSON_BUILD_DOC', 'doc'))
+        args.append(self.define_from_variant("RAPIDJSON_BUILD_DOC", "doc"))
         return args

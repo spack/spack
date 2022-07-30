@@ -11,19 +11,19 @@ class Vifi(Package):
     for identifying viral integration and fusion mRNA reads from NGS data."""
 
     homepage = "https://github.com/namphuon/ViFi"
-    git      = "https://github.com/namphuon/ViFi.git"
+    git = "https://github.com/namphuon/ViFi.git"
 
-    version('master', tag='master')
+    version("master", tag="master")
 
-    depends_on('perl', type='run')
-    depends_on('python', type='run')
-    depends_on('py-pysam', type='run')
-    depends_on('hmmer', type='run')
+    depends_on("perl", type="run")
+    depends_on("python", type="run")
+    depends_on("py-pysam", type="run")
+    depends_on("hmmer", type="run")
 
     def install(self, spec, prefix):
-        install_tree('scripts', prefix.bin)
-        install_tree('lib', prefix.lib)
-        install_tree('test', prefix.test)
-        install('LICENSE', prefix)
-        install('README.md', prefix)
-        install('TUTORIAL.md', prefix)
+        install_tree("scripts", prefix.bin)
+        install_tree("lib", prefix.lib)
+        install_tree("test", prefix.test)
+        install("LICENSE", prefix)
+        install("README.md", prefix)
+        install("TUTORIAL.md", prefix)

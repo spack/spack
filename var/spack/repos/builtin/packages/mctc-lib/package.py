@@ -10,13 +10,13 @@ class MctcLib(MesonPackage):
     """Modular computation toolchain library for quantum chemistry file IO"""
 
     homepage = "https://github.com/grimme-lab/mctc-lib"
-    url      = "https://github.com/grimme-lab/mctc-lib/releases/download/v0.3.0/mctc-lib-0.3.0.tar.xz"
+    url = "https://github.com/grimme-lab/mctc-lib/releases/download/v0.3.0/mctc-lib-0.3.0.tar.xz"
     git = "https://github.com/grimme-lab/mctc-lib"
 
     maintainers = ["awvwgk"]
 
     version("main", branch="main")
-    version('0.3.0', '81f3edbf322e6e28e621730a796278498b84af0f221f785c537a315312059bf0')
+    version("0.3.0", "81f3edbf322e6e28e621730a796278498b84af0f221f785c537a315312059bf0")
 
     variant("json", default=False, description="Enable support for JSON")
 

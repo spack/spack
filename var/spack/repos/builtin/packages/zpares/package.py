@@ -8,46 +8,46 @@ from spack.package import *
 
 class Zpares(MakefilePackage):
     """z-Pares is designed to compute a few eigenvalues
-       and eigenvectors of sparse matrices."""
+    and eigenvectors of sparse matrices."""
 
     homepage = "https://zpares.cs.tsukuba.ac.jp/"
-    url      = "http://zpares.cs.tsukuba.ac.jp/download/zpares_0.9.6a.tar.gz"
+    url = "http://zpares.cs.tsukuba.ac.jp/download/zpares_0.9.6a.tar.gz"
 
-    version('0.9.6a', sha256='3c34257d249451b0b984abc985e296ebb73ae5331025f1b8ea08d50301c7cf9a')
+    version("0.9.6a", sha256="3c34257d249451b0b984abc985e296ebb73ae5331025f1b8ea08d50301c7cf9a")
 
-    variant('mpi', default=False, description='Activates MPI support')
-    variant('mumps', default=False, description='Activates MUMPS support')
+    variant("mpi", default=False, description="Activates MPI support")
+    variant("mumps", default=False, description="Activates MUMPS support")
 
-    depends_on('mumps+mpi', when='+mumps+mpi')
-    depends_on('mumps~mpi', when='+mumps~mpi')
-    depends_on('lapack')
-    depends_on('blas')
-    depends_on('mpi', when='+mpi')
+    depends_on("mumps+mpi", when="+mumps+mpi")
+    depends_on("mumps~mpi", when="+mumps~mpi")
+    depends_on("lapack")
+    depends_on("blas")
+    depends_on("mpi", when="+mpi")
 
     def edit(self, spec, prefix):
-        copy(join_path('Makefile.inc', 'make.inc.gfortran.seq'), 'make.inc')
+        copy(join_path("Makefile.inc", "make.inc.gfortran.seq"), "make.inc")
 
     @property
     def build_targets(self):
         targets = []
 
-        if '+mpi' in self.spec:
-            targets.append('USE_MPI=1')
-            targets.append('FC={0}'.format(self.spec['mpi'].mpifc))
+        if "+mpi" in self.spec:
+            targets.append("USE_MPI=1")
+            targets.append("FC={0}".format(self.spec["mpi"].mpifc))
         else:
-            targets.append('USE_MPI=0')
-            targets.append('FC={0}'.format(self.compiler.fc))
+            targets.append("USE_MPI=0")
+            targets.append("FC={0}".format(self.compiler.fc))
 
-        if '+mumps' in self.spec:
-            targets.append('USE_MUMPS=1')
-            targets.append('FFLAG={0}'.format(self.compiler.openmp_flag))
-            targets.append('LFFLAG={0}'.format(self.compiler.openmp_flag))
-            targets.append('MUMPS_DIR={0}'.format(self.spec['mumps'].prefix))
+        if "+mumps" in self.spec:
+            targets.append("USE_MUMPS=1")
+            targets.append("FFLAG={0}".format(self.compiler.openmp_flag))
+            targets.append("LFFLAG={0}".format(self.compiler.openmp_flag))
+            targets.append("MUMPS_DIR={0}".format(self.spec["mumps"].prefix))
         else:
-            targets.append('USE_MUMPS=0')
+            targets.append("USE_MUMPS=0")
 
-        targets.append('BLAS={0}'.format(self.spec['blas'].libs.link_flags))
-        targets.append('LAPACK={0}'.format(self.spec['lapack'].libs.link_flags))
+        targets.append("BLAS={0}".format(self.spec["blas"].libs.link_flags))
+        targets.append("LAPACK={0}".format(self.spec["lapack"].libs.link_flags))
 
         return targets
 
@@ -55,5 +55,5 @@ class Zpares(MakefilePackage):
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
 
-        install(join_path('lib', '*.a'),  prefix.lib)
-        install(join_path('include', '*.mod'),  prefix.include)
+        install(join_path("lib", "*.a"), prefix.lib)
+        install(join_path("include", "*.mod"), prefix.include)

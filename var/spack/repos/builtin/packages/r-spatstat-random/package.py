@@ -23,11 +23,11 @@ class RSpatstatRandom(RPackage):
     mosaics). Excludes random generation on a linear network, which is covered
     by the separate package 'spatstat.linnet'."""
 
-    cran     = "spatstat.random"
+    cran = "spatstat.random"
 
-    version('2.2-0', sha256='45f0bbdb9dbd53b6c4151c3cdd098451cf787729717ccbb063cd1f33910e604d')
+    version("2.2-0", sha256="45f0bbdb9dbd53b6c4151c3cdd098451cf787729717ccbb063cd1f33910e604d")
 
-    depends_on('r@3.5.0:', type=('build', 'run'))
-    depends_on('r-spatstat-data@2.1-0:', type=('build', 'run'))
-    depends_on('r-spatstat-geom@2.4-0:', type=('build', 'run'))
-    depends_on('r-spatstat-utils@2.2-0:', type=('build', 'run'))
+    depends_on("r@3.5.0:", type=("build", "run"))
+    depends_on("r-spatstat-data@2.1-0:", type=("build", "run"))
+    depends_on("r-spatstat-geom@2.4-0:", type=("build", "run"))
+    depends_on("r-spatstat-utils@2.2-0:", type=("build", "run"))

@@ -27,4 +27,4 @@ class RAcepack(RPackage):
 
     cran = "acepack"
 
-    version('1.4.1', sha256='82750507926f02a696f6cc03693e8d4a5ee7e92500c8c15a16a9c12addcd28b9')
+    version("1.4.1", sha256="82750507926f02a696f6cc03693e8d4a5ee7e92500c8c15a16a9c12addcd28b9")

@@ -16,5 +16,5 @@ class RFracdiff(RPackage):
 
     cran = "fracdiff"
 
-    version('1.5-1', sha256='b8103b32a4ca3a59dda1624c07da08ecd144c7a91a747d1f4663e99421950eb6')
-    version('1.4-2', sha256='983781cedc2b4e3ba9fa020213957d5133ae9cd6710bc61d6225728e2f6e850e')
+    version("1.5-1", sha256="b8103b32a4ca3a59dda1624c07da08ecd144c7a91a747d1f4663e99421950eb6")
+    version("1.4-2", sha256="983781cedc2b4e3ba9fa020213957d5133ae9cd6710bc61d6225728e2f6e850e")

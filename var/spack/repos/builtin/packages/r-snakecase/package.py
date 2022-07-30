@@ -14,8 +14,8 @@ class RSnakecase(RPackage):
 
     cran = "snakecase"
 
-    version('0.11.0', sha256='998420a58391ac85785e60bcdf6fd6927c82758ad2859a9a73a0e57299e8c1cf')
+    version("0.11.0", sha256="998420a58391ac85785e60bcdf6fd6927c82758ad2859a9a73a0e57299e8c1cf")
 
-    depends_on('r@3.2:', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-stringi', type=('build', 'run'))
+    depends_on("r@3.2:", type=("build", "run"))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-stringi", type=("build", "run"))

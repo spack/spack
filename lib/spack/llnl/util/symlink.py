@@ -11,7 +11,7 @@ from sys import platform as _platform
 
 from llnl.util import lang
 
-is_windows = _platform == 'win32'
+is_windows = _platform == "win32"
 
 if is_windows:
     from win32file import CreateHardLink
@@ -47,7 +47,7 @@ def _win32_junction(path, link):
 
     # os.symlink will fail if link exists, emulate the behavior here
     if exists(link):
-        raise OSError(errno.EEXIST, 'File  exists: %s -> %s' % (link, path))
+        raise OSError(errno.EEXIST, "File  exists: %s -> %s" % (link, path))
 
     if not os.path.isabs(path):
         parent = os.path.join(link, os.pardir)
@@ -61,13 +61,14 @@ def _win32_junction(path, link):
 def _win32_can_symlink():
     tempdir = tempfile.mkdtemp()
 
-    dpath = join(tempdir, 'dpath')
-    fpath = join(tempdir, 'fpath.txt')
+    dpath = join(tempdir, "dpath")
+    fpath = join(tempdir, "fpath.txt")
 
-    dlink = join(tempdir, 'dlink')
-    flink = join(tempdir, 'flink.txt')
+    dlink = join(tempdir, "dlink")
+    flink = join(tempdir, "flink.txt")
 
     import llnl.util.filesystem as fs
+
     fs.touchp(fpath)
 
     try:
@@ -106,7 +107,6 @@ def _win32_is_junction(path):
         FILE_ATTRIBUTE_REPARSE_POINT = 0x400
 
         res = GetFileAttributes(path)
-        return res != INVALID_FILE_ATTRIBUTES and \
-            bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
+        return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
 
     return False

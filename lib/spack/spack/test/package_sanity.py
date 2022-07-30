@@ -52,8 +52,7 @@ def test_packages_are_pickleable():
             failed_to_pickle.append(name)
 
     if failed_to_pickle:
-        tty.msg('The following packages failed to pickle: ' +
-                ', '.join(failed_to_pickle))
+        tty.msg("The following packages failed to pickle: " + ", ".join(failed_to_pickle))
 
         for name in failed_to_pickle:
             pkg_cls = spack.repo.path.get_pkg_class(name)
@@ -78,13 +77,13 @@ def test_packages_are_unparseable():
             failed_to_compile.append(name)
 
     if failed_to_unparse:
-        tty.msg('The following packages failed to unparse: ' +
-                ', '.join(failed_to_unparse))
+        tty.msg("The following packages failed to unparse: " + ", ".join(failed_to_unparse))
         assert False
 
     if failed_to_compile:
-        tty.msg('The following unparsed packages failed to compile: ' +
-                ', '.join(failed_to_compile))
+        tty.msg(
+            "The following unparsed packages failed to compile: " + ", ".join(failed_to_compile)
+        )
         assert False
 
 
@@ -110,7 +109,7 @@ def test_all_versions_are_lowercase():
     """Spack package names must be lowercase, and use `-` instead of `_`."""
     errors = []
     for name in spack.repo.all_package_names():
-        if re.search(r'[_A-Z]', name):
+        if re.search(r"[_A-Z]", name):
             errors.append(name)
 
     assert len(errors) == 0
@@ -118,15 +117,16 @@ def test_all_versions_are_lowercase():
 
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
-    defaults = spack.config.get('packages', scope='defaults')
-    default_providers = defaults['all']['providers']
+    defaults = spack.config.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
     providers = spack.repo.path.provider_index.providers
-    default_providers_filename = \
-        spack.config.config.scopes['defaults'].get_section_filename('packages')
+    default_providers_filename = spack.config.config.scopes["defaults"].get_section_filename(
+        "packages"
+    )
     for provider in providers:
-        assert provider in default_providers, \
-            "all providers must have a default in %s" \
-            % default_providers_filename
+        assert provider in default_providers, (
+            "all providers must have a default in %s" % default_providers_filename
+        )
 
 
 def test_package_version_consistency():
@@ -141,24 +141,22 @@ def test_package_version_consistency():
 
 def test_no_fixme():
     """Packages should not contain any boilerplate such as
-       FIXME or example.com."""
+    FIXME or example.com."""
     errors = []
     fixme_regexes = [
-        r'remove this boilerplate',
-        r'FIXME: Put',
-        r'FIXME: Add',
-        r'example.com',
+        r"remove this boilerplate",
+        r"FIXME: Put",
+        r"FIXME: Add",
+        r"example.com",
     ]
     for name in spack.repo.all_package_names():
         filename = spack.repo.path.filename_for_package_name(name)
-        with open(filename, 'r') as package_file:
+        with open(filename, "r") as package_file:
             for i, line in enumerate(package_file):
-                pattern = next((r for r in fixme_regexes
-                                if re.search(r, line)), None)
+                pattern = next((r for r in fixme_regexes if re.search(r, line)), None)
                 if pattern:
                     errors.append(
-                        "%s:%d: boilerplate needs to be removed: %s" %
-                        (filename, i, line.strip())
+                        "%s:%d: boilerplate needs to be removed: %s" % (filename, i, line.strip())
                     )
             assert [] == errors
 
@@ -194,8 +192,8 @@ def test_all_packages_use_sha256_checksums():
             bad_digest = invalid_sha256_digest(fetcher)
             if bad_digest:
                 errors.append(
-                    "All packages must use sha256 checksums. %s@%s uses %s." %
-                    (name, v, bad_digest)
+                    "All packages must use sha256 checksums. %s@%s uses %s."
+                    % (name, v, bad_digest)
                 )
 
         for _, resources in pkg.resources.items():
@@ -204,7 +202,7 @@ def test_all_packages_use_sha256_checksums():
                 if bad_digest:
                     errors.append(
                         "All packages must use sha256 checksums."
-                        "Resource in %s uses %s." % (name,  bad_digest)
+                        "Resource in %s uses %s." % (name, bad_digest)
                     )
 
     assert [] == errors
@@ -216,22 +214,21 @@ def test_api_for_build_and_run_environment():
     """
     failing = []
     for pkg_cls in spack.repo.path.all_package_classes():
-        add_to_list = (hasattr(pkg_cls, 'setup_environment') or
-                       hasattr(pkg_cls, 'setup_dependent_environment'))
+        add_to_list = hasattr(pkg_cls, "setup_environment") or hasattr(
+            pkg_cls, "setup_dependent_environment"
+        )
         if add_to_list:
             failing.append(pkg_cls)
 
-    msg = ('there are {0} packages using the old API to set build '
-           'and run environment [{1}], for further information see '
-           'https://github.com/spack/spack/pull/11115')
-    assert not failing, msg.format(
-        len(failing), ','.join(x.name for x in failing)
+    msg = (
+        "there are {0} packages using the old API to set build "
+        "and run environment [{1}], for further information see "
+        "https://github.com/spack/spack/pull/11115"
     )
+    assert not failing, msg.format(len(failing), ",".join(x.name for x in failing))
 
 
-@pytest.mark.skipif(
-    not executable.which('git'), reason='requires git to be installed'
-)
+@pytest.mark.skipif(not executable.which("git"), reason="requires git to be installed")
 def test_prs_update_old_api():
     """Ensures that every package modified in a PR doesn't contain
     deprecated calls to any method.
@@ -240,42 +237,36 @@ def test_prs_update_old_api():
     if not ref:
         pytest.skip("No base ref found")
 
-    changed_package_files = [
-        x for x in style.changed_files(base=ref) if style.is_package(x)
-    ]
+    changed_package_files = [x for x in style.changed_files(base=ref) if style.is_package(x)]
     failing = []
     for file in changed_package_files:
-        if 'builtin.mock' not in file:  # don't restrict packages for tests
+        if "builtin.mock" not in file:  # don't restrict packages for tests
             name = os.path.basename(os.path.dirname(file))
             pkg_cls = spack.repo.path.get_pkg_class(name)
             pkg = pkg_cls(spack.spec.Spec(name))
 
-            failed = (hasattr(pkg, 'setup_environment') or
-                      hasattr(pkg, 'setup_dependent_environment'))
+            failed = hasattr(pkg, "setup_environment") or hasattr(
+                pkg, "setup_dependent_environment"
+            )
             if failed:
                 failing.append(name)
 
-    msg = ('there are {0} packages using the old API to set build '
-           'and run environment [{1}], for further information see '
-           'https://github.com/spack/spack/pull/11115')
-    assert not failing, msg.format(
-        len(failing), ','.join(failing)
+    msg = (
+        "there are {0} packages using the old API to set build "
+        "and run environment [{1}], for further information see "
+        "https://github.com/spack/spack/pull/11115"
     )
+    assert not failing, msg.format(len(failing), ",".join(failing))
 
 
 def test_all_dependencies_exist():
     """Make sure no packages have nonexisting dependencies."""
     missing = {}
     pkgs = [pkg for pkg in spack.repo.path.all_package_names()]
-    spack.package_base.possible_dependencies(
-        *pkgs, transitive=True, missing=missing)
+    spack.package_base.possible_dependencies(*pkgs, transitive=True, missing=missing)
 
-    lines = [
-        "%s: [%s]" % (name, ", ".join(deps)) for name, deps in missing.items()
-    ]
-    assert not missing, "These packages have missing dependencies:\n" + (
-        "\n".join(lines)
-    )
+    lines = ["%s: [%s]" % (name, ", ".join(deps)) for name, deps in missing.items()]
+    assert not missing, "These packages have missing dependencies:\n" + ("\n".join(lines))
 
 
 def test_variant_defaults_are_parsable_from_cli():
@@ -288,7 +279,8 @@ def test_variant_defaults_are_parsable_from_cli():
                 # Permitting a default that is an instance on 'int' permits
                 # to have foo=false or foo=0. Other falsish values are
                 # not allowed, since they can't be parsed from cli ('foo=')
-                isinstance(variant.default, int) or variant.default
+                isinstance(variant.default, int)
+                or variant.default
             )
             if not default_is_parsable:
                 failing.append((pkg_cls.name, variant_name))

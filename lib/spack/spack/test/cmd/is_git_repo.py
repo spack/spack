@@ -17,7 +17,7 @@ from spack.util.executable import which
 from spack.version import ver
 
 git = which("git")
-git_required_version = '2.17.0'
+git_required_version = "2.17.0"
 
 
 def check_git_version():
@@ -35,8 +35,7 @@ def check_git_version():
 
 
 pytestmark = pytest.mark.skipif(
-    not git or not check_git_version(),
-    reason="we need git to test if we are in a git repo"
+    not git or not check_git_version(), reason="we need git to test if we are in a git repo"
 )
 
 
@@ -49,7 +48,7 @@ def git_tmp_worktree(tmpdir):
     # follow up fixes. 27021
     # Path length is occasionally too long on Windows
     # the following reduces the path length to acceptable levels
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         long_pth = str(tmpdir).split(os.path.sep)
         tmp_worktree = os.path.sep.join(long_pth[:-1])
     else:

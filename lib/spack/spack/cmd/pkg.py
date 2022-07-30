@@ -22,60 +22,61 @@ level = "long"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='pkg_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="pkg_command")
 
-    add_parser = sp.add_parser('add', help=pkg_add.__doc__)
-    arguments.add_common_arguments(add_parser, ['packages'])
+    add_parser = sp.add_parser("add", help=pkg_add.__doc__)
+    arguments.add_common_arguments(add_parser, ["packages"])
 
-    list_parser = sp.add_parser('list', help=pkg_list.__doc__)
-    list_parser.add_argument('rev', default='HEAD', nargs='?',
-                             help="revision to list packages for")
+    list_parser = sp.add_parser("list", help=pkg_list.__doc__)
+    list_parser.add_argument(
+        "rev", default="HEAD", nargs="?", help="revision to list packages for"
+    )
 
-    diff_parser = sp.add_parser('diff', help=pkg_diff.__doc__)
+    diff_parser = sp.add_parser("diff", help=pkg_diff.__doc__)
     diff_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev1", nargs="?", default="HEAD^", help="revision to compare against"
+    )
     diff_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
+    )
 
-    add_parser = sp.add_parser('added', help=pkg_added.__doc__)
+    add_parser = sp.add_parser("added", help=pkg_added.__doc__)
+    add_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
     add_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
-    add_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
+    )
 
-    add_parser = sp.add_parser('changed', help=pkg_changed.__doc__)
+    add_parser = sp.add_parser("changed", help=pkg_changed.__doc__)
+    add_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
     add_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
+        "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
+    )
     add_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
-    add_parser.add_argument(
-        '-t', '--type', action='store', default='C',
-        help="Types of changes to show (A: added, R: removed, "
-        "C: changed); default is 'C'")
+        "-t",
+        "--type",
+        action="store",
+        default="C",
+        help="Types of changes to show (A: added, R: removed, " "C: changed); default is 'C'",
+    )
 
-    rm_parser = sp.add_parser('removed', help=pkg_removed.__doc__)
+    rm_parser = sp.add_parser("removed", help=pkg_removed.__doc__)
+    rm_parser.add_argument("rev1", nargs="?", default="HEAD^", help="revision to compare against")
     rm_parser.add_argument(
-        'rev1', nargs='?', default='HEAD^',
-        help="revision to compare against")
-    rm_parser.add_argument(
-        'rev2', nargs='?', default='HEAD',
-        help="revision to compare to rev1 (default is HEAD)")
+        "rev2", nargs="?", default="HEAD", help="revision to compare to rev1 (default is HEAD)"
+    )
 
-    source_parser = sp.add_parser('source', help=pkg_source.__doc__)
+    source_parser = sp.add_parser("source", help=pkg_source.__doc__)
     source_parser.add_argument(
-        '-c', '--canonical', action='store_true', default=False,
-        help="dump canonical source as used by package hash.")
-    arguments.add_common_arguments(source_parser, ['spec'])
+        "-c",
+        "--canonical",
+        action="store_true",
+        default=False,
+        help="dump canonical source as used by package hash.",
+    )
+    arguments.add_common_arguments(source_parser, ["spec"])
 
-    hash_parser = sp.add_parser('hash', help=pkg_hash.__doc__)
-    arguments.add_common_arguments(hash_parser, ['spec'])
+    hash_parser = sp.add_parser("hash", help=pkg_hash.__doc__)
+    arguments.add_common_arguments(hash_parser, ["spec"])
 
 
 def pkg_add(args):
@@ -161,13 +162,13 @@ def pkg(parser, args):
         tty.die("This spack is not a git clone. Can't use 'spack pkg'")
 
     action = {
-        'add': pkg_add,
-        'diff': pkg_diff,
-        'list': pkg_list,
-        'removed': pkg_removed,
-        'added': pkg_added,
-        'changed': pkg_changed,
-        'source': pkg_source,
-        'hash': pkg_hash,
+        "add": pkg_add,
+        "diff": pkg_diff,
+        "list": pkg_list,
+        "removed": pkg_removed,
+        "added": pkg_added,
+        "changed": pkg_changed,
+        "source": pkg_source,
+        "hash": pkg_hash,
     }
     action[args.pkg_command](args)

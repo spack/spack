@@ -27,17 +27,18 @@ class QMakePackage(PackageBase):
     They all have sensible defaults and for many packages the only thing
     necessary will be to override :py:meth:`~.QMakePackage.qmake_args`.
     """
+
     #: Phases of a qmake package
-    phases = ['qmake', 'build', 'install']
+    phases = ["qmake", "build", "install"]
 
     #: This attribute is used in UI queries that need to know the build
     #: system base class
-    build_system_class = 'QMakePackage'
+    build_system_class = "QMakePackage"
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['check']
+    build_time_test_callbacks = ["check"]
 
-    depends_on('qt', type='build')
+    depends_on("qt", type="build")
 
     @property
     def build_directory(self):
@@ -66,18 +67,17 @@ class QMakePackage(PackageBase):
         """Make the install targets"""
 
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make('install')
+            inspect.getmodule(self).make("install")
 
     # Tests
 
     def check(self):
-        """Searches the Makefile for a ``check:`` target and runs it if found.
-        """
+        """Searches the Makefile for a ``check:`` target and runs it if found."""
 
         with working_dir(self.build_directory):
-            self._if_make_target_execute('check')
+            self._if_make_target_execute("check")
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

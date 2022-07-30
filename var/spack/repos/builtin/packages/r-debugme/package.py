@@ -14,6 +14,6 @@ class RDebugme(RPackage):
 
     cran = "debugme"
 
-    version('1.1.0', sha256='4dae0e2450d6689a6eab560e36f8a7c63853abbab64994028220b8fd4b793ab1')
+    version("1.1.0", sha256="4dae0e2450d6689a6eab560e36f8a7c63853abbab64994028220b8fd4b793ab1")
 
-    depends_on('r-crayon', type=('build', 'run'))
+    depends_on("r-crayon", type=("build", "run"))

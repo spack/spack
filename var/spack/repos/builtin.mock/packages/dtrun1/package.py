@@ -12,7 +12,7 @@ class Dtrun1(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dtrun1-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('dtlink5')
-    depends_on('dtrun3', type='run')
+    depends_on("dtlink5")
+    depends_on("dtrun3", type="run")

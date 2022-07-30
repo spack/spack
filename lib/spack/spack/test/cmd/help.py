@@ -11,7 +11,7 @@ from spack.main import SpackCommand
 @pytest.mark.xfail
 def test_reuse_after_help():
     """Test `spack help` can be called twice with the same SpackCommand."""
-    help_cmd = SpackCommand('help')
+    help_cmd = SpackCommand("help")
     help_cmd()
 
     # This second invocation will somehow fail because the parser no
@@ -30,27 +30,27 @@ def test_reuse_after_help():
 
 def test_help():
     """Sanity check the help command to make sure it works."""
-    help_cmd = SpackCommand('help')
+    help_cmd = SpackCommand("help")
     out = help_cmd()
-    assert 'These are common spack commands:' in out
+    assert "These are common spack commands:" in out
 
 
 def test_help_all():
     """Test the spack help --all flag"""
-    help_cmd = SpackCommand('help')
-    out = help_cmd('--all')
-    assert 'Complete list of spack commands:' in out
+    help_cmd = SpackCommand("help")
+    out = help_cmd("--all")
+    assert "Complete list of spack commands:" in out
 
 
 def test_help_spec():
     """Test the spack help --spec flag"""
-    help_cmd = SpackCommand('help')
-    out = help_cmd('--spec')
-    assert 'spec expression syntax:' in out
+    help_cmd = SpackCommand("help")
+    out = help_cmd("--spec")
+    assert "spec expression syntax:" in out
 
 
 def test_help_subcommand():
     """Test the spack help subcommand argument"""
-    help_cmd = SpackCommand('help')
-    out = help_cmd('help')
-    assert 'get help on spack and its commands' in out
+    help_cmd = SpackCommand("help")
+    out = help_cmd("help")
+    assert "get help on spack and its commands" in out

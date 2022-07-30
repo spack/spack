@@ -13,20 +13,20 @@ class Vite(CMakePackage):
     """
 
     homepage = "https://solverstack.gitlabpages.inria.fr/vite/"
-    maintainers = ['trahay']
+    maintainers = ["trahay"]
     git = "https://gitlab.inria.fr/solverstack/vite.git"
 
-    version('master',  branch='master')
+    version("master", branch="master")
 
-    depends_on('cmake@3.1:', type='build')
-    depends_on('qt+opengl')
-    depends_on('glm')
-    depends_on('glew')
-    depends_on('otf2', when='+otf2')
-    depends_on('tau', when='+tau')
+    depends_on("cmake@3.1:", type="build")
+    depends_on("qt+opengl")
+    depends_on("glm")
+    depends_on("glew")
+    depends_on("otf2", when="+otf2")
+    depends_on("tau", when="+tau")
 
-    variant('tau', default=False, description='Support for TAU trace format')
-    variant('otf2', default=False, description='Support for OTF2 trace format')
+    variant("tau", default=False, description="Support for TAU trace format")
+    variant("otf2", default=False, description="Support for OTF2 trace format")
 
     def cmake_args(self):
         define = CMakePackage.define

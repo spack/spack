@@ -11,21 +11,22 @@ class PrintingPackage(Package):
 
     We use this to test whether that output is properly logged.
     """
-    homepage = "http://www.example.com/printing_package"
-    url      = "http://www.unit-test-should-replace-this-url/trivial_install-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    homepage = "http://www.example.com/printing_package"
+    url = "http://www.unit-test-should-replace-this-url/trivial_install-1.0.tar.gz"
+
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         print("BEFORE INSTALL")
 
-        configure('--prefix=%s' % prefix)
+        configure("--prefix=%s" % prefix)
         make()
-        make('install')
+        make("install")
 
         print("AFTER INSTALL")
 
     def test(self):
         print("BEFORE TEST")
-        self.run_test('true')  # run /bin/true
+        self.run_test("true")  # run /bin/true
         print("AFTER TEST")

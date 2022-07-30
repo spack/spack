@@ -8,6 +8,7 @@ from spack.package import *
 
 class InstalledDepsB(Package):
     """Used by test_installed_deps test case."""
+
     #     a
     #    / \
     #   b   c   b --> d build/link
@@ -16,7 +17,7 @@ class InstalledDepsB(Package):
     #   d   e   c --> e build/link
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/b-1.0.tar.gz"
+    url = "http://www.example.com/b-1.0.tar.gz"
 
     version("1", "0123456789abcdef0123456789abcdef")
     version("2", "abcdef0123456789abcdef0123456789")

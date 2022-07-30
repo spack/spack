@@ -36,15 +36,15 @@ properties = union_dicts(
     spack.schema.modules.properties,
     spack.schema.packages.properties,
     spack.schema.repos.properties,
-    spack.schema.upstreams.properties
+    spack.schema.upstreams.properties,
 )
 
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack merged configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack merged configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

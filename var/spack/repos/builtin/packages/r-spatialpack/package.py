@@ -19,10 +19,10 @@ class RSpatialpack(RPackage):
 
     cran = "SpatialPack"
 
-    version('0.3-8196', sha256='9027e1656db97b721a12f5eda46532c6a99b4a079299b8d12fb57d445b237b4d')
-    version('0.3-8', sha256='a0e54b5dee3cd30a634e2d30380fe163942b672073fd909be888803332ed5151')
-    version('0.3',   sha256='4c80fc1c77bc97fc678e6e201ecf7f0f89dcf3417b3b497a28a3639e9b30bd8a')
+    version("0.3-8196", sha256="9027e1656db97b721a12f5eda46532c6a99b4a079299b8d12fb57d445b237b4d")
+    version("0.3-8", sha256="a0e54b5dee3cd30a634e2d30380fe163942b672073fd909be888803332ed5151")
+    version("0.3", sha256="4c80fc1c77bc97fc678e6e201ecf7f0f89dcf3417b3b497a28a3639e9b30bd8a")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r@3.5.0:', type=('build', 'run'), when='@0.3-8196:')
-    depends_on('r-fastmatrix', type=('build', 'run'), when='@0.3-8196:')
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@0.3-8196:")
+    depends_on("r-fastmatrix", type=("build", "run"), when="@0.3-8196:")

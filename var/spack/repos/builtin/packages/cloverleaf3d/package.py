@@ -21,9 +21,7 @@ class Cloverleaf3d(MakefilePackage):
 
     maintainers = ["s1913388"]
 
-    version(
-        "1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef"
-    )
+    version("1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef")
 
     variant("opencl", default=False, description="Enable OpenCL Support")
 

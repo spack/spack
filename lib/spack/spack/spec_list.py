@@ -12,8 +12,7 @@ from spack.spec import Spec
 
 
 class SpecList(object):
-
-    def __init__(self, name='specs', yaml_list=None, reference=None):
+    def __init__(self, name="specs", yaml_list=None, reference=None):
         # Normalize input arguments
         yaml_list = yaml_list or []
         reference = reference or {}
@@ -22,11 +21,11 @@ class SpecList(object):
         self._reference = reference  # TODO: Do we need defensive copy here?
 
         # Validate yaml_list before assigning
-        if not all(isinstance(s, string_types) or isinstance(s, (list, dict))
-                   for s in yaml_list):
+        if not all(isinstance(s, string_types) or isinstance(s, (list, dict)) for s in yaml_list):
             raise ValueError(
                 "yaml_list can contain only valid YAML types!  Found:\n  %s"
-                % [type(s) for s in yaml_list])
+                % [type(s) for s in yaml_list]
+            )
         self.yaml_list = yaml_list[:]
 
         # Expansions can be expensive to compute and difficult to keep updated
@@ -82,13 +81,15 @@ class SpecList(object):
 
     def remove(self, spec):
         # Get spec to remove from list
-        remove = [s for s in self.yaml_list
-                  if (isinstance(s, string_types) and not s.startswith('$'))
-                  and Spec(s) == Spec(spec)]
+        remove = [
+            s
+            for s in self.yaml_list
+            if (isinstance(s, string_types) and not s.startswith("$")) and Spec(s) == Spec(spec)
+        ]
         if not remove:
-            msg = 'Cannot remove %s from SpecList %s\n' % (spec, self.name)
-            msg += 'Either %s is not in %s or %s is ' % (spec, self.name, spec)
-            msg += 'expanded from a matrix and cannot be removed directly.'
+            msg = "Cannot remove %s from SpecList %s\n" % (spec, self.name)
+            msg += "Either %s is not in %s or %s is " % (spec, self.name, spec)
+            msg += "expanded from a matrix and cannot be removed directly."
             raise SpecListError(msg)
         assert len(remove) == 1
         self.yaml_list.remove(remove[0])
@@ -114,19 +115,19 @@ class SpecList(object):
         self._specs = None
 
     def _parse_reference(self, name):
-        sigil = ''
+        sigil = ""
         name = name[1:]
 
         # Parse specs as constraints
-        if name.startswith('^') or name.startswith('%'):
+        if name.startswith("^") or name.startswith("%"):
             sigil = name[0]
             name = name[1:]
 
         # Make sure the reference is valid
         if name not in self._reference:
-            msg = 'SpecList %s refers to ' % self.name
-            msg += 'named list %s ' % name
-            msg += 'which does not appear in its reference dict'
+            msg = "SpecList %s refers to " % self.name
+            msg += "named list %s " % name
+            msg += "which does not appear in its reference dict"
             raise UndefinedReferenceError(msg)
 
         return (name, sigil)
@@ -137,12 +138,11 @@ class SpecList(object):
 
             for item in yaml:
                 # if it's a reference, expand it
-                if isinstance(item, string_types) and item.startswith('$'):
+                if isinstance(item, string_types) and item.startswith("$"):
                     # replace the reference and apply the sigil if needed
                     name, sigil = self._parse_reference(item)
                     referent = [
-                        _sigilify(item, sigil)
-                        for item in self._reference[name].specs_as_yaml_list
+                        _sigilify(item, sigil) for item in self._reference[name].specs_as_yaml_list
                     ]
                     ret.extend(referent)
                 else:
@@ -151,8 +151,7 @@ class SpecList(object):
             return ret
         elif isinstance(yaml, dict):
             # There can't be expansions in dicts
-            return dict((name, self._expand_references(val))
-                        for (name, val) in yaml.items())
+            return dict((name, self._expand_references(val)) for (name, val) in yaml.items())
         else:
             # Strings are just returned
             return yaml
@@ -167,27 +166,28 @@ class SpecList(object):
 def _expand_matrix_constraints(matrix_config):
     # recurse so we can handle nested matrices
     expanded_rows = []
-    for row in matrix_config['matrix']:
+    for row in matrix_config["matrix"]:
         new_row = []
         for r in row:
             if isinstance(r, dict):
                 # Flatten the nested matrix into a single row of constraints
                 new_row.extend(
-                    [[' '.join([str(c) for c in expanded_constraint_list])]
-                     for expanded_constraint_list in _expand_matrix_constraints(r)]
+                    [
+                        [" ".join([str(c) for c in expanded_constraint_list])]
+                        for expanded_constraint_list in _expand_matrix_constraints(r)
+                    ]
                 )
             else:
                 new_row.append([r])
         expanded_rows.append(new_row)
 
-    excludes = matrix_config.get('exclude', [])  # only compute once
-    sigil = matrix_config.get('sigil', '')
+    excludes = matrix_config.get("exclude", [])  # only compute once
+    sigil = matrix_config.get("sigil", "")
 
     results = []
     for combo in itertools.product(*expanded_rows):
         # Construct a combined spec to test against excludes
-        flat_combo = [constraint for constraint_list in combo
-                      for constraint in constraint_list]
+        flat_combo = [constraint for constraint_list in combo for constraint in constraint_list]
         flat_combo = [Spec(x) for x in flat_combo]
 
         test_spec = flat_combo[0].copy()
@@ -219,7 +219,7 @@ def _expand_matrix_constraints(matrix_config):
 def _sigilify(item, sigil):
     if isinstance(item, dict):
         if sigil:
-            item['sigil'] = sigil
+            item["sigil"] = sigil
         return item
     else:
         return sigil + item

@@ -37,21 +37,21 @@ class Platform(object):
     """
 
     # Subclass sets number. Controls detection order
-    priority = None   # type: int
+    priority = None  # type: int
 
     #: binary formats used on this platform; used by relocation logic
-    binary_formats = ['elf']
+    binary_formats = ["elf"]
 
-    front_end = None   # type: str
-    back_end = None   # type: str
-    default = None   # type: str # The default back end target.
+    front_end = None  # type: str
+    back_end = None  # type: str
+    default = None  # type: str # The default back end target.
 
-    front_os = None   # type: str
-    back_os = None   # type: str
-    default_os = None   # type: str
+    front_os = None  # type: str
+    back_os = None  # type: str
+    default_os = None  # type: str
 
-    reserved_targets = ['default_target', 'frontend', 'fe', 'backend', 'be']
-    reserved_oss = ['default_os', 'frontend', 'fe', 'backend', 'be']
+    reserved_targets = ["default_target", "frontend", "fe", "backend", "be"]
+    reserved_oss = ["default_os", "frontend", "fe", "backend", "be"]
 
     def __init__(self, name):
         self.targets = {}
@@ -76,11 +76,11 @@ class Platform(object):
         """
         # TODO: Check if we can avoid using strings here
         name = str(name)
-        if name == 'default_target':
+        if name == "default_target":
             name = self.default
-        elif name == 'frontend' or name == 'fe':
+        elif name == "frontend" or name == "fe":
             name = self.front_end
-        elif name == 'backend' or name == 'be':
+        elif name == "backend" or name == "be":
             name = self.back_end
 
         return self.targets.get(name, None)
@@ -95,11 +95,11 @@ class Platform(object):
         self.operating_sys[name] = os_class
 
     def operating_system(self, name):
-        if name == 'default_os':
+        if name == "default_os":
             name = self.default_os
-        if name == 'frontend' or name == "fe":
+        if name == "frontend" or name == "fe":
             name = self.front_os
-        if name == 'backend' or name == 'be':
+        if name == "backend" or name == "be":
             name = self.back_os
 
         return self.operating_sys.get(name, None)
@@ -137,9 +137,11 @@ class Platform(object):
         def targets():
             for t in sorted(self.targets.values()):
                 yield t._cmp_iter
+
         yield targets
 
         def oses():
             for o in sorted(self.operating_sys.values()):
                 yield o._cmp_iter
+
         yield oses

@@ -13,8 +13,8 @@ class Imath(CMakePackage):
     16-bit floating-point type."""
 
     homepage = "https://github.com/AcademySoftwareFoundation/Imath"
-    url      = "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.1.5.tar.gz"
+    url = "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.1.5.tar.gz"
 
-    version('3.1.5', sha256='1e9c7c94797cf7b7e61908aed1f80a331088cc7d8873318f70376e4aed5f25fb')
+    version("3.1.5", sha256="1e9c7c94797cf7b7e61908aed1f80a331088cc7d8873318f70376e4aed5f25fb")
 
-    depends_on('cmake@3.12:', type='build')
+    depends_on("cmake@3.12:", type="build")

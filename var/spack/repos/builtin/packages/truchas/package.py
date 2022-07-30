@@ -18,13 +18,13 @@ class Truchas(CMakePackage):
     """
 
     homepage = "https://www.truchas.org"
-    url      = "https://gitlab.com/truchas/truchas/-/archive/22.04.1/truchas-22.04.1.tar.bz2"
-    git      = "https://gitlab.com/truchas/truchas.git"
+    url = "https://gitlab.com/truchas/truchas/-/archive/22.04.1/truchas-22.04.1.tar.bz2"
+    git = "https://gitlab.com/truchas/truchas.git"
 
-    maintainers = ['pbrady']
+    maintainers = ["pbrady"]
 
-    version('develop', branch="master")
-    version('22.04.1', sha256="ed2000f27ee5c4bd3024063a374023878c61e8a3c76c37542fffd341d1226dc1")
+    version("develop", branch="master")
+    version("22.04.1", sha256="ed2000f27ee5c4bd3024063a374023878c61e8a3c76c37542fffd341d1226dc1")
 
     # ------------------------------------------------------------ #
     # Variants
@@ -38,72 +38,73 @@ class Truchas(CMakePackage):
     # ------------------------------------------------------------ #
     # Build dependencies
     # ------------------------------------------------------------ #
-    depends_on('cmake@3.16:', type='build')
+    depends_on("cmake@3.16:", type="build")
 
     # ------------------------------------------------------------ #
     # Test suite and restart utils
     # ------------------------------------------------------------ #
-    depends_on('python@3.5:')
-    depends_on('py-numpy@1.12:')
-    depends_on('py-h5py')
+    depends_on("python@3.5:")
+    depends_on("py-numpy@1.12:")
+    depends_on("py-h5py")
 
     # ------------------------------------------------------------ #
     # IO dependencies
     # ------------------------------------------------------------ #
-    depends_on('exodusii@2020-05-12: +mpi')
-    depends_on('scorpio')
-    depends_on('petaca@22.03: +shared')
-    depends_on('petaca@22.03: +shared +std_name', when='+std_name')
+    depends_on("exodusii@2020-05-12: +mpi")
+    depends_on("scorpio")
+    depends_on("petaca@22.03: +shared")
+    depends_on("petaca@22.03: +shared +std_name", when="+std_name")
 
     # ------------------------------------------------------------ #
     # Partitioning
     # ------------------------------------------------------------ #
-    depends_on('chaco')
-    depends_on('metis@5:', when='+metis')
+    depends_on("chaco")
+    depends_on("metis@5:", when="+metis")
 
     # ------------------------------------------------------------ #
     # Radiation
     # ------------------------------------------------------------ #
-    depends_on('chaparral +mpi')
+    depends_on("chaparral +mpi")
 
     # ------------------------------------------------------------ #
     # Solvers
     # ------------------------------------------------------------ #
-    depends_on('hypre@2.20: ~fortran')
+    depends_on("hypre@2.20: ~fortran")
 
     # ------------------------------------------------------------ #
     # Mapping
     # ------------------------------------------------------------ #
-    depends_on('portage@3:', when='+portage')
+    depends_on("portage@3:", when="+portage")
 
     def cmake_args(self):
         # baseline config args
         opts = [
-            self.define_from_variant('USE_METIS', 'metis'),
-            self.define_from_variant('USE_PORTAGE', 'portage'),
-            self.define_from_variant("ENABLE_STD_MOD_PROC_NAME", "std_name")
+            self.define_from_variant("USE_METIS", "metis"),
+            self.define_from_variant("USE_PORTAGE", "portage"),
+            self.define_from_variant("ENABLE_STD_MOD_PROC_NAME", "std_name"),
         ]
 
         spec = self.spec
-        if '+config' in spec:
+        if "+config" in spec:
             root = self.root_cmakelists_dir
 
-            nag = 'nag' in self.compiler.fc
+            nag = "nag" in self.compiler.fc
 
-            if spec.satisfies('platform=linux'):
-                if nag or '%nag' in spec:
+            if spec.satisfies("platform=linux"):
+                if nag or "%nag" in spec:
                     opts.append("-C {}/config/linux-nag.cmake".format(root))
-                elif '%gcc' in spec:
+                elif "%gcc" in spec:
                     opts.append("-C {}/config/linux-gcc.cmake".format(root))
-                elif '%intel' in spec:
+                elif "%intel" in spec:
                     opts.append("-C {}/config/linux-intel.cmake".format(root))
 
-            elif spec.satisfies('platform=darwin'):
-                if nag or '%nag' in spec:
+            elif spec.satisfies("platform=darwin"):
+                if nag or "%nag" in spec:
                     opts.append("-C {}/config/mac-nag.cmake".format(root))
 
-            if self.spec.satisfies('%apple-clang@12:'):
-                opts.append(self.define("CMAKE_C_FLAGS",
-                                        "-Wno-error=implicit-function-declaration"))
+            if self.spec.satisfies("%apple-clang@12:"):
+                opts.append(
+                    self.define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration")
+                )
 
         return opts

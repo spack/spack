@@ -17,8 +17,8 @@ class RFontawesome(RPackage):
 
     cran = "fontawesome"
 
-    version('0.2.2', sha256='572db64d1b3c9be301935e0ca7baec69f3a6e0aa802e23f1f224b3724259df64')
+    version("0.2.2", sha256="572db64d1b3c9be301935e0ca7baec69f3a6e0aa802e23f1f224b3724259df64")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.10:', type=('build', 'run'))
-    depends_on('r-htmltools@0.5.1.1:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-rlang@0.4.10:", type=("build", "run"))
+    depends_on("r-htmltools@0.5.1.1:", type=("build", "run"))
