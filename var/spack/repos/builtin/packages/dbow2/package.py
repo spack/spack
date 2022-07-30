@@ -13,16 +13,16 @@ class Dbow2(CMakePackage):
     representation."""
 
     homepage = "https://github.com/dorian3d/DBoW2"
-    git      = "https://github.com/dorian3d/DBoW2.git"
+    git = "https://github.com/dorian3d/DBoW2.git"
 
-    version('master', branch='master')
-    version('shinsumicco', git='https://github.com/shinsumicco/DBoW2.git', branch='master')
+    version("master", branch="master")
+    version("shinsumicco", git="https://github.com/shinsumicco/DBoW2.git", branch="master")
 
-    depends_on('cmake@3.0:', type='build')
+    depends_on("cmake@3.0:", type="build")
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
-    depends_on('opencv+calib3d+features2d+highgui+imgproc')
-    depends_on('dlib')
-    depends_on('eigen', type='link')
+    depends_on("opencv+calib3d+features2d+highgui+imgproc")
+    depends_on("dlib")
+    depends_on("eigen", type="link")

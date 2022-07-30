@@ -30,8 +30,8 @@ def get_mirror_connection(url, url_type="push"):
 
 
 def _parse_s3_endpoint_url(endpoint_url):
-    if not urllib_parse.urlparse(endpoint_url, scheme='').scheme:
-        endpoint_url = '://'.join(('https', endpoint_url))
+    if not urllib_parse.urlparse(endpoint_url, scheme="").scheme:
+        endpoint_url = "://".join(("https", endpoint_url))
 
     return endpoint_url
 
@@ -49,11 +49,11 @@ def get_mirror_s3_connection_info(connection):
         if connection.get("profile"):
             s3_connection["profile_name"] = connection["profile"]
 
-    s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
+    s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
 
-    endpoint_url = os.environ.get('S3_ENDPOINT_URL')
+    endpoint_url = os.environ.get("S3_ENDPOINT_URL")
     if endpoint_url:
-        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
+        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(endpoint_url)
     elif s3_connection_is_dict and connection.get("endpoint_url"):
         s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])
 
@@ -62,10 +62,10 @@ def get_mirror_s3_connection_info(connection):
 
 def create_s3_session(url, connection={}):
     url = url_util.parse(url)
-    if url.scheme != 's3':
+    if url.scheme != "s3":
         raise ValueError(
-            'Can not create S3 session from URL with scheme: {SCHEME}'.format(
-                SCHEME=url.scheme))
+            "Can not create S3 session from URL with scheme: {SCHEME}".format(SCHEME=url.scheme)
+        )
 
     # NOTE(opadron): import boto and friends as late as possible.  We don't
     # want to require boto as a dependency unless the user actually wants to
@@ -83,6 +83,6 @@ def create_s3_session(url, connection={}):
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    client = session.client('s3', **s3_client_args)
+    client = session.client("s3", **s3_client_args)
     client.ClientError = ClientError
     return client

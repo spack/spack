@@ -10,19 +10,19 @@ class Elsd(MakefilePackage):
     """ELSD: Ellipse and Line Segment Detector"""
 
     homepage = "http://ubee.enseeiht.fr/vision/ELSD/"
-    git      = "https://github.com/viorik/ELSD.git"
+    git = "https://github.com/viorik/ELSD.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on("blas")
+    depends_on("lapack")
 
     def edit(self, spec, prefix):
-        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        lapack_blas = spec["lapack"].libs + spec["blas"].libs
 
-        makefile = FileFilter('makefile')
-        makefile.filter('-llapack -lblas', lapack_blas.link_flags)
+        makefile = FileFilter("makefile")
+        makefile.filter("-llapack -lblas", lapack_blas.link_flags)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('elsd', prefix.bin)
+        install("elsd", prefix.bin)
