@@ -20,15 +20,14 @@ if is_windows:
 root = drive + os.sep
 
 #: directory with sample compiler data
-datadir = os.path.join(spack.paths.test_path, 'data',
-                       'compiler_verbose_output')
+datadir = os.path.join(spack.paths.test_path, "data", "compiler_verbose_output")
 
 
 @pytest.fixture(autouse=True)
 def allow_nonexistent_paths(monkeypatch):
     # Allow nonexistent paths to be detected as part of the output
     # for testing purposes.
-    monkeypatch.setattr(os.path, 'isdir', lambda x: True)
+    monkeypatch.setattr(os.path, "isdir", lambda x: True)
 
 
 def check_link_paths(filename, paths):
@@ -51,7 +50,8 @@ def check_link_paths(filename, paths):
 def test_icc16_link_paths():
     prefix = os.path.join(root, "usr", "tce", "packages")
     check_link_paths(
-        'icc-16.0.3.txt', [
+        "icc-16.0.3.txt",
+        [
             os.path.join(
                 prefix,
                 "intel",
@@ -66,35 +66,37 @@ def test_icc16_link_paths():
                 prefix, "gcc", "gcc-4.9.3", "lib64", "gcc", "x86_64-unknown-linux-gnu", "4.9.3"
             ),
             os.path.join(prefix, "gcc", "gcc-4.9.3", "lib64"),
-        ]
+        ],
     )
 
 
 def test_pgi_link_paths():
     check_link_paths(
-        'pgcc-16.3.txt', [
+        "pgcc-16.3.txt",
+        [
             os.path.join(
                 root, "usr", "tce", "packages", "pgi", "pgi-16.3", "linux86-64", "16.3", "lib"
             )
-        ]
+        ],
     )
 
 
 def test_gcc7_link_paths():
-    check_link_paths('gcc-7.3.1.txt', [])
+    check_link_paths("gcc-7.3.1.txt", [])
 
 
 def test_clang4_link_paths():
-    check_link_paths('clang-4.0.1.txt', [])
+    check_link_paths("clang-4.0.1.txt", [])
 
 
 def test_xl_link_paths():
     check_link_paths(
-        'xl-13.1.5.txt', [
+        "xl-13.1.5.txt",
+        [
             os.path.join(root, "opt", "ibm", "xlsmp", "4.1.5", "lib"),
             os.path.join(root, "opt", "ibm", "xlmass", "8.1.5", "lib"),
             os.path.join(root, "opt", "ibm", "xlC", "13.1.5", "lib"),
-        ]
+        ],
     )
 
 
@@ -102,7 +104,8 @@ def test_cce_link_paths():
     gcc = os.path.join(root, "opt", "gcc")
     cray = os.path.join(root, "opt", "cray")
     check_link_paths(
-        'cce-8.6.5.txt', [
+        "cce-8.6.5.txt",
+        [
             os.path.join(gcc, "6.1.0", "snos", "lib64"),
             os.path.join(cray, "dmapp", "default", "lib64"),
             os.path.join(cray, "pe", "mpt", "7.7.0", "gni", "mpich-cray", "8.6", "lib"),
@@ -119,22 +122,16 @@ def test_cce_link_paths():
             os.path.join(cray, "wlm_detect", "1.3.2-6.0.5.0_3.1__g388ccd5.ari", "lib64"),
             os.path.join(gcc, "6.1.0", "snos", "lib", "gcc", "x86_64-suse-linux", "6.1.0"),
             os.path.join(
-                cray,
-                "pe",
-                "cce",
-                "8.6.5",
-                "binutils",
-                "x86_64",
-                "x86_64-unknown-linux-gnu",
-                "lib"
+                cray, "pe", "cce", "8.6.5", "binutils", "x86_64", "x86_64-unknown-linux-gnu", "lib"
             ),
-        ]
+        ],
     )
 
 
 def test_clang_apple_ld_link_paths():
     check_link_paths(
-        'clang-9.0.0-apple-ld.txt', [
+        "clang-9.0.0-apple-ld.txt",
+        [
             os.path.join(
                 root,
                 "Applications",
@@ -149,7 +146,7 @@ def test_clang_apple_ld_link_paths():
                 "usr",
                 "lib",
             )
-        ]
+        ],
     )
 
 
@@ -170,11 +167,12 @@ def test_nag_mixed_gcc_gnu_ld_link_paths():
     )
 
     check_link_paths(
-        'collect2-6.3.0-gnu-ld.txt', [
+        "collect2-6.3.0-gnu-ld.txt",
+        [
             os.path.join(prefix, "lib", "gcc", "x86_64-pc-linux-gnu", "6.5.0"),
             os.path.join(prefix, "lib64"),
             os.path.join(prefix, "lib"),
-        ]
+        ],
     )
 
 
@@ -195,11 +193,12 @@ def test_nag_link_paths():
     )
 
     check_link_paths(
-        'nag-6.2-gcc-6.5.0.txt', [
+        "nag-6.2-gcc-6.5.0.txt",
+        [
             os.path.join(prefix, "lib", "gcc", "x86_64-pc-linux-gnu", "6.5.0"),
             os.path.join(prefix, "lib64"),
             os.path.join(prefix, "lib"),
-        ]
+        ],
     )
 
 
@@ -214,4 +213,4 @@ def test_obscure_parsing_rules():
     if is_windows:
         paths.remove(os.path.join(root, "second", "path"))
 
-    check_link_paths('obscure-parsing-rules.txt', paths)
+    check_link_paths("obscure-parsing-rules.txt", paths)
