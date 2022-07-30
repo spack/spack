@@ -9,6 +9,7 @@ import archspec.cpu
 
 import spack.target
 from spack.operating_systems.mac_os import MacOs
+from spack.version import Version
 
 from ._platform import Platform
 
@@ -60,7 +61,7 @@ class Darwin(Platform):
         """
 
         os = self.operating_sys[pkg.spec.os]
-        version = os.version
+        version = Version(os.version)
         if len(version) == 1:
             # Version has only one component: add a minor version to prevent
             # potential errors with `ld`,
