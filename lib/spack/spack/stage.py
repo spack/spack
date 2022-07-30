@@ -957,17 +957,9 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     if not version_hashes:
         tty.die("Could not fetch any versions for {0}".format(name))
 
-    # Find length of longest string in the list for padding
-    max_len = max(len(str(v)) for v, h in version_hashes)
-
     # Generate the version directives to put in a package.py
     version_lines = "\n".join(
-        [
-            "    version('{0}', {1}sha256='{2}'{3})".format(
-                v, " " * (max_len - len(str(v))), h, expand_arg
-            )
-            for v, h in version_hashes
-        ]
+        ["    version('{0}', sha256='{1}'{2})".format(v, h, expand_arg) for v, h in version_hashes]
     )
 
     num_hash = len(version_hashes)
