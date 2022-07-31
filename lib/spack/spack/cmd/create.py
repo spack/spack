@@ -69,7 +69,7 @@ class {class_name}({base_class_name}):
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    # maintainers = ["github_user1", "github_user2"]
 
 {versions}
 
@@ -88,7 +88,7 @@ class BundlePackageTemplate(object):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('foo')"""
+    # depends_on("foo")"""
 
     url_def = "    # There is no URL since there is no code to download."
     body_def = "    # There is no need for install() since there is no code."
@@ -125,9 +125,9 @@ class PackageTemplate(BundlePackageTemplate):
     def install(self, spec, prefix):
         # FIXME: Unknown build system
         make()
-        make('install')"""
+        make("install")"""
 
-    url_line = '    url      = "{url}"'
+    url_line = '    url = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -156,18 +156,18 @@ class AutoreconfPackageTemplate(PackageTemplate):
     base_class_name = "AutotoolsPackage"
 
     dependencies = """\
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('foo')"""
+    # depends_on("foo")"""
 
     body_def = """\
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
-        autoreconf('--install', '--verbose', '--force')
+        autoreconf("--install", "--verbose", "--force")
 
     def configure_args(self):
         # FIXME: Add arguments other than --prefix
@@ -274,7 +274,7 @@ class BazelPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add additional dependencies if required.
-    depends_on('bazel', type='build')"""
+    depends_on("bazel", type="build")"""
 
     body_def = """\
     def install(self, spec, prefix):
@@ -289,19 +289,19 @@ class RacketPackageTemplate(PackageTemplate):
 
     url_line = """\
     # FIXME: set the proper location from which to fetch your package
-    git      = "git@github.com:example/example.git"
+    git = "git@github.com:example/example.git"
     """
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
     # if you need specific versions. A generic racket dependency is
     # added implicity by the RacketPackage class.
-    # depends_on('racket@8.3:', type=('build', 'run'))"""
+    # depends_on("racket@8.3:", type=("build", "run"))"""
 
     body_def = """\
     # FIXME: specify the name of the package,
     # as it should appear to ``raco pkg install``
-    name = '{0}'
+    name = "{0}"
     # FIXME: set to true if published on pkgs.racket-lang.org
     # pkgs = False
     # FIXME: specify path to the root directory of the
@@ -328,18 +328,18 @@ class PythonPackageTemplate(PackageTemplate):
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
     # or need to change the dependency type. Generic python/pip/wheel dependencies are
     # added implicity by the PythonPackage base class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-pip@X.Y:', type='build')
-    # depends_on('py-wheel@X.Y:', type='build')
+    # depends_on("python@2.X:2.Y,3.Z:", type=("build", "run"))
+    # depends_on("py-pip@X.Y:", type="build")
+    # depends_on("py-wheel@X.Y:", type="build")
 
     # FIXME: Add a build backend, usually defined in pyproject.toml. If no such file
     # exists, use setuptools.
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-flit-core', type='build')
-    # depends_on('py-poetry-core', type='build')
+    # depends_on("py-setuptools", type="build")
+    # depends_on("py-flit-core", type="build")
+    # depends_on("py-poetry-core", type="build")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('py-foo', type=('build', 'run'))"""
+    # depends_on("py-foo", type=("build", "run"))"""
 
     body_def = """\
     def global_options(self, spec, prefix):
@@ -397,7 +397,7 @@ class PythonPackageTemplate(PackageTemplate):
                     project = parse_name(url)
                     url = "/".join([project, match.group(4)])
 
-                self.url_line = '    pypi     = "{url}"'
+                self.url_line = '    pypi = "{url}"'
         else:
             # Add a reminder about spack preferring PyPI URLs
             self.url_line = (
@@ -418,7 +418,7 @@ class RPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
-    # depends_on('r-foo', type=('build', 'run'))"""
+    # depends_on("r-foo", type=("build", "run"))"""
 
     body_def = """\
     def configure_args(self):
@@ -440,12 +440,12 @@ class RPackageTemplate(PackageTemplate):
 
         if cran:
             url = r_name
-            self.url_line = '    cran     = "{url}"'
+            self.url_line = '    cran = "{url}"'
 
         bioc = re.search(r"(?:bioconductor)[^/]+/packages" + "/([^/]+)" * 5, url)
 
         if bioc:
-            self.url_line = '    url      = "{0}"\n' '    bioc     = "{1}"'.format(url, r_name)
+            self.url_line = '    url = "{0}"\n' '    bioc = "{1}"'.format(url, r_name)
 
         super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
@@ -458,7 +458,7 @@ class PerlmakePackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required:
-    # depends_on('perl-foo', type=('build', 'run'))"""
+    # depends_on("perl-foo", type=("build", "run"))"""
 
     body_def = """\
     def configure_args(self):
@@ -482,10 +482,10 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     that come with a Build.PL instead of a Makefile.PL"""
 
     dependencies = """\
-    depends_on('perl-module-build', type='build')
+    depends_on("perl-module-build", type="build")
 
     # FIXME: Add additional dependencies if required:
-    # depends_on('perl-foo', type=('build', 'run'))"""
+    # depends_on("perl-foo", type=("build", "run"))"""
 
 
 class OctavePackageTemplate(PackageTemplate):
@@ -494,10 +494,10 @@ class OctavePackageTemplate(PackageTemplate):
     base_class_name = "OctavePackage"
 
     dependencies = """\
-    extends('octave')
+    extends("octave")
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('octave-foo', type=('build', 'run'))"""
+    # depends_on("octave-foo", type=("build", "run"))"""
 
     def __init__(self, name, *args, **kwargs):
         # If the user provided `--name octave-splines`, don't rename it
@@ -519,8 +519,8 @@ class RubyPackageTemplate(PackageTemplate):
     # FIXME: Add dependencies if required. Only add the ruby dependency
     # if you need specific versions. A generic ruby dependency is
     # added implicity by the RubyPackage class.
-    # depends_on('ruby@X.Y.Z:', type=('build', 'run'))
-    # depends_on('ruby-foo', type=('build', 'run'))"""
+    # depends_on("ruby@X.Y.Z:", type=("build", "run"))
+    # depends_on("ruby-foo", type=("build", "run"))"""
 
     body_def = """\
     def build(self, spec, prefix):
@@ -547,8 +547,9 @@ class MakefilePackageTemplate(PackageTemplate):
     def edit(self, spec, prefix):
         # FIXME: Edit the Makefile if necessary
         # FIXME: If not needed delete this function
-        # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')"""
+        # makefile = FileFilter("Makefile")
+        # makefile.filter("CC = .*", "CC = cc")
+        pass"""
 
 
 class IntelPackageTemplate(PackageTemplate):
@@ -732,39 +733,39 @@ class BuildSystemGuesser:
                 break
 
 
-def get_name(args):
+def get_name(name, url):
     """Get the name of the package based on the supplied arguments.
 
     If a name was provided, always use that. Otherwise, if a URL was
     provided, extract the name from that. Otherwise, use a default.
 
     Args:
-        args (argparse.Namespace): The arguments given to
-            ``spack create``
+        name (str): explicit ``--name`` argument given to ``spack create``
+        url (str): ``url`` argument given to ``spack create``
 
     Returns:
         str: The name of the package
     """
 
     # Default package name
-    name = "example"
+    result = "example"
 
-    if args.name is not None:
+    if name is not None:
         # Use a user-supplied name if one is present
-        name = args.name
-        if len(args.name.strip()) > 0:
-            tty.msg("Using specified package name: '{0}'".format(name))
+        result = name
+        if len(name.strip()) > 0:
+            tty.msg("Using specified package name: '{0}'".format(result))
         else:
             tty.die("A package name must be provided when using the option.")
-    elif args.url is not None:
+    elif url is not None:
         # Try to guess the package name based on the URL
         try:
-            name = parse_name(args.url)
-            if name != args.url:
+            result = parse_name(url)
+            if result != url:
                 desc = "URL"
             else:
                 desc = "package name"
-            tty.msg("This looks like a {0} for {1}".format(desc, name))
+            tty.msg("This looks like a {0} for {1}".format(desc, result))
         except UndetectableNameError:
             tty.die(
                 "Couldn't guess a name for this package.",
@@ -772,34 +773,28 @@ def get_name(args):
                 "  `spack create --name <name> <url>`",
             )
 
-    name = simplify_name(name)
+    result = simplify_name(result)
 
-    if not valid_fully_qualified_module_name(name):
+    if not valid_fully_qualified_module_name(result):
         tty.die("Package name can only contain a-z, 0-9, and '-'")
 
-    return name
+    return result
 
 
-def get_url(args):
+def get_url(url):
     """Get the URL to use.
 
     Use a default URL if none is provided.
 
     Args:
-        args (argparse.Namespace): The arguments given to ``spack create``
+        url (str): ``url`` argument to ``spack create``
 
     Returns:
         str: The URL of the package
     """
 
-    # Default URL
-    url = "https://www.example.com/example-1.2.3.tar.gz"
-
-    if args.url:
-        # Use a user-supplied URL if one is present
-        url = args.url
-
-    return url
+    # Use the user-supplied URL or a default URL if none is present.
+    return url or "https://www.example.com/example-1.2.3.tar.gz"
 
 
 def get_versions(args, name):
@@ -820,12 +815,12 @@ def get_versions(args, name):
     # Default version with hash
     hashed_versions = """\
     # FIXME: Add proper versions and checksums here.
-    # version('1.2.3', '0123456789abcdef0123456789abcdef')"""
+    # version("1.2.3", "0123456789abcdef0123456789abcdef")"""
 
     # Default version without hash
     unhashed_versions = """\
     # FIXME: Add proper versions here.
-    # version('1.2.4')"""
+    # version("1.2.4")"""
 
     # Default guesser
     guesser = BuildSystemGuesser()
@@ -865,7 +860,7 @@ def get_versions(args, name):
     return versions, guesser
 
 
-def get_build_system(args, guesser):
+def get_build_system(template, url, guesser):
     """Determine the build system template.
 
     If a template is specified, always use that. Otherwise, if a URL
@@ -873,6 +868,8 @@ def get_build_system(args, guesser):
     build system it uses. Otherwise, use a generic template by default.
 
     Args:
+        template (str): ``--template`` argument given to ``spack create``
+        url (str): ``url`` argument given to ``spack create``
         args (argparse.Namespace): The arguments given to ``spack create``
         guesser (BuildSystemGuesser): The first_stage_function given to
             ``spack checksum`` which records the build system it detects
@@ -881,22 +878,22 @@ def get_build_system(args, guesser):
         str: The name of the build system template to use
     """
     # Default template
-    template = "generic"
+    selected_template = "generic"
 
-    if args.template is not None:
+    if template is not None:
+        selected_template = template
         # Use a user-supplied template if one is present
-        template = args.template
-        tty.msg("Using specified package template: '{0}'".format(template))
-    elif args.url is not None:
+        tty.msg("Using specified package template: '{0}'".format(selected_template))
+    elif url is not None:
         # Use whatever build system the guesser detected
-        template = guesser.build_system
-        if template == "generic":
+        selected_template = guesser.build_system
+        if selected_template == "generic":
             tty.warn("Unable to detect a build system. " "Using a generic package template.")
         else:
             msg = "This package looks like it uses the {0} build system"
-            tty.msg(msg.format(template))
+            tty.msg(msg.format(selected_template))
 
-    return template
+    return selected_template
 
 
 def get_repository(args, name):
@@ -945,10 +942,10 @@ def get_repository(args, name):
 
 def create(parser, args):
     # Gather information about the package to be created
-    name = get_name(args)
-    url = get_url(args)
+    name = get_name(args.name, args.url)
+    url = get_url(args.url)
     versions, guesser = get_versions(args, name)
-    build_system = get_build_system(args, guesser)
+    build_system = get_build_system(args.template, url, guesser)
 
     # Create the package template object
     constr_args = {"name": name, "versions": versions}
