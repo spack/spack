@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import os
 
 import pytest
@@ -12,16 +11,9 @@ import spack.cmd.create
 import spack.util.editor
 from spack.main import SpackCommand
 from spack.url import UndetectableNameError
+from spack.util.executable import which
 
 create = SpackCommand("create")
-
-
-@pytest.fixture(scope="module")
-def parser():
-    """Returns the parser for the module"""
-    prs = argparse.ArgumentParser()
-    spack.cmd.create.setup_parser(prs)
-    return prs
 
 
 @pytest.mark.parametrize(
@@ -41,7 +33,7 @@ def parser():
             "test-autoreconf",
             [
                 r"TestAutoreconf(AutotoolsPackage)",
-                r"depends_on('autoconf",
+                r'depends_on("autoconf',
                 r"def autoreconf(self",
                 r"def configure_args(self",
             ],
@@ -54,7 +46,7 @@ def parser():
         (
             ["-t", "bazel", "/test-bazel"],
             "test-bazel",
-            [r"TestBazel(Package)", r"depends_on('bazel", r"bazel()"],
+            [r"TestBazel(Package)", r'depends_on("bazel', r"bazel()"],
         ),
         (["-t", "bundle", "/test-bundle"], "test-bundle", [r"TestBundle(BundlePackage)"]),
         (
@@ -80,28 +72,28 @@ def parser():
         (
             ["-t", "octave", "/test-octave"],
             "octave-test-octave",
-            [r"OctaveTestOctave(OctavePackage)", r"extends('octave", r"depends_on('octave"],
+            [r"OctaveTestOctave(OctavePackage)", r'extends("octave', r'depends_on("octave'],
         ),
         (
             ["-t", "perlbuild", "/test-perlbuild"],
             "perl-test-perlbuild",
             [
                 r"PerlTestPerlbuild(PerlPackage)",
-                r"depends_on('perl-module-build",
+                r'depends_on("perl-module-build',
                 r"def configure_args(self",
             ],
         ),
         (
             ["-t", "perlmake", "/test-perlmake"],
             "perl-test-perlmake",
-            [r"PerlTestPerlmake(PerlPackage)", r"depends_on('perl-", r"def configure_args(self"],
+            [r"PerlTestPerlmake(PerlPackage)", r'depends_on("perl-', r"def configure_args(self"],
         ),
         (
             ["-t", "python", "/test-python"],
             "py-test-python",
             [
                 r"PyTestPython(PythonPackage)",
-                r"depends_on('py-",
+                r'depends_on("py-',
                 r"def global_options(self",
                 r"def install_options(self",
             ],
@@ -114,7 +106,7 @@ def parser():
         (
             ["-t", "r", "/test-r"],
             "r-test-r",
-            [r"RTestR(RPackage)", r"depends_on('r-", r"def configure_args(self"],
+            [r"RTestR(RPackage)", r'depends_on("r-', r"def configure_args(self"],
         ),
         (
             ["-t", "scons", "/test-scons"],
@@ -129,20 +121,25 @@ def parser():
         (["-t", "waf", "/test-waf"], "test-waf", [r"TestWaf(WafPackage)", r"configure_args()"]),
     ],
 )
-def test_create_template(parser, mock_test_repo, args, name, expected):
+def test_create_template(mock_test_repo, args, name, expected):
     """Test template creation."""
     repo, repodir = mock_test_repo
 
-    constr_args = parser.parse_args(["--skip-editor"] + args)
-    spack.cmd.create.create(parser, constr_args)
+    create("--skip-editor", *args)
 
     filename = repo.filename_for_package_name(name)
     assert os.path.exists(filename)
 
     with open(filename, "r") as package_file:
-        content = " ".join(package_file.readlines())
+        content = package_file.read()
         for entry in expected:
             assert entry in content
+
+    black = which("black", required=False)
+    if not black:
+        pytest.skip("checking blackness of `spack create` output requires black")
+
+    black("--check", "--diff", filename)
 
 
 @pytest.mark.parametrize(
@@ -152,17 +149,14 @@ def test_create_template(parser, mock_test_repo, args, name, expected):
         ("bad#name", "name can only contain"),
     ],
 )
-def test_create_template_bad_name(parser, mock_test_repo, name, expected, capsys):
+def test_create_template_bad_name(mock_test_repo, name, expected):
     """Test template creation with bad name options."""
-    constr_args = parser.parse_args(["--skip-editor", "-n", name])
-    with pytest.raises(SystemExit):
-        spack.cmd.create.create(parser, constr_args)
-
-    captured = capsys.readouterr()
-    assert expected in str(captured)
+    output = create("--skip-editor", "-n", name, fail_on_error=False)
+    assert expected in output
+    assert create.returncode != 0
 
 
-def test_build_system_guesser_no_stage(parser):
+def test_build_system_guesser_no_stage():
     """Test build system guesser when stage not provided."""
     guesser = spack.cmd.create.BuildSystemGuesser()
 
@@ -171,7 +165,7 @@ def test_build_system_guesser_no_stage(parser):
         guesser(None, "/the/url/does/not/matter")
 
 
-def test_build_system_guesser_octave(parser):
+def test_build_system_guesser_octave():
     """
     Test build system guesser for the special case, where the same base URL
     identifies the build system rather than guessing the build system from
@@ -185,8 +179,7 @@ def test_build_system_guesser_octave(parser):
     assert guesser.build_system == expected
 
     # Also ensure get the correct template
-    args = parser.parse_args([url])
-    bs = spack.cmd.create.get_build_system(args, guesser)
+    bs = spack.cmd.create.get_build_system(None, url, guesser)
     assert bs == expected
 
 
@@ -197,14 +190,13 @@ def test_build_system_guesser_octave(parser):
         ("file://example.com/archive.tar.gz", "archive"),
     ],
 )
-def test_get_name_urls(parser, url, expected):
+def test_get_name_urls(url, expected):
     """Test get_name with different URLs."""
-    args = parser.parse_args([url])
-    name = spack.cmd.create.get_name(args)
+    name = spack.cmd.create.get_name(None, url)
     assert name == expected
 
 
-def test_get_name_error(parser, monkeypatch, capsys):
+def test_get_name_error(monkeypatch, capsys):
     """Test get_name UndetectableNameError exception path."""
 
     def _parse_name_offset(path, v):
@@ -213,15 +205,13 @@ def test_get_name_error(parser, monkeypatch, capsys):
     monkeypatch.setattr(spack.url, "parse_name_offset", _parse_name_offset)
 
     url = "downloads.sourceforge.net/noapp/"
-    args = parser.parse_args([url])
 
     with pytest.raises(SystemExit):
-        spack.cmd.create.get_name(args)
+        spack.cmd.create.get_name(None, url)
     captured = capsys.readouterr()
     assert "Couldn't guess a name" in str(captured)
 
 
-def test_no_url(parser):
+def test_no_url():
     """Test creation of package without a URL."""
-    args = parser.parse_args(["--skip-editor", "-n", "create-new-package"])
-    spack.cmd.create.create(parser, args)
+    create("--skip-editor", "-n", "create-new-package")
