@@ -214,7 +214,7 @@ Note that ``py-wheel`` is already listed as a build dependency in the
 need to specify a specific version requirement or change the
 dependency type.
 
-See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`_ and
+See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`__ and
 `PEP 518 <https://www.python.org/dev/peps/pep-0518/>`_ for more
 information on the design of ``pyproject.toml``.
 
@@ -403,7 +403,7 @@ Config settings
 """""""""""""""
 
 These settings are passed to
-`PEP 517 <https://peps.python.org/pep-0517/>`_ build backends.
+`PEP 517 <https://peps.python.org/pep-0517/>`__ build backends.
 For example, ``py-scipy`` package allows you to specify the name of
 the BLAS/LAPACK library you want pkg-config to search for:
 
