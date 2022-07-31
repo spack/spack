@@ -46,13 +46,17 @@ exclude_directories = [
 
 #: Order in which tools should be run. flake8 is last so that it can
 #: double-check the results of other tools (if, e.g., --fix was provided)
-#: The list maps an executable name to a spack spec needed to install it.
+#: The list maps an executable name to a method to ensure the tool is
+#: bootstrapped or present in the environment.
 tool_order = [
     ("isort", spack.bootstrap.ensure_isort_in_path_or_raise),
     ("mypy", spack.bootstrap.ensure_mypy_in_path_or_raise),
     ("black", spack.bootstrap.ensure_black_in_path_or_raise),
     ("flake8", spack.bootstrap.ensure_flake8_in_path_or_raise),
 ]
+
+#: list of just the tool names -- for argparse
+tool_names = [k for k, _ in tool_order]
 
 #: tools we run in spack style
 tools = {}
@@ -180,35 +184,27 @@ def setup_parser(subparser):
         help="format automatically if possible (e.g., with isort, black)",
     )
     subparser.add_argument(
-        "--no-isort",
-        dest="isort",
-        action="store_false",
-        help="do not run isort (default: run isort if available)",
-    )
-    subparser.add_argument(
-        "--no-flake8",
-        dest="flake8",
-        action="store_false",
-        help="do not run flake8 (default: run flake8 or fail)",
-    )
-    subparser.add_argument(
-        "--no-mypy",
-        dest="mypy",
-        action="store_false",
-        help="do not run mypy (default: run mypy if available)",
-    )
-    subparser.add_argument(
-        "--no-black",
-        dest="black",
-        action="store_false",
-        help="run black if available (default: run black if available)",
-    )
-    subparser.add_argument(
         "--root",
         action="store",
         default=None,
         help="style check a different spack instance",
     )
+
+    tool_group = subparser.add_mutually_exclusive_group()
+    tool_group.add_argument(
+        "-t",
+        "--tool",
+        action="append",
+        help="specify which tools to run (default: %s)" % ",".join(tool_names),
+    )
+    tool_group.add_argument(
+        "-s",
+        "--skip",
+        metavar="TOOL",
+        action="append",
+        help="specify tools to skip (choose from %s)" % ",".join(tool_names),
+    )
+
     subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
 
 
@@ -233,8 +229,8 @@ def rewrite_and_print_output(
         print(line)
 
 
-def print_style_header(file_list, args):
-    tools = [tool for tool, _ in tool_order if getattr(args, tool)]
+def print_style_header(file_list, args, selected):
+    tools = [tool for tool in tool_names if tool in selected]
     tty.msg("Running style checks on spack", "selected: " + ", ".join(tools))
 
     # translate modified paths to cwd_relative if needed
@@ -394,6 +390,15 @@ def run_black(black_cmd, file_list, args):
     return returncode
 
 
+def validate_toolset(arg_value):
+    """Validate --tool and --skip arguments (sets of optionally comma-separated tools)."""
+    tools = set(",".join(arg_value).split(","))  # allow args like 'isort,flake8'
+    for tool in tools:
+        if tool not in tool_names:
+            tty.die("Invaild tool: '%s'" % tool, "Choose from: %s" % ", ".join(tool_names))
+    return tools
+
+
 def style(parser, args):
     # ensure python version is new enough
     if sys.version_info < (3, 6):
@@ -421,26 +426,33 @@ def style(parser, args):
 
         file_list = [prefix_relative(p) for p in file_list]
 
+    # process --tool and --skip arguments
+    selected = set(tool_names)
+    if args.tool is not None:
+        selected = validate_toolset(args.tool)
+    if args.skip is not None:
+        selected -= validate_toolset(args.skip)
+
+    if not selected:
+        tty.msg("Nothing to run.")
+        return
+
     return_code = 0
     with working_dir(args.root):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
-        print_style_header(file_list, args)
 
+        print_style_header(file_list, args, selected)
+
+        tools_to_run = [(tool, fn) for tool, fn in tool_order if tool in selected]
         commands = {}
         with spack.bootstrap.ensure_bootstrap_configuration():
-            for tool_name, bootstrap_fn in tool_order:
-                # Skip the tool if it was not requested
-                if not getattr(args, tool_name):
-                    continue
-
+            # bootstrap everything first to get commands
+            for tool_name, bootstrap_fn in tools_to_run:
                 commands[tool_name] = bootstrap_fn()
 
-            for tool_name, bootstrap_fn in tool_order:
-                # Skip the tool if it was not requested
-                if not getattr(args, tool_name):
-                    continue
-
+            # run tools once bootstrapping is done
+            for tool_name, bootstrap_fn in tools_to_run:
                 run_function, required = tools[tool_name]
                 print_tool_header(tool_name)
                 return_code |= run_function(commands[tool_name], file_list, args)
