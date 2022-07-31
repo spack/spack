@@ -29,9 +29,11 @@ spack:
     - py-botorch
     - py-efficientnet-pytorch
     - py-gpytorch
+    - py-kornia
     - py-pytorch-gradual-warmup-lr
     - py-pytorch-lightning
     - py-segmentation-models-pytorch
+    - py-timm
     - py-torch
     - py-torch-cluster
     - py-torch-geometric
