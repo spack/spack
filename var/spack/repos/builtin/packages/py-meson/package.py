@@ -16,9 +16,9 @@ class PyMeson(PythonPackage):
     """
 
     homepage = "https://mesonbuild.com/"
-    pypi     = "meson/meson-0.62.2.tar.gz"
+    pypi = "meson/meson-0.62.2.tar.gz"
 
-    version('0.62.2', sha256='a7669e4c4110b06b743d57cc5d6432591a6677ef2402139fe4f3d42ac13380b0')
+    version("0.62.2", sha256="a7669e4c4110b06b743d57cc5d6432591a6677ef2402139fe4f3d42ac13380b0")
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools@42:', type='build')
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type="build")
