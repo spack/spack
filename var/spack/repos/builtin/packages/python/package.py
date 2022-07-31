@@ -961,10 +961,8 @@ config.update(get_paths())
                 # get_config_vars
                 "BINDIR": self.prefix.bin,
                 "CC": "cc",
-                "CONFINCLUDEDIR": self.prefix.include.join("python{}").format(version),
                 "CONFINCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "CXX": "c++",
-                "INCLUDEDIR": self.prefix.include.join("python{}").format(version),
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
                 "LIBDIR": self.prefix.lib,
