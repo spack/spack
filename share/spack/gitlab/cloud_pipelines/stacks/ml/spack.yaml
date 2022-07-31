@@ -38,7 +38,7 @@ spack:
     - py-torch-nvidia-apex
     - py-torch-scatter
     - py-torch-sparse
-    - py-torch-spline-cov
+    - py-torch-spline-conv
     - py-torchaudio
     - py-torchdata
     - py-torchfile
