@@ -78,8 +78,7 @@ class Xl(Compiler):
         # is required to distinguish whether support is available
         if self.version >= ver("16.1.1.8"):
             return "-std=c++14"
-        raise UnsupportedCompilerFlag(
-            self, "the C++14 standard", "cxx14_flag", "< 16.1.1.8")
+        raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag", "< 16.1.1.8")
 
     @property
     def cc_pic_flag(self):
