@@ -74,6 +74,8 @@ class Xl(Compiler):
 
     @property
     def cxx14_flag(self):
+        # .real_version does not have the "y.z" component of "w.x.y.z", which
+        # is required to distinguish whether support is available
         if self.version >= ver("16.1.1.8"):
             return "-std=c++14"
         raise UnsupportedCompilerFlag(
