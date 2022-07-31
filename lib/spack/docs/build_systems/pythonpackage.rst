@@ -398,6 +398,34 @@ packages. However, the installation instructions for a package may
 suggest passing certain flags to the ``setup.py`` call. The
 ``PythonPackage`` class has two techniques for doing this.
 
+"""""""""""""""
+Config settings
+"""""""""""""""
+
+These settings are passed to
+`PEP 517 <https://peps.python.org/pep-0517/>`_ build backends.
+For example, ``py-scipy`` package allows you to specify the name of
+the BLAS/LAPACK library you want pkg-config to search for:
+
+.. code-block:: python
+
+   depends_on('py-pip@22.1:', type='build')
+
+   def config_settings(self, spec, prefix):
+       return {
+           'blas': spec['blas'].libs.names[0],
+           'lapack': spec['lapack'].libs.names[0],
+       }
+
+
+.. note::
+
+   This flag only works for packages that define a ``build-backend``
+   in ``pyproject.toml``. Also, it is only supported by pip 22.1+,
+   which requires Python 3.7+. For packages that still support Python
+   3.6 and older, ``install_options`` should be used instead.
+
+
 """"""""""""""
 Global options
 """"""""""""""
@@ -415,6 +443,16 @@ has an optional dependency on ``libyaml`` that can be enabled like so:
        else:
            options.append('--without-libyaml')
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 """""""""""""""
@@ -435,6 +473,16 @@ allows you to specify the directories to search for ``libyaml``:
                spec['libyaml'].headers.include_flags,
            ])
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 ^^^^^^^
