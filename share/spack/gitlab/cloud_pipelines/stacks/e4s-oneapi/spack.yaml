@@ -224,16 +224,14 @@ spack:
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
-  # parallel-netcdf: checking if Fortran "integer*1" is ... configure: error: Could not link conftestf.o and conftest.o
   # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
   # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
   # py-numpy@1.23.1: numpy/distutils/checks/cpu_avx512_knm.c:22:9: error: implicit declaration of function '_mm512_4fmadd_ps' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
   # ruby: limits.c:415:34: error: invalid suffix 'D' on floating constant
   # rust: /usr/bin/ld: /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/lib/intel64_lin/libimf.a(libm_feature_flag.o): in function `__libm_feature_flag_init': libm_feature_flag.c:(.text+0x25): undefined reference to `__intel_cpu_feature_indicator_x'
-  # scr: scr_globals.h:81:10: fatal error: 'spath_mpi.h' file not found: #include "spath_mpi.h"
   # unifyfs: client/src/unifyfs.c:1502:7: error: unused function 'next_page_align' [-Werror,-Wunused-function]
   # variorum: ld: Intel/CMakeFiles/variorum_intel.dir/msr_core.c.o:(.bss+0x0): multiple definition of `g_platform'; CMakeFiles/variorum.dir/config_architecture.c.o:(.bss+0x0): first defined here
-  # vtk-m: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
+  # vtk-m +openmp: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
 
   # GPU BUILD FAILURES
   #- ginkgo@1.4.0 +oneapi %dpcpp ^cmake%oneapi                                              # ginkgo
