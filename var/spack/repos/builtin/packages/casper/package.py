@@ -8,27 +8,27 @@ from spack.package import *
 
 class Casper(MakefilePackage):
     """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art
-       merging tool in terms of accuracy and robustness. Using this
-       sophisticated merging method, we could get elongated reads from the
-       forward and reverse reads."""
+    merging tool in terms of accuracy and robustness. Using this
+    sophisticated merging method, we could get elongated reads from the
+    forward and reverse reads."""
 
     homepage = "http://best.snu.ac.kr/casper/index.php?name=main"
-    url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
+    url = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
-    version('0.8.2', sha256='3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914')
+    version("0.8.2", sha256="3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914")
 
-    depends_on('jellyfish@2.2.3:')
-    depends_on('boost+exception')
+    depends_on("jellyfish@2.2.3:")
+    depends_on("boost+exception")
 
-    conflicts('%gcc@7.1.0')
+    conflicts("%gcc@7.1.0")
 
     def flag_handler(self, name, flags):
-        if name.lower() == 'cxxflags':
+        if name.lower() == "cxxflags":
             flags.append(self.compiler.cxx98_flag)
         return (flags, None, None)
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.spec.prefix)
+        env.prepend_path("PATH", self.spec.prefix)

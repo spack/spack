@@ -16,11 +16,11 @@ import spack.util.lock as lk
 
 def test_disable_locking(tmpdir):
     """Ensure that locks do no real locking when disabled."""
-    lock_path = str(tmpdir.join('lockfile'))
+    lock_path = str(tmpdir.join("lockfile"))
 
-    old_value = spack.config.get('config:locks')
+    old_value = spack.config.get("config:locks")
 
-    with spack.config.override('config:locks', False):
+    with spack.config.override("config:locks", False):
         lock = lk.Lock(lock_path)
 
         lock.acquire_read()
@@ -35,7 +35,7 @@ def test_disable_locking(tmpdir):
         lock.release_read()
         assert not os.path.exists(lock_path)
 
-    assert old_value == spack.config.get('config:locks')
+    assert old_value == spack.config.get("config:locks")
 
 
 # "Disable" mock_stage fixture to avoid subdir permissions issues on cleanup.
