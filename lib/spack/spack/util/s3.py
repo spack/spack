@@ -17,7 +17,7 @@ def get_mirror_connection(url, url_type="push"):
     # Check to see if desired file starts with any of the mirror URLs
     rebuilt_path = url_util.format(url)
     # Gather dict of push URLS point to the value of the whole mirror
-    mirror_dict = {x.push_url: x for x in spack.mirror.MirrorCollection().values()}  # noqa: E501
+    mirror_dict = {x.push_url: x for x in spack.mirror.MirrorCollection().values()}
     # Ensure most specific URLs (longest) are presented first
     mirror_url_keys = mirror_dict.keys()
     mirror_url_keys = sorted(mirror_url_keys, key=len, reverse=True)
@@ -30,8 +30,8 @@ def get_mirror_connection(url, url_type="push"):
 
 
 def _parse_s3_endpoint_url(endpoint_url):
-    if not urllib_parse.urlparse(endpoint_url, scheme='').scheme:
-        endpoint_url = '://'.join(('https', endpoint_url))
+    if not urllib_parse.urlparse(endpoint_url, scheme="").scheme:
+        endpoint_url = "://".join(("https", endpoint_url))
 
     return endpoint_url
 
@@ -49,23 +49,23 @@ def get_mirror_s3_connection_info(connection):
         if connection.get("profile"):
             s3_connection["profile_name"] = connection["profile"]
 
-    s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
+    s3_client_args = {"use_ssl": spack.config.get("config:verify_ssl")}
 
-    endpoint_url = os.environ.get('S3_ENDPOINT_URL')
+    endpoint_url = os.environ.get("S3_ENDPOINT_URL")
     if endpoint_url:
-        s3_client_args['endpoint_url'] = _parse_s3_endpoint_url(endpoint_url)
+        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(endpoint_url)
     elif s3_connection_is_dict and connection.get("endpoint_url"):
-        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])  # noqa: E501
+        s3_client_args["endpoint_url"] = _parse_s3_endpoint_url(connection["endpoint_url"])
 
     return (s3_connection, s3_client_args)
 
 
 def create_s3_session(url, connection={}):
     url = url_util.parse(url)
-    if url.scheme != 's3':
+    if url.scheme != "s3":
         raise ValueError(
-            'Can not create S3 session from URL with scheme: {SCHEME}'.format(
-                SCHEME=url.scheme))
+            "Can not create S3 session from URL with scheme: {SCHEME}".format(SCHEME=url.scheme)
+        )
 
     # NOTE(opadron): import boto and friends as late as possible.  We don't
     # want to require boto as a dependency unless the user actually wants to
@@ -83,6 +83,6 @@ def create_s3_session(url, connection={}):
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    client = session.client('s3', **s3_client_args)
+    client = session.client("s3", **s3_client_args)
     client.ClientError = ClientError
     return client

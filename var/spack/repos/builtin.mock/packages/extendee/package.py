@@ -10,11 +10,11 @@ class Extendee(Package):
     """A package with extensions"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/extendee-1.0.tar.gz"
+    url = "http://www.example.com/extendee-1.0.tar.gz"
 
     extendable = True
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

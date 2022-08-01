@@ -19,7 +19,7 @@ class PySphinxcontribApplehelp(PythonPackage):
     # import any modules for this package.
     import_modules = []  # type: List[str]
 
-    version('1.0.1', sha256='edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897')
+    version("1.0.1", sha256="edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897")
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
