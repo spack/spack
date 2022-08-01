@@ -12,26 +12,28 @@ import spack.compilers.clang
 
 class Rocmcc(spack.compilers.clang.Clang):
     # Subclasses use possible names of C compiler
-    cc_names = ['amdclang']
+    cc_names = ["amdclang"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['amdclang++']
+    cxx_names = ["amdclang++"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['amdflang']
+    f77_names = ["amdflang"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['amdflang']
+    fc_names = ["amdflang"]
 
-    PrgEnv = 'PrgEnv-amd'
-    PrgEnv_compiler = 'amd'
+    PrgEnv = "PrgEnv-amd"
+    PrgEnv_compiler = "amd"
 
     @property
     def link_paths(self):
-        link_paths = {'cc': 'rocmcc/amdclang',
-                      'cxx': 'rocmcc/amdclang++',
-                      'f77': 'rocmcc/amdflang',
-                      'fc': 'rocmcc/amdflang'}
+        link_paths = {
+            "cc": "rocmcc/amdclang",
+            "cxx": "rocmcc/amdclang++",
+            "f77": "rocmcc/amdflang",
+            "fc": "rocmcc/amdflang",
+        }
 
         return link_paths
 
@@ -49,7 +51,7 @@ class Rocmcc(spack.compilers.clang.Clang):
 
     @property
     def c99_flag(self):
-        return '-std=c99'
+        return "-std=c99"
 
     @property
     def c11_flag(self):
@@ -58,12 +60,9 @@ class Rocmcc(spack.compilers.clang.Clang):
     @classmethod
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
-        match = re.search(
-            r'llvm-project roc-(\d+)[._](\d+)[._](\d+)',
-            output
-        )
+        match = re.search(r"llvm-project roc-(\d+)[._](\d+)[._](\d+)", output)
         if match:
-            return '.'.join(match.groups())
+            return ".".join(match.groups())
 
     @classmethod
     def fc_version(cls, fortran_compiler):
@@ -75,4 +74,4 @@ class Rocmcc(spack.compilers.clang.Clang):
 
     @property
     def stdcxx_libs(self):
-        return ('-lstdc++', )
+        return ("-lstdc++",)

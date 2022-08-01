@@ -17,7 +17,7 @@ import spack.util.path as sp
 class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
-    def __init__(self, type, value='', start=0, end=0):
+    def __init__(self, type, value="", start=0, end=0):
         self.type = type
         self.value = value
         self.start = start
@@ -39,23 +39,18 @@ class Token(object):
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
-    def __init__(self, lexicon0, mode_switches_01=[],
-                 lexicon1=[], mode_switches_10=[]):
+    def __init__(self, lexicon0, mode_switches_01=[], lexicon1=[], mode_switches_10=[]):
         self.scanner0 = re.Scanner(lexicon0)
         self.mode_switches_01 = mode_switches_01
         self.scanner1 = re.Scanner(lexicon1)
         self.mode_switches_10 = mode_switches_10
         self.mode = 0
 
-    def token(self, type, value=''):
+    def token(self, type, value=""):
         if self.mode == 0:
-            return Token(type, value,
-                         self.scanner0.match.start(0),
-                         self.scanner0.match.end(0))
+            return Token(type, value, self.scanner0.match.start(0), self.scanner0.match.end(0))
         else:
-            return Token(type, value,
-                         self.scanner1.match.start(0),
-                         self.scanner1.match.end(0))
+            return Token(type, value, self.scanner1.match.start(0), self.scanner1.match.end(0))
 
     def lex_word(self, word):
         scanner = self.scanner0
@@ -73,8 +68,9 @@ class Lexer(object):
                 # scan in other mode
                 self.mode = 1 - self.mode  # swap 0/1
                 remainder_used = 1
-                tokens = tokens[:i + 1] + self.lex_word(
-                    word[word.index(t.value) + len(t.value):])
+                tokens = tokens[: i + 1] + self.lex_word(
+                    word[word.index(t.value) + len(t.value) :]
+                )
                 break
 
         if remainder and not remainder_used:
@@ -94,9 +90,9 @@ class Parser(object):
     """Base class for simple recursive descent parsers."""
 
     def __init__(self, lexer):
-        self.tokens = iter([])    # iterators over tokens, handled in order.
+        self.tokens = iter([])  # iterators over tokens, handled in order.
         self.token = Token(None)  # last accepted token
-        self.next = None          # next token
+        self.next = None  # next token
         self.lexer = lexer
         self.text = None
 
@@ -109,8 +105,7 @@ class Parser(object):
 
     def push_tokens(self, iterable):
         """Adds all tokens in some iterable to the token stream."""
-        self.tokens = itertools.chain(
-            iter(iterable), iter([self.next]), self.tokens)
+        self.tokens = itertools.chain(iter(iterable), iter([self.next]), self.tokens)
         self.gettok()
 
     def accept(self, id):
