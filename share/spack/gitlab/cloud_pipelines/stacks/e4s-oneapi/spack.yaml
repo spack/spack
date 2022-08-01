@@ -1,0 +1,467 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+
+  config:
+    concretizer: clingo
+    install_tree:
+      root: /home/software/spack
+      padded_length: 256
+      projections:
+        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+
+  compilers:
+  - compiler:
+      spec: dpcpp@2022.1.0
+      paths:
+        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/dpcpp
+        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: [compiler]
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: oneapi@2022.1.0
+      paths:
+        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icpx
+        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: [compiler]
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@9.4.0
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+
+  packages:
+    all:
+      compiler: [oneapi]
+      providers:
+        blas: [openblas]
+        mpi: [mpich]
+      target: [x86_64]
+      variants: +mpi
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    cuda:
+      version: [11.4.2]
+    elfutils:
+      variants: +bzip2 ~nls +xz
+    hdf5:
+      variants: +fortran +hl +shared
+    libfabric:
+      variants: fabrics=sockets,tcp,udp,rxm
+    libunwind:
+      variants: +pic +xz
+    mpich:
+      variants: ~wrapperrpath
+    ncurses:
+      variants: +termlib
+    openblas:
+      variants: threads=openmp
+    python:
+      version: [3.8.13]
+    trilinos:
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    xz:
+      variants: +pic
+    mesa:
+      version: [21.3.8]
+
+  specs:
+  # CPU
+  - adios
+  - alquimia
+  - aml
+  - amrex
+  - arborx
+  - argobots
+  - bolt
+  - bricks
+  - cabana
+  - caliper
+  - chai ~benchmarks ~tests
+  - conduit
+  - darshan-runtime
+  - darshan-util
+  - datatransferkit
+  - faodel
+  - flit
+  - flux-core
+  - fortrilinos
+  - gasnet
+  - ginkgo
+  - globalarrays
+  - gmp
+  - gotcha
+  - hdf5 +fortran +hl +shared
+  - heffte +fftw
+  - hypre
+  - kokkos-kernels +openmp
+  - kokkos +openmp
+  - lammps
+  - legion
+  - libnrm
+  - libquo
+  - libunwind
+  - loki
+  - mercury
+  - metall
+  - mfem
+  - mpark-variant
+  - mpifileutils ~xattr
+  - nccmp
+  - nco
+  - netlib-scalapack
+  - omega-h
+  - openmpi
+  - papi
+  - papyrus
+  - parallel-netcdf
+  - parsec ~cuda
+  - pdt
+  - petsc
+  - plasma
+  - plumed
+  - precice
+  - pumi
+  - py-cinemasci
+  - py-jupyterhub
+  - qthreads scheduler=distrib
+  - raja
+  - rempi
+  - scr
+  - slate ~cuda
+  - slepc
+  - stc
+  - sundials
+  - superlu-dist
+  - superlu
+  - swig
+  - swig@4.0.2-fortran
+  - sz
+  - tasmanian
+  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+   +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+   +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+   +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - turbine
+  - umap
+  - umpire
+  - upcxx
+  - veloc
+  - wannier90
+  - zfp
+
+  # GPU
+  - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
+  - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
+  - kokkos +sycl +openmp std=17 +tests +examples %oneapi
+
+  # CPU BUILD FAILURES
+  #- adios2@2.8.0                                     # adios2
+  #- archer@2.0.0                                     # binutils
+  #- ascent@0.8.0                                     # vtk-m
+  #- axom@0.6.1                                       # axom
+  #- butterflypack@2.1.1                              # butterflypack
+  #- charliecloud@0.26                                # charliecloud
+  #- dyninst@12.1.0                                   # intel-tbb
+  #- exaworks@0.1.0                                   # rust, flux-sched
+  #- geopm@1.1.0                                      # ruby
+  #- gptune@3.0.0                                     # intel-tbb
+  #- h5bench@1.2                                      # h5bench
+  #- hpctoolkit@2022.04.15                            # binutils
+  #- hpx@1.7.1 networking=mpi                         # boost@1.79.0
+  #- nrm@0.1.0                                        # py-numpy@1.23.1
+  #- openpmd-api@0.14.4                               # adios2
+  #- paraview@5.10.1 +qt                              # binutils
+  #- phist@1.9.5                                      # phist
+  #- pruners-ninja@1.0.1                              # pruners-ninja
+  #- py-libensemble@0.9.1                             # py-numpy@1.23.1
+  #- py-petsc4py@3.17.1                               # py-numpy@1.23.1
+  #- py-warpx@22.05 ^warpx dims=2                     # adios2
+  #- py-warpx@22.05 ^warpx dims=3                     # adios2
+  #- py-warpx@22.05 ^warpx dims=rz                    # adios2
+  #- strumpack@6.3.1 ~slate                           # butterflypack
+  #- tau@2.31 +mpi +python                            # binutils
+  #- unifyfs@0.9.2                                    # unifyfs
+  #- variorum@0.4.1                                   # variorum
+  #- vtk-m@1.7.1                                      # vtk-m
+
+  # CPU BUILD FAILURES - NOTES
+  # adios2: /usr/bin/ld: ../../lib/libadios2_fortran.so.2.8.2: version node not found for symbol adios2_adios_init_mod@adios2_adios_init_serial_smod._; /usr/bin/ld: failed to set dynamic section sizes: bad value
+  # axom: /usr/bin/ld: /lib/x86_64-linux-gnu/crt1.o: in function `_start': (.text+0x24): undefined reference to `main'
+  # binutils: gold/powerpc.cc:3590: undefined reference to `gold::Sized_symbol<64>::Value_type gold::Symbol_table::compute_final_value<64>(gold::Sized_symbol<64> const*, gold::Symbol_table::Compute_final_value_status*) const'
+  # boost@1.79.0 cxxstd=17: clang++: error: unsupported argument 'h-create' to option '-pc'; clang++: error: no such file or directory: 'bin.v2/libs/math/build/intel-linux-2022.1.0/release/cxxstd-17-iso/threading-multi/visibility-hidden/pch.pchi'
+  # butterflypack: SRC_COMPLEX/cMAGMA_utilities.f90(353): error #5192: Lead underscore not allowed
+  # charliecloud: autoreconf phase: RuntimeError: configure script not found in ...
+  # flux-sched: include/yaml-cpp/emitter.h:164:9: error: comparison with NaN always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
+  # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
+  # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
+  # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
+  # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
+  # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
+  # py-numpy@1.23.1: numpy/distutils/checks/cpu_avx512_knm.c:22:9: error: implicit declaration of function '_mm512_4fmadd_ps' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+  # ruby: limits.c:415:34: error: invalid suffix 'D' on floating constant
+  # rust: /usr/bin/ld: /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/lib/intel64_lin/libimf.a(libm_feature_flag.o): in function `__libm_feature_flag_init': libm_feature_flag.c:(.text+0x25): undefined reference to `__intel_cpu_feature_indicator_x'
+  # unifyfs: client/src/unifyfs.c:1502:7: error: unused function 'next_page_align' [-Werror,-Wunused-function]
+  # variorum: ld: Intel/CMakeFiles/variorum_intel.dir/msr_core.c.o:(.bss+0x0): multiple definition of `g_platform'; CMakeFiles/variorum.dir/config_architecture.c.o:(.bss+0x0): first defined here
+  # vtk-m +openmp: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
+
+  # GPU BUILD FAILURES
+  #- ginkgo@1.4.0 +oneapi %dpcpp ^cmake%oneapi                                              # ginkgo
+  #- hpctoolkit@2022.04.15 +level_zero                                                      # dyninst
+  #- sundials@6.2.0 +sycl cxxstd=17                                                         # sundials
+  #- tau@2.31.1 +mpi +opencl +level_zero ~pdt %oneapi ^binutils%gcc@9.4.0 ^papi%gcc@9.4.0   # tau
+
+  # GPU BUILD FAILURES - NOTES
+  # berkeley-db %dpcpp: dpcpp: dpcpperror: : no such file or directory: '/tmp/conftest-9d8d34.o'
+  # ginkgo %dpcpp: CMakeTestCXXCompiler.cmake:62: /usr/bin/ld: warning: libsvml.so, needed by /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../lib/libsycl.so, not found (try using -rpath or -rpath-link) ...
+  # ncurses %dpcpp: If you have ncurses 4.2 applications, you should read the INSTALL document, and install the terminfo without the -x optiontic: error while loading shared libraries: libsvml.so: cannot open shared object file: No such file or directory
+  # sundials: include/sunmemory/sunmemory_sycl.h:20:10: fatal error: 'CL/sycl.hpp' file not found
+  # tau: requires libdrm-dev
+
+  # SKIPPED
+  #- flecsi@1.4.2    # dependency pfunit marks oneapi as an unsupported compiler
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s-oneapi" }
+
+  gitlab-ci:
+
+    script:
+      - . "./share/spack/setup-env.sh"
+      - spack --version
+      - cd ${SPACK_CONCRETE_ENV_DIR}
+      - spack env activate --without-view .
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - export PATH=/bootstrap/runner/view/bin:${PATH}
+      - . /bootstrap/runner/install/linux-ubuntu20.04-x86_64/gcc-9.4.0/lmod-8.7.2-ri26z7qy6ixtgpsqinswx3w6tuggluv5/lmod/8.7.2/init/bash
+      - module use /opt/intel/oneapi/modulefiles
+      - module load compiler
+      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+    
+    mappings:
+      - match:
+          - hipblas
+          - llvm
+          - llvm-amdgpu
+          - rocblas
+        runner-attributes:
+          tags: [ "spack", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
+      - match:
+          - cuda
+          - dyninst
+          - ginkgo
+          - hpx
+          - kokkos-kernels
+          - kokkos-nvcc-wrapper
+          - magma
+          - mfem
+          - mpich
+          - openturns
+          - precice
+          - raja
+          - rust
+          - slate
+          - trilinos
+          - vtk-m
+          - warpx
+        runner-attributes:
+          tags: [ "spack", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - adios2
+          - amrex
+          - archer
+          - ascent
+          - axom
+          - binutils
+          - blaspp
+          - boost
+          - butterflypack
+          - cabana
+          - caliper
+          - camp
+          - chai
+          - conduit
+          - datatransferkit
+          - faodel
+          - ffmpeg
+          - fftw
+          - fortrilinos
+          - gperftools
+          - gptune
+          - hdf5
+          - heffte
+          - hpctoolkit
+          - hwloc
+          - hypre
+          - kokkos
+          - lammps
+          - lapackpp
+          - legion
+          - libzmq
+          - llvm-openmp-ompt
+          - mbedtls
+          - netlib-scalapack
+          - omega-h
+          - openmpi
+          - openpmd-api
+          - pagmo2
+          - papyrus
+          - parsec
+          - pdt
+          - petsc
+          - pumi
+          - py-ipython-genutils
+          - py-petsc4py
+          - py-scipy
+          - py-statsmodels
+          - py-warlock
+          - py-warpx
+          - pygmo
+          - slepc
+          - slurm
+          - strumpack
+          - sundials
+          - superlu-dist
+          - tasmanian
+          - tau
+          - upcxx
+          - vtk-h
+          - zfp
+        runner-attributes:
+          tags: [ "spack", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - alsa-lib
+          - ant
+          - antlr
+          - argobots
+          - automake
+          - berkeley-db
+          - bison
+          - blt
+          - cmake
+          - curl
+          - darshan-util
+          - diffutils
+          - exmcutils
+          - expat
+          - flit
+          - freetype
+          - gdbm
+          - gotcha
+          - hpcviewer
+          - jansson
+          - json-c
+          - libbsd
+          - libevent
+          - libjpeg-turbo
+          - libnrm
+          - libpng
+          - libunistring
+          - lua-luaposix
+          - m4
+          - mpfr
+          - ncurses
+          - openblas
+          - openjdk
+          - papi
+          - parallel-netcdf
+          - pcre2
+          - perl-data-dumper
+          - pkgconf
+          - py-alembic
+          - py-idna
+          - py-testpath
+          - qhull
+          - snappy
+          - swig
+          - tar
+          - tcl
+          - texinfo
+          - unzip
+          - util-linux-uuid
+          - util-macros
+          - yaml-cpp
+          - zlib
+          - zstd
+        runner-attributes:
+          tags: [ "spack", "small", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+      - match: ['os=ubuntu20.04']
+        runner-attributes:
+          tags: ["spack", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
+    service-job-attributes:
+      before_script:
+        - . "./share/spack/setup-env.sh"
+        - spack --version
+      image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+      tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+
+  cdash:
+    build-group: E4S OneAPI
+    url: https://cdash.spack.io
+    project: Spack Testing
+    site: Cloud Gitlab Infrastructure

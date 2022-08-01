@@ -15,4 +15,4 @@ class RGsalib(RPackage):
 
     cran = "gsalib"
 
-    version('2.1', sha256='e1b23b986c18b89a94c58d9db45e552d1bce484300461803740dacdf7c937fcc')
+    version("2.1", sha256="e1b23b986c18b89a94c58d9db45e552d1bce484300461803740dacdf7c937fcc")
