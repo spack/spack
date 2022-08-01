@@ -31,7 +31,9 @@ class Gperftools(AutotoolsPackage):
         description="Try to build run-time switch for sized delete operator",
     )
     variant("debugalloc", default=True, description="Build versions of libs with debugalloc")
-    variant("libunwind", default=True, description="Enable libunwind linking")
+    variant(
+        "libunwind", default=True, when="platform=linux", description="Enable libunwind linking"
+    )
 
     depends_on("unwind", when="+libunwind")
 
