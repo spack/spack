@@ -34,16 +34,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     version("3.0", sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151")
     version("master", branch="master", submodules="True")
 
-    version("9.1", sha256="fedb4c684a98ad857cd49b69a3ae51a73f85a9c36e9cb63e3b02320c74454ce6")
-    version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
-    version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
-    version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
-    version("6.1", sha256="af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b")
-    version("5.1", sha256="e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412")
-    version("4.1", sha256="4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343")
-    version("3.0", sha256="1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151")
-    version("master", branch="master", submodules="True")
-
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
     variant(
