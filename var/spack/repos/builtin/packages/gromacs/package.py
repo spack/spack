@@ -106,6 +106,15 @@ class Gromacs(CMakePackage):
     variant('cycle_subcounters', default=False,
             description='Enables cycle subcounters')
 
+    variant('cp2k', default=False, description='CP2K QM/MM interface integration')
+    conflicts('+cp2k', when='@:2021',
+              msg='CP2K QM/MM support have been introduced in GROMACS 2022')
+    conflicts('+shared', when='+cp2k', msg='Enabling CP2K requires static build')
+    conflicts('~lapack', when='+cp2k',
+              msg='GROMACS and CP2K should use the same lapack, please disable bundled lapack')
+    conflicts('~blas', when='+cp2k',
+              msg='GROMACS and CP2K should use the same blas, please disable bundled blas')
+
     depends_on('mpi', when='+mpi')
 
     # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
@@ -179,6 +188,9 @@ class Gromacs(CMakePackage):
 
     depends_on('hwloc@1.0:1', when='+hwloc@2016:2018')
     depends_on('hwloc', when='+hwloc@2019:')
+
+    depends_on('cp2k@8.1:', when='+cp2k')
+    depends_on('dbcsr', when='+cp2k')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@5.0:2017^cmake@3.14.0:')
@@ -328,6 +340,10 @@ class Gromacs(CMakePackage):
                     self.spec['blas'].libs.joined(';')))
         else:
             options.append('-DGMX_EXTERNAL_BLAS:BOOL=OFF')
+
+        if '+cp2k' in self.spec:
+            options.append('-DGMX_CP2K:BOOL=ON')
+            options.append('-DCP2K_DIR:STRING={0}'.format(self.spec['cp2k'].prefix))
 
         # Activate SIMD based on properties of the target
         target = self.spec.target
