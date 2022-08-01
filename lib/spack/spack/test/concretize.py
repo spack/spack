@@ -1733,26 +1733,22 @@ class TestConcretize(object):
             setup = spack.solver.asp.SpackSolverSetup()
             result = solver.driver.solve(setup, [root_spec], reuse=reusable_specs, out=sys.stdout)
         concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies('%gcc@4.5.0')
-        assert concrete_spec.satisfies('os=debian6')
+        assert concrete_spec.satisfies("%gcc@4.5.0")
+        assert concrete_spec.satisfies("os=debian6")
 
     def test_git_hash_assigned_version_is_preferred(self):
-        hash = 'a' * 40
-        s = Spec('develop-branch-version@%s=develop' % hash)
+        hash = "a" * 40
+        s = Spec("develop-branch-version@%s=develop" % hash)
         c = s.concretized()
         assert hash in str(c)
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="Not supported on Windows (yet)")
+    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
     def test_git_hash_version_is_equivalent_to_specified_infinity_version(self):
-        if spack.config.get('config:concretizer') == 'original':
-            pytest.skip(
-                'Original concretizer cannot account for git hashes'
-            )
-        hash = 'a' * 40
-        s = Spec('depends-on-develop ^develop-branch-version@%s=develop' % hash)
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer cannot account for git hashes")
+        hash = "a" * 40
+        s = Spec("depends-on-develop ^develop-branch-version@%s=develop" % hash)
         c = s.concretized()
         assert hash in str(c)
-        assert s.satisfies('@develop')
-        assert s.satisfies('@10:')
-
+        assert s.satisfies("@develop")
+        assert s.satisfies("@10:")

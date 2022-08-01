@@ -45,7 +45,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r'^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$')
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -178,7 +178,7 @@ def is_git_version(string):
         return True
     elif len(string) == 40 and COMMIT_VERSION.match(string):
         return True
-    elif '=' in string:
+    elif "=" in string:
         return True
     return False
 
@@ -470,11 +470,11 @@ class GitVersion(VersionBase):
         self._ref_lookup = None
         self.ref_version = None
 
-        git_prefix = string.startswith('git.')
+        git_prefix = string.startswith("git.")
         pruned_string = string[4:] if git_prefix else string
 
-        if '=' in pruned_string:
-            self.ref, self.ref_version = pruned_string.split('=')
+        if "=" in pruned_string:
+            self.ref, self.ref_version = pruned_string.split("=")
         else:
             self.ref = pruned_string
 
@@ -484,8 +484,7 @@ class GitVersion(VersionBase):
 
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
         # unless we are assigning a version with =
-        canonical_string = self.ref if (self.is_commit and
-                                        not self.ref_version) else string
+        canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
         super(GitVersion, self).__init__(canonical_string)
 
     def _cmp(self, other_lookups=None):

@@ -585,12 +585,7 @@ def test_list_highest():
     assert vl2.lowest() == Version("master")
 
 
-@pytest.mark.parametrize('version_str', [
-    "foo 1.2.0",
-    "!",
-    "1!2",
-    "=1.2.0"
-])
+@pytest.mark.parametrize("version_str", ["foo 1.2.0", "!", "1!2", "=1.2.0"])
 def test_invalid_versions(version_str):
     """Ensure invalid versions are rejected with a ValueError"""
     with pytest.raises(ValueError):
@@ -734,12 +729,15 @@ def test_version_list_with_range_and_concrete_version_is_not_concrete():
     assert v.concrete
 
 
-@pytest.mark.parametrize('vstring, eq_vstring',
-                         (('abc12' * 8 + '=develop', 'develop'),
-                          ('git.' + 'abc12' * 8 + '=main', 'main'),
-                          ('a' * 40 + '=develop', 'develop'),
-                          ('b' * 40 + '=3.2', '3.2'),
-                          ))
+@pytest.mark.parametrize(
+    "vstring, eq_vstring",
+    (
+        ("abc12" * 8 + "=develop", "develop"),
+        ("git." + "abc12" * 8 + "=main", "main"),
+        ("a" * 40 + "=develop", "develop"),
+        ("b" * 40 + "=3.2", "3.2"),
+    ),
+)
 def test_git_hash_can_be_assigned_a_version(vstring, eq_vstring):
     v = Version(vstring)
     v_equivalent = Version(eq_vstring)
