@@ -959,7 +959,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
 
     # Generate the version directives to put in a package.py
     version_lines = "\n".join(
-        ["    version('{0}', sha256='{1}'{2})".format(v, h, expand_arg) for v, h in version_hashes]
+        ['    version("{0}", sha256="{1}"{2})'.format(v, h, expand_arg) for v, h in version_hashes]
     )
 
     num_hash = len(version_hashes)
