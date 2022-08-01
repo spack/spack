@@ -17,8 +17,19 @@ class JediUfsEnv(BundlePackage):
 
     version('1.0.0')
 
-    depends_on('base-env',                    type='run')
-    depends_on('jedi-base-env',               type='run')
-    depends_on('ufs-weather-model-env',       type='run')
+    depends_on('base-env',          type='run')
+    depends_on('jedi-base-env',     type='run')
+    depends_on('fms@release-jcsda', type='run')
+
+    depends_on('bacio',             type='run')
+    depends_on('crtm@v2.3-jedi.4',  type='run')
+    depends_on('g2',                type='run')
+    depends_on('g2tmpl',            type='run')
+    depends_on('ip',                type='run')
+    depends_on('sp',                type='run')
+    depends_on('w3nco',             type='run')
+
+    depends_on('esmf~debug',        type='run')
+    depends_on('mapl~debug',        type='run')
 
     # There is no need for install() since there is no code.

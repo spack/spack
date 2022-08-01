@@ -1,0 +1,1104 @@
+==> Warning: Missing a source id for jedi-ufs-env@1.0.0
+==> Warning: Missing a source id for base-env@1.0.0
+==> Warning: Missing a source id for jedi-base-env@1.0.0
+==> Warning: Missing a source id for ufs-weather-model-env@1.0.0
+==> Warning: Missing a source id for ufs-pyenv@1.0.0
+==> Warning: Missing a source id for jedi-ewok-env@1.0.0
+==> Warning: Missing a source id for jedi-fv3-env@1.0.0
+==> Warning: Missing a source id for jedi-mpas-env@1.0.0
+==> Concretized bacio@2.4.1
+ -   v4wtq5d  bacio@2.4.1%apple-clang@13.1.6~ipo+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized base-env@1.0.0
+ -   kluruqq  base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm      ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx      ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb      ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo          ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t              ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w              ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura              ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk              ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                  ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                      ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                          ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                          ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                      ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                  ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                      ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz      ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck          ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm              ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb          ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref          ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym      ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l          ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp              ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6      ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy      ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn      ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2      ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+
+==> Concretized bison@3.8.2
+ -   f5722wq  bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea      ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   nwc5nhm      ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   n3ld56w      ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+
+==> Concretized bufr@11.7.0
+ -   q4ivaap  bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   qnnplnb      ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz          ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   n3ld56w              ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   mskyyxd          ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc              ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   3qpdjhn                  ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   sjpc3em              ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                  ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized crtm@v2.3-jedi.4
+ -   ijs6mru  crtm@v2.3-jedi.4%apple-clang@13.1.6~fix~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   ebz4z53      ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized ecbuild@3.6.5
+ -   hepmggs  ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   n3ld56w      ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+
+==> Concretized eccodes@2.25.0
+ -   4lncrkw  eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   lhm7c4h      ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+
+==> Concretized ecflow@5
+ -   fxr43cs  ecflow@5.8.3%apple-clang@13.1.6~ipo+ssl~static_boost+ui build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   sndeyyx      ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   kl4ebqg      ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   fb5aox3          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   qnnplnb      ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz          ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd          ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc              ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em              ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                  ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   otq33sk      ^qt@5.15.3%apple-clang@13.1.6~dbus~debug~doc~examples+framework~gtk+gui~opengl~phonon+shared+sql+ssl+tools~webkit patches=51aeba5,7f34d48,c2d75d9 arch=darwin-monterey-x86_64
+
+==> Concretized eckit@1.19.0
+ -   2mnzijl  eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   f5722wq      ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea          ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   dpakuyd      ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vuqh5t3      ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw      ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx      ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   psebo6c      ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   4ugaura          ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   zn6bhjz      ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   wqfmboo      ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t          ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   o2grlhk          ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574              ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                  ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                      ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                      ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                      ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   iveeb26              ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                  ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+
+==> Concretized ecmwf-atlas@0.29.0~fftw~trans
+ -   ui4mh7a  ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   sndeyyx      ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   2mnzijl      ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   nwc5nhm              ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   dpakuyd          ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3          ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw          ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx          ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   psebo6c          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   4ugaura              ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   zn6bhjz          ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   wqfmboo          ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t              ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   o2grlhk              ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                  ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                      ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                          ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                          ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   iveeb26                  ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                      ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   bmb2vob      ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+
+==> Concretized eigen@3.4.0
+ -   vuqh5t3  eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized esmf@8.3.0b09
+ -   wpl5cg7  esmf@8.3.0b09%apple-clang@13.1.6~debug~external-lapack+mpi+netcdf~pio~pnetcdf~xerces arch=darwin-monterey-x86_64
+ -   gisiraj      ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3          ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   4ugaura          ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   xj7vql7          ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   67flp7d              ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6      ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized fckit@0.9.5
+ -   bmb2vob  fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   2mnzijl      ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   nwc5nhm              ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   dpakuyd          ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3          ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw          ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx          ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   psebo6c          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   4ugaura              ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   zn6bhjz          ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   wqfmboo          ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t              ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   o2grlhk              ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                  ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                      ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                          ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                          ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   iveeb26                  ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                      ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   3qpdjhn      ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+
+==> Concretized flex@2.6.4
+ -   ndisnlw  flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+
+==> Concretized fms@release-jcsda
+ -   5ntpk6k  fms@release-jcsda%apple-clang@13.1.6+64bit+gfs_phys~ipo~openmp+quad_precision build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   dmrfvkn      ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6      ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized g2@3.4.5
+ -   fexnsle  g2@3.4.5%apple-clang@13.1.6~ipo+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   qykgnki      ^jasper@2.0.32%apple-clang@13.1.6+jpeg~opengl+shared build_type=Release arch=darwin-monterey-x86_64
+ -   l2jhx75          ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv              ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   6cyb6os      ^libpng@1.6.37%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fb5aox3          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+
+==> Concretized g2tmpl@1.10.0
+ -   tpw2r2j  g2tmpl@1.10.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized gftl-shared@1.5.0
+ -   mr455ud  gftl-shared@1.5.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   gbs4uxx      ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   nwc5nhm      ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+
+==> Concretized hdf@4.2.15
+ -   2zyy65w  hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   f5722wq      ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea          ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   ndisnlw      ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   l2jhx75      ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   sk4hsmv          ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fb5aox3      ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+
+==> Concretized hdf5@1.12.1
+ -   x3gsaeb  hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   wqfmboo      ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t          ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura          ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk          ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574              ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                  ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                      ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                      ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                      ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                  ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26              ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                  ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+
+==> Concretized ip@3.3.3
+ -   7yv2onf  ip@3.3.3%apple-clang@13.1.6~ipo+openmp+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   znv3vj7      ^sp@2.3.3%apple-clang@13.1.6~ipo+openmp+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+
+==> Concretized jasper@2.0.32
+ -   qykgnki  jasper@2.0.32%apple-clang@13.1.6+jpeg~opengl+shared build_type=Release arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   l2jhx75      ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv          ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized jedi-base-env@1.0.0~fftw
+ -   lbciw4d  jedi-base-env@1.0.0%apple-clang@13.1.6~fftw arch=darwin-monterey-x86_64
+ -   kluruqq      ^base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz          ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck              ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm                  ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb              ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref              ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym          ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l              ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp                  ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy          ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2          ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+ -   f5722wq      ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea          ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sndeyyx      ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   q4ivaap      ^bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   qnnplnb          ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz              ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd              ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                  ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em                  ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                      ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   4lncrkw      ^eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   lhm7c4h          ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2mnzijl      ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   dpakuyd          ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3          ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw          ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx          ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   ui4mh7a      ^ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   bmb2vob          ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ebz4z53      ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rhwfdbf      ^gsl-lite@0.37.0%apple-clang@13.1.6~cmake_export_package_registry~compat_header~cuda_tests~examples~ipo~legacy_headers~static_analysis_demos~tests build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2zyy65w      ^hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   l2jhx75          ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv              ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dmrfvkn      ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   y6e5oxf      ^netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   7ncrkw5      ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vogjzqj      ^nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ys6yntb      ^odc@1.4.5%apple-clang@13.1.6~fortran~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hthkaqt      ^py-eccodes@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dojhs4e          ^py-attrs@21.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   j3nwjcm          ^py-cffi@1.15.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   to37r6r              ^libffi@3.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bnbnta6              ^py-pycparser@2.20%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wd5upz7          ^py-findlibs@0.0.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hrqj4gt      ^py-h5py@3.6.0%apple-clang@13.1.6+mpi arch=darwin-monterey-x86_64
+ -   wqfesiz          ^py-mpi4py@3.1.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   m3bw6xi          ^py-pkgconfig@1.5.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dq2i3cc              ^py-poetry-core@1.0.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fsbow6f      ^py-netcdf4@1.5.3%apple-clang@13.1.6+mpi patches=255b5ae arch=darwin-monterey-x86_64
+ -   p3toavi          ^py-cftime@1.0.3.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pm6ooe4      ^py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny          ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md          ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3          ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme              ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb                  ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                      ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew                  ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj              ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca          ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bkwuu2x      ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   nmnqqf2          ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4yyr2si      ^py-pycodestyle@2.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   xoj7nvt      ^py-pyhdf@0.10.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mn2ne6f      ^py-pyyaml@6.0%apple-clang@13.1.6+libyaml arch=darwin-monterey-x86_64
+ -   d42lduk          ^libyaml@0.2.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5h6kozd      ^py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y          ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh              ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra              ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd                  ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j              ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2pfg5ro      ^udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr          ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+
+==> Concretized jedi-cmake@1.3.0
+ -   dmrfvkn  jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized jedi-ewok-env@1.0.0
+ -   66ruu6l  jedi-ewok-env@1.0.0%apple-clang@13.1.6~ewok~r2d2~solo arch=darwin-monterey-x86_64
+ -   kluruqq      ^base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz          ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck              ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm                  ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb              ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref              ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym          ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l              ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp                  ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy          ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2          ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+ -   fxr43cs      ^ecflow@5.8.3%apple-clang@13.1.6~ipo+ssl~static_boost+ui build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   sndeyyx          ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   qnnplnb          ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz              ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd              ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                  ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em                  ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                      ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   otq33sk          ^qt@5.15.3%apple-clang@13.1.6~dbus~debug~doc~examples+framework~gtk+gui~opengl~phonon+shared+sql+ssl+tools~webkit patches=51aeba5,7f34d48,c2d75d9 arch=darwin-monterey-x86_64
+ -   lbciw4d      ^jedi-base-env@1.0.0%apple-clang@13.1.6~fftw arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   q4ivaap          ^bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hepmggs          ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   4lncrkw          ^eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   lhm7c4h              ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2mnzijl          ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   dpakuyd              ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3              ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw              ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx              ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   ui4mh7a          ^ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   bmb2vob              ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ebz4z53          ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rhwfdbf          ^gsl-lite@0.37.0%apple-clang@13.1.6~cmake_export_package_registry~compat_header~cuda_tests~examples~ipo~legacy_headers~static_analysis_demos~tests build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2zyy65w          ^hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   l2jhx75              ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv                  ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dmrfvkn          ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   y6e5oxf          ^netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   7ncrkw5          ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vogjzqj          ^nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ys6yntb          ^odc@1.4.5%apple-clang@13.1.6~fortran~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hthkaqt          ^py-eccodes@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dojhs4e              ^py-attrs@21.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   j3nwjcm              ^py-cffi@1.15.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   to37r6r                  ^libffi@3.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bnbnta6                  ^py-pycparser@2.20%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wd5upz7              ^py-findlibs@0.0.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hrqj4gt          ^py-h5py@3.6.0%apple-clang@13.1.6+mpi arch=darwin-monterey-x86_64
+ -   wqfesiz              ^py-mpi4py@3.1.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   m3bw6xi              ^py-pkgconfig@1.5.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dq2i3cc                  ^py-poetry-core@1.0.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fsbow6f          ^py-netcdf4@1.5.3%apple-clang@13.1.6+mpi patches=255b5ae arch=darwin-monterey-x86_64
+ -   p3toavi              ^py-cftime@1.0.3.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pm6ooe4          ^py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny              ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md              ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3              ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme                  ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb                      ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                          ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew                      ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj                  ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca              ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bkwuu2x          ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   nmnqqf2              ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4yyr2si          ^py-pycodestyle@2.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   xoj7nvt          ^py-pyhdf@0.10.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mn2ne6f          ^py-pyyaml@6.0%apple-clang@13.1.6+libyaml arch=darwin-monterey-x86_64
+ -   d42lduk              ^libyaml@0.2.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5h6kozd          ^py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y              ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh                  ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra                  ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd                      ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j                  ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2pfg5ro          ^udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr              ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+ -   ax6jox2      ^py-boto3@1.18.12%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   34lilxg          ^py-botocore@1.21.12%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ib7bgs2              ^py-jmespath@0.10.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   24xowte              ^py-urllib3@1.26.6%apple-clang@13.1.6~brotli~secure~socks arch=darwin-monterey-x86_64
+ -   gtfbizk          ^py-s3transfer@0.5.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   45ftbxa      ^py-cartopy@0.20.2%apple-clang@13.1.6~ows+plotting arch=darwin-monterey-x86_64
+ -   mpbsp7j          ^gdal@3.4.3%apple-clang@13.1.6~armadillo~cfitsio~crypto~cryptopp~curl~expat~geos~gif~grib~hdf4~hdf5~jasper~java+jpeg~kea~libiconv~libkml+liblzma+libtool+libz~netcdf~odbc~opencl~openjpeg~pcre~pcre2~perl~pg~png~poppler+proj+python~qhull~sosi~sqlite3~unix_stdio_64~xerces~xml2 arch=darwin-monterey-x86_64
+ -   b2klwww              ^gmake@3.81%apple-clang@13.1.6~guile+nls patches=ca60bd9 arch=darwin-monterey-x86_64
+ -   cayswtm              ^json-c@0.15%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   xp4wunr              ^libgeotiff@1.6.0%apple-clang@13.1.6+jpeg+proj+zlib arch=darwin-monterey-x86_64
+ -   reuz6tk                  ^libtiff@4.2.0%apple-clang@13.1.6~jbig~jpeg~jpeg12~lerc~libdeflate~lzma~old-jpeg~pixarlog~webp~zlib~zstd arch=darwin-monterey-x86_64
+ -   4ibpnss                  ^proj@8.1.0%apple-clang@13.1.6+curl~tiff arch=darwin-monterey-x86_64
+ -   sp6yf6f                      ^googletest@1.10.0%apple-clang@13.1.6~gmock~ipo+pthreads+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   xfjobpc                      ^sqlite@3.38.5%apple-clang@13.1.6+column_metadata+dynamic_extensions+fts~functions+rtree arch=darwin-monterey-x86_64
+ -   byc6hew                          ^readline@8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   afxntiz          ^geos@3.9.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo patches=ab78db7 arch=darwin-monterey-x86_64
+ -   hr33flw          ^py-matplotlib@3.5.2%apple-clang@13.1.6~animation~fonts+image~latex~movies backend=macosx arch=darwin-monterey-x86_64
+ -   fu3dvai              ^freetype@2.11.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   6cyb6os                  ^libpng@1.6.37%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pi2djh6              ^py-certifi@2021.10.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   aontywr              ^py-cycler@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mliq6k7              ^py-fonttools@4.31.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   h7r2g3g              ^py-kiwisolver@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zo7hkm5                  ^py-cppy@1.1.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bgi3y3i              ^py-pillow@9.0.0%apple-clang@13.1.6~freetype~imagequant+jpeg~jpeg2000~lcms~tiff~webp~webpmux~xcb+zlib arch=darwin-monterey-x86_64
+ -   yi7kesd              ^py-setuptools-scm-git-archive@1.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wlbwny4              ^qhull@2020.2%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   b4gjhrg          ^py-pyproj@3.1.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hwemh3f          ^py-pyshp@2.1.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zn3d2o5          ^py-shapely@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sczej3l      ^py-jinja2@3.0.3%apple-clang@13.1.6~i18n arch=darwin-monterey-x86_64
+ -   teqdpxr          ^py-markupsafe@2.0.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bt65jam      ^py-ruamel-yaml@0.17.16%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cq3o75x      ^py-ruamel-yaml-clib@0.2.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized jedi-fv3-env@1.0.0
+ -   hw5jqy3  jedi-fv3-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   kluruqq      ^base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz          ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck              ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm                  ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb              ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref              ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym          ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l              ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp                  ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy          ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2          ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+ -   5ntpk6k      ^fms@release-jcsda%apple-clang@13.1.6+64bit+gfs_phys~ipo~openmp+quad_precision build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hepmggs          ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   dmrfvkn          ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   lbciw4d      ^jedi-base-env@1.0.0%apple-clang@13.1.6~fftw arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sndeyyx          ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   q4ivaap          ^bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   qnnplnb              ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz                  ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd                  ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                      ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em                      ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                          ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4lncrkw          ^eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   lhm7c4h              ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2mnzijl          ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   dpakuyd              ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3              ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw              ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx              ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   ui4mh7a          ^ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   bmb2vob              ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ebz4z53          ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rhwfdbf          ^gsl-lite@0.37.0%apple-clang@13.1.6~cmake_export_package_registry~compat_header~cuda_tests~examples~ipo~legacy_headers~static_analysis_demos~tests build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2zyy65w          ^hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   l2jhx75              ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv                  ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   y6e5oxf          ^netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   7ncrkw5          ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vogjzqj          ^nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ys6yntb          ^odc@1.4.5%apple-clang@13.1.6~fortran~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hthkaqt          ^py-eccodes@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dojhs4e              ^py-attrs@21.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   j3nwjcm              ^py-cffi@1.15.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   to37r6r                  ^libffi@3.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bnbnta6                  ^py-pycparser@2.20%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wd5upz7              ^py-findlibs@0.0.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hrqj4gt          ^py-h5py@3.6.0%apple-clang@13.1.6+mpi arch=darwin-monterey-x86_64
+ -   wqfesiz              ^py-mpi4py@3.1.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   m3bw6xi              ^py-pkgconfig@1.5.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dq2i3cc                  ^py-poetry-core@1.0.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fsbow6f          ^py-netcdf4@1.5.3%apple-clang@13.1.6+mpi patches=255b5ae arch=darwin-monterey-x86_64
+ -   p3toavi              ^py-cftime@1.0.3.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pm6ooe4          ^py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny              ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md              ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3              ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme                  ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb                      ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                          ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew                      ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj                  ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca              ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bkwuu2x          ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   nmnqqf2              ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4yyr2si          ^py-pycodestyle@2.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   xoj7nvt          ^py-pyhdf@0.10.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mn2ne6f          ^py-pyyaml@6.0%apple-clang@13.1.6+libyaml arch=darwin-monterey-x86_64
+ -   d42lduk              ^libyaml@0.2.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5h6kozd          ^py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y              ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh                  ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra                  ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd                      ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j                  ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2pfg5ro          ^udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr              ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+
+==> Concretized jedi-mpas-env@1.0.0
+ -   wn5ixzc  jedi-mpas-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   kluruqq      ^base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz          ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck              ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm                  ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb              ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref              ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym          ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l              ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp                  ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy          ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2          ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+ -   lbciw4d      ^jedi-base-env@1.0.0%apple-clang@13.1.6~fftw arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sndeyyx          ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   q4ivaap          ^bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   qnnplnb              ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz                  ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd                  ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                      ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em                      ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                          ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hepmggs          ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   4lncrkw          ^eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   lhm7c4h              ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2mnzijl          ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   dpakuyd              ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3              ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw              ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx              ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   ui4mh7a          ^ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   bmb2vob              ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ebz4z53          ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rhwfdbf          ^gsl-lite@0.37.0%apple-clang@13.1.6~cmake_export_package_registry~compat_header~cuda_tests~examples~ipo~legacy_headers~static_analysis_demos~tests build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2zyy65w          ^hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   l2jhx75              ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv                  ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dmrfvkn          ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   y6e5oxf          ^netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   7ncrkw5          ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vogjzqj          ^nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ys6yntb          ^odc@1.4.5%apple-clang@13.1.6~fortran~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hthkaqt          ^py-eccodes@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dojhs4e              ^py-attrs@21.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   j3nwjcm              ^py-cffi@1.15.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   to37r6r                  ^libffi@3.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bnbnta6                  ^py-pycparser@2.20%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wd5upz7              ^py-findlibs@0.0.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hrqj4gt          ^py-h5py@3.6.0%apple-clang@13.1.6+mpi arch=darwin-monterey-x86_64
+ -   wqfesiz              ^py-mpi4py@3.1.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   m3bw6xi              ^py-pkgconfig@1.5.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dq2i3cc                  ^py-poetry-core@1.0.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fsbow6f          ^py-netcdf4@1.5.3%apple-clang@13.1.6+mpi patches=255b5ae arch=darwin-monterey-x86_64
+ -   p3toavi              ^py-cftime@1.0.3.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pm6ooe4          ^py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny              ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md              ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3              ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme                  ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb                      ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                          ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew                      ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj                  ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca              ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bkwuu2x          ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   nmnqqf2              ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4yyr2si          ^py-pycodestyle@2.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   xoj7nvt          ^py-pyhdf@0.10.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mn2ne6f          ^py-pyyaml@6.0%apple-clang@13.1.6+libyaml arch=darwin-monterey-x86_64
+ -   d42lduk              ^libyaml@0.2.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5h6kozd          ^py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y              ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh                  ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra                  ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd                      ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j                  ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2pfg5ro          ^udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr              ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+
+==> Concretized jedi-ufs-env@1.0.0
+ -   6s37ow4  jedi-ufs-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   kluruqq      ^base-env@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   au3sodz          ^libbacktrace@2020-02-19%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sd3v4ck              ^autoconf@2.69%apple-clang@13.1.6 patches=35c4492,7793209,a49dd5b arch=darwin-monterey-x86_64
+ -   nwc5nhm                  ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   mfsxjnb              ^automake@1.16.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wo3kref              ^libtool@2.4.7%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   ykm7uym          ^nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   r7lmn4l              ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   fbre7tp                  ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   q7m3fsy          ^parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   3qpdjhn          ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   ta3jmc2          ^wget@1.21.3%apple-clang@13.1.6~libpsl~pcre~python+zlib ssl=openssl arch=darwin-monterey-x86_64
+ -   lbciw4d      ^jedi-base-env@1.0.0%apple-clang@13.1.6~fftw arch=darwin-monterey-x86_64
+ -   f5722wq          ^bison@3.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zbvdsea              ^diffutils@2.8.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sndeyyx          ^boost@1.78.0%apple-clang@13.1.6~atomic+chrono~clanglibcpp~container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem~graph~graph_parallel~icu~iostreams~json~locale~log~math~mpi+multithreaded~nowide~numpy+pic+program_options+python~random+regex+serialization+shared~signals~singlethreaded~stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout~wave cxxstd=14 patches=a440f96,b8569d7 visibility=hidden arch=darwin-monterey-x86_64
+ -   q4ivaap          ^bufr@11.7.0%apple-clang@13.1.6~ipo+python+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   qnnplnb              ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz                  ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   mskyyxd                  ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                      ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em                      ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                          ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hepmggs          ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   4lncrkw          ^eccodes@2.25.0%apple-clang@13.1.6~aec~fortran~ipo~memfs~netcdf~openmp~png~pthreads~python+shared~tools build_type=RelWithDebInfo definitions=auto jp2k=openjpeg samples=auto arch=darwin-monterey-x86_64
+ -   lhm7c4h              ^openjpeg@2.3.1%apple-clang@13.1.6~codec~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2mnzijl          ^eckit@1.19.0%apple-clang@13.1.6+admin+aio~curl~ipo~jemalloc+mpi+shared+sql~ssl+tools+unicode+xxhash build_type=RelWithDebInfo compression=bzip2,lz4 linalg=eigen,lapack arch=darwin-monterey-x86_64
+ -   dpakuyd              ^bzip2@1.0.8%apple-clang@13.1.6~debug~pic+shared arch=darwin-monterey-x86_64
+ -   vuqh5t3              ^eigen@3.4.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ndisnlw              ^flex@2.6.4%apple-clang@13.1.6+lex~nls patches=f8b85a0 arch=darwin-monterey-x86_64
+ -   lpn4jrx              ^lz4@1.9.3%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   ui4mh7a          ^ecmwf-atlas@0.29.0%apple-clang@13.1.6+eigen+fckit~fftw~ipo+shared~trans build_type=RelWithDebInfo patches=569103b arch=darwin-monterey-x86_64
+ -   bmb2vob              ^fckit@0.9.5%apple-clang@13.1.6+eckit~ipo+shared build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ebz4z53          ^git-lfs@3.1.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rhwfdbf          ^gsl-lite@0.37.0%apple-clang@13.1.6~cmake_export_package_registry~compat_header~cuda_tests~examples~ipo~legacy_headers~static_analysis_demos~tests build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   2zyy65w          ^hdf@4.2.15%apple-clang@13.1.6~external-xdr~fortran~java~netcdf+pic~shared~szip patches=49733dd,5434f29,ce75518,d54592d,f7d67e8 arch=darwin-monterey-x86_64
+ -   l2jhx75              ^libjpeg-turbo@2.1.0%apple-clang@13.1.6+shared+static arch=darwin-monterey-x86_64
+ -   sk4hsmv                  ^nasm@2.15.05%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dmrfvkn          ^jedi-cmake@1.3.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   y6e5oxf          ^netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   7ncrkw5          ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   vogjzqj          ^nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ys6yntb          ^odc@1.4.5%apple-clang@13.1.6~fortran~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   hthkaqt          ^py-eccodes@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dojhs4e              ^py-attrs@21.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   j3nwjcm              ^py-cffi@1.15.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   to37r6r                  ^libffi@3.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bnbnta6                  ^py-pycparser@2.20%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   wd5upz7              ^py-findlibs@0.0.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   hrqj4gt          ^py-h5py@3.6.0%apple-clang@13.1.6+mpi arch=darwin-monterey-x86_64
+ -   wqfesiz              ^py-mpi4py@3.1.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   m3bw6xi              ^py-pkgconfig@1.5.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dq2i3cc                  ^py-poetry-core@1.0.8%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fsbow6f          ^py-netcdf4@1.5.3%apple-clang@13.1.6+mpi patches=255b5ae arch=darwin-monterey-x86_64
+ -   p3toavi              ^py-cftime@1.0.3.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   pm6ooe4          ^py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny              ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md              ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3              ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme                  ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb                      ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                          ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew                      ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj                  ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca              ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bkwuu2x          ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   nmnqqf2              ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   4yyr2si          ^py-pycodestyle@2.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   xoj7nvt          ^py-pyhdf@0.10.4%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   mn2ne6f          ^py-pyyaml@6.0%apple-clang@13.1.6+libyaml arch=darwin-monterey-x86_64
+ -   d42lduk              ^libyaml@0.2.5%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5h6kozd          ^py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y              ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh                  ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra                  ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd                      ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j                  ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2pfg5ro          ^udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr              ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+ -   fizcn5a      ^ufs-weather-model-env@1.0.0%apple-clang@13.1.6~debug+python arch=darwin-monterey-x86_64
+ -   v4wtq5d          ^bacio@2.4.1%apple-clang@13.1.6~ipo+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   ijs6mru          ^crtm@v2.3-jedi.4%apple-clang@13.1.6~fix~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   wpl5cg7          ^esmf@8.3.0b09%apple-clang@13.1.6~debug~external-lapack+mpi+netcdf~pio~pnetcdf~xerces arch=darwin-monterey-x86_64
+ -   5ntpk6k          ^fms@release-jcsda%apple-clang@13.1.6+64bit+gfs_phys~ipo~openmp+quad_precision build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   fexnsle          ^g2@3.4.5%apple-clang@13.1.6~ipo+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   qykgnki              ^jasper@2.0.32%apple-clang@13.1.6+jpeg~opengl+shared build_type=Release arch=darwin-monterey-x86_64
+ -   6cyb6os              ^libpng@1.6.37%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tpw2r2j          ^g2tmpl@1.10.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   7yv2onf          ^ip@3.3.3%apple-clang@13.1.6~ipo+openmp+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   znv3vj7              ^sp@2.3.3%apple-clang@13.1.6~ipo+openmp+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   zszsaaf          ^mapl@2.12.3%apple-clang@13.1.6~debug+esma_gfe_namespace~extdata2g~flap~ipo~pflogger+shared build_type=RelWithDebInfo patches=7b9c28b,98f5232,b1964fc arch=darwin-monterey-x86_64
+ -   mr455ud              ^gftl-shared@1.5.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   7wywdfi              ^yafyaml@0.5.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   oe5ft77          ^ufs-pyenv@1.0.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   iaqgs26              ^py-f90nml@1.4.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sczej3l              ^py-jinja2@3.0.3%apple-clang@13.1.6~i18n arch=darwin-monterey-x86_64
+ -   teqdpxr                  ^py-markupsafe@2.0.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   6jyj26r          ^w3nco@2.4.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo patches=4126d42 arch=darwin-monterey-x86_64
+
+==> Concretized libpng@1.6.37
+ -   6cyb6os  libpng@1.6.37%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   fb5aox3      ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+
+==> Concretized mapl@2.12.3
+ -   zszsaaf  mapl@2.12.3%apple-clang@13.1.6~debug+esma_gfe_namespace~extdata2g~flap~ipo~pflogger+shared build_type=RelWithDebInfo patches=7b9c28b,98f5232,b1964fc arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   hepmggs      ^ecbuild@3.6.5%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   wpl5cg7      ^esmf@8.3.0b09%apple-clang@13.1.6~debug~external-lapack+mpi+netcdf~pio~pnetcdf~xerces arch=darwin-monterey-x86_64
+ -   gisiraj          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   4ugaura              ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   xj7vql7              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   r7lmn4l          ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm              ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb              ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo                  ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                      ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   o2grlhk                      ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                          ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   psebo6c                              ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                          ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                              ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm              ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp              ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6          ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   mr455ud      ^gftl-shared@1.5.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   7wywdfi      ^yafyaml@0.5.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+
+==> Concretized nccmp@1.9.0.1
+ -   ykm7uym  nccmp@1.9.0.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized netcdf-c@4.8.1
+ -   r7lmn4l  netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm      ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb      ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   wqfmboo          ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t              ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w              ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura              ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk              ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                  ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                      ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                          ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                          ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                          ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                      ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                  ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                      ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm      ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp      ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized netcdf-cxx4@4.3.1
+ -   y6e5oxf  netcdf-cxx4@4.3.1%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   67flp7d              ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized netcdf-fortran@4.5.4
+ -   qvo3cw6  netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   67flp7d              ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized nlohmann-json@3.10.5
+==> Warning: included configuration files should be updated manually [files=site, common]
+ -   7ncrkw5  nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized nlohmann-json-schema-validator@2.1.0
+ -   vogjzqj  nlohmann-json-schema-validator@2.1.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   7ncrkw5      ^nlohmann-json@3.10.5%apple-clang@13.1.6~ipo~multiple_headers build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+
+==> Concretized parallel-netcdf@1.12.2
+ -   fbre7tp  parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   nwc5nhm      ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   wqfmboo      ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t          ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura          ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk          ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574              ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                  ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                      ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                      ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                      ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                  ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26              ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                  ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+
+==> Concretized parallelio@2.5.4
+ -   q7m3fsy  parallelio@2.5.4%apple-clang@13.1.6~ipo+pnetcdf+shared~timing build_type=RelWithDebInfo patches=55a6d7a arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   r7lmn4l      ^netcdf-c@4.8.1%apple-clang@13.1.6+dap~fsync~hdf4~jna+mpi+parallel-netcdf+pic+shared patches=de556da arch=darwin-monterey-x86_64
+ -   cmwd5bm          ^curl@7.83.0%apple-clang@13.1.6+gssapi+ldap~libidn2~librtmp~libssh~libssh2+nghttp2 libs=shared,static tls=secure_transport arch=darwin-monterey-x86_64
+ -   x3gsaeb          ^hdf5@1.12.1%apple-clang@13.1.6~cxx+fortran+hl~ipo~java+mpi+shared~szip+threadsafe+tools api=default build_type=RelWithDebInfo patches=ee351eb arch=darwin-monterey-x86_64
+ -   wqfmboo              ^openmpi@4.1.3%apple-clang@13.1.6~atomics~cuda~cxx~cxx_exceptions~gpfs+internal-hwloc~java~legacylaunchers~lustre~memchecker~pmi+romio+rsh~singularity+static+two_level_namespace+vt+wrapper-rpath fabrics=none schedulers=none arch=darwin-monterey-x86_64
+ -   7mt6q5t                  ^openssh@8.6p1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   4ugaura                  ^pkg-config@0.29.2%apple-clang@13.1.6+internal_glib arch=darwin-monterey-x86_64
+ -   o2grlhk                  ^pmix@4.1.2%apple-clang@13.1.6~docs+pmi_backwards_compatibility~restful arch=darwin-monterey-x86_64
+ -   zopo574                      ^hwloc@2.7.1%apple-clang@13.1.6~cairo~cuda~gl~libudev+libxml2~netloc~nvml~opencl~pci~rocm+shared arch=darwin-monterey-x86_64
+ -   gisiraj                          ^libxml2@2.9.13%apple-clang@13.1.6~python arch=darwin-monterey-x86_64
+ -   gvn5nm3                              ^libiconv@1.16%apple-clang@13.1.6 libs=shared,static arch=darwin-monterey-x86_64
+ -   xj7vql7                              ^xz@5.2.5%apple-clang@13.1.6~pic libs=shared,static arch=darwin-monterey-x86_64
+ -   fb5aox3                              ^zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+ -   psebo6c                          ^ncurses@6.2%apple-clang@13.1.6~symlinks+termlib abi=none arch=darwin-monterey-x86_64
+ -   iveeb26                      ^libevent@2.1.12%apple-clang@13.1.6+openssl arch=darwin-monterey-x86_64
+ -   kl4ebqg                          ^openssl@1.1.1o%apple-clang@13.1.6~docs~shared certs=system arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+ -   fbre7tp          ^parallel-netcdf@1.12.2%apple-clang@13.1.6~burstbuffer+cxx+fortran+pic+shared arch=darwin-monterey-x86_64
+ -   qvo3cw6      ^netcdf-fortran@4.5.4%apple-clang@13.1.6~doc+pic+shared arch=darwin-monterey-x86_64
+
+==> Concretized py-numpy@1.22.3
+ -   qnnplnb  py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz      ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   mskyyxd      ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc          ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   3qpdjhn              ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   sjpc3em          ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h              ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized py-pandas@1.4.0
+ -   pm6ooe4  py-pandas@1.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   bpubhny      ^py-bottleneck@1.3.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   qnnplnb          ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz              ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   n3ld56w                  ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   mskyyxd              ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc                  ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   3qpdjhn                      ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   sjpc3em                  ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h                      ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zrne5md      ^py-numexpr@2.7.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rf7vga3      ^py-python-dateutil@2.8.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rdneeme          ^py-setuptools-scm@6.3.2%apple-clang@13.1.6+toml arch=darwin-monterey-x86_64
+ -   6zafshb              ^py-packaging@21.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   jfhtna2                  ^py-pyparsing@3.0.6%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2yuweew              ^py-tomli@1.2.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   w27xhwj          ^py-six@1.16.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   tc4bjca      ^py-pytz@2021.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized py-scipy@1.8.0
+ -   5h6kozd  py-scipy@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   zn6bhjz      ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   n3ld56w          ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+ -   mskyyxd      ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc          ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   3qpdjhn              ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   sjpc3em          ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h              ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   qnnplnb      ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   bkwuu2x      ^py-pybind11@2.8.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   nmnqqf2          ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   dfvgw2y      ^py-pythran@0.11.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   rafr2jh          ^llvm-openmp@12.0.1%apple-clang@13.1.6~ipo~multicompat build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   mnvx6ra          ^py-beniget@0.4.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   cvx63sd              ^py-gast@0.5.3%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   2o4x47j          ^py-ply@3.11%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+
+==> Concretized py-shapely@1.8.0
+ -   zn3d2o5  py-shapely@1.8.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   afxntiz      ^geos@3.9.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo patches=ab78db7 arch=darwin-monterey-x86_64
+ -   67flp7d          ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   nmnqqf2          ^ninja@1.10.2%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   3qpdjhn              ^python@3.9.13%apple-clang@13.1.6+bz2+ctypes+dbm~debug+ensurepip+libxml2+lzma+nis~optimizations+pic+pyexpat~pythoncmd+readline+shared+sqlite3+ssl~tix~tkinter~ucs4+uuid+zlib patches=0d98e93,4c24573,f2fd060 arch=darwin-monterey-x86_64
+ -   mskyyxd      ^py-cython@0.29.30%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   blvv2qc          ^py-pip@21.3.1%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   sjpc3em          ^py-setuptools@59.4.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   umiov4h              ^py-wheel@0.37.0%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   qnnplnb      ^py-numpy@1.22.3%apple-clang@13.1.6+blas+lapack patches=873745d,e9508c3 arch=darwin-monterey-x86_64
+ -   zn6bhjz          ^openblas@0.3.19%apple-clang@13.1.6~bignuma~consistent_fpcsr~ilp64+locking+noavx512+pic+shared symbol_suffix=none threads=none arch=darwin-monterey-x86_64
+ -   n3ld56w              ^perl@5.30.3%apple-clang@13.1.6~cpanm+shared+threads arch=darwin-monterey-x86_64
+
+==> Concretized sp@2.3.3
+ -   znv3vj7  sp@2.3.3%apple-clang@13.1.6~ipo+openmp+pic build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized udunits@2.2.28
+ -   2pfg5ro  udunits@2.2.28%apple-clang@13.1.6 arch=darwin-monterey-x86_64
+ -   5y4x7rr      ^expat@2.4.8%apple-clang@13.1.6~libbsd arch=darwin-monterey-x86_64
+
+==> Concretized w3nco@2.4.1
+ -   6jyj26r  w3nco@2.4.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo patches=4126d42 arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+
+==> Concretized yafyaml@0.5.1
+ -   7wywdfi  yafyaml@0.5.1%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   67flp7d      ^cmake@3.23.1%apple-clang@13.1.6~doc+ncurses+ownlibs~qt build_type=Release arch=darwin-monterey-x86_64
+ -   mr455ud      ^gftl-shared@1.5.0%apple-clang@13.1.6~ipo build_type=RelWithDebInfo arch=darwin-monterey-x86_64
+ -   gbs4uxx          ^git@2.36.0%apple-clang@13.1.6+man+nls+perl+subtree~svn~tcltk arch=darwin-monterey-x86_64
+ -   nwc5nhm          ^m4@1.4.6%apple-clang@13.1.6+sigsegv arch=darwin-monterey-x86_64
+
+==> Concretized zlib@1.2.12
+ -   fb5aox3  zlib@1.2.12%apple-clang@13.1.6+optimize+pic+shared patches=0d38234 arch=darwin-monterey-x86_64
+
