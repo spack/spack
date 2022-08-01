@@ -87,16 +87,6 @@ def flake8_package_with_errors(scope="function"):
         shutil.move(tmp, filename)
 
 
-def test_changed_files(flake8_package):
-    # changed_files returns file paths relative to the root
-    # directory of Spack. Convert to absolute file paths.
-    files = [os.path.join(spack.paths.prefix, os.path.normpath(path)) for path in changed_files()]
-
-    # There will likely be other files that have changed
-    # when these tests are run
-    assert flake8_package in files
-
-
 def test_changed_files_from_git_rev_base(tmpdir, capfd):
     """Test arbitrary git ref as base."""
     git = which("git", required=True)
