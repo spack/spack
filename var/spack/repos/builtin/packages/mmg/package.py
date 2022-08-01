@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
+from spack.util.executable import which
 
 
 class Mmg(CMakePackage):
@@ -58,3 +61,11 @@ class Mmg(CMakePackage):
             args.append("-DLIBMMG_STATIC=ON")
 
         return args
+
+    # parmmg requires this for its build
+    @run_after("install")
+    def install_source(self):
+        prefix = self.spec.prefix
+        cp = which("cp")
+        cp("-r", os.path.join(self.stage.source_path, "src"), prefix)
+        cp("-r", os.path.join(self.build_directory, "src"), prefix)
