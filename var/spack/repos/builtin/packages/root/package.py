@@ -611,6 +611,9 @@ class Root(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+        if "platform=darwin" in spec:
+            # Newer deployment targets cause fatal errors in rootcling
+            env.unset("MACOSX_DEPLOYMENT_TARGET")
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)

@@ -141,6 +141,7 @@ class MacOs(OperatingSystem):
             "10.16": "bigsur",
             "11": "bigsur",
             "12": "monterey",
+            "13": "ventura",
         }
 
         version = macos_version()
