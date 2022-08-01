@@ -73,6 +73,14 @@ class Xl(Compiler):
         raise UnsupportedCompilerFlag(self, "the C11 standard", "c11_flag", "< 12.1")
 
     @property
+    def cxx14_flag(self):
+        # .real_version does not have the "y.z" component of "w.x.y.z", which
+        # is required to distinguish whether support is available
+        if self.version >= ver("16.1.1.8"):
+            return "-std=c++14"
+        raise UnsupportedCompilerFlag(self, "the C++14 standard", "cxx14_flag", "< 16.1.1.8")
+
+    @property
     def cc_pic_flag(self):
         return "-qpic"
 
