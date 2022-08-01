@@ -33,3 +33,5 @@ class Crtm(CMakePackage):
     version('2.4.0', commit='a831626')
     # Uses the tip of REL-2.3.0_emc branch
     version('2.3.0', commit='99760e6')
+    # JEDI applications so far use this version
+    version('v2.3-jedi.4', commit='bfede42')
