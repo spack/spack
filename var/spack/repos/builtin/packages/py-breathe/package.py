@@ -36,7 +36,8 @@ class PyBreathe(PythonPackage):
     depends_on("py-six@1.4:", type=("build", "run"), when="@:4.20")
     depends_on("py-six@1.9:", type=("build", "run"), when="@4.21:4.32")
     depends_on("py-sphinx", type=("build", "run"))
+    depends_on("py-sphinx@:3", type=("build", "run"), when="@:4.20")
     depends_on("py-sphinx@3:3.2", type=("build", "run"), when="@4.21:4.32")
-    depends_on("py-sphinx@3:4", type=("build", "run"), when="@4.33:")
+    depends_on("py-sphinx@3:", type=("build", "run"), when="@4.33:")
 
     depends_on("doxygen@1.8.4:", type="run")
