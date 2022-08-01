@@ -11,13 +11,13 @@ class AppleLibuuid(BundlePackage):
 
     homepage = "https://opensource.apple.com/tarballs/Libsystem/"
 
-    version('1353.100.2')
+    version("1353.100.2")
 
-    provides('uuid')
+    provides("uuid")
 
     # Only supported on 'platform=darwin'
-    conflicts('platform=linux')
-    conflicts('platform=cray')
+    conflicts("platform=linux")
+    conflicts("platform=cray")
 
     @property
     def libs(self):
@@ -37,9 +37,9 @@ class AppleLibuuid(BundlePackage):
         confirms that it will link dynamically to
         `/usr/lib/system/libsystem_c.dylib`."""
 
-        return LibraryList('/usr/lib/libSystem.dylib')
+        return LibraryList("/usr/lib/libSystem.dylib")
 
     @property
     def headers(self):
         """Export the Apple libuuid header."""
-        return HeaderList(self.prefix.include.uuid.join('uuid.h'))
+        return HeaderList(self.prefix.include.uuid.join("uuid.h"))

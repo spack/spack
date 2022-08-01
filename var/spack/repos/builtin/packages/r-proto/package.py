@@ -14,5 +14,5 @@ class RProto(RPackage):
 
     cran = "proto"
 
-    version('1.0.0', sha256='9294d9a3b2b680bb6fac17000bfc97453d77c87ef68cfd609b4c4eb6d11d04d1')
-    version('0.3-10', sha256='d0d941bfbf247879b3510c8ef3e35853b1fbe83ff3ce952e93d3f8244afcbb0e')
+    version("1.0.0", sha256="9294d9a3b2b680bb6fac17000bfc97453d77c87ef68cfd609b4c4eb6d11d04d1")
+    version("0.3-10", sha256="d0d941bfbf247879b3510c8ef3e35853b1fbe83ff3ce952e93d3f8244afcbb0e")

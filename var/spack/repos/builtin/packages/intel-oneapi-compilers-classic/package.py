@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description
@@ -13,7 +13,7 @@ class IntelOneapiCompilersClassic(Package):
 
     """
 
-    maintainers = ['rscohn2']
+    maintainers = ["rscohn2"]
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
@@ -21,15 +21,17 @@ class IntelOneapiCompilersClassic(Package):
 
     phases = []
 
-    for ver in ['2022.1.0',
-                '2022.0.2',
-                '2022.0.1',
-                '2021.4.0',
-                '2021.3.0',
-                '2021.2.0',
-                '2021.1.2']:
+    for ver in [
+        "2022.1.0",
+        "2022.0.2",
+        "2022.0.1",
+        "2021.4.0",
+        "2021.3.0",
+        "2021.2.0",
+        "2021.1.2",
+    ]:
         version(ver)
-        depends_on('intel-oneapi-compilers@' + ver, when='@' + ver, type='run')
+        depends_on("intel-oneapi-compilers@" + ver, when="@" + ver, type="run")
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
@@ -42,9 +44,10 @@ class IntelOneapiCompilersClassic(Package):
 
         and from setting CC/CXX/F77/FC
         """
-        bin = join_path(self.spec['intel-oneapi-compilers'].prefix,
-                        'compile', 'linux', 'bin', 'intel64')
-        env.set('CC', join_path(bin, 'icc'))
-        env.set('CXX', join_path(bin, 'icpc'))
-        env.set('F77', join_path(bin, 'ifort'))
-        env.set('FC', join_path(bin, 'ifort'))
+        bin = join_path(
+            self.spec["intel-oneapi-compilers"].prefix, "compile", "linux", "bin", "intel64"
+        )
+        env.set("CC", join_path(bin, "icc"))
+        env.set("CXX", join_path(bin, "icpc"))
+        env.set("F77", join_path(bin, "ifort"))
+        env.set("FC", join_path(bin, "ifort"))
