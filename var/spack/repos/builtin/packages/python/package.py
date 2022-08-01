@@ -961,6 +961,7 @@ config.update(get_paths())
                 # get_config_vars
                 "BINDIR": self.prefix.bin,
                 "CC": "cc",
+                "CONFINCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "CXX": "c++",
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
@@ -1098,15 +1099,17 @@ config.update(get_paths())
 
     @property
     def headers(self):
-        directory = self.config_vars["include"]
+        # Location where pyconfig.h is _supposed_ to be
         config_h = self.config_vars["config_h_filename"]
-
         if os.path.exists(config_h):
             headers = HeaderList(config_h)
         else:
-            headers = find_headers("pyconfig", directory)
-            if headers:
-                config_h = headers[0]
+            # If not, one of these config vars should contain the right directory
+            for var in ["INCLUDEPY", "CONFINCLUDEPY"]:
+                headers = find_headers("pyconfig", self.config_vars[var])
+                if headers:
+                    config_h = headers[0]
+                    break
             else:
                 msg = "Unable to locate {} headers in {}"
                 raise spack.error.NoHeadersError(msg.format(self.name, directory))
