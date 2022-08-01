@@ -265,13 +265,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         options = [
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
+            from_variant("CMAKE_CXX_STANDARD", "std"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
-
-        if spec.satisfies("@develop"):
-            options.append(from_variant("CMAKE_CXX_STANDARD", "std"))
-        else:
-            options.append(from_variant("Kokkos_CXX_STANDARD", "std"))
 
         spack_microarches = []
         if "+cuda" in spec:
