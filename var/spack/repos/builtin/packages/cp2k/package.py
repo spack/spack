@@ -716,6 +716,35 @@ class Cp2k(MakefilePackage, CudaPackage):
         mkdirp(self.prefix.include)
         install('src/start/libcp2k.h', join_path(self.prefix.include, 'libcp2k.h'))
 
+    @run_after('install')
+    def fix_package_config(self):
+        """
+        Default build procedure generates libcp2k.pc with invalid paths,
+        because they are collected from temporary directory.
+
+        Ignoring invalid paths, most library-related switches are correct
+        except for fftw and openblas.
+
+        This procedure is appending two missing switches (tested with GROMACS 2022.2 + CP2K).
+
+        In case such approach causes issues in the future, it might be necessary
+        to generate and override entire libcp2k.pc.
+        """
+        with open(join_path(self.prefix.lib.pkgconfig, 'libcp2k.pc'), 'r+') as handle:
+            content = handle.read().rstrip()
+
+            if '^fftw' in self.spec:
+                content += ' -lfftw3'
+
+            if '^fftw+openmp' in self.spec:
+                content += ' -lfftw3_omp'
+
+            content += ' -lopenblas'
+            content += '\n'
+
+            handle.seek(0)
+            handle.write(content)
+
     def check(self):
         data_dir = join_path(self.stage.source_path, 'data')
 
