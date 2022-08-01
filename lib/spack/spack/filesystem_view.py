@@ -454,7 +454,7 @@ class YamlFilesystemView(FilesystemView):
             # convert the file we want to remove to a source in this spec
             projection = self.get_projection_for_spec(spec)
             relative_path = os.path.relpath(file, projection)
-            test_path = os.path.join(spec.prefix, relative_path)
+            test_path = spec.prefix.joinpath(relative_path)
 
             # check if this spec owns a file of that name (through the
             # manifest in the metadata dir, which we have in the view).
@@ -596,7 +596,7 @@ class YamlFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
+            return self._root.joinpath(locator_spec.format(proj))
         return self._root
 
     def get_all_specs(self):
@@ -796,7 +796,7 @@ class SimpleFilesystemView(FilesystemView):
 
         # Make the directory structure
         for dst in visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            os.mkdir(self._root.joinpath(dst))
 
         # Then group the files to be linked by spec...
         # For compatibility, we have to create a merge_map dict mapping
@@ -807,8 +807,8 @@ class SimpleFilesystemView(FilesystemView):
         for (spec, (src_root, rel_paths)) in zip(specs, files_per_spec):
             merge_map = dict()
             for dst_rel, (_, src_rel) in rel_paths:
-                full_src = os.path.join(src_root, src_rel)
-                full_dst = os.path.join(self._root, dst_rel)
+                full_src = src_root.joinpath(src_rel)
+                full_dst = self._root.joinpath(dst_rel)
                 merge_map[full_src] = full_dst
             spec.package.add_files_to_view(self, merge_map, skip_if_exists=False)
 
@@ -841,11 +841,11 @@ class SimpleFilesystemView(FilesystemView):
             raise MergeConflictSummary(metadata_visitor.file_conflicts)
 
         for dst in metadata_visitor.directories:
-            os.mkdir(os.path.join(self._root, dst))
+            os.mkdir(self._root.joinpath(dst))
 
         for dst_relpath, (src_root, src_relpath) in metadata_visitor.files.items():
-            self.link(os.path.join(src_root, src_relpath),
-                      os.path.join(self._root, dst_relpath))
+            self.link(src_root.joinpath(src_relpath),
+                      self._root.joinpath(dst_relpath))
 
     def get_relative_projection_for_spec(self, spec):
         # Extensions are placed by their extendee, not by their own spec
@@ -869,7 +869,7 @@ class SimpleFilesystemView(FilesystemView):
 
         proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, locator_spec.format(proj))
+            return self._root.joinpath(locator_spec.format(proj))
         return self._root
 
 

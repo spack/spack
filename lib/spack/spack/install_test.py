@@ -53,12 +53,12 @@ def get_all_test_suites():
         return []
 
     def valid_stage(d):
-        dirpath = os.path.join(stage_root, d)
+        dirpath = stage_root.joinpath(d)
         return (dirpath.is_dir() and
                 test_suite_filename in os.listdir(dirpath))
 
     candidates = [
-        os.path.join(stage_root, d, test_suite_filename)
+        stage_root.joinpath(d, test_suite_filename)
         for d in os.listdir(stage_root)
         if valid_stage(d)
     ]
@@ -211,7 +211,7 @@ class TestSuite(object):
     @property
     def stage(self):
         return spack.util.prefix.Prefix(
-            os.path.join(get_test_stage_dir(), self.content_hash))
+            get_test_stage_dir().joinpath(self.content_hash))
 
     @property
     def results_file(self):

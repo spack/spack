@@ -58,7 +58,7 @@ def unconditional_environment_modifications(view):
     env = environment.EnvironmentModifications()
 
     for subdir, vars in prefix_inspections(sys.platform).items():
-        full_subdir = os.path.join(view.root, subdir)
+        full_subdir = view.root.joinpath(subdir)
         for var in vars:
             env.prepend_path(var, full_subdir)
 

@@ -57,7 +57,7 @@ def write_manifest(spec):
         manifest = {}
         for root, dirs, files in os.walk(spec.prefix):
             for entry in list(dirs + files):
-                path = os.path.join(root, entry)
+                path = root.joinpath(entry)
                 manifest[path] = create_manifest_entry(path)
         manifest[spec.prefix] = create_manifest_entry(spec.prefix)
 
@@ -178,14 +178,14 @@ def check_spec_manifest(spec):
                 # This file is linked in by an extension. Belongs to extension
                 return True
         elif p.is_dir() and p not in manifest:
-            if all(is_extension_artifact(os.path.join(p, f))
+            if all(is_extension_artifact(p.joinpath(f))
                    for f in os.listdir(p)):
                 return True
         return False
 
     for root, dirs, files in os.walk(prefix):
         for entry in list(dirs + files):
-            path = os.path.join(root, entry)
+            path = root.joinpath(entry)
 
             # Do not check links from prefix to active extension
             # TODO: make this stricter for non-linux systems that use symlink

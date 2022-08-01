@@ -754,7 +754,7 @@ def relocate_links(links, orig_layout_root,
         new_install_prefix (str): install prefix where we want to relocate
     """
     placeholder = _placeholder(orig_layout_root)
-    abs_links = [os.path.join(new_install_prefix, link) for link in links]
+    abs_links = [new_install_prefix.joinpath(link) for link in links]
     for abs_link in abs_links:
         link_target = os.readlink(abs_link)
         link_target = re.sub(placeholder, orig_layout_root, link_target)
@@ -884,7 +884,7 @@ def is_relocatable(spec):
     # Explore the installation prefix of the spec
     for root, dirs, files in os.walk(spec.prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in ('.spack', 'man')]
-        abs_files = [os.path.join(root, f) for f in files]
+        abs_files = [root.joinpath(f) for f in files]
         if not all(file_is_relocatable(f) for f in abs_files if is_binary(f)):
             # If any of the file is not relocatable, the entire
             # package is not relocatable
@@ -1007,7 +1007,7 @@ def fixup_macos_rpath(root, filename):
     Returns:
         True if fixups were applied, else False
     """
-    abspath = os.path.join(root, filename)
+    abspath = root.joinpath(filename)
     if mime_type(abspath) != ('application', 'x-mach-binary'):
         return False
 

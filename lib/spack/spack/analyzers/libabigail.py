@@ -68,7 +68,7 @@ class Libabigail(AnalyzerBase):
             outdir = os.path.dirname(obj.replace(self.spec.package.prefix,
                                      '').strip(os.path.sep))
             outfile = "spack-analyzer-libabigail-%s.xml" % obj.name
-            outfile = os.path.join(self.output_dir, outdir, outfile)
+            outfile = self.output_dir.joinpath(outdir, outfile)
             outdir = outfile.parent
 
             # Create the output directory

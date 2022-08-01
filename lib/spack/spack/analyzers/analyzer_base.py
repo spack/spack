@@ -37,7 +37,7 @@ def get_analyzer_dir(spec, analyzer_dir=None):
 
     # We follow the same convention as the spec install (this could be better)
     package_prefix = os.sep.join(spec.package.prefix.split('/')[-3:])
-    meta_dir = os.path.join(analyzer_dir, package_prefix)
+    meta_dir = analyzer_dir.joinpath(package_prefix)
     return meta_dir
 
 
@@ -81,7 +81,7 @@ class AnalyzerBase(object):
         """
         if not hasattr(self, "_output_dir"):
             output_dir = get_analyzer_dir(self.spec, self.dirname)
-            self._output_dir = os.path.join(output_dir, self.name)
+            self._output_dir = output_dir.joinpath(self.name)
 
         return self._output_dir
 
@@ -99,7 +99,7 @@ class AnalyzerBase(object):
         # that in the future, we could upload to a monitor server
         if result[self.name]:
 
-            outfile = os.path.join(self.output_dir, self.outfile)
+            outfile = self.output_dir.joinpath(self.outfile)
 
             # Only try to create the results directory if we have a result
             if not self._output_dir.exists():

@@ -164,7 +164,7 @@ class IntelPackage(PackageBase):
                     dirs.append(self.normalize_path(
                         'licenses', component_suite_dir, relative=True))
 
-        files = [os.path.join(d, 'license.lic') for d in dirs]
+        files = [Path(d).joinpath('license.lic') for d in dirs]
         return files
 
     #: Components to install (list of name patterns from pset/mediaconfig.xml)

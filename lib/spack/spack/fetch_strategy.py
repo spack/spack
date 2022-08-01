@@ -90,7 +90,7 @@ def _ensure_one_stage_entry(stage_path):
     """Ensure there is only one stage entry in the stage path."""
     stage_entries = os.listdir(stage_path)
     assert len(stage_entries) == 1
-    return os.path.join(stage_path, stage_entries[0])
+    return stage_path.joinpath(stage_entries[0])
 
 
 def fetcher(cls):
@@ -580,7 +580,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Remove everything but the archive from the stage
         for filename in os.listdir(self.stage.path):
-            abspath = os.path.join(self.stage.path, filename)
+            abspath = self.stage.path.joinpath(filename)
             if abspath != self.archive_file:
                 shutil.rmtree(abspath, ignore_errors=True)
 
@@ -746,7 +746,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             except OSError:
                 pass
             env = dict(os.environ)
-            env['GOPATH'] = os.path.join(Path.cwd(), 'go')
+            env['GOPATH'] = Path.cwd().joinpath('go')
             self.go('get', '-v', '-d', self.url, env=env)
 
     def archive(self, destination):
@@ -1394,7 +1394,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         if self.stage.save_filename:
             llnl.util.filesystem.rename(
-                os.path.join(self.stage.path, basename),
+                self.stage.path.joinpath(basename),
                 self.stage.save_filename)
 
         if not self.archive_file:
@@ -1443,7 +1443,7 @@ class GCSFetchStrategy(URLFetchStrategy):
 
         if self.stage.save_filename:
             os.rename(
-                os.path.join(self.stage.path, basename),
+                self.stage.path.joinpath(basename),
                 self.stage.save_filename)
 
         if not self.archive_file:
@@ -1705,12 +1705,12 @@ class FsCache(object):
         if isinstance(fetcher, CacheURLFetchStrategy):
             return
 
-        dst = os.path.join(self.root, relative_dest)
+        dst = self.root.joinpath(relative_dest)
         mkdirp(dst.parent)
         fetcher.archive(dst)
 
     def fetcher(self, target_path, digest, **kwargs):
-        path = os.path.join(self.root, target_path)
+        path = self.root.joinpath(target_path)
         return CacheURLFetchStrategy(path, digest, **kwargs)
 
     def destroy(self):

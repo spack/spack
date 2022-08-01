@@ -96,7 +96,7 @@ def create_stage_root(path):
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
                      .format(user_uid, p, owner_uid))
 
-    spack_src_subdir = os.path.join(path, _source_path_subdir)
+    spack_src_subdir = path.joinpath(_source_path_subdir)
     # When staging into a user-specified directory with `spack stage -p <PATH>`, we need
     # to ensure the `spack-src` subdirectory exists, as we can't rely on it being
     # created automatically by spack. It's not clear why this is the case for `spack
@@ -147,7 +147,7 @@ def _resolve_paths(candidates):
         # Ensure the path is unique per user.
         can_path = sup.canonicalize_path(path)
         if user not in can_path:
-            can_path = os.path.join(can_path, user)
+            can_path = can_path.joinpath(user)
 
         paths.append(can_path)
 
@@ -301,7 +301,7 @@ class Stage(object):
         if path is not None:
             self.path = path
         else:
-            self.path = os.path.join(get_stage_root(), self.name)
+            self.path = get_stage_root().joinpath(self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -314,7 +314,7 @@ class Stage(object):
             if self.name not in Stage.stage_locks:
                 sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
-                stage_lock_path = os.path.join(get_stage_root(), '.lock')
+                stage_lock_path = get_stage_root().joinpath('.lock')
 
                 tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
@@ -374,11 +374,11 @@ class Stage(object):
         if self.mirror_paths:
             fnames.extend(x.name for x in self.mirror_paths)
 
-        paths.extend(os.path.join(self.path, f) for f in fnames)
+        paths.extend(self.path.joinpath(f) for f in fnames)
         if not expanded:
             # If the download file is not compressed, the "archive" is a
             # single file placed in Stage.source_path
-            paths.extend(os.path.join(self.source_path, f) for f in fnames)
+            paths.extend(self.source_path.joinpath(f) for f in fnames)
 
         return paths
 
@@ -408,7 +408,7 @@ class Stage(object):
     @property
     def source_path(self):
         """Returns the well-known source directory path."""
-        return os.path.join(self.path, _source_path_subdir)
+        return self.path.joinpath(_source_path_subdir)
 
     def fetch(self, mirror_only=False, err_msg=None):
         """Retrieves the code or archive
@@ -528,14 +528,14 @@ class Stage(object):
             mkdirp(dest)
 
         # glob all files and directories in the source path
-        hidden_entries = glob.glob(os.path.join(self.source_path, '.*'))
-        entries = glob.glob(os.path.join(self.source_path, '*'))
+        hidden_entries = glob.glob(self.source_path.joinpath('.*'))
+        entries = glob.glob(self.source_path.joinpath('*'))
 
         # Move all files from stage to destination directory
         # Include hidden files for VCS repo history
         for entry in hidden_entries + entries:
             if entry.is_dir():
-                d = os.path.join(dest, entry.name)
+                d = dest.joinpath(entry.name)
                 shutil.copytree(entry, d, symlinks=True)
             else:
                 shutil.copy2(entry, dest)
@@ -693,8 +693,8 @@ class ResourceStage(Stage):
                 raise
 
         for key, value in iteritems(placement):
-            destination_path = os.path.join(target_path, value)
-            source_path = os.path.join(self.source_path, key)
+            destination_path = target_path.joinpath(value)
+            source_path = self.source_path.joinpath(key)
 
             if not destination_path.exists():
                 tty.info('Moving resource stage\n\tsource: '
@@ -823,7 +823,7 @@ def purge():
     if root.is_dir():
         for stage_dir in os.listdir(root):
             if stage_dir.startswith(stage_prefix) or stage_dir == '.lock':
-                stage_path = os.path.join(root, stage_dir)
+                stage_path = root.joinpath(stage_dir)
                 if stage_path.is_dir():
                     remove_linked_tree(stage_path)
                 else:

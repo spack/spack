@@ -156,7 +156,7 @@ class DirectoryLayout(object):
         # Otherwise just returns the YAML.
         yaml_path = os.path.join(
             self.metadata_path(spec), self._spec_file_name_yaml)
-        json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
+        json_path = self.metadata_path(spec).joinpath(self.spec_file_name)
         if yaml_path.exists() and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
             try:
@@ -271,11 +271,11 @@ class DirectoryLayout(object):
             path_elems = ["*"] * len(path_scheme.split(posixpath.sep))
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, 'spec.json']
-            pattern = os.path.join(self.root, *path_elems)
+            pattern = self.root.joinpath(*path_elems)
             spec_files = glob.glob(pattern)
             if not spec_files:  # we're probably looking at legacy yaml...
                 path_elems += [self.metadata_dir, 'spec.yaml']
-                pattern = os.path.join(self.root, *path_elems)
+                pattern = self.root.joinpath(*path_elems)
                 spec_files = glob.glob(pattern)
             specs.extend([self.read_spec(s) for s in spec_files])
         return specs
@@ -290,7 +290,7 @@ class DirectoryLayout(object):
             # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, self.deprecated_dir,
                            '*_spec.*']  # + self.spec_file_name]
-            pattern = os.path.join(self.root, *path_elems)
+            pattern = self.root.joinpath(*path_elems)
             spec_files = glob.glob(pattern)
             get_depr_spec_file = lambda x: os.path.join(
                 os.path.dirname(x.parent), self.spec_file_name)

@@ -127,7 +127,7 @@ def get_version():
     The commit sha is only added when available.
     """
     version = spack.spack_version
-    git_path = os.path.join(spack.paths.prefix, ".git")
+    git_path = spack.paths.prefix.joinpath(".git")
     if git_path.exists():
         git = exe.which("git")
         if not git:

@@ -27,5 +27,5 @@ class InstallFiles(AnalyzerBase):
 
         We write it out to the analyzers folder, with key as the analyzer name.
         """
-        manifest_file = os.path.join(self.meta_dir, "install_manifest.json")
+        manifest_file = self.meta_dir.joinpath("install_manifest.json")
         return {self.name: spack.monitor.read_json(manifest_file)}

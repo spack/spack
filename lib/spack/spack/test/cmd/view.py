@@ -37,7 +37,7 @@ def test_view_link_type(
     install('libdwarf')
     viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
     view(cmd, viewpath, 'libdwarf')
-    package_prefix = os.path.join(viewpath, 'libdwarf')
+    package_prefix = viewpath.joinpath('libdwarf')
     assert package_prefix.exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
@@ -53,7 +53,7 @@ def test_view_link_type_remove(
     install('needs-relocation')
     viewpath = str(tmpdir.mkdir('view_{0}'.format(add_cmd)))
     view(add_cmd, viewpath, 'needs-relocation')
-    bindir = os.path.join(viewpath, 'bin')
+    bindir = viewpath.joinpath('bin')
     assert bindir.exists()
 
     view('remove', viewpath, 'needs-relocation')
@@ -77,7 +77,7 @@ def test_view_projections(
     view(cmd, viewpath, '--projection-file={0}'.format(projection_file),
          'libdwarf')
 
-    package_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
+    package_prefix = viewpath.joinpath('libdwarf-20130207/libdwarf')
     assert package_prefix.exists()
 
     # Check that we use symlinks for and only for the appropriate subcommands
@@ -101,8 +101,8 @@ def test_view_multiple_projections(
     view('add', viewpath, '--projection-file={0}'.format(projection_file),
          'libdwarf', 'extendee')
 
-    libdwarf_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
-    extendee_prefix = os.path.join(viewpath, 'extendee-gcc/bin')
+    libdwarf_prefix = viewpath.joinpath('libdwarf-20130207/libdwarf')
+    extendee_prefix = viewpath.joinpath('extendee-gcc/bin')
     assert libdwarf_prefix.exists()
     assert extendee_prefix.exists()
 
@@ -123,8 +123,8 @@ def test_view_multiple_projections_all_first(
     view('add', viewpath, '--projection-file={0}'.format(projection_file),
          'libdwarf', 'extendee')
 
-    libdwarf_prefix = os.path.join(viewpath, 'libdwarf-20130207/libdwarf')
-    extendee_prefix = os.path.join(viewpath, 'extendee-gcc/bin')
+    libdwarf_prefix = viewpath.joinpath('libdwarf-20130207/libdwarf')
+    extendee_prefix = viewpath.joinpath('extendee-gcc/bin')
     assert libdwarf_prefix.exists()
     assert extendee_prefix.exists()
 
@@ -161,7 +161,7 @@ def test_view_extension(
     assert 'extension1@1.0' in view_activated
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
-    assert os.path.join(viewpath, 'bin', 'extension1'.exists())
+    assert viewpath.joinpath('bin', 'extension1'.exists())
 
 
 def test_view_extension_projection(
@@ -213,7 +213,7 @@ def test_view_extension_remove(
                                 '-v', viewpath,
                                 'extendee')
     assert 'extension1@1.0' not in view_activated
-    assert not os.path.join(viewpath, 'bin', 'extension1'.exists())
+    assert not viewpath.joinpath('bin', 'extension1'.exists())
 
 
 def test_view_extension_conflict(
@@ -237,7 +237,7 @@ def test_view_extension_conflict_ignored(
     viewpath = str(tmpdir.mkdir('view'))
     view('symlink', viewpath, 'extension1@1.0')
     view('symlink', viewpath, '-i', 'extension1@2.0')
-    with open(os.path.join(viewpath, 'bin', 'extension1'), 'r') as fin:
+    with open(viewpath.joinpath('bin', 'extension1'), 'r') as fin:
         assert fin.read() == '1.0'
 
 

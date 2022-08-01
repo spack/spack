@@ -26,9 +26,9 @@ def _relocate_spliced_links(links, orig_prefix, new_prefix):
     in our case. This still needs to be called after the copy to destination
     because it expects the new directory structure to be in place."""
     for link in links:
-        link_target = os.readlink(os.path.join(orig_prefix, link))
+        link_target = os.readlink(orig_prefix.joinpath(link))
         link_target = re.sub('^' + orig_prefix, new_prefix, link_target)
-        new_link_path = os.path.join(new_prefix, link)
+        new_link_path = new_prefix.joinpath(link)
         new_link_path.unlink()
         symlink(link_target, new_link_path)
 
@@ -53,10 +53,10 @@ def rewire_node(spec, explicit):
     """This function rewires a single node, worrying only about references to
     its subgraph. Binaries, text, and links are all changed in accordance with
     the splice. The resulting package is then 'installed.'"""
-    tempdir = tempfile.mkdtemp()
+    tempdir = Path(tempfile.mkdtemp())
     # copy anything installed to a temporary directory
     shutil.copytree(spec.build_spec.prefix,
-                    os.path.join(tempdir, spec.dag_hash()))
+                    tempdir.joinpath(spec.dag_hash()))
 
     spack.hooks.pre_install(spec)
     # compute prefix-to-prefix for every node from the build spec to the spliced
@@ -68,13 +68,13 @@ def rewire_node(spec, explicit):
     manifest = bindist.get_buildfile_manifest(spec.build_spec)
     platform = spack.platforms.by_name(spec.platform)
 
-    text_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+    text_to_relocate = [tempdir.joinpath(spec.dag_hash(), rel_path)
                         for rel_path in manifest.get('text_to_relocate', [])]
     if text_to_relocate:
         relocate.relocate_text(files=text_to_relocate,
                                prefixes=prefix_to_prefix)
 
-    bins_to_relocate = [os.path.join(tempdir, spec.dag_hash(), rel_path)
+    bins_to_relocate = [tempdir.joinpath(spec.dag_hash(), rel_path)
                         for rel_path in manifest.get('binary_to_relocate', [])]
     if bins_to_relocate:
         if 'macho' in platform.binary_formats:
@@ -97,7 +97,7 @@ def rewire_node(spec, explicit):
                                    prefixes=prefix_to_prefix)
     # Copy package into place, except for spec.json (because spec.json
     # describes the old spec and not the new spliced spec).
-    shutil.copytree(os.path.join(tempdir, spec.dag_hash()), spec.prefix,
+    shutil.copytree(tempdir.joinpath(spec.dag_hash()), spec.prefix,
                     ignore=shutil.ignore_patterns('spec.json',
                                                   'install_manifest.json'))
     if manifest.get('link_to_relocate'):

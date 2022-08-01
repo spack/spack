@@ -39,7 +39,7 @@ __all__ = [
 def fetch_log(pkg, do_fn, dir):
     log_files = {
         '_install_task': pkg.build_log_path,
-        'do_test': os.path.join(dir, TestSuite.test_log_name(pkg.spec)),
+        'do_test': dir.joinpath(TestSuite.test_log_name(pkg.spec)),
     }
     try:
         with codecs.open(log_files[do_fn.__name__], 'r', 'utf-8') as f:

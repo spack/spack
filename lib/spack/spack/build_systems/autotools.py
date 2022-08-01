@@ -111,13 +111,13 @@ class AutotoolsPackage(PackageBase):
         """File containing the list of remove libtool archives"""
         build_dir = self.build_directory
         if not self.build_directory.is_absolute():
-            build_dir = os.path.join(self.stage.path, build_dir)
-        return os.path.join(build_dir, 'removed_la_files.txt')
+            build_dir = self.stage.path.joinpath(build_dir)
+        return build_dir.joinpath('removed_la_files.txt')
 
     @property
     def archive_files(self):
         """Files to archive for packages based on autotools"""
-        files = [os.path.join(self.build_directory, 'config.log')]
+        files = [self.build_directory.joinpath('config.log')]
         if not self.install_libtool_archives:
             files.append(self._removed_la_files_log)
         return files

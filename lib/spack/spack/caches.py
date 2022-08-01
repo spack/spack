@@ -65,7 +65,7 @@ class MirrorCache(object):
 
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
-        dst = os.path.join(self.root, relative_dest)
+        dst = self.root.joinpath(relative_dest)
         mkdirp(dst.parent)
         fetcher.archive(dst)
 
@@ -73,8 +73,8 @@ class MirrorCache(object):
         """Symlink a human readible path in our mirror to the actual
         storage location."""
 
-        cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
-        storage_path = os.path.join(self.root, mirror_ref.storage_path)
+        cosmetic_path = self.root.joinpath(mirror_ref.cosmetic_path)
+        storage_path = self.root.joinpath(mirror_ref.storage_path)
         relative_dst = os.path.relpath(
             storage_path,
             start=cosmetic_path.parent)

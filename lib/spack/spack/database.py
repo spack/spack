@@ -337,23 +337,23 @@ class Database(object):
         self.root = root
 
         # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
+        self._db_dir = db_dir or self.root.joinpath(_db_dirname)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, 'index.json')
-        self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
-        self._lock_path = os.path.join(self._db_dir, 'lock')
+        self._index_path = self._db_dir.joinpath('index.json')
+        self._verifier_path = self._db_dir.joinpath('index_verifier')
+        self._lock_path = self._db_dir.joinpath('lock')
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
+        self.prefix_lock_path = self._db_dir.joinpath('prefix_lock')
 
         # Ensure a persistent location for dealing with parallel installation
         # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self._db_dir, 'failures')
+        self._failure_dir = self._db_dir.joinpath('failures')
 
         # Support special locks for handling parallel installation failures
         # of a spec.
-        self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
+        self.prefix_fail_path = self._db_dir.joinpath('prefix_failures')
 
         # Create needed directories and files
         if not is_upstream and not self._db_dir.exists():
@@ -448,7 +448,7 @@ class Database(object):
         tty.debug('Removing prefix failure tracking files')
         for fail_mark in os.listdir(self._failure_dir):
             try:
-                os.path.join(self._failure_dir, fail_mark).unlink()
+                self._failure_dir.joinpath(fail_mark).unlink()
             except OSError as exc:
                 tty.warn('Unable to remove failure marking file {0}: {1}'
                          .format(fail_mark, str(exc)))

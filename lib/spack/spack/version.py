@@ -1092,7 +1092,7 @@ class CommitLookup(object):
         known version prior to the commit, as well as the distance from that version
         to the commit in the git repo. Those values are used to compare Version objects.
         """
-        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+        dest = spack.paths.user_repos_cache_path.joinpath(self.repository_uri)
         if dest.endswith('.git'):
             dest = dest[:-4]
 

@@ -911,7 +911,7 @@ def _command_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If the command is not found
     """
-    path = os.path.join(spec.prefix.bin, spec.name)
+    path = spec.prefix.bin.joinpath(spec.name)
 
     if fs.is_exe(path):
         return spack.util.executable.Executable(path)
@@ -5390,7 +5390,7 @@ def save_dependency_specfiles(
                 dep_name, root_spec.name)
             raise SpecDependencyNotFoundError(msg)
         dep_spec = root_spec[dep_name]
-        json_path = os.path.join(output_directory, '{0}.json'.format(dep_name))
+        json_path = output_directory.joinpath('{0}.json'.format(dep_name))
 
         with open(json_path, 'w') as fd:
             fd.write(dep_spec.to_json(hash=ht.dag_hash))

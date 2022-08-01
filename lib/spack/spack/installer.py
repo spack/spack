@@ -168,19 +168,19 @@ def _do_fake_install(pkg):
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
-    fs.touch(os.path.join(pkg.prefix.bin, command))
+    fs.touch(pkg.prefix.bin.joinpath(command))
     if sys.platform != 'win32':
         chmod = which('chmod')
-        chmod('+x', os.path.join(pkg.prefix.bin, command))
+        chmod('+x', pkg.prefix.bin.joinpath(command))
 
     # Install fake header file
     fs.mkdirp(pkg.prefix.include)
-    fs.touch(os.path.join(pkg.prefix.include, header + '.h'))
+    fs.touch(pkg.prefix.include.joinpath(header + '.h'))
 
     # Install fake shared and static libraries
     fs.mkdirp(pkg.prefix.lib)
     for suffix in [dso_suffix, '.a']:
-        fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
+        fs.touch(pkg.prefix.lib.joinpath(library + suffix))
 
     # Install fake man page
     fs.mkdirp(pkg.prefix.man.man1)
@@ -459,7 +459,7 @@ def dump_packages(spec, path):
             # Locate the dependency package in the install tree and find
             # its provenance information.
             source = spack.store.layout.build_packages_path(node)
-            source_repo_root = os.path.join(source, node.namespace)
+            source_repo_root = source.joinpath(node.namespace)
 
             # If there's no provenance installed for the package, skip it.
             # If it's external, skip it because it either:
@@ -484,7 +484,7 @@ def dump_packages(spec, path):
                          .format(node.name))
 
         # Create a destination repository
-        dest_repo_root = os.path.join(path, node.namespace)
+        dest_repo_root = path.joinpath(node.namespace)
         if not dest_repo_root.exists():
             spack.repo.create_repo(dest_repo_root)
         repo = spack.repo.Repo(dest_repo_root)
@@ -548,7 +548,7 @@ def log(pkg):
     # Archive all phase log paths
     for phase_log in pkg.phase_log_files:
         log_file = phase_log.name
-        log_file = os.path.join(packages_dir.parent, log_file)
+        log_file = packages_dir.parent.joinpath(log_file)
         fs.install(phase_log, log_file)
 
     # Archive the environment modifications for the build.
@@ -582,7 +582,7 @@ def log(pkg):
             files = glob.glob(glob_expr)
             for f in files:
                 try:
-                    target = os.path.join(target_dir, f)
+                    target = target_dir.joinpath(f)
                     # We must ensure that the directory exists before
                     # copying a file in
                     fs.mkdirp(target.parent)
@@ -596,7 +596,7 @@ def log(pkg):
                     errors.write('[FAILED TO ARCHIVE]: {0}'.format(f))
 
         if errors.getvalue():
-            error_file = os.path.join(target_dir, 'errors.txt')
+            error_file = target_dir.joinpath('errors.txt')
             fs.mkdirp(target_dir)
             with open(error_file, 'w') as err:
                 err.write(errors.getvalue())
@@ -1893,7 +1893,7 @@ class BuildProcessInstaller(object):
         if not pkg.stage.source_path.is_dir():
             return
 
-        src_target = os.path.join(pkg.spec.prefix, 'share', pkg.name, 'src')
+        src_target = pkg.spec.prefix.joinpath('share', pkg.name, 'src')
         tty.debug('{0} Copying source to {1}' .format(self.pre, src_target))
 
         fs.install_tree(pkg.stage.source_path, src_target)
@@ -1941,7 +1941,7 @@ class BuildProcessInstaller(object):
                 log_file = "spack-build-%02d-%s-out.txt" % (
                     i + 1, phase_name.lower()
                 )
-                log_file = os.path.join(log_dir, log_file)
+                log_file = log_dir.joinpath(log_file)
 
                 try:
                     # DEBUGGING TIP - to debug this section, insert an IPython

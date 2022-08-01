@@ -29,5 +29,5 @@ class ConfigArgs(AnalyzerBase):
         package install directory, and read it into a json structure that has
         the name of the analyzer as the key.
         """
-        config_file = os.path.join(self.meta_dir, "spack-configure-args.txt")
+        config_file = self.meta_dir.joinpath("spack-configure-args.txt")
         return {self.name: spack.monitor.read_file(config_file)}

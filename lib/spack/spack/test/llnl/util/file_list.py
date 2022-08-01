@@ -198,7 +198,7 @@ class TestHeaderList(object):
 
 
 #: Directory where the data for the test below is stored
-search_dir = os.path.join(spack.paths.test_path, 'data', 'directory_search')
+search_dir = spack.paths.test_path.joinpath('data', 'directory_search')
 
 
 @pytest.mark.parametrize('search_fn,search_list,root,kwargs', [

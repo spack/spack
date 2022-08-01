@@ -69,7 +69,7 @@ def load_command_extension(command, path):
 
     # Compute the absolute path of the file to be loaded, along with the
     # name of the python module where it will be stored
-    cmd_path = os.path.join(path, extension, 'cmd', python_name + '.py')
+    cmd_path = path.joinpath(extension, 'cmd', python_name + '.py')
 
     # Short circuit if the command source file does not exist
     if not cmd_path.exists():
@@ -122,7 +122,7 @@ def get_command_paths():
 
     for path in extension_paths:
         extension = _python_name(extension_name(path))
-        command_paths.append(os.path.join(path, extension, 'cmd'))
+        command_paths.append(path.joinpath(extension, 'cmd'))
 
     return command_paths
 
@@ -169,7 +169,7 @@ def get_template_dirs():
     in extensions.
     """
     extension_dirs = get_extension_paths()
-    extensions = [os.path.join(x, 'templates') for x in extension_dirs]
+    extensions = [x.joinpath('templates') for x in extension_dirs]
     return extensions
 
 

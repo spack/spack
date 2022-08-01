@@ -49,7 +49,7 @@ class CachedCMakePackage(CMakePackage):
 
     @property
     def cache_path(self):
-        return os.path.join(self.stage.source_path, self.cache_name)
+        return self.stage.source_path.joinpath(self.cache_name)
 
     def flag_handler(self, name, flags):
         if name in ('cflags', 'cxxflags', 'cppflags', 'fflags'):
@@ -143,11 +143,11 @@ class CachedCMakePackage(CMakePackage):
                 # Heuristic until we have dependents on externals
                 mpiexec = '/usr/bin/srun'
             else:
-                mpiexec = os.path.join(spec['slurm'].prefix.bin, 'srun')
+                mpiexec = spec['slurm'].prefix.bin.joinpath('srun')
         else:
-            mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
+            mpiexec = spec['mpi'].prefix.bin.joinpath('mpirun')
             if not mpiexec.exists():
-                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
+                mpiexec = spec['mpi'].prefix.bin.joinpath('mpiexec')
 
         if not mpiexec.exists():
             msg = "Unable to determine MPIEXEC, %s tests may fail" % self.name

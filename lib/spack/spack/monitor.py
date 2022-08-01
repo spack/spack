@@ -148,7 +148,7 @@ class SpackMonitorClient:
 
         # Name based on timestamp
         now = datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%s')
-        self.save_dir = os.path.join(save_dir, now)
+        self.save_dir = save_dir.joinpath(now)
         if not self.save_dir.exists():
             os.makedirs(self.save_dir)
 
@@ -156,7 +156,7 @@ class SpackMonitorClient:
         """
         Save a monitor json result to the save directory.
         """
-        filename = os.path.join(self.save_dir, filename)
+        filename = self.save_dir.joinpath(filename)
         write_json(obj, filename)
         return {"message": "Build saved locally to %s" % filename}
 
@@ -172,7 +172,7 @@ class SpackMonitorClient:
             tty.die("A spec must have a package to load the environment.")
 
         pkg_dir = spec.package.install_log_path.parent
-        env_file = os.path.join(pkg_dir, "install_environment.json")
+        env_file = pkg_dir.joinpath("install_environment.json")
         build_environment = read_json(env_file)
         if not build_environment:
             tty.warn(
@@ -487,11 +487,11 @@ class SpackMonitorClient:
         # include the full specfile here
         if not spec_exists:
             meta_dir = spec.package.install_log_path.parent
-            spec_file = os.path.join(meta_dir, "spec.json")
+            spec_file = meta_dir.joinpath("spec.json")
             if spec_file.exists():
                 data['spec'] = sjson.load(read_file(spec_file))
             else:
-                spec_file = os.path.join(meta_dir, "spec.yaml")
+                spec_file = meta_dir.joinpath("spec.yaml")
                 data['spec'] = syaml.load(read_file(spec_file))
 
         if self.save_local:
@@ -635,7 +635,7 @@ class SpackMonitorClient:
         # We can't be sure the level of nesting the user has provided
         # So we walk recursively through and look for build metadata
         for subdir, dirs, files in os.walk(dirname):
-            root = os.path.join(dirname, subdir)
+            root = dirname.joinpath(subdir)
 
             # A metadata file signals a monitor export
             metadata = glob("%s%sbuild-metadata*" % (root, os.sep))

@@ -514,7 +514,7 @@ class FastPackageChecker(Mapping):
         cache = {}  # type: Dict[str, os.stat_result]
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
-            pkg_dir = os.path.join(self.packages_path, pkg_name)
+            pkg_dir = self.packages_path.joinpath(pkg_name)
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
@@ -1024,18 +1024,18 @@ class Repo(object):
                 raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file = os.path.join(self.root, repo_config_name)
+        self.config_file = self.root.joinpath(repo_config_name)
         check(self.config_file.is_file(),
               "No %s found in '%s'" % (repo_config_name, root))
 
-        self.packages_path = os.path.join(self.root, packages_dir_name)
+        self.packages_path = self.root.joinpath(packages_dir_name)
         check(self.packages_path.is_dir(),
               "No directory '%s' found in '%s'" % (packages_dir_name, root))
 
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
-              % os.path.join(root, repo_config_name))
+              % root.joinpath(repo_config_name))
 
         self.namespace = config['namespace']
         check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
@@ -1204,7 +1204,7 @@ class Repo(object):
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
-        return os.path.join(self.packages_path, pkg_name)
+        return self.packages_path.joinpath(pkg_name)
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
@@ -1216,7 +1216,7 @@ class Repo(object):
            the package exists before importing.
         """
         pkg_dir = self.dirname_for_package_name(pkg_name)
-        return os.path.join(pkg_dir, package_file_name)
+        return pkg_dir.joinpath(package_file_name)
 
     @property
     def _pkg_checker(self):
@@ -1352,8 +1352,8 @@ def create_repo(root, namespace=None):
             "Cannot create repository in %s: can't access parent!" % root)
 
     try:
-        config_path = os.path.join(root, repo_config_name)
-        packages_path = os.path.join(root, packages_dir_name)
+        config_path = root.joinpath(repo_config_name)
+        packages_path = root.joinpath(packages_dir_name)
 
         fs.mkdirp(packages_path)
         with open(config_path, 'w') as config:
