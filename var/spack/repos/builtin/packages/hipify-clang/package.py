@@ -83,10 +83,9 @@ class HipifyClang(CMakePackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
-    patch(
-        "0001-Install-clang-header-into-clang-include-directory.patch",
-        when="@4.5.0:"
-    )
+
+    patch("0001-Install-clang-header-into-clang-include-directory.patch", when="@4.5.0:")
+
     depends_on("cmake@3.5:", type="build")
     for ver in [
         "3.5.0",
