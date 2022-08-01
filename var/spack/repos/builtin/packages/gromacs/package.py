@@ -132,12 +132,12 @@ class Gromacs(CMakePackage):
     conflicts(
         "~lapack",
         when="+cp2k",
-        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack"
+        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
     )
     conflicts(
         "~blas",
         when="+cp2k",
-        msg="GROMACS and CP2K should use the same blas, please disable bundled blas"
+        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
     )
 
     depends_on("mpi", when="+mpi")
