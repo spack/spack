@@ -41,6 +41,9 @@ class Wps(Package):
     depends_on("wrf")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
+    # Dependence on mpi needs to be explicit because concretizers
+    # won't do the right thing and will mix mpi stacks.
+    depends_on("mpi") 
     # build script use csh
     depends_on("tcsh", type=("build"))
 
