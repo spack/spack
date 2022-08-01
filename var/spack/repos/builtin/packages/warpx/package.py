@@ -92,6 +92,7 @@ class Warpx(CMakePackage):
     depends_on("boost@1.66.0: +math", when="+qedtablegen")
     depends_on("cmake@3.15.0:", type="build")
     depends_on("cmake@3.18.0:", type="build", when="@22.01:")
+    depends_on("cmake@3.20.0:", type="build", when="@22.08:")
     depends_on("mpi", when="+mpi")
     with when("compute=cuda"):
         depends_on("cuda@9.2.88:")
