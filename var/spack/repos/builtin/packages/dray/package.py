@@ -106,13 +106,20 @@ class Dray(Package, CudaPackage):
     def setup_build_environment(self, env):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
+        spec = self.spec
+        if '+cuda' in spec and '+mpi' in spec:
+            env.set('CUDAHOSTCXX', spec['mpi'].mpicxx)
+
     def install(self, spec, prefix):
         """
         Build and install Devil Ray.
         """
         with working_dir("spack-build", create=True):
             host_cfg_fname = self.create_host_config(spec, prefix)
-            cmake_args = []
+            cmake_args = [
+                '-DHDF5_DIR={0}'.format(spec['hdf5'].prefix),
+                '-DHDF5_INCLUDE_DIRS={0}'.format(';'.join(spec['hdf5'].headers.directories)),
+            ]
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
             # (see: https://github.com/LLNL/spack/issues/2658)
@@ -202,6 +209,9 @@ class Dray(Package, CudaPackage):
         cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
         cfg.write("# cpp compiler used by spack\n")
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
+
+        cfg.write(cmake_cache_entry("BLT_SOURCE_DIR", spec['blt'].prefix))
+        cfg.write(cmake_cache_entry("BLT_CXX_STD", "c++14"))
 
         if "+mpi" in spec:
             mpicc_path = spec["mpi"].mpicc
