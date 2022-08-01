@@ -80,6 +80,8 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    openssl:
+      variants: certs=system # https://github.com/spack/spack/issues/31401
     python:
       version: [3.8.13]
     trilinos:
