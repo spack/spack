@@ -702,10 +702,19 @@ class Cp2k(MakefilePackage, CudaPackage):
         with spack.util.environment.set_env(PWD=self.build_directory):
             super(Cp2k, self).build(spec, prefix)
 
+            with working_dir(self.build_directory):
+                make('libcp2k', *self.build_targets)
+
     def install(self, spec, prefix):
         exe_dir = join_path('exe', self.makefile_architecture)
+        lib_dir = join_path('lib', self.makefile_architecture, self.makefile_version)
+
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
+        install_tree(lib_dir, self.prefix.lib)
+
+        mkdirp(self.prefix.include)
+        install('src/start/libcp2k.h', join_path(self.prefix.include, 'libcp2k.h'))
 
     def check(self):
         data_dir = join_path(self.stage.source_path, 'data')
