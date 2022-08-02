@@ -58,4 +58,3 @@ class RRhtslib(RPackage):
         env.set("XZ_INCLUDE", self.spec["xz"].headers.include_flags)
         env.set("BZIP2_LIB", self.spec["bzip2"].libs.search_flags)
         env.set("XZ_LIB", self.spec["xz"].libs.search_flags)
-        
