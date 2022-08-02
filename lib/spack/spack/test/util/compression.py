@@ -14,7 +14,7 @@ from spack.paths import spack_root
 from spack.util import compression as scomp
 from spack.util.executable import CommandNotFoundError
 
-datadir = os.path.join(spack_root, 'lib', 'spack',
+datadir = spack_root.joinpath( 'lib', 'spack',
                        'spack', 'test', 'data', 'compression')
 
 ext_archive = {}
@@ -37,11 +37,11 @@ def compr_support_check(monkeypatch):
 @pytest.fixture
 def archive_file(tmpdir_factory, request):
     """Copy example archive to temp directory for test"""
-    archive_file_stub = os.path.join(datadir, 'Foo')
+    archive_file_stub = datadir.joinpath( 'Foo')
     extension = request.param
     tmpdir = tmpdir_factory.mktemp('compression')
     shutil.copy(archive_file_stub + '.' + extension, str(tmpdir))
-    return os.path.join(str(tmpdir), 'Foo.%s' % extension)
+    return str(tmpdir).joinpath( 'Foo.%s' % extension)
 
 
 @pytest.mark.parametrize('archive_file', ext_archive.keys(), indirect=True)

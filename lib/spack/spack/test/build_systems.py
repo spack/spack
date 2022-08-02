@@ -18,7 +18,7 @@ from spack.build_environment import ChildError, get_std_cmake_args, setup_packag
 from spack.spec import Spec
 from spack.util.executable import which
 
-DATA_PATH = os.path.join(spack.paths.test_path, 'data')
+DATA_PATH = spack.paths.test_path.joinpath( 'data')
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32",
                                 reason="does not run on windows")
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
 
 @pytest.mark.parametrize(
     'directory',
-    glob.iglob(os.path.join(DATA_PATH, 'make', 'affirmative', '*'))
+    glob.iglob(DATA_PATH.joinpath( 'make', 'affirmative', '*'))
 )
 def test_affirmative_make_check(directory, config, mock_packages, working_env):
     """Tests that Spack correctly detects targets in a Makefile."""
@@ -45,7 +45,7 @@ def test_affirmative_make_check(directory, config, mock_packages, working_env):
 
 @pytest.mark.parametrize(
     'directory',
-    glob.iglob(os.path.join(DATA_PATH, 'make', 'negative', '*'))
+    glob.iglob(DATA_PATH.joinpath( 'make', 'negative', '*'))
 )
 @pytest.mark.regression('9067')
 def test_negative_make_check(directory, config, mock_packages, working_env):
@@ -66,7 +66,7 @@ def test_negative_make_check(directory, config, mock_packages, working_env):
 @pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
 @pytest.mark.parametrize(
     'directory',
-    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'affirmative', '*'))
+    glob.iglob(DATA_PATH.joinpath( 'ninja', 'affirmative', '*'))
 )
 def test_affirmative_ninja_check(
         directory, config, mock_packages, working_env):
@@ -91,7 +91,7 @@ def test_affirmative_ninja_check(
 @pytest.mark.skipif(not which('ninja'), reason='ninja is not installed')
 @pytest.mark.parametrize(
     'directory',
-    glob.iglob(os.path.join(DATA_PATH, 'ninja', 'negative', '*'))
+    glob.iglob(DATA_PATH.joinpath( 'ninja', 'negative', '*'))
 )
 def test_negative_ninja_check(directory, config, mock_packages, working_env):
     """Tests that Spack correctly ignores false positives in a Ninja
@@ -203,7 +203,7 @@ class TestAutotoolsPackage(object):
         # Assert the libtool archive is not there and we have
         # a log of removed files
         assert not s.package.libtool_archive_file.exists()
-        search_directory = os.path.join(s.prefix, '.spack')
+        search_directory = s.prefix.joinpath( '.spack')
         libtool_deletion_log = fs.find(
             search_directory, 'removed_la_files.txt', recursive=True
         )
@@ -231,16 +231,16 @@ class TestAutotoolsPackage(object):
         s.concretize()
         s.package.do_install()
 
-        with open(os.path.join(s.prefix.broken, 'config.sub')) as f:
+        with open(s.prefix.broken.joinpath( 'config.sub')) as f:
             assert "gnuconfig version of config.sub" in f.read()
 
-        with open(os.path.join(s.prefix.broken, 'config.guess')) as f:
+        with open(s.prefix.broken.joinpath( 'config.guess')) as f:
             assert "gnuconfig version of config.guess" in f.read()
 
-        with open(os.path.join(s.prefix.working, 'config.sub')) as f:
+        with open(s.prefix.working.joinpath( 'config.sub')) as f:
             assert "gnuconfig version of config.sub" not in f.read()
 
-        with open(os.path.join(s.prefix.working, 'config.guess')) as f:
+        with open(s.prefix.working.joinpath( 'config.guess')) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
     def test_autotools_gnuconfig_replacement_disabled(self, mutable_database):
@@ -251,16 +251,16 @@ class TestAutotoolsPackage(object):
         s.concretize()
         s.package.do_install()
 
-        with open(os.path.join(s.prefix.broken, 'config.sub')) as f:
+        with open(s.prefix.broken.joinpath( 'config.sub')) as f:
             assert "gnuconfig version of config.sub" not in f.read()
 
-        with open(os.path.join(s.prefix.broken, 'config.guess')) as f:
+        with open(s.prefix.broken.joinpath( 'config.guess')) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
-        with open(os.path.join(s.prefix.working, 'config.sub')) as f:
+        with open(s.prefix.working.joinpath( 'config.sub')) as f:
             assert "gnuconfig version of config.sub" not in f.read()
 
-        with open(os.path.join(s.prefix.working, 'config.guess')) as f:
+        with open(s.prefix.working.joinpath( 'config.guess')) as f:
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
@@ -285,7 +285,7 @@ class TestAutotoolsPackage(object):
         """
         env_dir = str(tmpdir.ensure('env', dir=True))
         gnuconfig_dir = str(tmpdir.ensure('gnuconfig', dir=True))  # empty dir
-        with open(os.path.join(env_dir, 'spack.yaml'), 'w') as f:
+        with open(env_dir.joinpath( 'spack.yaml'), 'w') as f:
             f.write("""\
 spack:
   specs:

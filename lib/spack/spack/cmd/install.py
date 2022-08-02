@@ -181,9 +181,9 @@ def default_log_file(spec):
     """
     fmt = 'test-{x.name}-{x.version}-{hash}.xml'
     basename = fmt.format(x=spec, hash=spec.dag_hash())
-    dirname = fs.os.path.join(spack.paths.reports_path, 'junit')
+    dirname = fs.spack.paths.reports_path.joinpath( 'junit')
     fs.mkdirp(dirname)
-    return fs.os.path.join(dirname, basename)
+    return fs.dirname.joinpath( basename)
 
 
 def install_specs(cli_args, kwargs, specs):

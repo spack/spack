@@ -341,7 +341,7 @@ def mock_stage(tmpdir_factory, monkeypatch, request):
         new_stage_path = str(new_stage)
 
         # Ensure the source directory exists within the new stage path
-        source_path = os.path.join(new_stage_path,
+        source_path = new_stage_path.joinpath(
                                    spack.stage._source_path_subdir)
         mkdirp(source_path)
 
@@ -417,7 +417,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(stage_path, f)
+            path = stage_path.joinpath( f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -576,9 +576,9 @@ def default_config():
 
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
-    defaults_path = os.path.join(spack.paths.etc_path, 'defaults')
+    defaults_path = spack.paths.etc_path.joinpath( 'defaults')
     if is_windows:
-        defaults_path = os.path.join(defaults_path, "windows")
+        defaults_path = defaults_path.joinpath( "windows")
     with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
 
@@ -713,7 +713,7 @@ def no_compilers_yaml(mutable_config):
     for scope, local_config in mutable_config.scopes.items():
         if not local_config.path:  # skip internal scopes
             continue
-        compilers_yaml = os.path.join(local_config.path, 'compilers.yaml')
+        compilers_yaml = local_config.path.joinpath( 'compilers.yaml')
         if compilers_yaml.exists():
             compilers_yaml.unlink()
 
@@ -980,7 +980,7 @@ class ConfigUpdate(object):
         self.monkeypatch = monkeypatch
 
     def __call__(self, filename):
-        file = os.path.join(self.root_for_conf, filename + '.yaml')
+        file = self.root_for_conf.joinpath( filename + '.yaml')
         with open(file) as f:
             config_settings = syaml.load_config(f)
         spack.config.set('modules:default', config_settings)

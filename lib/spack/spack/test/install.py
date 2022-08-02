@@ -193,7 +193,7 @@ def test_install_dependency_symlinks_pkg(
     pkg.do_install()
 
     # Ensure dependency directory exists after the installation.
-    dependency_dir = os.path.join(pkg.prefix, 'dependency-install')
+    dependency_dir = pkg.prefix.joinpath( 'dependency-install')
     assert dependency_dir.is_dir()
 
 
@@ -206,7 +206,7 @@ def test_install_times(
     pkg.do_install()
 
     # Ensure dependency directory exists after the installation.
-    install_times = os.path.join(pkg.prefix, ".spack", 'install_times.json')
+    install_times = pkg.prefix.joinpath( ".spack", 'install_times.json')
     assert install_times.is_file()
 
     # Ensure the phases are included
@@ -241,7 +241,7 @@ def test_flatten_deps(
     # Flatten the dependencies and ensure the dependency directory is there.
     spack.package_base.flatten_dependencies(spec, pkg.prefix)
 
-    dependency_dir = os.path.join(pkg.prefix, dependency_name)
+    dependency_dir = pkg.prefix.joinpath( dependency_name)
     assert dependency_dir.is_dir()
 
 
@@ -445,11 +445,11 @@ def test_nosource_pkg_install_post_install(
     pkg.do_install()
 
     # Ensure the file created in the package's `install` method exists.
-    install_txt = os.path.join(spec.prefix, 'install.txt')
+    install_txt = spec.prefix.joinpath( 'install.txt')
     assert install_txt.is_file()
 
     # Ensure the file created in the package's `post-install` method exists.
-    post_install_txt = os.path.join(spec.prefix, 'post-install.txt')
+    post_install_txt = spec.prefix.joinpath( 'post-install.txt')
     assert post_install_txt.is_file()
 
 
@@ -490,13 +490,13 @@ def test_pkg_install_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
 
-    log_path = os.path.join(spec.prefix, '.spack', _spack_build_logfile)
+    log_path = spec.prefix.joinpath( '.spack', _spack_build_logfile)
     assert spec.package.install_log_path == log_path
 
-    env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
+    env_path = spec.prefix.joinpath( '.spack', _spack_build_envfile)
     assert spec.package.install_env_path == env_path
 
-    args_path = os.path.join(spec.prefix, '.spack', _spack_configure_argsfile)
+    args_path = spec.prefix.joinpath( '.spack', _spack_configure_argsfile)
     assert spec.package.install_configure_args_path == args_path
 
     # Backward compatibility checks
@@ -563,7 +563,7 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     fs.mkdirp(install_path)
 
     source = spec.package.stage.source_path
-    config = os.path.join(source, 'config.log')
+    config = source.joinpath( 'config.log')
     fs.touchp(config)
     spec.package.archive_files = ['missing', '..', config]
 
@@ -573,18 +573,18 @@ def test_log_install_with_build_files(install_mockery, monkeypatch):
     assert spec.package.install_env_path.exists()
     assert spec.package.install_configure_args_path.exists()
 
-    archive_dir = os.path.join(install_path, 'archived-files')
+    archive_dir = install_path.joinpath( 'archived-files')
     source_dir = source.parent
     rel_config = os.path.relpath(config, source_dir)
 
-    assert os.path.join(archive_dir, rel_config.exists())
-    assert not os.path.join(archive_dir, 'missing'.exists())
+    assert archive_dir.joinpath( rel_config.exists())
+    assert not archive_dir.joinpath( 'missing'.exists())
 
     expected_errs = [
         'OUTSIDE SOURCE PATH',   # for '..'
         'FAILED TO ARCHIVE'      # for rel_config
     ]
-    with open(os.path.join(archive_dir, 'errors.txt'), 'r') as fd:
+    with open(archive_dir.joinpath( 'errors.txt'), 'r') as fd:
         for ln, expected in zip(fd, expected_errs):
             assert expected in ln
 

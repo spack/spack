@@ -622,7 +622,7 @@ class PyclingoDriver(object):
                                     self.fact(AspFunction(name)(arg.string))
 
             self.h1("Error messages")
-            path = os.path.join(parent_dir, 'concretize.lp')
+            path = parent_dir.joinpath( 'concretize.lp')
             parse_files([path], visit)
 
         # If we're only doing setup, just return an empty solve result
@@ -630,8 +630,8 @@ class PyclingoDriver(object):
             return Result(specs)
 
         # Load the file itself
-        self.control.load(os.path.join(parent_dir, 'concretize.lp'))
-        self.control.load(os.path.join(parent_dir, "display.lp"))
+        self.control.load(parent_dir.joinpath( 'concretize.lp'))
+        self.control.load(parent_dir.joinpath( "display.lp"))
         timer.phase("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -2200,7 +2200,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info['path']))
+    path = os.path.normpath(env.path.joinpath( dev_info['path']))
 
     if 'dev_path' in spec.variants:
         assert spec.variants['dev_path'].value == path

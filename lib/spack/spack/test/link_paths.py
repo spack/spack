@@ -16,7 +16,7 @@ if is_windows:
     drive_m = re.search(r'[A-Za-z]:', spack.paths.test_path)
     drive = drive_m.group() if drive_m else None
 #: directory with sample compiler data
-datadir = os.path.join(spack.paths.test_path, 'data',
+datadir = spack.paths.test_path.joinpath( 'data',
                        'compiler_verbose_output')
 
 
@@ -28,7 +28,7 @@ def allow_nonexistent_paths(monkeypatch):
 
 
 def check_link_paths(filename, paths):
-    with open(os.path.join(datadir, filename)) as file:
+    with open(datadir.joinpath( filename)) as file:
         output = file.read()
     detected_paths = _parse_non_system_link_dirs(output)
 

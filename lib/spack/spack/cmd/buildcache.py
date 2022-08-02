@@ -536,18 +536,18 @@ def copy_fn(args):
 
     tarball_rel_path = os.path.join(
         build_cache_dir, bindist.tarball_path_name(spec, '.spack'))
-    tarball_src_path = os.path.join(args.base_dir, tarball_rel_path)
-    tarball_dest_path = os.path.join(dest_root_path, tarball_rel_path)
+    tarball_src_path = args.base_dir.joinpath( tarball_rel_path)
+    tarball_dest_path = dest_root_path.joinpath( tarball_rel_path)
 
     specfile_rel_path = os.path.join(
         build_cache_dir, bindist.tarball_name(spec, '.spec.json'))
-    specfile_src_path = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path = os.path.join(dest_root_path, specfile_rel_path)
+    specfile_src_path = args.base_dir.joinpath( specfile_rel_path)
+    specfile_dest_path = dest_root_path.joinpath( specfile_rel_path)
 
     specfile_rel_path_yaml = os.path.join(
         build_cache_dir, bindist.tarball_name(spec, '.spec.yaml'))
-    specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
+    specfile_src_path_yaml = args.base_dir.joinpath( specfile_rel_path)
+    specfile_dest_path_yaml = dest_root_path.joinpath( specfile_rel_path)
 
     # Make sure directory structure exists before attempting to copy
     os.makedirs(tarball_dest_path.parent)
@@ -653,7 +653,7 @@ def sync_fn(args):
     try:
         for rel_path in buildcache_rel_paths:
             src_url = url_util.join(src_mirror_url, rel_path)
-            local_path = os.path.join(tmpdir, rel_path)
+            local_path = tmpdir.joinpath( rel_path)
             dest_url = url_util.join(dest_mirror_url, rel_path)
 
             tty.debug('Copying {0} to {1} via {2}'.format(

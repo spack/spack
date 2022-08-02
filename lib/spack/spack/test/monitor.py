@@ -269,7 +269,7 @@ def test_install_monitor_save_local(install_mockery_mutable_config,
 
     # Ensure we have monitor results saved
     for dirname in os.listdir(str(reports_dir)):
-        dated_dir = os.path.join(str(reports_dir), dirname)
+        dated_dir = str(reports_dir).joinpath( dirname)
         build_metadata = "build-metadata-%s.json" % spec.dag_hash()
         assert build_metadata in os.listdir(dated_dir)
         spec_file = "spec-dttop-%s-config.json" % spec.version

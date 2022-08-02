@@ -345,7 +345,7 @@ class BinaryCacheIndex(object):
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append({
                     'url': cached_mirror_url,
-                    'cache_key': os.path.join(self._index_cache_root,
+                    'cache_key': self._index_cache_root.joinpath(
                                               cached_index_path)
                 })
                 spec_cache_clear_needed = True
@@ -733,11 +733,11 @@ def tarball_path_name(spec, ext):
     Return the full path+name for a given spec according to the convention
     <tarball_directory_name>/<tarball_name>
     """
-    return os.path.join(tarball_directory_name(spec),
+    return tarball_directory_name(spec).joinpath(
                         tarball_name(spec, ext))
 
 
-def checksum_tarball(file):
+def checksum_tarball(file)):
     # calculate sha256 hash of tar file
     block_size = 65536
     hasher = hashlib.sha256()
@@ -1646,7 +1646,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
     # hard links and symbolic links.
     extract_tmp = spack.store.layout.root.joinpath('.tmp')
     mkdirp(extract_tmp)
-    extracted_dir = os.path.join(extract_tmp,
+    extracted_dir = extract_tmp.joinpath(
                                  old_relative_prefix.split(os.path.sep)[-1])
 
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
@@ -1671,7 +1671,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False,
         shutil.rmtree(spec.prefix)
         raise e
     else:
-        manifest_file = os.path.join(spec.prefix,
+        manifest_file = spec.prefix.joinpath(
                                      spack.store.layout.metadata_dir,
                                      spack.store.layout.manifest_file_name)
         if not manifest_file.exists():

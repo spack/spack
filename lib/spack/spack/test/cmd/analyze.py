@@ -143,7 +143,7 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
 
     # The analyzer should return no result if the output file does not exist.
     spec = Spec('libdwarf').concretized()
-    env_file = os.path.join(spec.package.prefix, '.spack', 'spack-build-env.txt')
+    env_file = spec.package.prefix.joinpath( '.spack', 'spack-build-env.txt')
     assert env_file.exists()
     env_file.unlink()
     analyzer = spack.analyzers.get_analyzer("environment_variables")

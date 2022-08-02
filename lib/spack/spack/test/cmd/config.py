@@ -68,13 +68,13 @@ def test_get_config_scope_merged(mock_low_high_config):
     fs.mkdirp(low_path)
     fs.mkdirp(high_path)
 
-    with open(os.path.join(low_path, 'repos.yaml'), 'w') as f:
+    with open(low_path.joinpath( 'repos.yaml'), 'w') as f:
         f.write('''\
 repos:
 - repo3
 ''')
 
-    with open(os.path.join(high_path, 'repos.yaml'), 'w') as f:
+    with open(high_path.joinpath( 'repos.yaml'), 'w') as f:
         f.write('''\
 repos:
 - repo1
@@ -94,8 +94,8 @@ def test_config_edit():
     dms_path = spack.config.config.scopes[dms].path
     user_path = spack.config.config.scopes['user'].path
 
-    comp_path = os.path.join(dms_path, 'compilers.yaml')
-    repos_path = os.path.join(user_path, 'repos.yaml')
+    comp_path = dms_path.joinpath( 'compilers.yaml')
+    repos_path = user_path.joinpath( 'repos.yaml')
 
     assert config('edit', '--print-file', 'compilers').strip() == comp_path
     assert config('edit', '--print-file', 'repos').strip() == repos_path

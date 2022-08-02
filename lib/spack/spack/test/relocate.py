@@ -65,7 +65,7 @@ def source_file(tmpdir, is_relocatable):
         shutil.copy(template_src, str(src))
     else:
         template_dirs = [
-            os.path.join(spack.paths.test_path, 'data', 'templates')
+            spack.paths.test_path.joinpath( 'data', 'templates')
         ]
         env = spack.tengine.make_environment(template_dirs)
         template = env.get_template('non_relocatable.c')

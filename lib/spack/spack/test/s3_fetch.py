@@ -40,7 +40,7 @@ def test_s3fetchstrategy_bad_url(tmpdir, _fetch_method):
 def test_s3fetchstrategy_downloaded(tmpdir, _fetch_method):
     """Ensure fetch with archive file already downloaded is a noop."""
     testpath = str(tmpdir)
-    archive = os.path.join(testpath, 's3.tar.gz')
+    archive = testpath.joinpath( 's3.tar.gz')
 
     with spack_config.override('config:url_fetch_method', _fetch_method):
         class Archived_S3FS(spack_fs.S3FetchStrategy):

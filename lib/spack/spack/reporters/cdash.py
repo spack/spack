@@ -215,7 +215,7 @@ class CDash(Reporter):
                 report_file_name = package['name'] + "_" + report_name
             else:
                 report_file_name = report_name
-            phase_report = os.path.join(directory_name, report_file_name)
+            phase_report = directory_name.joinpath( report_file_name)
 
             with codecs.open(phase_report, 'w', 'utf-8') as f:
                 env = spack.tengine.make_environment()
@@ -342,7 +342,7 @@ class CDash(Reporter):
             # Write the report.
             report_name = phase.capitalize() + ".xml"
             report_file_name = package['name'] + "_" + report_name
-            phase_report = os.path.join(directory_name, report_file_name)
+            phase_report = directory_name.joinpath( report_file_name)
 
             with codecs.open(phase_report, 'w', 'utf-8') as f:
                 env = spack.tengine.make_environment()
@@ -381,7 +381,7 @@ class CDash(Reporter):
         env = spack.tengine.make_environment()
         update_template = posixpath.join(self.template_dir, 'Update.xml')
         t = env.get_template(update_template)
-        output_filename = os.path.join(directory_name, 'Update.xml')
+        output_filename = directory_name.joinpath( 'Update.xml')
         with open(output_filename, 'w') as f:
             f.write(t.render(report_data))
         # We don't have a current package when reporting on concretization

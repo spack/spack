@@ -195,16 +195,16 @@ def test_get_header():
 def test_list_url(tmpdir):
     testpath = str(tmpdir)
 
-    os.mkdir(os.path.join(testpath, 'dir'))
+    os.mkdir(testpath.joinpath( 'dir'))
 
-    with open(os.path.join(testpath, 'file-0.txt'), 'w'):
+    with open(testpath.joinpath( 'file-0.txt'), 'w'):
         pass
-    with open(os.path.join(testpath, 'file-1.txt'), 'w'):
+    with open(testpath.joinpath( 'file-1.txt'), 'w'):
         pass
-    with open(os.path.join(testpath, 'file-2.txt'), 'w'):
+    with open(testpath.joinpath( 'file-2.txt'), 'w'):
         pass
 
-    with open(os.path.join(testpath, 'dir', 'another-file.txt'), 'w'):
+    with open(testpath.joinpath( 'dir', 'another-file.txt'), 'w'):
         pass
 
     list_url = lambda recursive: list(sorted(

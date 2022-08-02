@@ -47,7 +47,7 @@ def create_manifest_entry(path):
 
 
 def write_manifest(spec):
-    manifest_file = os.path.join(spec.prefix,
+    manifest_file = spec.prefix.joinpath(
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 
@@ -121,7 +121,7 @@ def check_file_manifest(filename):
             return results
         dirname = dirname.parent
 
-    manifest_file = os.path.join(dirname,
+    manifest_file = dirname.joinpath(
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 
@@ -147,7 +147,7 @@ def check_spec_manifest(spec):
     prefix = spec.prefix
 
     results = VerificationResults()
-    manifest_file = os.path.join(prefix,
+    manifest_file = prefix.joinpath(
                                  spack.store.layout.metadata_dir,
                                  spack.store.layout.manifest_file_name)
 

@@ -14,7 +14,7 @@ import spack.util.package_hash as ph
 from spack.spec import Spec
 from spack.util.unparse import unparse
 
-datadir = os.path.join(spack.paths.test_path, "data", "unparse")
+datadir = spack.paths.test_path.joinpath( "data", "unparse")
 
 
 def compare_sans_name(eq, spec1, spec2):
@@ -360,7 +360,7 @@ def test_package_hash_consistency(package_spec, expected_hash):
 
     """
     spec = Spec(package_spec)
-    filename = os.path.join(datadir, "%s.txt" % spec.name)
+    filename = datadir.joinpath( "%s.txt" % spec.name)
     with open(filename) as f:
         source = f.read()
     h = ph.package_hash(spec, source=source)

@@ -456,8 +456,8 @@ def test_default_queries(database):
 
 def test_005_db_exists(database):
     """Make sure db cache file exists after creating."""
-    index_file = os.path.join(database.root, '.spack-db', 'index.json')
-    lock_file = os.path.join(database.root, '.spack-db', 'lock')
+    index_file = database.root.joinpath( '.spack-db', 'index.json')
+    lock_file = database.root.joinpath( '.spack-db', 'lock')
     assert str(index_file.exists())
     # Lockfiles not currently supported on Windows
     if not is_windows:

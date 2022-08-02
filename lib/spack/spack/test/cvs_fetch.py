@@ -65,7 +65,7 @@ def test_fetch(
             if test.date is not None:
                 assert get_date() <= test.date
 
-            file_path = os.path.join(pkg.stage.source_path, test.file)
+            file_path = pkg.stage.source_path.joinpath( test.file)
             assert pkg.stage.source_path.is_dir()
             assert file_path.is_file()
 

@@ -55,7 +55,7 @@ def test_read_spec_from_signed_json():
     file_name = (
         'linux-ubuntu18.04-haswell-gcc-8.4.0-'
         'zlib-1.2.12-g7otk5dra3hifqxej36m5qzm7uyghqgb.spec.json.sig')
-    spec_path = os.path.join(spec_dir, file_name)
+    spec_path = spec_dir.joinpath( file_name)
 
     def check_spec(spec_to_check):
         assert(spec_to_check.name == 'zlib')
@@ -373,8 +373,8 @@ def test_save_dependency_spec_jsons_subset(tmpdir, config):
 
         save_dependency_specfiles(spec_a_json, output_path, ['b', 'c'])
 
-        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.json'))
-        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.json'))
+        assert check_specs_equal(b_spec, output_path.joinpath( 'b.json'))
+        assert check_specs_equal(c_spec, output_path.joinpath( 'c.json'))
 
 
 def test_legacy_yaml(tmpdir, install_mockery, mock_packages):

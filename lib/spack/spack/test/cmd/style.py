@@ -19,7 +19,7 @@ from spack.cmd.style import changed_files
 from spack.util.executable import which
 
 #: directory with sample style files
-style_data = os.path.join(spack.paths.test_path, 'data', 'style')
+style_data = spack.paths.test_path.joinpath( 'data', 'style')
 
 
 style = spack.main.SpackCommand("style")
@@ -89,7 +89,7 @@ def test_changed_files(flake8_package):
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
     files = [
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        spack.paths.prefix.joinpath( os.path.normpath(path))
         for path in changed_files()
     ]
 
@@ -139,7 +139,7 @@ def test_changed_no_base(tmpdir, capfd):
 def test_changed_files_all_files(flake8_package):
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set([
-        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        spack.paths.prefix.joinpath( os.path.normpath(path))
         for path in changed_files(all_files=True)
     ])
 
@@ -151,7 +151,7 @@ def test_changed_files_all_files(flake8_package):
     assert zlib.module.__file__ in files
 
     # a core spack file
-    assert os.path.join(spack.paths.module_path, "spec.py") in files
+    assert spack.paths.module_path.joinpath( "spec.py") in files
 
     # a mock package
     assert flake8_package in files
@@ -233,9 +233,9 @@ def test_fix_style(external_style_root):
     """Make sure spack style --fix works."""
     tmpdir, py_file = external_style_root
 
-    broken_dummy = os.path.join(style_data, "broken.dummy")
+    broken_dummy = style_data.joinpath( "broken.dummy")
     broken_py = str(tmpdir / "lib" / "spack" / "spack" / "broken.py")
-    fixed_py = os.path.join(style_data, "fixed.py")
+    fixed_py = style_data.joinpath( "fixed.py")
 
     shutil.copy(broken_dummy, broken_py)
     assert not filecmp.cmp(broken_py, fixed_py)

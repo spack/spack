@@ -111,7 +111,7 @@ variable SPACK_CONCRETE_ENVIRONMENT_PATH.""")
                                       help=ci_reproduce.__doc__)
     reproduce.add_argument('job_url', help='Url of job artifacts bundle')
     reproduce.add_argument('--working-dir', help="Where to unpack artifacts",
-                           default=os.path.join(Path.cwd(), 'ci_reproduction'))
+                           default=Path.cwd().joinpath( 'ci_reproduction'))
 
     reproduce.set_defaults(func=ci_reproduce)
 
@@ -213,10 +213,10 @@ def ci_rebuild(args):
     ci_project_dir = get_env_var('CI_PROJECT_DIR')
     pipeline_artifacts_dir = os.path.join(
         ci_project_dir, pipeline_artifacts_dir)
-    job_log_dir = os.path.join(ci_project_dir, job_log_dir)
-    repro_dir = os.path.join(ci_project_dir, repro_dir)
-    local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
-    concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
+    job_log_dir = ci_project_dir.joinpath( job_log_dir)
+    repro_dir = ci_project_dir.joinpath( repro_dir)
+    local_mirror_dir = ci_project_dir.joinpath( local_mirror_dir)
+    concrete_env_dir = ci_project_dir.joinpath( concrete_env_dir)
 
     # Debug print some of the key environment variables we should have received
     tty.debug('pipeline_artifacts_dir = {0}'.format(pipeline_artifacts_dir))
@@ -294,14 +294,14 @@ def ci_rebuild(args):
     job_spec = spec_map[job_spec_pkg_name]
 
     job_spec_json_file = '{0}.json'.format(job_spec_pkg_name)
-    job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
+    job_spec_json_path = repro_dir.joinpath( job_spec_json_file)
 
     # To provide logs, cdash reports, etc for developer download/perusal,
     # these things have to be put into artifacts.  This means downstream
     # jobs that "need" this job will get those artifacts too.  So here we
     # need to clean out the artifacts we may have got from upstream jobs.
 
-    cdash_report_dir = os.path.join(pipeline_artifacts_dir, 'cdash_report')
+    cdash_report_dir = pipeline_artifacts_dir.joinpath( 'cdash_report')
     if cdash_report_dir.exists():
         shutil.rmtree(cdash_report_dir)
 
@@ -330,9 +330,9 @@ def ci_rebuild(args):
 
     for dir_to_list in target_dirs:
         for file_name in os.listdir(dir_to_list):
-            src_file = os.path.join(dir_to_list, file_name)
+            src_file = dir_to_list.joinpath( file_name)
             if src_file.is_file():
-                dst_file = os.path.join(repro_dir, file_name)
+                dst_file = repro_dir.joinpath( file_name)
                 shutil.copyfile(src_file, dst_file)
 
     # If signing key was provided via "SPACK_SIGNING_KEY", then try to
@@ -355,12 +355,12 @@ def ci_rebuild(args):
         fd.write(job_spec.to_json(hash=ht.dag_hash))
 
     # Write the concrete root spec json into the reproduction directory
-    root_spec_json_path = os.path.join(repro_dir, 'root.json')
+    root_spec_json_path = repro_dir.joinpath( 'root.json')
     with open(root_spec_json_path, 'w') as fd:
         fd.write(spec_map['root'].to_json(hash=ht.dag_hash))
 
     # Write some other details to aid in reproduction into an artifact
-    repro_file = os.path.join(repro_dir, 'repro.json')
+    repro_file = repro_dir.joinpath( 'repro.json')
     repro_details = {
         'job_name': ci_job_name,
         'job_spec_json': job_spec_json_file,
@@ -372,7 +372,7 @@ def ci_rebuild(args):
 
     # Write information about spack into an artifact in the repro dir
     spack_info = spack_ci.get_spack_info()
-    spack_info_file = os.path.join(repro_dir, 'spack_info.txt')
+    spack_info_file = repro_dir.joinpath( 'spack_info.txt')
     with open(spack_info_file, 'wb') as fd:
         fd.write(b'\n')
         fd.write(spack_info.encode('utf8'))
@@ -419,7 +419,7 @@ def ci_rebuild(args):
             tty.msg('    {0}'.format(match['mirror_url']))
         if enable_artifacts_mirror:
             matching_mirror = matches[0]['mirror_url']
-            build_cache_dir = os.path.join(local_mirror_dir, 'build_cache')
+            build_cache_dir = local_mirror_dir.joinpath( 'build_cache')
             tty.debug('Getting {0} buildcache from {1}'.format(
                 job_spec_pkg_name, matching_mirror))
             tty.debug('Downloading to {0}'.format(build_cache_dir))
@@ -488,7 +488,7 @@ def ci_rebuild(args):
     st = os.stat('install.sh')
     os.chmod('install.sh', st.st_mode | stat.S_IEXEC)
 
-    install_copy_path = os.path.join(repro_dir, 'install.sh')
+    install_copy_path = repro_dir.joinpath( 'install.sh')
     shutil.copyfile('install.sh', install_copy_path)
 
     # Run the generated install.sh shell script as if it were being run in
@@ -516,7 +516,7 @@ def ci_rebuild(args):
             tty.msg('Reporting broken develop build as: {0}'.format(
                 broken_spec_path))
             tmpdir = tempfile.mkdtemp()
-            empty_file_path = os.path.join(tmpdir, 'empty.txt')
+            empty_file_path = tmpdir.joinpath( 'empty.txt')
 
             broken_spec_details = {
                 'broken-spec': {

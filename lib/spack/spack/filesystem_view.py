@@ -458,7 +458,7 @@ class YamlFilesystemView(FilesystemView):
 
             # check if this spec owns a file of that name (through the
             # manifest in the metadata dir, which we have in the view).
-            manifest_file = os.path.join(self.get_path_meta_folder(spec),
+            manifest_file = self.get_path_meta_folder(spec).joinpath(
                                          spack.store.layout.manifest_file_name)
             try:
                 with open(manifest_file, 'r') as f:
@@ -603,14 +603,14 @@ class YamlFilesystemView(FilesystemView):
         md_dirs = []
         for root, dirs, files in os.walk(self._root):
             if spack.store.layout.metadata_dir in dirs:
-                md_dirs.append(os.path.join(root,
+                md_dirs.append(root.joinpath(
                                             spack.store.layout.metadata_dir))
 
         specs = []
         for md_dir in md_dirs:
             if md_dir.exists():
                 for name_dir in os.listdir(md_dir):
-                    filename = os.path.join(md_dir, name_dir,
+                    filename = md_dir.joinpath( name_dir,
                                             spack.store.layout.spec_file_name)
                     spec = get_spec_from_file(filename)
                     if spec:
@@ -634,7 +634,7 @@ class YamlFilesystemView(FilesystemView):
 
     def get_spec(self, spec):
         dotspack = self.get_path_meta_folder(spec)
-        filename = os.path.join(dotspack,
+        filename = dotspack.joinpath(
                                 spack.store.layout.spec_file_name)
 
         return get_spec_from_file(filename)

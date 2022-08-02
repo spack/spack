@@ -251,7 +251,7 @@ def test_get_command_paths(config):
     for ext in extensions:
         ext_path = Path('my').joinpath( 'path', 'to', 'spack-' + ext)
         ext_paths.append(ext_path)
-        path = os.path.join(ext_path, spack.cmd.python_name(ext), 'cmd')
+        path = ext_path.joinpath( spack.cmd.python_name(ext), 'cmd')
         path = path.resolve()
         expected_cmd_paths.append(path)
 
@@ -263,12 +263,12 @@ def test_variable_in_extension_path(config, working_env):
     """Test variables in extension paths."""
     os.environ['_MY_VAR'] = Path('my').joinpath( 'var')
     ext_paths = [
-        os.path.join("~", "${_MY_VAR}", "spack-extension-1")
+        "~".joinpath( "${_MY_VAR}", "spack-extension-1")
     ]
     # Home env variable is USERPROFILE on Windows
     home_env = 'USERPROFILE' if is_windows else 'HOME'
     expected_ext_paths = [
-        os.path.join(os.environ[home_env], os.environ['_MY_VAR'], "spack-extension-1")
+        os.environ[home_env].joinpath( os.environ['_MY_VAR'], "spack-extension-1")
     ]
     with spack.config.override('config:extensions', ext_paths):
         assert spack.extensions.get_extension_paths() == expected_ext_paths

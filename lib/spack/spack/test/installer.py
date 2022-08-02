@@ -488,7 +488,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
         # Perform the original function
         source = orig_bpp(spec)
         # Mock the required directory structure for the repository
-        _mock_repo(os.path.join(source, spec.namespace), spec.namespace)
+        _mock_repo(source.joinpath( spec.namespace), spec.namespace)
         return source
 
     def _repoerr(repo, name):
@@ -534,7 +534,7 @@ def test_clear_failures_success(install_mockery):
     spack.store.db._prefix_failures['test'] = lock
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+    fs.touch(spack.store.db._failure_dir.joinpath( 'test'))
 
     # Now clear failure tracking
     inst.clear_failures()
@@ -557,7 +557,7 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
         raise OSError(err_msg)
 
     # Set up a fake failure mark (or file)
-    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+    fs.touch(spack.store.db._failure_dir.joinpath( 'test'))
 
     monkeypatch.setattr(os, 'remove', _raise_except)
 
@@ -583,13 +583,13 @@ def test_combine_phase_logs(tmpdir):
 
     # Create and write to dummy phase log files
     for log_file in log_files:
-        phase_log_file = os.path.join(str(tmpdir), log_file)
+        phase_log_file = str(tmpdir).joinpath( log_file)
         with open(phase_log_file, 'w') as plf:
             plf.write('Output from %s\n' % log_file)
         phase_log_files.append(phase_log_file)
 
     # This is the output log we will combine them into
-    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
+    combined_log = str(tmpdir).joinpath( "combined-out.txt")
     spack.installer.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, 'r') as log_file:
         out = log_file.read()
@@ -1184,7 +1184,7 @@ def test_overwrite_install_backup_success(temporary_store, config, mock_packages
     task = installer._pop_task()
 
     # Make sure the install prefix exists with some trivial file
-    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    installed_file = task.pkg.prefix.joinpath( 'some_file')
     fs.touchp(installed_file)
 
     class InstallerThatWipesThePrefixDir:
@@ -1246,7 +1246,7 @@ def test_overwrite_install_backup_failure(temporary_store, config, mock_packages
     task = installer._pop_task()
 
     # Make sure the install prefix exists
-    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    installed_file = task.pkg.prefix.joinpath( 'some_file')
     fs.touchp(installed_file)
 
     fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()

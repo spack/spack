@@ -76,7 +76,7 @@ def develop(parser, args):
     # get absolute path to check
     abspath = path
     if not abspath.is_absolute():
-        abspath = os.path.join(env.path, path)
+        abspath = env.path.joinpath( path)
 
     # clone default: only if the path doesn't exist
     clone = args.clone

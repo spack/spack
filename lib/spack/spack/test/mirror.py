@@ -55,7 +55,7 @@ def set_up_package(name, repository, url_attr):
 
 def check_mirror():
     with Stage('spack-mirror-test') as stage:
-        mirror_root = os.path.join(stage.path, 'test-mirror')
+        mirror_root = stage.path.joinpath( 'test-mirror')
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         with spack.config.override('mirrors', mirrors):
@@ -268,17 +268,17 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
             pass
 
     def successful_expand(_class):
-        expanded_path = os.path.join(_class.stage.path,
+        expanded_path = _class.stage.path.joinpath(
                                      spack.stage._source_path_subdir)
         expanded_path.mkdir()
-        with open(os.path.join(expanded_path, 'test.patch'), 'w'):
+        with open(expanded_path.joinpath( 'test.patch'), 'w'):
             pass
 
     def successful_apply(*args, **kwargs):
         pass
 
     with Stage('spack-mirror-test') as stage:
-        mirror_root = os.path.join(stage.path, 'test-mirror')
+        mirror_root = stage.path.joinpath( 'test-mirror')
 
         monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, 'fetch',
                             successful_fetch)
@@ -320,7 +320,7 @@ def test_mirror_cache_symlinks(tmpdir):
     cache.symlink(reference)
 
     link_target = resolve_link_target_relative_to_the_link(
-        os.path.join(cache.root, reference.cosmetic_path))
+        cache.root.joinpath( reference.cosmetic_path))
     assert link_target.exists()
     assert (os.path.normpath(link_target) ==
-            os.path.join(cache.root, reference.storage_path))
+            cache.root.joinpath( reference.storage_path))

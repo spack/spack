@@ -123,7 +123,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
         git_args.append(["ls-files", "--exclude-standard"])
 
     excludes = [
-        os.path.realpath(os.path.join(root, f))
+        os.path.realpath(root.joinpath( f))
         for f in exclude_directories
     ]
     changed = set()
@@ -218,7 +218,7 @@ def setup_parser(subparser):
 
 def cwd_relative(path, args):
     """Translate prefix-relative path to current working directory-relative."""
-    return os.path.relpath(os.path.join(args.root, path), args.initial_working_dir)
+    return os.path.relpath(args.root.joinpath( path), args.initial_working_dir)
 
 
 def rewrite_and_print_output(
@@ -274,7 +274,7 @@ def run_flake8(flake8_cmd, file_list, args):
     for chunk in grouper(file_list, 100):
         output = flake8_cmd(
             # always run with config from running spack prefix
-            "--config=%s" % os.path.join(spack.paths.prefix, ".flake8"),
+            "--config=%s" % spack.paths.prefix.joinpath( ".flake8"),
             *chunk,
             fail_on_error=False,
             output=str
@@ -291,7 +291,7 @@ def run_flake8(flake8_cmd, file_list, args):
 def run_mypy(mypy_cmd, file_list, args):
     # always run with config from running spack prefix
     common_mypy_args = [
-        "--config-file", os.path.join(spack.paths.prefix, "pyproject.toml"),
+        "--config-file", spack.paths.prefix.joinpath( "pyproject.toml"),
         "--show-error-codes",
     ]
     mypy_arg_sets = [common_mypy_args + [
@@ -318,7 +318,7 @@ def run_mypy(mypy_cmd, file_list, args):
 @tool("isort")
 def run_isort(isort_cmd, file_list, args):
     # always run with config from running spack prefix
-    isort_args = ("--settings-path", os.path.join(spack.paths.prefix, "pyproject.toml"))
+    isort_args = ("--settings-path", spack.paths.prefix.joinpath( "pyproject.toml"))
     if not args.fix:
         isort_args += ("--check", "--diff")
 
@@ -352,7 +352,7 @@ def run_isort(isort_cmd, file_list, args):
 @tool("black")
 def run_black(black_cmd, file_list, args):
     # always run with config from running spack prefix
-    black_args = ("--config", os.path.join(spack.paths.prefix, "pyproject.toml"))
+    black_args = ("--config", spack.paths.prefix.joinpath( "pyproject.toml"))
     if not args.fix:
         black_args += ("--check", "--diff")
         if color.get_color_when():  # only show color when spack would
@@ -386,12 +386,12 @@ def style(parser, args):
 
     # ensure that the config files we need actually exist in the spack prefix.
     # assertions b/c users should not ever see these errors -- they're checked in CI.
-    assert os.path.join(spack.paths.prefix, "pyproject.toml".is_file())
-    assert os.path.join(spack.paths.prefix, ".flake8".is_file())
+    assert spack.paths.prefix.joinpath( "pyproject.toml".is_file())
+    assert spack.paths.prefix.joinpath( ".flake8".is_file())
 
     # validate spack root if the user provided one
     args.root = os.path.realpath(args.root) if args.root else spack.paths.prefix
-    spack_script = os.path.join(args.root, "bin", "spack")
+    spack_script = args.root.joinpath( "bin", "spack")
     if not spack_script.exists():
         tty.die(
             "This does not look like a valid spack root.",

@@ -295,7 +295,7 @@ def which_string(*args, **kwargs):
                     return exe
             else:
                 for directory in path.parents:
-                    exe = os.path.join(directory, candidate_name)
+                    exe = directory.joinpath( candidate_name)
                     if exe.is_file() and os.access(exe, os.X_OK):
                         return exe
 

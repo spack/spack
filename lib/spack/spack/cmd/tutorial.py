@@ -26,7 +26,7 @@ level = "long"
 # tutorial configuration parameters
 tutorial_branch = "releases/v0.18"
 tutorial_mirror = "file:///mirror"
-tutorial_key    = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
+tutorial_key    = spack.paths.share_path.joinpath( "keys", "tutorial.pub")
 
 # configs to remove
 rm_configs = [

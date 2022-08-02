@@ -49,11 +49,11 @@ class WindowsOs(OperatingSystem):
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
             vs_install_paths = paths.split('\n')
-            msvc_paths = [os.path.join(path, "VC", "Tools", "MSVC")
+            msvc_paths = [path.joinpath( "VC", "Tools", "MSVC")
                           for path in vs_install_paths]
             for p in msvc_paths:
                 comp_search_paths.extend(
-                    glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
+                    glob.glob(p.joinpath( '*', 'bin', 'Hostx64', 'x64')))
             if os.getenv("ONEAPI_ROOT"):
                 comp_search_paths.extend(glob.glob(os.path.join(
                     str(os.getenv("ONEAPI_ROOT")),

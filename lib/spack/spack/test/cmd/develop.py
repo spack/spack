@@ -48,7 +48,7 @@ class TestDevelop(object):
         env('create', 'test')
         with ev.read('test') as e:
             # develop checks that the path exists
-            fs.mkdirp(os.path.join(e.path, 'mpich'))
+            fs.mkdirp(e.path.joinpath( 'mpich'))
             develop('--no-clone', 'mpich@1.0')
             self.check_develop(e, spack.spec.Spec('mpich@1.0'))
 
@@ -69,7 +69,7 @@ class TestDevelop(object):
         with ev.read('test') as e:
             # develop and remove it
             develop('mpich@1.0')
-            shutil.rmtree(os.path.join(e.path, 'mpich'))
+            shutil.rmtree(e.path.joinpath( 'mpich'))
 
             # test develop with no args
             develop()

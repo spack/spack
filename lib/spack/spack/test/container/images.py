@@ -41,7 +41,7 @@ def test_validate(
 ):
     minimal_configuration['spack'].update(extra_config)
     spack_yaml_dir = config_dumper(minimal_configuration)
-    spack_yaml = os.path.join(spack_yaml_dir, 'spack.yaml')
+    spack_yaml = spack_yaml_dir.joinpath( 'spack.yaml')
 
     with pytest.warns(UserWarning) as w:
         spack.container.validate(spack_yaml)

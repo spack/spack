@@ -203,7 +203,7 @@ def test_core_lib_files():
     for test_dir in test_directories:
         for n in os.listdir(test_dir):
             if n.endswith('.py') and not n.startswith('bad'):
-                names.append(os.path.join(test_dir, n))
+                names.append(test_dir.joinpath( n))
 
     for filename in names:
         print('Testing %s' % filename)

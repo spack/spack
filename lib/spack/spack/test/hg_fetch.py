@@ -63,7 +63,7 @@ def test_fetch(
         with working_dir(pkg.stage.source_path):
             assert h() == t.revision
 
-            file_path = os.path.join(pkg.stage.source_path, t.file)
+            file_path = pkg.stage.source_path.joinpath( t.file)
             assert pkg.stage.source_path.is_dir()
             assert file_path.is_file()
 

@@ -26,9 +26,9 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
 
 def test_single_file_verify_cmd(tmpdir):
     # Test the verify command interface to verifying a single file.
-    filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
-    filepath = os.path.join(filedir, 'file')
-    metadir = os.path.join(str(tmpdir), spack.store.layout.metadata_dir)
+    filedir = str(tmpdir).joinpath( 'a', 'b', 'c', 'd')
+    filepath = filedir.joinpath( 'file')
+    metadir = str(tmpdir).joinpath( spack.store.layout.metadata_dir)
 
     fs.mkdirp(filedir)
     fs.mkdirp(metadir)
@@ -38,7 +38,7 @@ def test_single_file_verify_cmd(tmpdir):
 
     data = spack.verify.create_manifest_entry(filepath)
 
-    manifest_file = os.path.join(metadir,
+    manifest_file = metadir.joinpath(
                                  spack.store.layout.manifest_file_name)
 
     with open(manifest_file, 'w') as f:
@@ -81,7 +81,7 @@ def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
     results = verify('/%s' % hash, fail_on_error=False)
     assert not results
 
-    new_file = os.path.join(prefix, 'new_file_for_verify_test')
+    new_file = prefix.joinpath( 'new_file_for_verify_test')
     with open(new_file, 'w') as f:
         f.write('New file')
 

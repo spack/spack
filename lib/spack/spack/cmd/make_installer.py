@@ -64,8 +64,8 @@ def make_installer(parser, args):
         output_dir = args.output_dir
         cmake_spec = Spec('cmake')
         cmake_spec.concretize()
-        cmake_path = os.path.join(cmake_spec.prefix, "bin", "cmake.exe")
-        cpack_path = os.path.join(cmake_spec.prefix, "bin", "cpack.exe")
+        cmake_path = cmake_spec.prefix.joinpath( "bin", "cmake.exe")
+        cpack_path = cmake_spec.prefix.joinpath( "bin", "cpack.exe")
         spack_source = args.spack_source
         git_verbosity = ""
         if args.git_verbosity:
@@ -83,7 +83,7 @@ def make_installer(parser, args):
         spack_version = args.spack_version
 
         here = os.path.abspath(__file__.parent)
-        source_dir = os.path.join(here, "installer")
+        source_dir = here.joinpath( "installer")
         posix_root = convert_to_posix_path(spack.paths.spack_root)
         spack_license = posixpath.join(posix_root, "LICENSE-APACHE")
         rtf_spack_license = txt_to_rtf(spack_license)

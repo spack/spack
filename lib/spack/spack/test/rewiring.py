@@ -44,7 +44,7 @@ def test_rewire_db(mock_fetch, install_mockery, transitive):
 
     # check the file in the prefix has the correct paths
     for node in spliced_spec.traverse(root=True):
-        text_file_path = os.path.join(node.prefix, node.name)
+        text_file_path = node.prefix.joinpath( node.name)
         with open(text_file_path, 'r') as f:
             text = f.read()
             for modded_spec in node.traverse(root=True):
@@ -78,7 +78,7 @@ def test_rewire_bin(mock_fetch, install_mockery, transitive):
                  'quux': 'quuxifier'}
     for node in spliced_spec.traverse(root=True):
         for dep in node.traverse(root=True):
-            bin_file_path = os.path.join(dep.prefix.bin, bin_names[dep.name])
+            bin_file_path = dep.prefix.bin.joinpath( bin_names[dep.name])
             assert text_in_bin(dep.prefix, bin_file_path)
 
 
@@ -96,22 +96,22 @@ def test_rewire_writes_new_metadata(mock_fetch, install_mockery):
     # test install manifests
     for node in spliced_spec.traverse(root=True):
         spack.store.layout.ensure_installed(node)
-        manifest_file_path = os.path.join(node.prefix,
+        manifest_file_path = node.prefix.joinpath(
                                           spack.store.layout.metadata_dir,
                                           spack.store.layout.manifest_file_name)
         assert manifest_file_path.exists()
         orig_node = spec[node.name]
-        orig_manifest_file_path = os.path.join(orig_node.prefix,
+        orig_manifest_file_path = orig_node.prefix.joinpath(
                                                spack.store.layout.metadata_dir,
                                                spack.store.layout.manifest_file_name)
         assert orig_manifest_file_path.exists()
         assert not filecmp.cmp(orig_manifest_file_path, manifest_file_path,
                                shallow=False)
-        specfile_path = os.path.join(node.prefix,
+        specfile_path = node.prefix.joinpath(
                                      spack.store.layout.metadata_dir,
                                      spack.store.layout.spec_file_name)
         assert specfile_path.exists()
-        orig_specfile_path = os.path.join(orig_node.prefix,
+        orig_specfile_path = orig_node.prefix.joinpath(
                                           spack.store.layout.metadata_dir,
                                           spack.store.layout.spec_file_name)
         assert orig_specfile_path.exists()

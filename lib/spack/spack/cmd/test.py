@@ -196,7 +196,7 @@ environment variables:
                 log_file = args.log_file
             else:
                 log_dir = Path.cwd()
-                log_file = os.path.join(log_dir, args.log_file)
+                log_file = log_dir.joinpath( args.log_file)
         else:
             log_file = os.path.join(
                 Path.cwd(),

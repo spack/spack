@@ -32,7 +32,7 @@ install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 
-legacy_mirror_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_yaml')
+legacy_mirror_dir = test_path.joinpath( 'data', 'mirrors', 'legacy_yaml')
 
 
 @pytest.fixture(scope='function')
@@ -126,7 +126,7 @@ def default_config(
     extensions = spack.config.get('config:template_dirs')
     if not extensions:
         spack.config.set('config:template_dirs',
-                         [os.path.join(spack.paths.share_path, 'templates')],
+                         [spack.paths.share_path.joinpath( 'templates')],
                          scope='user')
 
     mutable_dir.ensure('build_stage', dir=True)
@@ -341,13 +341,13 @@ def test_relative_rpaths_install_nondefault(mirror_dir):
 def test_push_and_fetch_keys(mock_gnupghome):
     testpath = str(mock_gnupghome)
 
-    mirror = os.path.join(testpath, 'mirror')
+    mirror = testpath.joinpath( 'mirror')
     mirrors = {'test-mirror': mirror}
     mirrors = spack.mirror.MirrorCollection(mirrors)
     mirror = spack.mirror.Mirror('file://' + mirror)
 
-    gpg_dir1 = os.path.join(testpath, 'gpg1')
-    gpg_dir2 = os.path.join(testpath, 'gpg2')
+    gpg_dir1 = testpath.joinpath( 'gpg1')
+    gpg_dir2 = testpath.joinpath( 'gpg2')
 
     # dir 1: create a new key, record its fingerprint, and push it to a new
     #        mirror
@@ -462,7 +462,7 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
     # Remove dependency from cache
     libelf_files = glob.glob(
-        os.path.join(mirror_dir.join('build_cache').strpath, '*libelf*'))
+        mirror_dir.join('build_cache').strpath.joinpath( '*libelf*'))
     os.remove(*libelf_files)
 
     # Update index
@@ -607,11 +607,11 @@ def test_install_legacy_buildcache_layout(install_mockery_mutable_config):
     where the .spack file contained a repeated spec.json and another
     compressed archive file containing the install tree.  This test
     makes sure we can still read that layout."""
-    legacy_layout_dir = os.path.join(test_path, 'data', 'mirrors', 'legacy_layout')
+    legacy_layout_dir = test_path.joinpath( 'data', 'mirrors', 'legacy_layout')
     mirror_url = "file://{0}".format(legacy_layout_dir)
     filename = ("test-debian6-core2-gcc-4.5.0-archive-files-2.0-"
                 "l3vdiqvbobmspwyb4q2b62fz6nitd4hk.spec.json")
-    spec_json_path = os.path.join(legacy_layout_dir, 'build_cache', filename)
+    spec_json_path = legacy_layout_dir.joinpath( 'build_cache', filename)
     mirror_cmd('add', '--scope', 'site', 'test-legacy-layout', mirror_url)
     output = install_cmd(
         '--no-check-signature', '--cache-only', '-f', spec_json_path, output=str)

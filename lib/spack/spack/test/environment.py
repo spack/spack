@@ -27,7 +27,7 @@ def test_error_on_nonempty_view_dir(tmpdir):
     with tmpdir.as_cwd():
         os.mkdir("empty_dir")
         os.mkdir("nonempty_dir")
-        with open(os.path.join("nonempty_dir", "file"), "wb"):
+        with open("nonempty_dir".joinpath( "file"), "wb"):
             pass
         os.symlink("empty_dir", "symlinked_empty_dir")
         os.symlink("does_not_exist", "broken_link")

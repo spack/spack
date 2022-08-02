@@ -177,7 +177,7 @@ def _collect_and_consume_cray_manifest_files(
 
     for directory in manifest_dirs:
         for fname in os.listdir(directory):
-            manifest_files.append(os.path.join(directory, fname))
+            manifest_files.append(directory.joinpath( fname))
 
     if not manifest_files:
         raise NoManifestFileError(

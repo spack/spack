@@ -193,7 +193,7 @@ def test_view_extension_projection(
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
 
-    assert os.path.exists(os.path.join(viewpath, 'extendee-1.0',
+    assert os.path.exists(viewpath.joinpath( 'extendee-1.0',
                                        'bin', 'extension1'))
 
 
@@ -266,8 +266,8 @@ def test_view_extension_global_activation(
     assert 'extension1@1.0' in view_activated
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
-    assert os.path.join(viewpath, 'bin', 'extension1'.exists())
-    assert not os.path.join(viewpath, 'bin', 'extension2'.exists())
+    assert viewpath.joinpath( 'bin', 'extension1'.exists())
+    assert not viewpath.joinpath( 'bin', 'extension2'.exists())
 
 
 def test_view_extendee_with_global_activations(
@@ -285,6 +285,6 @@ def test_view_extendee_with_global_activations(
 
 def test_view_fails_with_missing_projections_file(tmpdir):
     viewpath = str(tmpdir.mkdir('view'))
-    projection_file = os.path.join(str(tmpdir), 'nonexistent')
+    projection_file = str(tmpdir).joinpath( 'nonexistent')
     with pytest.raises(SystemExit):
         view('symlink', '--projection-file', projection_file, viewpath, 'foo')

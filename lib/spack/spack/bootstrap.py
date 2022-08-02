@@ -167,7 +167,7 @@ def _fix_ext_suffix(candidate_spec):
     for abs_path in non_standard_extensions:
         directory, filename = os.path.split(abs_path)
         module = filename.split('.')[0]
-        link_name = os.path.join(directory, expected['fmt'].format(
+        link_name = directory.joinpath( expected['fmt'].format(
             module=module, major=sys.version_info[0], minor=sys.version_info[1])
         )
         if link_name.exists():

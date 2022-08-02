@@ -67,7 +67,7 @@ def executables_in_path(path_hints=None):
     # entry overrides later entries
     for search_path in reversed(search_paths):
         for exe in os.listdir(search_path):
-            exe_path = os.path.join(search_path, exe)
+            exe_path = search_path.joinpath( exe)
             if is_executable(exe_path):
                 path_to_exe[exe_path] = exe
     return path_to_exe
@@ -102,7 +102,7 @@ def libraries_in_ld_library_path(path_hints=None):
     # LD_LIBRARY_PATH entry overrides later entries
     for search_path in reversed(search_paths):
         for lib in os.listdir(search_path):
-            lib_path = os.path.join(search_path, lib)
+            lib_path = search_path.joinpath( lib)
             if llnl.util.filesystem.is_readable_file(lib_path):
                 path_to_lib[lib_path] = lib
     return path_to_lib

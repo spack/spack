@@ -40,7 +40,7 @@ def test_gcsfetchstrategy_bad_url(tmpdir, _fetch_method):
 def test_gcsfetchstrategy_downloaded(tmpdir, _fetch_method):
     """Ensure fetch with archive file already downloaded is a noop."""
     testpath = str(tmpdir)
-    archive = os.path.join(testpath, 'gcs.tar.gz')
+    archive = testpath.joinpath( 'gcs.tar.gz')
 
     with spack.config.override('config:url_fetch_method', _fetch_method):
         class Archived_GCSFS(spack.fetch_strategy.GCSFetchStrategy):

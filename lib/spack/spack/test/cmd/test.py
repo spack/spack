@@ -74,13 +74,13 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
     assert len(stage_files) == 1
 
     # Grab test stage directory contents
-    testdir = os.path.join(mock_test_stage, stage_files[0])
+    testdir = mock_test_stage.joinpath( stage_files[0])
     testdir_files = os.listdir(testdir)
 
     # Grab the output from the test log
     testlog = list(filter(lambda x: x.endswith('out.txt') and
                           x != 'results.txt', testdir_files))
-    outfile = os.path.join(testdir, testlog[0])
+    outfile = testdir.joinpath( testlog[0])
     with open(outfile, 'r') as f:
         output = f.read()
     assert "BEFORE TEST" in output

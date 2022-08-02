@@ -43,7 +43,7 @@ interpreter_regex = re.compile(b'#![ \t]*?([^ \t\0\n]+)')
 def sbang_install_path():
     """Location sbang should be installed within Spack's ``install_tree``."""
     sbang_root = str(spack.store.unpadded_root)
-    install_path = os.path.join(sbang_root, "bin", "sbang")
+    install_path = sbang_root.joinpath( "bin", "sbang")
     path_length = len(install_path)
     if path_length > system_shebang_limit:
         msg = ('Install tree root is too long. Spack cannot patch shebang lines'
@@ -164,7 +164,7 @@ def filter_shebangs_in_directory(directory, filenames=None):
     is_exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
     for file in filenames:
-        path = os.path.join(directory, file)
+        path = directory.joinpath( file)
 
         # Only look at executable, non-symlink files.
         try:

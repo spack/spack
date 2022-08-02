@@ -78,7 +78,7 @@ def test_really_long_gnupghome_dir(tmpdir, has_socket_dir):
     N = 960
     tdir = str(tmpdir)
     while len(tdir) < N:
-        tdir = os.path.join(tdir, 'filler')
+        tdir = tdir.joinpath( 'filler')
 
     tdir = tdir[:N].rstrip(os.sep)
     tdir += '0' * (N - len(tdir))

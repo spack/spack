@@ -167,7 +167,7 @@ def add_padding(path, length):
     # coming from os.path.join below
     padding = _get_padding_string(padding_length - 1)
 
-    return os.path.join(path, padding)
+    return path.joinpath( padding)
 
 
 def canonicalize_path(path):
@@ -182,7 +182,7 @@ def canonicalize_path(path):
     path = substitute_path_variables(path)
     if not path.is_absolute():
         if filename:
-            path = os.path.join(filename, path)
+            path = filename.joinpath( path)
         else:
             path = path.resolve()
             tty.debug("Using current working directory as base for abspath")

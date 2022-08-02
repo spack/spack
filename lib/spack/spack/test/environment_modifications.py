@@ -21,7 +21,7 @@ from spack.util.environment import (
     is_system_path,
 )
 
-datadir = os.path.join(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
+datadir = spack_root.joinpath( 'lib', 'spack', 'spack', 'test', 'data')
 
 
 def test_inspect_path(tmpdir):
@@ -116,10 +116,10 @@ def miscellaneous_paths():
 def files_to_be_sourced():
     """Returns a list of files to be sourced"""
     return [
-        os.path.join(datadir, 'sourceme_first.sh'),
-        os.path.join(datadir, 'sourceme_second.sh'),
-        os.path.join(datadir, 'sourceme_parameters.sh'),
-        os.path.join(datadir, 'sourceme_unicode.sh')
+        datadir.joinpath( 'sourceme_first.sh'),
+        datadir.joinpath( 'sourceme_second.sh'),
+        datadir.joinpath( 'sourceme_parameters.sh'),
+        datadir.joinpath( 'sourceme_unicode.sh')
     ]
 
 
@@ -335,24 +335,24 @@ def test_preserve_environment(prepare_environment_for_tests):
                     reason="Not supported on Windows (yet)")
 @pytest.mark.parametrize('files,expected,deleted', [
     # Sets two variables
-    ((os.path.join(datadir, 'sourceme_first.sh'),),
+    ((datadir.joinpath( 'sourceme_first.sh'),),
      {'NEW_VAR': 'new', 'UNSET_ME': 'overridden'}, []),
     # Check if we can set a variable to different values depending
     # on command line parameters
-    ((os.path.join(datadir, 'sourceme_parameters.sh'),),
+    ((datadir.joinpath( 'sourceme_parameters.sh'),),
      {'FOO': 'default'}, []),
-    (([os.path.join(datadir, 'sourceme_parameters.sh'), 'intel64'],),
+    (([datadir.joinpath( 'sourceme_parameters.sh'), 'intel64'],),
      {'FOO': 'intel64'}, []),
     # Check unsetting variables
-    ((os.path.join(datadir, 'sourceme_second.sh'),),
+    ((datadir.joinpath( 'sourceme_second.sh'),),
      {'PATH_LIST': '/path/first:/path/second:/path/fourth'},
      ['EMPTY_PATH_LIST']),
     # Check that order of sourcing matters
-    ((os.path.join(datadir, 'sourceme_unset.sh'),
-      os.path.join(datadir, 'sourceme_first.sh')),
+    ((datadir.joinpath( 'sourceme_unset.sh'),
+      datadir.joinpath( 'sourceme_first.sh')),
      {'NEW_VAR': 'new', 'UNSET_ME': 'overridden'}, []),
-    ((os.path.join(datadir, 'sourceme_first.sh'),
-      os.path.join(datadir, 'sourceme_unset.sh')),
+    ((datadir.joinpath( 'sourceme_first.sh'),
+      datadir.joinpath( 'sourceme_unset.sh')),
      {'NEW_VAR': 'new'}, ['UNSET_ME']),
 
 ])
@@ -462,7 +462,7 @@ def test_from_environment_diff(before, after, search_list):
 @pytest.mark.regression('15775')
 def test_blacklist_lmod_variables():
     # Construct the list of environment modifications
-    file = os.path.join(datadir, 'sourceme_lmod.sh')
+    file = datadir.joinpath( 'sourceme_lmod.sh')
     env = EnvironmentModifications.from_sourcing_file(file)
 
     # Check that variables related to lmod are not in there

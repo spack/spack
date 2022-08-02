@@ -35,7 +35,7 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
         dev_build('dev-build-test-install@0.0.0')
 
     assert spec.package.filename in os.listdir(spec.prefix)
-    with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
+    with open(spec.prefix.joinpath( spec.package.filename), 'r') as f:
         assert f.read() == spec.package.replacement_string
 
     assert str(tmpdir.exists())
@@ -216,7 +216,7 @@ env:
             install()
 
     assert spec.package.filename in os.listdir(spec.prefix)
-    with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
+    with open(spec.prefix.joinpath( spec.package.filename), 'r') as f:
         assert f.read() == spec.package.replacement_string
 
 
@@ -304,7 +304,7 @@ env:
 
     for spec in (leaf_spec, root_spec):
         assert spec.package.filename in os.listdir(spec.prefix)
-        with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
+        with open(spec.prefix.joinpath( spec.package.filename), 'r') as f:
             assert f.read() == spec.package.replacement_string
 
 
@@ -400,7 +400,7 @@ env:
 
             reset_string()  # so the package will accept rebuilds
 
-            fs.touch(os.path.join(str(build_dir), 'test'))
+            fs.touch(str(build_dir).joinpath( 'test'))
             output = install()
 
     assert 'Installing %s' % test_spec in output

@@ -367,16 +367,16 @@ def test_recursive_search_of_headers_from_prefix(
         include_dirs = [dir.replace("/", "\\") for dir in include_dirs]
 
     # Check that the header files we expect are all listed
-    assert os.path.join(prefix, 'include', 'ex3.h') in header_list
-    assert os.path.join(prefix, 'include', 'boost', 'ex3.h') in header_list
-    assert os.path.join(prefix, 'path', 'to', 'ex1.h') in header_list
-    assert os.path.join(prefix, 'path', 'to', 'subdir', 'ex2.h') in header_list
+    assert prefix.joinpath( 'include', 'ex3.h') in header_list
+    assert prefix.joinpath( 'include', 'boost', 'ex3.h') in header_list
+    assert prefix.joinpath( 'path', 'to', 'ex1.h') in header_list
+    assert prefix.joinpath( 'path', 'to', 'subdir', 'ex2.h') in header_list
 
     # Check that when computing directories we exclude <prefix>/include/boost
-    assert os.path.join(prefix, 'include') in include_dirs
-    assert os.path.join(prefix, 'include', 'boost') not in include_dirs
-    assert os.path.join(prefix, 'path', 'to') in include_dirs
-    assert os.path.join(prefix, 'path', 'to', 'subdir') in include_dirs
+    assert prefix.joinpath( 'include') in include_dirs
+    assert prefix.joinpath( 'include', 'boost') not in include_dirs
+    assert prefix.joinpath( 'path', 'to') in include_dirs
+    assert prefix.joinpath( 'path', 'to', 'subdir') in include_dirs
 
 
 if sys.platform == "win32":
@@ -506,7 +506,7 @@ def test_filter_files_with_different_encodings(
     original_file = os.path.join(
         spack.paths.test_path, 'data', 'filter_file', filename
     )
-    target_file = os.path.join(str(tmpdir), filename)
+    target_file = str(tmpdir).joinpath( filename)
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(regex, replacement, target_file, **keyword_args)
@@ -526,7 +526,7 @@ def test_filter_files_multiple(tmpdir):
     original_file = os.path.join(
         spack.paths.test_path, 'data', 'filter_file', 'x86_cpuid_info.c'
     )
-    target_file = os.path.join(str(tmpdir), 'x86_cpuid_info.c')
+    target_file = str(tmpdir).joinpath( 'x86_cpuid_info.c')
     shutil.copy(original_file, target_file)
     # This should not raise exceptions
     fs.filter_file(r'\<malloc.h\>', '<unistd.h>', target_file)
@@ -703,15 +703,15 @@ def test_lexists_islink_isdir(tmpdir):
     root = str(tmpdir)
 
     # Create a directory and a file, an a bunch of symlinks.
-    dir = os.path.join(root, "dir")
-    file = os.path.join(root, "file")
-    nonexistent = os.path.join(root, "does_not_exist")
-    symlink_to_dir = os.path.join(root, "symlink_to_dir")
-    symlink_to_file = os.path.join(root, "symlink_to_file")
-    dangling_symlink = os.path.join(root, "dangling_symlink")
-    symlink_to_dangling_symlink = os.path.join(root, "symlink_to_dangling_symlink")
-    symlink_to_symlink_to_dir = os.path.join(root, "symlink_to_symlink_to_dir")
-    symlink_to_symlink_to_file = os.path.join(root, "symlink_to_symlink_to_file")
+    dir = root.joinpath( "dir")
+    file = root.joinpath( "file")
+    nonexistent = root.joinpath( "does_not_exist")
+    symlink_to_dir = root.joinpath( "symlink_to_dir")
+    symlink_to_file = root.joinpath( "symlink_to_file")
+    dangling_symlink = root.joinpath( "dangling_symlink")
+    symlink_to_dangling_symlink = root.joinpath( "symlink_to_dangling_symlink")
+    symlink_to_symlink_to_dir = root.joinpath( "symlink_to_symlink_to_dir")
+    symlink_to_symlink_to_file = root.joinpath( "symlink_to_symlink_to_file")
 
     os.mkdir(dir)
     with open(file, "wb") as f:

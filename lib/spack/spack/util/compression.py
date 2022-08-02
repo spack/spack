@@ -102,8 +102,8 @@ def _bunzip2(archive_file):
     compressed_file_name = archive_file.name
     decompressed_file = archive_file.strip(ext).name
     working_dir = Path.cwd()
-    archive_out = os.path.join(working_dir, decompressed_file)
-    copy_path = os.path.join(working_dir, compressed_file_name)
+    archive_out = working_dir.joinpath( decompressed_file)
+    copy_path = working_dir.joinpath( compressed_file_name)
     if bz2_support():
         import bz2
         f_bz = bz2.BZ2File(archive_file, mode='rb')

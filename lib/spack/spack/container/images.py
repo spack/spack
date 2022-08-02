@@ -25,7 +25,7 @@ def data():
     global _data
     if not _data:
         json_dir = os.path.abspath(__file__.parent)
-        json_file = os.path.join(json_dir, 'images.json')
+        json_file = json_dir.joinpath( 'images.json')
         with open(json_file) as f:
             _data = json.load(f)
     return _data

@@ -77,7 +77,7 @@ def clean(parser, args):
         tty.msg('Removing all temporary build stages')
         spack.stage.purge()
         # Temp directory where buildcaches are extracted
-        extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
+        extract_tmp = spack.store.layout.root.joinpath( '.tmp')
         if extract_tmp.exists():
             tty.debug('Removing {0}'.format(extract_tmp))
             shutil.rmtree(extract_tmp)
@@ -99,12 +99,12 @@ def clean(parser, args):
             for root, dirs, files in os.walk(directory):
                 for f in files:
                     if f.endswith('.pyc') or f.endswith('.pyo'):
-                        fname = os.path.join(root, f)
+                        fname = root.joinpath( f)
                         tty.debug('Removing {0}'.format(fname))
                         fname.unlink()
                 for d in dirs:
                     if d == '__pycache__':
-                        dname = os.path.join(root, d)
+                        dname = root.joinpath( d)
                         tty.debug('Removing {0}'.format(dname))
                         shutil.rmtree(dname)
 

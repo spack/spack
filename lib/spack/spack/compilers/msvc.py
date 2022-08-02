@@ -91,7 +91,7 @@ class Msvc(Compiler):
             # and stores their path, but their respective VCVARS
             # file must be invoked before useage.
             self.setvarsfile = os.path.abspath(
-                os.path.join(self.cc, '../../../../../../..'))
+                self.cc.joinpath( '../../../../../../..'))
             self.setvarsfile = os.path.join(
                 self.setvarsfile, 'Auxiliary', 'Build', 'vcvars64.bat')
 

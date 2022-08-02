@@ -48,18 +48,18 @@ def mock_patch_stage(tmpdir_factory, monkeypatch):
     return mock_path
 
 
-data_path = os.path.join(spack.paths.test_path, 'data', 'patch')
+data_path = spack.paths.test_path.joinpath( 'data', 'patch')
 
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="Line ending conflict on Windows")
 @pytest.mark.parametrize('filename, sha256, archive_sha256', [
     # compressed patch -- needs sha256 and archive_256
-    (os.path.join(data_path, 'foo.tgz'),
+    (data_path.joinpath( 'foo.tgz'),
      '252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
      '4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e'),
     # uncompressed patch -- needs only sha256
-    (os.path.join(data_path, 'foo.patch'),
+    (data_path.joinpath( 'foo.patch'),
      platform_url_sha,
      None)
 ])
@@ -282,15 +282,15 @@ def check_multi_dependency_patch_specs(
     baz_patch = get_patch(libdwarf, 'baz.patch')
 
     assert foo_patch.owner == owner
-    assert foo_patch.path == os.path.join(package_dir, 'foo.patch')
+    assert foo_patch.path == package_dir.joinpath( 'foo.patch')
     assert foo_patch.sha256 == foo_sha256
 
     assert bar_patch.owner == 'builtin.mock.patch-several-dependencies'
-    assert bar_patch.path == os.path.join(package_dir, 'bar.patch')
+    assert bar_patch.path == package_dir.joinpath( 'bar.patch')
     assert bar_patch.sha256 == bar_sha256
 
     assert baz_patch.owner == 'builtin.mock.patch-several-dependencies'
-    assert baz_patch.path == os.path.join(package_dir, 'baz.patch')
+    assert baz_patch.path == package_dir.joinpath( 'baz.patch')
     assert baz_patch.sha256 == baz_sha256
 
     # URL patches

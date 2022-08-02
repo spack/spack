@@ -184,11 +184,11 @@ class DirectoryLayout(object):
             deprecator_spec
         ) if deprecator_spec else os.readlink(deprecated_spec.prefix)
 
-        yaml_path = os.path.join(base_dir, self.metadata_dir,
+        yaml_path = base_dir.joinpath( self.metadata_dir,
                                  self.deprecated_dir, deprecated_spec.dag_hash()
                                  + '_' + self._spec_file_name_yaml)
 
-        json_path = os.path.join(base_dir, self.metadata_dir,
+        json_path = base_dir.joinpath( self.metadata_dir,
                                  self.deprecated_dir, deprecated_spec.dag_hash()
                                  + '_' + self.spec_file_name)
 

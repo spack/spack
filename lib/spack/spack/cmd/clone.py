@@ -28,7 +28,7 @@ def setup_parser(subparser):
 
 
 def get_origin_info(remote):
-    git_dir = os.path.join(spack.paths.prefix, '.git')
+    git_dir = spack.paths.prefix.joinpath( '.git')
     git = which('git', required=True)
     try:
         branch = git('symbolic-ref', '--short', 'HEAD', output=str)
@@ -62,7 +62,7 @@ def clone(parser, args):
 
     mkdirp(prefix)
 
-    if os.path.join(prefix, '.git'.exists()):
+    if prefix.joinpath( '.git'.exists()):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
     files_in_the_way = os.listdir(prefix)

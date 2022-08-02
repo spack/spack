@@ -248,7 +248,7 @@ class LmodFileLayout(BaseFileLayout):
                 str(self.spec.os),
                 str(self.spec.target.family)
             ])
-            return os.path.join(self.dirname(), arch_folder)
+            return self.dirname().joinpath( arch_folder)
         return self.dirname()
 
     @property

@@ -1661,7 +1661,7 @@ class TestConcretize(object):
         # Here we delete the package.py instead of removing the repo and we
         # make it such that "c" doesn't exist in myrepo
         del sys.modules['spack.pkg.myrepo.c']
-        c_dir = os.path.join(additional_repo_with_c.root, 'packages', 'c')
+        c_dir = additional_repo_with_c.root.joinpath( 'packages', 'c')
         shutil.rmtree(c_dir)
         monkeypatch.setattr(additional_repo_with_c, 'exists', lambda x: False)
 

@@ -194,7 +194,7 @@ def _reset(args):
             continue
 
         # If we are outside of an env scope delete the bootstrap.yaml file
-        bootstrap_yaml = os.path.join(scope.path, 'bootstrap.yaml')
+        bootstrap_yaml = scope.path.joinpath( 'bootstrap.yaml')
         backup_file = bootstrap_yaml + '.bkp'
         if bootstrap_yaml.exists():
             shutil.move(bootstrap_yaml, backup_file)
@@ -336,7 +336,7 @@ def _add(args):
             'the directory "{0}" does not exist'.format(args.metadata_dir)
         )
 
-    file = os.path.join(metadata_dir, 'metadata.yaml')
+    file = metadata_dir.joinpath( 'metadata.yaml')
     if not file.exists():
         raise RuntimeError('the file "{0}" does not exist'.format(file))
 
@@ -379,7 +379,7 @@ def _remove(args):
 
 
 def _mirror(args):
-    mirror_dir = os.path.join(args.root_dir, LOCAL_MIRROR_DIR)
+    mirror_dir = args.root_dir.joinpath( LOCAL_MIRROR_DIR)
 
     # TODO: Here we are adding gnuconfig manually, but this can be fixed
     # TODO: as soon as we have an option to add to a mirror all the possible
@@ -403,7 +403,7 @@ def _mirror(args):
         stage.create()
         stage.fetch()
         stage.expand_archive()
-        build_cache_dir = os.path.join(stage.source_path, 'build_cache')
+        build_cache_dir = stage.source_path.joinpath( 'build_cache')
         shutil.move(build_cache_dir, mirror_dir)
         llnl.util.tty.set_msg_enabled(True)
 

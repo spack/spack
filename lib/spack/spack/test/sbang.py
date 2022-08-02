@@ -68,38 +68,38 @@ class ScriptDirectory(object):
     def __init__(self, sbang_line):
         self.tempdir = tempfile.mkdtemp()
 
-        self.directory = os.path.join(self.tempdir, 'dir')
+        self.directory = self.tempdir.joinpath( 'dir')
         fs.mkdirp(self.directory)
 
         # Script with short shebang
-        self.short_shebang = os.path.join(self.tempdir, 'short')
+        self.short_shebang = self.tempdir.joinpath( 'short')
         with open(self.short_shebang, 'w') as f:
             f.write(short_line)
             f.write(last_line)
         self.make_executable(self.short_shebang)
 
         # Script with long shebang
-        self.long_shebang = os.path.join(self.tempdir, 'long')
+        self.long_shebang = self.tempdir.joinpath( 'long')
         with open(self.long_shebang, 'w') as f:
             f.write(long_line)
             f.write(last_line)
         self.make_executable(self.long_shebang)
 
         # Non-executable script with long shebang
-        self.nonexec_long_shebang = os.path.join(self.tempdir, 'nonexec_long')
+        self.nonexec_long_shebang = self.tempdir.joinpath( 'nonexec_long')
         with open(self.nonexec_long_shebang, 'w') as f:
             f.write(long_line)
             f.write(last_line)
 
         # Lua script with long shebang
-        self.lua_shebang = os.path.join(self.tempdir, 'lua')
+        self.lua_shebang = self.tempdir.joinpath( 'lua')
         with open(self.lua_shebang, 'w') as f:
             f.write(lua_line)
             f.write(last_line)
         self.make_executable(self.lua_shebang)
 
         # Lua occurring in text, not in shebang
-        self.lua_textbang = os.path.join(self.tempdir, 'lua_in_text')
+        self.lua_textbang = self.tempdir.joinpath( 'lua_in_text')
         with open(self.lua_textbang, 'w') as f:
             f.write(short_line)
             f.write(lua_in_text)
@@ -107,14 +107,14 @@ class ScriptDirectory(object):
         self.make_executable(self.lua_textbang)
 
         # Luajit script with long shebang
-        self.luajit_shebang = os.path.join(self.tempdir, 'luajit')
+        self.luajit_shebang = self.tempdir.joinpath( 'luajit')
         with open(self.luajit_shebang, 'w') as f:
             f.write(luajit_line)
             f.write(last_line)
         self.make_executable(self.luajit_shebang)
 
         # Luajit occuring in text, not in shebang
-        self.luajit_textbang = os.path.join(self.tempdir, 'luajit_in_text')
+        self.luajit_textbang = self.tempdir.joinpath( 'luajit_in_text')
         with open(self.luajit_textbang, 'w') as f:
             f.write(short_line)
             f.write(luajit_in_text)
@@ -122,14 +122,14 @@ class ScriptDirectory(object):
         self.make_executable(self.luajit_textbang)
 
         # Node script with long shebang
-        self.node_shebang = os.path.join(self.tempdir, 'node')
+        self.node_shebang = self.tempdir.joinpath( 'node')
         with open(self.node_shebang, 'w') as f:
             f.write(node_line)
             f.write(last_line)
         self.make_executable(self.node_shebang)
 
         # Node occuring in text, not in shebang
-        self.node_textbang = os.path.join(self.tempdir, 'node_in_text')
+        self.node_textbang = self.tempdir.joinpath( 'node_in_text')
         with open(self.node_textbang, 'w') as f:
             f.write(short_line)
             f.write(node_in_text)
@@ -137,14 +137,14 @@ class ScriptDirectory(object):
         self.make_executable(self.node_textbang)
 
         # php script with long shebang
-        self.php_shebang = os.path.join(self.tempdir, 'php')
+        self.php_shebang = self.tempdir.joinpath( 'php')
         with open(self.php_shebang, 'w') as f:
             f.write(php_line)
             f.write(last_line)
         self.make_executable(self.php_shebang)
 
         # php occuring in text, not in shebang
-        self.php_textbang = os.path.join(self.tempdir, 'php_in_text')
+        self.php_textbang = self.tempdir.joinpath( 'php_in_text')
         with open(self.php_textbang, 'w') as f:
             f.write(short_line)
             f.write(php_in_text)
@@ -152,7 +152,7 @@ class ScriptDirectory(object):
         self.make_executable(self.php_textbang)
 
         # Script already using sbang.
-        self.has_sbang = os.path.join(self.tempdir, 'shebang')
+        self.has_sbang = self.tempdir.joinpath( 'shebang')
         with open(self.has_sbang, 'w') as f:
             f.write(sbang_line)
             f.write(long_line)
@@ -160,7 +160,7 @@ class ScriptDirectory(object):
         self.make_executable(self.has_sbang)
 
         # Fake binary file.
-        self.binary = os.path.join(self.tempdir, 'binary')
+        self.binary = self.tempdir.joinpath( 'binary')
         tar = which('tar', required=True)
         tar('czf', self.binary, self.has_sbang)
         self.make_executable(self.binary)
@@ -239,13 +239,13 @@ def test_shebang_handling(script_dir, sbang_line):
         assert f.readline() == last_line
 
     assert filecmp.cmp(script_dir.lua_textbang,
-                       os.path.join(script_dir.tempdir, 'lua_in_text'))
+                       script_dir.tempdir.joinpath( 'lua_in_text'))
     assert filecmp.cmp(script_dir.luajit_textbang,
-                       os.path.join(script_dir.tempdir, 'luajit_in_text'))
+                       script_dir.tempdir.joinpath( 'luajit_in_text'))
     assert filecmp.cmp(script_dir.node_textbang,
-                       os.path.join(script_dir.tempdir, 'node_in_text'))
+                       script_dir.tempdir.joinpath( 'node_in_text'))
     assert filecmp.cmp(script_dir.php_textbang,
-                       os.path.join(script_dir.tempdir, 'php_in_text'))
+                       script_dir.tempdir.joinpath( 'php_in_text'))
 
     # Make sure this is untouched
     with open(script_dir.has_sbang, 'r') as f:
@@ -353,7 +353,7 @@ def test_install_sbang_too_long(tmpdir):
     long_path = root
     while num_extend > 1:
         add = min(num_extend, 255)
-        long_path = os.path.join(long_path, 'e' * add)
+        long_path = long_path.joinpath( 'e' * add)
         num_extend -= add
     with spack.store.use_store(spack.store.Store(long_path)):
         with pytest.raises(sbang.SbangPathError) as exc_info:

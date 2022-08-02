@@ -232,12 +232,12 @@ def root_path(name, module_set_name):
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
 
-    path = roots.get(name, os.path.join(spack.paths.share_path, name))
+    path = roots.get(name, spack.paths.share_path.joinpath( name))
     return spack.util.path.canonicalize_path(path)
 
 
 def generate_module_index(root, modules, overwrite=False):
-    index_path = os.path.join(root, 'module-index.yaml')
+    index_path = root.joinpath( 'module-index.yaml')
     if overwrite or not index_path.exists():
         entries = syaml.syaml_dict()
     else:
@@ -272,7 +272,7 @@ ModuleIndexEntry = collections.namedtuple(
 
 
 def read_module_index(root):
-    index_path = os.path.join(root, 'module-index.yaml')
+    index_path = root.joinpath( 'module-index.yaml')
     if not index_path.exists():
         return {}
     with open(index_path, 'r') as index_file:
@@ -616,9 +616,9 @@ class BaseFileLayout(object):
         if arch_folder_conf:
             # include an arch specific folder between root and filename
             arch_folder = str(self.spec.architecture)
-            filename = os.path.join(arch_folder, filename)
+            filename = arch_folder.joinpath( filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), filename)
+        return self.dirname().joinpath( filename)
 
 
 class BaseContext(tengine.Context):
@@ -903,9 +903,9 @@ class BaseModuleFileWriter(object):
             # This spec matches a default, it needs to be symlinked to default
             # Symlink to a tmp location first and move, so that existing
             # symlinks do not cause an error.
-            default_path = os.path.join(self.layout.filename.parent,
-                                        'default')
-            default_tmp = os.path.join(self.layout.filename.parent,
+            default_path = self.layout.filename.parent.joinpath(
+                                        'default')self.layout.filename.parent.joinpath(
+                                        'default')parent,
                                        '.tmp_spack_default')
             default_tmp.symlink_to(self.layout.filename)
             os.rename(default_tmp, default_path)

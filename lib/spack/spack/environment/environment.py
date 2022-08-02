@@ -64,7 +64,7 @@ _active_environment = None
 
 
 #: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, 'environments')
+env_path = spack.paths.var_path.joinpath( 'environments')
 
 
 #: Name of the input yaml file for an environment
@@ -200,7 +200,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return env_path.joinpath( name)
 
 
 def root(name):
@@ -224,7 +224,7 @@ def active(name):
 def is_env_dir(path):
     """Whether a directory contains a spack environment."""
     return path.is_dir() and os.path.exists(
-        os.path.join(path, manifest_name))
+        path.joinpath( manifest_name))
 
 
 def read(name):
@@ -259,7 +259,7 @@ def all_environment_names():
     candidates = sorted(os.listdir(env_path))
     names = []
     for candidate in candidates:
-        yaml_path = os.path.join(_root(candidate), manifest_name)
+        yaml_path = _root(candidate).joinpath( manifest_name)
         if valid_env_name(candidate) and yaml_path.exists():
             names.append(candidate)
     return names
@@ -433,13 +433,13 @@ class ViewDescriptor(object):
             return root
 
         root_dir = self.root.parent
-        return os.path.join(root_dir, root)
+        return root_dir.joinpath( root)
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
         root_dir = self.root.parent
         root_name = self.root.name
-        return os.path.join(root_dir, '._%s' % root_name, content_hash)
+        return root_dir.joinpath( '._%s' % root_name, content_hash)
 
     def content_hash(self, specs):
         d = syaml.syaml_dict([
@@ -459,7 +459,7 @@ class ViewDescriptor(object):
         view = self.view()
         view_path = view.get_projection_for_spec(spec)
         rel_path = os.path.relpath(view_path, self._current_root)
-        return os.path.join(self.root, rel_path)
+        return self.root.joinpath( rel_path)
 
     def view(self, new=None):
         """
@@ -557,7 +557,7 @@ class ViewDescriptor(object):
         view = self.view(new=new_root)
 
         root_dirname = self.root.parent
-        tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+        tmp_symlink_name = root_dirname.joinpath( '._view_link')
 
         # Create a new view
         try:
@@ -849,19 +849,19 @@ class Environment(object):
     @property
     def manifest_path(self):
         """Path to spack.yaml file in this environment."""
-        return os.path.join(self.path, manifest_name)
+        return self.path.joinpath( manifest_name)
 
     @property
     def _transaction_lock_path(self):
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(self.env_subdir_path, 'transaction_lock')
+        return self.env_subdir_path.joinpath( 'transaction_lock')
 
     @property
     def lock_path(self):
         """Path to spack.lock file in this environment."""
-        return os.path.join(self.path, lockfile_name)
+        return self.path.joinpath( lockfile_name)
 
     @property
     def _lock_backup_v1_path(self):
@@ -871,20 +871,20 @@ class Environment(object):
     @property
     def env_subdir_path(self):
         """Path to directory where the env stores repos, logs, views."""
-        return os.path.join(self.path, env_subdir_name)
+        return self.path.joinpath( env_subdir_name)
 
     @property
     def repos_path(self):
-        return os.path.join(self.path, env_subdir_name, 'repos')
+        return self.path.joinpath( env_subdir_name, 'repos')
 
     @property
     def log_path(self):
-        return os.path.join(self.path, env_subdir_name, 'logs')
+        return self.path.joinpath( env_subdir_name, 'logs')
 
     @property
     def view_path_default(self):
         # default path for environment views
-        return os.path.join(self.env_subdir_path, 'view')
+        return self.env_subdir_path.joinpath( 'view')
 
     @property
     def repo(self):
@@ -914,7 +914,7 @@ class Environment(object):
 
             # treat relative paths as relative to the environment
             if not config_path.is_absolute():
-                config_path = os.path.join(self.path, config_path)
+                config_path = self.path.joinpath( config_path)
                 config_path = os.path.normpath(os.path.realpath(config_path))
 
             if config_path.is_dir():
@@ -1111,7 +1111,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = os.path.normpath(os.path.join(self.path, path))
+            abspath = os.path.normpath(self.path.joinpath( path))
 
             stage = spec.package.stage
             stage.steal_source(abspath)
@@ -1944,7 +1944,7 @@ class Environment(object):
                         raise ValueError('specs passed to environment.write() '
                                          'must be concrete!')
 
-                    root = os.path.join(self.repos_path, dep.namespace)
+                    root = self.repos_path.joinpath( dep.namespace)
                     repo = spack.repo.create_or_construct(root, dep.namespace)
                     pkg_dir = repo.dirname_for_package_name(dep.name)
 
@@ -2181,7 +2181,7 @@ def make_repo_path(root):
 
     if root.is_dir():
         for repo_root in os.listdir(root):
-            repo_root = os.path.join(root, repo_root)
+            repo_root = root.joinpath( repo_root)
 
             if not repo_root.is_dir():
                 continue
@@ -2222,7 +2222,7 @@ def manifest_file(env_name_or_dir):
         env_dir = os.path.abspath(root(env_name_or_dir))
 
     assert env_dir, "environment not found [env={0}]".format(env_name_or_dir)
-    return os.path.join(env_dir, manifest_name)
+    return env_dir.joinpath( manifest_name)
 
 
 def update_yaml(manifest, backup_file):

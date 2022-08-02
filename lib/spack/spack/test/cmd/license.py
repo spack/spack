@@ -24,7 +24,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32",
 def test_list_files():
     files = license('list-files').strip().split('\n')
     assert all(f.startswith(spack.paths.prefix) for f in files)
-    assert os.path.join(spack.paths.bin_path, 'spack') in files
+    assert spack.paths.bin_path.joinpath( 'spack') in files
     assert os.path.abspath(__file__) in files
 
 
@@ -92,7 +92,7 @@ def test_update_copyright_year(tmpdir):
 """ % year)
 
     # add an old MIT license at top level
-    mit_file = os.path.join(spack.paths.prefix, "LICENSE-MIT")
+    mit_file = spack.paths.prefix.joinpath( "LICENSE-MIT")
     test_mit_file = str(tmpdir.join("LICENSE-MIT"))
     with open(mit_file) as real:
         with open(test_mit_file, "w") as dummy:

@@ -231,7 +231,7 @@ def test_updated_completion_scripts(tmpdir):
         header = os.path.join(
             spack.paths.share_path, shell, 'spack-completion.in')
         script = 'spack-completion.{0}'.format(shell)
-        old_script = os.path.join(spack.paths.share_path, script)
+        old_script = spack.paths.share_path.joinpath( script)
         new_script = str(tmpdir.join(script))
 
         commands('--aliases', '--format', shell,

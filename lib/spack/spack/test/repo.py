@@ -69,7 +69,7 @@ def test_repo_last_mtime():
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
-    with open(os.path.join(extra_repo.root, 'packages', '.invisible'), 'w'):
+    with open(extra_repo.root.joinpath( 'packages', '.invisible'), 'w'):
         pass
     extra_repo.all_package_names()
 

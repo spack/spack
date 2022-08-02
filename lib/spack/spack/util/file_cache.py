@@ -45,7 +45,7 @@ class FileCache(object):
     def destroy(self):
         """Remove all files under the cache root."""
         for f in os.listdir(self.root):
-            path = os.path.join(self.root, f)
+            path = self.root.joinpath( f)
             if path.is_dir():
                 shutil.rmtree(path, True)
             else:
@@ -53,14 +53,14 @@ class FileCache(object):
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
-        return os.path.join(self.root, key)
+        return self.root.joinpath( key)
 
     def _lock_path(self, key):
         """Path to the file in the cache for a particular key."""
         keyfile = key.name
         keydir = key.parent
 
-        return os.path.join(self.root, keydir, '.' + keyfile + '.lock')
+        return self.root.joinpath( keydir, '.' + keyfile + '.lock')
 
     def _get_lock(self, key):
         """Create a lock for a key, if necessary, and return a lock object."""

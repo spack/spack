@@ -14,7 +14,7 @@ def test_prefix_attributes():
     """Test normal prefix attributes like ``prefix.bin``"""
     prefix = Prefix(os.sep + 'usr')
 
-    assert prefix.bin     == os.sep + os.path.join(Path('usr'), 'bin')
+    assert prefix.bin     == os.sep + Path('usr').joinpath( 'bin')
     assert prefix.lib     == os.sep + Path('usr').joinpath( 'lib')
     assert prefix.include == os.sep + Path('usr').joinpath( 'include')
 

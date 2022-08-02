@@ -124,7 +124,7 @@ def test_fetch(type_of_test,
         with working_dir(pkg.stage.source_path):
             assert h('HEAD') == h(t.revision)
 
-            file_path = os.path.join(pkg.stage.source_path, t.file)
+            file_path = pkg.stage.source_path.joinpath( t.file)
             assert pkg.stage.source_path.is_dir()
             assert file_path.is_file()
 
@@ -349,10 +349,10 @@ def test_gitsubmodules_callable(
     monkeypatch.setitem(pkg.versions, ver('git'), args)
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
-        file_path = os.path.join(pkg.stage.source_path,
+        file_path = pkg.stage.source_path.joinpath(
                                  'third_party/submodule0/r0_file_0')
         assert file_path.is_file()
-        file_path = os.path.join(pkg.stage.source_path,
+        file_path = pkg.stage.source_path.joinpath(
                                  'third_party/submodule1/r0_file_1')
         assert not file_path.is_file()
 
@@ -378,9 +378,9 @@ def test_gitsubmodules_delete(
     monkeypatch.setitem(pkg.versions, ver('git'), args)
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
-        file_path = os.path.join(pkg.stage.source_path,
+        file_path = pkg.stage.source_path.joinpath(
                                  'third_party/submodule0')
         assert not file_path.is_dir()
-        file_path = os.path.join(pkg.stage.source_path,
+        file_path = pkg.stage.source_path.joinpath(
                                  'third_party/submodule1')
         assert not file_path.is_dir()

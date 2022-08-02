@@ -50,7 +50,7 @@ class RacketPackage(PackageBase):
     def build_directory(self):
         ret = Path.cwd()
         if self.subdirectory:
-            ret = os.path.join(ret, self.subdirectory)
+            ret = ret.joinpath( self.subdirectory)
         return ret
 
     def install(self, spec, prefix):

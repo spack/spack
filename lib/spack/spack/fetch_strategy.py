@@ -517,7 +517,7 @@ class URLFetchStrategy(FetchStrategy):
                       .format(self.archive_file, self.stage.source_path))
             if not self.stage.expanded:
                 mkdirp(self.stage.source_path)
-            dest = os.path.join(self.stage.source_path,
+            dest = self.stage.source_path.joinpath(
                                 self.archive_file.name)
             shutil.move(self.archive_file, dest)
             return

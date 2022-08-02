@@ -91,7 +91,7 @@ def test_modules_default_symlink(
     generator = generator_cls(spec, 'default')
     generator.write()
 
-    link_path = os.path.join(mock_module_filename.parent, 'default')
+    link_path = mock_module_filename.parent.joinpath( 'default')
     assert link_path.is_symlink()
     assert os.readlink(link_path) == mock_module_filename
 

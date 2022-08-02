@@ -963,7 +963,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
            particular package should be stored."""
         if not self.license_files:
             return
-        return os.path.join(self.global_license_dir, self.name,
+        return self.global_license_dir.joinpath( self.name,
                             self.license_files[0].name)
 
     @property

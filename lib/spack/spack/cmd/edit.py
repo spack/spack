@@ -64,7 +64,7 @@ def setup_parser(subparser):
         help="edit the command with the supplied name")
     excl_args.add_argument(
         '-d', '--docs', dest='path', action='store_const',
-        const=os.path.join(spack.paths.lib_path, 'docs'),
+        const=spack.paths.lib_path.joinpath( 'docs'),
         help="edit the docs with the supplied name")
     excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
@@ -101,7 +101,7 @@ def edit(parser, args):
             if path == spack.paths.command_path:
                 name = spack.cmd.python_name(name)
 
-            path = os.path.join(path, name)
+            path = path.joinpath( name)
             if not path.exists():
                 files = glob.glob(path + '*')
                 blacklist = ['.pyc', '~']  # blacklist binaries and backups

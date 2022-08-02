@@ -89,16 +89,16 @@ def test_url_local_file_path():
         assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
-    expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
+    expected = spack_root.joinpath( 'a', 'b', 'c.txt').resolve()
     assert(lfp == expected)
 
     if is_windows:
         lfp = url_util.local_file_path('file:///$spack/a/b/c.txt')
-        expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
+        expected = spack_root.joinpath( 'a', 'b', 'c.txt').resolve()
         assert(lfp == expected)
 
     lfp = url_util.local_file_path('file://$spack/a/b/c.txt')
-    expected = os.path.join(spack_root, 'a', 'b', 'c.txt').resolve()
+    expected = spack_root.joinpath( 'a', 'b', 'c.txt').resolve()
     assert(lfp == expected)
 
     # not a file:// URL - so no local file path

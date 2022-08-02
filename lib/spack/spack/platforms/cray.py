@@ -95,7 +95,7 @@ class Cray(Platform):
             module('unload', mod)
 
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
-        cray_wrapper_names = os.path.join(build_env_path, 'cray')
+        cray_wrapper_names = build_env_path.joinpath( 'cray')
 
         if cray_wrapper_names.is_dir():
             env.prepend_path('PATH', cray_wrapper_names)

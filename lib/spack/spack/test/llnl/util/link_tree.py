@@ -37,7 +37,7 @@ def stage():
 @pytest.fixture()
 def link_tree(stage):
     """Return a properly initialized LinkTree instance."""
-    source_path = os.path.join(stage.path, 'source')
+    source_path = stage.path.joinpath( 'source')
     return LinkTree(source_path)
 
 

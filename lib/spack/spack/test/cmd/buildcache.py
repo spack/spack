@@ -96,9 +96,9 @@ def tests_buildcache_create(
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+        str(tmpdir).joinpath( 'build_cache', tarball_path))
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball))
+        str(tmpdir).joinpath( 'build_cache', tarball))
 
 
 def tests_buildcache_create_env(
@@ -118,9 +118,9 @@ def tests_buildcache_create_env(
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+        str(tmpdir).joinpath( 'build_cache', tarball_path))
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball))
+        str(tmpdir).joinpath( 'build_cache', tarball))
 
 
 def test_buildcache_create_fails_on_noargs(tmpdir):
@@ -198,7 +198,7 @@ def test_buildcache_sync(mutable_mock_env_path, install_mockery_mutable_config,
 
     def verify_mirror_contents():
         dest_list = os.listdir(
-            os.path.join(dest_mirror_dir, 'build_cache'))
+            dest_mirror_dir.joinpath( 'build_cache'))
 
         found_pkg = False
 
@@ -269,6 +269,6 @@ def test_buildcache_create_install(mutable_mock_env_path,
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
     tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball_path))
+        str(tmpdir).joinpath( 'build_cache', tarball_path))
     assert os.path.exists(
-        os.path.join(str(tmpdir), 'build_cache', tarball))
+        str(tmpdir).joinpath( 'build_cache', tarball))

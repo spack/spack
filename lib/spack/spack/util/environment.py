@@ -35,7 +35,7 @@ system_paths = ['/', '/usr', '/usr/local'] if \
                          'C:\\Program Files (x86)', 'C:\\Users',
                          'C:\\ProgramData']
 suffixes = ['bin', 'bin64', 'include', 'lib', 'lib64'] if not is_windows else []
-system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
+system_dirs = [p.joinpath( s) for s in suffixes for p in system_paths] + \
     system_paths
 
 
@@ -943,7 +943,7 @@ def inspect_path(root, inspections, exclude=None):
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
-        expected = os.path.join(root, relative_path)
+        expected = root.joinpath( relative_path)
 
         if expected.is_dir() and not exclude(expected):
             for variable in variables:

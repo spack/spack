@@ -181,7 +181,7 @@ def gpg_init(args):
         for filename in filenames:
             if not filename.endswith('.key'):
                 continue
-            spack.util.gpg.trust(os.path.join(root, filename))
+            spack.util.gpg.trust(root.joinpath( filename))
 
 
 def gpg_untrust(args):

@@ -78,7 +78,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
     e = ev.read(env_name)
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
     for spec in e.specs_by_hash.values():
-        mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
+        mirror_res = os.listdir(mirror_dir.joinpath( spec.name))
         expected = ['%s.tar.gz' % spec.format('{name}-{version}')]
         assert mirror_res == expected
 
@@ -87,7 +87,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
 def source_for_pkg_with_hash(mock_packages, tmpdir):
     pkg = spack.repo.get('trivial-pkg-with-valid-hash')
     local_url_basename = pkg.url.name
-    local_path = os.path.join(str(tmpdir), local_url_basename)
+    local_path = str(tmpdir).joinpath( local_url_basename)
     with open(local_path, 'w') as f:
         f.write(pkg.hashed_content)
     local_url = "file://" + local_path
@@ -135,7 +135,7 @@ def test_exclude_specs(mock_packages, config):
 
 
 def test_exclude_file(mock_packages, tmpdir, config):
-    exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
+    exclude_path = str(tmpdir).joinpath( 'test-exclude.txt')
     with open(exclude_path, 'w') as exclude_file:
         exclude_file.write("""\
 mpich@3.0.1:3.0.2

@@ -173,8 +173,8 @@ def test_install_with_source(
     spec = Spec('trivial-install-test-package').concretized()
     src = os.path.join(
         spec.prefix.share, 'trivial-install-test-package', 'src')
-    assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
-                       os.path.join(src, 'configure'))
+    assert filecmp.cmp(mock_archive.path.joinpath( 'configure'),
+                       src.joinpath( 'configure'))
 
 
 def test_install_env_variables(
@@ -212,7 +212,7 @@ def test_install_overwrite(
     install('libdwarf')
 
     # Ignore manifest and install times
-    manifest = os.path.join(spec.prefix, spack.store.layout.metadata_dir,
+    manifest = spec.prefix.joinpath( spack.store.layout.metadata_dir,
                             spack.store.layout.manifest_file_name)
     ignores = [manifest, spec.package.times_log_path]
 
@@ -221,7 +221,7 @@ def test_install_overwrite(
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
-    with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
+    with open(spec.prefix.joinpath( 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
     bad_md5 = fs.hash_directory(spec.prefix, ignore=ignores)
@@ -290,7 +290,7 @@ def test_install_overwrite_multiple(
 
     install('cmake')
 
-    ld_manifest = os.path.join(libdwarf.prefix,
+    ld_manifest = libdwarf.prefix.joinpath(
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
@@ -300,7 +300,7 @@ def test_install_overwrite_multiple(
     expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
                                               ignore=ld_ignores)
 
-    cm_manifest = os.path.join(cmake.prefix,
+    cm_manifest = cmake.prefix.joinpath(
                                spack.store.layout.metadata_dir,
                                spack.store.layout.manifest_file_name)
 
@@ -310,9 +310,9 @@ def test_install_overwrite_multiple(
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
-    with open(os.path.join(libdwarf.prefix, 'only_in_old'), 'w') as f:
+    with open(libdwarf.prefix.joinpath( 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
-    with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
+    with open(cmake.prefix.joinpath( 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
     bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=ld_ignores)
@@ -502,12 +502,12 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
     archive_dir = os.path.join(
         spack.store.layout.metadata_path(s), 'archived-files'
     )
-    config_log = os.path.join(archive_dir,
+    config_log = archive_dir.joinpath(
                               mock_archive.expanded_archive_basedir,
                               'config.log')
     assert config_log.exists()
 
-    errors_txt = os.path.join(archive_dir, 'errors.txt')
+    errors_txt = archive_dir.joinpath( 'errors.txt')
     assert errors_txt.exists()
 
 

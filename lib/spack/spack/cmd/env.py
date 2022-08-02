@@ -554,7 +554,7 @@ def env_depfile(args):
     hash_to_spec = {}
 
     if args.make_target_prefix is None:
-        target_prefix = os.path.join(env.env_subdir_path, 'makedeps')
+        target_prefix = env.env_subdir_path.joinpath( 'makedeps')
     else:
         target_prefix = args.make_target_prefix
 
@@ -566,13 +566,13 @@ def env_depfile(args):
         if name in ('all', 'fetch-all', 'clean') and target_prefix.is_absolute():
             return name
         else:
-            return os.path.join(target_prefix, name)
+            return target_prefix.joinpath( name)
 
     def get_install_target(name):
-        return os.path.join(target_prefix, '.install', name)
+        return target_prefix.joinpath( '.install', name)
 
     def get_fetch_target(name):
-        return os.path.join(target_prefix, '.fetch', name)
+        return target_prefix.joinpath( '.fetch', name)
 
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):

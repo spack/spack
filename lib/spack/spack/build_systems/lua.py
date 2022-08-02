@@ -48,7 +48,7 @@ class LuaPackage(PackageBase):
         )
 
     def _luarocks_config_path(self):
-        return os.path.join(self.stage.source_path, 'spack_luarocks.lua')
+        return self.stage.source_path.joinpath( 'spack_luarocks.lua')
 
     def generate_luarocks_config(self, spec, prefix):
         spec = self.spec

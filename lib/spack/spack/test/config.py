@@ -386,7 +386,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
                         lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path(
         '$env/foo/bar/baz'
-    ) == os.path.join(fake_env_path, Path('foo').joinpath( 'bar', 'baz'))
+    ) == fake_env_path.joinpath( Path('foo').joinpath( 'bar', 'baz'))
 
     # relative paths without source information are relative to cwd
     assert spack_path.canonicalize_path(
@@ -400,7 +400,7 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     spack.config.config.clear_caches()
     path = spack.config.get('modules:default:roots:lmod')
     assert spack_path.canonicalize_path(path) == os.path.normpath(
-        os.path.join(mock_low_high_config.scopes['low'].path,
+        mock_low_high_config.scopes['low'].path.joinpath(
                      Path('foo').joinpath( 'bar', 'baz')))
 
 
@@ -514,11 +514,11 @@ def test_parse_install_tree(config_settings, expected, mutable_config):
 @pytest.mark.parametrize('config_settings,expected', [
     ([['config:install_tree:root', os.sep + 'path'],
       ['config:install_tree:padded_length', 11]],
-     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+     [os.sep + 'path'.joinpath( PAD_STRING[:5]), os.sep + 'path', None]),
     ([['config:install_tree:root', '/path/$padding:11']],
-     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+     [os.sep + 'path'.joinpath( PAD_STRING[:5]), os.sep + 'path', None]),
     ([['config:install_tree', '/path/${padding:11}']],
-     [os.path.join(os.sep + 'path', PAD_STRING[:5]), os.sep + 'path', None]),
+     [os.sep + 'path'.joinpath( PAD_STRING[:5]), os.sep + 'path', None]),
     ([['config:install_tree:padded_length', False]], [None, None, None]),
     ([['config:install_tree:padded_length', True],
       ['config:install_tree:root', os.sep + 'path']],
@@ -757,7 +757,7 @@ def test_keys_are_ordered():
 
     config_scope = spack.config.ConfigScope(
         'modules',
-        os.path.join(spack.paths.test_path, 'data', 'config')
+        spack.paths.test_path.joinpath( 'data', 'config')
     )
 
     data = config_scope.get_section('modules')
@@ -1164,7 +1164,7 @@ def test_license_dir_config(mutable_config, mock_packages):
     assert spack.package.Package.global_license_dir == spack.paths.default_license_dir
     assert spack.repo.get("a").global_license_dir == spack.paths.default_license_dir
 
-    rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
+    rel_path = os.path.sep.joinpath( "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
     assert spack.package.Package.global_license_dir == rel_path

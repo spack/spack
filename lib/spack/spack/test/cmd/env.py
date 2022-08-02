@@ -383,7 +383,7 @@ def test_environment_status(capsys, tmpdir):
 
         with ev.Environment('local_dir'):
             with capsys.disabled():
-                assert os.path.join(Path.cwd(), 'local_dir') in env('status')
+                assert Path.cwd().joinpath( 'local_dir') in env('status')
 
             e = ev.Environment('myproject')
             e.write()
@@ -667,7 +667,7 @@ def test_env_with_include_config_files_same_basename():
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
-    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+    fs.mkdirp(e.path.joinpath( 'path', 'to'))
     with open(os.path.join(
             e.path,
             './path/to/included-config.yaml'), 'w') as f:
@@ -677,7 +677,7 @@ def test_env_with_include_config_files_same_basename():
               version: [0.8.10]
         """)
 
-    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    fs.mkdirp(e.path.joinpath( 'second', 'path', 'to'))
     with open(os.path.join(
             e.path,
             './second/path/to/include-config.yaml'), 'w') as f:
@@ -707,7 +707,7 @@ env:
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
-    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+    with open(e.path.joinpath( 'included-config.yaml'), 'w') as f:
         f.write("""\
 packages:
   mpileaks:
@@ -722,7 +722,7 @@ packages:
 
 
 def test_env_with_included_config_scope():
-    config_scope_path = os.path.join(ev.root('test'), 'config')
+    config_scope_path = ev.root('test').joinpath( 'config')
     test_config = """\
 env:
   include:
@@ -736,7 +736,7 @@ env:
     e = ev.read('test')
 
     fs.mkdirp(config_scope_path)
-    with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
+    with open(config_scope_path.joinpath( 'packages.yaml'), 'w') as f:
         f.write("""\
 packages:
   mpileaks:
@@ -793,7 +793,7 @@ env:
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
-    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+    with open(e.path.joinpath( 'included-config.yaml'), 'w') as f:
         f.write("""\
 packages:
   mpileaks:
@@ -826,14 +826,14 @@ env:
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
-    with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
+    with open(e.path.joinpath( 'high-config.yaml'), 'w') as f:
         f.write("""\
 packages:
   libelf:
     version: [0.8.10]  # this should override libelf version below
 """)
 
-    with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
+    with open(e.path.joinpath( 'low-config.yaml'), 'w') as f:
         f.write("""\
 packages:
   mpileaks:
@@ -881,7 +881,7 @@ def test_env_loads(install_mockery, mock_fetch):
 
     e = ev.read('test')
 
-    loads_file = os.path.join(e.path, 'loads')
+    loads_file = e.path.joinpath( 'loads')
     assert loads_file.exists()
 
     with open(loads_file) as f:
@@ -905,7 +905,7 @@ def test_stage(mock_stage, mock_fetch, install_mockery):
         for dep in spec.traverse():
             stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, dep.name,
                                                  dep.version, dep.dag_hash())
-            assert os.path.join(root, stage_name.is_dir())
+            assert root.joinpath( stage_name.is_dir())
 
     check_stage('mpileaks')
     check_stage('zmpi')
@@ -1114,9 +1114,9 @@ def test_env_view_succeeds_symlinked_dir_file(
         add('view-dir-symlinked-dir')
         add('view-dir-dir')
         install()
-        x_dir = os.path.join(str(view_dir), 'bin', 'x')
-        assert os.path.join(x_dir, 'file_in_dir'.exists())
-        assert os.path.join(x_dir, 'file_in_symlinked_dir'.exists())
+        x_dir = str(view_dir).joinpath( 'bin', 'x')
+        assert x_dir.joinpath( 'file_in_dir'.exists())
+        assert x_dir.joinpath( 'file_in_symlinked_dir'.exists())
 
 
 def test_env_without_view_install(
@@ -1157,7 +1157,7 @@ env:
     e = ev.read('test')
 
     # Check that metadata folder for this spec exists
-    assert os.path.join(e.default_view.view(.is_dir()._root,
+    assert e.default_view.view(.is_dir()._root.joinpath(
                          '.spack', 'mpileaks'))
 
 
@@ -1772,7 +1772,7 @@ env:
         test = ev.read('test')
         for spec in test._get_environment_specs():
             assert os.path.exists(
-                os.path.join(viewdir, spec.name, '%s-%s' %
+                viewdir.joinpath( spec.name, '%s-%s' %
                              (spec.version, spec.compiler.name)))
 
 
@@ -1806,11 +1806,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies('%gcc'):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -1844,11 +1844,11 @@ env:
         for spec in test._get_environment_specs():
             if not spec.satisfies('callpath'):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -1883,11 +1883,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies('%gcc') and not spec.satisfies('callpath'):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -1924,11 +1924,11 @@ env:
             if spec in test.roots() and (spec.satisfies('%gcc') and
                                          not spec.satisfies('callpath')):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -1955,12 +1955,12 @@ spack:
 
     # make sure transitive run type deps are in the view
     for pkg in ('dtrun1', 'dtrun3'):
-        assert os.path.join(viewdir, pkg.exists())
+        assert viewdir.joinpath( pkg.exists())
 
     # and non-run-type deps are not.
     for pkg in ('dtlink1', 'dtlink2', 'dtlink3', 'dtlink4', 'dtlink5'
                 'dtbuild1', 'dtbuild2', 'dtbuild3'):
-        assert not os.path.join(viewdir, pkg.exists())
+        assert not viewdir.joinpath( pkg.exists())
 
 
 @pytest.mark.parametrize('link_type', ['hardlink', 'copy', 'symlink'])
@@ -2024,11 +2024,11 @@ env:
         for spec in test._get_environment_specs():
             if spec.satisfies('%gcc') and not spec.satisfies('callpath'):
                 assert os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(viewdir, spec.name, '%s-%s' %
+                    viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -2059,7 +2059,7 @@ env:
         shell = env('activate', '--sh', 'test')
 
         assert 'PATH' in shell
-        assert os.path.join(viewdir, 'bin') in shell
+        assert viewdir.joinpath( 'bin') in shell
         assert 'FOOBAR=mpileaks' in shell
 
 
@@ -2126,17 +2126,17 @@ env:
 
         shell = env('activate', '--sh', 'test')
         assert 'PATH' in shell
-        assert os.path.join(default_viewdir, 'bin') in shell
+        assert default_viewdir.joinpath( 'bin') in shell
 
         test = ev.read('test')
         for spec in test._get_environment_specs():
             if not spec.satisfies('callpath%gcc'):
                 assert os.path.exists(
-                    os.path.join(combin_viewdir, spec.name, '%s-%s' %
+                    combin_viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
             else:
                 assert not os.path.exists(
-                    os.path.join(combin_viewdir, spec.name, '%s-%s' %
+                    combin_viewdir.joinpath( spec.name, '%s-%s' %
                                  (spec.version, spec.compiler.name)))
 
 
@@ -2188,7 +2188,7 @@ def test_env_activate_default_view_root_unconditional(mutable_mock_env_path):
         viewdir = e.default_view.root
 
     out = env('activate', '--sh', 'test')
-    viewdir_bin = os.path.join(viewdir, 'bin')
+    viewdir_bin = viewdir.joinpath( 'bin')
 
     assert "export PATH={0}".format(viewdir_bin) in out or \
            "export PATH='{0}".format(viewdir_bin) in out or \
@@ -2507,7 +2507,7 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+        assert e.dev_specs['mypkg2']['path'] == sep + 'some'.joinpath(
                                                                    'other', 'path')
 
 
@@ -2518,7 +2518,7 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == sep + os.path.join('some',
+        assert e.dev_specs['mypkg2']['path'] == sep + 'some'.joinpath(
                                                                    'other', 'path')
 
 
@@ -2779,7 +2779,7 @@ def test_environment_view_target_already_exists(
 
     # Replace it with something new.
     os.mkdir(real_view)
-    fs.touch(os.path.join(real_view, 'file'))
+    fs.touch(real_view.joinpath( 'file'))
 
     # Remove the symlink so Spack can't know about the "previous root"
     view.unlink()

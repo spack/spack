@@ -83,7 +83,7 @@ def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch, mutable_config):
 def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
+        gpg('verify', mock_gpg_data_path.joinpath( 'content.txt'))
 
     # Import the default key.
     gpg('init', '--from', mock_gpg_keys_path)
@@ -94,14 +94,14 @@ def test_gpg(tmpdir, tmp_scope, mock_gnupghome):
     gpg('list', '--signing')
 
     # Verify the file now that the key has been trusted.
-    gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
+    gpg('verify', mock_gpg_data_path.joinpath( 'content.txt'))
 
     # Untrust the default key.
     gpg('untrust', 'Spack testing')
 
     # Now that the key is untrusted, verification should fail.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
+        gpg('verify', mock_gpg_data_path.joinpath( 'content.txt'))
 
     # Create a file to test signing.
     test_path = tmpdir.join('to-sign.txt')

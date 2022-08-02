@@ -37,7 +37,7 @@ def test_stage_spec(monkeypatch):
 
 @pytest.fixture(scope='function')
 def check_stage_path(monkeypatch, tmpdir):
-    expected_path = os.path.join(str(tmpdir), 'x')
+    expected_path = str(tmpdir).joinpath( 'x')
 
     def fake_stage(pkg, mirror_only=False):
         assert pkg.path == expected_path

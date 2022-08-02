@@ -601,7 +601,7 @@ def test_versions_from_git(mock_git_version_info, monkeypatch, mock_packages):
 
         with working_dir(repo_path):
             which('git')('checkout', commit)
-        with open(os.path.join(repo_path, filename), 'r') as f:
+        with open(repo_path.joinpath( filename), 'r') as f:
             expected = f.read()
 
         assert str(comparator) == expected

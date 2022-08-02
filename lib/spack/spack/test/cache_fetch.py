@@ -34,7 +34,7 @@ def test_fetch_missing_cache(tmpdir, _fetch_method):
 def test_fetch(tmpdir, _fetch_method):
     """Ensure a fetch after expanding is effectively a no-op."""
     testpath = str(tmpdir)
-    cache = os.path.join(testpath, 'cache.tar.gz')
+    cache = testpath.joinpath( 'cache.tar.gz')
     touch(cache)
     if is_windows:
         url_stub = '{0}'

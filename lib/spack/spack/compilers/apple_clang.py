@@ -124,11 +124,11 @@ class AppleClang(spack.compilers.clang.Clang):
             raise OSError(msg)
 
         real_root = os.path.dirname(real_root.parent)
-        developer_root = os.path.join(spack.stage.get_stage_root(),
+        developer_root = spack.stage.get_stage_root().joinpath(
                                       'xcode-select',
                                       self.name,
                                       str(self.version))
-        xcode_link = os.path.join(developer_root, 'Xcode.app')
+        xcode_link = developer_root.joinpath( 'Xcode.app')
 
         if not developer_root.exists():
             tty.warn('Copying Xcode from %s to %s in order to add spack '
@@ -156,16 +156,16 @@ class AppleClang(spack.compilers.clang.Clang):
             bins = ['c++', 'c89', 'c99', 'cc', 'clang', 'clang++', 'cpp']
 
             for real_dir in real_dirs:
-                dev_dir = os.path.join(developer_root,
+                dev_dir = developer_root.joinpath(
                                        'Contents',
                                        'Developer',
                                        real_dir)
                 for fname in os.listdir(dev_dir):
                     if fname in bins:
-                        os.unlink(os.path.join(dev_dir, fname))
+                        os.unlink(dev_dir.joinpath( fname))
                         symlink(
-                            os.path.join(spack.paths.build_env_path, 'cc'),
-                            os.path.join(dev_dir, fname))
+                            spack.paths.build_env_path.joinpath( 'cc'),
+                            dev_dir.joinpath( fname))
 
             symlink(developer_root, xcode_link)
 

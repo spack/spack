@@ -229,12 +229,12 @@ search_dir = spack.paths.test_path.joinpath('data', 'directory_search')
     (find_headers, ['a', 'c'], search_dir, {'recursive': True}),
     (find_libraries,
      ['liba', 'libd'],
-     os.path.join(search_dir, 'b'),
+     search_dir.joinpath( 'b'),
      {'recursive': False}
      ),
     (find_headers,
      ['b', 'd'],
-     os.path.join(search_dir, 'b'),
+     search_dir.joinpath( 'b'),
      {'recursive': False}
      ),
 ])
@@ -270,14 +270,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [
     (search_dir, '*/*bar.tx?', {'recursive': False}, [
-        os.path.join(search_dir, Path('a').joinpath( 'foobar.txt')),
-        os.path.join(search_dir, Path('b').joinpath( 'bar.txp')),
-        os.path.join(search_dir, Path('c').joinpath( 'bar.txt')),
+        search_dir.joinpath( Path('a').joinpath( 'foobar.txt')),
+        search_dir.joinpath( Path('b').joinpath( 'bar.txp')),
+        search_dir.joinpath( Path('c').joinpath( 'bar.txt')),
     ]),
     (search_dir, '*/*bar.tx?', {'recursive': True}, [
-        os.path.join(search_dir, Path('a').joinpath( 'foobar.txt')),
-        os.path.join(search_dir, Path('b').joinpath( 'bar.txp')),
-        os.path.join(search_dir, Path('c').joinpath( 'bar.txt')),
+        search_dir.joinpath( Path('a').joinpath( 'foobar.txt')),
+        search_dir.joinpath( Path('b').joinpath( 'bar.txp')),
+        search_dir.joinpath( Path('c').joinpath( 'bar.txt')),
     ])
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):

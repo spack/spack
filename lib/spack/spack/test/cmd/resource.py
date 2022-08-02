@@ -46,7 +46,7 @@ def test_resource_list(mock_packages, capfd):
     assert 'patched by:' in out
     assert 'path:' in out
 
-    assert os.path.join('repos', 'builtin.mock', 'packages',
+    assert 'repos'.joinpath( 'builtin.mock', 'packages',
                         'patch-a-dependency', 'libelf.patch') in out
     assert 'applies to: builtin.mock.libelf' in out
     assert 'patched by: builtin.mock.patch-a-dependency' in out

@@ -51,7 +51,7 @@ def _show_patch(sha256):
 
         if 'relative_path' in rec:
             pkg_dir = spack.repo.get(owner).package_dir
-            path = os.path.join(pkg_dir, rec['relative_path'])
+            path = pkg_dir.joinpath( rec['relative_path'])
             print("    path:       %s" % path)
         else:
             print("    url:        %s" % rec['url'])

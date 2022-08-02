@@ -35,14 +35,14 @@ def os_pathsep_join(path, *pths):
 
 
 def prep_and_join(path, *pths):
-    return os.path.sep + os.path.join(path, *pths)
+    return os.path.sep + path.joinpath( *pths)
 
 
 @pytest.fixture
 def build_environment(working_env):
-    cc = Executable(os.path.join(build_env_path, "cc"))
-    cxx = Executable(os.path.join(build_env_path, "c++"))
-    fc = Executable(os.path.join(build_env_path, "fc"))
+    cc = Executable(build_env_path.joinpath( "cc"))
+    cxx = Executable(build_env_path.joinpath( "c++"))
+    fc = Executable(build_env_path.joinpath( "fc"))
 
     realcc = "/bin/mycc"
     prefix = "/spack-test-prefix"
@@ -258,7 +258,7 @@ def test_spack_paths_before_module_paths(
 
     spack.build_environment.setup_package(pkg, False)
 
-    spack_path = os.path.join(spack.paths.prefix, Path('lib').joinpath( 'spack', 'env'))
+    spack_path = spack.paths.prefix.joinpath( Path('lib').joinpath( 'spack', 'env'))
 
     paths = os.environ['PATH'].split(os.pathsep)
 
@@ -344,10 +344,10 @@ def test_wrapper_variables(
         prefix = str(installation_dir_with_headers)
         include_dirs = normpaths(header_dir_var.split(os.pathsep))
 
-        assert os.path.join(prefix, 'include') in include_dirs
-        assert os.path.join(prefix, 'include', 'boost') not in include_dirs
-        assert os.path.join(prefix, 'path', 'to') not in include_dirs
-        assert os.path.join(prefix, 'path', 'to', 'subdir') not in include_dirs
+        assert prefix.joinpath( 'include') in include_dirs
+        assert prefix.joinpath( 'include', 'boost') not in include_dirs
+        assert prefix.joinpath( 'path', 'to') not in include_dirs
+        assert prefix.joinpath( 'path', 'to', 'subdir') not in include_dirs
 
     finally:
         delattr(dep_pkg, 'libs')

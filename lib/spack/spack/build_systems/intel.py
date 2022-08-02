@@ -443,7 +443,7 @@ class IntelPackage(PackageBase):
             #  So, we can't have it quite as easy as:
             # d = Prefix(d.append('compilers_and_libraries_' + self.version))
             #  Alright, let's see what we can find instead:
-            unversioned_dirname = os.path.join(d, suite_dir_name)
+            unversioned_dirname = d.joinpath( suite_dir_name)
 
         if unversioned_dirname:
             for g in version_globs:
@@ -562,7 +562,7 @@ class IntelPackage(PackageBase):
 
         reparent_as = {}
         if cs == 'compilers_and_libraries':     # must qualify further
-            d = os.path.join(d, _expand_fields('{platform}'))
+            d = d.joinpath( _expand_fields('{platform}'))
         elif cs == 'composer_xe':
             reparent_as = {'mpi': 'impi'}
             # ignore 'imb' (MPI Benchmarks)
@@ -570,7 +570,7 @@ class IntelPackage(PackageBase):
         for nominal_p, actual_p in reparent_as.items():
             if component_path.startswith(nominal_p):
                 dirs = glob.glob(
-                    os.path.join(parent_dir, actual_p, standalone_glob))
+                    parent_dir.joinpath( actual_p, standalone_glob))
                 debug_print('reparent dirs: %s' % dirs)
                 # Brazenly assume last match is the most recent version;
                 # convert back to relative of parent_dir, and re-assemble.
@@ -578,7 +578,7 @@ class IntelPackage(PackageBase):
                 component_path = component_path.replace(nominal_p, rel_dir, 1)
                 d = parent_dir
 
-        d = os.path.join(d, component_path)
+        d = d.joinpath( component_path)
 
         if relative:
             d = os.path.relpath(os.path.realpath(d), parent_dir)
@@ -590,14 +590,14 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'compiler':     # bin dir is always under PARENT
-            d = os.path.join(ancestor(d), 'bin', _expand_fields('{libarch}'))
+            d = ancestor(d).joinpath( 'bin', _expand_fields('{libarch}'))
             d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
             # NB: Works fine even with relative=True, e.g.:
             #   composer_xe/compiler -> composer_xe/bin/intel64
         elif component == 'mpi':
-            d = os.path.join(d, _expand_fields('{libarch}'), 'bin')
+            d = d.joinpath( _expand_fields('{libarch}'), 'bin')
         else:
-            d = os.path.join(d, 'bin')
+            d = d.joinpath( 'bin')
         debug_print(d)
         return d
 
@@ -608,13 +608,13 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = os.path.join(d, _expand_fields('{libarch}'), 'lib')
+            d = d.joinpath( _expand_fields('{libarch}'), 'lib')
         else:
-            d = os.path.join(d, 'lib', _expand_fields('{libarch}'))
+            d = d.joinpath( 'lib', _expand_fields('{libarch}'))
             d = d.rstrip(os.sep)        # cosmetics, when {libarch} is empty
 
         if component == 'tbb':      # must qualify further for abi
-            d = os.path.join(d, self._tbb_abi)
+            d = d.joinpath( self._tbb_abi)
 
         debug_print(d)
         return d
@@ -623,9 +623,9 @@ class IntelPackage(PackageBase):
         d = self.normalize_path(component, **kwargs)
 
         if component == 'mpi':
-            d = os.path.join(d, _expand_fields('{libarch}'), 'include')
+            d = d.joinpath( _expand_fields('{libarch}'), 'include')
         else:
-            d = os.path.join(d, 'include')
+            d = d.joinpath( 'include')
 
         debug_print(d)
         return d
@@ -889,19 +889,19 @@ class IntelPackage(PackageBase):
         if self.compiler.name == 'intel':
             wrapper_vars = {
                 # eschew Prefix objects -- emphasize the command strings.
-                'MPICC':  os.path.join(bindir, 'mpiicc'),
-                'MPICXX': os.path.join(bindir, 'mpiicpc'),
-                'MPIF77': os.path.join(bindir, 'mpiifort'),
-                'MPIF90': os.path.join(bindir, 'mpiifort'),
-                'MPIFC':  os.path.join(bindir, 'mpiifort'),
+                'MPICC':  bindir.joinpath( 'mpiicc'),
+                'MPICXX': bindir.joinpath( 'mpiicpc'),
+                'MPIF77': bindir.joinpath( 'mpiifort'),
+                'MPIF90': bindir.joinpath( 'mpiifort'),
+                'MPIFC':  bindir.joinpath( 'mpiifort'),
             }
         else:
             wrapper_vars = {
-                'MPICC':  os.path.join(bindir, 'mpicc'),
-                'MPICXX': os.path.join(bindir, 'mpicxx'),
-                'MPIF77': os.path.join(bindir, 'mpif77'),
-                'MPIF90': os.path.join(bindir, 'mpif90'),
-                'MPIFC':  os.path.join(bindir, 'mpif90'),
+                'MPICC':  bindir.joinpath( 'mpicc'),
+                'MPICXX': bindir.joinpath( 'mpicxx'),
+                'MPIF77': bindir.joinpath( 'mpif77'),
+                'MPIF90': bindir.joinpath( 'mpif90'),
+                'MPIFC':  bindir.joinpath( 'mpif90'),
             }
         # debug_print("wrapper_vars =", wrapper_vars)
         return wrapper_vars
@@ -1013,7 +1013,7 @@ class IntelPackage(PackageBase):
                     result += self.spec['libfabric'].libs
                 else:
                     result += find_libraries(['libfabric'],
-                                             os.path.join(d, 'libfabric', 'lib'))
+                                             d.joinpath( 'libfabric', 'lib'))
 
         if '^mpi' in self.spec.root and ('+mkl' in self.spec or
                                          self.provides('scalapack')):
@@ -1137,7 +1137,7 @@ class IntelPackage(PackageBase):
 
         All Intel software shares the same license, so we store it in a
         common 'intel' directory."""
-        return os.path.join(self.global_license_dir, 'intel', 'license.lic')
+        return self.global_license_dir.joinpath( 'intel', 'license.lic')
 
     @property
     def _determine_license_type(self):
@@ -1198,7 +1198,7 @@ class IntelPackage(PackageBase):
         # NB: .cfg files generated with the "--duplicate filename" option have
         # the COMPONENTS string begin with a separator - do not worry about it.
         components_joined = ';'.join(self._filtered_components)
-        nonrpm_db_dir = os.path.join(prefix, 'nonrpm-db')
+        nonrpm_db_dir = prefix.joinpath( 'nonrpm-db')
 
         config_draft = {
             # Basics first - these should be accepted in all products.
@@ -1254,7 +1254,7 @@ class IntelPackage(PackageBase):
         install_script('--silent', 'silent.cfg')
 
         # preserve config and logs
-        dst = os.path.join(self.prefix, '.spack')
+        dst = self.prefix.joinpath( '.spack')
         install('silent.cfg', dst)
         for f in glob.glob('%s/intel*log' % tmpdir):
             install(f, dst)
@@ -1277,7 +1277,7 @@ class IntelPackage(PackageBase):
         compilers_lib_dir = self.component_lib_dir('compiler')
 
         for compiler_name in 'icc icpc ifort'.split():
-            f = os.path.join(compilers_bin_dir, compiler_name)
+            f = compilers_bin_dir.joinpath( compiler_name)
             if not f.is_file():
                 raise InstallError(
                     'Cannot find compiler command to configure rpath:\n\t' + f)
@@ -1295,7 +1295,7 @@ class IntelPackage(PackageBase):
             compilers_bin_dir = self.component_bin_dir('compiler')
 
             for compiler_name in 'icc icpc ifort'.split():
-                f = os.path.join(compilers_bin_dir, compiler_name)
+                f = compilers_bin_dir.joinpath( compiler_name)
                 if not f.is_file():
                     raise InstallError(
                         'Cannot find compiler command to configure '
@@ -1317,7 +1317,7 @@ class IntelPackage(PackageBase):
             bin_dir = self.component_bin_dir('mpi')
             for f in 'mpif77 mpif90 mpigcc mpigxx mpiicc mpiicpc ' \
                      'mpiifort'.split():
-                f = os.path.join(bin_dir, f)
+                f = bin_dir.joinpath( f)
                 filter_file('-Xlinker --enable-new-dtags', ' ', f, string=True)
 
     @run_after('install')
@@ -1331,7 +1331,7 @@ class IntelPackage(PackageBase):
         #  "... you can also uninstall the Intel(R) Software Manager
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
-        f = os.path.join(self.normalize_path('ism'), 'uninstall.sh')
+        f = self.normalize_path('ism').joinpath( 'uninstall.sh')
         if f.is_file():
             tty.warn('Uninstalling "Intel Software Improvement Program"'
                      'component')
@@ -1349,7 +1349,7 @@ class IntelPackage(PackageBase):
         """Provide the library directory located in the base of Intel installation.
         """
         d = self.normalize_path('')
-        d = os.path.join(d, 'lib')
+        d = d.joinpath( 'lib')
 
         debug_print(d)
         return d

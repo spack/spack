@@ -37,7 +37,7 @@ class Prefix(str):
     installs easy.
     """
     def __getattr__(self, attr):
-        return Prefix(os.path.join(self, attr))
+        return Prefix(self.joinpath( attr))
 
     def join(self, string):
         """Concatenates a string to a prefix.
@@ -48,7 +48,7 @@ class Prefix(str):
         Returns:
             Prefix: the newly created installation prefix
         """
-        return Prefix(os.path.join(self, string))
+        return Prefix(self.joinpath( string))
 
     def __getstate__(self):
         return self.__dict__

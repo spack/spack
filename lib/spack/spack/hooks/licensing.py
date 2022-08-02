@@ -169,7 +169,7 @@ def symlink_license(pkg):
     """Create local symlinks that point to the global license file."""
     target = pkg.global_license_file
     for filename in pkg.license_files:
-        link_name = os.path.join(pkg.prefix, filename)
+        link_name = pkg.prefix.joinpath( filename)
         link_name = link_name.resolve()
         license_dir = link_name.parent
         if not license_dir.exists():

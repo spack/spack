@@ -68,7 +68,7 @@ class PerlPackage(PackageBase):
         elif 'Build.PL'.is_file():
             self.build_method = 'Build.PL'
             self.build_executable = Executable(
-                os.path.join(self.stage.source_path, 'Build'))
+                self.stage.source_path.joinpath( 'Build'))
         else:
             raise RuntimeError('Unknown build_method for perl package')
 

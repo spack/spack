@@ -200,7 +200,7 @@ def private_lock_path(lock_dir):
 
     For other modes, it is the same as a shared lock.
     """
-    lock_file = os.path.join(lock_dir, 'lockfile')
+    lock_file = lock_dir.joinpath( 'lockfile')
     if mpi:
         lock_file += '.%s' % comm.rank
 
@@ -214,7 +214,7 @@ def private_lock_path(lock_dir):
 @pytest.fixture
 def lock_path(lock_dir):
     """This lock is shared among all processes in a multiproc test."""
-    lock_file = os.path.join(lock_dir, 'lockfile')
+    lock_file = lock_dir.joinpath( 'lockfile')
 
     yield lock_file
 

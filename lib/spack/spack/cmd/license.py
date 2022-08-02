@@ -81,7 +81,7 @@ def _all_spack_files(root=spack.paths.prefix):
     visited = set()
     for cur_root, folders, files in os.walk(root):
         for filename in files:
-            path = os.path.realpath(os.path.join(cur_root, filename))
+            path = os.path.realpath(cur_root.joinpath( filename))
 
             if path not in visited:
                 yield os.path.relpath(path, root)
@@ -97,7 +97,7 @@ def _licensed_files(args):
 def list_files(args):
     """list files in spack that should have license headers"""
     for relpath in sorted(_licensed_files(args)):
-        print(os.path.join(spack.paths.spack_root, relpath))
+        print(spack.paths.spack_root.joinpath( relpath))
 
 
 # Error codes for license verification. All values are chosen such that
@@ -194,7 +194,7 @@ def verify(args):
     license_errors = LicenseError()
 
     for relpath in _licensed_files(args):
-        path = os.path.join(args.root, relpath)
+        path = args.root.joinpath( relpath)
         with open(path) as f:
             lines = [line for line in f][:license_lines]
 
@@ -216,13 +216,13 @@ def update_copyright_year(args):
         fs.filter_file(
             r'Copyright \d{4}-\d{4}' + llns_and_other,
             strict_date + llns_and_other,
-            os.path.join(args.root, filename)
+            args.root.joinpath( filename)
         )
 
     # also update MIT license file at root. Don't use llns_and_other; it uses
     # a shortened version of that for better github detection.
     mit_date = strict_date.replace("Copyright", "Copyright (c)")
-    mit_file = os.path.join(args.root, "LICENSE-MIT")
+    mit_file = args.root.joinpath( "LICENSE-MIT")
     fs.filter_file(r"Copyright \(c\) \d{4}-\d{4}", mit_date, mit_file)
 
 
