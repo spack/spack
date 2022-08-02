@@ -77,13 +77,16 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     # Maybe the following is not needed, check CMakeLists.txt
     with when('+cuda'):
         # only nvhpcsdk compiler is supported
+        conflicts("%aocc")
+        conflicts("%apple_clang")
         conflicts("%arm")
         conflicts("%cce")
-        conflicts("%apple-clang")
         conflicts("%clang")
+        conflicts("%fj")
         conflicts("%gcc")
         conflicts("%intel")
         conflicts("%nag")
+        conflicts("%oneapi")
         conflicts("%xl")
         conflicts("%xl_r")
         # GPUs are enabled since v6.6
