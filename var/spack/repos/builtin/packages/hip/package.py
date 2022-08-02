@@ -18,13 +18,14 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIP"
     git = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
+    version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
     version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
     version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
     version("5.0.2", sha256="e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca")
@@ -124,6 +125,7 @@ class Hip(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -214,7 +216,13 @@ class Hip(CMakePackage):
     patch(
         "0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
         ".5.0.2.patch",
-        when="@5.0.2:",
+        when="@5.0.2:5.1.3",
+    )
+
+    patch(
+        "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
+        ".5.2.0.patch",
+        when="@5.2.0:",
     )
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141

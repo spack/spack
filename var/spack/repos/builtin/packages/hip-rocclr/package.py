@@ -16,7 +16,7 @@ class HipRocclr(CMakePackage):
     git = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
 
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.
@@ -113,6 +113,7 @@ class HipRocclr(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -135,6 +136,7 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
         ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
         ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
         ("5.0.2", "3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95"),

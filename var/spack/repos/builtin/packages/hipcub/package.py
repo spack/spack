@@ -11,10 +11,10 @@ class Hipcub(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
     git = "https://github.com/ROCmSoftwarePlatform/hipCUB.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipCUB/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
 
     version("5.1.3", sha256="dc75640689b6a5e15dd3acea643266bdf114ea63efc60be8272f484cf8f04494")
     version("5.1.0", sha256="b30d51fc5fca2584f0c9a6fa8dafc9fbdda96a3acff30288e49b397f8842f705")
@@ -101,6 +101,7 @@ class Hipcub(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -114,5 +115,8 @@ class Hipcub(CMakePackage):
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
+
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
 
         return args

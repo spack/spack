@@ -14,10 +14,10 @@ class Hipsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
     git = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipsparse"]
 
     version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
@@ -104,6 +104,7 @@ class Hipsparse(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -123,6 +124,7 @@ class Hipsparse(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocprim@" + ver, when="@" + ver)
 
@@ -152,6 +154,8 @@ class Hipsparse(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
         return args
 
     def setup_build_environment(self, env):

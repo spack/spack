@@ -14,10 +14,10 @@ class Miopengemm(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "arjun-raj-kuppala", "renjithravindrankannath"]
     libraries = ["libmiopengemm"]
 
     def url_for_version(self, version):
@@ -110,6 +110,7 @@ class Miopengemm(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)

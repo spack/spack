@@ -17,10 +17,10 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
@@ -114,6 +114,7 @@ class HsaRocrDev(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -154,11 +155,11 @@ class HsaRocrDev(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
-        if "@3.7.0:" in spec:
+        if self.spec.satisfies("@3.7.0:"):
             args.append(self.define_from_variant("IMAGE_SUPPORT", "image"))
 
             # device libs is bundled with llvm-amdgpu (default) or standalone
-            if "^rocm-device-libs" in spec:
+            if self.spec.satisfies("^rocm-device-libs"):
                 bitcode_dir = spec["rocm-device-libs"].prefix.amdgcn.bitcode
             else:
                 bitcode_dir = spec["llvm-amdgpu"].prefix.amdgcn.bitcode
