@@ -85,7 +85,7 @@ class ArmForge(Package):
         version("21.0", sha256="60cfa7dd1cd131ec85e67cb660f2f84cf30bb700d8979cae1f5f88af658fd249")
     elif platform.machine() == "x86_64":
         version(
-            "22.0.4", sha256="a2c8c1da38b9684d7c4656a98b3fc42777b03fd474cd0bf969324804f47587e5"
+            "22.0.3", sha256="4dc8d0bb3923810cf78279dd446d5a529af523271111249b795cef01f86bd0fd"
         )
         version(
             "22.0.2", sha256="3db0c3993d1db617f850c48d25c9239f06a018c895ea305786a7ad836a44496d"
