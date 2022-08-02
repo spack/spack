@@ -72,11 +72,7 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed", "git_ref"]
-
-#: Weighting for something that should never be selected by the concretizer
-ARBITRARY_HIGH_WEIGHT = 1e3
-
+version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed"]
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
@@ -777,11 +773,15 @@ class SpackSolverSetup(object):
                 # disqualify any git supplied version from user if they weren't already known
                 # versions in spack
                 if ref_version not in most_to_least_preferred:
-                    self.gen.fact(
-                        fn.version_declared(
-                            pkg.name, ref_version, ARBITRARY_HIGH_WEIGHT, "git_ref"
+                    msg = (
+                        "The paired version '{version}' for package '{package}' is not defined."
+                        " If this is not a typo then you must define '{version}' in the "
+                        "packages.yaml or in the package definition.".format(
+                            package=pkg.name, version=v1.version.ref_version
                         )
                     )
+
+                    raise UnsatisfiableSpecError(msg)
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]

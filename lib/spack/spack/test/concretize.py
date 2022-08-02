@@ -21,6 +21,7 @@ import spack.platforms
 import spack.repo
 import spack.variant as vt
 from spack.concretize import find_spec
+from spack.solver.asp import UnsatisfiableSpecError
 from spack.spec import Spec
 from spack.version import ver
 
@@ -1760,8 +1761,8 @@ class TestConcretize(object):
         hash = "a" * 40
         # main is not defined in the package.py for this file
         s = Spec("depends-on-develop ^develop-branch-version@%s=main" % hash)
-        c = s.concretized()
-        assert hash not in str(c)
-        assert s.satisfies("@main")
-        assert s.satisfies("@develop")
-        assert s.satisfies("@10:")
+        with pytest.raises(
+            UnsatisfiableSpecError,
+            match="The paired version 'main' for package 'develop-branch-version'",
+        ):  # for package 'develop-branch-version'"):
+            s.concretized()
