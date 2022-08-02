@@ -21,20 +21,22 @@ class PyJax(PythonPackage, CudaPackage):
     homepage = "https://github.com/google/jax"
     pypi = "jax/jax-0.2.25.tar.gz"
 
-    version('0.2.25', sha256='822e8d1e06257eaa0fdc4c0a0686c4556e9f33647fa2a766755f984786ae7446')
+    version("0.2.25", sha256="822e8d1e06257eaa0fdc4c0a0686c4556e9f33647fa2a766755f984786ae7446")
 
-    variant('cuda', default=True, description='CUDA support')
+    variant("cuda", default=True, description="CUDA support")
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.18:', type=('build', 'run'))
-    depends_on('py-absl-py', type=('build', 'run'))
-    depends_on('py-opt-einsum', type=('build', 'run'))
-    depends_on('py-scipy@1.2.1:', type=('build', 'run'))
-    depends_on('py-typing-extensions', type=('build', 'run'))
-    depends_on('py-jaxlib@0.1.69:', type=('build', 'run'), when='~cuda')
-    depends_on('py-jaxlib@0.1.69:+cuda', type=('build', 'run'), when='+cuda')
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.18:", type=("build", "run"))
+    depends_on("py-absl-py", type=("build", "run"))
+    depends_on("py-opt-einsum", type=("build", "run"))
+    depends_on("py-scipy@1.2.1:", type=("build", "run"))
+    depends_on("py-typing-extensions", type=("build", "run"))
+    depends_on("py-jaxlib@0.1.69:", type=("build", "run"), when="~cuda")
+    depends_on("py-jaxlib@0.1.69:+cuda", type=("build", "run"), when="+cuda")
     for arch in CudaPackage.cuda_arch_values:
-        depends_on('py-jaxlib@0.1.69:+cuda cuda_arch={0}'.format(arch),
-                   type=('build', 'run'),
-                   when='cuda_arch={0}'.format(arch))
+        depends_on(
+            "py-jaxlib@0.1.69:+cuda cuda_arch={0}".format(arch),
+            type=("build", "run"),
+            when="cuda_arch={0}".format(arch),
+        )

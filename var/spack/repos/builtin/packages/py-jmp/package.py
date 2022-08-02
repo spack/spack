@@ -14,10 +14,10 @@ class PyJmp(PythonPackage):
     # pypi tarball has requirements.txt missing
     url = "https://github.com/deepmind/jmp/archive/refs/tags/v0.0.2.tar.gz"
 
-    version('0.0.2', sha256='4d242fb14502b15a7c072e112bdcd7cb5d8b373d9733162eea23e0b9b7dbb6d0')
+    version("0.0.2", sha256="4d242fb14502b15a7c072e112bdcd7cb5d8b373d9733162eea23e0b9b7dbb6d0")
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.19.5:', type=('build', 'run'))
-    depends_on('py-dataclasses@0.7:', type=('build', 'run'), when='^python@:3.6')
-    depends_on('py-jax@0.1.71:', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.19.5:", type=("build", "run"))
+    depends_on("py-dataclasses@0.7:", type=("build", "run"), when="^python@:3.6")
+    depends_on("py-jax@0.1.71:", type=("build", "run"))

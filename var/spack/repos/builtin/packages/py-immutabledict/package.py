@@ -22,7 +22,7 @@ class PyImmutabledict(PythonPackage):
     homepage = "https://github.com/corenting/immutabledict"
     pypi = "immutabledict/immutabledict-2.2.1.tar.gz"
 
-    version('2.2.1', sha256='1ddb0edf1bb6c70d0197eb90ce1fe2b2d58502334f5fdfde72d7c633d723ec3a')
+    version("2.2.1", sha256="1ddb0edf1bb6c70d0197eb90ce1fe2b2d58502334f5fdfde72d7c633d723ec3a")
 
-    depends_on('python@3.6:3', type=('build', 'run'))
-    depends_on('py-poetry-core@1:', type='build')
+    depends_on("python@3.6:3", type=("build", "run"))
+    depends_on("py-poetry-core@1:", type="build")

@@ -17,17 +17,17 @@ class HhSuite(CMakePackage):
     homepage = "https://github.com/soedinglab/hh-suite"
     url = "https://github.com/soedinglab/hh-suite/archive/refs/tags/v3.3.0.tar.gz"
 
-    version('3.3.0', sha256='dd67f7f3bf601e48c9c0bc4cf1fbe3b946f787a808bde765e9436a48d27b0964')
+    version("3.3.0", sha256="dd67f7f3bf601e48c9c0bc4cf1fbe3b946f787a808bde765e9436a48d27b0964")
 
-    variant('mpi', default=True, description='Enable MPI support')
+    variant("mpi", default=True, description="Enable MPI support")
 
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on('mpi', when='+mpi')
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on("mpi", when="+mpi")
 
     def build_args(self, spec, prefix):
         args = []
-        if '+mpi' in self.spec:
-            args.append('-DCHECK_MPI=1')
+        if "+mpi" in self.spec:
+            args.append("-DCHECK_MPI=1")
         else:
-            args.append('-DCHECK_MPI=0')
+            args.append("-DCHECK_MPI=0")
         return args
