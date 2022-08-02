@@ -1528,7 +1528,7 @@ class Database(object):
         """Query only the local Spack database.
 
         This function doesn't guarantee any sorting of the returned
-        data for performance reason, since comparing specs for __eq__
+        data for performance reason, since comparing specs for __lt__
         may be an expensive operation.
         """
         with self.read_transaction():
