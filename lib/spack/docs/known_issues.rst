@@ -24,10 +24,6 @@ packages, the concretizer values reuse of installed packages higher than prefere
 set in ``packages.yaml``. Note that ``packages.yaml`` specifies only preferences, not
 hard constraints.
 
-To verify you are affected by this problem, you can use
-``spack spec --install-status <spec>``. This should indicate with a ``[+]`` that
-certain "problematic" specs were picked because they were already installed.
-
 There are multiple workarounds:
 
 1. Disable reuse during concretization: ``spack install --fresh <spec>`` when installing
