@@ -54,27 +54,28 @@ spack:
   specs:
   # CPU
   - adios
-  - adios2
+  #- adios2
   - alquimia
   - aml
   - amrex
   - arborx
   - archer
   - argobots
-  - ascent
+  #- ascent
   - axom
   - bolt
   - bricks
   - butterflypack
   - cabana
   - chai ~benchmarks ~tests
-  - conduit
-  - darshan-runtime
-  - darshan-util
+  #- conduit
+  #- darshan-runtime
+  #- darshan-util
   - datatransferkit
   - dyninst
   - exaworks
-  - faodel
+  - ecp-data-vis-sdk +adios2+ascent+cinema~cuda+darshan+faodel+hdf5+paraview+pnetcdf~rocm~sensei+sz+unifyfs+veloc+visit+vtkm+zfp
+  #- faodel
   - flecsi
   - flit
   - flux-core
@@ -84,7 +85,7 @@ spack:
   - globalarrays
   - gmp
   - gptune
-  - hdf5 +fortran +hl +shared
+  #- hdf5 +fortran +hl +shared
   - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
@@ -140,7 +141,7 @@ spack:
   - superlu-dist
   - swig
   - swig@4.0.2-fortran
-  - sz
+  #- sz
   - tasmanian
   - tau +mpi +python
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
@@ -149,15 +150,16 @@ spack:
     +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
   - turbine
   - umap
-  - umpire
+  #- umpire
   - upcxx
-  - veloc
-  - vtk-m
+  #- veloc
+  #- vtk-m
   - wannier90
-  - zfp
+  #- zfp
 
   # CUDA
-  - adios2 +cuda cuda_arch=80
+  - ecp-data-vis-sdk +adios2+ascent+cinema+cuda+darshan+faodel+hdf5+paraview+pnetcdf~rocm~sensei+sz+unifyfs+veloc+visit+vtkm+zfp cuda_arch=80
+  #- adios2 +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
@@ -182,11 +184,12 @@ spack:
   - superlu-dist +cuda cuda_arch=80
   - tasmanian +cuda cuda_arch=80
   - tau +mpi +cuda
-  - umpire ~shared +cuda cuda_arch=80
-  - vtk-m +cuda cuda_arch=80
-  - zfp +cuda cuda_arch=80
+  #- umpire ~shared +cuda cuda_arch=80
+  #- vtk-m +cuda cuda_arch=80
+  #- zfp +cuda cuda_arch=80
 
   # ROCm
+  - ecp-data-vis-sdk +rocm+vtkm amdgpu_target=gfx90a
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
