@@ -16,6 +16,7 @@ class Rocprim(CMakePackage):
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
 
+    version("5.2.0", sha256="f99eb7d2f6b1445742fba631a0dc8bb0d464a767a9c4fb79ac865d9570fe747b")
     version("5.1.3", sha256="b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1")
     version("5.1.0", sha256="dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48")
     version("5.0.2", sha256="a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0")

@@ -26,6 +26,7 @@ class Miopengemm(CMakePackage):
         url = "https://github.com/ROCmSoftwarePlatform/MIOpenGEMM/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.2.0", sha256="10458fb07b56a7fbe165595d588b7bf5f1300c57bda2f3133c3687c7bae39ea8")
     version("5.1.3", sha256="c70fc9e2a6d47356a612e24f5757bf16fdf26e671bd53a0975c1a0978da740b6")
     version("5.1.0", sha256="e2b20cdc20a745bcb7a554852e6b4bd39274c7dcc13fc19a81a282fb4dfa475f")
     version("5.0.2", sha256="64a6bf7c902af63d85563e29361763e9daa1fd3699490a91c222b057673612cc")

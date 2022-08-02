@@ -20,6 +20,7 @@ class Hipsparse(CMakePackage):
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipsparse"]
 
+    version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
     version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
     version("5.1.0", sha256="f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b")
     version("5.0.2", sha256="a266e8b3bbdea04617260f51b3d85cc672af6ca417cae0812d04fd9702429c47")
