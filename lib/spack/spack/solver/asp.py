@@ -772,7 +772,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(fn.version_equivalent(pkg.name, v1.version, ref_version.version))
                 # disqualify any git supplied version from user if they weren't already known
                 # versions in spack
-                if ref_version not in most_to_least_preferred:
+                if not any(spack.version.Version(v1.ref_version) == dv.version for dv in most_to_least_preferred):
                     msg = (
                         "The reference version '{version}' for package '{package}' is not defined."
                         " Either choose another reference version or define '{version}' in your version"
