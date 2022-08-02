@@ -85,7 +85,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     variant("petsc", default=False, description="Enable PETSc interfaces")
     variant("sundials", default=False, description="Enable SUNDIALS interfaces")
     variant("pic", default=False, description="Enable PIC")
-    variant('sycl', default=False, description='Enable SYCL backend')
+    variant("sycl", default=False, description="Enable SYCL backend")
 
     # Build dependencies
     depends_on("mpi", when="+mpi")
@@ -257,10 +257,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
 
-        if '+sycl' in self.spec:
-            args.append('-DAMReX_GPU_BACKEND=SYCL')
+        if "+sycl" in self.spec:
+            args.append("-DAMReX_GPU_BACKEND=SYCL")
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
-            sycl_compatible_compilers = ['dpcpp', 'icpx']
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
                 raise InstallError("AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
                                    + " or the oneAPI CXX (icpx) compiler.")
