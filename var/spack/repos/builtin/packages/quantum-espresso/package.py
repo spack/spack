@@ -74,7 +74,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("^openblas threads=none")
         conflicts("^openblas threads=pthreads")
 
-    # Maybe the following is not needed, check CMakeLists.txt
+    # Add cuda support 
     with when('+cuda'):
         # only nvhpcsdk compiler is supported
         conflicts("%aocc")
@@ -109,7 +109,6 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     variant("nvtx", default=False, description="Enables NVTX markers for profiling")
     with when("+nvtx~cuda"):
         depends_on("cuda")
-
 
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
