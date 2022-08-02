@@ -482,7 +482,10 @@ def _normalize_packages_yaml(packages_yaml):
                 entry["buildable"] = False
 
         externals = data.get("externals", [])
-        keyfn = lambda x: spack.spec.Spec(x["spec"]).name
+
+        def keyfn(x):
+            return spack.spec.Spec(x["spec"]).name
+
         for provider, specs in itertools.groupby(externals, key=keyfn):
             entry = normalized_yaml.setdefault(provider, {})
             entry.setdefault("externals", []).extend(specs)
@@ -743,13 +746,6 @@ class SpackSolverSetup(object):
             # then by order added.
             return version.origin, version.idx
 
-        def equivalent_versions(ver_a, ver_b):
-            if isinstance(ver_a, spack.version.GitVersion) and not isinstance(
-                ver_b, spack.version.GitVersion
-            ):
-                return spack.version.Version(ver_a.ref_version) == ver_b
-            return False
-
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
@@ -771,9 +767,12 @@ class SpackSolverSetup(object):
             )
 
         for v1 in most_to_least_preferred:
-            for v2 in most_to_least_preferred:
-                if equivalent_versions(v1.version, v2.version):
-                    self.gen.fact(fn.version_equivalent(pkg.name, v1.version, v2.version))
+            if isinstance(v1.version, spack.version.GitVersion):
+                self.gen.fact(
+                    fn.version_equivalent(
+                        pkg.name, v1.version, spack.version.Version(v1.version.ref_version)
+                    )
+                )
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
