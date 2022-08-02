@@ -25,13 +25,14 @@ set in ``packages.yaml``. Note that ``packages.yaml`` specifies only preferences
 hard constraints.
 
 To verify you are affected by this problem, you can use
-``spack spec --install-status <spec>``, which should show at least some already
-installed packages indicated by the leading ``[+]``.
+``spack spec --install-status <spec>``. This should indicate with a ``[+]`` that
+certain "problematic" specs were picked because they were already installed.
 
 There are multiple workarounds:
 
 1. Disable reuse during concretization: ``spack install --fresh <spec>`` when installing
-   and individual spec, or ``spack concretize --fresh --force`` when using environments.  
+   from the command line, or ``spack concretize --fresh --force`` when using
+   environments.  
 2. Turn preferences into constrains, by moving them to the input spec. For example,
    use ``spack spec zlib%gcc@12`` when you want to force GCC 12 even if ``zlib`` was
    already installed with GCC 10.
