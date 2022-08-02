@@ -15,17 +15,20 @@ class OneapiIgc(Package):
     homepage = "https://github.com/intel/intel-graphics-compiler"
     has_code = False
 
-    maintainers = ['rscohn2']
+    maintainers = ["rscohn2"]
 
-    version('1.0.10409')
-    version('1.0.8744')
-    version('1.0.8517')
+    version("1.0.10409")
+    version("1.0.8744")
+    version("1.0.8517")
 
     def install(self, spec, prefix):
         raise InstallError(
-            self.spec.format('{name} is not installable, you need to specify '
-                             'it as an external package in packages.yaml'))
+            self.spec.format(
+                "{name} is not installable, you need to specify "
+                "it as an external package in packages.yaml"
+            )
+        )
 
     @property
     def libs(self):
-        return find_libraries(['libigc'], root=self.prefix, recursive=True)
+        return find_libraries(["libigc"], root=self.prefix, recursive=True)
