@@ -210,7 +210,7 @@ class Dray(Package, CudaPackage):
         cfg.write("# cpp compiler used by spack\n")
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
-        cfg.write(cmake_cache_entry("BLT_SOURCE_DIR", spec['blt'].prefix))
+        cfg.write(cmake_cache_entry("BLT_SOURCE_DIR", spec["blt"].prefix))
         cfg.write(cmake_cache_entry("BLT_CXX_STD", "c++14"))
 
         if "+mpi" in spec:
