@@ -280,7 +280,7 @@ with '-Wl,-commons,use_dylibs' and without
         for exe in exes:
             variants = []
             output = Executable(exe)(output=str, error=str)
-            if re.search(r"--with-hwloc[-prefix]*=embedded", output):
+            if re.search(r"--with-hwloc(-prefix)*=embedded", output):
                 variants.append("~hwloc")
 
             if re.search(r"--with-pm=hydra", output):
