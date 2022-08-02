@@ -75,7 +75,20 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         "cuda_maxregcount",
         default="default",
         description="Limits the number of CUDA registers available",
-        values=("default", "63", "127", "255", "511", "1023", "2047", "4095", "8191", "16383", "32767", "65535")
+        values=(
+            "default",
+            "63",
+            "127",
+            "255",
+            "511",
+            "1023",
+            "2047",
+            "4095",
+            "8191",
+            "16383",
+            "32767",
+            "65535",
+        ),
     )
     variant("eb", default=False, description="Build Embedded Boundary classes")
     variant("fortran", default=False, description="Build Fortran API")
