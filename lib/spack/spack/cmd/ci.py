@@ -521,10 +521,9 @@ def ci_rebuild(args):
     install_copy_path = os.path.join(repro_dir, "install.sh")
     shutil.copyfile("install.sh", install_copy_path)
 
-    # Run the generated install.sh shell script as if it were being run in
-    # a login shell.
+    # Run the generated install.sh shell script
     try:
-        install_process = subprocess.Popen(["bash", "-l", "./install.sh"])
+        install_process = subprocess.Popen(["bash", "./install.sh"])
         install_process.wait()
         install_exit_code = install_process.returncode
     except (ValueError, subprocess.CalledProcessError, OSError) as inst:
