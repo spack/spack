@@ -18,6 +18,7 @@ class TomlF(MesonPackage):
     maintainers = ["awvwgk"]
 
     version("main", branch="main")
+    version("0.3.0", "40ceca008091607165a09961b79312abfdbbda71cbb94a9dc2625b88c93ff45a")
     version("0.2.3", "2dca7ff6d3e35415cd92454c31560d2b656c014af8236be09c54c13452e4539c")
 
     depends_on("meson@0.57.2:", type="build")
