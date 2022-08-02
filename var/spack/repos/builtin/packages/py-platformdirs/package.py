@@ -23,12 +23,9 @@ class PyPlatformdirs(PythonPackage):
     depends_on("py-setuptools-scm@5:+toml", type="build")
 
     @when("^python@:3.6")
-    @run_before("install")
-    def handle_utf8_setup_cfg(self):
-        """Sanitize setup.cfg to resolve issues with Python 3.6 and UTF-8"""
-        with open("setup.cfg", mode="r", encoding="utf-8") as input_file:
-            cfg = input_file.readlines()
-        with open(
-            "setup.cfg", mode="w", encoding="ascii", errors="backslashreplace"
-        ) as output_file:
-            output_file.writelines(cfg)
+    def setup_build_environment(self, env):
+        """Python 3.6 needs a little help with setup.cfg re:
+
+        https://github.com/platformdirs/platformdirs/issues/50
+        """
+        env.set("LC_ALL", "en_US.UTF-8")
