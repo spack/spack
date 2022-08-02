@@ -13,6 +13,7 @@ class PyPycodestyle(PythonPackage):
     homepage = "https://github.com/PyCQA/pycodestyle"
     pypi = "pycodestyle/pycodestyle-2.8.0.tar.gz"
 
+    version("2.9.0", sha256="beaba44501f89d785be791c9462553f06958a221d166c64e1f107320f839acc2")
     version("2.8.0", sha256="eddd5847ef438ea1c7870ca7eb78a9d47ce0cdb4851a5523949f2601d0cbbe7f")
     version("2.7.0", sha256="c389c1d06bf7904078ca03399a4816f974a1d590090fecea0c63ec26ebaf1cef")
     version("2.6.0", sha256="c58a7d2815e0e8d7972bf1803331fb0152f867bd89adf8a01dfd55085434192e")
@@ -76,5 +77,6 @@ class PyPycodestyle(PythonPackage):
     # However, py-pycodestyle requires py-setuptools during runtime as well.
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@2.7.0:")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@2.8.0:")
+    depends_on("python@3.6:", when="@2.9:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", when="@2.8", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@2.7", type=("build", "run"))
