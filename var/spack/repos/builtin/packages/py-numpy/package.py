@@ -184,7 +184,13 @@ class PyNumpy(PythonPackage):
                 )
                 p1.stderr.close()
                 out, err = p2.communicate()
-                gcc_version = Version(out.split()[5].decode('utf-8'))
+                # Because compiler env variables aren't loaded in the flag_handler
+                # phase, the above command ("icc -v") may fail (no Intel license file
+                # found etc). Fall back to calling "gcc -v" directly.
+                try:
+                    gcc_version = Version(out.split()[5].decode('utf-8'))
+                except IndexError:
+                    gcc_version = Version(spack.compiler.get_compiler_version_output('gcc', '-dumpversion'))
             if gcc_version < Version('4.8'):
                 raise InstallError('The GCC version that the Intel compiler '
                                    'uses must be >= 4.8. The GCC in use is '
