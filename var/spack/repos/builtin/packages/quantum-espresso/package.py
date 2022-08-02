@@ -18,7 +18,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers = ["ye-luo", "danielecesarini"]
+    maintainers = ["ye-luo", "danielecesarini", "bellenlau"]
 
     version("develop", branch="develop")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
@@ -61,16 +61,11 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     with when("+cmake"):
         depends_on("cmake@3.14.0:", type="build")
         conflicts("@:6.7", msg="+cmake works since QE v6.8")
-        # TODO
-        # variant(
-        #     'gpu', default='none', description='Builds with GPU support',
-        #     values=('nvidia', 'none'), multi=False
-        # )
 
     variant("libxc", default=False, description="Uses libxc")
     depends_on("libxc@5.1.2:", when="+libxc")
 
-    variant('openmp', default=False, description='Enables openMP support, auto-enabled by CMakeLists with +cuda')
+    variant('openmp', default=False, description='Enables OpenMP support, auto-enabled with +cuda')
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
@@ -79,10 +74,9 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("^openblas threads=none")
         conflicts("^openblas threads=pthreads")
 
-    # NVTX variant for profiling ; requires linking to CUDA library, handled by CMake
-    variant('nvtx', default=False, description='Enables NVTX markers for profiling')
     # Maybe the following is not needed, check CMakeLists.txt
     with when('+cuda'):
+        # only nvhpcsdk compiler is supported
         conflicts("%arm")
         conflicts("%cce")
         conflicts("%apple-clang")
@@ -92,6 +86,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("%nag")
         conflicts("%xl")
         conflicts("%xl_r")
+        # GPUs are enabled since v6.6
         conflicts('@:6.5')
         # cuda version >= 10.1
         conflicts("cuda@:10.0.130")
@@ -107,6 +102,12 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         # PGI support
         conflicts('%pgi@:19.9', msg='PGI supported for v >= 19.10')
 
+    # NVTX variant for profiling ; requires linking to CUDA library, handled by CMake
+    variant('nvtx', default=False, description='Enables NVTX markers for profiling')
+    with when('+nvtx~cuda'):
+        depends_on('cuda')
+
+
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
     desc = "Apply recommended upstream patches. May need to be set "
@@ -119,7 +120,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         variant('scalapack', default=True, description='Enables scalapack support')
         with when('+cuda'):
             # add mpi_gpu_aware variant, False by default
-            variant('mpigpu', default=False, description='Enables __GPU_MPI')
+            variant('mpigpu', default=False, description='Enables GPU-aware MPI operations')
 
     with when("+scalapack"):
         depends_on("scalapack")
