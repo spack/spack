@@ -183,17 +183,17 @@ class Bazel(Package):
     # patches for compiling bazel-4.1:4 with gcc-11
     # these are derived from
     # https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/29084/
-    patch('gcc11_1.patch', when='@0.3:4%gcc@11:')
-    patch('gcc11_2.patch', when='@0.3:4%gcc@11:')
-    patch('gcc11_3.patch', when='@0.3:4%gcc@11:')
-    patch('gcc11_4.patch', when='@4.1:4%gcc@11:')
+    patch("gcc11_1.patch", when="@0.3:4%gcc@11:")
+    patch("gcc11_2.patch", when="@0.3:4%gcc@11:")
+    patch("gcc11_3.patch", when="@0.3:4%gcc@11:")
+    patch("gcc11_4.patch", when="@4.1:4%gcc@11:")
 
     # bazel-4.0.0 does not compile with gcc-11
     # newer versions of grpc and abseil dependencies are needed but are not in
     # bazel-4.0.0
-    conflicts('@:0.2,4.0.0', when='%gcc@11:')
+    conflicts("@:0.2,4.0.0", when="%gcc@11:")
 
-    executables = ['^bazel$']
+    executables = ["^bazel$"]
 
     @classmethod
     def determine_version(cls, exe):
