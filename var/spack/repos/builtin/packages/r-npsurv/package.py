@@ -18,7 +18,7 @@ class RNpsurv(RPackage):
 
     cran = "npsurv"
 
-    version('0.5-0', sha256='bc87db76e7017e178c2832a684fcd49c42e20054644b21b586413d26c8821dc6')
-    version('0.4-0', sha256='404cf7135dc40a04e9b81224a543307057a8278e11109ba1fcaa28e87c6204f3')
+    version("0.5-0", sha256="bc87db76e7017e178c2832a684fcd49c42e20054644b21b586413d26c8821dc6")
+    version("0.4-0", sha256="404cf7135dc40a04e9b81224a543307057a8278e11109ba1fcaa28e87c6204f3")
 
-    depends_on('r-lsei', type=('build', 'run'))
+    depends_on("r-lsei", type=("build", "run"))
