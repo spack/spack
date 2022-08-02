@@ -699,7 +699,7 @@ Spack versions may also be arbitrary non-numeric strings, for example
 ``@develop``, ``@master``, ``@local``.
 
 The order on versions is defined as follows. A version string is split
-into a list of components based on delimiters such as ``.``, ``-`` etc. 
+into a list of components based on delimiters such as ``.``, ``-`` etc.
 Lists are then ordered lexicographically, where components are ordered
 as follows:
 
@@ -2264,9 +2264,17 @@ The following dependency types are available:
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package. Another
-consequence of this is that ``build``-only dependencies do not affect the
-hash of the package. The same is true for ``test`` dependencies.
+this because uninstalling the dependency would break the package.
+
+``build``, ``link``, and ``run`` dependencies all affect the hash of Spack
+packages (along with ``sha256`` sums of patches and archives used to build the
+package, and a [canonical hash](https://github.com/spack/spack/pull/28156) of
+the ``package.py`` recipes). ``test`` dependencies do not affect the package
+hash, as they are only used to construct a test environment *after* building and
+installing a given package installation. Older versions of Spack did not include
+build dependencies in the hash, but this has been
+[fixed](https://github.com/spack/spack/pull/28504) as of [Spack
+``v0.18``](https://github.com/spack/spack/releases/tag/v0.18.0)
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
