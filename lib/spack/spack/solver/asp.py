@@ -774,9 +774,9 @@ class SpackSolverSetup(object):
                 # versions in spack
                 if ref_version not in most_to_least_preferred:
                     msg = (
-                        "The paired version '{version}' for package '{package}' is not defined."
-                        " If this is not a typo then you must define '{version}' in the "
-                        "packages.yaml or in the package definition.".format(
+                        "The reference version '{version}' for package '{package}' is not defined."
+                        " Either choose another reference version or define '{version}' in your version"
+                        "preferences or package.py file for {package}.".format(
                             package=pkg.name, version=v1.version.ref_version
                         )
                     )
