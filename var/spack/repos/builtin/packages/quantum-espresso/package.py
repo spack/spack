@@ -97,9 +97,9 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("%nvhpc@21.11:22.2", msg="QE-GPU has issues with these NVHPC compiler versions")
         # bugs with nvhpc@22.3 in versions > 7.1 still present
         with when("@develop"):
-           conflicts("%nvhpc@22.3", msg="Develop has issues with this NVHPC compiler version")
+            conflicts("%nvhpc@22.3", msg="Develop has issues with this NVHPC compiler version")
         with when("@7.2:"):
-           conflicts("%nvhpc@22.3", msg="v > 7.1 has issues with this NVHPC compiler version")
+            conflicts("%nvhpc@22.3", msg="v > 7.1 has issues with this NVHPC compiler version")
         # only cmake is supported 
         conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
         # PGI support
