@@ -15,6 +15,16 @@ class CaCertificatesMozilla(Package):
     maintainers = ["haampie"]
 
     version(
+        "2022-07-19",
+        sha256="6ed95025fba2aef0ce7b647607225745624497f876d74ef6ec22b26e73e9de77",
+        expand=False,
+    )
+    version(
+        "2022-04-26",
+        sha256="08df40e8f528ed283b0e480ba4bcdbfdd2fdcf695a7ada1668243072d80f8b6f",
+        expand=False,
+    )
+    version(
         "2022-03-29",
         sha256="1979e7fe618c51ed1c9df43bba92f977a0d3fe7497ffa2a5e80dfc559a1e5a29",
         expand=False,
