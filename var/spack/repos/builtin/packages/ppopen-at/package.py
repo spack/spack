@@ -13,16 +13,16 @@ class PpopenAt(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('master', branch='AT')
+    version("master", branch="AT")
 
     def edit(self, spec, prefix):
-        makefile_in = FileFilter('Makefile.in')
-        makefile_in.filter('gcc', spack_cxx)
-        makefile_in.filter('~/ppohAT_1.0.0', prefix)
-        makefile_in.filter('mkdir', 'mkdir -p')
-        mkdirp('bin')
+        makefile_in = FileFilter("Makefile.in")
+        makefile_in.filter("gcc", spack_cxx)
+        makefile_in.filter("~/ppohAT_1.0.0", prefix)
+        makefile_in.filter("mkdir", "mkdir -p")
+        mkdirp("bin")
 
     def install(self, spec, prefix):
-        make('install')
-        install_tree('examples', prefix.examples)
-        install_tree('doc', prefix.doc)
+        make("install")
+        install_tree("examples", prefix.examples)
+        install_tree("doc", prefix.doc)
