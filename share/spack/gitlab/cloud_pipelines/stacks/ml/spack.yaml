@@ -19,6 +19,10 @@ spack:
     # Horovod
     - py-horovod
 
+    # JAX
+    - py-jax
+    - py-jaxlib
+
     # Keras
     - py-keras
     - py-keras-applications
