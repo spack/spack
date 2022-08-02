@@ -91,7 +91,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.3.6:", type="build", when="@:4.1.2")
 
     depends_on("camp", when="@5.0.0:")
-    depends_on("camp@0.2.2", when="@6.0.0")
+    depends_on("camp@0.2.2:0.2.3", when="@6.0.0")
     depends_on("camp@0.1.0", when="@5.0.0:5.0.1")
     depends_on("camp@2022.03.0:", when="@2022.03.0:")
 
