@@ -133,7 +133,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
-        option_prefix = "RAJA_" if spec.satisfies("@2022.03.0:") else ""
+        option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "camp" in self.spec:
