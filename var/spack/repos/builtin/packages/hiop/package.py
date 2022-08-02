@@ -113,6 +113,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
 
+    depends_on("ginkgo@glu+cuda", when="+ginkgo+cuda")
+
     conflicts(
         "+shared",
         when="+cuda+raja",
