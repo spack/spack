@@ -5,7 +5,6 @@
 
 import os
 import re
-import shutil
 
 import llnl.util.tty as tty
 
