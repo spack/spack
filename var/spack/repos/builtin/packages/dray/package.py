@@ -107,8 +107,8 @@ class Dray(Package, CudaPackage):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
         spec = self.spec
-        if '+cuda' in spec and '+mpi' in spec:
-            env.set('CUDAHOSTCXX', spec['mpi'].mpicxx)
+        if "+cuda" in spec and "+mpi" in spec:
+            env.set("CUDAHOSTCXX", spec["mpi"].mpicxx)
 
     def install(self, spec, prefix):
         """
@@ -117,8 +117,8 @@ class Dray(Package, CudaPackage):
         with working_dir("spack-build", create=True):
             host_cfg_fname = self.create_host_config(spec, prefix)
             cmake_args = [
-                '-DHDF5_DIR={0}'.format(spec['hdf5'].prefix),
-                '-DHDF5_INCLUDE_DIRS={0}'.format(';'.join(spec['hdf5'].headers.directories)),
+                "-DHDF5_DIR={0}".format(spec["hdf5"].prefix),
+                "-DHDF5_INCLUDE_DIRS={0}".format(";".join(spec["hdf5"].headers.directories)),
             ]
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
