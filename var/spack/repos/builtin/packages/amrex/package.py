@@ -71,6 +71,12 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         description="Real precision (double/single)",
         values=("single", "double"),
     )
+    variant(
+        "cuda_maxregcount",
+        default="default",
+        description="Limits the number of CUDA registers available",
+        values=("default", "63", "127", "255", "511", "1023", "2047", "4095", "8191", "16383", "32767", "65535")
+    )
     variant("eb", default=False, description="Build Embedded Boundary classes")
     variant("fortran", default=False, description="Build Fortran API")
     variant("linear_solvers", default=True, description="Build linear solvers")
@@ -237,6 +243,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON")
             cuda_arch = self.spec.variants["cuda_arch"].value
             args.append("-DAMReX_CUDA_ARCH=" + self.get_cuda_arch_string(cuda_arch))
+            maxregcount = self.spec.variants["cuda_maxregcount"].value
+            if maxregcount != "default":
+                args.append("-DAMReX_CUDA_MAXREGCOUNT=" + maxregcount)
 
         if "+rocm" in self.spec:
             args.append("-DCMAKE_CXX_COMPILER={0}".format(self.spec["hip"].hipcc))
