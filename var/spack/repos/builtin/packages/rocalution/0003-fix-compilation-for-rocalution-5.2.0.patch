@@ -1,0 +1,23 @@
+diff --git a/src/solvers/multigrid/ruge_stueben_amg.hpp b/src/solvers/multigrid/ruge_stueben_amg.hpp
+index 24ee942..7f25796 100644
+--- a/src/solvers/multigrid/ruge_stueben_amg.hpp
++++ b/src/solvers/multigrid/ruge_stueben_amg.hpp
+@@ -58,14 +58,16 @@ namespace rocalution
+         ROCALUTION_EXPORT
+         virtual void Print(void) const;
+ 
++#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
+         /** \brief Set coupling strength */
+         ROCALUTION_EXPORT
+-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
++        void SetCouplingStrength(ValueType eps);
+ #else
+         [[deprecated("This function will be removed in a future release. Use "
+                      "SetStrengthThreshold() instead")]]
+-#endif
++        ROCALUTION_EXPORT
+         void SetCouplingStrength(ValueType eps);
++#endif
+ 
+         /** \brief Set strength threshold */
+         ROCALUTION_EXPORT
