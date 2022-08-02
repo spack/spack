@@ -1752,3 +1752,16 @@ class TestConcretize(object):
         assert hash in str(c)
         assert s.satisfies("@develop")
         assert s.satisfies("@10:")
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+    def test_git_hash_version_is_skipped_if_not_valid(self):
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer cannot account for git hashes")
+        hash = "a" * 40
+        # main is not defined in the package.py for this file
+        s = Spec("depends-on-develop ^develop-branch-version@%s=main" % hash)
+        c = s.concretized()
+        assert hash not in str(c)
+        assert s.satisfies("@main")
+        assert s.satisfies("@develop")
+        assert s.satisfies("@10:")

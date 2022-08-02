@@ -72,13 +72,10 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = [
-    "spec",
-    "external",
-    "packages_yaml",
-    "package_py",
-    "installed",
-]
+version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed", "git_ref"]
+
+#: Weighting for something that should never be selected by the concretizer
+ARBITRARY_HIGH_WEIGHT = 1e3
 
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
@@ -768,11 +765,23 @@ class SpackSolverSetup(object):
 
         for v1 in most_to_least_preferred:
             if isinstance(v1.version, spack.version.GitVersion):
-                self.gen.fact(
-                    fn.version_equivalent(
-                        pkg.name, v1.version, spack.version.Version(v1.version.ref_version)
-                    )
+                # treat the reference as if if came from the package.py since that is the only
+                # acceptable place for a git matched version to have originated
+                ref_version = DeclaredVersion(
+                    version=spack.version.Version(v1.version.ref_version),
+                    idx=v1.idx,
+                    origin=version_provenance.package_py,
                 )
+
+                self.gen.fact(fn.version_equivalent(pkg.name, v1.version, ref_version.version))
+                # disqualify any git supplied version from user if they weren't already known
+                # versions in spack
+                if ref_version not in most_to_least_preferred:
+                    self.gen.fact(
+                        fn.version_declared(
+                            pkg.name, ref_version, ARBITRARY_HIGH_WEIGHT, "git_ref"
+                        )
+                    )
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
