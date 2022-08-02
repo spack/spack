@@ -1763,6 +1763,6 @@ class TestConcretize(object):
         s = Spec("depends-on-develop ^develop-branch-version@%s=main" % hash)
         with pytest.raises(
             UnsatisfiableSpecError,
-            match="The paired version 'main' for package 'develop-branch-version'",
+            match="The reference version 'main' for package 'develop-branch-version'",
         ):  # for package 'develop-branch-version'"):
             s.concretized()
