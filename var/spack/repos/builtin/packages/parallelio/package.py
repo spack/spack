@@ -12,7 +12,7 @@ class Parallelio(CMakePackage):
     large numbers of processors on a HPC system."""
 
     homepage = "https://ncar.github.io/ParallelIO/"
-    url      = "https://github.com/NCAR/ParallelIO/archive/pio2_5_7.tar.gz"
+    url = "https://github.com/NCAR/ParallelIO/archive/pio2_5_7.tar.gz"
 
     maintainers = ["jedwards4b"]
 
@@ -23,14 +23,16 @@ class Parallelio(CMakePackage):
     variant("pnetcdf", default=False, description="enable pnetcdf")
     variant("timing", default=False, description="enable GPTL timing")
     variant("logging", default=False, description="enable verbose logging")
-    variant("fortran", default=True, description="enable fortran interface (requires netcdf fortran)")
+    variant(
+        "fortran", default=True, description="enable fortran interface (requires netcdf fortran)"
+    )
 
     depends_on("mpi")
     depends_on("netcdf-c +mpi", type="link")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
-    resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git",tag="genf90_200608")
+    resource(name="genf90", git="https://github.com/PARALLELIO/genf90.git", tag="genf90_200608")
 
     def cmake_args(self):
         define = self.define
