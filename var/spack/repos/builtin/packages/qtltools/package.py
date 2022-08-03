@@ -11,7 +11,6 @@ from spack import *
 class Qtltools(MakefilePackage):
     """A complete tool set for molecular QTL discovery and analysis."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://qtltools.github.io/qtltools/"
     url      = "https://github.com/qtltools/qtltools/archive/refs/tags/1.3.1.tar.gz"
 
