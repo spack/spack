@@ -19,7 +19,7 @@ class Qtltools(MakefilePackage):
 
     depends_on('boost +pic +iostreams +program_options')
     depends_on('gsl')
-    depends_on('htslib -libcurl -libdeflate')
+    depends_on('htslib ~libcurl ~libdeflate')
     depends_on('r +rmath')
 
     def edit(self, spec, prefix):
