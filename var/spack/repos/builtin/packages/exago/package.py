@@ -36,6 +36,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     variant("raja", default=False, description="Enable/Disable RAJA")
     variant("python", default=True, description="Enable/Disable Python bindings")
     conflicts("+python", when="@:1.3.0", msg="Python bindings require ExaGO 1.4")
+    conflicts(
+        "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
+    )
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
@@ -72,7 +75,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc@3.16.0:3.16", when="@1.3.0:")
     depends_on("petsc~mpi", when="~mpi")
 
-    depends_on("py-pytest", type=("build", "run"), when="@1.4.1:")
+    depends_on("py-pytest", type=("build", "run"), when="@1.4.1:+python")
 
     for arch in CudaPackage.cuda_arch_values:
         cuda_dep = "+cuda cuda_arch={0}".format(arch)
