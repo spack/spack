@@ -195,9 +195,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="+sycl", msg="HIP and SYCL support are exclusive")
 
     conflicts(
-        "+sycl",
-        when="@:21.05",
-        msg="For SYCL support, AMReX version 21.06 and newer suggested.")
+        "+sycl", when="@:21.05", msg="For SYCL support, AMReX version 21.06 and newer suggested."
+    )
 
     def url_for_version(self, version):
         if version >= Version("20.05"):
@@ -262,8 +261,10 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
             sycl_compatible_compilers = ["dpcpp", "icpx"]
             if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
-                raise InstallError("AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
-                                   + " or the oneAPI CXX (icpx) compiler.")
+                raise InstallError(
+                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
+                    + " or the oneAPI CXX (icpx) compiler."
+                )
 
         return args
 
