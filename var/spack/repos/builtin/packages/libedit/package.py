@@ -34,3 +34,13 @@ class Libedit(AutotoolsPackage):
     def url_for_version(self, version):
         url = "http://thrysoee.dk/editline/libedit-{0}-{1}.tar.gz"
         return url.format(version[-1], version.up_to(-1))
+
+    def configure_args(self):
+        args = ["ac_cv_lib_curses_tgetent=no", "ac_cv_lib_termcap_tgetent=no"]
+
+        if "+termlib" in self.spec["ncurses"]:
+            args.append("ac_cv_lib_ncurses_tgetent=no")
+        else:
+            args.append("ac_cv_lib_tinfo_tgetent=no")
+
+        return args
