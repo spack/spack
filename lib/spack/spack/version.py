@@ -522,7 +522,7 @@ class GitVersion(VersionBase):
     (X.Y.Z with X, Y, Z all integers) is associated with the version
     it represents, even if that version is not known to Spack. Each
     tag is then queried in git to see whether it is an ancestor of the
-    commit in question, and if so the distance between the two. The
+    git ref in question, and if so the distance between the two. The
     previous version is the version that is an ancestor with the least
     distance from the commit in question.
     
