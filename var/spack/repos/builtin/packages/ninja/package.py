@@ -74,4 +74,4 @@ class Ninja(Package):
         name = "ninja"
         if sys.platform == "win32":
             name = name + ".exe"
-        module.ninja = which(name, path=[self.spec.prefix.bin])
+        module.ninja = which(name, path=[self.spec.prefix.bin], required=True)
