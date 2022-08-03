@@ -1119,11 +1119,11 @@ reference provided.  Acceptable syntaxes for this are:
    foo@git.develop # use the develop branch
    foo@git.0.19 # use the 0.19 tag
    
-   # commit hashes
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234 
+    # commit hashes
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # user specified version reference
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234 # version reference must be found by spack
 
-When using commit hashes a spack version needs to be paried to the hash.
+When using commit hashes a reference spack version needs to be paried to the hash.
 This allows Spack to solve build requirements that are based on the version.
 A version can be assigned with ``[hash]=[version]`` syntax.
 There is a constratint that the specified version must be known to Spack
