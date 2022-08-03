@@ -497,23 +497,23 @@ class GitVersion(VersionBase):
     1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
     2) GitVersions requiring commit lookups
 
-    Git commit versions that are not paried with a known version
+    Git ref versions that are not paried with a known version
     are handled separately from all other version comparisons. 
-    When Spack identifies a git commit version, it associates a 
+    When Spack identifies a git ref version, it associates a 
     ``CommitLookup`` object with the version. This object
     handles caching of information from the git repo. When executing
-    comparisons with a git commit version, Spack queries the
+    comparisons with a git ref version, Spack queries the
     ``CommitLookup`` for the most recent version previous to this
     git ref, as well as the distance between them expressed as a number
     of commits. If the previous version is ``X.Y.Z`` and the distance
     is ``D``, the git commit version is represented by the tuple ``(X,
     Y, Z, '', D)``. The component ``''`` cannot be parsed as part of
     any valid version, but is a valid component. This allows a git
-    commit version to be less than (older than) every Version newer
+    ref version to be less than (older than) every Version newer
     than its previous version, but still newer than its previous
     version.
 
-    To find the previous version from a git commit version, Spack
+    To find the previous version from a git ref version, Spack
     queries the git repo for its tags. Any tag that matches a version
     known to Spack is associated with that version, as is any tag that
     is a known version prepended with the character ``v`` (i.e., a tag
@@ -528,8 +528,8 @@ class GitVersion(VersionBase):
     
     This procedure can be circumvented if the user supplies a known version 
     to associate with the GitVersion (e.g. `[hash]=develop`).  If the user
-    prescribes the version then there is no need to do a commit lookup
-    any more and the standard version comparison operations are sufficient.
+    prescribes the version then there is no need to do a lookup
+    and the standard version comparison operations are sufficient.
 
     Non-git versions may be coerced to GitVersion for comparison, but no Spec will ever
     have a GitVersion that is not actually referencing a version from git."""

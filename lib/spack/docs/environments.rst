@@ -392,17 +392,13 @@ developed package in the environment are concretized to match the
 version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
 
-For packages with ``git`` attributes, 40-character commit hashes are
-also valid versions. This means that for a package ``foo`` whose
-latest commit is ``abcdef1234abcdef1234abcdef1234abcdef1234``, ``spack
-develop foo@abcdef1234abcdef1234abcdef1234abcdef1234`` will clone the
-latest version of the package, and ``spack install`` will install from
-that source if ``foo`` is in the environment. Further development on
-``foo`` can be tested by reinstalling the environment, and eventually
-committed and pushed to the upstream git repo.
-
-Further information on git commits as versions can be found in the
-API documentation for the ``Version`` class.
+For packages with ``git`` attributes, git branches, tags, and commits can
+also be used as valid concrete versions (see :ref:`version specifier <version-specifier>`).
+This means thata for a package ``foo``, ``spack develop foo@git.main`` will clone 
+the ``main`` branch of the package, and ``spack install`` will install from
+that git clone if ``foo`` is in the environment.
+Further development on ``foo`` can be tested by reinstalling the environment,
+and eventually committed and pushed to the upstream git repo.
 
 ^^^^^^^
 Loading
