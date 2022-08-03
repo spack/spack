@@ -13,12 +13,12 @@ class PyGlymur(PythonPackage):
     glymur works on Python 3.7, 3.8, 3.9, and 3.10."""
 
     homepage = "https://github.com/quintusdias/glymur"
-    pypi     = "Glymur/Glymur-0.9.9.tar.gz"
+    pypi = "Glymur/Glymur-0.9.9.tar.gz"
 
-    version('0.9.9', sha256='25b8a6ac07892c98b4613f959295ada9ca5e76b27bfa25069ab0a8a5bb4048f4')
+    version("0.9.9", sha256="25b8a6ac07892c98b4613f959295ada9ca5e76b27bfa25069ab0a8a5bb4048f4")
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-lxml', type=('build', 'run'))
-    depends_on('py-packaging', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-lxml", type=("build", "run"))
+    depends_on("py-packaging", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
