@@ -393,7 +393,7 @@ version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
 
 For packages with ``git`` attributes, git branches, tags, and commits can
-also be used as valid concrete versions (see :ref:`version specifier <version-specifier>`).
+also be used as valid concrete versions (see :ref:`version-specifier`).
 This means thata for a package ``foo``, ``spack develop foo@git.main`` will clone 
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
