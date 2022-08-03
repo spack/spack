@@ -1,5 +1,5 @@
 diff --git a/bin/hipcc.pl b/bin/hipcc.pl
-index 1ef3a90e..995abe5e 100755
+index 1ef3a90..995abe5 100755
 --- a/bin/hipcc.pl
 +++ b/bin/hipcc.pl
 @@ -605,7 +605,8 @@ if($HIP_PLATFORM eq "amd"){
@@ -13,7 +13,7 @@ index 1ef3a90e..995abe5e 100755
              $targetsStr =~ s/\n/,/g;
          }
 diff --git a/hipamd/CMakeLists.txt b/hipamd/CMakeLists.txt
-index 95919245..301b2728 100755
+index 9591924..301b272 100755
 --- a/hipamd/CMakeLists.txt
 +++ b/hipamd/CMakeLists.txt
 @@ -91,7 +91,18 @@ string(REPLACE "-" ";" VERSION_LIST ${HIP_VERSION_PATCH_GITHASH})
@@ -65,18 +65,9 @@ index 95919245..301b2728 100755
  endif()
  
 diff --git a/hipamd/hip-config.cmake.in b/hipamd/hip-config.cmake.in
-index ba3e75c9..136b82fc 100755
+index ba3e75c..02dd586 100755
 --- a/hipamd/hip-config.cmake.in
 +++ b/hipamd/hip-config.cmake.in
-@@ -220,7 +220,7 @@ if(HIP_RUNTIME MATCHES "rocclr")
-   if(NOT WIN32)
-     set_target_properties(hip::device PROPERTIES
-       INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
--      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-+      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
-     )
-   endif()
- endif()
 @@ -290,7 +290,6 @@ if(HIP_COMPILER STREQUAL "clang")
      if(CLANGRT_BUILTINS-NOTFOUND)
        message(FATAL_ERROR "clangrt builtins lib not found")
