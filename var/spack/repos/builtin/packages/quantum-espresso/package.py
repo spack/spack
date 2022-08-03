@@ -78,7 +78,9 @@ class QuantumEspresso(CMakePackage):
     # Add cuda support
     with when("%nvhpc"):
         variant(
-            "cuda", default=False, description="Build with CUDA, OpenMP on is strongly suggested"
+            "cuda",
+            default=False,
+            description="Build with CUDA, OpenMP on is strongly suggested for performance",
         )
         with when("+cuda"):
             # GPUs are enabled since v6.6
