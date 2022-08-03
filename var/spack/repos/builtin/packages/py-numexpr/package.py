@@ -29,4 +29,4 @@ class PyNumexpr(PythonPackage):
     depends_on("py-numpy@1.7:1.22", type=("build", "run"), when="@:2.7")
     depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@2.8.3:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-packaging", type="build", when="@2.8.3:")
+    depends_on("py-packaging", type=("build", "run"), when="@2.8.3:")
