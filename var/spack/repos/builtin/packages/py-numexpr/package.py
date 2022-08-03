@@ -12,7 +12,7 @@ class PyNumexpr(PythonPackage):
     homepage = "https://github.com/pydata/numexpr"
     url = "https://github.com/pydata/numexpr/archive/v2.7.0.tar.gz"
 
-    version("2.8.3", sha256="a912b0e3338f20b8833c2f8367292c413cd170065382b4dc4fd514db7d4c957a")
+    version("2.8.3", sha256="389ceefca74eff30ec3fd03fc4c3b7ab3df8f22d1f235117a392ce702ed208c0")
     version("2.7.3", sha256="00d6b1518605afe0ed10417e0ff07123e5d531c02496c6eed7dd4b9923238e1e")
     version("2.7.2", sha256="7d1b3790103221feda07f4a93a4fa5c6654f46865197a677ca6f27eb5cb4e5ef")
     version("2.7.0", sha256="1923f038b90cc69635871968ed742be7775c879451c612f173c2547c823c9561")
