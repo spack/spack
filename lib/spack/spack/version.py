@@ -210,7 +210,7 @@ class VersionBase(object):
     commit SHAs. The following are the full rules for comparing
     versions.
 
-    1. If the version represents a git commit, see GitVersions.
+    1. If the version represents a git reference (i.e. commit, tag, branch), see GitVersions.
 
     2. The version is split into fields based on the delimiters ``.``,
     ``-``, and ``_``, as well as alphabetic-numeric boundaries.

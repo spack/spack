@@ -1123,11 +1123,11 @@ reference provided.  Acceptable syntaxes for this are:
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
    
-When using git reference a corresponding version may be paired to the git reference.
-A paired version is necessary so Spack can solve build requirements that are based on the version.
-A version can be assigned with ``[ref]=[version]`` syntax.
-There is a constraint that the specified version must be known to Spack
-either through the package definition, or in the configuration i.e. ``packages.yaml``.
+When using git reference a corresponding version must be paired to the git reference.
+A paired version is necessary so Spack can solve build requirements that are based on the version, e.g. ``depends_on('~shared', when=':1.5')``.
+A paired version can be assigned with ``[git ref]=[version]`` syntax with the caveat that the specified version
+is known to Spack.
+This can be through the package definition, or in the configuration i.e. ``packages.yaml``.
 
 .. code-block:: console
 
@@ -1136,7 +1136,7 @@ either through the package definition, or in the configuration i.e. ``packages.y
 
 
 If a version is not supplied then the tags in the git repo are used to determine
-the nearest previous version known to Spack. Details
+the nearest, previous version known to Spack. Details
 about how versions are compared and how Spack determines if one
 version is less than another are discussed in the developer guide.
 
