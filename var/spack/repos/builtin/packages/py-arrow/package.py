@@ -29,4 +29,4 @@ class PyArrow(PythonPackage):
         "py-backports-functools-lru-cache@1.2.1:", type=("build", "run"), when="^python@2.7:2.8"
     )
     depends_on("py-python-dateutil", type=("build", "run"))
-    depends_on("py-typing-extensions", type=("build", "run"), when="@1.2.1: ^python@:3.8")
+    depends_on("py-typing-extensions", type=("build", "run"), when="@1.2.1: ^python@:3.7")
