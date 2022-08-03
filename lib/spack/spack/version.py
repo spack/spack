@@ -228,6 +228,7 @@ class VersionBase(object):
     ''``
 
     """
+
     __slots__ = [
         "version",
         "separators",
@@ -491,15 +492,15 @@ class VersionBase(object):
 
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
-    
+
     There are two distinct categories of git versions:
-    
+
     1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
     2) GitVersions requiring commit lookups
 
     Git ref versions that are not paried with a known version
-    are handled separately from all other version comparisons. 
-    When Spack identifies a git ref version, it associates a 
+    are handled separately from all other version comparisons.
+    When Spack identifies a git ref version, it associates a
     ``CommitLookup`` object with the version. This object
     handles caching of information from the git repo. When executing
     comparisons with a git ref version, Spack queries the
@@ -525,8 +526,8 @@ class GitVersion(VersionBase):
     git ref in question, and if so the distance between the two. The
     previous version is the version that is an ancestor with the least
     distance from the git ref in question.
-    
-    This procedure can be circumvented if the user supplies a known version 
+
+    This procedure can be circumvented if the user supplies a known version
     to associate with the GitVersion (e.g. `[hash]=develop`).  If the user
     prescribes the version then there is no need to do a lookup
     and the standard version comparison operations are sufficient.
