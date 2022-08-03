@@ -3,11 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
 
 from spack.package import *
 
 
-class QuantumEspresso(CMakePackage, CudaPackage):
+class QuantumEspresso(CMakePackage):
     """Quantum ESPRESSO is an integrated suite of Open-Source computer codes
     for electronic-structure calculations and materials modeling at the
     nanoscale. It is based on density-functional theory, plane waves, and
@@ -65,7 +66,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     variant("libxc", default=False, description="Uses libxc")
     depends_on("libxc@5.1.2:", when="+libxc")
 
-    variant("openmp", default=False, description="Enables OpenMP support, auto-enabled with +cuda")
+    variant("openmp", default=False, description="Enables OpenMP support")
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
@@ -74,36 +75,29 @@ class QuantumEspresso(CMakePackage, CudaPackage):
         conflicts("^openblas threads=none")
         conflicts("^openblas threads=pthreads")
 
-    # Add cuda support 
-    with when('+cuda'):
-        # only nvhpcsdk compiler is supported
-        conflicts("%aocc")
-        conflicts("%apple_clang")
-        conflicts("%arm")
-        conflicts("%cce")
-        conflicts("%clang")
-        conflicts("%fj")
-        conflicts("%gcc")
-        conflicts("%intel")
-        conflicts("%nag")
-        conflicts("%oneapi")
-        conflicts("%xl")
-        conflicts("%xl_r")
-        # GPUs are enabled since v6.6
-        conflicts("@:6.5")
-        # cuda version >= 10.1
-        conflicts("cuda@:10.0.130")
-        # bugs with following nvhpcsdk versions
-        conflicts("%nvhpc@21.11:22.2", msg="QE-GPU has issues with these NVHPC compiler versions")
-        # bugs with nvhpc@22.3 in versions > 7.1 still present
-        with when("@develop"):
-            conflicts("%nvhpc@22.3", msg="Develop has issues with this NVHPC compiler version")
-        with when("@7.2:"):
-            conflicts("%nvhpc@22.3", msg="v > 7.1 has issues with this NVHPC compiler version")
-        # only cmake is supported 
-        conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
-        # PGI support
-        conflicts("%pgi@:19.9", msg="PGI supported for v >= 19.10")
+    # Add cuda support
+    with when("%nvhpc"):
+        variant(
+            "cuda", default=False, description="Build with CUDA, OpenMP on is strongly suggested"
+        )
+        with when("+cuda"):
+            # GPUs are enabled since v6.6
+            conflicts("@:6.5")
+            # cuda version >= 10.1
+            # conflicts("cuda@:10.0.130")
+            # bugs with following nvhpcsdk versions
+            conflicts(
+                "%nvhpc@21.11:22.2", msg="QE-GPU has issues with these NVHPC compiler versions"
+            )
+            # bugs with nvhpc@22.3 in versions > 7.1 still present
+            with when("@develop"):
+                conflicts("%nvhpc@22.3", msg="Develop has issues with this NVHPC compiler version")
+            with when("@7.2:"):
+                conflicts("%nvhpc@22.3", msg="v > 7.1 has issues with this NVHPC compiler version")
+            # only cmake is supported
+            conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
+            # PGI support
+            conflicts("%pgi@:19.9", msg="PGI supported for v >= 19.10")
 
     # NVTX variant for profiling ; requires linking to CUDA library, handled by CMake
     variant("nvtx", default=False, description="Enables NVTX markers for profiling")
@@ -120,7 +114,7 @@ class QuantumEspresso(CMakePackage, CudaPackage):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
-        with when("+cuda"):
+        with when("%nvhpc+cuda"):
             # add mpi_gpu_aware variant, False by default
             variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
 
@@ -378,6 +372,12 @@ class QuantumEspresso(CMakePackage, CudaPackage):
 
     # extlibs_makefile updated to work with fujitsu compilers
     patch("fj-fox.patch", when="+patch %fj")
+
+    # Warning for CUDA without OpenMP
+    @run_before("cmake")
+    def caveats(self):
+        if "+cuda~openmp" in self.spec:
+            tty.warn("CUDA without OpenMP could incur in severe performance degredation !!!")
 
     def cmake_args(self):
         spec = self.spec
