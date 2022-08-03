@@ -528,7 +528,7 @@ class GitVersion(VersionBase):
     distance from the git ref in question.
 
     This procedure can be circumvented if the user supplies a known version
-    to associate with the GitVersion (e.g. `[hash]=develop`).  If the user
+    to associate with the GitVersion (e.g. ``[hash]=develop``).  If the user
     prescribes the version then there is no need to do a lookup
     and the standard version comparison operations are sufficient.
 
