@@ -200,8 +200,7 @@ class VersionBase(object):
     such as ``2.3.0`` or ``1.2-5``. These Versions are represented by
     the tuples ``(2, 3, 0)`` and ``(1, 2, 5)`` respectively.
 
-    Some Spack versions involve slight extensions of numeric syntax;
-    for example, ``0.1.3a``. Versions are split on ``.``, ``-``, and
+    Versions are split on ``.``, ``-``, and
     ``_`` characters, as well as any point at which they switch from
     numeric to alphabetical or vice-versa. For example, the version
     ``0.1.3a`` is represented by the tuple ``(0, 1, 3, 'a') and the
