@@ -173,6 +173,19 @@ class Spectre(CMakePackage):
     #   kernels before then.
     conflicts("^blaze+blas", when="@:2022.02.17")
 
+    # Patch Charm++ v7.0.0 for Python bindings (see
+    # https://github.com/sxs-collaboration/spectre/pull/3942 and
+    # https://github.com/UIUC-PPL/charm/issues/3600)
+    depends_on(
+        "charmpp@6.10.2:",
+        patches=patch(
+            "https://raw.githubusercontent.com/sxs-collaboration/spectre/develop/support/Charm/v7.0.0.patch",
+            sha256="576c745de202f030275aaeb3c6206f7ebdda696385353e0d1417ed7c47b856ca",
+            when="@7.0.0",
+        ),
+        when="@2022.06.14: +python platform=linux",
+    )
+
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
     # support releases associated with published papers, so their results are
