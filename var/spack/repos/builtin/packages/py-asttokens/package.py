@@ -10,11 +10,11 @@ class PyAsttokens(PythonPackage):
     """Annotate AST trees with source code positions."""
 
     homepage = "https://github.com/gristlabs/asttokens"
-    pypi     = "asttokens/asttokens-2.0.5.tar.gz"
+    pypi = "asttokens/asttokens-2.0.5.tar.gz"
 
-    version('2.0.5', sha256='9a54c114f02c7a9480d56550932546a3f1fe71d8a02f1bc7ccd0ee3ee35cf4d5')
+    version("2.0.5", sha256="9a54c114f02c7a9480d56550932546a3f1fe71d8a02f1bc7ccd0ee3ee35cf4d5")
 
-    depends_on('py-setuptools@44:', type='build')
-    depends_on('py-setuptools-scm+toml@3.4.3:', type='build')
+    depends_on("py-setuptools@44:", type="build")
+    depends_on("py-setuptools-scm+toml@3.4.3:", type="build")
 
-    depends_on('py-six', type=('build', 'run'))
+    depends_on("py-six", type=("build", "run"))

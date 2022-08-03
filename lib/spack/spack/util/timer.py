@@ -19,6 +19,7 @@ class Timer(object):
     """
     Simple timer for timing phases of a solve or install
     """
+
     def __init__(self):
         self.start = time.time()
         self.last = self.start
@@ -33,8 +34,7 @@ class Timer(object):
 
     @property
     def total(self):
-        """Return the total time
-        """
+        """Return the total time"""
         if self.end:
             return self.end - self.start
         return time.time() - self.start

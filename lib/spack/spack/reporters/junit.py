@@ -10,7 +10,7 @@ import spack.fetch_strategy
 import spack.package_base
 from spack.reporter import Reporter
 
-__all__ = ['JUnit']
+__all__ = ["JUnit"]
 
 
 class JUnit(Reporter):
@@ -20,11 +20,11 @@ class JUnit(Reporter):
         Reporter.__init__(self, args)
         # Posixpath is used here to support the underlying template enginge
         # Jinja2, which expects `/` path separators
-        self.template_file = posixpath.join('reports', 'junit.xml')
+        self.template_file = posixpath.join("reports", "junit.xml")
 
     def build_report(self, filename, report_data):
         # Write the report
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             env = spack.tengine.make_environment()
             t = env.get_template(self.template_file)
             f.write(t.render(report_data))

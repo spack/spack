@@ -12,7 +12,7 @@ class LowPriorityProvider(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    provides('lapack')
-    provides('mpi')
+    provides("lapack")
+    provides("mpi")
