@@ -36,7 +36,9 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     variant("raja", default=False, description="Enable/Disable RAJA")
     variant("python", default=True, description="Enable/Disable Python bindings")
     conflicts("+python", when="@:1.3.0", msg="Python bindings require ExaGO 1.4")
-    conflicts("+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm.")
+    conflicts(
+        "+python", when="+ipopt+rocm", msg="Python bindings require -fPIC with Ipopt for rocm."
+    )
 
     # Solver options
     variant("hiop", default=False, description="Enable/Disable HiOp")
