@@ -492,10 +492,10 @@ class VersionBase(object):
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
     
-    If the ref is a commit hash then there are two paths of execution:
+    There are two distinct categories of git versions:
     
-    1) a raw comit hash needs a commit lookup to pair it to a spack version
-    2) a commit hash paired with a valid spack version  i.e. [hash]=main
+    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    2) GitVersions requiring commit lookups
 
     Git commit versions that are not paried with a known version
     are handled separately from all other version comparisons. 
