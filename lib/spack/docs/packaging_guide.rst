@@ -126,7 +126,7 @@ generates a boilerplate template for your package, and opens up the new
    # If you submit this package back to Spack as a pull request,
    # please first remove this boilerplate and all FIXME comments.
    #
-   from spack import *
+   from spack.package import *
 
 
    class Gmp(AutotoolsPackage):
