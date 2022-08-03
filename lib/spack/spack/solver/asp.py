@@ -2250,8 +2250,10 @@ class SpecBuilder(object):
         # roots here, because the specs aren't complete, and the hash
         # function will loop forever.
         roots = [spec.root for spec in self._specs.values() if not spec.root.installed]
+        tty.debug("roots list: {0}".format(",".join([root.name for root in roots])))
         roots = dict((id(r), r) for r in roots)
         for root in roots.values():
+            tty.debug("Injecting roots for: {0}".format(root.name))
             spack.spec.Spec.inject_patches_variant(root)
 
         # Add external paths to specs with just external modules
