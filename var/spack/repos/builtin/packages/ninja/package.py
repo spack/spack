@@ -71,4 +71,7 @@ class Ninja(Package):
             symlink("ninja", "ninja-build")
 
     def setup_dependent_package(self, module, dspec):
-        module.ninja = which("ninja", path=[self.spec.prefix.bin])
+        name = "ninja"
+        if sys.platform == "win32":
+            name = name + ".exe"
+        module.ninja = which(name, path=[self.spec.prefix.bin])
