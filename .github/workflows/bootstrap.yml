@@ -184,7 +184,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
-        macos-version: ['macos-10.15', 'macos-11', 'macos-12']
+        macos-version: ['macos-11', 'macos-12']
     if: github.repository == 'spack/spack'
     steps:
       - name: Install dependencies
