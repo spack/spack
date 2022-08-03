@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -83,6 +85,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     variant("petsc", default=False, description="Enable PETSc interfaces")
     variant("sundials", default=False, description="Enable SUNDIALS interfaces")
     variant("pic", default=False, description="Enable PIC")
+    variant("sycl", default=False, description="Enable SYCL backend")
 
     # Build dependencies
     depends_on("mpi", when="+mpi")
@@ -125,6 +128,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
+    depends_on("cmake@3.22:", type="build", when="+sycl")
+    depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
     # see https://github.com/spack/spack/issues/22310
@@ -184,7 +189,14 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         when="+rocm",
         msg="AMReX does not support rocm-4.2 due to a compiler bug",
     )
+    # GPU vendor support is mutually exclusive
     conflicts("+cuda", when="+rocm", msg="CUDA and HIP support are exclusive")
+    conflicts("+cuda", when="+sycl", msg="CUDA and SYCL support are exclusive")
+    conflicts("+rocm", when="+sycl", msg="HIP and SYCL support are exclusive")
+
+    conflicts(
+        "+sycl", when="@:21.05", msg="For SYCL support, AMReX version 21.06 and newer suggested."
+    )
 
     def url_for_version(self, version):
         if version >= Version("20.05"):
@@ -243,6 +255,16 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DAMReX_GPU_BACKEND=HIP")
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
+
+        if "+sycl" in self.spec:
+            args.append("-DAMReX_GPU_BACKEND=SYCL")
+            # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError(
+                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
+                    + " or the oneAPI CXX (icpx) compiler."
+                )
 
         return args
 
