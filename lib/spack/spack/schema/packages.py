@@ -24,15 +24,15 @@ properties = {
                     "require": {
                         "oneOf": [
                             # A condition group: at least one member is applied
-                            {"type": "array",
-                             "items": {
-                                 "type": "object",
-                                 "properties": {
-                                     "one_of": {"type": "array"}
-                                 }
-                             }},
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {"one_of": {"type": "array"}},
+                                },
+                            },
                             # Shorthand for a condition group with one member
-                            {"type": "string"}
+                            {"type": "string"},
                         ]
                     },
                     "version": {

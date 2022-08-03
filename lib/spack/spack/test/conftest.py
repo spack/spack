@@ -706,12 +706,13 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
-    tmpdir.ensure_dir('concretize')
+    tmpdir.ensure_dir("concretize")
     mutable_config.push_scope(
-        spack.config.ConfigScope('concretize', str(tmpdir.join('concretize'))))
+        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+    )
 
     yield
 

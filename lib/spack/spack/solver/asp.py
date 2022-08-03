@@ -887,7 +887,7 @@ class SpackSolverSetup(object):
         else:
             rules = []
             for requirement in requirements:
-                rules.append((pkg_name, requirement['one_of']))
+                rules.append((pkg_name, requirement["one_of"]))
         cnd_grp_id = 0
         for pkg_name, cnd_group in rules:
             requirement_weight = 0
@@ -897,10 +897,8 @@ class SpackSolverSetup(object):
                 if not spec.name:
                     spec.name = pkg_name
                 member_id = next(self._condition_id_counter)
-                self.gen.fact(
-                    fn.requirement_group_member(member_id, pkg_name, cnd_grp_id))
-                self.gen.fact(
-                    fn.requirement_has_weight(member_id, requirement_weight))
+                self.gen.fact(fn.requirement_group_member(member_id, pkg_name, cnd_grp_id))
+                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
                 self.impose(member_id, spec, name=pkg_name, node=False)
                 requirement_weight += 1
             cnd_grp_id += 1
