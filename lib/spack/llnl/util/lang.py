@@ -486,6 +486,8 @@ class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
+    __slots__ = ("dict",)
+
     def __init__(self):
         self.dict = {}
 
