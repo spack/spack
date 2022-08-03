@@ -524,7 +524,7 @@ class GitVersion(VersionBase):
     tag is then queried in git to see whether it is an ancestor of the
     git ref in question, and if so the distance between the two. The
     previous version is the version that is an ancestor with the least
-    distance from the commit in question.
+    distance from the git ref in question.
     
     This procedure can be circumvented if the user supplies a known version 
     to associate with the commit hash i.e. `[hash]=develop`.  If the user
