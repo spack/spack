@@ -108,7 +108,7 @@ jobs:
           concretizer: original
         - python-version: 3.6
           concretizer: original
-        - python-version: 3.10
+        - python-version: 3.9
           concretizer: original
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
