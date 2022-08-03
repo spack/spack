@@ -17,7 +17,17 @@ class RRhtslib(RPackage):
 
     bioc = "Rhtslib"
 
-    version("1.99.5", commit="a5335e1fea92ea06c33d42c7e290b6d8b4245ad3")
+    # There is a problem with the git repository where the commit for
+    # version 1.28.0 pulls changes to a file that blocks checking out the
+    # commit. Use the branch instead.
+    # error: Your local changes to the following files would be overwritten by
+    # checkout:
+    #             src/htslib-1.15.1/htscodecs/tests/names/tok3/nv.names.1
+    #             Please, commit your changes or stash them before you can switch
+    #             branches.
+    #             Aborting
+    # version("1.28.0", commit='214fde2218bdbca89f1e12a30d2e081e76915aef')
+    version("1.28.0", branch="RELEASE_3_15")
     version("1.26.0", commit="f5b20e97b283942877529f750b28398782552655")
     version("1.22.0", commit="899b79faa54d42c7c9b9a2bc49972109637d367f")
     version("1.18.1", commit="751a2ebaed43b7991204b27bd6c7870645001d82")

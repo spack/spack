@@ -252,6 +252,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
     depends_on("mmg", when="+mmg")
+    depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
     # hypre+/~fortran based on wheter fortran is enabled/disabled
