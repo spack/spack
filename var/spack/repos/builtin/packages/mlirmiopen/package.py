@@ -16,6 +16,7 @@ class Mlirmiopen(CMakePackage):
     tags = ["rocm"]
 
     maintainers = ["srekolam"]
+
     version("5.2.0", sha256="546121f203e7787d3501fbaf6673bdbeefbb39e0446b02c480454338362a1f01")
     version("5.1.3", sha256="936f92707ffe9a1973728503db6365bb7f14e5aeccfaef9f0924e54d25080c69")
     version("5.1.0", sha256="56dab11877295784cbb754c10bf2bd6535a3dfea31ec0b97ffe77b94115109dc")
