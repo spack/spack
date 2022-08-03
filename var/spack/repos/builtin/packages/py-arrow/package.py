@@ -31,4 +31,4 @@ class PyArrow(PythonPackage):
     )
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"), when="@1.2.1: ^python@:3.7")
-    depends_on("py-dateutil@2.7.0", type=("build", "run"), when="@1.2.1:")
+    depends_on("py-python-dateutil@2.7.0", type=("build", "run"), when="@1.2.1:")
