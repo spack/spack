@@ -1,0 +1,10 @@
+enable:
+  - ups_table
+ups_table:
+  whitelist:
+    - zmpi
+  blacklist:
+    - callpath
+    - mpi
+  all:
+    autoload: 'direct'

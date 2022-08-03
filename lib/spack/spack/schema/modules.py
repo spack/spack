@@ -27,7 +27,8 @@ spec_regex = (
 
 #: Matches a valid name for a module set
 valid_module_set_name = (
-    r"^(?!arch_folder$|lmod$|roots$|enable$|prefix_inspections$|" r"tcl$|use_view$)\w[\w-]*$"
+    r"^(?!arch_folder$|lmod$|roots$|enable$|prefix_inspections$|"
+    r"tcl$|use_view$|ups_table$|ups_version$)\w[\w-]*$"
 )
 
 #: Matches an anonymous spec, i.e. a spec without a root name
@@ -117,12 +118,14 @@ module_config_properties = {
         "properties": {
             "tcl": {"type": "string"},
             "lmod": {"type": "string"},
+            "ups_table": {"type": "string"},
+            "ups_version": {"type": "string"},
         },
     },
     "enable": {
         "type": "array",
         "default": [],
-        "items": {"type": "string", "enum": ["tcl", "lmod"]},
+        "items": {"type": "string", "enum": ["tcl", "lmod", "ups_table", "ups_version"]},
     },
     "lmod": {
         "allOf": [
@@ -153,6 +156,20 @@ module_config_properties = {
             r"^[\w-]*": array_of_strings
         },
     },
+    "ups_table": {
+        "allOf": [
+            # Base configuration
+            module_type_configuration,
+            {},  # Specific UPS table file extensions
+        ]
+    },
+    "ups_version": {
+        "allOf": [
+            # Base configuration
+            module_type_configuration,
+            {},  # Specific UPS version file extensions
+        ]
+    },
 }
 
 
@@ -179,6 +196,20 @@ properties = {
                     r"^[\w-]*": array_of_strings
                 },
             },
+            "ups_table": {
+                "allOf": [
+                    # Base configuration
+                    module_type_configuration,
+                    {},  # Specific tcl extensions
+                ]
+            },
+            "ups_version": {
+                "allOf": [
+                    # Base configuration
+                    module_type_configuration,
+                    {},  # Specific tcl extensions
+                ]
+            },
         },
         "patternProperties": {
             valid_module_set_name: {
@@ -191,7 +222,16 @@ properties = {
             "^(arch_folder|lmod|roots|enable|tcl|use_view)$": {},
         },
         "deprecatedProperties": {
-            "properties": ["arch_folder", "lmod", "roots", "enable", "tcl", "use_view"],
+            "properties": [
+                "arch_folder",
+                "lmod",
+                "roots",
+                "enable",
+                "tcl",
+                "use_view",
+                "ups_table",
+                "ups_version",
+            ],
             "message": deprecation_msg_default_module_set,
             "error": False,
         },

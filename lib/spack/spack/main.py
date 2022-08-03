@@ -783,7 +783,12 @@ def print_setup_info(*info):
     shell_set("_sp_sys_type", str(spack.spec.ArchSpec.default_arch()))
     shell_set("_sp_compatible_sys_types", ":".join(_compatible_sys_types()))
     # print roots for all module systems
-    module_to_roots = {"tcl": list(), "lmod": list()}
+    module_to_roots = {
+        "tcl": list(),
+        "lmod": list(),
+        "ups_table": list(),
+        "ups_version": list(),
+    }
     for name in module_to_roots.keys():
         path = spack.modules.common.root_path(name, "default")
         module_to_roots[name].append(path)

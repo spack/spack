@@ -7,6 +7,8 @@ from typing import Callable, Dict  # novm
 
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
+import spack.cmd.modules.ups_table
+import spack.cmd.modules.ups_version
 
 description = "generate/manage module files"
 section = "user environment"
@@ -20,6 +22,8 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="module_command")
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)
+    spack.cmd.modules.ups_table.add_command(sp, _subcommands)
+    spack.cmd.modules.ups_version.add_command(sp, _subcommands)
 
 
 def module(parser, args):

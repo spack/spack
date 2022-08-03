@@ -1,0 +1,7 @@
+enable:
+  - ups_table
+ups_table:
+  mpileaks:
+    suffixes:
+      '+debug': foo
+      '~debug': bar

@@ -1,0 +1,21 @@
+enable:
+  - ups_version
+ups_version:
+  all:
+    filter:
+      environment_blacklist':
+        - CMAKE_PREFIX_PATH
+    environment:
+      set:
+        '{name}_ROOT_{prefix}': '{prefix}'
+
+  'platform=test target=x86_64':
+    environment:
+      set:
+        FOO_{variants}: 'foo'
+      unset:
+        - BAR
+
+  'platform=test target=x86_32':
+    load:
+      - 'foo/bar'

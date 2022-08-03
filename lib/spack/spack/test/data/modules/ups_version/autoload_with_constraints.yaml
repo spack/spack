@@ -1,0 +1,8 @@
+enable:
+  - ups_version
+ups_version:
+  ^mpich2:
+    autoload: 'direct'
+
+  ^python:
+    autoload: 'direct'

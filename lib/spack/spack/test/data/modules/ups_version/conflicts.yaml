@@ -1,0 +1,8 @@
+enable:
+  - ups_version
+ups_version:
+  naming_scheme: '{name}/{version}-{compiler.name}'
+  all:
+    conflict:
+      - '{name}'
+      - 'intel/14.0.1'

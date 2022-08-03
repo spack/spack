@@ -1,0 +1,6 @@
+enable:
+  - ups_table
+ups_table:
+  verbose: true
+  all:
+    autoload: 'all'

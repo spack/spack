@@ -1,0 +1,5 @@
+enable:
+  - ups_version
+ups_version:
+  all:
+    template: 'override_from_modules.txt'

@@ -69,7 +69,7 @@ def test_modules_written_with_proper_permissions(
     assert mock_package_perms & os.stat(mock_module_filename).st_mode == mock_package_perms
 
 
-@pytest.mark.parametrize("module_type", ["tcl", "lmod"])
+@pytest.mark.parametrize("module_type", ["tcl", "lmod", "ups_table", "ups_version"])
 def test_modules_default_symlink(
     module_type, mock_packages, mock_module_filename, mock_module_defaults, config
 ):

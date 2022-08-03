@@ -1,0 +1,5 @@
+enable:
+  - ups_table
+ups_table:
+  all:
+    prerequisites: 'direct'
