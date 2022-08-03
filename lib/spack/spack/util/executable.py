@@ -294,7 +294,7 @@ def which_string(*args, **kwargs):
         if sys.platform == "win32":
             new_path = path[:]
             for p in path:
-                if os.path.basename(p) == 'bin':
+                if os.path.basename(p) == "bin":
                     new_path.append(os.path.dirname(p))
             path = new_path
 
