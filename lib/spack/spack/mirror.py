@@ -650,6 +650,7 @@ def _add_single_spec(spec, mirror, mirror_stats):
     except Exception as e:
         msg = "Skipping '{0}', as it fails to concretize [{1}]".format(spec, str(e))
         tty.debug(msg)
+        mirror_stats.error()
         return False
 
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("{name}{@version}")))
