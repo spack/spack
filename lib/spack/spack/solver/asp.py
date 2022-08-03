@@ -764,11 +764,11 @@ class SpackSolverSetup(object):
             # The first uses a lookup to supply a tag and distance as a version.
             # The second is user specified and can be resolved as a standard version.
             # This second option is constrained such that the user version must be known to Spack
-            # for now we distinguish this by if the ref_version is a string
-            if isinstance(v.version, spack.version.GitVersion) and isinstance(
-                v.version.ref_version, str
+            if (
+                isinstance(v.version, spack.version.GitVersion)
+                and v.version.user_supplied_reference
             ):
-                ref_version = spack.version.Version(v.version.ref_version)
+                ref_version = spack.version.Version(v.version.ref_version_str)
                 self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
                 # disqualify any git supplied version from user if they weren't already known
                 # versions in spack
@@ -777,7 +777,7 @@ class SpackSolverSetup(object):
                         "The reference version '{version}' for package '{package}' is not defined."
                         " Either choose another reference version or define '{version}' in your"
                         " version preferences or package.py file for {package}.".format(
-                            package=pkg.name, version=v.version.ref_version
+                            package=pkg.name, version=str(ref_version)
                         )
                     )
 

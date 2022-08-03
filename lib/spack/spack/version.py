@@ -213,9 +213,13 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
+        self.separators, self.version = self._generate_seperators_and_components(string)
+
+    def _generate_seperators_and_components(self, string):
         segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
-        self.separators = tuple(m[2] for m in segments)
+        components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
+        separators = tuple(m[2] for m in segments)
+        return separators, components
 
     @property
     def dotted(self):
@@ -467,6 +471,7 @@ class GitVersion(VersionBase):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
         # An object that can lookup git refs to compare them to versions
+        self.user_supplied_reference = False
         self._ref_lookup = None
         self.ref_version = None
 
@@ -474,11 +479,13 @@ class GitVersion(VersionBase):
         pruned_string = string[4:] if git_prefix else string
 
         if "=" in pruned_string:
-            self.ref, self.ref_version = pruned_string.split("=")
+            self.ref, self.ref_version_str = pruned_string.split("=")
+            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            self.user_supplied_reference = True
         else:
             self.ref = pruned_string
 
-        self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
+        self.is_commit = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
