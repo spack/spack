@@ -760,7 +760,14 @@ class SpackSolverSetup(object):
             )
 
         for v in most_to_least_preferred:
-            if isinstance(v.version, spack.version.GitVersion):
+            # There are two paths for creating the ref_version in GitVersions.
+            # The first uses a lookup to supply a tag and distance as a version.
+            # The second is user specified and can be resolved as a standard version.
+            # This second option is constrained such that the user version must be known to Spack
+            # for now we distinguish this by if the ref_version is a string
+            if isinstance(v.version, spack.version.GitVersion) and isinstance(
+                v.version.ref_version, str
+            ):
                 ref_version = spack.version.Version(v.version.ref_version)
                 self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
                 # disqualify any git supplied version from user if they weren't already known
