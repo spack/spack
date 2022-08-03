@@ -1,8 +1,7 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Here we consolidate the logic for creating an abstract description
 of the information that module systems need.
 
@@ -41,9 +40,9 @@ import llnl.util.filesystem
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-import spack.build_environment as build_environment
+import spack.build_environment
 import spack.config
-import spack.environment as ev
+import spack.environment
 import spack.error
 import spack.paths
 import spack.projections as proj
@@ -55,14 +54,38 @@ import spack.util.path
 import spack.util.spack_yaml as syaml
 
 
+def get_deprecated(dictionary, name, old_name, default):
+    """Get a deprecated property from a ``dict``.
+
+    Arguments:
+        dictionary (dict): dictionary to get a value from.
+        name (str): New name for the property. If present, supersedes ``old_name``.
+        old_name (str): Deprecated name for the property. If present, a warning
+            is printed.
+        default (object): value to return if neither name is found.
+    """
+    value = default
+
+    # always warn if old name is present
+    if old_name in dictionary:
+        value = dictionary.get(old_name, value)
+        main_msg = "`{}:` is deprecated in module config and will be removed in v0.20."
+        details = (
+            "Use `{}:` instead. You can run `spack config update` to translate your "
+            "configuration files automatically."
+        )
+        tty.warn(main_msg.format(old_name), details.format(name))
+
+    # name overrides old name if present
+    value = dictionary.get(name, value)
+
+    return value
+
+
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
-    config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
-        # return old format for backward compatibility
-        return spack.config.get('modules', {})
-    return config
+    return spack.config.get(config_path, {})
 
 
 #: Valid tokens for naming scheme and env variable names
@@ -192,7 +215,7 @@ def merge_config_rules(configuration, spec):
     # Transform keywords for dependencies or prerequisites into a list of spec
 
     # Which modulefiles we want to autoload
-    autoload_strategy = spec_configuration.get('autoload', 'none')
+    autoload_strategy = spec_configuration.get('autoload', 'direct')
     spec_configuration['autoload'] = dependencies(spec, autoload_strategy)
 
     # Which instead we want to mark as prerequisites
@@ -209,6 +232,10 @@ def merge_config_rules(configuration, spec):
 
     verbose = module_specific_configuration.get('verbose', False)
     spec_configuration['verbose'] = verbose
+
+    # module defaults per-package
+    defaults = module_specific_configuration.get('defaults', [])
+    spec_configuration['defaults'] = defaults
 
     return spec_configuration
 
@@ -229,11 +256,6 @@ def root_path(name, module_set_name):
     }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
-
-    # For backwards compatibility, read the old module roots for default set
-    if module_set_name == 'default':
-        roots = spack.config.merge_yaml(
-            spack.config.get('config:module_roots', {}), roots)
 
     # Merge config values into the defaults so we prefer configured values
     roots = spack.config.merge_yaml(defaults, roots)
@@ -357,14 +379,14 @@ def get_module(
 
     Retrieve the module file for the given spec if it is available. If the
     module is not available, this will raise an exception unless the module
-    is blacklisted or if the spec is installed upstream.
+    is excluded or if the spec is installed upstream.
 
     Args:
         module_type: the type of module we want to retrieve (e.g. lmod)
         spec: refers to the installed package that we want to retrieve a module
             for
-        required: if the module is required but blacklisted, this function will
-            print a debug message. If a module is missing but not blacklisted,
+        required: if the module is required but excluded, this function will
+            print a debug message. If a module is missing but not excluded,
             then an exception is raised (regardless of whether it is required)
         get_full_path: if ``True``, this returns the full path to the module.
             Otherwise, this returns the module name.
@@ -376,7 +398,7 @@ def get_module(
         available.
     """
     try:
-        upstream = spec.package.installed_upstream
+        upstream = spec.installed_upstream
     except spack.repo.UnknownPackageError:
         upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
     if upstream:
@@ -392,13 +414,13 @@ def get_module(
     else:
         writer = spack.modules.module_types[module_type](spec, module_set_name)
         if not os.path.isfile(writer.layout.filename):
-            if not writer.conf.blacklisted:
+            if not writer.conf.excluded:
                 err_msg = "No module available for package {0} at {1}".format(
                     spec, writer.layout.filename
                 )
                 raise ModuleNotFoundError(err_msg)
             elif required:
-                tty.debug("The module configuration has blacklisted {0}: "
+                tty.debug("The module configuration has excluded {0}: "
                           "omitting it".format(spec))
             else:
                 return None
@@ -455,6 +477,11 @@ class BaseConfiguration(object):
         return self.conf.get('template', None)
 
     @property
+    def defaults(self):
+        """Returns the specs configured as defaults or []."""
+        return self.conf.get('defaults', [])
+
+    @property
     def env(self):
         """List of environment modifications that should be done in the
         module.
@@ -484,26 +511,30 @@ class BaseConfiguration(object):
         return None
 
     @property
-    def blacklisted(self):
-        """Returns True if the module has been blacklisted,
-        False otherwise.
-        """
+    def excluded(self):
+        """Returns True if the module has been excluded, False otherwise."""
+
         # A few variables for convenience of writing the method
         spec = self.spec
         conf = self.module.configuration(self.name)
 
-        # Compute the list of whitelist rules that match
-        wlrules = conf.get('whitelist', [])
-        whitelist_matches = [x for x in wlrules if spec.satisfies(x)]
+        # Compute the list of include rules that match
+        # DEPRECATED: remove 'whitelist' in v0.20
+        include_rules = get_deprecated(conf, "include", "whitelist", [])
+        include_matches = [x for x in include_rules if spec.satisfies(x)]
 
-        # Compute the list of blacklist rules that match
-        blrules = conf.get('blacklist', [])
-        blacklist_matches = [x for x in blrules if spec.satisfies(x)]
+        # Compute the list of exclude rules that match
+        # DEPRECATED: remove 'blacklist' in v0.20
+        exclude_rules = get_deprecated(conf, "exclude", "blacklist", [])
+        exclude_matches = [x for x in exclude_rules if spec.satisfies(x)]
 
-        # Should I blacklist the module because it's implicit?
-        blacklist_implicits = conf.get('blacklist_implicits')
+        # Should I exclude the module because it's implicit?
+        # DEPRECATED: remove 'blacklist_implicits' in v0.20
+        exclude_implicits = get_deprecated(
+            conf, "exclude_implicits", "blacklist_implicits", None
+        )
         installed_implicitly = not spec._installed_explicitly()
-        blacklisted_as_implicit = blacklist_implicits and installed_implicitly
+        excluded_as_implicit = exclude_implicits and installed_implicitly
 
         def debug_info(line_header, match_list):
             if match_list:
@@ -512,15 +543,15 @@ class BaseConfiguration(object):
                 for rule in match_list:
                     tty.debug('\t\tmatches rule: {0}'.format(rule))
 
-        debug_info('WHITELIST', whitelist_matches)
-        debug_info('BLACKLIST', blacklist_matches)
+        debug_info('INCLUDE', include_matches)
+        debug_info('EXCLUDE', exclude_matches)
 
-        if blacklisted_as_implicit:
-            msg = '\tBLACKLISTED_AS_IMPLICIT : {0}'.format(spec.cshort_spec)
+        if excluded_as_implicit:
+            msg = '\tEXCLUDED_AS_IMPLICIT : {0}'.format(spec.cshort_spec)
             tty.debug(msg)
 
-        is_blacklisted = blacklist_matches or blacklisted_as_implicit
-        if not whitelist_matches and is_blacklisted:
+        is_excluded = exclude_matches or excluded_as_implicit
+        if not include_matches and is_excluded:
             return True
 
         return False
@@ -545,17 +576,22 @@ class BaseConfiguration(object):
         return self._create_list_for('prerequisites')
 
     @property
-    def environment_blacklist(self):
+    def exclude_env_vars(self):
         """List of variables that should be left unmodified."""
-        return self.conf.get('filter', {}).get('environment_blacklist', {})
+        filter = self.conf.get('filter', {})
+
+        # DEPRECATED: remove in v0.20
+        return get_deprecated(
+            filter, "exclude_env_vars", "environment_blacklist", {}
+        )
 
     def _create_list_for(self, what):
-        whitelist = []
+        include = []
         for item in self.conf[what]:
             conf = type(self)(item, self.name)
-            if not conf.blacklisted:
-                whitelist.append(item)
-        return whitelist
+            if not conf.excluded:
+                include.append(item)
+        return include
 
     @property
     def verbose(self):
@@ -612,9 +648,14 @@ class BaseFileLayout(object):
         if self.extension:
             filename = '{0}.{1}'.format(self.use_name, self.extension)
         # Architecture sub-folder
-        arch_folder = str(self.spec.architecture)
+        arch_folder_conf = spack.config.get(
+            'modules:%s:arch_folder' % self.conf.name, True)
+        if arch_folder_conf:
+            # include an arch specific folder between root and filename
+            arch_folder = str(self.spec.architecture)
+            filename = os.path.join(arch_folder, filename)
         # Return the absolute path
-        return os.path.join(self.dirname(), arch_folder, filename)
+        return os.path.join(self.dirname(), filename)
 
 
 class BaseContext(tengine.Context):
@@ -685,12 +726,11 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
-        std_prefix_inspections = spack.config.get(
-            'modules:prefix_inspections', {})
-        set_prefix_inspections = spack.config.get(
-            'modules:%s:prefix_inspections' % self.conf.name, {})
-        prefix_inspections = spack.config.merge_yaml(
-            std_prefix_inspections, set_prefix_inspections)
+        prefix_inspections = syaml.syaml_dict()
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:prefix_inspections', {}))
+        spack.config.merge_yaml(prefix_inspections, spack.config.get(
+            'modules:%s:prefix_inspections' % self.conf.name, {}))
 
         use_view = spack.config.get(
             'modules:%s:use_view' % self.conf.name, False)
@@ -698,12 +738,13 @@ class BaseContext(tengine.Context):
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:
             if use_view is True:
-                use_view = ev.default_view_name
+                use_view = spack.environment.default_view_name
 
-            env = ev.active_environment()
+            env = spack.environment.active_environment()
             if not env:
-                raise ev.SpackEnvironmentViewError("Module generation with views "
-                                                   "requires active environment")
+                raise spack.environment.SpackEnvironmentViewError(
+                    "Module generation with views requires active environment"
+                )
 
             view = env.views[use_view]
 
@@ -718,19 +759,19 @@ class BaseContext(tengine.Context):
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
         env.extend(
-            build_environment.modifications_from_dependencies(
+            spack.build_environment.modifications_from_dependencies(
                 spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(spec.package)
+        spack.build_environment.set_module_variables_for_package(spec.package)
         spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
 
-        # List of variables that are blacklisted in modules.yaml
-        blacklist = self.conf.environment_blacklist
+        # List of variables that are excluded in modules.yaml
+        exclude = self.conf.exclude_env_vars
 
         # We may have tokens to substitute in environment commands
 
@@ -754,7 +795,7 @@ class BaseContext(tengine.Context):
                 pass
             x.name = str(x.name).replace('-', '_')
 
-        return [(type(x).__name__, x) for x in env if x.name not in blacklist]
+        return [(type(x).__name__, x) for x in env if x.name not in exclude]
 
     @tengine.context_property
     def autoload(self):
@@ -827,18 +868,16 @@ class BaseModuleFileWriter(object):
                 existing file. If False the operation is skipped an we print
                 a warning to the user.
         """
-        # Return immediately if the module is blacklisted
-        if self.conf.blacklisted:
-            msg = '\tNOT WRITING: {0} [BLACKLISTED]'
+        # Return immediately if the module is excluded
+        if self.conf.excluded:
+            msg = '\tNOT WRITING: {0} [EXCLUDED]'
             tty.debug(msg.format(self.spec.cshort_spec))
             return
 
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.filename}\n'
-            message += 'spec : {0.spec}'
+            message = 'Module file {0.filename} exists and will not be overwritten'
             tty.warn(message.format(self.layout))
             return
 
@@ -893,6 +932,21 @@ class BaseModuleFileWriter(object):
         if os.path.exists(self.layout.filename):
             fp.set_permissions_by_spec(self.layout.filename, self.spec)
 
+        # Symlink defaults if needed
+        self.update_module_defaults()
+
+    def update_module_defaults(self):
+        if any(self.spec.satisfies(default) for default in self.conf.defaults):
+            # This spec matches a default, it needs to be symlinked to default
+            # Symlink to a tmp location first and move, so that existing
+            # symlinks do not cause an error.
+            default_path = os.path.join(os.path.dirname(self.layout.filename),
+                                        'default')
+            default_tmp = os.path.join(os.path.dirname(self.layout.filename),
+                                       '.tmp_spack_default')
+            os.symlink(self.layout.filename, default_tmp)
+            os.rename(default_tmp, default_path)
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -912,7 +966,9 @@ def disable_modules():
     """Disable the generation of modulefiles within the context manager."""
     data = {
         'modules:': {
-            'enable': []
+            'default': {
+                'enable': []
+            }
         }
     }
     disable_scope = spack.config.InternalConfigScope('disable_modules', data=data)

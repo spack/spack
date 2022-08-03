@@ -1,12 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from six import string_types
 
-import spack.architecture
-from spack import *
+import spack.platforms
+from spack.package import *
 from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
 
 
@@ -18,6 +18,16 @@ class Multimethod(MultimethodBase):
 
     homepage = 'http://www.example.com/'
     url      = 'http://www.example.com/example-1.0.tar.gz'
+
+    version('5.0', '0123456789abcdef0123456789abcdef')
+    version('4.0', '0123456789abcdef0123456789abcdef')
+    version('3.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '0123456789abcdef0123456789abcdef')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+
+    variant('mpi', default=False, description='')
+
+    depends_on('mpi', when='+mpi')
 
     #
     # These functions are only valid for versions 1, 3, and 4.
@@ -76,14 +86,14 @@ class Multimethod(MultimethodBase):
     def has_a_default(self):
         return 'gcc'
 
-    @when('%intel')
+    @when('%clang')
     def has_a_default(self):
-        return 'intel'
+        return 'clang'
 
     #
     # Make sure we can switch methods on different target
     #
-    platform = spack.architecture.platform()
+    platform = spack.platforms.host()
     targets = list(platform.targets.values())
     if len(targets) > 1:
         targets = targets[:-1]

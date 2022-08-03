@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Snappy(CMakePackage):
@@ -12,6 +12,7 @@ class Snappy(CMakePackage):
     homepage = "https://github.com/google/snappy"
     url      = "https://github.com/google/snappy/archive/1.1.8.tar.gz"
 
+    version('1.1.9', sha256='75c1fbb3d618dd3a0483bff0e26d0a92b495bbe5059c8b4f1c962b478b6e06e7')
     version('1.1.8', sha256='16b677f07832a612b0836178db7f374e414f94657c138e6993cbfc5dcc58651f')
     version('1.1.7', sha256='3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4')
 
@@ -20,13 +21,14 @@ class Snappy(CMakePackage):
 
     depends_on('googletest', type='test')
 
-    patch('link_gtest.patch')
+    patch('link_gtest.patch', when='@:1.1.8')
 
     def cmake_args(self):
         return [
             self.define('CMAKE_INSTALL_LIBDIR', self.prefix.lib),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define('SNAPPY_BUILD_TESTS', self.run_tests),
+            self.define('SNAPPY_BUILD_BENCHMARKS', 'OFF'),
         ]
 
     def flag_handler(self, name, flags):

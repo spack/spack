@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Emacs(AutotoolsPackage, GNUMirrorPackage):
@@ -16,6 +16,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
     version('master', branch='master')
+    version('28.1', sha256='1439bf7f24e5769f35601dbf332e74dfc07634da6b1e9500af67188a92340a28')
     version('27.2', sha256='80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73')
     version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
@@ -59,7 +60,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gcc@11: +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
-    conflicts('+native', when='@:27.99.99', msg="native compilation require @master")
+    conflicts('+native', when='@:27', msg="native compilation require @master")
 
     @when('platform=darwin')
     def setup_build_environment(self, env):

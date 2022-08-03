@@ -1,19 +1,23 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
 
+from spack.package import *
+
 
 class Libtool(AutotoolsPackage, GNUMirrorPackage):
     """libtool -- library building part of autotools."""
 
     homepage = 'https://www.gnu.org/software/libtool/'
-    gnu_mirror_path = "libtool/libtool-2.4.2.tar.gz"
+    gnu_mirror_path = "libtool/libtool-2.4.6.tar.gz"
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)
+
+    version('2.4.7', sha256='04e96c2404ea70c590c546eba4202a4e12722c640016c12b9b2f1ce3d481e9a8')
     version('2.4.6', sha256='e3bd4d5d3d025a36c21dd6af7ea818a2afcd4dfc1ea5a17b39d7854bcd0c06e3')
     # Version released in 2011
     version('2.4.2', sha256='b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918', deprecated=True)
@@ -24,6 +28,10 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         depends_on('autoconf', type='build')
         depends_on('automake', type='build')
         depends_on('help2man', type='build')
+
+    with when('@2.4.6'):
+        depends_on('autoconf@2.62:', type='test')
+        depends_on('automake',       type='test')
 
     with when('@develop'):
         depends_on('autoconf', type='build')
@@ -92,3 +100,20 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
                 join_path(self.prefix.bin, 'glibtool'))
         symlink(join_path(self.prefix.bin, 'libtoolize'),
                 join_path(self.prefix.bin, 'glibtoolize'))
+
+    def setup_build_environment(self, env):
+        """Wrapper until spack has a real implementation of setup_test_environment()"""
+        if self.run_tests:
+            self.setup_test_environment(env)
+
+    def setup_test_environment(self, env):
+        """When Fortran is not provided, a few tests need to be skipped"""
+        if (self.compiler.f77 is None):
+            env.set('F77', 'no')
+        if (self.compiler.fc is None):
+            env.set('FC', 'no')
+
+    @when('@2.4.6')
+    def check(self):
+        """installcheck of libtool-2.4.6 runs the full testsuite, skip 'make check'"""
+        pass

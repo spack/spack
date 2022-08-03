@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RReportingtools(RPackage):
-    """Tools for making reports in various formats
+    """Tools for making reports in various formats.
 
        The ReportingTools software package enables users to easily display
        reports of analysis results generated from sources such as microarray
@@ -21,9 +21,10 @@ class RReportingtools(RPackage):
        be viewed in a web browser. For more examples, please visit our site:
        http:// research-pub.gene.com/ReportingTools."""
 
-    homepage = "https://bioconductor.org/packages/ReportingTools"
-    git      = "https://git.bioconductor.org/packages/ReportingTools.git"
+    bioc = "ReportingTools"
 
+    version('2.36.0', commit='34122d4bde5ce43415f63f2e39e3a088c55282cc')
+    version('2.34.0', commit='fb5aef0b6e1c6166d0f025d9e6ca60e54c68dbaf')
     version('2.30.0', commit='fb9aee416f38cfd308d6d7264ccbcda0467642a7')
     version('2.24.0', commit='d114c658affba9b682a37b4e2caf4341cf8da6cf')
     version('2.22.1', commit='dce6af6c6a1cddff077fe61368f2c13e5a0e7bab')

@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
+
+
 class VersionTestDependencyPreferred(AutotoolsPackage):
     """Dependency of version-test-pkg, which has a multi-valued
     variant with two default values (a very low priority optimization

@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
+
+from spack.package import *
 
 
 class Ninja(Package):
@@ -14,10 +17,13 @@ class Ninja(Package):
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
     git      = "https://github.com/ninja-build/ninja.git"
 
+    tags = ['build-tools', 'e4s']
+
     executables = ['^ninja$']
 
     version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
     version('master', branch='master')
+    version('1.11.0', sha256='3c6ba2e66400fe3f1ae83deb4b235faf3137ec20bd5b08c29bfc368db143e4c6')
     version('1.10.2', sha256='ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed')
     version('1.10.1', sha256='a6b6f7ac360d4aabd54e299cc1d8fa7b234cd81b9401693da21221c62569a23e')
     version('1.10.0', sha256='3810318b08489435f8efc19c05525e80a993af5a55baa0dfeae0465a9d45f99f')
@@ -51,9 +57,14 @@ class Ninja(Package):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('ninja', prefix.bin)
+        name = 'ninja'
+        if sys.platform == 'win32':
+            name = name + '.exe'
+        install(name, prefix.bin)
         install_tree('misc', prefix.misc)
 
+        if sys.platform == "win32":
+            return
         # Some distros like Fedora install a 'ninja-build' executable
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):

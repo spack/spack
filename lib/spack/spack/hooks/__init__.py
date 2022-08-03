@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,6 @@ Currently the following hooks are supported:
     * on_phase_success(pkg, phase_name, log_file)
     * on_phase_error(pkg, phase_name, log_file)
     * on_phase_error(pkg, phase_name, log_file)
-    * on_analyzer_save(pkg, result)
     * post_env_write(env)
 
 This can be used to implement support for things like module
@@ -90,9 +89,7 @@ on_phase_error = _HookRunner('on_phase_error')
 on_install_start = _HookRunner('on_install_start')
 on_install_success = _HookRunner('on_install_success')
 on_install_failure = _HookRunner('on_install_failure')
-
-# Analyzer hooks
-on_analyzer_save = _HookRunner('on_analyzer_save')
+on_install_cancel = _HookRunner('on_install_cancel')
 
 # Environment hooks
 post_env_write = _HookRunner('post_env_write')

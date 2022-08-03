@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 import pytest
 
@@ -16,6 +17,9 @@ from spack.main import SpackCommand
 dev_build = SpackCommand('dev-build')
 install = SpackCommand('install')
 env = SpackCommand('env')
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
 
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
@@ -134,7 +138,7 @@ def mock_module_noop(*args):
 
 
 def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
-                           install_mockery):
+                           install_mockery, working_env):
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
 
     monkeypatch.setattr(spack.build_environment, 'module', mock_module_noop)
@@ -245,7 +249,7 @@ env:
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
-            with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
+            with pytest.raises(RuntimeError):
                 install()
 
 
@@ -258,17 +262,19 @@ def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
     # root and dependency if they wanted a dev build for both.
     leaf_dir = tmpdir.mkdir('leaf')
     leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0')
+    leaf_pkg_cls = spack.repo.path.get_pkg_class(leaf_spec.name)
     with leaf_dir.as_cwd():
-        with open(leaf_spec.package.filename, 'w') as f:
-            f.write(leaf_spec.package.original_string)
+        with open(leaf_pkg_cls.filename, 'w') as f:
+            f.write(leaf_pkg_cls.original_string)
 
     # setup dev-build-test-dependent package for dev build
     # don't concretize outside environment -- dev info will be wrong
     root_dir = tmpdir.mkdir('root')
     root_spec = spack.spec.Spec('dev-build-test-dependent@0.0.0')
+    root_pkg_cls = spack.repo.path.get_pkg_class(root_spec.name)
     with root_dir.as_cwd():
-        with open(root_spec.package.filename, 'w') as f:
-            f.write(root_spec.package.original_string)
+        with open(root_pkg_cls.filename, 'w') as f:
+            f.write(root_pkg_cls.original_string)
 
     # setup environment
     envdir = tmpdir.mkdir('env')
@@ -315,8 +321,9 @@ def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
     dep_spec = spack.spec.Spec('dev-build-test-install')
 
     with build_dir.as_cwd():
-        with open(dep_spec.package.filename, 'w') as f:
-            f.write(dep_spec.package.original_string)
+        dep_pkg_cls = spack.repo.path.get_pkg_class(dep_spec.name)
+        with open(dep_pkg_cls.filename, 'w') as f:
+            f.write(dep_pkg_cls.original_string)
 
     # setup environment
     envdir = tmpdir.mkdir('env')

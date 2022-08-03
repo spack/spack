@@ -1,0 +1,11 @@
+--- a/setup.py	2021-12-06 12:23:39.000000000 -0600
++++ b/setup.py	2021-12-14 10:30:33.000000000 -0600
+@@ -2099,6 +2099,8 @@
+         #
+         # Detection stops at the first successful method.
+ 
++        return False
++
+         # Check for Tcl and Tk at the locations indicated by _TCLTK_INCLUDES
+         # and _TCLTK_LIBS environment variables.
+         if self.detect_tkinter_fromenv():

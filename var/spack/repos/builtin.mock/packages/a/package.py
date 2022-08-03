@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class A(AutotoolsPackage):
@@ -27,6 +27,8 @@ class A(AutotoolsPackage):
         description='',
         multi=False
     )
+
+    variant('lorem_ipsum', description='', default=False)
 
     variant('bvv', default=True, description='The good old BV variant')
 

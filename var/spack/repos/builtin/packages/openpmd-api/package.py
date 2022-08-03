@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class OpenpmdApi(CMakePackage):
@@ -13,10 +13,16 @@ class OpenpmdApi(CMakePackage):
     url      = "https://github.com/openPMD/openPMD-api/archive/0.14.2.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 
-    maintainers = ['ax3l']
+    maintainers = ['ax3l', 'franzpoeschel']
 
-    # C++14 up until here
+    tags = ['e4s']
+
+    # C++17 up until here
     version('develop', branch='dev')
+    # C++14 up until here
+    version('0.14.5', sha256='e3f509098e75014394877e0dc91f833e57ced5552b110c7339a69e9dbe49bf62')
+    version('0.14.4', sha256='42b7bcd043e772d63f0fe0e5e70da411f001db10096d5b8be797ffc88e786379')
+    version('0.14.3', sha256='57282455e0fb1873b4def1894fadadd6425dfc8349eac7fcc68daf677c48b7ce')
     version('0.14.2', sha256='25c6b4bcd0ae1ba668b633b8514e66c402da54901c26861fc754fca55717c836')
     version('0.14.1', sha256='172fd1d785627d01c77f1170adc5a18bd8a6302e804d0f271dc0d616a5156791')
     version('0.14.0', sha256='7bb561c1a6f54e9a6a1b56aaf1d4d098bbe290d204f84ebe5a6f11b3cab2be6e')
@@ -43,11 +49,12 @@ class OpenpmdApi(CMakePackage):
             description='Enable Python bindings')
 
     depends_on('cmake@3.15.0:', type='build')
-    depends_on('mpark-variant@1.4.0:')
     depends_on('catch2@2.6.1:', type='test')
     depends_on('catch2@2.13.4:', type='test', when='@0.14.0:')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('nlohmann-json@3.9.1:')
+    depends_on('mpark-variant@1.4.0:', when='@:0.14.99')  # pre C++17 releases
+    depends_on('toml11@3.7.1:', when='@0.15.0:')
     with when('+hdf5'):
         depends_on('hdf5@1.8.13:')
         depends_on('hdf5@1.8.13: ~mpi', when='~mpi')
@@ -72,7 +79,7 @@ class OpenpmdApi(CMakePackage):
 
     # Fix breaking HDF5 1.12.0 API when build with legacy api options
     # https://github.com/openPMD/openPMD-api/pull/1012
-    patch('hdf5-1.12.0.patch', when='@:0.13.99 +hdf5')
+    patch('hdf5-1.12.0.patch', when='@:0.13 +hdf5')
 
     extends('python', when='+python')
 
@@ -101,10 +108,12 @@ class OpenpmdApi(CMakePackage):
                 self.define('openPMD_USE_INTERNAL_PYBIND11', False)
             ]
 
-        args += [
-            self.define('openPMD_USE_INTERNAL_JSON', False),
-            self.define('openPMD_USE_INTERNAL_VARIANT', False)
-        ]
+        args.append(self.define('openPMD_USE_INTERNAL_JSON', False))
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
+            args.append(self.define('openPMD_USE_INTERNAL_VARIANT', False))
+        if spec.satisfies('@0.15:'):
+            args.append(self.define('openPMD_USE_INTERNAL_TOML11', False))
+
         if self.run_tests:
             args.append(self.define('openPMD_USE_INTERNAL_CATCH', False))
 
@@ -113,8 +122,9 @@ class OpenpmdApi(CMakePackage):
     def setup_run_environment(self, env):
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
-        env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
+            env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
 
         # more deps searched in openPMDConfig.cmake
         if spec.satisfies("+mpi"):
@@ -128,10 +138,12 @@ class OpenpmdApi(CMakePackage):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
+        spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        env.prepend_path('CMAKE_PREFIX_PATH',
-                         self.spec['mpark-variant'].prefix)
-        env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
+        if spec.satisfies('@:0.14'):  # pre C++17 releases
+            env.prepend_path('CMAKE_PREFIX_PATH',
+                             spec['mpark-variant'].prefix)
+            env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
 
     def check(self):
         """CTest checks after the build phase"""

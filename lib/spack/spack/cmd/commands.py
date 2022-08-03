@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,7 @@ _positional_to_subroutine = {
     'virtual': '_providers',
     'namespace': '_repos',
     'hash': '_all_resource_hashes',
-    'pytest': '_tests',
+    'pytest': '_unit_tests',
 }
 
 

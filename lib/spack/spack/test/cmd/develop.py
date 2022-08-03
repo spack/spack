@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -16,9 +17,13 @@ from spack.main import SpackCommand
 develop = SpackCommand('develop')
 env = SpackCommand('env')
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
+
 
 @pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'mock_packages', 'mock_fetch')
+    'mutable_mock_env_path', 'mock_packages', 'mock_fetch', 'config'
+)
 class TestDevelop(object):
     def check_develop(self, env, spec, path=None):
         path = path or spec.name

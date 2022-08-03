@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import argparse
 import os
 import shutil
 
+import llnl.util.filesystem
 import llnl.util.tty as tty
 
 import spack.bootstrap
@@ -14,9 +15,9 @@ import spack.caches
 import spack.cmd.common.arguments as arguments
 import spack.cmd.test
 import spack.config
-import spack.main
 import spack.repo
 import spack.stage
+import spack.util.path
 from spack.paths import lib_path, var_path
 
 description = "remove temporary build files and/or downloaded archives"
@@ -27,7 +28,7 @@ level = "long"
 class AllClean(argparse.Action):
     """Activates flags -s -d -f -m and -p simultaneously"""
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(['-sdfmpb'], namespace=namespace)
+        parser.parse_args(['-sdfmp'], namespace=namespace)
 
 
 def setup_parser(subparser):
@@ -48,11 +49,28 @@ def setup_parser(subparser):
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
         '-b', '--bootstrap', action='store_true',
-        help="remove software needed to bootstrap Spack")
+        help="remove software and configuration needed to bootstrap Spack")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdfmpb", nargs=0
+        '-a', '--all', action=AllClean,
+        help="equivalent to -sdfmp (does not include --bootstrap)",
+        nargs=0
     )
     arguments.add_common_arguments(subparser, ['specs'])
+
+
+def remove_python_cache():
+    for directory in [lib_path, var_path]:
+        for root, dirs, files in os.walk(directory):
+            for f in files:
+                if f.endswith('.pyc') or f.endswith('.pyo'):
+                    fname = os.path.join(root, f)
+                    tty.debug('Removing {0}'.format(fname))
+                    os.remove(fname)
+            for d in dirs:
+                if d == '__pycache__':
+                    dname = os.path.join(root, d)
+                    tty.debug('Removing {0}'.format(dname))
+                    shutil.rmtree(dname)
 
 
 def clean(parser, args):
@@ -67,13 +85,16 @@ def clean(parser, args):
         for spec in specs:
             msg = 'Cleaning build stage [{0}]'
             tty.msg(msg.format(spec.short_spec))
-            package = spack.repo.get(spec)
-            package.do_clean()
+            spec.package.do_clean()
 
     if args.stage:
         tty.msg('Removing all temporary build stages')
         spack.stage.purge()
-
+        # Temp directory where buildcaches are extracted
+        extract_tmp = os.path.join(spack.store.layout.root, '.tmp')
+        if os.path.exists(extract_tmp):
+            tty.debug('Removing {0}'.format(extract_tmp))
+            shutil.rmtree(extract_tmp)
     if args.downloads:
         tty.msg('Removing cached downloads')
         spack.caches.fetch_cache.destroy()
@@ -88,22 +109,12 @@ def clean(parser, args):
 
     if args.python_cache:
         tty.msg('Removing python cache files')
-        for directory in [lib_path, var_path]:
-            for root, dirs, files in os.walk(directory):
-                for f in files:
-                    if f.endswith('.pyc') or f.endswith('.pyo'):
-                        fname = os.path.join(root, f)
-                        tty.debug('Removing {0}'.format(fname))
-                        os.remove(fname)
-                for d in dirs:
-                    if d == '__pycache__':
-                        dname = os.path.join(root, d)
-                        tty.debug('Removing {0}'.format(dname))
-                        shutil.rmtree(dname)
+        remove_python_cache()
 
     if args.bootstrap:
-        msg = 'Removing software in "{0}"'
-        tty.msg(msg.format(spack.bootstrap.store_path()))
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            uninstall = spack.main.SpackCommand('uninstall')
-            uninstall('-a', '-y')
+        bootstrap_prefix = spack.util.path.canonicalize_path(
+            spack.config.get('bootstrap:root')
+        )
+        msg = 'Removing bootstrapped software and configuration in "{0}"'
+        tty.msg(msg.format(bootstrap_prefix))
+        llnl.util.filesystem.remove_directory_contents(bootstrap_prefix)

@@ -8,3 +8,4 @@ lmod:
 
   all:
     template: 'override_from_modules.txt'
+    autoload: none

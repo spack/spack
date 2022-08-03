@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,9 @@ def setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to load the package")
+    shells.add_argument(
+        '--bat', action='store_const', dest='shell', const='bat',
+        help="print bat commands to load the package")
 
     subparser.add_argument('-a', '--all', action='store_true',
                            help='unload all loaded Spack packages.')

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dnstop(AutotoolsPackage):
@@ -15,6 +15,10 @@ class Dnstop(AutotoolsPackage):
     version('master', branch='master')
 
     depends_on('libpcap')
+    depends_on('ncurses')
+
+    def configure_args(self):
+        return ['LIBS=-ltinfo']
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

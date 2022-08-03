@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Postgresql(AutotoolsPackage):
@@ -19,6 +19,8 @@ class Postgresql(AutotoolsPackage):
     list_url = "http://ftp.postgresql.org/pub/source"
     list_depth = 1
 
+    version('14.0',   sha256='ee2ad79126a7375e9102c4db77c4acae6ae6ffe3e082403b88826d96d927a122')
+    version('12.2',   sha256='ad1dcc4c4fc500786b745635a9e1eba950195ce20b8913f50345bb7d5369b5de')
     version('11.2',   sha256='2676b9ce09c21978032070b6794696e0aa5a476e3d21d60afc036dc0a9c09405')
     version('11.1',   sha256='90815e812874831e9a4bf6e1136bf73bc2c5a0464ef142e2dfea40cda206db08')
     version('11.0',   sha256='bf9bba03d0c3902c188af12e454b35343c4a9bf9e377ec2fe50132efb44ef36b')
@@ -55,6 +57,10 @@ class Postgresql(AutotoolsPackage):
     depends_on('perl', when='+perl')
     depends_on('python', when='+python')
     depends_on('libxml2', when='+xml')
+
+    @property
+    def command(self):
+        return Exectuable(self.prefix.bin.pg_config)
 
     def configure_args(self):
         config_args = ["--with-openssl"]
@@ -123,3 +129,25 @@ class Postgresql(AutotoolsPackage):
             env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
             env.prepend_path('PYTHONPATH', self.prefix.lib)
+
+    @property
+    def libs(self):
+        stat_libs = ['libecpg_compat', 'libecpg', 'libpgcommon',
+                     'libpgcommon_shlib', 'libpgfeutils', 'libpgport',
+                     'libpgport_shlib', 'libpgtypes', 'libpq']
+        fl_stat = find_libraries(stat_libs, self.prefix, shared=False,
+                                 recursive=True)
+
+        dyn_libs = ['libecpg_compat', 'libecpg', 'libpgtypes', 'libpq',
+                    'libpqwalreceiver', 'plpgsql', 'pgoutput']
+        if '+perl' in self.spec:
+            dyn_libs.append('plperl')
+        if '+python' in self.spec:
+            dyn_libs.append('plpython')
+        if '+tcl' in self.spec:
+            dyn_libs.append('pltcl')
+
+        fl_dyn = find_libraries(dyn_libs, self.prefix, shared=True,
+                                recursive=True)
+
+        return fl_dyn + fl_stat

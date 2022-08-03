@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,13 +23,17 @@ import subprocess
 import sys
 from glob import glob
 
+from docutils.statemachine import StringList
+from sphinx.domains.python import PythonDomain
 from sphinx.ext.apidoc import main as sphinx_apidoc
+from sphinx.parsers import RSTParser
 
 # -- Spack customizations -----------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external'))
+sys.path.insert(0, os.path.abspath('_spack_root/lib/spack/external/pytest-fallback'))
 
 if sys.version_info[0] < 3:
     sys.path.insert(
@@ -81,9 +85,6 @@ todo_include_todos = True
 #
 # Disable duplicate cross-reference warnings.
 #
-from sphinx.domains.python import PythonDomain
-
-
 class PatchedPythonDomain(PythonDomain):
     def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
         if 'refspecific' in node:
@@ -91,8 +92,20 @@ class PatchedPythonDomain(PythonDomain):
         return super(PatchedPythonDomain, self).resolve_xref(
             env, fromdocname, builder, typ, target, node, contnode)
 
+#
+# Disable tabs to space expansion in code blocks
+# since Makefiles require tabs.
+#
+class NoTabExpansionRSTParser(RSTParser):
+    def parse(self, inputstring, document):
+        if isinstance(inputstring, str):
+            lines = inputstring.splitlines()
+            inputstring = StringList(lines, document.current_source)
+        super().parse(inputstring, document)
+
 def setup(sphinx):
     sphinx.add_domain(PatchedPythonDomain, override=True)
+    sphinx.add_source_parser(NoTabExpansionRSTParser, override=True)
 
 # -- General configuration -----------------------------------------------------
 
@@ -179,6 +192,7 @@ nitpick_ignore = [
     ('py:class', '_frozen_importlib_external.SourceFileLoader'),
     # Spack classes that are private and we don't want to expose
     ('py:class', 'spack.provider_index._IndexBase'),
+    ('py:class', 'spack.repo._PrependFileLoader'),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

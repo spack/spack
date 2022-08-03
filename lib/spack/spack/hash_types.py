@@ -1,11 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Definitions that control how Spack creates Spec hashes."""
 
 import spack.dependency as dp
+import spack.repo
 
 hashes = []
 
@@ -33,23 +33,42 @@ class SpecHashDescriptor(object):
         """Private attribute stored on spec"""
         return '_' + self.name
 
+    def __call__(self, spec):
+        """Run this hash on the provided spec."""
+        return spec.spec_hash(self)
 
-#: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
+
+#: Spack's deployment hash. Includes all inputs that can affect how a package is built.
 dag_hash = SpecHashDescriptor(
-    deptype=('link', 'run'), package_hash=False, name='hash')
+    deptype=('build', 'link', 'run'), package_hash=True, name='hash')
 
 
-#: Hash descriptor that includes build dependencies.
-build_hash = SpecHashDescriptor(
-    deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')
+#: Hash descriptor used only to transfer a DAG, as is, across processes
+process_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run', 'test'),
+    package_hash=False,
+    name='process_hash'
+)
 
 
-#: Full hash used in build pipelines to determine when to rebuild packages.
+def _content_hash_override(spec):
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    pkg = pkg_cls(spec)
+    return pkg.content_hash()
+
+
+#: Package hash used as part of dag hash
+package_hash = SpecHashDescriptor(
+    deptype=(), package_hash=True, name='package_hash',
+    override=_content_hash_override)
+
+
+# Deprecated hash types, no longer used, but needed to understand old serialized
+# spec formats
+
 full_hash = SpecHashDescriptor(
     deptype=('build', 'link', 'run'), package_hash=True, name='full_hash')
 
 
-#: Package hash used as part of full hash
-package_hash = SpecHashDescriptor(
-    deptype=(), package_hash=True, name='package_hash',
-    override=lambda s: s.package.content_hash())
+build_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run'), package_hash=False, name='build_hash')

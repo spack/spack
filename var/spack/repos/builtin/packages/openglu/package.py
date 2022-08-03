@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Openglu(Package):
@@ -58,6 +58,10 @@ class Openglu(Package):
         lib              (GLU libraries, including "libGLU.dylib")"""
 
         raise InstallError(msg)
+
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        _ = self.fetcher
 
     @property
     def libs(self):

@@ -1,15 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 
-from spack import *
+from spack.package import *
 
 
+@IntelOneApiPackage.update_description
 class IntelMkl(IntelPackage):
-    """Intel Math Kernel Library."""
+    """Intel Math Kernel Library. This package has been replaced by
+       intel-oneapi-mkl.
+
+    """
+
+    maintainers = ['rscohn2']
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
@@ -75,6 +81,8 @@ class IntelMkl(IntelPackage):
 
     provides('blas')
     provides('lapack')
+    provides('lapack@3.9.0', when='@2020.4')
+    provides('lapack@3.7.0', when='@11.3')
     provides('scalapack')
     provides('mkl')
     provides('fftw-api@3', when='@2017:')

@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Libkml(CMakePackage):
@@ -20,12 +21,14 @@ class Libkml(CMakePackage):
     variant('java', default=False, description='Build java bindings')
     variant('python', default=False, description='Build python bindings')
 
-    extends('jdk', when='+java')
+    extends('openjdk', when='+java')
     extends('python', when='+python')
 
     # See DEPENDENCIES
     depends_on('cmake@2.8:', type='build')
+    # FIXME: Can the maintainers confirm if this is a required dependency
     depends_on('boost@1.44.0:')
+    depends_on(Boost.with_default_variants)
     depends_on('expat@2.1.0:')
     depends_on('minizip@1.2.8:')
     depends_on('uriparser')
@@ -33,6 +36,10 @@ class Libkml(CMakePackage):
     depends_on('googletest@1.7.0:', type='link')
     depends_on('swig', when='+java', type='build')
     depends_on('swig', when='+python', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries('libkmlbase', root=self.prefix, recursive=True)
 
     def cmake_args(self):
         spec = self.spec

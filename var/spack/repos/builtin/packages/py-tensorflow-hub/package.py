@@ -1,9 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import tempfile
+
+from spack.package import *
 
 
 class PyTensorflowHub(Package):
@@ -21,10 +23,16 @@ class PyTensorflowHub(Package):
     extends('python')
 
     depends_on('bazel', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('python@3.6:',        type=('build', 'run'))
     depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
+
+    patch("https://github.com/tensorflow/hub/commit/049192a7edd3e80eebf1735b93f57c7965381bdb.patch?full_index=1",
+          sha256="c8b59d17511a8ebd2a58717723b9b77514a12b43bb2e6acec6d0c1062df6e457",
+          when="@:0.12")
 
     def install(self, spec, prefix):
         tmp_path = tempfile.mkdtemp(prefix='spack')
@@ -68,8 +76,8 @@ class PyTensorflowHub(Package):
                      join_path(insttmp_path, 'tensorflow_hub'))
 
         with working_dir(insttmp_path):
-            setup_py('install', '--prefix={0}'.format(prefix),
-                     '--single-version-externally-managed', '--root=/')
+            args = std_pip_args + ['--prefix=' + prefix, '.']
+            pip(*args)
 
         remove_linked_tree(tmp_path)
         remove_linked_tree(insttmp_path)

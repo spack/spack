@@ -1,0 +1,266 @@
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/CompilerEnum.java b/src/main/java/net/sf/antcontrib/cpptasks/CompilerEnum.java
+index e7af352..7b977c8 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/CompilerEnum.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/CompilerEnum.java
+@@ -60,6 +60,10 @@ import org.apache.tools.ant.types.EnumeratedAttribute;
+  * <td>xcode.clang</td>
+  * <td>Xcode clang / llvm C compiler (via xcrun)</td>
+  * </tr>
++ * <td>fcc</td>
++ * <td>fcc / Fujitsu C compiler</td>
++ * </tr>
++ * <tr>
+  * <tr>
+  * <td>g++</td>
+  * <td>GCC C++ compiler</td>
+@@ -69,6 +73,10 @@ import org.apache.tools.ant.types.EnumeratedAttribute;
+  * <td>clang++ / llvm C++ compiler</td>
+  * </tr>
+  * <tr>
++ * <td>FCC</td>
++ * <td>FCC / Fujitsu C++ compiler</td>
++ * </tr>
++ * <tr>
+  * <td>xcode.clang++</td>
+  * <td>Xcode clang++ / llvm C++ compiler (via xcrun)</td>
+  * </tr>
+@@ -209,6 +217,8 @@ public class CompilerEnum extends EnumeratedAttribute {
+             new ProcessorEnumValue("clang++", GccCCompiler.getCPPLangInstance()),
+             new ProcessorEnumValue("xcode.clang", GccCCompiler.getXCodeCLangInstance()),
+             new ProcessorEnumValue("xcode.clang++", GccCCompiler.getXCodeCPPLangInstance()),
++            new ProcessorEnumValue("fcc", GccCCompiler.getFccInstance()),
++            new ProcessorEnumValue("FCC", GccCCompiler.getFCCPPInstance()),
+             new ProcessorEnumValue("c++", GccCCompiler.getCppInstance()),
+             new ProcessorEnumValue("g77", GccCCompiler.getG77Instance()),
+             new ProcessorEnumValue("msvc", DevStudioCCompiler.getInstance()),
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/LinkerEnum.java b/src/main/java/net/sf/antcontrib/cpptasks/LinkerEnum.java
+index 38800ae..e57de43 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/LinkerEnum.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/LinkerEnum.java
+@@ -52,6 +52,8 @@ public class LinkerEnum extends EnumeratedAttribute {
+             new ProcessorEnumValue("clang++", GppLinker.getClangInstance()),
+             new ProcessorEnumValue("xcode.clang", GccLinker.getXcodeClangInstance()),
+             new ProcessorEnumValue("xcode.clang++", GppLinker.getXcodeClangInstance()),
++            new ProcessorEnumValue("fcc", GccLinker.getFccInstance()),
++            new ProcessorEnumValue("FCC", GppLinker.getFccInstance()),
+             new ProcessorEnumValue("ld", LdLinker.getInstance()),
+             new ProcessorEnumValue("ar", GccLibrarian.getInstance()),
+             new ProcessorEnumValue("msvc", DevStudioLinker.getInstance()),
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccCCompiler.java b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccCCompiler.java
+index da6de52..585b6dd 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccCCompiler.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccCCompiler.java
+@@ -75,6 +75,14 @@ public final class GccCCompiler extends GccCompatibleCCompiler {
+             sourceExtensions, headerExtensions, false,
+             false, new GccCCompiler("clang++", sourceExtensions, headerExtensions, false,
+                             true, null, false, null), false, null);
++    private static final GccCCompiler fccInstance = new GccCCompiler("fcc",
++            sourceExtensions, headerExtensions, false,
++            false, new GccCCompiler("fcc", sourceExtensions, headerExtensions, false,
++                            true, null, false, null), false, null);
++    private static final GccCCompiler fccppInstance = new GccCCompiler("FCC",
++            sourceExtensions, headerExtensions, false,
++            false, new GccCCompiler("FCC", sourceExtensions, headerExtensions, false,
++                            true, null, false, null), false, null);
+     /**
+      * Gets c++ adapter
+      */
+@@ -111,6 +119,18 @@ public final class GccCCompiler extends GccCompatibleCCompiler {
+     public static GccCCompiler getCPPLangInstance() {
+         return cpplangInstance;
+     }
++    /**
++     * Gets fcc adapter
++     */
++    public static GccCCompiler getFccInstance() {
++        return fccInstance;
++    }
++    /**
++     * Gets FCC adapter
++     */
++    public static GccCCompiler getFCCPPInstance() {
++        return fccppInstance;
++    }
+     /**
+      * Gets XCode clang adapter
+      */
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccLinker.java b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccLinker.java
+index f9c51ef..94ac8c2 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccLinker.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GccLinker.java
+@@ -41,16 +41,22 @@ public class GccLinker extends GnuLinker {
+     private static final GccLinker clangInstance = new GccLinker("clang", objFiles,
+             discardFiles, "", "", false, null);
+     private static final GccLinker xcodeClangInstance = new GccLinker(clangInstance, true);
++    private static final GccLinker fccInstance = new GccLinker("fcc", objFiles,
++            discardFiles, "", "", false, null);
+ 
+     private static final GccLinker dllLinker = new GccLinker("gcc", objFiles,
+             discardFiles, "lib", ".so", false, new GccLinker("gcc", objFiles, discardFiles, "lib", ".so", true, null));
+     private static final GccLinker dllClangLinker = new GccLinker("clang", objFiles,
+             discardFiles, "lib", ".so", false, new GccLinker("clang", objFiles, discardFiles, "lib", ".so", true, null));
++    private static final GccLinker dllFccLinker = new GccLinker("fcc", objFiles,
++            discardFiles, "lib", ".so", false, new GccLinker("fcc", objFiles, discardFiles, "lib", ".so", true, null));
+ 
+     private static final GccLinker arLinker = new GccLinker("gcc", objFiles,
+             discardFiles, "lib", ".a", false, new GccLinker("gcc", objFiles, discardFiles, "lib", ".a", true, null));
+     private static final GccLinker arClangLinker = new GccLinker("clang", objFiles,
+             discardFiles, "lib", ".a", false, new GccLinker("clang", objFiles, discardFiles, "lib", ".a", true, null));
++    private static final GccLinker arFccLinker = new GccLinker("fcc", objFiles,
++            discardFiles, "lib", ".a", false, new GccLinker("fcc", objFiles, discardFiles, "lib", ".a", true, null));
+ 
+     private static final GccLinker machBundleLinker = new GccLinker("gcc",
+             objFiles, discardFiles, "lib", ".bundle", false, null);
+@@ -76,6 +82,9 @@ public class GccLinker extends GnuLinker {
+     public static GccLinker getClangInstance() {
+         return clangInstance;
+     }
++    public static GccLinker getFccInstance() {
++        return fccInstance;
++    }
+     public static GccLinker getXcodeClangInstance() {
+         return xcodeClangInstance;
+     }
+@@ -102,10 +111,18 @@ public class GccLinker extends GnuLinker {
+         return dllClangLinker;
+     }
+     @Override
++    protected final GnuLinker getStaticDllFccLinker() {
++        return dllFccLinker;
++    }
++    @Override
+     protected final GnuLinker getStaticArLinker() {
+         return arLinker;
+     }
+     @Override
++    protected final GnuLinker getStaticArFccLinker() {
++        return arFccLinker;
++    }
++    @Override
+     protected final GnuLinker getStaticArClangLinker() {
+         return arClangLinker;
+     }
+@@ -114,6 +131,10 @@ public class GccLinker extends GnuLinker {
+         return clangInstance;
+     }
+     @Override
++    protected final GnuLinker getStaticFccInstance() {
++        return fccInstance;
++    }
++    @Override
+     protected final GnuLinker getStaticXcodeClangInstance() {
+         return xcodeClangInstance;
+     }
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GnuLinker.java b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GnuLinker.java
+index f6d477f..9ad9894 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GnuLinker.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GnuLinker.java
+@@ -35,6 +35,9 @@ public abstract class GnuLinker extends AbstractLdLinker {
+     protected abstract GnuLinker getStaticArLinker();
+     protected abstract GnuLinker getStaticArClangLinker();
+     protected abstract GnuLinker getStaticClangInstance();
++    protected abstract GnuLinker getStaticDllFccLinker();
++    protected abstract GnuLinker getStaticArFccLinker();
++    protected abstract GnuLinker getStaticFccInstance();
+     protected abstract GnuLinker getStaticXcodeClangInstance();
+     protected abstract GnuLinker getStaticMachBundleLinker();
+     protected abstract GnuLinker getStaticMachClangBundleLinker();
+@@ -129,24 +132,24 @@ public abstract class GnuLinker extends AbstractLdLinker {
+             if (isDarwin()) {
+                 return isGNU() ? getStaticMachArLinker() : ( isXcodeRun() ? getStaticXcodeMachArClangLinker() : getStaticMachArClangLinker() );
+             } else {
+-                return isGNU() ? getStaticArLinker() : getStaticArClangLinker();
++                return isGNU() ? getStaticArLinker() : (isCLANG()? getStaticArClangLinker(): getStaticArFccLinker());
+             }
+         }
+         if (type.isPluginModule()) {
+             if (isDarwin()) {
+                 return isGNU() ? getStaticMachBundleLinker() : ( isXcodeRun() ? getStaticXcodeMachClangBundleLinker() : getStaticMachClangBundleLinker() );
+             } else {
+-                return isGNU() ? getStaticDllLinker() : getStaticDllClangLinker();
++                return isGNU() ? getStaticDllLinker() : (isCLANG()? getStaticDllClangLinker(): getStaticDllFccLinker());
+             }
+         }
+         if (type.isSharedLibrary()) {
+             if (isDarwin()) {
+                 return isGNU() ? getStaticMachDllLinker() : ( isXcodeRun() ? getStaticXcodeMachDllClangLinker() : getStaticMachDllClangLinker() );
+             } else {
+-                return isGNU() ? getStaticDllLinker() : getStaticDllClangLinker();
++                return isGNU() ? getStaticDllLinker() : (isCLANG()? getStaticDllClangLinker(): getStaticDllFccLinker());
+             }
+         }
+         return isGNU() ? getStaticInstance() : ( isXcodeRun() ? getStaticXcodeClangInstance() : getStaticClangInstance() ) ;
+     }
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GppLinker.java b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GppLinker.java
+index 833556e..ac8b688 100644
+--- a/src/main/java/net/sf/antcontrib/cpptasks/gcc/GppLinker.java
++++ b/src/main/java/net/sf/antcontrib/cpptasks/gcc/GppLinker.java
+@@ -46,6 +46,8 @@ public class GppLinker extends GnuLinker {
+             discardFiles, "", "", false, false, null);
+     private static final GppLinker clangInstance = new GppLinker("clang", objFiles,
+             discardFiles, "", "", false, false, null);
++    private static final GppLinker fccInstance = new GppLinker("fcc", objFiles,
++            discardFiles, "", "", false, false, null);
+     private static final GppLinker xcodeClangInstance = new GppLinker(clangInstance, true);
+ 
+     private static final GppLinker dllLinker = new GppLinker("gcc", objFiles,
+@@ -54,6 +56,9 @@ public class GppLinker extends GnuLinker {
+     private static final GppLinker dllClangLinker = new GppLinker("clang", objFiles,
+             discardFiles, "lib", ".so", false, false, new GppLinker("clang", objFiles,
+                     discardFiles, "lib", ".so", false, true, null));
++    private static final GppLinker dllFccLinker = new GppLinker("fcc", objFiles,
++            discardFiles, "lib", ".so", false, false, new GppLinker("fcc", objFiles,
++                    discardFiles, "lib", ".so", false, true, null));
+ 
+     private static final GppLinker arLinker = new GppLinker("gcc", objFiles,
+             discardFiles, "lib", ".a", false, false, new GppLinker("gcc", objFiles,
+@@ -61,6 +66,9 @@ public class GppLinker extends GnuLinker {
+     private static final GppLinker arClangLinker = new GppLinker("clang", objFiles,
+             discardFiles, "lib", ".a", false, false, new GppLinker("clang", objFiles,
+                     discardFiles, "lib", ".a", false, true, null));
++    private static final GppLinker arFccLinker = new GppLinker("fcc", objFiles,
++            discardFiles, "lib", ".a", false, false, new GppLinker("fcc", objFiles,
++                    discardFiles, "lib", ".a", false, true, null));
+ 
+     private static final GppLinker machBundleLinker = new GppLinker("gcc",
+             objFiles, discardFiles, "lib", ".bundle", false, false, null);
+@@ -86,6 +94,9 @@ public class GppLinker extends GnuLinker {
+     public static GppLinker getClangInstance() {
+         return clangInstance;
+     }
++    public static GppLinker getFccInstance() {
++        return fccInstance;
++    }
+     public static GppLinker getXcodeClangInstance() {
+         return xcodeClangInstance;
+     }
+@@ -112,6 +123,10 @@ public class GppLinker extends GnuLinker {
+         return dllClangLinker;
+     }
+     @Override
++    protected final GnuLinker getStaticDllFccLinker() {
++        return dllFccLinker;
++    }
++    @Override
+     protected final GnuLinker getStaticArLinker() {
+         return arLinker;
+     }
+@@ -124,6 +139,14 @@ public class GppLinker extends GnuLinker {
+         return clangInstance;
+     }
+     @Override
++    protected final GnuLinker getStaticArFccLinker() {
++        return arFccLinker;
++    }
++    @Override
++    protected final GnuLinker getStaticFccInstance() {
++        return fccInstance;
++    }
++    @Override
+     protected final GnuLinker getStaticXcodeClangInstance() {
+         return xcodeClangInstance;
+     }

@@ -1,0 +1,17 @@
+diff -Naur spack-src/config spack-src.patched/config
+--- spack-src/config	2020-08-05 13:51:21.000000000 -0400
++++ spack-src.patched/config	2021-12-30 17:59:44.574264378 -0500
+@@ -501,7 +501,12 @@
+       echo "Using $PYTHON_CONFIG to configure Python."
+       PYTHON_PREFIX=$($PYTHON_CONFIG --prefix)
+       PYTHON_INCFLAGS=$($PYTHON_CONFIG --includes)
+-      PYTHON_LDFLAGS=$($PYTHON_CONFIG --ldflags)
++      # Payerle 2021-12-30: python@3.8 python-config omits -lpython unless --embed given
++      # Try first with embed, and if fails, try w/out embed
++      PYTHON_LDFLAGS=$($PYTHON_CONFIG --ldflags --embed)
++      if echo "$PYTHON_LDFLAGS" | grep -q '^Usage'; then
++	      PYTHON_LDFLAGS=$($PYTHON_CONFIG --ldflags)
++      fi
+       if ! echo "$PYTHON_LDFLAGS" | grep -q -- '-L'; then
+         echo "$PYTHON_CONFIG did not return a -L flag: using Anaconda?"
+         if [ -d "$PYTHON_PREFIX/lib" ]; then

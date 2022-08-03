@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ _craype_name_to_target_name = {
     'x86-cascadelake': 'cascadelake',
     'x86-naples': 'zen',
     'x86-rome': 'zen2',
+    'x86-milan': 'zen3',
     'x86-skylake': 'skylake_avx512',
     'mic-knl': 'mic_knl',
     'interlagos': 'bulldozer',
@@ -83,8 +84,7 @@ class Cray(Platform):
         if self.front_os != self.back_os:
             self.add_operating_system(self.front_os, front_distro)
 
-    @classmethod
-    def setup_platform_environment(cls, pkg, env):
+    def setup_platform_environment(self, pkg, env):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
@@ -143,19 +143,25 @@ class Cray(Platform):
                 env={'TERM': os.environ.get('TERM', '')},
                 output=str, error=os.devnull
             )
+
             default_from_module = ''.join(output.split())  # rm all whitespace
             if default_from_module:
                 tty.debug("Found default module:%s" % default_from_module)
                 return default_from_module
             else:
-                front_end = archspec.cpu.host().name
-                if front_end in list(
-                        map(lambda x: _target_name_from_craype_target_name(x),
-                            self._avail_targets())
-                ):
-                    tty.debug("default to front-end architecture")
-                    return archspec.cpu.host().name
+                front_end = archspec.cpu.host()
+                # Look for the frontend architecture or closest ancestor
+                # available in cray target modules
+                avail = [
+                    _target_name_from_craype_target_name(x)
+                    for x in self._avail_targets()
+                ]
+                for front_end_possibility in [front_end] + front_end.ancestors:
+                    if front_end_possibility.name in avail:
+                        tty.debug("using front-end architecture or available ancestor")
+                        return front_end_possibility.name
                 else:
+                    tty.debug("using platform.machine as default")
                     return platform.machine()
 
     def _avail_targets(self):

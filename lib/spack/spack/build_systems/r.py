@@ -1,13 +1,14 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
+from typing import Optional
+
+import llnl.util.lang as lang
 
 from spack.directives import extends
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 
 
 class RPackage(PackageBase):
@@ -28,10 +29,10 @@ class RPackage(PackageBase):
     # package attributes that can be expanded to set the homepage, url,
     # list_url, and git values
     # For CRAN packages
-    cran = None
+    cran = None  # type: Optional[str]
 
     # For Bioconductor packages
-    bioc = None
+    bioc = None  # type: Optional[str]
 
     maintainers = ['glennpj']
 
@@ -41,27 +42,27 @@ class RPackage(PackageBase):
 
     extends('r')
 
-    @property
-    def homepage(self):
-        if self.cran:
-            return 'https://cloud.r-project.org/package=' + self.cran
-        elif self.bioc:
-            return 'https://bioconductor.org/packages/' + self.bioc
+    @lang.classproperty
+    def homepage(cls):
+        if cls.cran:
+            return 'https://cloud.r-project.org/package=' + cls.cran
+        elif cls.bioc:
+            return 'https://bioconductor.org/packages/' + cls.bioc
 
-    @property
-    def url(self):
-        if self.cran:
+    @lang.classproperty
+    def url(cls):
+        if cls.cran:
             return (
                 'https://cloud.r-project.org/src/contrib/'
-                + self.cran + '_' + str(list(self.versions)[0]) + '.tar.gz'
+                + cls.cran + '_' + str(list(cls.versions)[0]) + '.tar.gz'
             )
 
-    @property
-    def list_url(self):
-        if self.cran:
+    @lang.classproperty
+    def list_url(cls):
+        if cls.cran:
             return (
                 'https://cloud.r-project.org/src/contrib/Archive/'
-                + self.cran + '/'
+                + cls.cran + '/'
             )
 
     @property

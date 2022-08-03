@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ spec expression syntax:
       hdf5 @B{+mpi}                     hdf5 with mpi enabled
       hdf5 @r{~mpi}                     hdf5 with mpi disabled
       hdf5 @B{+mpi} ^mpich              hdf5 with mpi, using mpich
-      hdf5 @B{+mpi} ^openmpi@c{@1.7}        hdf5 wtih mpi, using openmpi 1.7
+      hdf5 @B{+mpi} ^openmpi@c{@1.7}        hdf5 with mpi, using openmpi 1.7
       boxlib @B{dim=2}                  boxlib built for 2 dimensions
       libdwarf @g{%intel} ^libelf@g{%gcc}
           libdwarf, built with intel compiler, linked to libelf built with gcc

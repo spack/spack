@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Libidl(AutotoolsPackage):
@@ -15,5 +15,7 @@ class Libidl(AutotoolsPackage):
 
     version('0.8.14', sha256='c5d24d8c096546353fbc7cedf208392d5a02afe9d56ebcc1cccb258d7c4d2220')
 
+    depends_on('flex',      type='build')
+    depends_on('bison',     type='build')
     depends_on('pkgconfig', type='build')
     depends_on('glib')

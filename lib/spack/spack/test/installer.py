@@ -1,9 +1,12 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
+import shutil
+import sys
 
 import py
 import pytest
@@ -20,6 +23,8 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.util.lock as lk
+
+is_windows = sys.platform == 'win32'
 
 
 def _mock_repo(root, namespace):
@@ -64,7 +69,8 @@ def create_build_task(pkg, install_args={}):
     Create a built task for the given (concretized) package
 
     Args:
-        pkg (spack.package.PackageBase): concretized package associated with the task
+        pkg (spack.package_base.PackageBase): concretized package associated with
+                                              the task
         install_args (dict): dictionary of kwargs (or install args)
 
     Return:
@@ -202,15 +208,15 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     """Tests of _process_binary_cache_tarball when no tarball."""
     monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _none)
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    assert not inst._process_binary_cache_tarball(pkg, None, False, False)
+    s = spack.spec.Spec('trivial-install-test-package').concretized()
+    assert not inst._process_binary_cache_tarball(s.package, None, False, False)
 
     assert 'exists in binary cache but' in capfd.readouterr()[0]
 
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests of _process_binary_cache_tarball with a tar file."""
-    def _spec(spec, preferred_mirrors=None):
+    def _spec(spec, unsigned=False, mirrors_for_spec=None):
         return spec
 
     # Skip binary distribution functionality since assume tested elsewhere
@@ -230,31 +236,11 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch):
-    """Tests SystemExit path for_try_install_from_binary_cache.
-
-       This test does not make sense.  We tell spack there is a mirror
-       with a binary for this spec and then expect it to die because there
-       are no mirrors configured."""
-    # def _mirrors_for_spec(spec, full_hash_match=False):
-    #     spec = spack.spec.Spec('mpi').concretized()
-    #     return [{
-    #         'mirror_url': 'notused',
-    #         'spec': spec,
-    #     }]
-
+    """Test return false when no match exists in the mirror"""
     spec = spack.spec.Spec('mpich')
     spec.concretize()
-
-    # monkeypatch.setattr(
-    #     spack.binary_distribution, 'get_mirrors_for_spec', _mirrors_for_spec)
-
-    # with pytest.raises(SystemExit):
-    #     inst._try_install_from_binary_cache(spec.package, False, False)
     result = inst._try_install_from_binary_cache(spec.package, False, False)
     assert(not result)
-
-    # captured = capsys.readouterr()
-    # assert 'add a spack mirror to allow download' in str(captured)
 
 
 def test_installer_repr(install_mockery):
@@ -278,29 +264,29 @@ def test_installer_str(install_mockery):
 
 
 def test_check_before_phase_error(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
-    pkg.stop_before_phase = 'beforephase'
+    s = spack.spec.Spec('trivial-install-test-package').concretized()
+    s.package.stop_before_phase = 'beforephase'
     with pytest.raises(inst.BadInstallPhase) as exc_info:
-        inst._check_last_phase(pkg)
+        inst._check_last_phase(s.package)
 
     err = str(exc_info.value)
     assert 'is not a valid phase' in err
-    assert pkg.stop_before_phase in err
+    assert s.package.stop_before_phase in err
 
 
 def test_check_last_phase_error(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
-    pkg.stop_before_phase = None
-    pkg.last_phase = 'badphase'
+    s = spack.spec.Spec('trivial-install-test-package').concretized()
+    s.package.stop_before_phase = None
+    s.package.last_phase = 'badphase'
     with pytest.raises(inst.BadInstallPhase) as exc_info:
-        inst._check_last_phase(pkg)
+        inst._check_last_phase(s.package)
 
     err = str(exc_info.value)
     assert 'is not a valid phase' in err
-    assert pkg.last_phase in err
+    assert s.package.last_phase in err
 
 
-def test_installer_ensure_ready_errors(install_mockery):
+def test_installer_ensure_ready_errors(install_mockery, monkeypatch):
     const_arg = installer_args(['trivial-install-test-package'], {})
     installer = create_installer(const_arg)
     spec = installer.build_requests[0].pkg.spec
@@ -316,14 +302,14 @@ def test_installer_ensure_ready_errors(install_mockery):
 
     # Force an upstream package error
     spec.external_path, spec.external_modules = path, modules
-    spec.package._installed_upstream = True
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", True)
     msg = fmt.format('is upstream')
     with pytest.raises(inst.UpstreamPackageError, match=msg):
         installer._ensure_install_ready(spec.package)
 
     # Force an install lock error, which should occur naturally since
     # we are calling an internal method prior to any lock-related setup
-    spec.package._installed_upstream = False
+    monkeypatch.setattr(spack.spec.Spec, "installed_upstream", False)
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
@@ -428,9 +414,10 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 
 
 def test_package_id_err(install_mockery):
-    pkg = spack.repo.get('trivial-install-test-package')
+    s = spack.spec.Spec('trivial-install-test-package')
+    pkg_cls = spack.repo.path.get_pkg_class(s.name)
     with pytest.raises(ValueError, match='spec is not concretized'):
-        inst.package_id(pkg)
+        inst.package_id(pkg_cls(s))
 
 
 def test_package_id_ok(install_mockery):
@@ -461,8 +448,12 @@ def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     assert not packages
 
 
-def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
-                                                        monkeypatch):
+@pytest.mark.xfail(
+    reason="fails when assuming Spec.package can only be called on concrete specs"
+)
+def test_packages_needed_to_bootstrap_compiler_packages(
+        install_mockery, monkeypatch
+):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
 
@@ -520,7 +511,7 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=path):
+    with pytest.raises(IOError, match=path if not is_windows else ''):
         inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
@@ -533,6 +524,8 @@ def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     assert "Couldn't copy in provenance for cmake" in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="Not supported on Windows (yet)")
 def test_clear_failures_success(install_mockery):
     """Test the clear_failures happy path."""
 
@@ -652,7 +645,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
     request = installer.build_requests[0]
 
     # Mock the known dependent, b, as installed upstream
-    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    monkeypatch.setattr(spack.spec.Spec, 'installed_upstream', True)
     installer._check_deps_status(request)
     assert list(installer.installed)[0].startswith('b')
 
@@ -729,7 +722,7 @@ def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
     task.compiler = True
 
     # Preclude any meaningful side-effects
-    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(spack.package_base.PackageBase, 'unit_test_check', _true)
     monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
     monkeypatch.setattr(spack.build_environment, 'start_build_process', _noop)
     monkeypatch.setattr(spack.database.Database, 'add', _noop)
@@ -833,7 +826,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     def _get_group(spec):
         return mock_group
 
-    def _chgrp(path, group):
+    def _chgrp(path, group, follow_symlinks=True):
         tty.msg(mock_chgrp_msg.format(path, group))
 
     monkeypatch.setattr(prefs, 'get_package_group', _get_group)
@@ -845,6 +838,10 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
+    # Regex matching with Windows style paths typically fails
+    # so we skip the match check here
+    if is_windows:
+        metadatadir = None
     # Should fail with a "not a directory" error
     with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)
@@ -1058,7 +1055,7 @@ def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
     # This will prevent b from installing, which will cause the build of a
     # to be skipped.
     monkeypatch.setattr(
-        spack.package.PackageBase,
+        spack.package_base.PackageBase,
         'do_patch',
         _test_install_fail_fast_on_except_patch
     )
@@ -1177,3 +1174,106 @@ def test_install_skip_patch(install_mockery, mock_fetch):
 
     spec, install_args = const_arg[0]
     assert inst.package_id(spec.package) in installer.installed
+
+
+def test_overwrite_install_backup_success(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should restore the backup
+    of the original prefix, and leave the original spec marked installed.
+    """
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists with some trivial file
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    class InstallerThatWipesThePrefixDir:
+        def _install_task(self, task):
+            shutil.rmtree(task.pkg.prefix, ignore_errors=True)
+            fs.mkdirp(task.pkg.prefix)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    fake_installer = InstallerThatWipesThePrefixDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure the package is not marked uninstalled and the original dir
+    # is back.
+    assert not fake_db.called
+    assert os.path.exists(installed_file)
+
+
+def test_overwrite_install_backup_failure(temporary_store, config, mock_packages,
+                                          tmpdir):
+    """
+    When doing an overwrite install that fails, Spack should try to recover the
+    original prefix. If that fails, the spec is lost, and it should be removed
+    from the database.
+    """
+    class InstallerThatAccidentallyDeletesTheBackupDir:
+        def _install_task(self, task):
+            # Remove the backup directory, which is at the same level as the prefix,
+            # starting with .backup
+            backup_glob = os.path.join(
+                os.path.dirname(os.path.normpath(task.pkg.prefix)),
+                '.backup*'
+            )
+            for backup in glob.iglob(backup_glob):
+                shutil.rmtree(backup)
+            raise Exception("Some fatal install error")
+
+    class FakeDatabase:
+        called = False
+
+        def remove(self, spec):
+            self.called = True
+
+    # Get a build task. TODO: refactor this to avoid calling internal methods
+    const_arg = installer_args(["b"])
+    installer = create_installer(const_arg)
+    installer._init_queue()
+    task = installer._pop_task()
+
+    # Make sure the install prefix exists
+    installed_file = os.path.join(task.pkg.prefix, 'some_file')
+    fs.touchp(installed_file)
+
+    fake_installer = InstallerThatAccidentallyDeletesTheBackupDir()
+    fake_db = FakeDatabase()
+    overwrite_install = inst.OverwriteInstall(fake_installer, fake_db, task)
+
+    # Installation should throw the installation exception, not the backup
+    # failure.
+    with pytest.raises(Exception, match='Some fatal install error'):
+        overwrite_install.install()
+
+    # Make sure that `remove` was called on the database after an unsuccessful
+    # attempt to restore the backup.
+    assert fake_db.called
+
+
+def test_term_status_line():
+    # Smoke test for TermStatusLine; to actually test output it would be great
+    # to pass a StringIO instance, but we use tty.msg() internally which does not
+    # accept that. `with log_output(buf)` doesn't really work because it trims output
+    # and we actually want to test for escape sequences etc.
+    x = inst.TermStatusLine(enabled=True)
+    x.add("a")
+    x.add("b")
+    x.clear()

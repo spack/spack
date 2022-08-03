@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,14 @@
 import spack.variant
 from spack.directives import conflicts, depends_on, variant
 from spack.multimethod import when
-from spack.package import PackageBase
+from spack.package_base import PackageBase
 
 
 class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
 
-    Maintainers: ax3l, Rombur
+    Maintainers: ax3l, Rombur, davidbeckingsale
     """
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
@@ -36,7 +36,9 @@ class CudaPackage(PackageBase):
 
     variant('cuda_arch',
             description='CUDA architecture',
-            values=spack.variant.any_combination_of(*cuda_arch_values))
+            values=spack.variant.any_combination_of(*cuda_arch_values),
+            sticky=True,
+            when='+cuda')
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
@@ -86,30 +88,33 @@ class CudaPackage(PackageBase):
     # apply to platform=darwin. We currently do not provide conflicts for
     # platform=darwin with %apple-clang.
 
-    # GCC
-    # According to
-    # https://github.com/spack/spack/pull/25054#issuecomment-886531664
-    # these conflicts are valid independently from the architecture
-
-    # minimum supported versions
-    conflicts('%gcc@:4', when='+cuda ^cuda@11.0:')
-    conflicts('%gcc@:5', when='+cuda ^cuda@11.4:')
-
-    # maximum supported version
-    # NOTE:
-    # in order to not constrain future cuda version to old gcc versions,
-    # it has been decided to use an upper bound for the latest version.
-    # This implies that the last one in the list has to be updated at
-    # each release of a new cuda minor version.
-    conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
-    conflicts('%gcc@11:', when='+cuda ^cuda@:11.4')
-
-    # https://gist.github.com/ax3l/9489132#gistcomment-3860114
-    conflicts('%gcc@10', when='+cuda ^cuda@:11.4.0')
-
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    with when('~allow-unsupported-compilers'):
+    with when('^cuda~allow-unsupported-compilers'):
+        # GCC
+        # According to
+        # https://github.com/spack/spack/pull/25054#issuecomment-886531664
+        # these conflicts are valid independently from the architecture
+
+        # minimum supported versions
+        conflicts('%gcc@:4', when='+cuda ^cuda@11.0:')
+        conflicts('%gcc@:5', when='+cuda ^cuda@11.4:')
+
+        # maximum supported version
+        # NOTE:
+        # in order to not constrain future cuda version to old gcc versions,
+        # it has been decided to use an upper bound for the latest version.
+        # This implies that the last one in the list has to be updated at
+        # each release of a new cuda minor version.
+        conflicts('%gcc@10:', when='+cuda ^cuda@:11.0')
+        conflicts('%gcc@11:', when='+cuda ^cuda@:11.4.0')
+        conflicts('%gcc@12:', when='+cuda ^cuda@:11.7')
+        conflicts('%clang@12:', when='+cuda ^cuda@:11.4.0')
+        conflicts('%clang@13:', when='+cuda ^cuda@:11.5')
+        conflicts('%clang@14:', when='+cuda ^cuda@:11.7')
+
+        # https://gist.github.com/ax3l/9489132#gistcomment-3860114
+        conflicts('%gcc@10', when='+cuda ^cuda@:11.4.0')
         conflicts('%gcc@5:', when='+cuda ^cuda@:7.5 target=x86_64:')
         conflicts('%gcc@6:', when='+cuda ^cuda@:8 target=x86_64:')
         conflicts('%gcc@7:', when='+cuda ^cuda@:9.1 target=x86_64:')
@@ -184,7 +189,3 @@ class CudaPackage(PackageBase):
         # Darwin.
         # TODO: add missing conflicts for %apple-clang cuda@:10
         conflicts('platform=darwin', when='+cuda ^cuda@11.0.2: ')
-
-    # Make sure cuda_arch can not be used without +cuda
-    for value in cuda_arch_values:
-        conflicts('~cuda', when='cuda_arch=' + value)

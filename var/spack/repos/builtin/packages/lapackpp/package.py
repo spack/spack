@@ -1,16 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-from spack import *
+from spack.package import *
 
 # Each LAPACK++ version requires a specific BLAS++ version
 _versions = [
     # LAPACK++,     BLAS++
     ['master',     'master'],
+    ['2022.05.00', '2022.05.00'],
     ['2020.10.00', '2020.10.00'],
     ['2020.10.01', '2020.10.01'],
     ['2020.10.02', '2020.10.02'],
@@ -29,6 +30,7 @@ class Lapackpp(CMakePackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
+    version('2022.05.00', sha256='d0f548cbc9d4ac46b1f961834d113173c0b433074f77bcfd69c7c31cb89b7ff2')
     version('2021.04.00', sha256='67abd8de9757dba86eb5d154cdb91f176b6c8b2b7d8e2a669ba0c221c4bb60ed')
     version('2020.10.02', sha256='8dde9b95d75b494c4f8b893d68034e95b7a7541981359acb97b6c1c4a9c45cd9')
     version('2020.10.01', sha256='ecd659730b4c3cfb8d2595f9bbb6af65d96b79397db654f17fe045bdfea841c0')
@@ -45,11 +47,17 @@ class Lapackpp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        return [
+
+        args = [
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
             '-Dbuild_tests=%s'       % self.run_tests,
             '-DLAPACK_LIBRARIES=%s'  % spec['lapack'].libs.joined(';')
         ]
+
+        if spec['blas'].name == 'cray-libsci':
+            args.append(self.define('BLA_VENDOR', 'CRAY'))
+
+        return args
 
     def check(self):
         # If the tester fails to build, ensure that the check() fails.
@@ -58,3 +66,8 @@ class Lapackpp(CMakePackage):
                 make('check')
         else:
             raise Exception('The tester was not built!')
+
+    def flag_handler(self, name, flags):
+        if (self.spec['blas'].name == 'cray-libsci') and name == 'cxxflags':
+            flags.append('-DLAPACK_FORTRAN_ADD_')
+        return (None, None, flags)

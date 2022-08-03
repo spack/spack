@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyOpencensus(PythonPackage):
@@ -14,4 +17,4 @@ class PyOpencensus(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-opencensus-context@0.1.1', type=('build', 'run'))
-    depends_on('py-google-api-core@1.0:1.999', type=('build', 'run'))
+    depends_on('py-google-api-core@1.0:1', type=('build', 'run'))

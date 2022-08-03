@@ -1,7 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
 
 import pytest
 
@@ -16,8 +18,11 @@ libdwarf_spec_string = 'libdwarf target=x86_64'
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
 
+pytestmark = pytest.mark.skipif(sys.platform == "win32",
+                                reason="does not run on windows")
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+
+@pytest.mark.usefixtures('config', 'mock_packages', 'mock_module_filename')
 class TestTcl(object):
 
     def test_simple_case(self, modulefile_content, module_configuration):
@@ -92,10 +97,16 @@ class TestTcl(object):
 
         assert len([x for x in content if 'prereq' in x]) == 5
 
-    def test_alter_environment(self, modulefile_content, module_configuration):
+    # DEPRECATED: remove blacklist in v0.20
+    @pytest.mark.parametrize(
+        "config_name", ["alter_environment", "blacklist_environment"]
+    )
+    def test_alter_environment(
+            self, modulefile_content, module_configuration, config_name
+    ):
         """Tests modifications to run-time environment."""
 
-        module_configuration('alter_environment')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks platform=test target=x86_64')
 
         assert len([x for x in content
@@ -124,10 +135,11 @@ class TestTcl(object):
         assert len([x for x in content if 'module load foo/bar' in x]) == 1
         assert len([x for x in content if 'setenv LIBDWARF_ROOT' in x]) == 1
 
-    def test_blacklist(self, modulefile_content, module_configuration):
-        """Tests blacklisting the generation of selected modules."""
+    @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
+    def test_exclude(self, modulefile_content, module_configuration, config_name):
+        """Tests excluding the generation of selected modules."""
 
-        module_configuration('blacklist')
+        module_configuration(config_name)
         content = modulefile_content('mpileaks ^zmpi')
 
         assert len([x for x in content if 'is-loaded' in x]) == 1
@@ -194,7 +206,9 @@ class TestTcl(object):
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
 
-    def test_invalid_naming_scheme(self, factory, module_configuration):
+    def test_invalid_naming_scheme(
+        self, factory, module_configuration, mock_module_filename
+    ):
         """Tests the evaluation of an invalid naming scheme."""
 
         module_configuration('invalid_naming_scheme')
@@ -205,7 +219,9 @@ class TestTcl(object):
         with pytest.raises(RuntimeError):
             writer.layout.use_name
 
-    def test_invalid_token_in_env_name(self, factory, module_configuration):
+    def test_invalid_token_in_env_name(
+        self, factory, module_configuration, mock_module_filename
+    ):
         """Tests setting environment variables with an invalid name."""
 
         module_configuration('invalid_token_in_env_var_name')
@@ -350,24 +366,27 @@ class TestTcl(object):
 
     @pytest.mark.regression('4400')
     @pytest.mark.db
-    def test_blacklist_implicits(
-            self, modulefile_content, module_configuration, database
+    @pytest.mark.parametrize(
+        "config_name", ["exclude_implicits", "blacklist_implicits"]
+    )
+    def test_exclude_implicits(
+            self, modulefile_content, module_configuration, database, config_name
     ):
-        module_configuration('blacklist_implicits')
+        module_configuration(config_name)
 
         # mpileaks has been installed explicitly when setting up
         # the tests database
         mpileaks_specs = database.query('mpileaks')
         for item in mpileaks_specs:
             writer = writer_cls(item, 'default')
-            assert not writer.conf.blacklisted
+            assert not writer.conf.excluded
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
         callpath_specs = database.query('callpath')
         for item in callpath_specs:
             writer = writer_cls(item, 'default')
-            assert writer.conf.blacklisted
+            assert writer.conf.excluded
 
     @pytest.mark.regression('9624')
     @pytest.mark.db
@@ -386,21 +405,9 @@ class TestTcl(object):
         content = modulefile_content('mpileaks ^mpich')
         assert len([x for x in content if 'is-loaded' in x]) == 0
 
-    def test_config_backwards_compat(self, mutable_config):
-        settings = {
-            'enable': ['tcl'],
-            'tcl': {
-                'all': {
-                    'conflict': ['{name}']
-                }
-            }
-        }
+    def test_modules_no_arch(self, factory, module_configuration):
+        module_configuration('no_arch')
+        module, spec = factory(mpileaks_spec_string)
+        path = module.layout.filename
 
-        spack.config.set('modules:default', settings)
-        new_format = spack.modules.tcl.configuration('default')
-
-        spack.config.set('modules', settings)
-        old_format = spack.modules.tcl.configuration('default')
-
-        assert old_format == new_format
-        assert old_format == settings['tcl']
+        assert str(spec.os) not in path

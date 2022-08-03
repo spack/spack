@@ -1,0 +1,40 @@
+diff --git a/script/scons b/script/scons
+index d889e74..f1b5105 100755
+--- a/script/scons
++++ b/script/scons
+@@ -1,4 +1,4 @@
+-#! /usr/bin/env python
++#! /usr/bin/env python3
+ #
+ # SCons - a Software Constructor
+ #
+diff --git a/script/scons-configure-cache b/script/scons-configure-cache
+index ee11943..898dbef 100644
+--- a/script/scons-configure-cache
++++ b/script/scons-configure-cache
+@@ -1,4 +1,4 @@
+-#! /usr/bin/env python
++#! /usr/bin/env python3
+ #
+ # SCons - a Software Constructor
+ #
+diff --git a/script/sconsign b/script/sconsign
+index b1f7cd0..cc5c018 100644
+--- a/script/sconsign
++++ b/script/sconsign
+@@ -1,4 +1,4 @@
+-#! /usr/bin/env python
++#! /usr/bin/env python3
+ #
+ # SCons - a Software Constructor
+ #
+diff --git a/script/scons-time b/script/scons-time
+index c371d59..8d17718 100644
+--- a/script/scons-time
++++ b/script/scons-time
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ #
+ # scons-time - run SCons timings and collect statistics
+ #

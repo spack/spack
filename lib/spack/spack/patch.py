@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import hashlib
 import inspect
 import os
 import os.path
+import sys
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -19,7 +20,7 @@ import spack.stage
 import spack.util.spack_json as sjson
 from spack.util.compression import allowed_archive
 from spack.util.crypto import Checker, checksum
-from spack.util.executable import which
+from spack.util.executable import which, which_string
 
 
 def apply_patch(stage, patch_path, level=1, working_dir='.'):
@@ -32,7 +33,20 @@ def apply_patch(stage, patch_path, level=1, working_dir='.'):
         working_dir (str): relative path *within* the stage to change to
             (default '.')
     """
-    patch = which("patch", required=True)
+    git_utils_path = os.environ.get('PATH', '')
+    if sys.platform == 'win32':
+        git = which_string('git', required=True)
+        git_root = git.split('\\')[:-2]
+        git_root.extend(['usr', 'bin'])
+        git_utils_path = os.sep.join(git_root)
+
+    # TODO: Decouple Spack's patch support on Windows from Git
+    # for Windows, and instead have Spack directly fetch, install, and
+    # utilize that patch.
+    # Note for future developers: The GNU port of patch to windows
+    # has issues handling CRLF line endings unless the --binary
+    # flag is passed.
+    patch = which("patch", required=True, path=git_utils_path)
     with llnl.util.filesystem.working_dir(stage.source_path):
         patch('-s',
               '-p', str(level),
@@ -96,6 +110,12 @@ class Patch(object):
             'level': self.level,
             'working_dir': self.working_dir,
         }
+
+    def __eq__(self, other):
+        return self.sha256 == other.sha256
+
+    def __hash__(self):
+        return hash(self.sha256)
 
 
 class FilePatch(Patch):
@@ -264,11 +284,11 @@ def from_dict(dictionary):
     owner = dictionary.get('owner')
     if 'owner' not in dictionary:
         raise ValueError('Invalid patch dictionary: %s' % dictionary)
-    pkg = spack.repo.get(owner)
+    pkg_cls = spack.repo.path.get_pkg_class(owner)
 
     if 'url' in dictionary:
         return UrlPatch(
-            pkg,
+            pkg_cls,
             dictionary['url'],
             dictionary['level'],
             dictionary['working_dir'],
@@ -277,7 +297,7 @@ def from_dict(dictionary):
 
     elif 'relative_path' in dictionary:
         patch = FilePatch(
-            pkg,
+            pkg_cls,
             dictionary['relative_path'],
             dictionary['level'],
             dictionary['working_dir'])
@@ -336,7 +356,7 @@ class PatchCache(object):
 
         Arguments:
             sha256 (str): sha256 hash to look up
-            pkg (spack.package.Package): Package object to get patch for.
+            pkg (spack.package_base.Package): Package object to get patch for.
 
         We build patch objects lazily because building them requires that
         we have information about the package's location in its repo.
@@ -348,8 +368,12 @@ class PatchCache(object):
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))
 
-        patch_dict = sha_index.get(pkg.fullname)
-        if not patch_dict:
+        # Find patches for this class or any class it inherits from
+        for fullname in pkg.fullnames:
+            patch_dict = sha_index.get(fullname)
+            if patch_dict:
+                break
+        else:
             raise NoSuchPatchError(
                 "Couldn't find patch for package %s with sha256: %s"
                 % (pkg.fullname, sha256))
@@ -380,8 +404,8 @@ class PatchCache(object):
             del self.index[sha256]
 
         # update the index with per-package patch indexes
-        pkg = spack.repo.get(pkg_fullname)
-        partial_index = self._index_patches(pkg)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_fullname)
+        partial_index = self._index_patches(pkg_cls)
         for sha256, package_to_patch in partial_index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)
@@ -408,10 +432,10 @@ class PatchCache(object):
             for cond, dependency in conditions.items():
                 for pcond, patch_list in dependency.patches.items():
                     for patch in patch_list:
-                        dspec = spack.repo.get(dependency.spec.name)
+                        dspec_cls = spack.repo.path.get_pkg_class(dependency.spec.name)
                         patch_dict = patch.to_dict()
                         patch_dict.pop('sha256')  # save some space
-                        index[patch.sha256] = {dspec.fullname: patch_dict}
+                        index[patch.sha256] = {dspec_cls.fullname: patch_dict}
 
         return index
 

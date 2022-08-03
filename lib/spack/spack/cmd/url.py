@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ from llnl.util import tty
 
 import spack.fetch_strategy as fs
 import spack.repo
+import spack.spec
 import spack.util.crypto as crypto
 from spack.url import (
     UndetectableNameError,
@@ -147,13 +148,13 @@ def url_list(args):
     urls = set()
 
     # Gather set of URLs from all packages
-    for pkg in spack.repo.path.all_packages():
-        url = getattr(pkg, 'url', None)
-        urls = url_list_parsing(args, urls, url, pkg)
+    for pkg_cls in spack.repo.path.all_package_classes():
+        url = getattr(pkg_cls, 'url', None)
+        urls = url_list_parsing(args, urls, url, pkg_cls)
 
-        for params in pkg.versions.values():
+        for params in pkg_cls.versions.values():
             url = params.get('url', None)
-            urls = url_list_parsing(args, urls, url, pkg)
+            urls = url_list_parsing(args, urls, url, pkg_cls)
 
     # Print URLs
     for url in sorted(urls):
@@ -184,8 +185,9 @@ def url_summary(args):
     tty.msg('Generating a summary of URL parsing in Spack...')
 
     # Loop through all packages
-    for pkg in spack.repo.path.all_packages():
+    for pkg_cls in spack.repo.path.all_package_classes():
         urls = set()
+        pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
 
         url = getattr(pkg, 'url', None)
         if url:
@@ -318,19 +320,20 @@ def url_stats(args):
     version_stats = UrlStats()
     resource_stats = UrlStats()
 
-    for pkg in spack.repo.path.all_packages():
+    for pkg_cls in spack.repo.path.all_package_classes():
         npkgs += 1
 
-        for v in pkg.versions:
+        for v in pkg_cls.versions:
             try:
+                pkg = pkg_cls(spack.spec.Spec(pkg_cls.name))
                 fetcher = fs.for_package_version(pkg, v)
             except (fs.InvalidArgsError, fs.FetcherConflict):
                 continue
-            version_stats.add(pkg.name, fetcher)
+            version_stats.add(pkg_cls.name, fetcher)
 
-        for _, resources in pkg.resources.items():
+        for _, resources in pkg_cls.resources.items():
             for resource in resources:
-                resource_stats.add(pkg.name, resource.fetcher)
+                resource_stats.add(pkg_cls.name, resource.fetcher)
 
     # print a nice summary table
     tty.msg("URL stats for %d packages:" % npkgs)
@@ -390,8 +393,8 @@ def url_stats(args):
         tty.msg("Found %d issues." % total_issues)
         for issue_type, pkgs in issues.items():
             tty.msg("Package URLs with %s" % issue_type)
-            for pkg, pkg_issues in pkgs.items():
-                color.cprint("    @*C{%s}" % pkg)
+            for pkg_cls, pkg_issues in pkgs.items():
+                color.cprint("    @*C{%s}" % pkg_cls)
                 for issue in pkg_issues:
                     print("      %s" % issue)
 
@@ -422,7 +425,7 @@ def url_list_parsing(args, urls, url, pkg):
         urls (set): List of URLs that have already been added
         url (str or None): A URL to potentially add to ``urls`` depending on
             ``args``
-        pkg (spack.package.PackageBase): The Spack package
+        pkg (spack.package_base.PackageBase): The Spack package
 
     Returns:
         set: The updated set of ``urls``
@@ -470,7 +473,7 @@ def name_parsed_correctly(pkg, name):
     """Determine if the name of a package was correctly parsed.
 
     Args:
-        pkg (spack.package.PackageBase): The Spack package
+        pkg (spack.package_base.PackageBase): The Spack package
         name (str): The name that was extracted from the URL
 
     Returns:
@@ -487,7 +490,7 @@ def version_parsed_correctly(pkg, version):
     """Determine if the version of a package was correctly parsed.
 
     Args:
-        pkg (spack.package.PackageBase): The Spack package
+        pkg (spack.package_base.PackageBase): The Spack package
         version (str): The version that was extracted from the URL
 
     Returns:
