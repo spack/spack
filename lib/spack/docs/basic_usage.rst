@@ -1108,14 +1108,39 @@ set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
 or ``1.7``).  When you supply such a specifier to ``spack install``,
 it constrains the set of versions that Spack will install.
 
+For packages with a ``git`` attribute, ``git`` references 
+may be specified instead of a numerical version i.e. branches, tags 
+and commits. Spack will stage and build based off the ``git`` 
+reference provided.  Acceptable syntaxes for this are:
+
+.. code-block:: console
+   
+    # branches and tags
+   foo@git.develop # use the develop branch
+   foo@git.0.19 # use the 0.19 tag
+   
+   # commit hashes
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234 
+
+When using commit hashes a spack version needs to be paried to the hash.
+This allows Spack to solve build requirements that are based on the version.
+A version can be assigned with ``[hash]=[version]`` syntax.
+There is a constratint that the specified version must be known to Spack
+either through the package definition, or in the configuration i.e. ``packages.yaml``.
+
+
+If a version is not supplied then the tags in the git repo to determine
+the nearest previous version known to Spack. Details
+about how versions are compared and how Spack determines if one
+version is less than another are discussed in the developer guide.
+
 If the version spec is not provided, then Spack will choose one
 according to policies set for the particular spack installation.  If
 the spec is ambiguous, i.e. it could match multiple versions, Spack
 will choose a version within the spec's constraints according to
 policies set for the particular Spack installation.
 
-Details about how versions are compared and how Spack determines if
-one version is less than another are discussed in the developer guide.
 
 ^^^^^^^^^^^^^^^^^^
 Compiler specifier
