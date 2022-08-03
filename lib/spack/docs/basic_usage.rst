@@ -1120,14 +1120,19 @@ reference provided.  Acceptable syntaxes for this are:
    foo@git.0.19 # use the 0.19 tag
    
     # commit hashes
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # user specified version reference
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234 # version reference must be found by spack
-
-When using commit hashes a reference spack version needs to be paried to the hash.
+   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
+   
+When using git refs a reference spack version may to be provided with the git reference.
 This allows Spack to solve build requirements that are based on the version.
-A version can be assigned with ``[hash]=[version]`` syntax.
-There is a constratint that the specified version must be known to Spack
+A version can be assigned with ``[ref]=[version]`` syntax.
+There is a constraint that the specified version must be known to Spack
 either through the package definition, or in the configuration i.e. ``packages.yaml``.
+
+.. code-block:: console
+
+   foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
 
 
 If a version is not supplied then the tags in the git repo to determine
