@@ -1764,5 +1764,5 @@ class TestConcretize(object):
         with pytest.raises(
             UnsatisfiableSpecError,
             match="The reference version 'main' for package 'develop-branch-version'",
-        ):  # for package 'develop-branch-version'"):
+        ):
             s.concretized()
