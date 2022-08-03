@@ -1744,23 +1744,23 @@ class TestConcretize(object):
         assert hash in str(c)
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-    def test_git_hash_version_is_equivalent_to_specified_infinity_version(self):
+    @pytest.mark.parameterized("git_ref", ("a" * 40, "0.2.14"))
+    def test_git_ref_version_is_equivalent_to_specified_infinity_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer cannot account for git hashes")
-        hash = "a" * 40
-        s = Spec("depends-on-develop ^develop-branch-version@%s=develop" % hash)
+        s = Spec("depends-on-develop ^develop-branch-version@%s=develop" % git_ref)
         c = s.concretized()
-        assert hash in str(c)
+        assert git_ref in str(c)
         assert s.satisfies("@develop")
-        assert s.satisfies("@10:")
+        assert s.satisfies("@0.1:")
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
-    def test_git_hash_version_is_skipped_if_not_valid(self):
+    @pytest.mark.parameterized("git_ref", ("a" * 40, "0.2.14"))
+    def test_git_ref_version_is_skipped_if_not_valid(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer cannot account for git hashes")
-        hash = "a" * 40
         # main is not defined in the package.py for this file
-        s = Spec("depends-on-develop ^develop-branch-version@%s=main" % hash)
+        s = Spec("depends-on-develop ^develop-branch-version@%s=main" % git_ref)
         with pytest.raises(
             UnsatisfiableSpecError,
             match="The reference version 'main' for package 'develop-branch-version'",
