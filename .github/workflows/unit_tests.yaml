@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
     - name: Install Python Packages
@@ -39,7 +39,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
     - name: Install Python packages
@@ -114,7 +114,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -179,7 +179,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
     - name: Install System packages
@@ -245,7 +245,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
     - name: Install System packages
@@ -294,7 +294,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -337,7 +337,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08 # @v2
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
     - name: Install Python packages
