@@ -1141,6 +1141,8 @@ the spec is ambiguous, i.e. it could match multiple versions, Spack
 will choose a version within the spec's constraints according to
 policies set for the particular Spack installation.
 
+Details about how versions are compared and how Spack determines if
+one version is less than another are discussed in the developer guide.
 
 ^^^^^^^^^^^^^^^^^^
 Compiler specifier
