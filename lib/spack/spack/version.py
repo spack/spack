@@ -505,7 +505,7 @@ class GitVersion(VersionBase):
     handles caching of information from the git repo. When executing
     comparisons with a git commit version, Spack queries the
     ``CommitLookup`` for the most recent version previous to this
-    commit, as well as the distance between them expressed as a number
+    git ref, as well as the distance between them expressed as a number
     of commits. If the previous version is ``X.Y.Z`` and the distance
     is ``D``, the git commit version is represented by the tuple ``(X,
     Y, Z, '', D)``. The component ``''`` cannot be parsed as part of
