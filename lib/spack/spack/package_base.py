@@ -373,6 +373,14 @@ class PackageMeta(
                             phase = getattr(base, phase_attr, None)
                             if phase is not None:
                                 break
+                        else:
+                            tty.die(
+                                """\
+                            bad directive @{0}() for functions {funcs} in package {1}:
+                            no phase "{2}" in any base {3}""".format(
+                                    check_name, name, phase_name, bases, funcs=funcs
+                                )
+                            )
 
                         phase = attr_dict[phase_attr] = phase.copy()
                     getattr(phase, check_name).extend(funcs)
