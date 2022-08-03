@@ -1135,7 +1135,7 @@ either through the package definition, or in the configuration i.e. ``packages.y
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
 
 
-If a version is not supplied then the tags in the git repo to determine
+If a version is not supplied then the tags in the git repo are used to determine
 the nearest previous version known to Spack. Details
 about how versions are compared and how Spack determines if one
 version is less than another are discussed in the developer guide.
