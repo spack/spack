@@ -376,11 +376,13 @@ class PackageMeta(
                         else:
                             tty.die(
                                 """\
-bad directive @{directive}() for functions {funcs} in package {pkg}:""".format(
-                                    directive=check_name, funcs=funcs, pkg=name
+bad callback decorator @{decorator}() for functions {funcs} in package {pkg}:""".format(
+                                    decorator=check_name,
+                                    funcs=[f.__name__ for f in funcs],
+                                    pkg=name,
                                 ),
-                                'no phase "{phase}" in any base {bases}'.format(
-                                    phase=phase_name, bases=bases
+                                'no phase "{phase}" in {pkg} or any base class thereof'.format(
+                                    phase=phase_name, pkg=name
                                 ),
                             )
 
