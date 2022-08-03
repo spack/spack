@@ -379,7 +379,7 @@ class QuantumEspresso(CMakePackage):
     @run_before("cmake")
     def caveats(self):
         if "+cuda~openmp" in self.spec:
-            tty.warn("CUDA without OpenMP could incur in severe performance degredation !!!")
+            tty.warn("CUDA without OpenMP could incur in severe performance degradation !!!")
 
     def cmake_args(self):
         spec = self.spec
