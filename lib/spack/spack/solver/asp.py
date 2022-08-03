@@ -760,17 +760,22 @@ class SpackSolverSetup(object):
             )
 
         for v in most_to_least_preferred:
-            if isinstance(v.version, spack.version.GitVersion):
-                ref_version = spack.version.Version(v.version.ref_version)
+            # There are two paths for creating the ref_version in GitVersions.
+            # The first uses a lookup to supply a tag and distance as a version.
+            # The second is user specified and can be resolved as a standard version.
+            # This second option is constrained such that the user version must be known to Spack
+            if isinstance(v.version, spack.version.GitVersion) and isinstance(
+                v.version.ref_version, spack.version.VersionBase
+            ):
+                ref_version = v.version.ref_version
                 self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
-                # disqualify any git supplied version from user if they weren't already known
-                # versions in spack
+
                 if not any(ref_version == dv.version for dv in most_to_least_preferred):
                     msg = (
                         "The reference version '{version}' for package '{package}' is not defined."
                         " Either choose another reference version or define '{version}' in your"
                         " version preferences or package.py file for {package}.".format(
-                            package=pkg.name, version=v.version.ref_version
+                            package=pkg.name, version=str(ref_version)
                         )
                     )
 

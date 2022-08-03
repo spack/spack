@@ -474,7 +474,8 @@ class GitVersion(VersionBase):
         pruned_string = string[4:] if git_prefix else string
 
         if "=" in pruned_string:
-            self.ref, self.ref_version = pruned_string.split("=")
+            self.ref, ref_ver_str = pruned_string.split("=")
+            self.ref_version = Version(ref_ver_str)
         else:
             self.ref = pruned_string
 

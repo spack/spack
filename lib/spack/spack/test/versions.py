@@ -744,4 +744,4 @@ def test_git_hash_can_be_assigned_a_version(vstring, eq_vstring):
     assert v.is_commit
     assert v.is_ref
     assert not v._ref_lookup
-    assert v_equivalent == Version(v.ref_version)
+    assert v_equivalent == v.ref_version
