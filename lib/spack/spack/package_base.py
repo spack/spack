@@ -376,10 +376,12 @@ class PackageMeta(
                         else:
                             tty.die(
                                 """\
-                            bad directive @{0}() for functions {funcs} in package {1}:
-                            no phase "{2}" in any base {3}""".format(
-                                    check_name, name, phase_name, bases, funcs=funcs
-                                )
+bad directive @{directive}() for functions {funcs} in package {pkg}:""".format(
+                                    directive=check_name, funcs=funcs, pkg=name
+                                ),
+                                'no phase "{phase}" in any base {bases}'.format(
+                                    phase=phase_name, bases=bases
+                                ),
                             )
 
                         phase = attr_dict[phase_attr] = phase.copy()
