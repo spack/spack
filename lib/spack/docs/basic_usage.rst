@@ -1123,7 +1123,7 @@ reference provided.  Acceptable syntaxes for this are:
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
    
-When using git refs a reference spack version may to be provided with the git reference.
+When using git reference a corresponding version may be paired to the git reference.
 This allows Spack to solve build requirements that are based on the version.
 A version can be assigned with ``[ref]=[version]`` syntax.
 There is a constraint that the specified version must be known to Spack
