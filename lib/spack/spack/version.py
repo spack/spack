@@ -196,7 +196,7 @@ class VersionBase(object):
     Versions are compared by converting to a tuple and comparing
     lexicographically.
 
-    The most common Versions are numeric, and are parsed from strings
+    The most common Versions are alpha-numeric, and are parsed from strings
     such as ``2.3.0`` or ``1.2-5``. These Versions are represented by
     the tuples ``(2, 3, 0)`` and ``(1, 2, 5)`` respectively.
 
