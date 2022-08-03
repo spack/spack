@@ -318,7 +318,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
     depends_on("zlib")
     depends_on("perl@5.14.0:", type=("build", "test"))
-    depends_on("ca-certificates-mozilla", type=("build", "run"), when="certs=mozilla")
+    depends_on("ca-certificates-mozilla", type="build", when="certs=mozilla")
     depends_on("nasm", when="platform=windows")
 
     patch(
@@ -473,7 +473,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
                 os.symlink(sys_certs, pkg_certs)
 
     @run_after("install")
-    def link_mozilla_certs(self):
+    def copy_mozilla_certs(self):
         if self.spec.variants["certs"].value != "mozilla":
             return
 
@@ -482,9 +482,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         mozilla_pem = self.spec["ca-certificates-mozilla"].pem_path
         pkg_cert = join_path(pkg_dir, "cert.pem")
-
-        if not os.path.exists(pkg_cert):
-            os.symlink(mozilla_pem, pkg_cert)
+        install(mozilla_pem, pkg_cert)
 
     def patch(self):
         if self.spec.satisfies("%nvhpc"):
