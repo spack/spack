@@ -225,7 +225,7 @@ class Ascent(CMakePackage, CudaPackage):
 
     @property
     def root_cmakelists_dir(self):
-        return os.path.join(self.stage.source_path, 'src')
+        return os.path.join(self.stage.source_path, "src")
 
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
@@ -456,7 +456,7 @@ class Ascent(CMakePackage, CudaPackage):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC" and  "@3.14" in spec["cmake"]:
+            if cpp_compiler == "CC" and "@3.14" in spec["cmake"]:
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"
