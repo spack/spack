@@ -118,11 +118,9 @@ class Vasp(MakefilePackage):
 
         # Recent versions of vasp have renamed the makefile.include files
         # to leave out the linux_ string
-        if os.path.exists(make_include):
-            os.rename(make_include, 'makefile.include')
-        else:
-            new_make_include = make_include.replace('linux_', '')
-            os.rename(new_make_include, 'makefile.include')
+        if not os.path.exists(make_include):
+            make_include = make_include.replace('linux_', '')
+        os.rename(make_include, 'makefile.include')
 
         # This bunch of 'filter_file()' is to make these options settable
         # as environment variables
