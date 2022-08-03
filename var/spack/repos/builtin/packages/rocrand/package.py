@@ -171,8 +171,9 @@ class Rocrand(CMakePackage):
             with working_dir(rocrand_path):
                 for header_file in rocrand_includes:
                     os.symlink(join_path("include", header_file), header_file)
-        else:
-            os.mkdir(os.path.join(self.prefix, "hiprand"))
+        elif self.spec.satisfies("@5.1.0:5.1.3"):
+            if not os.path.isdir(os.path.join(self.prefix, "hiprand")):
+                os.mkdir(os.path.join(self.prefix, "hiprand"))
             os.mkdir(os.path.join(self.prefix, "hiprand", "include"))
             hiprand_include_path = join_path(self.prefix, "include", "hiprand")
             with working_dir(hiprand_include_path):
