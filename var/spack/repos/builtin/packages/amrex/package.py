@@ -63,7 +63,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
     # Config options
-    variant("dimensions", default="3", description="Dimensionality", values=("2", "3"))
+    variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
