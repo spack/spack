@@ -284,6 +284,19 @@ class ArchSpec(object):
 
         self.platform, self.os, self.target = platform_tuple
 
+    @staticmethod
+    def override(init_spec, change_spec):
+        new_spec = init_spec.copy()
+        if change_spec.platform:
+            new_spec.platform = change_spec.platform
+            # TODO: if the platform is changed to something that is incompatible
+            # with the current os, we should implicitly remove it
+        if change_spec.os:
+            new_spec.os = change_spec.os
+        if change_spec.target:
+            new_spec.target = change_spec.target
+        return new_spec
+
     def _autospec(self, spec_like):
         if isinstance(spec_like, ArchSpec):
             return spec_like
@@ -2244,15 +2257,19 @@ class Spec(object):
 
     @staticmethod
     def override(init_spec, change_spec):
+        # TODO: this doesn't account for the case where the changed spec
+        # (and the user spec) have dependencies
         new_spec = init_spec.copy()
+        if change_spec.versions:
+            new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             new_spec.variants[variant] = value
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
-        if change_spec.arch:
-            new_spec.arch = ArchSpec.override(
-                new_spec.arch,
-                change_spec.arch
+        if change_spec.architecture:
+            new_spec.architecture = ArchSpec.override(
+                new_spec.architecture,
+                change_spec.architecture
             )
         return new_spec
 

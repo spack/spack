@@ -1039,15 +1039,21 @@ class Environment(object):
 
         list_to_change = self.spec_lists[list_name]
 
-        matches = [(i, s) for (i, s) in enumerate(list_to_change)
-                   if s.name == user_spec.name]
-        if not matches:
+        match = False
+        new_speclist = SpecList(list_name)
+        for i, spec in enumerate(list_to_change):
+            if spec.name == user_spec.name:
+                new_speclist.add(Spec.override(spec, user_spec))
+                match = True
+            else:
+                new_speclist.add(spec)
+
+        if not match:
             raise ValueError(
                 "There are no specs named {0} in {1}"
                 .format(user_spec.name, list_name)
             )
-        for index, match in matches:
-            list_to_change[i] = Spec.override(list_to_change_[i], user_spec)
+        self.spec_lists[list_name] = new_speclist
 
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):

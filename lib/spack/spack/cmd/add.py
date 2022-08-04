@@ -33,7 +33,7 @@ def add(parser, args):
     with env.write_transaction():
         for spec in spack.cmd.parse_specs(args.specs):
             if args.change:
-                env.change(spec)
+                env.change_existing_spec(spec)
             elif not env.add(spec, args.list_name):
                 tty.msg("Package {0} was already added to {1}".format(spec.name, env.name))
             else:
