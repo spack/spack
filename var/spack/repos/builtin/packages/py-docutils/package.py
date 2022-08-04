@@ -39,6 +39,8 @@ class PyDocutils(PythonPackage):
     @run_after("install")
     def post_install(self):
         bin_path = self.prefix.bin
+        if not os.path.exists(bin_path):
+            return
         for file in os.listdir(bin_path):
             if file.endswith(".py"):
                 os.symlink(os.path.join(bin_path, file), os.path.join(bin_path, file[:-3]))
