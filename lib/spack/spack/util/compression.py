@@ -244,6 +244,7 @@ def decompressor_for(path):
     Args:
         path (str): path of the archive file requiring decompression
     """
+    import pdb; pdb.set_trace()
     ext = extension_from_file(path, decompress=True)
     if not allowed_archive(ext):
         raise CommandNotFoundError("Cannot extract archive, \
@@ -371,7 +372,7 @@ class BZipFileType(CompressedFileTypeInterface):
     def decomp_in_memory(cls, stream):
         if is_bz2_supported():
             return io.BytesIO(initial_bytes=bz2.BZ2Decompressor().decompress(
-                stream.read(), max_length=cls.offset() + cls.header_size()))
+                stream.read(), max_length=TarFileType.offset() + TarFileType.header_size()))
         return None
 
 
@@ -419,7 +420,7 @@ class GZipFileType(CompressedFileTypeInterface):
         if is_gzip_supported():
             return io.BytesIO(
                 initial_bytes=gzip.GzipFile(
-                    fileobj=stream).read(cls.offset() + cls.header_size()))
+                    fileobj=stream).read(TarFileType.offset() + TarFileType.header_size()))
         return None
 
 
@@ -434,7 +435,7 @@ class LzmaFileType(CompressedFileTypeInterface):
     @classmethod
     def decomp_in_memory(cls, stream):
         if is_lzma_supported():
-            max_size = cls.offset() + cls.header_size()
+            max_size = TarFileType.offset() + TarFileType.header_size()
             return io.BytesIO(initial_bytes=lzma.LZMADecompressor().decompress(
                 stream.read(max_size), max_length=max_size))
         return None
