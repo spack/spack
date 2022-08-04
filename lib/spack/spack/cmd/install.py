@@ -234,12 +234,12 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
-def install_specs(cli_args, kwargs, specs):
+def install_specs(cli_args, install_kwargs, specs):
     """Do the actual installation.
 
     Args:
         cli_args (argparse.Namespace): argparse namespace with command arguments
-        kwargs (dict):  keyword arguments
+        install_kwargs (dict):  keyword arguments
         specs (list):  list of (abstract, concrete) spec tuples
     """
 
@@ -310,9 +310,9 @@ def install_specs(cli_args, kwargs, specs):
                 tty.debug("Installing the following cli specs:")
                 for s in specs_to_install:
                     tty.debug("  {0}".format(s.name))
-                env.install_specs(specs_to_install, args=cli_args, **kwargs)
+                env.install_specs(specs_to_install, args=cli_args, **install_kwargs)
         else:
-            installs = [(concrete.package, kwargs) for _, concrete in specs]
+            installs = [(concrete.package, install_kwargs) for _, concrete in specs]
             builder = PackageInstaller(installs)
             builder.install()
     except spack.build_environment.InstallError as e:
@@ -353,8 +353,10 @@ def _create_log_reporter(args):
     return reporter
 
 
-def install_from_active_environment(install_kwargs, only_concrete, cli_test_arg, reporter):
-    """Install specs from the active environment
+def install_all_specs_from_active_environment(
+    install_kwargs, only_concrete, cli_test_arg, reporter
+):
+    """Install all specs from the active environment
 
     Args:
         install_kwargs (dict): dictionary of options to be passed to the installer
@@ -453,6 +455,30 @@ def concrete_specs_from_file(args):
     return result
 
 
+def get_user_confirmation_for_overwrite(concrete_specs, args):
+    installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
+    if not args.yes_to_all:
+        display_args = {"long": True, "show_flags": True, "variants": True}
+
+        if installed:
+            tty.msg("The following package specs will be " "reinstalled:\n")
+            spack.cmd.display_specs(installed, **display_args)
+
+        not_installed = list(filter(lambda x: x not in installed, concrete_specs))
+        if not_installed:
+            tty.msg(
+                "The following package specs are not installed and"
+                " the --overwrite flag was given. The package spec"
+                " will be newly installed:\n"
+            )
+            spack.cmd.display_specs(not_installed, **display_args)
+
+        # We have some specs, so one of the above must have been true
+        answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
+        if not answer:
+            tty.die("Reinstallation aborted.")
+
+
 def install(parser, args):
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
@@ -472,7 +498,7 @@ def install(parser, args):
 
     if not args.spec and not args.specfiles:
         # If there are no args but an active environment then install the packages from it.
-        install_from_active_environment(
+        install_all_specs_from_active_environment(
             install_kwargs=install_kwargs,
             only_concrete=args.only_concrete,
             cli_test_arg=args.test,
@@ -497,28 +523,6 @@ def install(parser, args):
 
     with reporter("build"):
         if args.overwrite:
-            installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
-            if not args.yes_to_all:
-                display_args = {"long": True, "show_flags": True, "variants": True}
-
-                if installed:
-                    tty.msg("The following package specs will be " "reinstalled:\n")
-                    spack.cmd.display_specs(installed, **display_args)
-
-                not_installed = list(filter(lambda x: x not in installed, concrete_specs))
-                if not_installed:
-                    tty.msg(
-                        "The following package specs are not installed and"
-                        " the --overwrite flag was given. The package spec"
-                        " will be newly installed:\n"
-                    )
-                    spack.cmd.display_specs(not_installed, **display_args)
-
-                # We have some specs, so one of the above must have been true
-                answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
-                if not answer:
-                    tty.die("Reinstallation aborted.")
-
-            # overwrite all concrete explicit specs from this build
+            get_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
         install_specs(args, install_kwargs, zip(abstract_specs, concrete_specs))
