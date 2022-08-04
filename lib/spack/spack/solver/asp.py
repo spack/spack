@@ -101,14 +101,7 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = [
-    "spec",
-    "external",
-    "packages_yaml",
-    "package_py",
-    "installed",
-]
-
+version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed"]
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
@@ -511,7 +504,10 @@ def _normalize_packages_yaml(packages_yaml):
                 entry["buildable"] = False
 
         externals = data.get("externals", [])
-        keyfn = lambda x: spack.spec.Spec(x["spec"]).name
+
+        def keyfn(x):
+            return spack.spec.Spec(x["spec"]).name
+
         for provider, specs in itertools.groupby(externals, key=keyfn):
             entry = normalized_yaml.setdefault(provider, {})
             entry.setdefault("externals", []).extend(specs)
@@ -792,6 +788,30 @@ class SpackSolverSetup(object):
                     version_origin_str[declared_version.origin],
                 )
             )
+
+        for v in most_to_least_preferred:
+            # There are two paths for creating the ref_version in GitVersions.
+            # The first uses a lookup to supply a tag and distance as a version.
+            # The second is user specified and can be resolved as a standard version.
+            # This second option is constrained such that the user version must be known to Spack
+            if (
+                isinstance(v.version, spack.version.GitVersion)
+                and v.version.user_supplied_reference
+            ):
+                ref_version = spack.version.Version(v.version.ref_version_str)
+                self.gen.fact(fn.version_equivalent(pkg.name, v.version, ref_version))
+                # disqualify any git supplied version from user if they weren't already known
+                # versions in spack
+                if not any(ref_version == dv.version for dv in most_to_least_preferred if v != dv):
+                    msg = (
+                        "The reference version '{version}' for package '{package}' is not defined."
+                        " Either choose another reference version or define '{version}' in your"
+                        " version preferences or package.py file for {package}.".format(
+                            package=pkg.name, version=str(ref_version)
+                        )
+                    )
+
+                    raise UnsatisfiableSpecError(msg)
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]

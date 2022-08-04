@@ -45,7 +45,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-]+$")
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -178,6 +178,8 @@ def is_git_version(string):
         return True
     elif len(string) == 40 and COMMIT_VERSION.match(string):
         return True
+    elif "=" in string:
+        return True
     return False
 
 
@@ -211,9 +213,13 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
+        self.separators, self.version = self._generate_seperators_and_components(string)
+
+    def _generate_seperators_and_components(self, string):
         segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
-        self.separators = tuple(m[2] for m in segments)
+        components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
+        separators = tuple(m[2] for m in segments)
+        return separators, components
 
     @property
     def dotted(self):
@@ -464,20 +470,29 @@ class GitVersion(VersionBase):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
-        git_prefix = string.startswith("git.")
-        self.ref = string[4:] if git_prefix else string
+        # An object that can lookup git refs to compare them to versions
+        self.user_supplied_reference = False
+        self._ref_lookup = None
+        self.ref_version = None
 
-        self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
+        git_prefix = string.startswith("git.")
+        pruned_string = string[4:] if git_prefix else string
+
+        if "=" in pruned_string:
+            self.ref, self.ref_version_str = pruned_string.split("=")
+            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            self.user_supplied_reference = True
+        else:
+            self.ref = pruned_string
+
+        self.is_commit = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
-        canonical_string = self.ref if self.is_commit else string
+        # unless we are assigning a version with =
+        canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
         super(GitVersion, self).__init__(canonical_string)
-
-        # An object that can lookup git refs to compare them to versions
-        self._ref_lookup = None
-        self.ref_version = None
 
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs
@@ -602,6 +617,10 @@ class GitVersion(VersionBase):
         # Sanity check we have a commit
         if not self.is_ref:
             tty.die("%s is not a git version." % self)
+
+        # don't need a lookup if we already have a version assigned
+        if self.ref_version:
+            return
 
         # Generate a commit looker-upper
         self._ref_lookup = CommitLookup(pkg_name)

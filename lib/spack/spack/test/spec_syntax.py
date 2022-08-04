@@ -185,6 +185,10 @@ class TestSpecSyntax(object):
             'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel',
         )
 
+    def test_spec_with_version_hash_pair(self):
+        hash = "abc12" * 8
+        self.check_parse("develop-branch-version@%s=develop" % hash)
+
     def test_full_specs(self):
         self.check_parse(
             "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4" " ^stackwalker@8.1_1e"
