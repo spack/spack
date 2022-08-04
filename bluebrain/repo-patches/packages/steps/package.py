@@ -35,6 +35,10 @@ class Steps(CMakePackage):
     variant("likwid", default=False, description="Build in likwid support (Instrumentor Interface)")
     variant("vesicle", default=True, when="@5:", description="Add vesicle model")
 
+    # Build with `ninja` instead of `make`
+    generator = "Ninja"
+    depends_on("ninja", type="build")
+
     depends_on("benchmark", type=("build", "test"))
     depends_on("boost", when="@:3")
     depends_on("boost", when="@4:", type="build")
