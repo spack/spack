@@ -89,13 +89,13 @@ spack:
         runner-attributes:
           image: ghcr.io/blue42u/e4s-leap-15:latest@sha256:baabf6938a24962d9ee865c956f3061ea90f73a310b27d18d283e6ddc42c0cc3
           tags: ["spack", "x86_64_v3"]
-      - match: ['os=rocky8 target=:x86_64_v3']
+      - match: ['os=almalinux8 target=:x86_64_v3']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-rockylinux-8:latest@sha256:7d2d75b5b76b826d6807753919ff0a494014c89eec00a089d400afe371b84d35
+          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:82b63e63a3424f6bce9b7d8c2dbd0597d90f78afe3712e8e094fc10c44e116bc
           tags: ["spack", "x86_64_v3"]
-      - match: ['os=rocky8 target=:graviton']
+      - match: ['os=almalinux8 target=:graviton']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-rockylinux-8:latest@sha256:c042160c0d045ed758393b4574a1e4e34edff20739b3b8273cfa56ef32b3cff0
+          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:1f5a5c4bfbd6023f9ddaa2450ef9f6a53a903a47d29b29dbd2e58390b43399e8
           tags: ["spack", "graviton"]
       - match: ['os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
