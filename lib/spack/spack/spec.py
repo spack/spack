@@ -2260,10 +2260,18 @@ class Spec(object):
         # TODO: this doesn't account for the case where the changed spec
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
+        package_cls = spack.repo.path.get_pkg_class(new_spec.name)
         if change_spec.versions:
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
-            new_spec.variants[variant] = value
+            if variant in package_cls.variants:
+                if variant in new_spec.variants:
+                    new_spec.variants.substitute(value)
+                else:
+                    new_spec.variants[variant] = value
+            else:
+                raise ValueError("{0} is not a variant of {1}"
+                                 .format(variant, new_spec.name))
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
         if change_spec.architecture:
