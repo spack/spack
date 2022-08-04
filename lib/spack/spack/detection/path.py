@@ -46,18 +46,20 @@ def executables_in_path(path_hints=None):
     # If we're on a Windows box, run vswhere,
     # steal the installationPath using windows_os.py logic,
     # construct paths to CMake and Ninja, add to PATH
-    path_hints = path_hints or spack.util.environment.get_path('PATH')
-    if sys.platform == 'win32':
+    path_hints = path_hints or spack.util.environment.get_path("PATH")
+    if sys.platform == "win32":
         msvc_paths = list(winOs.WindowsOs.vs_install_paths)
         msvc_cmake_paths = [
-            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
-                         "CMake", "CMake", "bin")
-            for path in msvc_paths]
+            os.path.join(
+                path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
+            )
+            for path in msvc_paths
+        ]
         path_hints = msvc_cmake_paths + path_hints
         msvc_ninja_paths = [
-            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft",
-                         "CMake", "Ninja")
-            for path in msvc_paths]
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
+            for path in msvc_paths
+        ]
         path_hints = msvc_ninja_paths + path_hints
         path_hints.extend(find_win32_additional_install_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
@@ -90,11 +92,13 @@ def libraries_in_ld_library_path(path_hints=None):
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables.
     """
-    path_hints = path_hints or \
-        spack.util.environment.get_path('LIBRARY_PATH') + \
-        spack.util.environment.get_path('LD_LIBRARY_PATH') + \
-        spack.util.environment.get_path('DYLD_LIBRARY_PATH') + \
-        spack.util.environment.get_path('DYLD_FALLBACK_LIBRARY_PATH')
+    path_hints = path_hints or spack.util.environment.get_path(
+        "LIBRARY_PATH"
+    ) + spack.util.environment.get_path("LD_LIBRARY_PATH") + spack.util.environment.get_path(
+        "DYLD_LIBRARY_PATH"
+    ) + spack.util.environment.get_path(
+        "DYLD_FALLBACK_LIBRARY_PATH"
+    )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
@@ -135,7 +139,7 @@ def by_library(packages_to_check, path_hints=None):
     path_to_lib_name = libraries_in_ld_library_path(path_hints=path_hints)
     lib_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
-        if hasattr(pkg, 'libraries'):
+        if hasattr(pkg, "libraries"):
             for lib in pkg.libraries:
                 lib_pattern_to_pkgs[lib].append(pkg)
 
@@ -151,18 +155,17 @@ def by_library(packages_to_check, path_hints=None):
     resolved_specs = {}  # spec -> lib found for the spec
 
     for pkg, libs in pkg_to_found_libs.items():
-        if not hasattr(pkg, 'determine_spec_details'):
+        if not hasattr(pkg, "determine_spec_details"):
             llnl.util.tty.warn(
                 "{0} must define 'determine_spec_details' in order"
                 " for Spack to detect externally-provided instances"
-                " of the package.".format(pkg.name))
+                " of the package.".format(pkg.name)
+            )
             continue
 
         for prefix, libs_in_prefix in sorted(_group_by_prefix(libs)):
             try:
-                specs = _convert_to_iterable(
-                    pkg.determine_spec_details(prefix, libs_in_prefix)
-                )
+                specs = _convert_to_iterable(pkg.determine_spec_details(prefix, libs_in_prefix))
             except Exception as e:
                 specs = []
                 msg = 'error detecting "{0}" from prefix {1} [{2}]'
@@ -170,10 +173,10 @@ def by_library(packages_to_check, path_hints=None):
 
             if not specs:
                 llnl.util.tty.debug(
-                    'The following libraries in {0} were decidedly not '
-                    'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(
-                        _convert_to_iterable(libs_in_prefix)))
+                    "The following libraries in {0} were decidedly not "
+                    "part of the package {1}: {2}".format(
+                        prefix, pkg.name, ", ".join(_convert_to_iterable(libs_in_prefix))
+                    )
                 )
 
             for spec in specs:
@@ -186,13 +189,12 @@ def by_library(packages_to_check, path_hints=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(
-                        _convert_to_iterable(resolved_specs[spec]))
+                    prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
 
                     llnl.util.tty.debug(
                         "Libraries in {0} and {1} are both associated"
-                        " with the same spec {2}"
-                        .format(prefix, prior_prefix, str(spec)))
+                        " with the same spec {2}".format(prefix, prior_prefix, str(spec))
+                    )
                     continue
                 else:
                     resolved_specs[spec] = prefix
@@ -200,17 +202,17 @@ def by_library(packages_to_check, path_hints=None):
                 try:
                     spec.validate_detection()
                 except Exception as e:
-                    msg = ('"{0}" has been detected on the system but will '
-                           'not be added to packages.yaml [reason={1}]')
+                    msg = (
+                        '"{0}" has been detected on the system but will '
+                        "not be added to packages.yaml [reason={1}]"
+                    )
                     llnl.util.tty.warn(msg.format(spec, str(e)))
                     continue
 
                 if spec.external_path:
                     pkg_prefix = spec.external_path
 
-                pkg_to_entries[pkg.name].append(
-                    DetectedPackage(spec=spec, prefix=pkg_prefix)
-                )
+                pkg_to_entries[pkg.name].append(DetectedPackage(spec=spec, prefix=pkg_prefix))
 
     return pkg_to_entries
 
@@ -220,15 +222,15 @@ def by_executable(packages_to_check, path_hints=None):
     searching by path.
 
     Args:
-        packages_to_check (list): list of packages to be detected
+        packages_to_check (list): list of package classes to be detected
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
     path_hints = [] if path_hints is None else path_hints
     exe_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
-        if hasattr(pkg, 'executables'):
-            for exe in pkg.platform_executables:
+        if hasattr(pkg, "executables"):
+            for exe in pkg.platform_executables():
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
         path_hints.extend(compute_windows_program_path_for_package(pkg))
@@ -246,11 +248,12 @@ def by_executable(packages_to_check, path_hints=None):
     resolved_specs = {}  # spec -> exe found for the spec
 
     for pkg, exes in pkg_to_found_exes.items():
-        if not hasattr(pkg, 'determine_spec_details'):
+        if not hasattr(pkg, "determine_spec_details"):
             llnl.util.tty.warn(
                 "{0} must define 'determine_spec_details' in order"
                 " for Spack to detect externally-provided instances"
-                " of the package.".format(pkg.name))
+                " of the package.".format(pkg.name)
+            )
             continue
 
         for prefix, exes_in_prefix in sorted(_group_by_prefix(exes)):
@@ -260,9 +263,7 @@ def by_executable(packages_to_check, path_hints=None):
             # naming scheme which differentiates them), the spec won't be
             # usable.
             try:
-                specs = _convert_to_iterable(
-                    pkg.determine_spec_details(prefix, exes_in_prefix)
-                )
+                specs = _convert_to_iterable(pkg.determine_spec_details(prefix, exes_in_prefix))
             except Exception as e:
                 specs = []
                 msg = 'error detecting "{0}" from prefix {1} [{2}]'
@@ -270,10 +271,10 @@ def by_executable(packages_to_check, path_hints=None):
 
             if not specs:
                 llnl.util.tty.debug(
-                    'The following executables in {0} were decidedly not '
-                    'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(
-                        _convert_to_iterable(exes_in_prefix)))
+                    "The following executables in {0} were decidedly not "
+                    "part of the package {1}: {2}".format(
+                        prefix, pkg.name, ", ".join(_convert_to_iterable(exes_in_prefix))
+                    )
                 )
 
             for spec in specs:
@@ -285,13 +286,12 @@ def by_executable(packages_to_check, path_hints=None):
                     continue
 
                 if spec in resolved_specs:
-                    prior_prefix = ', '.join(
-                        _convert_to_iterable(resolved_specs[spec]))
+                    prior_prefix = ", ".join(_convert_to_iterable(resolved_specs[spec]))
 
                     llnl.util.tty.debug(
                         "Executables in {0} and {1} are both associated"
-                        " with the same spec {2}"
-                        .format(prefix, prior_prefix, str(spec)))
+                        " with the same spec {2}".format(prefix, prior_prefix, str(spec))
+                    )
                     continue
                 else:
                     resolved_specs[spec] = prefix
@@ -299,16 +299,16 @@ def by_executable(packages_to_check, path_hints=None):
                 try:
                     spec.validate_detection()
                 except Exception as e:
-                    msg = ('"{0}" has been detected on the system but will '
-                           'not be added to packages.yaml [reason={1}]')
+                    msg = (
+                        '"{0}" has been detected on the system but will '
+                        "not be added to packages.yaml [reason={1}]"
+                    )
                     llnl.util.tty.warn(msg.format(spec, str(e)))
                     continue
 
                 if spec.external_path:
                     pkg_prefix = spec.external_path
 
-                pkg_to_entries[pkg.name].append(
-                    DetectedPackage(spec=spec, prefix=pkg_prefix)
-                )
+                pkg_to_entries[pkg.name].append(DetectedPackage(spec=spec, prefix=pkg_prefix))
 
     return pkg_to_entries

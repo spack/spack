@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Kylin(MavenPackage):
@@ -17,8 +17,8 @@ class Kylin(MavenPackage):
     data."""
 
     homepage = "https://kylin.apache.org"
-    url      = "https://github.com/apache/kylin/archive/kylin-3.1.0.tar.gz"
+    url = "https://github.com/apache/kylin/archive/kylin-3.1.0.tar.gz"
 
-    version('3.1.0', sha256='84073ff16a0dad6e0611fea9fbf2b977b6bac307107a222b7f576a3a3b712157')
+    version("3.1.0", sha256="84073ff16a0dad6e0611fea9fbf2b977b6bac307107a222b7f576a3a3b712157")
 
-    depends_on('java@8', type=('build', 'run'))
+    depends_on("java@8", type=("build", "run"))

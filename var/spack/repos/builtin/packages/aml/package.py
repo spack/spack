@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.package import *
 
 
 class Aml(AutotoolsPackage):
@@ -20,7 +20,7 @@ class Aml(AutotoolsPackage):
 
     test_requires_compiler = True
 
-    tags = ['e4s']
+    tags = ["e4s"]
 
     # Package sources
     ###################################
@@ -103,7 +103,7 @@ class Aml(AutotoolsPackage):
     smoke_test = '0_hello'
     smoke_test_src = join_path('doc', 'tutorials', 'hello_world', smoke_test + '.c')
 
-    @run_after('install')
+    @run_after("install")
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
