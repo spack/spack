@@ -131,6 +131,12 @@ class LlvmAmdgpu(CMakePackage):
     patch("fix-spack-detection-4.2.0.patch", when="@4.2.0:4.5.2")
 
     patch("remove-cyclades-inclusion-in-sanitizer.patch", when="@4.2.0:4.5.2")
+
+    # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
+    # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
+    # Below patch is to look in the old path.
+    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
+
     conflicts("^cmake@3.19.0")
 
     root_cmakelists_dir = "llvm"

@@ -1,0 +1,13 @@
+diff --git a/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp b/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
+index 492f6577950e..5e443db420e3 100644
+--- a/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
++++ b/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
+@@ -198,7 +198,7 @@ const char *AMDGCN::OpenMPLinker::constructLLVMLinkCommand(
+       getProcessorFromTargetID(getToolChain().getTriple(), TargetID);
+
+   // If device debugging turned on, add specially built bc files
+-  StringRef libpath = Args.MakeArgString(C.getDriver().Dir + "/../lib");
++  StringRef libpath = Args.MakeArgString(C.getDriver().Dir + "/../lib/libdevice");
+   std::string lib_debug_path = FindDebugInLibraryPath();
+   if (!lib_debug_path.empty())
+     libpath = lib_debug_path;
