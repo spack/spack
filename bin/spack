@@ -77,21 +77,23 @@ if "ruamel" in sys.modules:
 try:
     import argparse
 except ImportError:
-    argparse_pyc = os.path.join(spack_external_libs, 'argparse.pyc')
+    argparse_pyc = os.path.join(spack_external_libs, "argparse.pyc")
     if not os.path.exists(argparse_pyc):
         raise
     try:
         os.remove(argparse_pyc)
-        import argparse  # noqa
+        import argparse  # noqa: F401
     except Exception:
-        msg = ('The file\n\n\t{0}\n\nis corrupted and cannot be deleted by Spack. '
-               'Either delete it manually or ask some administrator to '
-               'delete it for you.')
+        msg = (
+            "The file\n\n\t{0}\n\nis corrupted and cannot be deleted by Spack. "
+            "Either delete it manually or ask some administrator to "
+            "delete it for you."
+        )
         print(msg.format(argparse_pyc))
         sys.exit(1)
 
 
-import spack.main  # noqa
+import spack.main  # noqa: E402
 
 # Once we've set up the system path, run the spack main method
 if __name__ == "__main__":
