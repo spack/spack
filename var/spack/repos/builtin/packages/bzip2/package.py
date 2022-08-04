@@ -34,7 +34,7 @@ class Bzip2(Package, SourcewarePackage):
     conflicts('+shared', when='platform=windows',
               msg='Windows makefile has no recipe for shared builds, use ~shared.')
 
-    if sys != 'win32':
+    if sys.platform != 'win32':
         depends_on('diffutils', type='build')
 
     @classmethod
