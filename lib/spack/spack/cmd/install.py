@@ -234,87 +234,12 @@ def default_log_file(spec):
     return fs.os.path.join(dirname, basename)
 
 
-def install_specs(cli_args, install_kwargs, specs):
-    """Do the actual installation.
-
-    Args:
-        cli_args (argparse.Namespace): argparse namespace with command arguments
-        install_kwargs (dict):  keyword arguments
-        specs (list):  list of (abstract, concrete) spec tuples
-    """
-
-    # handle active environment, if any
-    env = ev.active_environment()
-
+def install_specs(specs, install_kwargs, cli_args):
     try:
-        if env:
-            specs_to_install = []
-            specs_to_add = []
-            for abstract, concrete in specs:
-                # This won't find specs added to the env since last
-                # concretize, therefore should we consider enforcing
-                # concretization of the env before allowing to install
-                # specs?
-                m_spec = env.matching_spec(abstract)
-
-                # If there is any ambiguity in the above call to matching_spec
-                # (i.e. if more than one spec in the environment matches), then
-                # SpackEnvironmentError is raised, with a message listing the
-                # the matches.  Getting to this point means there were either
-                # no matches or exactly one match.
-
-                if not m_spec:
-                    tty.debug("{0} matched nothing in the env".format(abstract.name))
-                    # no matches in the env
-                    if cli_args.no_add:
-                        msg = (
-                            "You asked to install {0} without adding it "
-                            + "(--no-add), but no such spec exists in "
-                            + "environment"
-                        ).format(abstract.name)
-                        tty.die(msg)
-                    else:
-                        tty.debug("adding {0} as a root".format(abstract.name))
-                        specs_to_add.append((abstract, concrete))
-
-                    continue
-
-                tty.debug(
-                    "exactly one match for {0} in env -> {1}".format(
-                        m_spec.name, m_spec.dag_hash()
-                    )
-                )
-
-                if m_spec in env.roots() or cli_args.no_add:
-                    # either the single match is a root spec (and --no-add is
-                    # the default for roots) or --no-add was stated explicitly
-                    tty.debug("just install {0}".format(m_spec.name))
-                    specs_to_install.append(m_spec)
-                else:
-                    # the single match is not a root (i.e. it's a dependency),
-                    # and --no-add was not specified, so we'll add it as a
-                    # root before installing
-                    tty.debug("add {0} then install it".format(m_spec.name))
-                    specs_to_add.append((abstract, concrete))
-
-            if specs_to_add:
-                tty.debug("Adding the following specs as roots:")
-                for abstract, concrete in specs_to_add:
-                    tty.debug("  {0}".format(abstract.name))
-                    with env.write_transaction():
-                        specs_to_install.append(env.concretize_and_add(abstract, concrete))
-                        env.write(regenerate=False)
-
-            # Install the validated list of cli specs
-            if specs_to_install:
-                tty.debug("Installing the following cli specs:")
-                for s in specs_to_install:
-                    tty.debug("  {0}".format(s.name))
-                env.install_specs(specs_to_install, args=cli_args, **install_kwargs)
+        if ev.active_environment():
+            install_specs_inside_environment(specs, install_kwargs, cli_args)
         else:
-            installs = [(concrete.package, install_kwargs) for _, concrete in specs]
-            builder = PackageInstaller(installs)
-            builder.install()
+            install_specs_outside_environment(specs, install_kwargs)
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
             e.print_context()
@@ -325,6 +250,72 @@ def install_specs(cli_args, install_kwargs, specs):
                 with open(e.pkg.build_log_path) as log:
                     shutil.copyfileobj(log, sys.stderr)
         raise
+
+
+def install_specs_inside_environment(specs, install_kwargs, cli_args):
+    specs_to_install, specs_to_add = [], []
+    env = ev.active_environment()
+    for abstract, concrete in specs:
+        # This won't find specs added to the env since last
+        # concretize, therefore should we consider enforcing
+        # concretization of the env before allowing to install
+        # specs?
+        m_spec = env.matching_spec(abstract)
+
+        # If there is any ambiguity in the above call to matching_spec
+        # (i.e. if more than one spec in the environment matches), then
+        # SpackEnvironmentError is raised, with a message listing the
+        # the matches.  Getting to this point means there were either
+        # no matches or exactly one match.
+
+        if not m_spec:
+            tty.debug("{0} matched nothing in the env".format(abstract.name))
+            # no matches in the env
+            if cli_args.no_add:
+                msg = (
+                    "You asked to install {0} without adding it "
+                    + "(--no-add), but no such spec exists in "
+                    + "environment"
+                ).format(abstract.name)
+                tty.die(msg)
+            else:
+                tty.debug("adding {0} as a root".format(abstract.name))
+                specs_to_add.append((abstract, concrete))
+
+            continue
+
+        tty.debug("exactly one match for {0} in env -> {1}".format(m_spec.name, m_spec.dag_hash()))
+
+        if m_spec in env.roots() or cli_args.no_add:
+            # either the single match is a root spec (and --no-add is
+            # the default for roots) or --no-add was stated explicitly
+            tty.debug("just install {0}".format(m_spec.name))
+            specs_to_install.append(m_spec)
+        else:
+            # the single match is not a root (i.e. it's a dependency),
+            # and --no-add was not specified, so we'll add it as a
+            # root before installing
+            tty.debug("add {0} then install it".format(m_spec.name))
+            specs_to_add.append((abstract, concrete))
+    if specs_to_add:
+        tty.debug("Adding the following specs as roots:")
+        for abstract, concrete in specs_to_add:
+            tty.debug("  {0}".format(abstract.name))
+            with env.write_transaction():
+                specs_to_install.append(env.concretize_and_add(abstract, concrete))
+                env.write(regenerate=False)
+    # Install the validated list of cli specs
+    if specs_to_install:
+        tty.debug("Installing the following cli specs:")
+        for s in specs_to_install:
+            tty.debug("  {0}".format(s.name))
+        env.install_specs(specs_to_install, **install_kwargs)
+
+
+def install_specs_outside_environment(specs, install_kwargs):
+    installs = [(concrete.package, install_kwargs) for _, concrete in specs]
+    builder = PackageInstaller(installs)
+    builder.install()
 
 
 def _print_cdash_help():
@@ -525,4 +516,4 @@ def install(parser, args):
         if args.overwrite:
             get_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
-        install_specs(args, install_kwargs, zip(abstract_specs, concrete_specs))
+        install_specs(zip(abstract_specs, concrete_specs), install_kwargs, args)
