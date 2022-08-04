@@ -332,30 +332,39 @@ def install_specs(cli_args, kwargs, specs):
         raise
 
 
-def install(parser, args, **kwargs):
-    # TODO: unify args.verbose?
-    tty.set_verbose(args.verbose or args.install_verbose)
-
-    if args.help_cdash:
-        parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=textwrap.dedent(
-                """\
+def _print_cdash_help():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
 environment variables:
-  SPACK_CDASH_AUTH_TOKEN
-                        authentication token to present to CDash
-                        """
-            ),
-        )
-        arguments.add_cdash_args(parser, True)
-        parser.print_help()
-        return
+SPACK_CDASH_AUTH_TOKEN
+                    authentication token to present to CDash
+                    """
+        ),
+    )
+    arguments.add_cdash_args(parser, True)
+    parser.print_help()
 
+
+def _create_log_reporter(args):
     reporter = spack.report.collect_info(
         spack.package_base.PackageInstaller, "_install_task", args.log_format, args
     )
     if args.log_file:
         reporter.filename = args.log_file
+    return reporter
+
+
+def install(parser, args, **kwargs):
+    # TODO: unify args.verbose?
+    tty.set_verbose(args.verbose or args.install_verbose)
+
+    if args.help_cdash:
+        _print_cdash_help()
+        return
+
+    reporter = _create_log_reporter(args)
 
     def get_tests(specs):
         if args.test == "all":
