@@ -286,7 +286,10 @@ class ArchSpec(object):
 
     @staticmethod
     def override(init_spec, change_spec):
-        new_spec = init_spec.copy()
+        if init_spec:
+            new_spec = init_spec.copy()
+        else:
+            new_spec = ArchSpec()
         if change_spec.platform:
             new_spec.platform = change_spec.platform
             # TODO: if the platform is changed to something that is incompatible
