@@ -25,6 +25,8 @@ class Crtm(CMakePackage):
     depends_on('crtm-fix@2.3.0_emc', when='@2.3.0 +fix')
     depends_on('crtm-fix@2.4.0_emc', when='@2.4.0 +fix')
 
+    depends_on('ecbuild', type=('build'), when='@v2.3-jedi.4')
+
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
     # depends_on('ecbuild', when='@2.4.0:', type=('build'))
