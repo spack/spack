@@ -31,7 +31,7 @@ def install_kwargs_from_args(args):
     """Translate command line arguments into a dictionary that will be passed
     to the package installer.
     """
-    result = {
+    return {
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
         "keep_stage": args.keep_stage,
@@ -49,16 +49,6 @@ def install_kwargs_from_args(args):
         "install_deps": ("dependencies" in args.things_to_install),
         "install_package": ("package" in args.things_to_install),
     }
-
-    if hasattr(args, "setup"):
-        setups = set()
-        for arglist_s in args.setup:
-            for arg in [x.strip() for x in arglist_s.split(",")]:
-                setups.add(arg)
-        result["setup"] = setups
-        tty.msg("Setup={0}".format(result["setup"]))
-
-    return result
 
 
 def setup_parser(subparser):
@@ -318,7 +308,7 @@ def install_specs_outside_environment(specs, install_kwargs):
     builder.install()
 
 
-def _print_cdash_help():
+def print_cdash_help():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(
@@ -371,7 +361,7 @@ def install_all_specs_from_active_environment(
             msg += "    spack --env . install"
         tty.die(msg)
 
-    install_kwargs["tests"] = _create_test_fn_argument(env.user_specs, cli_test_arg)
+    install_kwargs["tests"] = compute_tests_install_kwargs(env.user_specs, cli_test_arg)
     if not only_concrete:
         with env.write_transaction():
             concretized_specs = env.concretize(tests=install_kwargs["tests"])
@@ -402,8 +392,8 @@ def install_all_specs_from_active_environment(
         env.write()
 
 
-def _create_test_fn_argument(specs, cli_test_arg):
-    """Translate the test cli argument into the proper function argument"""
+def compute_tests_install_kwargs(specs, cli_test_arg):
+    """Translate the test cli argument into the proper install argument"""
     if cli_test_arg == "all":
         return True
     elif cli_test_arg == "root":
@@ -414,7 +404,7 @@ def _create_test_fn_argument(specs, cli_test_arg):
 def specs_from_cli(args, install_kwargs, reporter):
     """Return abstract and concrete spec parsed from the command line."""
     abstract_specs = spack.cmd.parse_specs(args.spec)
-    install_kwargs["tests"] = _create_test_fn_argument(abstract_specs, args.test)
+    install_kwargs["tests"] = compute_tests_install_kwargs(abstract_specs, args.test)
     try:
         concrete_specs = spack.cmd.parse_specs(
             args.spec, concretize=True, tests=install_kwargs["tests"]
@@ -475,7 +465,7 @@ def install(parser, args):
     tty.set_verbose(args.verbose or args.install_verbose)
 
     if args.help_cdash:
-        _print_cdash_help()
+        print_cdash_help()
         return
 
     if args.no_checksum:
