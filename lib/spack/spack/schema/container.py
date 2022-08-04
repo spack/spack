@@ -69,7 +69,11 @@ container_schema = {
         "extra_instructions": {
             "type": "object",
             "additionalProperties": False,
-            "properties": {"build": {"type": "string"}, "final": {"type": "string"}},
+            "properties": {
+                "pre_build": {"type": "string"},
+                "build": {"type": "string"},
+                "final": {"type": "string"}
+            }
         },
         # Reserved for properties that are specific to each format
         "singularity": {
