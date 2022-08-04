@@ -28,7 +28,9 @@ level = "short"
 
 
 def install_kwargs_from_args(args):
-    """Translate command line arguments into a dictionary that will be passed to the package installer."""
+    """Translate command line arguments into a dictionary that will be passed
+    to the package installer.
+    """
     result = {
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
@@ -352,7 +354,15 @@ def _create_log_reporter(args):
 
 
 def install_from_active_environment(install_kwargs, only_concrete, cli_test_arg, reporter):
-    """Install specs from the active environment"""
+    """Install specs from the active environment
+
+    Args:
+        install_kwargs (dict): dictionary of options to be passed to the installer
+        only_concrete (bool): if true don't concretize the environment, but install
+            only the specs that are already concrete
+        cli_test_arg (bool or str): command line argument to select which test to run
+        reporter: reporter object for the installations
+    """
     env = ev.active_environment()
     if not env:
         msg = "install requires a package argument or active environment"
@@ -379,18 +389,18 @@ def install_from_active_environment(install_kwargs, only_concrete, cli_test_arg,
             env.write(regenerate=False)
 
     specs = env.all_specs()
-    if specs:
-        if not reporter.filename:
-            reporter.filename = default_log_file(specs[0])
-        reporter.specs = specs
-
-        tty.msg("Installing environment {0}".format(env.name))
-        with reporter("build"):
-            env.install_all(**install_kwargs)
-
-    else:
+    if not specs:
         msg = "{0} environment has no specs to install".format(env.name)
         tty.msg(msg)
+        return
+
+    if not reporter.filename:
+        reporter.filename = default_log_file(specs[0])
+    reporter.specs = specs
+
+    tty.msg("Installing environment {0}".format(env.name))
+    with reporter("build"):
+        env.install_all(**install_kwargs)
 
     tty.debug("Regenerating environment views for {0}".format(env.name))
     with env.write_transaction():
