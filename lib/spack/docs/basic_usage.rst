@@ -1139,7 +1139,7 @@ The associated version can be assigned with ``[git ref]=[version]`` syntax, with
 
 If an associated version is not supplied then the tags in the git repo are used to determine
 the most recent previous version known to Spack. Details about how versions are compared
- and how Spack determines if one version is less than another are discussed in the developer guide.
+and how Spack determines if one version is less than another are discussed in the developer guide.
 
 If the version spec is not provided, then Spack will choose one
 according to policies set for the particular spack installation.  If
