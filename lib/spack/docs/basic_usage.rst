@@ -1093,6 +1093,8 @@ could depend on ``mpich@1.2:`` if it can only build with version
 
 Below are more details about the specifiers that you can add to specs.
 
+.. _version-specifier:
+
 ^^^^^^^^^^^^^^^^^
 Version specifier
 ^^^^^^^^^^^^^^^^^
