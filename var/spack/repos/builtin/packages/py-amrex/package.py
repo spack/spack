@@ -34,7 +34,7 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     # We just need a CMake binary, and py-cmake is notoriously hard to build on
     # exotic architectures. So ignore the pyproject.toml declaration and use
     # Spack's cmake package.
-    #depends_on('py-cmake@3.20:3', type='build')
+    # depends_on('py-cmake@3.20:3', type='build')
     depends_on("cmake@3.20:3", type="build")
     depends_on("py-pybind11@2.9.1:", type="link")
 
@@ -61,7 +61,6 @@ class PyAmrex(PythonPackage, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("amrex +rocm")
         # todo: how to forward amdgpu_target?
-
 
     def setup_build_environment(self, env):
         spec = self.spec
