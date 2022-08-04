@@ -50,8 +50,6 @@ class Aml(AutotoolsPackage):
             description="Support for memory operations on top of CUDA.")
     variant('hwloc', default=False,
             description="Enable feature related to topology management")
-    variant('openmp-targets', values=disjoint_sets(('spir64',)),
-            description="Intel OpenMP target architecture setting.")
     variant('hip-platform', values=disjoint_sets(('amd', 'nvidia')),
             description="HIP backend platform.")
 
@@ -65,7 +63,8 @@ class Aml(AutotoolsPackage):
     depends_on('cuda', when='+cuda')
     # - hip dependency. We use the environment variable HIP_PATH in the configure.
     depends_on('hip', when='+hip')
-    # - level_zero is not in any spack package at this moment.
+    # - level_zero loader is the dependency for the oneAPI variant
+    depends_on('oneapi-level-zero', when='+ze')
     # - hwloc >= 2.1 becomes a dependency when +hwloc variant is used.
     depends_on('hwloc@2.1:', when='+hwloc')
     # - ocl-icd >= 2.1 becomes a dependency when +opencl variant is used.
@@ -90,7 +89,7 @@ class Aml(AutotoolsPackage):
         config_args = []
         for b in ['opencl', 'hwloc', 'ze', 'hip', 'cuda']:
             config_args.extend(self.with_or_without(b))
-        if 'openmp-targets=spir64' in self.spec:
+        if self.spec.satisfies('%oneapi'):
             config_args += ['--with-openmp-flags="-fiopenmp -fopenmp-targets=spir64"']
         if 'hip-platform=amd' in self.spec:
             config_args += ['--with-hip-platform=amd']
