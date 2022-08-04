@@ -418,6 +418,41 @@ def _create_test_fn_argument(specs, cli_test_arg):
     return False
 
 
+def specs_from_cli(args, install_kwargs, reporter):
+    """Return abstract and concrete spec parsed from the command line."""
+    abstract_specs = spack.cmd.parse_specs(args.spec)
+    install_kwargs["tests"] = _create_test_fn_argument(abstract_specs, args.test)
+    try:
+        concrete_specs = spack.cmd.parse_specs(
+            args.spec, concretize=True, tests=install_kwargs["tests"]
+        )
+    except SpackError as e:
+        tty.debug(e)
+        reporter.concretization_report(e.message)
+        raise
+    return abstract_specs, concrete_specs
+
+
+def concrete_specs_from_file(args):
+    """Return the list of concrete specs read from files."""
+    result = []
+    for file in args.specfiles:
+        with open(file, "r") as f:
+            if file.endswith("yaml") or file.endswith("yml"):
+                s = spack.spec.Spec.from_yaml(f)
+            else:
+                s = spack.spec.Spec.from_json(f)
+
+        concretized = s.concretized()
+        if concretized.dag_hash() != s.dag_hash():
+            msg = 'skipped invalid file "{0}". '
+            msg += "The file does not contain a concrete spec."
+            tty.warn(msg.format(file))
+            continue
+        result.append(concretized)
+    return result
+
+
 def install(parser, args):
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
@@ -445,46 +480,24 @@ def install(parser, args):
         )
         return
 
-    # 1. Abstract specs from cli
-    abstract_specs = spack.cmd.parse_specs(args.spec)
-    tests = _create_test_fn_argument(abstract_specs, args.test)
-    install_kwargs["tests"] = tests
+    # Specs from CLI
+    abstract_specs, concrete_specs = specs_from_cli(args, install_kwargs, reporter)
 
-    try:
-        specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
-    except SpackError as e:
-        tty.debug(e)
-        reporter.concretization_report(e.message)
-        raise
+    # Concrete specs from YAML or JSON files
+    specs_from_file = concrete_specs_from_file(args)
+    abstract_specs.extend(specs_from_file)
+    concrete_specs.extend(specs_from_file)
 
-    # 2. Concrete specs from yaml files
-    for file in args.specfiles:
-        with open(file, "r") as f:
-            if file.endswith("yaml") or file.endswith("yml"):
-                s = spack.spec.Spec.from_yaml(f)
-            else:
-                s = spack.spec.Spec.from_json(f)
-
-        concretized = s.concretized()
-        if concretized.dag_hash() != s.dag_hash():
-            msg = 'skipped invalid file "{0}". '
-            msg += "The file does not contain a concrete spec."
-            tty.warn(msg.format(file))
-            continue
-
-        abstract_specs.append(s)
-        specs.append(concretized)
-
-    if len(specs) == 0:
+    if len(concrete_specs) == 0:
         tty.die("The `spack install` command requires a spec to install.")
 
-    if not args.log_file and not reporter.filename:
-        reporter.filename = default_log_file(specs[0])
-    reporter.specs = specs
+    if not reporter.filename:
+        reporter.filename = default_log_file(concrete_specs[0])
+    reporter.specs = concrete_specs
+
     with reporter("build"):
         if args.overwrite:
-
-            installed = list(filter(lambda x: x, map(spack.store.db.query_one, specs)))
+            installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
             if not args.yes_to_all:
                 display_args = {"long": True, "show_flags": True, "variants": True}
 
@@ -492,7 +505,7 @@ def install(parser, args):
                     tty.msg("The following package specs will be " "reinstalled:\n")
                     spack.cmd.display_specs(installed, **display_args)
 
-                not_installed = list(filter(lambda x: x not in installed, specs))
+                not_installed = list(filter(lambda x: x not in installed, concrete_specs))
                 if not_installed:
                     tty.msg(
                         "The following package specs are not installed and"
@@ -507,5 +520,5 @@ def install(parser, args):
                     tty.die("Reinstallation aborted.")
 
             # overwrite all concrete explicit specs from this build
-            install_kwargs["overwrite"] = [spec.dag_hash() for spec in specs]
-        install_specs(args, install_kwargs, zip(abstract_specs, specs))
+            install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
+        install_specs(args, install_kwargs, zip(abstract_specs, concrete_specs))
