@@ -19,17 +19,17 @@ class Chlorop(Package):
     a temporary directory."""
 
     homepage = "https://www.cbs.dtu.dk/services/ChloroP/"
-    url      = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
+    url = "file://{0}/chlorop-1.1.Linux.tar.gz".format(os.getcwd())
     manual_download = True
 
-    version('1.1', 'eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9')
+    version("1.1", "eb0ba6b28dfa735163ad5fc70e30139e46e33f6ae27f87666a7167a4ac5f71d9")
 
-    depends_on('awk', type='run')
-    patch('chlorop.patch')
+    depends_on("awk", type="run")
+    patch("chlorop.patch")
 
     def install(self, spec, prefix):
-        os.rename('chlorop', 'bin/chlorop')
-        install_tree('.', prefix)
+        os.rename("chlorop", "bin/chlorop")
+        install_tree(".", prefix)
 
     def setup_run_environment(self, env):
-        env.set('CHLOROP', self.prefix)
+        env.set("CHLOROP", self.prefix)

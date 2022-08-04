@@ -20,7 +20,7 @@ class RRcppde(RPackage):
 
     cran = "RcppDE"
 
-    version('0.1.6', sha256='c9386709f72cdc33505b3ac675c173013fe098434b7c21bc09eb625b529132c5')
+    version("0.1.6", sha256="c9386709f72cdc33505b3ac675c173013fe098434b7c21bc09eb625b529132c5")
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rcpparmadillo', type=('build', 'run'))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-rcpparmadillo", type=("build", "run"))

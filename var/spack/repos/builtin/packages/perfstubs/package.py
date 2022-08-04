@@ -19,13 +19,11 @@ class Perfstubs(CMakePackage):
     """
 
     homepage = "https://github.com/khuck/perfstubs"
-    git      = "https://github.com/khuck/perfstubs.git"
+    git = "https://github.com/khuck/perfstubs.git"
 
-    version('master', branch='master')
-    variant('static', default=False, description='Build static executable support')
+    version("master", branch="master")
+    variant("static", default=False, description="Build static executable support")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('PERFSTUBS_USE_STATIC', 'static')
-        ]
+        args = [self.define_from_variant("PERFSTUBS_USE_STATIC", "static")]
         return args

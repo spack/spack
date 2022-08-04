@@ -85,6 +85,7 @@ spack:
   - gmp
   - gptune
   - hdf5 +fortran +hl +shared
+  - hdf5-vol-async
   - heffte +fftw
   - hpctoolkit
   - hpx networking=mpi
@@ -195,9 +196,12 @@ spack:
   - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
+  - slate +rocm amdgpu_target=gfx90a
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
   - strumpack ~slate +rocm amdgpu_target=gfx90a
+  - sundials +rocm amdgpu_target=gfx90a
   - superlu-dist +rocm amdgpu_target=gfx90a
+  - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
   - upcxx +rocm amdgpu_target=gfx90a
 

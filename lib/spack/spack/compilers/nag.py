@@ -17,21 +17,22 @@ class Nag(spack.compiler.Compiler):
     cxx_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['nagfor']
+    f77_names = ["nagfor"]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['nagfor']
+    fc_names = ["nagfor"]
 
     # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
-        'cc': 'cc',
-        'cxx': 'c++',
-        'f77': os.path.join('nag', 'nagfor'),
-        'fc': os.path.join('nag', 'nagfor')}
+        "cc": "cc",
+        "cxx": "c++",
+        "f77": os.path.join("nag", "nagfor"),
+        "fc": os.path.join("nag", "nagfor"),
+    }
 
-    version_argument = '-V'
-    version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
+    version_argument = "-V"
+    version_regex = r"NAG Fortran Compiler Release ([0-9.]+)"
 
     @property
     def verbose_flag(self):
@@ -69,11 +70,11 @@ class Nag(spack.compiler.Compiler):
 
     @property
     def debug_flags(self):
-        return ['-g', '-gline', '-g90']
+        return ["-g", "-gline", "-g90"]
 
     @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
+        return ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
 
     @property
     def cxx11_flag(self):
@@ -94,22 +95,22 @@ class Nag(spack.compiler.Compiler):
     # options with '-Wl,-Wl,,'
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,,'
+        return "-Wl,-Wl,,-rpath,,"
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,,'
+        return "-Wl,-Wl,,-rpath,,"
 
     @property
     def linker_arg(self):
-        return '-Wl,-Wl,,'
+        return "-Wl,-Wl,,"
 
     @property
     def disable_new_dtags(self):
         # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
-        return ''
+        return ""
 
     @property
     def enable_new_dtags(self):
         # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
-        return ''
+        return ""
