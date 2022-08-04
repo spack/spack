@@ -183,7 +183,7 @@ jobs:
     runs-on: ${{ matrix.macos-version }}
     strategy:
       matrix:
-        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
         macos-version: ['macos-11', 'macos-12']
     if: github.repository == 'spack/spack'
     steps:
@@ -206,7 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
     if: github.repository == 'spack/spack'
     steps:
       - name: Checkout
