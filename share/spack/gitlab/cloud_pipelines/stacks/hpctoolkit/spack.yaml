@@ -22,22 +22,28 @@ spack:
   - when: arch.satisfies('target=aarch64:')
     target:
     - target=graviton
+  
+  - target_specific_mindeps: []
+  - when: arch.satisfies('target=x86_64:')
+    target_specific_mindeps:
+    - ^intel-xed @12.0.1
 
   specs:
     - matrix:
       - - libmonitor +hpctoolkit ~dlopen ~commrank
       - ['@2021.11.08', '@:']
       - - $target
+    # Latest release with latest compatible dependencies
     - matrix:
       - - hpctoolkit +mpi +viewer
-      - - +papi
-        - +papi ^papi @6.0.0.1
-        - ~papi
+      - [+papi, ~papi]
+      - - $target
+    # Latest release with minimum supported dependencies
+    - matrix:
+      - - hpctoolkit +mpi +viewer
+      - - +papi ^papi @6.0.0.1
         - ~papi ^libpfm4 @4.11.0
-      - # Latest release with latest compatible dependencies
-        - '@:'
-        # Latest release with minimum supported dependencies
-        - ^autoconf @2.69
+      - - ^autoconf @2.69
           ^automake @1.15.1
           ^libtool @2.4.6
           ^boost @1.77.0
@@ -51,7 +57,7 @@ spack:
           ^libunwind @1.6.2
           ^xerces-c @3.2.3
           ^memkind @1.12.0
-          ^intel-xed @12.0.1
+      - - $target_specific_mindeps
       - - $target
 
   mirrors:
