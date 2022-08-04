@@ -27,43 +27,38 @@ section = "build"
 level = "short"
 
 
-def update_kwargs_from_args(args, kwargs):
+def kwargs_from_args(args):
     """Parse cli arguments and construct a dictionary
     that will be passed to the package installer."""
 
-    kwargs.update(
-        {
-            "fail_fast": args.fail_fast,
-            "keep_prefix": args.keep_prefix,
-            "keep_stage": args.keep_stage,
-            "restage": not args.dont_restage,
-            "install_source": args.install_source,
-            "verbose": args.verbose or args.install_verbose,
-            "fake": args.fake,
-            "dirty": args.dirty,
-            "use_cache": args.use_cache,
-            "cache_only": args.cache_only,
-            "include_build_deps": args.include_build_deps,
-            "explicit": True,  # Always true for install command
-            "stop_at": args.until,
-            "unsigned": args.unsigned,
-        }
-    )
-
-    kwargs.update(
-        {
-            "install_deps": ("dependencies" in args.things_to_install),
-            "install_package": ("package" in args.things_to_install),
-        }
-    )
+    result = {
+        "fail_fast": args.fail_fast,
+        "keep_prefix": args.keep_prefix,
+        "keep_stage": args.keep_stage,
+        "restage": not args.dont_restage,
+        "install_source": args.install_source,
+        "verbose": args.verbose or args.install_verbose,
+        "fake": args.fake,
+        "dirty": args.dirty,
+        "use_cache": args.use_cache,
+        "cache_only": args.cache_only,
+        "include_build_deps": args.include_build_deps,
+        "explicit": True,  # Always true for install command
+        "stop_at": args.until,
+        "unsigned": args.unsigned,
+        "install_deps": ("dependencies" in args.things_to_install),
+        "install_package": ("package" in args.things_to_install),
+    }
 
     if hasattr(args, "setup"):
         setups = set()
         for arglist_s in args.setup:
             for arg in [x.strip() for x in arglist_s.split(",")]:
                 setups.add(arg)
-        kwargs["setup"] = setups
-        tty.msg("Setup={0}".format(kwargs["setup"]))
+        result["setup"] = setups
+        tty.msg("Setup={0}".format(result["setup"]))
+
+    return result
 
 
 def setup_parser(subparser):
@@ -356,7 +351,66 @@ def _create_log_reporter(args):
     return reporter
 
 
-def install(parser, args, **kwargs):
+def install_from_active_environment(args, reporter):
+    env = ev.active_environment()
+    if not env:
+        msg = "install requires a package argument or active environment"
+        if "spack.yaml" in os.listdir(os.getcwd()):
+            # There's a spack.yaml file in the working dir, the user may
+            # have intended to use that
+            msg += "\n\n"
+            msg += "Did you mean to install using the `spack.yaml`"
+            msg += " in this directory? Try: \n"
+            msg += "    spack env activate .\n"
+            msg += "    spack install\n"
+            msg += "  OR\n"
+            msg += "    spack --env . install"
+        tty.die(msg)
+
+    kwargs = kwargs_from_args(args)
+    tests = _create_test_fn_argument(env.user_specs, args.test)
+    kwargs["tests"] = tests
+
+    if not args.only_concrete:
+        with env.write_transaction():
+            concretized_specs = env.concretize(tests=tests)
+            ev.display_specs(concretized_specs)
+
+            # save view regeneration for later, so that we only do it
+            # once, as it can be slow.
+            env.write(regenerate=False)
+
+    specs = env.all_specs()
+    if specs:
+        if not args.log_file and not reporter.filename:
+            reporter.filename = default_log_file(specs[0])
+        reporter.specs = specs
+
+        tty.msg("Installing environment {0}".format(env.name))
+        with reporter("build"):
+            env.install_all(**kwargs)
+
+    else:
+        msg = "{0} environment has no specs to install".format(env.name)
+        tty.msg(msg)
+
+    tty.debug("Regenerating environment views for {0}".format(env.name))
+    with env.write_transaction():
+        # write env to trigger view generation and modulefile
+        # generation
+        env.write()
+
+
+def _create_test_fn_argument(specs, cli_test_arg):
+    """Translate the test cli argument into the proper function argument"""
+    if cli_test_arg == "all":
+        return True
+    elif cli_test_arg == "root":
+        return [spec.name for spec in specs]
+    return False
+
+
+def install(parser, args):
     # TODO: unify args.verbose?
     tty.set_verbose(args.verbose or args.install_verbose)
 
@@ -364,80 +418,24 @@ def install(parser, args, **kwargs):
         _print_cdash_help()
         return
 
-    reporter = _create_log_reporter(args)
-
-    def get_tests(specs):
-        if args.test == "all":
-            return True
-        elif args.test == "root":
-            return [spec.name for spec in specs]
-        else:
-            return False
-
-    # Parse cli arguments and construct a dictionary
-    # that will be passed to the package installer
-    update_kwargs_from_args(args, kwargs)
-
-    if not args.spec and not args.specfiles:
-        # if there are no args but an active environment
-        # then install the packages from it.
-        env = ev.active_environment()
-        if env:
-            tests = get_tests(env.user_specs)
-            kwargs["tests"] = tests
-
-            if not args.only_concrete:
-                with env.write_transaction():
-                    concretized_specs = env.concretize(tests=tests)
-                    ev.display_specs(concretized_specs)
-
-                    # save view regeneration for later, so that we only do it
-                    # once, as it can be slow.
-                    env.write(regenerate=False)
-
-            specs = env.all_specs()
-            if specs:
-                if not args.log_file and not reporter.filename:
-                    reporter.filename = default_log_file(specs[0])
-                reporter.specs = specs
-
-                tty.msg("Installing environment {0}".format(env.name))
-                with reporter("build"):
-                    env.install_all(**kwargs)
-
-            else:
-                msg = "{0} environment has no specs to install".format(env.name)
-                tty.msg(msg)
-
-            tty.debug("Regenerating environment views for {0}".format(env.name))
-            with env.write_transaction():
-                # write env to trigger view generation and modulefile
-                # generation
-                env.write()
-            return
-        else:
-            msg = "install requires a package argument or active environment"
-            if "spack.yaml" in os.listdir(os.getcwd()):
-                # There's a spack.yaml file in the working dir, the user may
-                # have intended to use that
-                msg += "\n\n"
-                msg += "Did you mean to install using the `spack.yaml`"
-                msg += " in this directory? Try: \n"
-                msg += "    spack env activate .\n"
-                msg += "    spack install\n"
-                msg += "  OR\n"
-                msg += "    spack --env . install"
-            tty.die(msg)
-
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
         spack.config.set("config:deprecated", True, scope="command_line")
 
+    reporter = _create_log_reporter(args)
+
+    if not args.spec and not args.specfiles:
+        # If there are no args but an active environment then install the packages from it.
+        install_from_active_environment(args, reporter=reporter)
+        return
+
+    kwargs = kwargs_from_args(args)
+
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
-    tests = get_tests(abstract_specs)
+    tests = _create_test_fn_argument(abstract_specs, args.test)
     kwargs["tests"] = tests
 
     try:
