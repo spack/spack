@@ -19,4 +19,5 @@ class PyIdentify(PythonPackage):
     version("1.4.7", sha256="d8919589bd2a5f99c66302fec0ef9027b12ae150b0b0213999ad3f695fc7296e")
 
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@2.4.5:")
     depends_on("py-setuptools", type="build")
