@@ -26,10 +26,10 @@ class RNcdf4(RPackage):
 
     cran = "ncdf4"
 
-    version('1.19', sha256='cb8d139211fc7475c435ce9f6a43e47710603409dc523b053c8b7de9848dfb63')
-    version('1.17', sha256='db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6')
-    version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
-    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
-    version('1.15', sha256='d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d')
+    version("1.19", sha256="cb8d139211fc7475c435ce9f6a43e47710603409dc523b053c8b7de9848dfb63")
+    version("1.17", sha256="db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6")
+    version("1.16.1", sha256="0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20")
+    version("1.16", sha256="edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253")
+    version("1.15", sha256="d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d")
 
-    depends_on('netcdf-c@4.1:')
+    depends_on("netcdf-c@4.1:")

@@ -14,18 +14,18 @@ from llnl.util import tty
 
 from spack.package import *
 
-is_windows = platform == 'win32'
+is_windows = platform == "win32"
 
 if not is_windows:
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK
 
-re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
-re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
-re_paroptnum = re.compile(r'\s+([0-9]+)\.\s+\(')
-re_nestline = re.compile(r'\(([0-9]+=[^)0-9]+)+\)')
-re_nestoptnum = re.compile(r'([0-9]+)=')
-re_nestoptname = re.compile(r'=([^,)]+)')
+re_optline = re.compile(r"\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+")
+re_paroptname = re.compile(r"\((serial|smpar|dmpar|dm\+sm)\)")
+re_paroptnum = re.compile(r"\s+([0-9]+)\.\s+\(")
+re_nestline = re.compile(r"\(([0-9]+=[^)0-9]+)+\)")
+re_nestoptnum = re.compile(r"([0-9]+)=")
+re_nestoptname = re.compile(r"=([^,)]+)")
 
 
 def setNonBlocking(fd):
@@ -66,16 +66,20 @@ class Wrf(Package):
     for both atmospheric research and operational forecasting applications.
     """
 
-    homepage    = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
-    url         = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
+    homepage = "https://www.mmm.ucar.edu/weather-research-and-forecasting-model"
+    url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
-    version("4.3.3", sha256='1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86')
-    version("4.3.2", sha256='2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec')
-    version("4.3.1", sha256='6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87')
+    version("4.3.3", sha256="1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86")
+    version("4.3.2", sha256="2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec")
+    version("4.3.1", sha256="6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87")
     version("4.2", sha256="c39a1464fd5c439134bbd39be632f7ce1afd9a82ad726737e37228c6a3d74706")
     version("4.0", sha256="9718f26ee48e6c348d8e28b8bc5e8ff20eafee151334b3959a11b7320999cf65")
-    version("3.9.1.1", sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a", url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz")
+    version(
+        "3.9.1.1",
+        sha256="a04f5c425bedd262413ec88192a0f0896572cc38549de85ca120863c43df047a",
+        url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
+    )
 
     variant(
         "build_type",
@@ -110,12 +114,7 @@ class Wrf(Package):
         default=True,
         description="Parallel IO support through Pnetcdf library",
     )
-    variant(
-        "chem",
-        default=False,
-        description="Enable WRF-Chem",
-        when="@4:"
-    )
+    variant("chem", default=False, description="Enable WRF-Chem", when="@4:")
 
     patch("patches/3.9/netcdf_backport.patch", when="@3.9.1.1")
     patch("patches/3.9/tirpc_detect.patch", when="@3.9.1.1")
@@ -153,18 +152,27 @@ class Wrf(Package):
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
     # Various syntax fixes found by FPT tool
-    patch("https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch?full_index=1",
-          sha256="c5162c23a132b377132924f8f1545313861c6cee5a627e9ebbdcf7b7b9d5726f", when="@4.2 %fj")
+    patch(
+        "https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch?full_index=1",
+        sha256="c5162c23a132b377132924f8f1545313861c6cee5a627e9ebbdcf7b7b9d5726f",
+        when="@4.2 %fj",
+    )
     patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
 
     patch("patches/4.3/Makefile.patch", when="@4.3:")
     patch("patches/4.3/arch.postamble.patch", when="@4.3:")
     patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
     # Syntax errors in physics routines
-    patch("https://github.com/wrf-model/WRF/commit/7c6fd575b7a8fe5715b07b38db160e606c302956.patch?full_index=1",
-          sha256="1ce97f4fd09e440bdf00f67711b1c50439ac27595ea6796efbfb32e0b9a1f3e4", when="@4.3.1")
-    patch("https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch?full_index=1",
-          sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1", when="@4.3.1")
+    patch(
+        "https://github.com/wrf-model/WRF/commit/7c6fd575b7a8fe5715b07b38db160e606c302956.patch?full_index=1",
+        sha256="1ce97f4fd09e440bdf00f67711b1c50439ac27595ea6796efbfb32e0b9a1f3e4",
+        when="@4.3.1",
+    )
+    patch(
+        "https://github.com/wrf-model/WRF/commit/238a7d219b7c8e285db28fe4f0c96ebe5068d91c.patch?full_index=1",
+        sha256="27c7268f6c84b884d21e4afad0bab8554b06961cf4d6bfd7d0f5a457dcfdffb1",
+        when="@4.3.1",
+    )
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -218,7 +226,7 @@ class Wrf(Package):
         if self.spec.satisfies("%aocc"):
             env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
             env.set("HDF5", self.spec["hdf5"].prefix)
-            env.prepend_path('PATH', ancestor(self.compiler.cc))
+            env.prepend_path("PATH", ancestor(self.compiler.cc))
 
     def patch(self):
         # Let's not assume csh is intalled in bin
@@ -236,19 +244,14 @@ class Wrf(Package):
                 basename(self.compiler.fc).split("-")[0],
                 basename(self.compiler.cc).split("-")[0],
             )
-            compiler_matches = dict(
-                (x, y) for x, y in options.items() if comp_pair in x.lower()
-            )
+            compiler_matches = dict((x, y) for x, y in options.items() if comp_pair in x.lower())
             if len(compiler_matches) > 1:
                 tty.warn("Found multiple potential build options")
             try:
                 compiler_key = min(compiler_matches.keys(), key=len)
                 tty.warn("Selected build option %s." % compiler_key)
                 return (
-                    "%s\n"
-                    % compiler_matches[compiler_key][
-                        self.spec.variants["build_type"].value
-                    ]
+                    "%s\n" % compiler_matches[compiler_key][self.spec.variants["build_type"].value]
                 )
             except KeyError:
                 InstallError(
@@ -270,31 +273,29 @@ class Wrf(Package):
         # configure.defaults, while in earlier versions
         # it's configure_new.defaults
         if self.spec.satisfies("@3.9.1.1"):
-            config = FileFilter(join_path('arch', 'configure_new.defaults'))
+            config = FileFilter(join_path("arch", "configure_new.defaults"))
         else:
-            config = FileFilter(join_path('arch', 'configure.defaults'))
+            config = FileFilter(join_path("arch", "configure.defaults"))
 
         if self.spec.satisfies("@3.9.1.1 %gcc"):
-            config.filter('^DM_FC.*mpif90 -f90=$(SFC)',
-                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
-            config.filter('^DM_CC.*mpicc -cc=$(SCC)',
-                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
+            config.filter(
+                "^DM_FC.*mpif90 -f90=$(SFC)", "DM_FC = {0}".format(self.spec["mpi"].mpifc)
+            )
+            config.filter("^DM_CC.*mpicc -cc=$(SCC)", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
         if self.spec.satisfies("%aocc"):
             config.filter(
-                '^DM_FC.*mpif90 -DMPI2SUPPORT',
-                'DM_FC = {0}'.format(self.spec['mpi'].mpifc + ' -DMPI2_SUPPORT')
+                "^DM_FC.*mpif90 -DMPI2SUPPORT",
+                "DM_FC = {0}".format(self.spec["mpi"].mpifc + " -DMPI2_SUPPORT"),
             )
             config.filter(
-                '^DM_.CC*mpicc -DMPI2SUPPORT',
-                'DM_CC = {0}'.format(self.spec['mpi'].mpicc) + ' -DMPI2_SUPPORT'
+                "^DM_.CC*mpicc -DMPI2SUPPORT",
+                "DM_CC = {0}".format(self.spec["mpi"].mpicc) + " -DMPI2_SUPPORT",
             )
 
         if self.spec.satisfies("@4.2: %intel"):
-            config.filter('^DM_FC.*mpif90',
-                          'DM_FC = {0}'.format(self.spec['mpi'].mpifc))
-            config.filter('^DM_CC.*mpicc',
-                          'DM_CC = {0}'.format(self.spec['mpi'].mpicc))
+            config.filter("^DM_FC.*mpif90", "DM_FC = {0}".format(self.spec["mpi"].mpifc))
+            config.filter("^DM_CC.*mpicc", "DM_CC = {0}".format(self.spec["mpi"].mpicc))
 
     def configure(self, spec, prefix):
 
@@ -303,8 +304,7 @@ class Wrf(Package):
 
         if self.spec.compiler.name not in ["intel", "gcc", "aocc", "fj"]:
             raise InstallError(
-                "Compiler %s not currently supported for WRF build."
-                % self.spec.compiler.name
+                "Compiler %s not currently supported for WRF build." % self.spec.compiler.name
             )
 
         p = Popen("./configure", stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -328,8 +328,7 @@ class Wrf(Package):
                     break
                 if stallcounter > 300:
                     raise InstallError(
-                        "Output stalled for 30s, presumably an "
-                        "undetected question."
+                        "Output stalled for 30s, presumably an " "undetected question."
                     )
                 time.sleep(0.1)  # Try to do a bit of rate limiting
                 stallcounter += 1
@@ -337,10 +336,7 @@ class Wrf(Package):
             stdout.write(line)
             stallcounter = 0
             outputbuf += line
-            if (
-                "Enter selection" in outputbuf
-                or "Compile for nesting" in outputbuf
-            ):
+            if "Enter selection" in outputbuf or "Compile for nesting" in outputbuf:
                 answer = self.answer_configure_question(outputbuf)
                 p.stdin.write(answer.encode())
                 p.stdin.flush()
@@ -353,7 +349,7 @@ class Wrf(Package):
     def patch_for_libmvec(self):
         if self.spec.satisfies("@3.9.1.1 %aocc"):
             fp = self.package_dir + "/patches/3.9/aocc_lmvec.patch"
-            which('patch')('-s', '-p1', '-i', '{0}'.format(fp), '-d', '.')
+            which("patch")("-s", "-p1", "-i", "{0}".format(fp), "-d", ".")
 
     def run_compile_script(self):
         csh_bin = self.spec["tcsh"].prefix.bin.csh
@@ -372,7 +368,7 @@ class Wrf(Package):
             num_jobs,
             self.spec.variants["compile_type"].value,
             output=str,
-            error=str
+            error=str,
         )
 
         print(result_buf)
@@ -386,16 +382,11 @@ class Wrf(Package):
         result = self.run_compile_script()
 
         if not result:
-            tty.warn(
-                "Compilation failed first time (WRF idiosyncrasies?) "
-                "- trying again..."
-            )
+            tty.warn("Compilation failed first time (WRF idiosyncrasies?) " "- trying again...")
             result = self.run_compile_script()
 
         if not result:
-            raise InstallError(
-                "Compile failed. Check the output log for details."
-            )
+            raise InstallError("Compile failed. Check the output log for details.")
 
     def install(self, spec, prefix):
         # Save all install files as many are needed for WPS and WRF runs

@@ -21,11 +21,14 @@ class Dpcpp(spack.compilers.oneapi.Oneapi):
 
     See also: https://www.intel.com/content/www/us/en/develop/documentation/oneapi-dpcpp-cpp-compiler-dev-guide-and-reference/top/compiler-setup/using-the-command-line/invoking-the-compiler.html
     """
+
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['dpcpp']
+    cxx_names = ["dpcpp"]
 
     # Named wrapper links within build_env_path
-    link_paths = {'cc': os.path.join('oneapi', 'icx'),
-                  'cxx': os.path.join('oneapi', 'dpcpp'),
-                  'f77': os.path.join('oneapi', 'ifx'),
-                  'fc': os.path.join('oneapi', 'ifx')}
+    link_paths = {
+        "cc": os.path.join("oneapi", "icx"),
+        "cxx": os.path.join("oneapi", "dpcpp"),
+        "f77": os.path.join("oneapi", "ifx"),
+        "fc": os.path.join("oneapi", "ifx"),
+    }
