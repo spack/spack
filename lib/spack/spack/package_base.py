@@ -377,10 +377,11 @@ class WindowsPackageMixin(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime binary dependencies"""
 
-    fs.
+    win_rpath = fsys.WindowsRuntimePath()
 
-    @property
-    def win_runtime_link(self):
+    def establish_win_link(self):
+        if is_windows:
+            self.win_rpath.establish_runtime_link()
 
 
 class PackageViewMixin(object):

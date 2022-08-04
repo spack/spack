@@ -2246,7 +2246,7 @@ class WindowsRuntimePath:
         Set of directories where package binaries are located. Symlinks
         to libraries/binaries on which this package depends
         """
-        return set(self.pkg.libs.directories)
+        return set(self.pkg.libs.directories) & set(self.internal_links)
 
     @property
     def internal_links(self):
@@ -2254,7 +2254,7 @@ class WindowsRuntimePath:
         linking that would need to be established within the package itself. Useful for links
         against extension modules/build time executables/internal linkage
         """
-        pass
+        return set(self.pkg.extension_libs)
 
     @property
     def link_targets(self):
