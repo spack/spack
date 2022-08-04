@@ -27,10 +27,8 @@ section = "build"
 level = "short"
 
 
-def kwargs_from_args(args):
-    """Parse cli arguments and construct a dictionary
-    that will be passed to the package installer."""
-
+def install_kwargs_from_args(args):
+    """Translate command line arguments into a dictionary that will be passed to the package installer."""
     result = {
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
@@ -343,6 +341,8 @@ SPACK_CDASH_AUTH_TOKEN
 
 
 def _create_log_reporter(args):
+    # TODO: remove args injection to spack.report.collect_info, since a class in core
+    # TODO: shouldn't know what are the command line arguments a command use.
     reporter = spack.report.collect_info(
         spack.package_base.PackageInstaller, "_install_task", args.log_format, args
     )
@@ -351,7 +351,8 @@ def _create_log_reporter(args):
     return reporter
 
 
-def install_from_active_environment(args, reporter):
+def install_from_active_environment(install_kwargs, only_concrete, cli_test_arg, reporter):
+    """Install specs from the active environment"""
     env = ev.active_environment()
     if not env:
         msg = "install requires a package argument or active environment"
@@ -367,13 +368,10 @@ def install_from_active_environment(args, reporter):
             msg += "    spack --env . install"
         tty.die(msg)
 
-    kwargs = kwargs_from_args(args)
-    tests = _create_test_fn_argument(env.user_specs, args.test)
-    kwargs["tests"] = tests
-
-    if not args.only_concrete:
+    install_kwargs["tests"] = _create_test_fn_argument(env.user_specs, cli_test_arg)
+    if not only_concrete:
         with env.write_transaction():
-            concretized_specs = env.concretize(tests=tests)
+            concretized_specs = env.concretize(tests=install_kwargs["tests"])
             ev.display_specs(concretized_specs)
 
             # save view regeneration for later, so that we only do it
@@ -382,13 +380,13 @@ def install_from_active_environment(args, reporter):
 
     specs = env.all_specs()
     if specs:
-        if not args.log_file and not reporter.filename:
+        if not reporter.filename:
             reporter.filename = default_log_file(specs[0])
         reporter.specs = specs
 
         tty.msg("Installing environment {0}".format(env.name))
         with reporter("build"):
-            env.install_all(**kwargs)
+            env.install_all(**install_kwargs)
 
     else:
         msg = "{0} environment has no specs to install".format(env.name)
@@ -425,18 +423,22 @@ def install(parser, args):
         spack.config.set("config:deprecated", True, scope="command_line")
 
     reporter = _create_log_reporter(args)
+    install_kwargs = install_kwargs_from_args(args)
 
     if not args.spec and not args.specfiles:
         # If there are no args but an active environment then install the packages from it.
-        install_from_active_environment(args, reporter=reporter)
+        install_from_active_environment(
+            install_kwargs=install_kwargs,
+            only_concrete=args.only_concrete,
+            cli_test_arg=args.test,
+            reporter=reporter,
+        )
         return
-
-    kwargs = kwargs_from_args(args)
 
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = _create_test_fn_argument(abstract_specs, args.test)
-    kwargs["tests"] = tests
+    install_kwargs["tests"] = tests
 
     try:
         specs = spack.cmd.parse_specs(args.spec, concretize=True, tests=tests)
@@ -495,5 +497,5 @@ def install(parser, args):
                     tty.die("Reinstallation aborted.")
 
             # overwrite all concrete explicit specs from this build
-            kwargs["overwrite"] = [spec.dag_hash() for spec in specs]
-        install_specs(args, kwargs, zip(abstract_specs, specs))
+            install_kwargs["overwrite"] = [spec.dag_hash() for spec in specs]
+        install_specs(args, install_kwargs, zip(abstract_specs, specs))
