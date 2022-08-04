@@ -1,0 +1,35 @@
+--- a/shapely/geos.py	2022-08-04 11:15:00.000000000 -0600
++++ b/shapely/geos.py	2022-08-04 11:16:57.000000000 -0600
+@@ -88,9 +88,12 @@
+         if len(geos_pyinstaller_so) >= 1:
+             _lgeos = CDLL(geos_pyinstaller_so[0])
+             LOG.debug("Found GEOS DLL: %r, using it.", _lgeos)
+-    elif exists_conda_env():
+-        # conda package.
+-        _lgeos = CDLL(os.path.join(sys.prefix, 'lib', 'libgeos_c.so'))
++    # Spack might be using a barebone miniconda installation, in which case
++    # this elif block makes py-shapely look for libgeos_c.so in the miniconda
++    # install tree ... need to comment out so that spack's libgeos_c.so is found
++    #elif exists_conda_env():
++    #    # conda package.
++    #    _lgeos = CDLL(os.path.join(sys.prefix, 'lib', 'libgeos_c.so'))
+     else:
+         alt_paths = [
+             'libgeos_c.so.1',
+@@ -119,10 +122,12 @@
+         else:
+             _lgeos = CDLL(geos_whl_dylib)
+             LOG.debug("Found GEOS DLL: %r, using it.", _lgeos)
+-
+-    elif exists_conda_env():
+-        # conda package.
+-        _lgeos = CDLL(os.path.join(sys.prefix, 'lib', 'libgeos_c.dylib'))
++    # Spack might be using a barebone miniconda installation, in which case
++    # this elif block makes py-shapely look for libgeos_c.so in the miniconda
++    # install tree ... need to comment out so that spack's libgeos_c.so is found
++    #elif exists_conda_env():
++    #    # conda package.
++    #    _lgeos = CDLL(os.path.join(sys.prefix, 'lib', 'libgeos_c.dylib'))
+     else:
+         if hasattr(sys, 'frozen'):
+             try:
