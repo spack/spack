@@ -252,6 +252,13 @@ def find_new_compilers(path_hints=None, scope=None):
             merged configuration.
     """
     compilers = find_compilers(path_hints)
+    return select_new_compilers(compilers, scope)
+
+
+def select_new_compilers(compilers, scope=None):
+    """Given a list of compilers, remove those that are already defined in
+    the configuration.
+    """
     compilers_not_in_config = []
     for c in compilers:
         arch_spec = spack.spec.ArchSpec((None, c.operating_system, c.target))

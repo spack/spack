@@ -1,3 +1,21 @@
+# v0.18.1 (2022-07-19)
+
+### Spack Bugfixes
+* Fix several bugs related to bootstrapping (#30834,#31042,#31180)
+* Fix a regression that was causing spec hashes to differ between 
+  Python 2 and Python 3 (#31092)
+* Fixed compiler flags for oneAPI and DPC++ (#30856)
+* Fixed several issues related to concretization (#31142,#31153,#31170,#31226)
+* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173.#31186)
+* Assign a version to openSUSE Tumbleweed according to the GLIBC version
+  in the system (#19895) 
+* Improved Dockerfile generation for `spack containerize` (#29741,#31321)
+* Fixed a few bugs related to concurrent execution of commands (#31509,#31493,#31477)  
+
+### Package updates
+* WarpX: add v22.06, fixed libs property (#30866,#31102)
+* openPMD: add v0.14.5, update recipe for @develop (#29484,#31023)
+
 # v0.18.0 (2022-05-28)
 
 `v0.18.0` is a major feature release.

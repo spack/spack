@@ -26,6 +26,9 @@ schema = {
                 "cpe-version": {"type": "string", "minLength": 1},
                 "system-type": {"type": "string", "minLength": 1},
                 "schema-version": {"type": "string", "minLength": 1},
+                # Older schemas use did not have "cpe-version", just the
+                # schema version; in that case it was just called "version"
+                "version": {"type": "string", "minLength": 1},
             }
         },
         "compilers": {

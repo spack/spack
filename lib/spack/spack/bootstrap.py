@@ -456,9 +456,10 @@ def _make_bootstrapper(conf):
     return _bootstrap_methods[btype](conf)
 
 
-def _validate_source_is_trusted(conf):
+def source_is_enabled_or_raise(conf):
+    """Raise ValueError if the source is not enabled for bootstrapping"""
     trusted, name = spack.config.get('bootstrap:trusted'), conf['name']
-    if name not in trusted:
+    if not trusted.get(name, False):
         raise ValueError('source is not trusted')
 
 
@@ -529,7 +530,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None):
 
     for current_config in bootstrapping_sources():
         with h.forward(current_config['name']):
-            _validate_source_is_trusted(current_config)
+            source_is_enabled_or_raise(current_config)
 
             b = _make_bootstrapper(current_config)
             if b.try_import(module, abstract_spec):
@@ -571,7 +572,7 @@ def ensure_executables_in_path_or_raise(executables, abstract_spec):
 
     for current_config in bootstrapping_sources():
         with h.forward(current_config['name']):
-            _validate_source_is_trusted(current_config)
+            source_is_enabled_or_raise(current_config)
 
             b = _make_bootstrapper(current_config)
             if b.try_search_path(executables, abstract_spec):

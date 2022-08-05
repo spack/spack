@@ -1061,8 +1061,8 @@ config.update(get_paths())
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists.
         shared_libs = [
-            'libpython{}.{}'.format(self.version.up_to(2), dso_suffix),
-            self.config_vars['LDLIBRARY'],
+            self.config_vars["LDLIBRARY"],
+            "libpython{}.{}".format(self.version.up_to(2), dso_suffix),
         ]
         static_libs = [
             self.config_vars['LIBRARY'],
