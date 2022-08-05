@@ -15,10 +15,14 @@ import llnl.util.tty as tty
 import spack.build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 import spack.environment as ev
 import spack.fetch_strategy
+import spack.package_base
 import spack.paths
 import spack.report
+import spack.spec
+import spack.store
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -209,8 +213,7 @@ packages. If neither are chosen, don't run tests for any packages.""",
     )
     arguments.add_cdash_args(subparser, False)
     arguments.add_common_arguments(subparser, ["yes_to_all", "spec"])
-
-    spack.cmd.common.arguments.add_concretizer_args(subparser)
+    arguments.add_concretizer_args(subparser)
 
 
 def default_log_file(spec):
