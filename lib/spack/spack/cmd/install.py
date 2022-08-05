@@ -43,7 +43,7 @@ def install_kwargs_from_args(args):
         "use_cache": args.use_cache,
         "cache_only": args.cache_only,
         "include_build_deps": args.include_build_deps,
-        "explicit": True,  # Always true for install command
+        "explicit": True,  # Use true as a default for install command
         "stop_at": args.until,
         "unsigned": args.unsigned,
         "install_deps": ("dependencies" in args.things_to_install),
