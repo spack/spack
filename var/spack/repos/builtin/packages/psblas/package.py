@@ -27,7 +27,7 @@ class Psblas(AutotoolsPackage):
 
     version("development", branch="development")
 
-    # version('3.8.0-2', sha256='')
+    version('3.8.0-2', sha256="86a76bb0987edddd4c10c810d7f18e13742aadc66ac14ad3679669809c1184fa")
     version("3.8.0-1", sha256="dca593010f258af669eb40d92c4934eaaa016ef17280d4ab1208afc3d5aa13f0")
     version("3.8.0", sha256="0eaef8f5fd41313ee1925a54bda33c5e1756a6d14b679c54e8423556881875e8")
     version("3.7.1", sha256="a440eac162728f4943dde24c92c10abdae3c2aca00fe94f862b68772a010d73d")
