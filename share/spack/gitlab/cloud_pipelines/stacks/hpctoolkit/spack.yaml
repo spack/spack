@@ -4,8 +4,6 @@ spack:
   concretizer:
     reuse: false
     unify: false
-    targets:
-      granularity: generic
   
   config:
     concretizer: clingo
@@ -17,32 +15,32 @@ spack:
 
   definitions:
   - when: arch.satisfies('target=x86_64:')
-    target:
-    - target=x86_64_v3
+    target: [target=x86_64_v3]
   - when: arch.satisfies('target=aarch64:')
-    target:
-    - target=graviton
-  
-  - target_specific_mindeps: []
+    target: [target=graviton]
+ 
+  - target_specific_mindeps: ['@:']
   - when: arch.satisfies('target=x86_64:')
-    target_specific_mindeps:
-    - ^intel-xed @12.0.1
+    target_specific_mindeps: [^intel-xed @12.0.1]
 
   specs:
     - matrix:
-      - - libmonitor +hpctoolkit ~dlopen ~commrank
-      - ['@2021.11.08', '@:']
-      - - $target
+      - [libmonitor +hpctoolkit ~dlopen ~commrank]
+      - - '@:'
+        - '@2021.11.08'
+      - [$target]
     # Latest release with latest compatible dependencies
     - matrix:
-      - - hpctoolkit +mpi +viewer
-      - [+papi, ~papi]
-      - - $target
+      - [hpctoolkit +mpi +viewer]
+      - - +papi
+        - ~papi
+      - [$target]
     # Latest release with minimum supported dependencies
     - matrix:
-      - - hpctoolkit +mpi +viewer
+      - [hpctoolkit +mpi +viewer]
       - - +papi ^papi @6.0.0.1
         - ~papi ^libpfm4 @4.11.0
+
       - - ^autoconf @2.69
           ^automake @1.15.1
           ^libtool @2.4.6
@@ -57,8 +55,8 @@ spack:
           ^libunwind @1.6.2
           ^xerces-c @3.2.3
           ^memkind @1.12.0
-      - - $target_specific_mindeps
-      - - $target
+      - [$target_specific_mindeps]
+      - [$target]
 
   mirrors:
     mirror: s3://spack-binaries/develop/hpctoolkit
