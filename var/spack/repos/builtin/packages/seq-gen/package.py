@@ -8,6 +8,9 @@ from spack.package import *
 
 class SeqGen(MakefilePackage):
     """Seq-Gen is a program that will simulate the evolution of nucleotide or
+    amino acid sequences along a phylogeny.
+
+    Seq-Gen is a program that will simulate the evolution of nucleotide or
     amino acid sequences along a phylogeny, using common models of the
     substitution process. A range of models of molecular evolution are implemented
     including the general reversible model. State frequencies and other parameters
