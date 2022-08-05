@@ -261,20 +261,16 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
         # the matches.  Getting to this point means there were either
         # no matches or exactly one match.
 
-        if not m_spec:
-            tty.debug("{0} matched nothing in the env".format(abstract.name))
-            # no matches in the env
-            if cli_args.no_add:
-                msg = (
-                    "You asked to install {0} without adding it "
-                    + "(--no-add), but no such spec exists in "
-                    + "environment"
-                ).format(abstract.name)
-                tty.die(msg)
-            else:
-                tty.debug("adding {0} as a root".format(abstract.name))
-                specs_to_add.append((abstract, concrete))
+        if not m_spec and cli_args.no_add:
+            msg = (
+                "You asked to install {0} without adding it (--no-add), but no such spec "
+                "exists in environment"
+            ).format(abstract.name)
+            tty.die(msg)
 
+        if not m_spec:
+            tty.debug("adding {0} as a root".format(abstract.name))
+            specs_to_add.append((abstract, concrete))
             continue
 
         tty.debug("exactly one match for {0} in env -> {1}".format(m_spec.name, m_spec.dag_hash()))
