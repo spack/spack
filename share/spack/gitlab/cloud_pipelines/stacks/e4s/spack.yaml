@@ -68,7 +68,7 @@ spack:
   - chai ~benchmarks ~tests
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk +adios2 +ascent +cinema ~cuda +darshan +faodel +hdf5 +paraview +pnetcdf ~rocm ~sensei +sz +unifyfs+ veloc +visit +vtkm +zfp
+  - ecp-data-vis-sdk +adios2 +ascent +cinema ~cuda +darshan +faodel +hdf5 +paraview +pnetcdf ~rocm ~sensei +sz +unifyfs+ veloc +visit +vtkm +zfp ^mesa +osmesa ~glx
   - exaworks
   - faodel
   - flecsi
@@ -147,7 +147,7 @@ spack:
   - wannier90
 
   # CUDA
-  - ecp-data-vis-sdk +adios2 +ascent +cinema +cuda +darshan +faodel +hdf5 ~paraview +pnetcdf ~rocm ~sensei +sz +unifyfs +veloc +visit +vtkm +zfp cuda_arch=80
+  - ecp-data-vis-sdk +adios2 +ascent +cinema +cuda +darshan +faodel +hdf5 ~paraview +pnetcdf ~rocm ~sensei +sz +unifyfs +veloc +visit +vtkm +zfp cuda_arch=80  ^mesa +osmesa ~glx
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
@@ -176,7 +176,7 @@ spack:
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
-  - ecp-data-vis-sdk +vtkm +rocm amdgpu_target=gfx90a
+  - ecp-data-vis-sdk +vtkm +rocm amdgpu_target=gfx90a ^mesa +osmesa ~glx
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
