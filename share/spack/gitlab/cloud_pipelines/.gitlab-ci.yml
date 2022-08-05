@@ -756,22 +756,22 @@ tutorial-protected-build:
     SPACK_CI_STACK_NAME: hpctoolkit
 .hpctoolkit-centos7:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-centos-7@sha256:232131a90b7247d0eeccdd69b91785d3b504ac581bcf2f0a421db190b422bc6a
+  image: ghcr.io/blue42u/e4s-centos-7@sha256:d74305ded85bbdf2b3a995c84d70700832654581f6b4b0c9e28f435284e32833
 .hpctoolkit-fedora36:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-fedora-36@sha256:1c709eebcbd858576ac8c470af18cbe3ea996078b0a3649e28d5dd1991799d45
+  image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:335894dff49fb70c3ad7a737488ff4c13325678fcadd4a1fb256a0b3cb9b3824
 .hpctoolkit-fedora36-aarch64:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-fedora-36@sha256:1c709eebcbd858576ac8c470af18cbe3ea996078b0a3649e28d5dd1991799d45
+  image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:a210ded2ef219d53ff2a96a81a4dea2ae81780063f487ed204a4022630d31d20
 .hpctoolkit-leap15:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-leap-15@sha256:c66547764662d11b6e81d710de52c69edf1fbbbac817a7d8df42b47cceeecdfe
+  image: ghcr.io/blue42u/e4s-leap-15@sha256:39154fa3a24af562576c3a490b27ac9eef9ee0884710cf91924ace18f809c98d
 .hpctoolkit-almalinux8:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:82b63e63a3424f6bce9b7d8c2dbd0597d90f78afe3712e8e094fc10c44e116bc
+  image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:ef356e5ce0fbf1670d723f0b43d685f5720a7392f003d8d032ab21de21136c50
 .hpctoolkit-almalinux8-aarch64:
   extends: .hpctoolkit
-  image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:1f5a5c4bfbd6023f9ddaa2450ef9f6a53a903a47d29b29dbd2e58390b43399e8
+  image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:8e39961a2c3fe587d624c74d4b76a7879fffddebe9e6585736e3e118b534fca2
 .hpctoolkit-ubuntu20.04:
   extends: .hpctoolkit
   image: ghcr.io/spack/e4s-ubuntu-20.04:v2022-03-21

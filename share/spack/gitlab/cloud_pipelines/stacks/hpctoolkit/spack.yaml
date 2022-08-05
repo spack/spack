@@ -79,27 +79,27 @@ spack:
     mappings:
       - match: ['os=centos7 target=:x86_64_v3']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-centos-7:latest@sha256:29dce475b2d2b3e040234d1993787f466cd3dc48c091a0c520cd794808c9ae2f
+          image: ghcr.io/blue42u/e4s-centos-7:latest@sha256:d74305ded85bbdf2b3a995c84d70700832654581f6b4b0c9e28f435284e32833
           tags: ["spack", "x86_64_v3"]
       - match: ['os=fedora36 target=:x86_64_v3']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:4dcda2b254311dd80996f9d5ca8e2dadffafbc91b10fb5c5f09f6efefa415afc
+          image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:335894dff49fb70c3ad7a737488ff4c13325678fcadd4a1fb256a0b3cb9b3824
           tags: ["spack", "x86_64_v3"]
       - match: ['os=fedora36 target=:graviton']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:f2e92918b7541b4e78fe09ea3942d700cdbda1daabed9a1d18789c570e503fd8
+          image: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:a210ded2ef219d53ff2a96a81a4dea2ae81780063f487ed204a4022630d31d20
           tags: ["spack", "graviton"]
       - match: ['os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-leap-15:latest@sha256:baabf6938a24962d9ee865c956f3061ea90f73a310b27d18d283e6ddc42c0cc3
+          image: ghcr.io/blue42u/e4s-leap-15:latest@sha256:39154fa3a24af562576c3a490b27ac9eef9ee0884710cf91924ace18f809c98d
           tags: ["spack", "x86_64_v3"]
       - match: ['os=almalinux8 target=:x86_64_v3']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:82b63e63a3424f6bce9b7d8c2dbd0597d90f78afe3712e8e094fc10c44e116bc
+          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:ef356e5ce0fbf1670d723f0b43d685f5720a7392f003d8d032ab21de21136c50
           tags: ["spack", "x86_64_v3"]
       - match: ['os=almalinux8 target=:graviton']
         runner-attributes:
-          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:1f5a5c4bfbd6023f9ddaa2450ef9f6a53a903a47d29b29dbd2e58390b43399e8
+          image: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:8e39961a2c3fe587d624c74d4b76a7879fffddebe9e6585736e3e118b534fca2
           tags: ["spack", "graviton"]
       - match: ['os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
