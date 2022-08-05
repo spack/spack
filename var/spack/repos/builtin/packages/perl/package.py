@@ -372,7 +372,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("build", "run"))
+        self._setup_dependent_env(env, dependent_spec, deptypes=("build", "run", "test"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self._setup_dependent_env(env, dependent_spec, deptypes=("run",))
