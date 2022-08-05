@@ -161,6 +161,7 @@ class PyNumpy(PythonPackage):
 
     # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
     conflicts("%intel", when="@1.23.0:")
+    conflicts("%oneapi", when="@1.23.0:")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"
