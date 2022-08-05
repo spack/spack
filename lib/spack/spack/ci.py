@@ -1327,7 +1327,10 @@ def generate_gitlab_ci_yaml(
         if v_match:
             version_to_clone = "v{0}".format(v_match.group(0))
         else:
-            v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+            # spack_version returns something like:
+            #     0.18.1.dev0 (<git-commit-sha>)
+            # So capture anything within the parens at the end of the line
+            v_match = re.search(r"\(([^\)]+)\)$", spack_version)
             if v_match:
                 version_to_clone = v_match.group(1)
             else:

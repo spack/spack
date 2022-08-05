@@ -1292,7 +1292,7 @@ spack:
         outputfile = str(tmpdir.join(".gitlab-ci.yml"))
 
         with ev.read("test"):
-            monkeypatch.setattr(spack.main, "get_version", lambda: "0.15.3-416-12ad69eb1")
+            monkeypatch.setattr(spack.main, "get_version", lambda: "0.19.0.dev0 (blah)")
             ci_cmd("generate", "--output-file", outputfile)
 
         with open(outputfile) as f:
@@ -1302,9 +1302,9 @@ spack:
             assert "variables" in yaml_contents
             global_vars = yaml_contents["variables"]
             assert "SPACK_VERSION" in global_vars
-            assert global_vars["SPACK_VERSION"] == "0.15.3-416-12ad69eb1"
+            assert global_vars["SPACK_VERSION"] == "0.19.0.dev0 (blah)"
             assert "SPACK_CHECKOUT_VERSION" in global_vars
-            assert global_vars["SPACK_CHECKOUT_VERSION"] == "12ad69eb1"
+            assert global_vars["SPACK_CHECKOUT_VERSION"] == "blah"
 
             for ci_key in yaml_contents.keys():
                 if "(specs) b" in ci_key:
