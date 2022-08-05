@@ -194,7 +194,7 @@ class Acts(CMakePackage, CudaPackage):
         "edm4hep",
         default=False,
         description="Build the EDM4hep examples",
-        when='@19.4.0: +examples'
+        when="@19.4.0: +examples",
     )
     variant(
         "geant4",
@@ -318,7 +318,7 @@ class Acts(CMakePackage, CudaPackage):
 
         log_failure_threshold = spec.variants["log_failure_threshold"].value
         args.append("-DACTS_LOG_FAILURE_THRESHOLD={0}".format(log_failure_threshold))
-        if spec.satisfies('@19.4.0:'):
+        if spec.satisfies("@19.4.0:"):
             args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
 
         if spec.satisfies("+autodiff"):
