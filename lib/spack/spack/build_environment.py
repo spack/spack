@@ -1012,11 +1012,15 @@ def modifications_from_dependencies(
 
 
 def get_cmake_prefix_path(pkg):
-    # Note that unlike modifications_from_dependencies, this does not include
-    # any edits to CMAKE_PREFIX_PATH defined in custom
-    # setup_dependent_build_environment implementations of dependency packages
-    build_deps = set(pkg.spec.dependencies(deptype=("build", "test")))
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
+    """Collect CMAKE_PREFIX_PATH shell variable modifications from prefixes, per-package
+    implementations of setup_build_environment, and finally externals filtering out
+    potentially problematic system paths
+
+    The goal of the order here is put everything provided by spack before everything
+    that comes from externals provided to spack.
+    """
+    build_deps = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps = set(pkg.spec.traverse(root=False, deptype=('link')))
     build_link_deps = build_deps | link_deps
     spack_built = []
     externals = []
@@ -1030,11 +1034,15 @@ def get_cmake_prefix_path(pkg):
             else:
                 spack_built.insert(0, dspec.prefix)
 
-    # CMAKE_PREFIX_PATH here cannot come from the outside environment under
-    # normal circumstances, it has to come from spack.  include these second
-    # after the spack_built dependencies but before externals
+    # CMAKE_PREFIX_PATH here cannot come from the outside spack under
+    # normal circumstances, it has to come from per-package implementations of
+    # `setup_build_environment` which modify the shell environment
+    # Since we are going to explicitly pass the CMAKE_PREFIX_PATH as a command line
+    # argument (to make sure we include the spack prefixs), passing these via the
+    # environment won't occur because CMake prefers the CLI argument
     env_mod_list = modifications_from_dependencies(pkg.spec, 'build',
-                                                   custom_mods_only=True)
+                                                   custom_mods_only=True,
+                                                   set_package_py_globals=False)
     env_mod = {}
     env_mod_list.apply_modifications(env_mod)
     extra_prefix_paths = env_mod.get("CMAKE_PREFIX_PATH", "").split(";")
