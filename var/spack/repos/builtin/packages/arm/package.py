@@ -78,7 +78,9 @@ class Arm(Package):
     conflicts("target=x86_64:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
-
+    
+    depends_on('ncurses abi=5')
+    
     executables = [r"armclang", r"armclang\+\+", r"armflang"]
 
     # Licensing - Not required from 22.0.1 on.
@@ -149,3 +151,5 @@ class Arm(Package):
         env.prepend_path("CPATH", join_path(arm_dir, "include"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
         env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, "licences"))
+        if "ncurses" in self.dependencies:
+            env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec["ncurses"].prefix, "lib"))
