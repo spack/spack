@@ -97,6 +97,9 @@ _spack_times_log = "install_times.json"
 _spack_configure_argsfile = "spack-configure-args.txt"
 
 
+is_windows = sys.platform == "win32"
+
+
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
@@ -189,12 +192,21 @@ class WindowsRPathMeta(object):
     due to their use of RPATH. All methods within this class are no-ops on
     non Windows. Packages can customize and manipulate this class as
     they would a genuine RPATH, i.e. adding directories that contain
-    runtime binary dependencies"""
+    runtime library dependencies"""
 
-    win_rpath = None
+    def add_search_paths(self, *path):
+        """Add additional rpaths that are not implicitly included in the search
+        scheme
+        """
+        self.win_rpath.include_additional_link_paths(*path)
 
-    def windows_establish_runtime_link(self):
-        self.win_rpath.establish_runtime_link()
+    def windows_establish_runtime_linkage(self):
+        """Establish RPATH on Windows
+
+        Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
+        """
+        if is_windows:
+            self.win_rpath.establish_link()
 
 
 #: Registers which are the detectable packages, by repo and package name
@@ -236,7 +248,7 @@ class DetectablePackageMeta(object):
                 plat_exe = []
                 if hasattr(cls, "executables"):
                     for exe in cls.executables:
-                        if sys.platform == "win32":
+                        if is_windows:
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
                 return plat_exe
@@ -340,7 +352,6 @@ class DetectablePackageMeta(object):
 
 class PackageMeta(
     DetectablePackageMeta,
-    WindowsRPathMeta,
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta,
     spack.multimethod.MultiMethodMeta,
@@ -529,7 +540,7 @@ def test_log_pathname(test_stage, spec):
     return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
-class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
+class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -745,10 +756,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: specs.
     test_suite = None
 
-    # On Windows, concept of rpath does not exist, after install
-    # establish runtime linkage via Windows Runtime link object
-    run_after('install')(PackageMeta.windows_establish_runtime_linkage)
-
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -773,7 +780,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Set up timing variables
         self._fetch_time = 0.0
 
-        self.win_rpath = fsys.WindowsRuntimePath(self)
+        self.win_rpath = fsys.WindowsSimulatedRPath(self)
 
         if self.is_extension:
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
@@ -2772,6 +2779,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+        if is_windows:
+            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
         return rpaths
 
     @property
