@@ -89,7 +89,7 @@ class Aml(AutotoolsPackage):
         for b in ["opencl", "hwloc", "ze", "hip", "cuda"]:
             config_args.extend(self.with_or_without(b))
         if self.spec.satisfies("%oneapi"):
-            config_args += ['--with-openmp-flags="-fiopenmp -fopenmp-targets=spir64"']
+            config_args += ["--with-openmp-flags=-fiopenmp -fopenmp-targets=spir64"]
         if "hip-platform=amd" in self.spec:
             config_args += ["--with-hip-platform=amd"]
         if "hip-platform=nvidia" in self.spec:
