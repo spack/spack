@@ -67,7 +67,11 @@ def view_copy(src, dst, view, spec=None):
 
     Use spec and view to generate relocations
     """
-    shutil.copy2(src, dst)
+    if os.path.isdir(src):
+        shutil.copytree(src, dst)
+    else:
+        shutil.copy2(src, dst)
+
     if spec and not spec.external:
         # Not metadata, we have to relocate it
 
