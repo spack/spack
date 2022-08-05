@@ -631,6 +631,7 @@ class PyclingoDriver(object):
 
         # Load the file itself
         self.control.load(os.path.join(parent_dir, 'concretize.lp'))
+        self.control.load(os.path.join(parent_dir, "os_facts.lp"))
         self.control.load(os.path.join(parent_dir, "display.lp"))
         timer.phase("load")
 
@@ -716,7 +717,7 @@ class SpackSolverSetup(object):
         self.variant_values_from_specs = set()
         self.version_constraints = set()
         self.target_constraints = set()
-        self.default_targets = {}
+        self.default_targets = []
         self.compiler_version_constraints = set()
         self.post_facts = []
 
@@ -748,7 +749,13 @@ class SpackSolverSetup(object):
 
         pkg = packagize(pkg)
         declared_versions = self.declared_versions[pkg.name]
-        most_to_least_preferred = sorted(declared_versions, key=key_fn)
+        partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
+
+        most_to_least_preferred = []
+        for _, group in itertools.groupby(partially_sorted_versions, key=key_fn):
+            most_to_least_preferred.extend(list(sorted(
+                group, reverse=True, key=lambda x: spack.version.ver(x.version)
+            )))
 
         for weight, declared_version in enumerate(most_to_least_preferred):
             self.gen.fact(fn.version_declared(
@@ -1171,29 +1178,19 @@ class SpackSolverSetup(object):
         if not self.target_specs_cache:
             self.target_specs_cache = [
                 spack.spec.Spec('target={0}'.format(target_name))
-                for target_name in archspec.cpu.TARGETS
+                for _, target_name in self.default_targets
             ]
 
-        target_specs = self.target_specs_cache
-        preferred_targets = [x for x in target_specs if key_fn(x) < 0]
+        package_targets = self.target_specs_cache[:]
+        package_targets.sort(key=key_fn)
 
-        for i, preferred in enumerate(preferred_targets):
-            self.gen.fact(fn.package_target_weight(
-                str(preferred.architecture.target), pkg_name, i
-            ))
-
-        # generate weights for non-preferred targets on a per-package basis
-        default_targets = {
-            name: weight for
-            name, weight in self.default_targets.items()
-            if not any(preferred.architecture.target.name == name
-                       for preferred in preferred_targets)
-        }
-
-        num_preferred = len(preferred_targets)
-        for name, weight in default_targets.items():
-            self.gen.fact(fn.default_target_weight(
-                name, pkg_name, weight + num_preferred + 30
+        offset = 0
+        best_default = self.default_targets[0][1]
+        for i, preferred in enumerate(package_targets):
+            if str(preferred.architecture.target) == best_default and i != 0:
+                offset = 100
+            self.gen.fact(fn.target_weight(
+                pkg_name, str(preferred.architecture.target), i + offset
             ))
 
     def flag_defaults(self):
@@ -1597,11 +1594,12 @@ class SpackSolverSetup(object):
             # these are stored to be generated as facts later offset by the
             # number of preferred targets
             if target.name in best_targets:
-                self.default_targets[target.name] = i
+                self.default_targets.append((i, target.name))
                 i += 1
             else:
-                self.default_targets[target.name] = 100
+                self.default_targets.append((100, target.name))
 
+            self.default_targets = list(sorted(set(self.default_targets)))
             self.gen.newline()
 
     def virtual_providers(self):

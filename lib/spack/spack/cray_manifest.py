@@ -20,6 +20,7 @@ default_path = '/opt/cray/pe/cpe-descriptive-manifest/'
 
 compiler_name_translation = {
     'nvidia': 'nvhpc',
+    'rocm': 'rocmcc',
 }
 
 
@@ -38,10 +39,6 @@ def translated_compiler_name(manifest_compiler_name):
     elif manifest_compiler_name in spack.compilers.supported_compilers():
         return manifest_compiler_name
     else:
-        # Try to fail quickly. This can occur in two cases: (1) the compiler
-        # definition (2) a spec can specify a compiler that doesn't exist; the
-        # first will be caught when creating compiler definition. The second
-        # will result in Specs with associated undefined compilers.
         raise spack.compilers.UnknownCompilerError(
             "Manifest parsing - unknown compiler: {0}"
             .format(manifest_compiler_name))
@@ -185,6 +182,8 @@ def read(path, apply_updates):
     tty.debug("{0}: {1} compilers read from manifest".format(
         path,
         str(len(compilers))))
+    # Filter out the compilers that already appear in the configuration
+    compilers = spack.compilers.select_new_compilers(compilers)
     if apply_updates and compilers:
         spack.compilers.add_compilers_to_config(
             compilers, init_config=False)
