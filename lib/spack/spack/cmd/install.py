@@ -435,28 +435,30 @@ def concrete_specs_from_file(args):
     return result
 
 
-def get_user_confirmation_for_overwrite(concrete_specs, args):
+def require_user_confirmation_for_overwrite(concrete_specs, args):
+    if args.yes_to_all:
+        return
+
     installed = list(filter(lambda x: x, map(spack.store.db.query_one, concrete_specs)))
-    if not args.yes_to_all:
-        display_args = {"long": True, "show_flags": True, "variants": True}
+    display_args = {"long": True, "show_flags": True, "variants": True}
 
-        if installed:
-            tty.msg("The following package specs will be " "reinstalled:\n")
-            spack.cmd.display_specs(installed, **display_args)
+    if installed:
+        tty.msg("The following package specs will be " "reinstalled:\n")
+        spack.cmd.display_specs(installed, **display_args)
 
-        not_installed = list(filter(lambda x: x not in installed, concrete_specs))
-        if not_installed:
-            tty.msg(
-                "The following package specs are not installed and"
-                " the --overwrite flag was given. The package spec"
-                " will be newly installed:\n"
-            )
-            spack.cmd.display_specs(not_installed, **display_args)
+    not_installed = list(filter(lambda x: x not in installed, concrete_specs))
+    if not_installed:
+        tty.msg(
+            "The following package specs are not installed and"
+            " the --overwrite flag was given. The package spec"
+            " will be newly installed:\n"
+        )
+        spack.cmd.display_specs(not_installed, **display_args)
 
-        # We have some specs, so one of the above must have been true
-        answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
-        if not answer:
-            tty.die("Reinstallation aborted.")
+    # We have some specs, so one of the above must have been true
+    answer = tty.get_yes_or_no("Do you want to proceed?", default=False)
+    if not answer:
+        tty.die("Reinstallation aborted.")
 
 
 def install(parser, args):
@@ -503,6 +505,6 @@ def install(parser, args):
 
     with reporter("build"):
         if args.overwrite:
-            get_user_confirmation_for_overwrite(concrete_specs, args)
+            require_user_confirmation_for_overwrite(concrete_specs, args)
             install_kwargs["overwrite"] = [spec.dag_hash() for spec in concrete_specs]
         install_specs(zip(abstract_specs, concrete_specs), install_kwargs, args)
