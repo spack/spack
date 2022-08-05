@@ -137,3 +137,8 @@ class Mbedtls(MakefilePackage):
 
     def install(self, spec, prefix):
         make("install", "DESTDIR={0}".format(prefix))
+
+    @run_after("install")
+    def darwin_fix(self):
+        if self.spec.satisfies("platform=darwin"):
+            fix_darwin_install_name(self.prefix.lib)
