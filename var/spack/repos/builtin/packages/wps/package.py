@@ -41,6 +41,7 @@ class Wps(Package):
     depends_on("wrf")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
+    depends_on("mpi")
     # build script use csh
     depends_on("tcsh", type=("build"))
 
