@@ -147,7 +147,6 @@ class Hipblas(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
@@ -161,8 +160,9 @@ class Hipblas(CMakePackage):
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
-
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@:5.1.3"):
+            args.append("-DCMAKE_MODULE_PATH={0}/".format(self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
 
         return args
