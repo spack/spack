@@ -1115,7 +1115,7 @@ may be specified instead of a numerical version i.e. branches, tags
 and commits. Spack will stage and build based off the ``git`` 
 reference provided.  Acceptable syntaxes for this are:
 
-.. code-block:: console
+.. code-block:: sh
    
     # branches and tags
    foo@git.develop # use the develop branch
@@ -1132,7 +1132,7 @@ version for all version comparisons in the package logic (e.g. ``depends_on('foo
 
 The associated version can be assigned with ``[git ref]=[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
 
-.. code-block:: console
+.. code-block:: sh
 
    foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
