@@ -16,6 +16,7 @@ class PyScikitLearn(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("master", branch="master")
+    version("1.1.2", sha256="7c22d1305b16f08d57751a4ea36071e2215efb4c09cb79183faa4e8e82a3dbf8")
     version("1.1.1", sha256="3e77b71e8e644f86c8b5be7f1c285ef597de4c384961389ee3e9ca36c445b256")
     version("1.1.0", sha256="80f9904f5b1356adfc32406725dd94c8cc9c8d265047d98390033a6c238cbb29")
     version("1.0.2", sha256="b5870959a5484b614f26d31ca4c17524b1b0317522199dc985c3b4256e030767")
@@ -83,7 +84,7 @@ class PyScikitLearn(PythonPackage):
 
     # Test dependencies
     depends_on("py-matplotlib@3.1.2:", type="test")
-    depends_on("py-scikit-image@0.14.5:", type="test")
+    depends_on("py-scikit-image@0.16.2:", type="test")
     depends_on("py-pandas@1.0.5:", type="test")
     depends_on("py-pytest@5.0.1:", type="test")
     depends_on("py-pyamg@4:", type="test")
