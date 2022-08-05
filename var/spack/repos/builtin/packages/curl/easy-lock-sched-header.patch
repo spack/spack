@@ -1,0 +1,13 @@
+diff -ruN spack-src/lib/easy_lock.h spack-src-patched/lib/easy_lock.h
+--- spack-src/lib/easy_lock.h	2022-06-26 13:58:05.000000000 -0700
++++ spack-src-patched/lib/easy_lock.h	2022-08-05 07:59:16.450137961 -0700
+@@ -36,6 +36,9 @@
+ 
+ #elif defined (HAVE_ATOMIC)
+ #include <stdatomic.h>
++#if defined(HAVE_SCHED_YIELD)
++#include <sched.h>
++#endif
+ 
+ #define curl_simple_lock atomic_bool
+ #define CURL_SIMPLE_LOCK_INIT false
