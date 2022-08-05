@@ -111,10 +111,10 @@ class FluxSched(AutotoolsPackage):
             # When using spack develop, this will already be unshallow
             try:
                 git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
             except spack.util.executable.ProcessError:
                 git("fetch")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
 
     def autoreconf(self, spec, prefix):
         self.setup()

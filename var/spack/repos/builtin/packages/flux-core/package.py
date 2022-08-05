@@ -131,6 +131,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("lz4")
+    depends_on("sqlite")
 
     depends_on("asciidoc", type="build", when="+docs")
     depends_on("py-docutils", type="build", when="@0.32.0:")
@@ -177,10 +178,10 @@ class FluxCore(AutotoolsPackage):
             # When using spack develop, this will already be unshallow
             try:
                 git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
             except spack.util.executable.ProcessError:
                 git("fetch")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
 
     def autoreconf(self, spec, prefix):
         self.setup()
