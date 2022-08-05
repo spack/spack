@@ -30,6 +30,12 @@ class Spectre(CMakePackage):
 
     version("develop", branch="develop")
     version(
+        "2022.08.01", sha256="453ad831f3d8c2d4dbed0b2e4f08f7a3b64e6634a2025b5ac1a0b242c1d87d93"
+    )
+    version(
+        "2022.07.18", sha256="8812aeba70d60d6800fe8866542c3d2e0fae34aaac0c8d1c4324cf6c804f3fe1"
+    )
+    version(
         "2022.06.14", sha256="872ab6729d8675c90b0d194f4ca34e4c02ce23e60c558a43b874fee9da9dfe78"
     )
     version(
@@ -166,6 +172,19 @@ class Spectre(CMakePackage):
     #   doesn't find the BLAS header. Also, we haven't tested Blaze with BLAS
     #   kernels before then.
     conflicts("^blaze+blas", when="@:2022.02.17")
+
+    # Patch Charm++ v7.0.0 for Python bindings (see
+    # https://github.com/sxs-collaboration/spectre/pull/3942 and
+    # https://github.com/UIUC-PPL/charm/issues/3600)
+    depends_on(
+        "charmpp@6.10.2:",
+        patches=patch(
+            "https://raw.githubusercontent.com/sxs-collaboration/spectre/develop/support/Charm/v7.0.0.patch",
+            sha256="576c745de202f030275aaeb3c6206f7ebdda696385353e0d1417ed7c47b856ca",
+            when="@7.0.0",
+        ),
+        when="@2022.06.14: +python platform=linux",
+    )
 
     # These patches backport updates to the SpECTRE build system to earlier
     # releases, to support installing them with Spack. In particular, we try to
