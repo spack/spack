@@ -1,0 +1,12 @@
+--- a/vtkm/cont/arg/TransportTagTopologyFieldIn.h	2022-07-18 19:02:03.153633000 -0400
++++ b/vtkm/cont/arg/TransportTagTopologyFieldIn.h	2022-07-18 19:02:51.538743000 -0400
+@@ -90,7 +90,9 @@
+   {
+     if (object.GetNumberOfValues() != detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
+     {
++#if 0
+       throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
++#endif
+     }
+ 
+     return object.PrepareForInput(Device(), token);
