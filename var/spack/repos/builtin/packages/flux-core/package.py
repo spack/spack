@@ -5,6 +5,7 @@
 
 import os
 
+import spack.util.executable
 from spack.package import *
 
 
@@ -173,7 +174,11 @@ class FluxCore(AutotoolsPackage):
         with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which("git")
-            git("fetch", "--unshallow")
+            # When using spack develop, this will already be unshallow
+            try:
+                git("fetch", "--unshallow")
+            except spack.util.executable.ProcessError:
+                git("fetch")
             git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
             git("fetch", "origin")
 
