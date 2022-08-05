@@ -311,3 +311,19 @@ def test_get_all_versions(specs, expected_specs):
     output_list = [str(x) for x in output_list]
     # Compare sets since order is not important
     assert set(output_list) == set(expected_specs)
+
+
+@pytest.mark.regression("31736")
+def test_non_concretizable_spec_does_not_raise():
+    s = Spec("doesnotexist")
+
+    class Stats(object):
+        called = False
+
+        def error(self):
+            self.called = True
+
+    mirror_stats = Stats()
+    result = spack.mirror._add_single_spec(s, mirror=None, mirror_stats=mirror_stats)
+    assert result is False
+    assert mirror_stats.called is True
