@@ -40,7 +40,6 @@ spack:
     - py-timm
     - py-torch
     - py-torch-cluster
-    - py-torch-geometric
     - py-torch-scatter
     - py-torch-sparse
     - py-torch-spline-conv
