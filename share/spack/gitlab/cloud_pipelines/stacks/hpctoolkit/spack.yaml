@@ -14,10 +14,10 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   definitions:
-  - when: arch.satisfies('target=x86_64:')
+  - when: arch.satisfies('target=x86_64_v3:')
     target: [target=x86_64_v3]
   - when: arch.satisfies('target=aarch64:')
-    target: [target=graviton]
+    target: [target=aarch64]
  
   - target_specific_mindeps: ['@:']
   - when: arch.satisfies('target=x86_64:')
