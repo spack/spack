@@ -125,7 +125,7 @@ class NetcdfC(AutotoolsPackage):
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on("hdf5@:1.8", when="@:4.4.0")
 
-    depends_on("zstd", when="@4.9.0:")
+    depends_on("zstd", when="+zstd")
 
     # The feature was introduced in version 4.1.2
     # and was removed in version 4.4.0
