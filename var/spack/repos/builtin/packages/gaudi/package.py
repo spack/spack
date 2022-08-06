@@ -107,10 +107,13 @@ class Gaudi(CMakePackage):
     depends_on("doxygen +graphviz", when="+docs")
     depends_on("gperftools", when="+gperftools")
     depends_on("gdb")
+    depends_on("gsl", when="@:31 +examples")
+    depends_on("heppdt", when="@:34 +examples")
     depends_on("heppdt", when="+heppdt")
     depends_on("jemalloc", when="+jemalloc")
+    depends_on("libng", when="@:34 +examples")
     depends_on("libunwind", when="+unwind")
-    # depends_on("relax", when="@:33 +optional")
+    depends_on("relax", when="@:34 +examples")
     depends_on("xerces-c", when="+xercesc")
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
     #       ROOT does not like being exposed to LLVM symbols.
