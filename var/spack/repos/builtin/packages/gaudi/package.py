@@ -46,6 +46,27 @@ class Gaudi(CMakePackage):
     variant("vtune", default=False, description="Build with Intel VTune profiler support")
     variant("xercesc", default=False, description="Build with Xerces-C XML support")
 
+    # meta-variants
+    optional_variants = [
+        "aida",
+        "cppunit",
+        "examples",
+        "gperftools",
+        "heppdt",
+        "jemalloc",
+        "unwind",
+        "xercesc",
+    ]
+    variant(
+        "optional",
+        default=False,
+        description="Build optional components; equivalent to{}".format(
+            " +".join([""] + optional_variants)
+        ),
+    )
+    for v in optional_variants:
+        conflicts("-" + v, when="+optional")
+
     # only build subdirectory GaudiExamples when +examples
     patch("build_testing.patch", when="@:34")
     # fixes for the cmake config which could not find newer boost versions
