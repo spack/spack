@@ -764,13 +764,12 @@ class Cp2k(MakefilePackage, CudaPackage):
         with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
             content = handle.read().rstrip()
 
-            if "^fftw" in self.spec:
-                content += " -lfftw3"
+            content += " " + self.spec['fftw-api'].libs.ld_flags
+            content += " " + self.spec["blas"].libs.ld_flags
 
             if "^fftw+openmp" in self.spec:
                 content += " -lfftw3_omp"
 
-            content += " -lopenblas"
             content += "\n"
 
             handle.seek(0)
