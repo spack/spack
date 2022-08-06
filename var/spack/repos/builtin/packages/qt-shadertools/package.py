@@ -10,36 +10,39 @@ class QtShadertools(CMakePackage):
     Direct3D, in addition to OpenGL."""
 
     homepage = "https://www.qt.io"
-    url      = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
+    url = "https://github.com/qt/qtshadertools/archive/refs/tags/v6.2.3.tar.gz"
     list_url = "https://github.com/qt/qtshadertools/tags"
 
-    maintainers = ['wdconinc', 'sethrj']
+    maintainers = ["wdconinc", "sethrj"]
 
-    version('6.2.4', sha256='c3332d91e0894086634d5f8d40638439e6e3653a3a185e1b5f5d23ae3b9f51a1')
-    version('6.2.3', sha256='658c4acc2925e57d35bbd38cdf49c08297555ed7d632f9e86bfef76e6d861562')
+    version("6.2.4", sha256="c3332d91e0894086634d5f8d40638439e6e3653a3a185e1b5f5d23ae3b9f51a1")
+    version("6.2.3", sha256="658c4acc2925e57d35bbd38cdf49c08297555ed7d632f9e86bfef76e6d861562")
 
-    generator = 'Ninja'
+    generator = "Ninja"
 
     # Changing default to Release for typical use in HPC contexts
-    variant('build_type',
-            default='Release',
-            values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
-            description='CMake build type')
+    variant(
+        "build_type",
+        default="Release",
+        values=("Release", "Debug", "RelWithDebInfo", "MinSizeRel"),
+        description="CMake build type",
+    )
 
-    depends_on('cmake@3.16:', type='build')
-    depends_on('ninja', type='build')
-    depends_on("pkgconfig", type='build')
-    depends_on("python", when='@5.7.0:', type='build')
+    depends_on("cmake@3.16:", type="build")
+    depends_on("ninja", type="build")
+    depends_on("pkgconfig", type="build")
+    depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ['6.2.4', '6.2.3']
+    _versions = ["6.2.4", "6.2.3"]
     for v in _versions:
-        depends_on('qt-base@' + v, when='@' + v)
+        depends_on("qt-base@" + v, when="@" + v)
 
     def patch(self):
         import os
         import shutil
-        vendor_dir = join_path(self.stage.source_path, 'src/3rdparty')
-        vendor_deps_to_keep = ['glslang', 'patches', 'SPIRV-Cross']
+
+        vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
+        vendor_deps_to_keep = ["glslang", "patches", "SPIRV-Cross"]
         with working_dir(vendor_dir):
             for dep in os.listdir():
                 if os.path.isdir(dep):
