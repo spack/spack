@@ -6,7 +6,7 @@
 import glob
 import tarfile
 
-from spack import *
+from spack.package import *
 
 
 class Cernlib(Package):
