@@ -120,6 +120,9 @@ class Curl(AutotoolsPackage):
     # curl queries pkgconfig for openssl compilation flags
     depends_on("pkgconfig", type="build")
 
+    # https://github.com/curl/curl/pull/9054
+    patch("easy-lock-sched-header.patch", when="@7.84.0")
+
     @classmethod
     def determine_version(cls, exe):
         curl = Executable(exe)
