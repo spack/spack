@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class QtShadertools(CMakePackage):
     """APIs and tools in this module provide the producer functionality for the
     shader pipeline that allows Qt Quick to operate on Vulkan, Metal, and

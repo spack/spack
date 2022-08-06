@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class QtQuick3d(CMakePackage):
     """A new module and API for defining 3D content in Qt Quick."""
 
