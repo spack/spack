@@ -68,7 +68,7 @@ def view_copy(src, dst, view, spec=None):
     Use spec and view to generate relocations
     """
     if os.path.isdir(src):
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, symlink=True)
     else:
         shutil.copy2(src, dst)
 
