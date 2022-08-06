@@ -111,7 +111,7 @@ class Gaudi(CMakePackage):
     depends_on("heppdt", when="@:34 +examples")
     depends_on("heppdt", when="+heppdt")
     depends_on("jemalloc", when="+jemalloc")
-    depends_on("libng", when="@:34 +examples")
+    depends_on("libpng", when="@:34 +examples")
     depends_on("libunwind", when="+unwind")
     depends_on("relax", when="@:34 +examples")
     depends_on("xerces-c", when="+xercesc")
