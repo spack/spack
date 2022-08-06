@@ -35,26 +35,16 @@ class Gaudi(CMakePackage):
 
     maintainers = ["drbenmorgan", "vvolkl"]
 
-    variant("aida", default=False,
-            description="Build AIDA interfaces support")
-    variant("cppunit", default=False,
-            description="Build with CppUnit unit testing")
-    variant("docs", default=False,
-            description="Build documentation with Doxygen")
-    variant("examples", default=False,
-            description="Build examples")
-    variant("gperftools", default=False,
-            description="Build with Google PerfTools support")
-    variant("heppdt", default=False,
-            description="Build with HEP Particle Data Table support")
-    variant("jemalloc", default=False,
-            description="Build with jemalloc allocator support")
-    variant("unwind", default=False,
-            description="Build with unwind call-chains")
-    variant("vtune", default=False,
-            description="Build with Intel VTune profiler support")
-    variant("xercesc", default=False,
-            description="Build with Xerces-C XML support")
+    variant("aida", default=False, description="Build AIDA interfaces support")
+    variant("cppunit", default=False, description="Build with CppUnit unit testing")
+    variant("docs", default=False, description="Build documentation with Doxygen")
+    variant("examples", default=False, description="Build examples")
+    variant("gperftools", default=False, description="Build with Google PerfTools support")
+    variant("heppdt", default=False, description="Build with HEP Particle Data Table support")
+    variant("jemalloc", default=False, description="Build with jemalloc allocator support")
+    variant("unwind", default=False, description="Build with unwind call-chains")
+    variant("vtune", default=False, description="Build with Intel VTune profiler support")
+    variant("xercesc", default=False, description="Build with Xerces-C XML support")
 
     # only build subdirectory GaudiExamples when +examples
     patch("build_testing.patch", when="@:34")
@@ -99,7 +89,7 @@ class Gaudi(CMakePackage):
     depends_on("heppdt", when="+heppdt")
     depends_on("jemalloc", when="+jemalloc")
     depends_on("libunwind", when="+unwind")
-    #depends_on("relax", when="@:33 +optional")
+    # depends_on("relax", when="@:33 +optional")
     depends_on("xerces-c", when="+xercesc")
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
     #       ROOT does not like being exposed to LLVM symbols.
@@ -109,15 +99,15 @@ class Gaudi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("BUILD_TESTING", self.run_tests or self.spec.satisfies('+examples')),
-            self.define_from_variant("GAUDI_USE_AIDA",       "aida"),
-            self.define_from_variant("GAUDI_USE_CPPUNIT",    "cppunit"),
+            self.define("BUILD_TESTING", self.run_tests or self.spec.satisfies("+examples")),
+            self.define_from_variant("GAUDI_USE_AIDA", "aida"),
+            self.define_from_variant("GAUDI_USE_CPPUNIT", "cppunit"),
             self.define_from_variant("GAUDI_USE_GPERFTOOLS", "gperftools"),
-            self.define_from_variant("GAUDI_USE_HEPPDT",     "heppdt"),
-            self.define_from_variant("GAUDI_USE_JEMALLOC",   "jemalloc"),
-            self.define_from_variant("GAUDI_USE_UNWIND",     "unwind"),
-            self.define_from_variant("GAUDI_USE_XERCESC",    "xercesc"),
-            self.define_from_variant("GAUDI_USE_DOXYGEN",    "docs"),
+            self.define_from_variant("GAUDI_USE_HEPPDT", "heppdt"),
+            self.define_from_variant("GAUDI_USE_JEMALLOC", "jemalloc"),
+            self.define_from_variant("GAUDI_USE_UNWIND", "unwind"),
+            self.define_from_variant("GAUDI_USE_XERCESC", "xercesc"),
+            self.define_from_variant("GAUDI_USE_DOXYGEN", "docs"),
             # needed to build core services like rndmsvc
             self.define("GAUDI_USE_CLHEP", True),
             self.define("GAUDI_USE_PYTHON_MAJOR", str(self.spec["python"].version.up_to(1))),
