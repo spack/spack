@@ -28,7 +28,7 @@ class QtQuicktimeline(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.2.4", "6.2.3"]
+    _versions = ["6.3.1", "6.3.0", "6.2.4", "6.2.3"]
     for v in _versions:
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-declarative@" + v, when="@" + v)
