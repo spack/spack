@@ -1,0 +1,102 @@
+name: update-package-request
+
+on:
+  # When a calling repository opens an issue with metadata,
+  # this will call spack to retrieve it and open a pull request with changes.
+  # This will automate external packages from needing to manually update packages
+  issues:
+    types: [opened, edited]
+
+jobs:
+  update-package:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+    - name: Parse Update Issue
+      env:
+        title: ${{ github.event.issue.title }}
+        number: ${{ github.event.issue.number }}
+      run: |  
+        printf "Issue title: ${title}\n"
+        printf "Issue number: ${number}\n"
+        echo "${{ github.event.issue.body }}" > new-issue.txt
+        cat new-issue.txt
+        # Script to parse the issue, sets envars needed for subsequent workflows
+        wget https://raw.githubusercontent.com/sciworks/spack-updater/main/parse_issue.py
+        python parse_issue.py new-issue.txt
+        echo "issue_number=${number}" >> $GITHUB_ENV
+
+    - name: View Package Request
+      env:
+        action: ${{ env.spack_updater_action }}
+        package: ${{ env.spack_updater_package }}
+        branch: ${{ env.spack_updater_branch }}
+        path: ${{ env.spack_updater_path }}
+        repo: ${{ env.spack_updater_repo }}
+      run: |
+         echo "package: ${package}"
+         echo " branch: ${branch}"
+         echo " action: ${action}"
+         echo "   path: ${path}"
+         echo "   repo: ${repo}"
+
+    - name: Update Spack      
+      if: ${{ env.spack_updater_package != '' }}
+      env:
+        action: ${{ env.spack_updater_action }}
+        package: ${{ env.spack_updater_package }}
+        branch: ${{ env.spack_updater_branch }}
+        path: ${{ env.spack_updater_path }}
+        repo: ${{ env.spack_updater_repo }}
+      run: |
+         if [[ "${branch}" != "" ]]; then          
+            git clone -b ${branch} --depth 1 ${repo} /tmp/src
+         else
+            git clone --depth 1 ${repo} /tmp/src
+         fi
+         printf "Files in repository to update from:\n"
+         tree /tmp/src/${path}
+         if [[ "${action}" == "new-package" ]]; then
+             cp -R /tmp/src/${path} var/spack/repos/builtin/packages/${package} 
+         else
+             cp -R /tmp/src/${path}/* var/spack/repos/builtin/packages/${package}/
+         fi
+         printf "Files after update:\n"
+         tree var/spack/repos/builtin/packages/${package}
+
+    - name: Checkout New Branch
+      if: ${{ env.spack_updater_package != '' }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH_AGAINST: "develop"
+        number: ${{ env.issue_number }}
+        package: ${{ env.spack_updater_package }}
+      run: |
+        printf "GitHub Actor: ${GITHUB_ACTOR}\n"
+        export BRANCH_FROM="update-package/${package}-$(date '+%Y-%m-%d')"
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        git branch
+        git checkout -b "${BRANCH_FROM}" || git checkout "${BRANCH_FROM}"
+        git branch
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git add var/spack/repos/builtin/packages/${package}/*
+        if git diff-index --quiet HEAD --; then
+           printf "No changes\n"
+        else
+           printf "Changes\n"
+           git commit -m "Automated deployment to update package ${package} $(date '+%Y-%m-%d')"
+           git push origin "${BRANCH_FROM}"
+           echo "open_pr=1" >> $GITHUB_ENV
+        fi
+        echo "PULL_REQUEST_FROM_BRANCH=${BRANCH_FROM}" >> $GITHUB_ENV
+        echo "PULL_REQUEST_BODY=This will close #${number}" >> $GITHUB_ENV
+
+    - name: Open Pull Request
+      if: ${{ env.open_pr != '' }}
+      uses: vsoch/pull-request-action@1.0.19
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PULL_REQUEST_BODY: ${{ env.PULL_REQUEST_BODY }}
+        PULL_REQUEST_BRANCH: "develop"
