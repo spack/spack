@@ -15,9 +15,9 @@ class PyPriority(PythonPackage):
     running over a single HTTP/2 connection."""
 
     homepage = "https://github.com/python-hyper/priority/"
-    pypi     = "priority/priority-2.0.0.tar.gz"
+    pypi = "priority/priority-2.0.0.tar.gz"
 
-    version('2.0.0', sha256='c965d54f1b8d0d0b19479db3924c7c36cf672dbf2aec92d43fbdaf4492ba18c0')
+    version("2.0.0", sha256="c965d54f1b8d0d0b19479db3924c7c36cf672dbf2aec92d43fbdaf4492ba18c0")
 
-    depends_on('python@3.6.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.6.1:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -5,10 +5,10 @@
 
 import webbrowser
 
-description = 'open spack documentation in a web browser'
-section = 'help'
-level = 'short'
+description = "open spack documentation in a web browser"
+section = "help"
+level = "short"
 
 
 def docs(parser, args):
-    webbrowser.open('https://spack.readthedocs.io')
+    webbrowser.open("https://spack.readthedocs.io")

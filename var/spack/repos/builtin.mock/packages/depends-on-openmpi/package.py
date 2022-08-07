@@ -8,9 +8,9 @@ from spack.package import *
 
 class DependsOnOpenmpi(Package):
     """For testing concretization of packages that use
-       `spack external read-cray-manifest`"""
+    `spack external read-cray-manifest`"""
 
-    depends_on('openmpi')
+    depends_on("openmpi")
 
-    version('1.0')
-    version('0.9')
+    version("1.0")
+    version("0.9")

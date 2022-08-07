@@ -23,7 +23,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python Packages
@@ -31,9 +31,9 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.5-' -v spack/lib/spack/spack/ spack/lib/spack/llnl/ spack/bin/
+      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.6-' -v spack/lib/spack/spack/ spack/lib/spack/llnl/ spack/bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.5-' -v spack/var/spack/repos
+      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.6-' -v spack/var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: windows-latest
@@ -41,12 +41,12 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages
       run: |
-        python -m pip install --upgrade pip six setuptools flake8 isort>=4.3.5 mypy>=0.800 black pywin32 types-python-dateutil
+        python -m pip install --upgrade pip six setuptools flake8 "isort>=4.3.5" "mypy>=0.800" "click==8.0.4" "black<=21.12b0" pywin32 types-python-dateutil
     - name: Create local develop
       run: |
         .\spack\.github\workflows\setup_git.ps1
@@ -63,7 +63,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -83,7 +83,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -103,7 +103,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -128,7 +128,7 @@ jobs:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages
@@ -159,7 +159,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-    - uses: actions/setup-python@c4e89fac7e8767b327bbad6cb4d859eda999cf08
+    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
       with:
         python-version: 3.9
     - name: Install Python packages

@@ -22,56 +22,75 @@ import spack.package_base
 import spack.solver.asp as asp
 
 description = "concretize a specs using an ASP solver"
-section = 'developer'
-level = 'long'
+section = "developer"
+level = "long"
 
 #: output options
-show_options = ('asp', 'opt', 'output', 'solutions')
+show_options = ("asp", "opt", "output", "solutions")
 
 
 def setup_parser(subparser):
     # Solver arguments
     subparser.add_argument(
-        '--show', action='store', default='opt,solutions',
+        "--show",
+        action="store",
+        default="opt,solutions",
         help="select outputs: comma-separated list of: \n"
         "  asp          asp program text\n"
         "  opt          optimization criteria for best model\n"
         "  output       raw clingo output\n"
         "  solutions    models found by asp program\n"
-        "  all          all of the above"
+        "  all          all of the above",
     )
-    subparser.add_argument(
-        '--models', action='store', type=int, default=0,
-        help="number of solutions to search (default 0 for all)")
 
     # Below are arguments w.r.t. spec display (like spack spec)
-    arguments.add_common_arguments(
-        subparser, ['long', 'very_long', 'install_status']
+    arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
+    subparser.add_argument(
+        "-y",
+        "--yaml",
+        action="store_const",
+        dest="format",
+        default=None,
+        const="yaml",
+        help="print concrete spec as yaml",
     )
     subparser.add_argument(
-        '-y', '--yaml', action='store_const', dest='format', default=None,
-        const='yaml', help='print concrete spec as yaml')
+        "-j",
+        "--json",
+        action="store_const",
+        dest="format",
+        default=None,
+        const="json",
+        help="print concrete spec as json",
+    )
     subparser.add_argument(
-        '-j', '--json', action='store_const', dest='format', default=None,
-        const='json', help='print concrete spec as json')
+        "-c",
+        "--cover",
+        action="store",
+        default="nodes",
+        choices=["nodes", "edges", "paths"],
+        help="how extensively to traverse the DAG (default: nodes)",
+    )
     subparser.add_argument(
-        '-c', '--cover', action='store',
-        default='nodes', choices=['nodes', 'edges', 'paths'],
-        help='how extensively to traverse the DAG (default: nodes)')
+        "-N",
+        "--namespaces",
+        action="store_true",
+        default=False,
+        help="show fully qualified package names",
+    )
     subparser.add_argument(
-        '-N', '--namespaces', action='store_true', default=False,
-        help='show fully qualified package names')
+        "-t", "--types", action="store_true", default=False, help="show dependency types"
+    )
     subparser.add_argument(
-        '-t', '--types', action='store_true', default=False,
-        help='show dependency types')
+        "--timers",
+        action="store_true",
+        default=False,
+        help="print out timers for different solve phases",
+    )
     subparser.add_argument(
-        '--timers', action='store_true', default=False,
-        help='print out timers for different solve phases')
-    subparser.add_argument(
-        '--stats', action='store_true', default=False,
-        help='print out statistics from clingo')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages")
+        "--stats", action="store_true", default=False, help="print out statistics from clingo"
+    )
+    subparser.add_argument("specs", nargs=argparse.REMAINDER, help="specs of packages")
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
 
@@ -84,14 +103,13 @@ def _process_result(result, show, required_format, kwargs):
         tty.msg("Optimization Criteria:")
 
         maxlen = max(len(s[2]) for s in result.criteria)
-        color.cprint(
-            "@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " ")
-        )
+        color.cprint("@*{  Priority  Criterion %sInstalled  ToBuild}" % ((maxlen - 10) * " "))
 
         fmt = "  @K{%%-8d}  %%-%ds%%9s  %%7s" % maxlen
         for i, (installed_cost, build_cost, name) in enumerate(result.criteria, 1):
             color.cprint(
-                fmt % (
+                fmt
+                % (
                     i,
                     name,
                     "-" if build_cost is None else installed_cost,
@@ -101,17 +119,16 @@ def _process_result(result, show, required_format, kwargs):
         print()
 
     # dump the solutions as concretized specs
-    if 'solutions' in show:
+    if "solutions" in show:
         for spec in result.specs:
             # With -y, just print YAML to output.
-            if required_format == 'yaml':
+            if required_format == "yaml":
                 # use write because to_yaml already has a newline.
                 sys.stdout.write(spec.to_yaml(hash=ht.dag_hash))
-            elif required_format == 'json':
+            elif required_format == "json":
                 sys.stdout.write(spec.to_json(hash=ht.dag_hash))
             else:
-                sys.stdout.write(
-                    spec.tree(color=sys.stdout.isatty(), **kwargs))
+                sys.stdout.write(spec.tree(color=sys.stdout.isatty(), **kwargs))
         print()
 
     if result.unsolved_specs and "solutions" in show:
@@ -123,31 +140,28 @@ def _process_result(result, show, required_format, kwargs):
 
 def solve(parser, args):
     # these are the same options as `spack spec`
-    name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
-    fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
+    name_fmt = "{namespace}.{name}" if args.namespaces else "{name}"
+    fmt = "{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}"
     install_status_fn = spack.spec.Spec.install_status
     kwargs = {
-        'cover': args.cover,
-        'format': name_fmt + fmt,
-        'hashlen': None if args.very_long else 7,
-        'show_types': args.types,
-        'status_fn': install_status_fn if args.install_status else None,
-        'hashes': args.long or args.very_long
+        "cover": args.cover,
+        "format": name_fmt + fmt,
+        "hashlen": None if args.very_long else 7,
+        "show_types": args.types,
+        "status_fn": install_status_fn if args.install_status else None,
+        "hashes": args.long or args.very_long,
     }
 
     # process output options
-    show = re.split(r'\s*,\s*', args.show)
-    if 'all' in show:
+    show = re.split(r"\s*,\s*", args.show)
+    if "all" in show:
         show = show_options
     for d in show:
         if d not in show_options:
             raise ValueError(
                 "Invalid option for '--show': '%s'\nchoose from: (%s)"
-                % (d, ', '.join(show_options + ('all',))))
-
-    models = args.models
-    if models < 0:
-        tty.die("model count must be non-negative: %d")
+                % (d, ", ".join(show_options + ("all",)))
+            )
 
     # Format required for the output (JSON, YAML or None)
     required_format = args.format
@@ -162,25 +176,24 @@ def solve(parser, args):
 
     solver = asp.Solver()
     output = sys.stdout if "asp" in show else None
-    setup_only = set(show) == {'asp'}
-    unify = spack.config.get('concretizer:unify')
-    if unify != 'when_possible':
+    setup_only = set(show) == {"asp"}
+    unify = spack.config.get("concretizer:unify")
+    if unify != "when_possible":
         # set up solver parameters
         # Note: reuse and other concretizer prefs are passed as configuration
         result = solver.solve(
             specs,
             out=output,
-            models=models,
             timers=args.timers,
             stats=args.stats,
-            setup_only=setup_only
+            setup_only=setup_only,
         )
         if not setup_only:
             _process_result(result, show, required_format, kwargs)
     else:
-        for idx, result in enumerate(solver.solve_in_rounds(
-                specs, out=output, models=models, timers=args.timers, stats=args.stats
-        )):
+        for idx, result in enumerate(
+            solver.solve_in_rounds(specs, out=output, timers=args.timers, stats=args.stats)
+        ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))
                 tty.msg("")
