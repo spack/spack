@@ -128,7 +128,7 @@ def test_exclude_specs(mock_packages, config):
         specs=["mpich"], versions_per_spec="all", exclude_specs="mpich@3.0.1:3.0.2 mpich@1.0"
     )
 
-    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
     expected_include = set(spack.spec.Spec(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"])
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
@@ -147,7 +147,7 @@ mpich@1.0
 
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=exclude_path)
 
-    mirror_specs = spack.cmd.mirror._determine_specs_to_mirror(args)
+    mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
     expected_include = set(spack.spec.Spec(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"])
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
