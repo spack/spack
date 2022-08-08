@@ -1024,7 +1024,7 @@ class Environment(object):
 
         return bool(not existing)
 
-    def change_existing_spec(self, user_spec, list_name=user_speclist_name):
+    def change_existing_spec(self, user_spec):
         """
         Provide a single spec and assume you want to find another spec with the
         same name and override it with any conflicting details in user_spec.
@@ -1037,10 +1037,15 @@ class Environment(object):
                 "Must specify a spec name to identify a single spec"
                 " in the environment that will be changed")
 
-        list_to_change = self.spec_lists[list_name]
+        if len(self.spec_lists) > 1:
+            raise SpackEnvironmentError(
+                "Spack cannot change specs in environments "
+                "where specs are not enumerated explicitly "
+                "(no stacks or matrices)")
+        list_to_change = self.spec_lists[user_speclist_name]
 
         match = False
-        new_speclist = SpecList(list_name)
+        new_speclist = SpecList(user_speclist_name)
         for i, spec in enumerate(list_to_change):
             if spec.name == user_spec.name:
                 new_speclist.add(Spec.override(spec, user_spec))
@@ -1053,7 +1058,7 @@ class Environment(object):
                 "There are no specs named {0} in {1}"
                 .format(user_spec.name, list_name)
             )
-        self.spec_lists[list_name] = new_speclist
+        self.spec_lists[user_speclist_name] = new_speclist
 
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
