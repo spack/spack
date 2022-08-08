@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack.package import *
 
@@ -23,6 +24,8 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     maintainers = ["sethrj"]
 
     tags = ["e4s"]
+
+    executables = ["^swig$"]
 
     version("master", git="https://github.com/swig/swig.git")
     version(
@@ -65,6 +68,13 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     build_directory = "spack-build"
 
     conflicts("%nvhpc", when="@:4.0.2")
+
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-version", output=str, error=str)
+        match = re.search(r"SWIG Version\s+(\S+)", output)
+        return match.group(1) if match else None
 
     @run_after("install")
     def create_symlink(self):
