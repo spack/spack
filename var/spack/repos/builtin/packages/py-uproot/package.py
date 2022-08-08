@@ -54,8 +54,8 @@ class PyUproot(PythonPackage):
 
     depends_on("python@2.6:2,3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@4.2.0:")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@42:", type="build", when="@4.1.8:")
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@4.1.8:")
     depends_on("py-numpy", type=("build", "run"))
 
     depends_on("xrootd", when="+xrootd")
