@@ -246,16 +246,6 @@ def _read_specs_from_file(filename):
 
 
 def _determine_specs_to_mirror(args):
-    if args.specs and args.all:
-        raise SpackError(
-            "Cannot specify specs on command line if you" " chose to mirror all specs with '--all'"
-        )
-    elif args.file and args.all:
-        raise SpackError(
-            "Cannot specify specs with a file ('-f') if you"
-            " chose to mirror all specs with '--all'"
-        )
-
     if not args.versions_per_spec:
         num_versions = 1
     elif args.versions_per_spec == "all":
@@ -339,6 +329,16 @@ def _determine_specs_to_mirror(args):
 def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives."""
+    if args.specs and args.all:
+        raise SpackError(
+            "Cannot specify specs on command line if you chose to mirror all specs with '--all'"
+        )
+
+    if args.file and args.all:
+        raise SpackError(
+            "Cannot specify specs with a file if you chose to mirror all specs with '--all'"
+        )
+
     mirror_specs = _determine_specs_to_mirror(args)
 
     mirror = spack.mirror.Mirror(args.directory or spack.config.get("config:source_cache"))
