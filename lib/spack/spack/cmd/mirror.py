@@ -324,25 +324,32 @@ def versions_per_spec(args):
 
 def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
-    package archives."""
+    package archives.
+    """
     if args.specs and args.all:
         raise SpackError(
-            "Cannot specify specs on command line if you chose to mirror all specs with '--all'"
+            "cannot specify specs on command line if you chose to mirror all specs with '--all'"
         )
 
     if args.file and args.all:
         raise SpackError(
-            "Cannot specify specs with a file if you chose to mirror all specs with '--all'"
+            "cannot specify specs with a file if you chose to mirror all specs with '--all'"
         )
 
     if args.file and args.specs:
-        raise SpackError("Cannot specify specs with a file AND on command line")
+        raise SpackError("cannot specify specs with a file AND on command line")
 
     if not args.specs and not args.file and not args.all:
         raise SpackError(
-            "No packages were specified.",
+            "no packages were specified.",
             "To mirror all packages, use the '--all' option "
             "(this will require significant time and space).",
+        )
+
+    if args.versions_per_spec and args.all:
+        raise SpackError(
+            "cannot specify '--versions_per-spec' and '--all' together",
+            "The option '--all' already implies mirroring all versions for each package.",
         )
 
     mirror_specs = _determine_specs_to_mirror(args)
