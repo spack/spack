@@ -265,8 +265,6 @@ def _determine_specs_to_mirror(args):
 
         # If there is a file, parse each line as a spec and add it to the list.
         if args.file:
-            if specs:
-                tty.die("Cannot pass specs on the command line with --file.")
             specs = _read_specs_from_file(args.file)
 
         env_specs = None
@@ -338,6 +336,9 @@ def mirror_create(args):
         raise SpackError(
             "Cannot specify specs with a file if you chose to mirror all specs with '--all'"
         )
+
+    if args.file and args.specs:
+        raise SpackError("Cannot specify specs with a file AND on command line")
 
     mirror_specs = _determine_specs_to_mirror(args)
 
