@@ -23,7 +23,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "swig/swig-3.0.12.tar.gz"
     maintainers = ["sethrj"]
 
-    tags = ["e4s"]
+    tags = ["e4s", "build-tools"]
 
     executables = ["^swig$"]
 
