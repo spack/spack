@@ -2264,7 +2264,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions:
+        if change_spec.versions and not change_spec.versions == spack.version.ver(':'):
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
