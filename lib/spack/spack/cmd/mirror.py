@@ -246,19 +246,7 @@ def _read_specs_from_file(filename):
 
 
 def _determine_specs_to_mirror(args):
-    if not args.versions_per_spec:
-        num_versions = 1
-    elif args.versions_per_spec == "all":
-        num_versions = "all"
-    else:
-        try:
-            num_versions = int(args.versions_per_spec)
-        except ValueError:
-            raise SpackError(
-                "'--versions-per-spec' must be a number or 'all',"
-                " got '{0}'".format(args.versions_per_spec)
-            )
-
+    num_versions = versions_per_spec(args)
     # try to parse specs from the command line first.
     with spack.concretize.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
@@ -322,6 +310,23 @@ def _determine_specs_to_mirror(args):
         )
 
     return mirror_specs
+
+
+def versions_per_spec(args):
+    """Return how many versions should be mirrored per spec."""
+    if not args.versions_per_spec:
+        num_versions = 1
+    elif args.versions_per_spec == "all":
+        num_versions = "all"
+    else:
+        try:
+            num_versions = int(args.versions_per_spec)
+        except ValueError:
+            raise SpackError(
+                "'--versions-per-spec' must be a number or 'all',"
+                " got '{0}'".format(args.versions_per_spec)
+            )
+    return num_versions
 
 
 def mirror_create(args):
