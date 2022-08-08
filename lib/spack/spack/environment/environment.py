@@ -1024,13 +1024,16 @@ class Environment(object):
 
         return bool(not existing)
 
+    # TODO: Alternatively, you could provide two values "where" and "new", and
+    # only things matching "where" get updated with "new".
     def change_existing_spec(self, user_spec):
         """
         Provide a single spec and assume you want to find another spec with the
         same name and override it with any conflicting details in user_spec.
 
-        Alternatively, you could provide two values "where" and "new", and
-        only things matching "where" get updated with "new".
+        This is only allowed for environments that do not use matrices (i.e.
+        they have a single, explicitly-enumerated list of specs called
+        'specs').
         """
         if not user_spec.name:
             raise ValueError(
