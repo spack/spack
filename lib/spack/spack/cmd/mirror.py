@@ -231,18 +231,20 @@ def mirror_list(args):
     mirrors.display()
 
 
-def _read_specs_from_file(filename):
-    specs = []
-    with open(filename, "r") as stream:
-        for i, string in enumerate(stream):
-            try:
-                s = Spec(string)
-                spack.repo.path.get_pkg_class(s.name)
-                specs.append(s)
-            except SpackError as e:
-                tty.debug(e)
-                tty.die("Parse error in %s, line %d:" % (filename, i + 1), ">>> " + string, str(e))
-    return specs
+def specs_from_text_file(filename, concretize=False):
+    """Return a list of specs read from a text file.
+
+    The file should contain one spec per line.
+
+    Args:
+        filename (str): name of the file containing the abstract specs.
+        concretize (bool): if True concretize the specs before returning
+            the list.
+    """
+    with open(filename, "r") as f:
+        specs_in_file = f.readlines()
+        specs_in_file = [s.strip() for s in specs_in_file]
+    return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=concretize)
 
 
 def _determine_specs_to_mirror(args):
@@ -253,7 +255,7 @@ def _determine_specs_to_mirror(args):
 
         # If there is a file, parse each line as a spec and add it to the list.
         if args.file:
-            specs = _read_specs_from_file(args.file)
+            specs = specs_from_text_file(args.file, concretize=True)
 
         env_specs = None
         if not specs:
@@ -294,7 +296,7 @@ def _determine_specs_to_mirror(args):
 
     exclude_specs = []
     if args.exclude_file:
-        exclude_specs.extend(_read_specs_from_file(args.exclude_file))
+        exclude_specs.extend(specs_from_text_file(args.exclude_file))
     if args.exclude_specs:
         exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
     if exclude_specs:
