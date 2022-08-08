@@ -50,5 +50,6 @@ class Crmc(CMakePackage):
         ]
         if self.spec.satisfies("@1.6.0:"):
             args.append("-D__HIJING__=ON")
-        args.append("-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch")
+        if self.spec.satisfies("%gcc@9:") and self.spec.satisfies("%clang@13:"):
+            args.append("-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch")
         return args
