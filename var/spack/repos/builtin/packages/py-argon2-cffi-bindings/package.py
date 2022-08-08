@@ -10,11 +10,11 @@ class PyArgon2CffiBindings(PythonPackage):
     """Low-level CFFI bindings for Argon2."""
 
     homepage = "https://github.com/hynek/argon2-cffi-bindings"
-    pypi     = "argon2-cffi-bindings/argon2-cffi-bindings-21.2.0.tar.gz"
+    pypi = "argon2-cffi-bindings/argon2-cffi-bindings-21.2.0.tar.gz"
 
-    version('21.2.0', sha256='bb89ceffa6c791807d1305ceb77dbfacc5aa499891d2c55661c6459651fc39e3')
+    version("21.2.0", sha256="bb89ceffa6c791807d1305ceb77dbfacc5aa499891d2c55661c6459651fc39e3")
 
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools@45:', type='build')
-    depends_on('py-setuptools-scm@6.2:', type='build')
-    depends_on('py-cffi@1.0.1:', type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools@45:", type="build")
+    depends_on("py-setuptools-scm@6.2:", type="build")
+    depends_on("py-cffi@1.0.1:", type=("build", "run"))

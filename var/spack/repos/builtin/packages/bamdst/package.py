@@ -10,18 +10,18 @@ class Bamdst(MakefilePackage):
     """Bamdst is a a lightweight bam file depth statistical tool."""
 
     homepage = "https://github.com/shiquan/bamdst"
-    git      = "https://github.com/shiquan/bamdst.git"
+    git = "https://github.com/shiquan/bamdst.git"
 
-    version('master', git='https://github.com/shiquan/bamdst.git')
+    version("master", git="https://github.com/shiquan/bamdst.git")
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     parallel = False
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('CC= .*', 'CC = cc')
+        makefile = FileFilter("Makefile")
+        makefile.filter("CC= .*", "CC = cc")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('bamdst', prefix.bin)
+        install("bamdst", prefix.bin)

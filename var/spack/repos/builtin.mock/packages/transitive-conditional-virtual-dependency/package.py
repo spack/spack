@@ -7,9 +7,10 @@ from spack.package import *
 
 class TransitiveConditionalVirtualDependency(Package):
     """Depends on a package with a conditional virtual dependency."""
+
     homepage = "https://dev.null"
     has_code = False
     phases = []
 
-    version('1.0')
-    depends_on('conditional-virtual-dependency')
+    version("1.0")
+    depends_on("conditional-virtual-dependency")

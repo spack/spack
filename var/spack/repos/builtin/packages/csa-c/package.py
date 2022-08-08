@@ -12,8 +12,8 @@ class CsaC(AutotoolsPackage):
     a C library and a command line utility csabathy."""
 
     homepage = "https://github.com/sakov/csa-c"
-    git      = "https://github.com/sakov/csa-c.git"
+    git = "https://github.com/sakov/csa-c.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    configure_directory = 'csa'
+    configure_directory = "csa"

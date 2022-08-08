@@ -11,16 +11,16 @@ class SquashfsMount(MakefilePackage):
     squashfuse."""
 
     homepage = "https://github.com/eth-cscs/squashfs-mount"
-    url      = "https://github.com/eth-cscs/squashfs-mount/archive/refs/tags/v0.1.0.tar.gz"
+    url = "https://github.com/eth-cscs/squashfs-mount/archive/refs/tags/v0.1.0.tar.gz"
 
-    maintainers = ['haampie']
+    maintainers = ["haampie"]
 
-    version('0.1.0', sha256='37841ede7a7486d437fd06ae13e432560f81806f69addc72cfc8e564c8727bc6')
+    version("0.1.0", sha256="37841ede7a7486d437fd06ae13e432560f81806f69addc72cfc8e564c8727bc6")
 
-    variant('suid', default=False, description='Make squashfs-mount a suid executable')
+    variant("suid", default=False, description="Make squashfs-mount a suid executable")
 
-    depends_on('util-linux', type='link')
+    depends_on("util-linux", type="link")
 
     def install(self, spec, prefix):
-        tgt = 'install' if '~suid' in spec else 'install-suid'
-        make(tgt, 'prefix=' + prefix)
+        tgt = "install" if "~suid" in spec else "install-suid"
+        make(tgt, "prefix=" + prefix)

@@ -3,131 +3,89 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import tempfile
-
 from spack.package import *
 
 
-class PyTensorboard(Package):
+class PyTensorboard(PythonPackage):
     """TensorBoard is a suite of web applications for
     inspecting and understanding your TensorFlow runs and
     graphs."""
 
     homepage = "https://github.com/tensorflow/tensorboard"
-    url      = "https://github.com/tensorflow/tensorboard/archive/2.2.0.tar.gz"
+    url = "https://files.pythonhosted.org/packages/py3/t/tensorboard/tensorboard-2.9.1-py3-none-any.whl"
+    list_url = "https://pypi.org/simple/tensorboard/"
 
-    maintainers = ['aweits']
+    maintainers = ["aweits"]
 
-    version('2.9.0', sha256='c08c5a5d3a88c222ec3419e27bbe41f42ef6d1aac38375b99e9996583ee1f5ae')
-    version('2.8.0', sha256='3d6fb62cc38e098679aaace51b55cfaa0478f718668376d47d5e9c616af39329')
-    version('2.7.0', sha256='5632812bb9450e5741083b5b7826244ffdb732fb5bce970d526c81874a3e7fb2')
-    version('2.6.0', sha256='3d1e0a05828b25c1c28bd90c73d981a0a65c6a5550510bc7983d03ab915e6503')
-    version('2.5.0', sha256='58c9e0c31062821ab1c02845c3b7902da92574ef7192d701b1828dacbe4ee610')
-    version('2.4.1', sha256='736dc204aa292d221f5871077e60994a9a9ea8e33b841f0d754d510fe6cc7635')
-    version('2.4.0', sha256='28a30794c1c797357b2086477394b59afa0b18ca48592ca3c0627f7f10536373')
-    version('2.3.0', sha256='947a58702c2841eb4559637dbf8639633f79de9a0f422be9737f3563a1725440')
-    version('2.2.0', sha256='d0dfbf0e4b3b5ebbc3fafa6d281d4b9aa5478eac6bac3330652ab6674278ab77')
+    version(
+        "2.9.1",
+        sha256="baa727f791776f9e5841d347127720ceed4bbd59c36b40604b95fb2ae6029276",
+        expand=False,
+    )
+    version(
+        "2.9.0",
+        sha256="bd78211076dca5efa27260afacfaa96cd05c7db12a6c09cc76a1d6b2987ca621",
+        expand=False,
+    )
+    version(
+        "2.8.0",
+        sha256="65a338e4424e9079f2604923bdbe301792adce2ace1be68da6b3ddf005170def",
+        expand=False,
+    )
+    version(
+        "2.7.0",
+        sha256="239f78a4a8dff200ce585a030c787773a8c1184d5c159252f5f85bac4e3c3b38",
+        expand=False,
+    )
+    version(
+        "2.6.0",
+        sha256="f7dac4cdfb52d14c9e3f74585ce2aaf8e6203620a864e51faf84988b09f7bbdb",
+        expand=False,
+    )
+    version(
+        "2.5.0",
+        sha256="e167460085b6528956b33bab1c970c989cdce47a6616273880733f5e7bde452e",
+        expand=False,
+    )
+    version(
+        "2.4.1",
+        sha256="7b8c53c396069b618f6f276ec94fc45d17e3282d668979216e5d30be472115e4",
+        expand=False,
+    )
+    version(
+        "2.4.0",
+        sha256="cde0c663a85609441cb4d624e7255fd8e2b6b1d679645095aac8a234a2812738",
+        expand=False,
+    )
+    version(
+        "2.3.0",
+        sha256="d34609ed83ff01dd5b49ef81031cfc9c166bba0dabd60197024f14df5e8eae5e",
+        expand=False,
+    )
+    version(
+        "2.2.0",
+        sha256="bb6bbc75ad2d8511ba6cbd49e4417276979f49866e11841e83da8298727dbaed",
+        expand=False,
+    )
 
-    depends_on('python@2.7:2.8,3.2:', type=('build', 'run'), when='@:2.5')
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.6:')
-    # See https://github.com/tensorflow/tensorboard/pull/5528 for upper bounds
-    depends_on('bazel@2.1:4', type='build', when='@2.2:2.4')
-    depends_on('bazel@3.7:4', type='build', when='@2.5:2.8')
-    depends_on('bazel@4:', type='build', when='@2.9:')
-    depends_on('py-pip', type='build')
-    depends_on('py-absl-py@0.4:', type=('build', 'run'))
-    depends_on('py-grpcio@1.24.3:', type=('build', 'run'), when='@2.3:')
-    depends_on('py-grpcio@1.23.3:', type=('build', 'run'), when='@2.2')
-    depends_on('py-google-auth@1.6.3:1', type=('build', 'run'), when='@:2.6')
-    depends_on('py-google-auth@1.6.3:2', type=('build', 'run'), when='@2.7:')
-    depends_on('py-google-auth-oauthlib@0.4.1:0.4', type=('build', 'run'))
-    depends_on('py-markdown@2.6.8:', type=('build', 'run'))
-    depends_on('py-numpy@1.12.0:', type=('build', 'run'))
-    depends_on('py-protobuf@3.6.0:', type=('build', 'run'))
-    depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.9:')
-    # https://github.com/protocolbuffers/protobuf/issues/10051
-    # https://github.com/PyTorchLightning/pytorch-lightning/issues/13159
-    depends_on('py-protobuf@:3', type=('build', 'run'))
-    depends_on('py-requests@2.21.0:2', type=('build', 'run'))
-    depends_on('py-setuptools@41.0.0:', type=('build', 'run'))
-    depends_on('py-tensorboard-data-server@0.6', type=('build', 'run'), when='@2.5:')
-    depends_on('py-tensorboard-plugin-wit@1.6.0:', type=('build', 'run'))
-    depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
-    depends_on('py-werkzeug@1.0.1:', type=('build', 'run'), when='@2.9:')
-    depends_on('py-wheel@0.26:', type='build')
-    depends_on('py-futures@3.1.1:', type=('build', 'run'), when='^python@:2')
-    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.4')
-
-    extends('python')
-
-    patch('tboard_shellenv.patch', when='@:2.4')
-    patch('webapp.patch', when='@2.7:')
-    patch('vz_projector.patch', when='@2.7:')
-
-    phases = ['configure', 'build', 'install']
-
-    # Version 2.6.0 and above do not build in parallel
-    @property
-    def parallel(self):
-        return self.spec.version < Version('2.6.0')
-
-    def patch(self):
-        filter_file('build --define=angular_ivy_enabled=True',
-                    'build --define=angular_ivy_enabled=True\n'
-                    'build --distinct_host_configuration=false\n'
-                    'build --action_env=PYTHONPATH="{0}"\n'.format(
-                        env['PYTHONPATH']),
-                    '.bazelrc')
-
-    def setup_build_environment(self, env):
-        self.tmp_path = tempfile.mkdtemp(prefix='spack')
-        env.set('TEST_TMPDIR', self.tmp_path)
-
-    def configure(self, spec, prefix):
-        builddir = join_path(self.stage.source_path, 'spack-build')
-        mkdirp(builddir)
-        filter_file(r'workdir=.*',
-                    'workdir="{0}"'.format(builddir),
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file(r'pip install .*',
-                    '',
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file(r'command \-v .*',
-                    '',
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file(r'virtualenv .*',
-                    '',
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file('trap cleanup EXIT',
-                    '',
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file('unset PYTHON_HOME',
-                    'export PYTHONPATH="{0}"'.format(env['PYTHONPATH']),
-                    'tensorboard/pip_package/build_pip_package.sh')
-        filter_file('python setup.py',
-                    '{0} setup.py'.format(spec['python'].command.path),
-                    'tensorboard/pip_package/build_pip_package.sh')
-        if self.spec.satisfies('@2.4.0:'):
-            filter_file('"@npm//@polymer/polymer",',
-                        '"@npm//@polymer/polymer",\n'
-                        '"@npm//@types/d3",',
-                        'tensorboard/plugins/projector/vz_projector/BUILD')
-
-    def build(self, spec, prefix):
-        bazel('--nohome_rc',
-              '--nosystem_rc',
-              '--output_user_root=' + self.tmp_path,
-              'build',
-              # watch https://github.com/bazelbuild/bazel/issues/7254
-              '--define=EXECUTOR=remote',
-              '--verbose_failures',
-              '--spawn_strategy=local',
-              '--subcommands=pretty_print',
-              '--jobs={0}'.format(make_jobs),
-              '//tensorboard/pip_package')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build'):
-            args = std_pip_args + ['--prefix=' + prefix, '.']
-            pip(*args)
-        remove_linked_tree(self.tmp_path)
+    depends_on("python@2.7:2.8,3.2:", type=("build", "run"), when="@:2.5")
+    depends_on("python@3.6:", type=("build", "run"), when="@2.6:")
+    depends_on("py-absl-py@0.4:", type=("build", "run"))
+    depends_on("py-grpcio@1.24.3:", type=("build", "run"), when="@2.3:")
+    depends_on("py-grpcio@1.23.3:", type=("build", "run"), when="@2.2")
+    depends_on("py-google-auth@1.6.3:1", type=("build", "run"), when="@:2.6")
+    depends_on("py-google-auth@1.6.3:2", type=("build", "run"), when="@2.7:")
+    depends_on("py-google-auth-oauthlib@0.4.1:0.4", type=("build", "run"))
+    depends_on("py-markdown@2.6.8:", type=("build", "run"))
+    depends_on("py-numpy@1.12.0:", type=("build", "run"))
+    depends_on("py-protobuf@3.6.0:3.19", type=("build", "run"), when="@:2.8")
+    depends_on("py-protobuf@3.9.2:3.19", type=("build", "run"), when="@2.9:")
+    depends_on("py-requests@2.21.0:2", type=("build", "run"))
+    depends_on("py-setuptools@41.0.0:", type=("build", "run"))
+    depends_on("py-tensorboard-data-server@0.6", type=("build", "run"), when="@2.5:")
+    depends_on("py-tensorboard-plugin-wit@1.6.0:", type=("build", "run"))
+    depends_on("py-werkzeug@0.11.15:", type=("build", "run"))
+    depends_on("py-werkzeug@1.0.1:", type=("build", "run"), when="@2.9:")
+    depends_on("py-wheel@0.26:", type="build")
+    depends_on("py-futures@3.1.1:", type=("build", "run"), when="^python@:2")
+    depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.4")

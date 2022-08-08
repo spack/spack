@@ -14,11 +14,11 @@ class RLater(RPackage):
 
     cran = "later"
 
-    version('1.3.0', sha256='08f50882ca3cfd2bb68c83f1fcfbc8f696f5cfb5a42c1448c051540693789829')
-    version('1.1.0.1', sha256='71baa7beae774a35a117e01d7b95698511c3cdc5eea36e29732ff1fe8f1436cd')
-    version('0.8.0', sha256='6b2a28b43c619b2c7890840c62145cd3a34a7ed65b31207fdedde52efb00e521')
+    version("1.3.0", sha256="08f50882ca3cfd2bb68c83f1fcfbc8f696f5cfb5a42c1448c051540693789829")
+    version("1.1.0.1", sha256="71baa7beae774a35a117e01d7b95698511c3cdc5eea36e29732ff1fe8f1436cd")
+    version("0.8.0", sha256="6b2a28b43c619b2c7890840c62145cd3a34a7ed65b31207fdedde52efb00e521")
 
-    depends_on('r-rcpp@0.12.9:', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'))
+    depends_on("r-rcpp@0.12.9:", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))
 
-    depends_on('r-bh', type=('build', 'run'), when='@:1.1.0.1')
+    depends_on("r-bh", type=("build", "run"), when="@:1.1.0.1")
