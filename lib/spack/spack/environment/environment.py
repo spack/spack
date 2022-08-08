@@ -1038,13 +1038,15 @@ class Environment(object):
         if not user_spec.name:
             raise ValueError(
                 "Must specify a spec name to identify a single spec"
-                " in the environment that will be changed")
+                " in the environment that will be changed"
+            )
 
         if len(self.spec_lists) > 1:
             raise SpackEnvironmentError(
                 "Spack cannot change specs in environments "
                 "where specs are not enumerated explicitly "
-                "(no stacks or matrices)")
+                "(no stacks or matrices)"
+            )
         list_to_change = self.spec_lists[user_speclist_name]
 
         match = False
@@ -1058,11 +1060,9 @@ class Environment(object):
 
         if not match:
             raise ValueError(
-                "There are no specs named {0} in {1}"
-                .format(user_spec.name, list_name)
+                "There are no specs named {0} in {1}".format(user_spec.name, list_name)
             )
         self.spec_lists[user_speclist_name] = new_speclist
-
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""

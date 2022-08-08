@@ -2264,7 +2264,7 @@ class Spec(object):
         # (and the user spec) have dependencies
         new_spec = init_spec.copy()
         package_cls = spack.repo.path.get_pkg_class(new_spec.name)
-        if change_spec.versions and not change_spec.versions == spack.version.ver(':'):
+        if change_spec.versions and not change_spec.versions == spack.version.ver(":"):
             new_spec.versions = change_spec.versions
         for variant, value in change_spec.variants.items():
             if variant in package_cls.variants:
@@ -2273,14 +2273,12 @@ class Spec(object):
                 else:
                     new_spec.variants[variant] = value
             else:
-                raise ValueError("{0} is not a variant of {1}"
-                                 .format(variant, new_spec.name))
+                raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
         if change_spec.architecture:
             new_spec.architecture = ArchSpec.override(
-                new_spec.architecture,
-                change_spec.architecture
+                new_spec.architecture, change_spec.architecture
             )
         return new_spec
 

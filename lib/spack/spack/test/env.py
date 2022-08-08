@@ -12,7 +12,9 @@ import spack.environment as ev
 import spack.spec
 
 pytestmark = pytest.mark.skipif(
-    sys.platform == "win32", reason="Envs are not supported on windows")
+    sys.platform == "win32", reason="Envs are not supported on windows"
+)
+
 
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # create an environment
@@ -42,6 +44,7 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     assert read_in.concretized_order[0] in read_in.specs_by_hash
     assert read_in.specs_by_hash[read_in.concretized_order[0]]._hash == new_hash
 
+
 def test_env_change_spec(tmpdir, mock_packages, config):
     env_path = tmpdir.mkdir("env_dir").strpath
     env = ev.Environment(env_path)
@@ -53,12 +56,12 @@ def test_env_change_spec(tmpdir, mock_packages, config):
 
     change_spec = spack.spec.Spec("mpileaks@2.2")
     env.change_existing_spec(change_spec)
-    spec, = env.added_specs()
+    (spec,) = env.added_specs()
     assert spec == spack.spec.Spec("mpileaks@2.2~shared+debug")
 
     change_spec = spack.spec.Spec("mpileaks~debug")
     env.change_existing_spec(change_spec)
-    spec, = env.added_specs()
+    (spec,) = env.added_specs()
     assert spec == spack.spec.Spec("mpileaks@2.2~shared~debug")
 
 

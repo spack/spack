@@ -1112,12 +1112,12 @@ class TestSpecSematics(object):
             spec.splice(dep, transitive)
 
     def test_override(self):
-        init_spec = Spec('a foo=baz foobar=baz')
-        change_spec = Spec('a foo=fee')
+        init_spec = Spec("a foo=baz foobar=baz")
+        change_spec = Spec("a foo=fee")
         new_spec = Spec.override(init_spec, change_spec)
-        assert 'foo=fee' in new_spec
-        assert 'foo=baz' not in new_spec
-        assert 'foobar=baz' in new_spec
+        assert "foo=fee" in new_spec
+        assert "foo=baz" not in new_spec
+        assert "foobar=baz" in new_spec
 
 
 @pytest.mark.regression("3887")
