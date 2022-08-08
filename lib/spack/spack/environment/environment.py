@@ -1060,7 +1060,7 @@ class Environment(object):
 
         if not match:
             raise ValueError(
-                "There are no specs named {0} in {1}".format(user_spec.name, list_name)
+                "There are no specs named {0} in the environment".format(user_spec.name)
             )
         self.spec_lists[user_speclist_name] = new_speclist
 
