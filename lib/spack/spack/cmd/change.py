@@ -14,13 +14,6 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        "-l",
-        "--list-name",
-        dest="list_name",
-        default="specs",
-        help="name of the list to add specs to",
-    )
     arguments.add_common_arguments(subparser, ["specs"])
 
 
