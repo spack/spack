@@ -286,7 +286,7 @@ def _determine_specs_to_mirror(args):
                 tty.warn("Ignoring '--versions-per-spec' for mirroring specs" " in environment.")
             mirror_specs = env_specs
         else:
-            if num_versions == "all":
+            if num_versions == "all" or args.all:
                 mirror_specs = spack.mirror.get_all_versions(specs)
             else:
                 mirror_specs = spack.mirror.get_matching_versions(specs, num_versions=num_versions)
