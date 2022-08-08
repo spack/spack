@@ -106,6 +106,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
+  - catalyst
   - chai ~benchmarks ~tests
   - conduit
   - darshan-runtime
