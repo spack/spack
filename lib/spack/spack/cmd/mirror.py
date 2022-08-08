@@ -257,14 +257,7 @@ def _determine_specs_to_mirror(args):
 
         env_specs = None
         if not specs:
-            # If nothing is passed, use environment or all if no active env
-            if not args.all:
-                tty.die(
-                    "No packages were specified.",
-                    "To mirror all packages, use the '--all' option"
-                    " (this will require significant time and space).",
-                )
-
+            assert args.all, "args.all is required if no specs are computed"
             env = ev.active_environment()
             if env:
                 env_specs = env.all_specs()
@@ -344,6 +337,13 @@ def mirror_create(args):
 
     if args.file and args.specs:
         raise SpackError("Cannot specify specs with a file AND on command line")
+
+    if not args.specs and not args.file and not args.all:
+        raise SpackError(
+            "No packages were specified.",
+            "To mirror all packages, use the '--all' option "
+            "(this will require significant time and space).",
+        )
 
     mirror_specs = _determine_specs_to_mirror(args)
 
