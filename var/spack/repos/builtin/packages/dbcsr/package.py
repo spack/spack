@@ -17,6 +17,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["dev-zero"]
 
     version("develop", branch="develop")
+    version("2.3.0", sha256="f750de586cffa66852b646f7f85eb831eeb64fa2d25ce50ed10e1df016dd3364")
     version("2.2.0", sha256="245b0382ddc7b80f85af8288f75bd03d56ec51cdfb6968acb4931529b35173ec")
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")
     version("2.0.1", sha256="61d5531b661e1dab043353a1d67939ddcde3893d3dc7b0ab3d05074d448b485c")
@@ -114,20 +115,23 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         ]
 
         # Switch necessary as a result of a bug.
-        # In version 2.0, this switch doesn't exist yet.
-        # The issue should be already fixed in 2.3 (not released yet).
         if "@2.1:2.2" in spec:
             args += ["-DBUILD_TESTING=ON"]
 
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]
 
-            gpuver = {
+            gpu_map = {
                 "35": "K40",
                 "37": "K80",
                 "60": "P100",
                 "70": "V100",
-            }[cuda_arch]
+            }
+
+            if "@2.3:" in spec:
+                gpu_map["80"] = "A100"
+
+            gpuver = gpu_map[cuda_arch]
 
             if cuda_arch == "35" and self.spec.satisfies("+cuda_arch_35_k20x"):
                 gpuver = "K20X"
