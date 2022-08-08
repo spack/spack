@@ -113,8 +113,6 @@ class TestPathPadding:
         assert padding_string not in out
 
 
-@pytest.mark.skipif(is_windows,
-                    reason='Padding functionality unsupported on Windows')
 @pytest.mark.parametrize("debug", [1, 2])
 def test_path_debug_padded_filter(debug, monkeypatch):
     """Ensure padded filter works as expected with different debug levels."""
@@ -126,7 +124,7 @@ def test_path_debug_padded_filter(debug, monkeypatch):
                         suffix)
     expected = fmt.format(prefix, os.sep,
                           "[padded-to-{0}-chars]".format(72),
-                          suffix) if debug <= 1 else string
+                          suffix) if debug <= 1 and not is_windows else string
 
     monkeypatch.setattr(tty, '_debug', debug)
     with spack.config.override('config:install_tree',
