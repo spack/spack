@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 This file contains code for creating spack mirror directories.  A
 mirror is an organized hierarchy containing specially named archive
@@ -56,7 +55,7 @@ class Mirror(object):
 
     Mirrors have a fetch_url that indicate where and how artifacts are fetched
     from them, and a push_url that indicate where and how artifacts are pushed
-    to them.  These two URLs are usually the same.
+    to them. These two URLs are usually the same.
     """
 
     def __init__(self, fetch_url, push_url=None, name=None):
@@ -631,13 +630,13 @@ class MirrorStats(object):
         self.errors.add(self.current_spec)
 
 
-def _add_single_spec(spec, mirror, mirror_stats):
+def _add_single_spec(spec, mirror_cache, mirror_stats):
     """Add a single spec to a mirror.
 
     Args:
         spec (spack.spec.Spec): spec to be added. If not concrete it will
             be concretized.
-        mirror (spack.mirror.Mirror): mirror where to add the spec.
+        mirror_cache (spack.caches.MirrorCache): mirror where to add the spec.
         mirror_stats (spack.mirror.MirrorStats): statistics on the current mirror
 
     Return:
@@ -658,10 +657,10 @@ def _add_single_spec(spec, mirror, mirror_stats):
     while num_retries > 0:
         try:
             with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror, mirror_stats)
+                pkg_stage.cache_mirror(mirror_cache, mirror_stats)
                 for patch in spec.package.all_patches():
                     if patch.stage:
-                        patch.stage.cache_mirror(mirror, mirror_stats)
+                        patch.stage.cache_mirror(mirror_cache, mirror_stats)
                     patch.clean()
             exception = None
             break

@@ -324,6 +324,6 @@ def test_non_concretizable_spec_does_not_raise():
             self.called = True
 
     mirror_stats = Stats()
-    result = spack.mirror._add_single_spec(s, mirror=None, mirror_stats=mirror_stats)
+    result = spack.mirror._add_single_spec(s, mirror_cache=None, mirror_stats=mirror_stats)
     assert result is False
     assert mirror_stats.called is True
