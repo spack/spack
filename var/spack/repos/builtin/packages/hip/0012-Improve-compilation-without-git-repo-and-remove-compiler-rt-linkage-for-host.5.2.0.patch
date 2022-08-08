@@ -1,3 +1,15 @@
+From d3d2b2b69ac04ac1d1ead30f546fb4884fb93e27 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 22:26:13 +0000
+Subject: [PATCH] Improve compilation without git repo and remove compiler rt
+ linkage for host and correction in CMake target path variable
+
+---
+ bin/hipcc.pl               |  3 ++-
+ hipamd/CMakeLists.txt      | 12 +++++++++---
+ hipamd/hip-config.cmake.in |  1 -
+ 3 files changed, 11 insertions(+), 5 deletions(-)
+
 diff --git a/bin/hipcc.pl b/bin/hipcc.pl
 index 1ef3a90..995abe5 100755
 --- a/bin/hipcc.pl
@@ -61,3 +73,6 @@ index ba3e75c..02dd586 100755
        set_property(TARGET hip::device APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
      endif()
    endif()
+-- 
+2.25.1
+

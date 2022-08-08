@@ -222,6 +222,9 @@ class Hip(CMakePackage):
         when="@5.0.2:5.1.3",
     )
 
+    # Improve compilation without git repo and remove compiler rt linkage
+    # for host and correction in CMake target path variable and
+    # correcting the CMake path variable.
     patch(
         "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
         ".5.2.0.patch",

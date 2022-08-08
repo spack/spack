@@ -149,6 +149,8 @@ class Rocalution(CMakePackage):
             )
 
     depends_on("googletest@1.10.0:", type="test")
+    # This fix is added to address the compilation failure and it is 
+    # already taken in 5.2.3 rocm release.
     patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2.0:")
 
     def check(self):

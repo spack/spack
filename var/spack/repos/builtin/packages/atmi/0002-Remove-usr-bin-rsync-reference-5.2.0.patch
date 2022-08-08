@@ -1,3 +1,16 @@
+From 5d2011bf498551f41ea99b77c63c33fc37518c00 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 19:33:10 +0000
+Subject: [PATCH] Reset the installation path and remove direct reference to
+ /usr/bin/rysnc for rsync command
+
+---
+ src/CMakeLists.txt                     | 12 ++----------
+ src/device_runtime/CMakeLists.txt      |  2 +-
+ src/runtime/core/CMakeLists.txt        |  4 ++--
+ src/runtime/interop/hsa/CMakeLists.txt |  2 +-
+ 4 files changed, 6 insertions(+), 14 deletions(-)
+
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index bb563a0..ab04424 100644
 --- a/src/CMakeLists.txt
@@ -81,3 +94,6 @@ index af1012d..c58b716 100644
    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/*.h
    )
  
+-- 
+2.25.1
+

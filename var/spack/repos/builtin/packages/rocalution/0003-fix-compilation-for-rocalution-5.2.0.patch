@@ -1,3 +1,12 @@
+From 58046aee2ab5d53092811e77ae9b17a226aadf90 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 22:52:43 +0000
+Subject: [PATCH] Fix for compilation failure in rocalution 5.2.0
+
+---
+ src/solvers/multigrid/ruge_stueben_amg.hpp | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
 diff --git a/src/solvers/multigrid/ruge_stueben_amg.hpp b/src/solvers/multigrid/ruge_stueben_amg.hpp
 index 24ee942..7f25796 100644
 --- a/src/solvers/multigrid/ruge_stueben_amg.hpp
@@ -21,3 +30,6 @@ index 24ee942..7f25796 100644
  
          /** \brief Set strength threshold */
          ROCALUTION_EXPORT
+-- 
+2.25.1
+
