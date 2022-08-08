@@ -4,16 +4,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Test environment internals without CLI"""
+import sys
 
 import pytest
 
 import spack.environment as ev
 import spack.spec
 
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Envs are not supported on windows")
 
-@pytest.mark.skipif(
-    str(spack.platforms.host()) == "windows", reason="Not supported on Windows (yet)"
-)
 def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     # create an environment
     env_path = tmpdir.mkdir("env_dir").strpath
@@ -41,6 +41,25 @@ def test_hash_change_no_rehash_concrete(tmpdir, mock_packages, config):
     assert read_in.concretized_order
     assert read_in.concretized_order[0] in read_in.specs_by_hash
     assert read_in.specs_by_hash[read_in.concretized_order[0]]._hash == new_hash
+
+def test_env_change_spec(tmpdir, mock_packages, config):
+    env_path = tmpdir.mkdir("env_dir").strpath
+    env = ev.Environment(env_path)
+    env.write()
+
+    spec = spack.spec.Spec("mpileaks@2.1~shared+debug")
+    env.add(spec)
+    env.write()
+
+    change_spec = spack.spec.Spec("mpileaks@2.2")
+    env.change_existing_spec(change_spec)
+    spec, = env.added_specs()
+    assert spec == spack.spec.Spec("mpileaks@2.2~shared+debug")
+
+    change_spec = spack.spec.Spec("mpileaks~debug")
+    env.change_existing_spec(change_spec)
+    spec, = env.added_specs()
+    assert spec == spack.spec.Spec("mpileaks@2.2~shared~debug")
 
 
 def test_activate_should_require_an_env():
