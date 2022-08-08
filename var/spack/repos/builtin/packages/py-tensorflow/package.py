@@ -6,11 +6,23 @@
 import sys
 import tempfile
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
 class PyTensorflow(Package, CudaPackage):
-    """TensorFlow is an Open Source Software Library for Machine Intelligence"""
+    """An Open Source Machine Learning Framework for Everyone.
+
+    TensorFlow is an end-to-end open source platform for machine learning. It has a
+    comprehensive, flexible ecosystem of tools, libraries, and community resources that
+    lets researchers push the state-of-the-art in ML and developers easily build and
+    deploy ML-powered applications.
+
+    TensorFlow was originally developed by researchers and engineers working on the
+    Google Brain team within Google's Machine Intelligence Research organization to
+    conduct machine learning and deep neural networks research. The system is general
+    enough to be applicable in a wide variety of other domains, as well.
+    """
 
     homepage = "https://www.tensorflow.org"
     url = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
@@ -18,19 +30,41 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
+    version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
+    version("2.8.2", sha256="b3f860c02c22a30e9787e2548ca252ab289a76b7778af6e9fa763d4aafd904c7")
+    version("2.8.1", sha256="4b487a63d6f0c1ca46a2ac37ba4687eabdc3a260c222616fa414f6df73228cec")
+    version("2.8.0", sha256="66b953ae7fba61fd78969a2e24e350b26ec116cf2e6a7eb93d02c63939c6f9f7")
+    version("2.7.3", sha256="b576c2e124cd6d4d04cbfe985430a0d955614e882172b2258217f0ec9b61f39b")
+    version("2.7.2", sha256="b3c8577f3b7cc82368ff7f9315821d506abd2f716ea6692977d255b7d8bc54c0")
+    version("2.7.1", sha256="abebe2cf5ca379e18071693ca5f45b88ade941b16258a21cc1f12d77d5387a21")
     version("2.7.0", sha256="bb124905c7fdacd81e7c842b287c169bbf377d29c74c9dacc04f96c9793747bb")
+    version("2.6.5", sha256="305da42845ac584a42494e521c92a88ce92ee47d93022d4c0bb45180b5c19a8c")
+    version("2.6.4", sha256="6a9e54f46039ef0a6f0a1adf19befa510044d3203d1e124dba8318ec4b1e0210")
+    version("2.6.3", sha256="7a71dde0987677b9512b202eb6ae119e0e308b1ea15b66dcfce001a44873997b")
     version("2.6.2", sha256="e68c1d346fc3d529653530ca346b2c62f5b31bd4fcca7ffc9c65bb39ab2f6ed3")
     version("2.6.1", sha256="8e457f617bc2eb43de2a51900e7922b60a8107e2524b2576438f1acccee1d043")
     version("2.6.0", sha256="41b32eeaddcbc02b0583660bcf508469550e4cd0f86b22d2abe72dfebeacde0f")
+    version("2.5.3", sha256="58d69b7163f7624debc243750976d27fa7dddbc6fb7c5215aec94732bcc670e1")
+    version("2.5.2", sha256="bcccc6ba0b8ac1d10d3302f766eed71911acecc0bc43d0bd27d97a1e7ce275a8")
+    version("2.5.1", sha256="8d2728e155a3aa6befd9cb3d0980fabd25e2142d124f8f6b6c78cdf17ff79da5")
     version("2.5.0", sha256="233875ea27fc357f6b714b2a0de5f6ff124b50c1ee9b3b41f9e726e9e677b86c")
+    version("2.4.4", sha256="f1abc3ed92c3ce955db2a7db5ec422a3a98f015331183194f97b99fe77a09bb4")
+    version("2.4.3", sha256="cafd520c753f8755a9eb1262932f685dc722d8658f08373f8ec88d8acd58d7d4")
+    version("2.4.2", sha256="edc88da97277906513d53eeee57997a2036fa32ac1f1937730301764fa06cdc0")
     version("2.4.1", sha256="f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0")
     version("2.4.0", sha256="26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae")
+    version("2.3.4", sha256="195947838b0918c15d79bc6ed85ff714b24d6d564b4d07ba3de0b745a2f9b656")
+    version("2.3.3", sha256="b91e5bcd373b942c4a62c6bcb7ff6f968b1448152b82f54a95dfb0d8fb9c6093")
+    version("2.3.2", sha256="21a703d2e68cd0677f6f9ce329198c24fd8203125599d791af9f1de61aadf31f")
     version("2.3.2", sha256="21a703d2e68cd0677f6f9ce329198c24fd8203125599d791af9f1de61aadf31f")
     version("2.3.1", sha256="ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac")
     version("2.3.0", sha256="2595a5c401521f20a2734c4e5d54120996f8391f00bb62a57267d930bce95350")
+    version("2.2.3", sha256="5e6c779ca8392864d436d88893461dcce783c3a8d46dcb2b2f2ee8ece3cc4538")
     version("2.2.2", sha256="fb4b5d26c5b983350f7ce8297b71176a86a69e91faf66e6ebb1e58538ad3bb51")
     version("2.2.1", sha256="e6a28e64236d729e598dbeaa02152219e67d0ac94d6ed22438606026a02e0f88")
     version("2.2.0", sha256="69cd836f87b8c53506c4f706f655d423270f5a563b76dc1cfa60fbc3184185a3")
+    version("2.1.4", sha256="f5bd53802b616cc5b4fe5e57a5d3b0f090500a87790020d5fccb0773be7c4b47")
     version("2.1.3", sha256="cfa66cce372f486e95a42beb1aacfefdaf0092c5efaaaa92459b381fde931fb8")
     version("2.1.2", sha256="3f941cda0ed12dfef5472e46f1d0238ea85da7583d73f1132d2ef050fda6e8ad")
     version("2.1.1", sha256="a200bc16e4b630db3ac7225bcb6f239a76841967b0aec1d7d7bbe44dc5661318")
@@ -111,9 +145,8 @@ class PyTensorflow(Package, CudaPackage):
 
     extends("python")
     depends_on("python@3:", type=("build", "run"), when="@2.1:")
-    # python 3.8 support in tensorflow 2.2
-    # see tensorflow issue #33374
-    depends_on("python@:3.7", type=("build", "run"), when="@:2.2")
+    # https://github.com/tensorflow/tensorflow/issues/33374
+    depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
 
     # TODO: Older versions of TensorFlow don't list the viable version range,
     # just the minimum version of bazel that will work. The latest version of
@@ -121,14 +154,17 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on("bazel@3.7.2:4.99.0", type="build", when="@2.7:")
-    depends_on("bazel@3.1.0:3.99.0", type="build", when="@2.3:2.6")
-    depends_on("bazel@2.0.0", type="build", when="@2.2.0:2.2")
-    depends_on("bazel@0.27.1:0.29.1", type="build", when="@2.1.0:2.1")
+    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9:")
+    depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
+    depends_on("bazel@3.7.2:4.99.0", type="build", when="@2.7")
+    depends_on("bazel@3.7.2:3.99.0", type="build", when="@2.5:2.6")
+    depends_on("bazel@3.1.0:3.99.0", type="build", when="@2.3:2.4")
+    depends_on("bazel@2.0.0", type="build", when="@2.2")
+    depends_on("bazel@0.27.1:0.29.1", type="build", when="@2.1")
     depends_on("bazel@0.24.1:0.26.1", type="build", when="@1.15:2.0")
     # See call to check_bazel_version in configure.py
-    depends_on("bazel@0.24.1:0.25.2", type="build", when="@1.14.0")
-    depends_on("bazel@0.19.0:0.21.0", type="build", when="@1.13.0:1.13.2")
+    depends_on("bazel@0.24.1:0.25.2", type="build", when="@1.14")
+    depends_on("bazel@0.19.0:0.21.0", type="build", when="@1.13")
     depends_on("bazel@0.24.1:0.25.0", type="build", when="@1.12.1")
     depends_on("bazel@0.15.0", type="build", when="@1.10:1.12.0,1.12.2:1.12.3")
     depends_on("bazel@0.10.0", type="build", when="@1.7:1.9")
@@ -138,8 +174,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("bazel@0.4.5", type="build", when="@1.2:1.3")
     # See call to check_version in WORKSPACE
     depends_on("bazel@0.4.2", type="build", when="@1.0:1.1")
-    depends_on("bazel@0.3.2", type="build", when="@0.12.0:0.12.1")
-    depends_on("bazel@0.3.0", type="build", when="@0.11.0")
+    depends_on("bazel@0.3.2", type="build", when="@0.12")
+    depends_on("bazel@0.3.0", type="build", when="@0.11")
     depends_on("bazel@0.2.0", type="build", when="@0.9:0.10")
     depends_on("bazel@0.1.4", type="build", when="@0.7:0.8")
     depends_on("bazel@0.1.1", type="build", when="@0.5:0.6")
@@ -147,65 +183,68 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("swig", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-wheel", type="build")
-    depends_on("py-setuptools", type="build")
     depends_on("py-future", type="build", when="^python@:2")
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
-    depends_on("py-absl-py@0.4:", type=("build", "run"), when="@2.7:")
-    depends_on("py-absl-py@0.10:0", type=("build", "run"), when="@2.4.0:2.6")
-    depends_on("py-absl-py@0.7.0:", type=("build", "run"), when="@1.12.1,1.14:2.3")
-    depends_on("py-absl-py@0.1.6:", type=("build", "run"), when="@1.5:1.11")
-    depends_on("py-astunparse@1.6.0:", type=("build", "run"), when="@2.7:")
-    depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4.0:2.6")
+    depends_on("py-absl-py@1:", type=("build", "run"), when="@2.9:")
+    depends_on("py-absl-py@0.4:", type=("build", "run"), when="@2.7:2.8")
+    depends_on("py-absl-py@0.10:0", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-absl-py@0.7:", type=("build", "run"), when="@1.12.1,1.14:2.3")
+    depends_on("py-absl-py@0.1.6:", type=("build", "run"), when="@1.5:1.12.0,1.12.2:1.13.2")
+    depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
+    depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-astor@0.6.0:", type=("build", "run"), when="@1.6:2.1")
-    depends_on("py-backports-weakref@1.0:", type=("build", "run"), when="@1.3: ^python@:3.3")
-    depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2.0:1.2.1")
-    depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.5: ^python@:3.3")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.4.0:1.4.1")
-    depends_on("py-gast@0.2.1:0.4", type=("build", "run"), when="@2.7:")
+    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9:")
+    depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
+    depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
+    depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-gast@0.2.1:0.4.0", type=("build", "run"), when="@2.9:")
+    depends_on("py-gast@0.2.1:", type=("build", "run"), when="@2.8")
+    depends_on("py-gast@0.2.1:0.4", type=("build", "run"), when="@2.7")
     depends_on("py-gast@0.4.0", type=("build", "run"), when="@2.5:2.6")
     depends_on("py-gast@0.3.3", type=("build", "run"), when="@2.2:2.4")
     depends_on("py-gast@0.2.2", type=("build", "run"), when="@1.15:2.1")
-    depends_on("py-gast@0.2.0:", type=("build", "run"), when="@1.6:1.14")
+    depends_on("py-gast@0.2:", type=("build", "run"), when="@1.6:1.14")
     depends_on("py-google-pasta@0.1.1:", type=("build", "run"), when="@2.7:")
-    depends_on("py-google-pasta@0.2:0", type=("build", "run"), when="@2.4.0:2.6")
-    depends_on("py-google-pasta@0.1.8:", type=("build", "run"), when="@2.1:2.3")
-    depends_on("py-google-pasta@0.1.6:", type=("build", "run"), when="@1.14:2.0")
+    depends_on("py-google-pasta@0.2:0", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-google-pasta@0.1.8:", type=("build", "run"), when="@2.2:2.3")
+    depends_on("py-google-pasta@0.1.6:", type=("build", "run"), when="@1.14:2.1")
     depends_on("py-google-pasta@0.1.2:", type=("build", "run"), when="@1.12.1")
+    depends_on("py-h5py@2.9:", type=("build", "run"), when="@2.7:")
+    depends_on("py-h5py@3.1", type=("build", "run"), when="@2.5:2.6")
+    depends_on("py-h5py@2.10", type=("build", "run"), when="@2.2:2.4")
+    depends_on("py-h5py@:2.10.0", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:2.1")
     # propagate the mpi variant setting for h5py/hdf5 to avoid unexpected crashes
-    depends_on("py-h5py@2.9:+mpi", type=("build", "run"), when="@2.7:+mpi")
-    depends_on("py-h5py@2.9:~mpi", type=("build", "run"), when="@2.7:~mpi")
-    depends_on("py-h5py@3.1+mpi", type=("build", "run"), when="@2.5:2.6+mpi")
-    depends_on("py-h5py@3.1~mpi", type=("build", "run"), when="@2.5:2.6~mpi")
-    depends_on("py-h5py@2.10+mpi", type=("build", "run"), when="@2.2:2.4+mpi")
-    depends_on("py-h5py@2.10~mpi", type=("build", "run"), when="@2.2:2.4~mpi")
-    depends_on("hdf5+mpi", type="build", when="@2.2:+mpi")
-    depends_on("hdf5~mpi", type="build", when="@2.2:~mpi")
-    depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
-    depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
-    depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11.0:1.11")
+    depends_on("py-h5py+mpi", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:+mpi")
+    depends_on("py-h5py~mpi", type=("build", "run"), when="@1.15.5,2.0.4,2.1.3:~mpi")
+    depends_on("hdf5+mpi", type="build", when="@1.15.5,2.0.4,2.1.3:+mpi")
+    depends_on("hdf5~mpi", type="build", when="@1.15.5,2.0.4,2.1.3:~mpi")
     depends_on("py-keras-preprocessing@1.1.1:", type=("build", "run"), when="@2.7:")
     depends_on("py-keras-preprocessing@1.1.2:1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-keras-preprocessing@1.1.1:1", type=("build", "run"), when="@2.3.0:2.3")
-    depends_on("py-keras-preprocessing@1.1.0:", type=("build", "run"), when="@2.1:2.2")
+    depends_on("py-keras-preprocessing@1.1.1:1.1", type=("build", "run"), when="@2.3")
+    depends_on("py-keras-preprocessing@1.1:", type=("build", "run"), when="@2.1.0,2.2")
+    depends_on("py-keras-preprocessing@1.1.0", type=("build", "run"), when="@2.1.1:2.1")
     depends_on("py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12:2.0")
-    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11.0:1.11")
-    # https://github.com/tensorflow/tensorflow/issues/40688
-    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@2.7:")
+    depends_on("py-keras-preprocessing@1.0.3:", type=("build", "run"), when="@1.11")
+    depends_on("py-libclang@13:", type=("build", "run"), when="@2.9:")
+    depends_on("py-libclang@9.0.1:", type=("build", "run"), when="@2.7:2.8")
+    depends_on("py-numpy@1.20:", type=("build", "run"), when="@2.8:")
+    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@2.7")
     depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.4:2.6")
+    # https://github.com/tensorflow/tensorflow/issues/40688
     depends_on("py-numpy@1.16.0:1.18", type=("build", "run"), when="@1.13.2,1.15:2.3")
-    depends_on("py-numpy@1.14.5:1.18", type=("build", "run"), when="@1.12.1,1.14.0")
-    depends_on("py-numpy@1.13.3:1.14.5", type=("build", "run"), when="@1.10.0:1.10.1")
-    depends_on("py-numpy@1.13.3:", type=("build", "run"), when="@1.6:1.9")
-    depends_on("py-numpy@1.12.1:", type=("build", "run"), when="@1.4:1.5")
-    depends_on("py-numpy@1.11.0:", type=("build", "run"), when="@0.11:1.3")
-    depends_on("py-numpy@1.10.1:", type=("build", "run"), when="@0.7.1:0.7 platform=darwin")
-    depends_on("py-numpy@1.8.2:", type=("build", "run"), when="@0.6:0.10")
-    depends_on("py-numpy@1.9.2:", type=("build", "run"), when="@0.5.0")
-    depends_on("py-opt-einsum@3.3.0:3.3", type=("build", "run"), when="@2.4.0:2.6")
+    depends_on("py-numpy@1.14.5:1.18", type=("build", "run"), when="@1.12.1,1.14")
+    depends_on(
+        "py-numpy@1.13.3:1.18", type=("build", "run"), when="@1.6:1.9,1.11:1.12.0,1.12.2:1.13.1"
+    )
+    depends_on("py-numpy@1.13.3:1.14.5", type=("build", "run"), when="@1.10")
+    depends_on("py-numpy@1.12.1:1.14.5", type=("build", "run"), when="@1.4:1.5")
+    depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@0.11:1.3")
+    depends_on("py-numpy@1.10.1:1.14.5", type=("build", "run"), when="@0.7.1:0.10 platform=darwin")
+    depends_on("py-numpy@1.8.2:1.14.5", type=("build", "run"), when="@0.5:0.10")
+    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
+    depends_on("py-packaging", type=("build", "run"), when="@2.9:")
     depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
     depends_on("py-protobuf@3.6.1:", type=("build", "run"), when="@1.12:2.0")
@@ -222,43 +261,59 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("protobuf@:3.17")
     # https://github.com/protocolbuffers/protobuf/issues/10051
     # https://github.com/tensorflow/tensorflow/issues/56266
-    depends_on("py-protobuf@:3", when="@:2.7.2", type=("build", "run"))
-    depends_on("protobuf@:3", when="@:2.7.2", type=("build", "run"))
-    depends_on("flatbuffers+python@1.12:2", type=("build", "run"), when="@2.7:")
-    depends_on("flatbuffers+python@1.12", type=("build", "run"), when="@2.4:2.6")
-
-    # tensorboard
-    depends_on("py-tensorboard@2.5.0:2.5", type=("build", "run"), when="@2.5")
-    depends_on("py-tensorboard@2.6.0:2.6", type=("build", "run"), when="@2.6")
-    depends_on("py-tensorboard@2.7.0:2.7", type=("build", "run"), when="@2.7")
-
-    depends_on("py-termcolor@1.1.0:1.1", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-termcolor@1.1.0:", type=("build", "run"), when="@1.6:2.3,2.7:")
-    depends_on("py-wrapt@1.11.0:", type=("build", "run"), when="@2.7:")
+    depends_on("py-protobuf@:3.19", type=("build", "run"))
+    depends_on("protobuf@:3.19", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-six@1.12:", type=("build", "run"), when="@2.1:2.3,2.7:")
+    depends_on("py-six@1.15", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-six@1.10:", type=("build", "run"), when="@:2.0")
+    depends_on("py-termcolor@1.1:", type=("build", "run"), when="@1.6:2.3,2.7:")
+    depends_on("py-termcolor@1.1", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:")
+    depends_on("py-typing-extensions@3.7.4:3.7", type=("build", "run"), when="@2.4:2.6")
+    depends_on("py-wrapt@1.11:", type=("build", "run"), when="@2.7:")
     depends_on("py-wrapt@1.12.1:1.12", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-wrapt@1.11.1:", type=("build", "run"), when="@1.12.1,1.14:2.3")
-    depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7:")
-    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6 ^python@3:")
-    depends_on("py-wheel", type=("build", "run"), when="@0.6:2.3")
-    depends_on("py-wheel@0.26:", type=("build", "run"), when="@0.6:2.3 ^python@3:")
-    depends_on("py-mock@2.0.0:", type=("build", "run"), when="@0.10: ^python@:2")
-    depends_on("py-functools32@3.2.3:", type=("build", "run"), when="@1.15: ^python@:2")
-    depends_on("py-six@1.15.0:1.15", type=("build", "run"), when="@2.4:2.6")
-    depends_on("py-six@1.12.0:", type=("build", "run"), when="@2.1:2.3,2.7:")
-    depends_on("py-six@1.10.0:", type=("build", "run"), when="@:2.0")
-    depends_on("py-scipy@1.2.2", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2")
-    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:")
-    depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:1.7")
-    depends_on("py-typing-extensions@3.6.6:", type=("build", "run"), when="@2.7:")
-    depends_on("py-typing-extensions@3.7.4:3.7", type=("build", "run"), when="@2.4.0:2.6")
+    # TODO: add package for this dependency
+    # depends_on('py-tensorflow-io-gcs-filesystem@0.23.1:',
+    #            type=('build', 'run'), when='@2.8:')
+    # depends_on('py-tensorflow-io-gcs-filesystem@0.21:',
+    #            type=('build', 'run'), when='@2.7')
 
     if sys.byteorder == "little":
         # Only builds correctly on little-endian machines
-        depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.8:2.3")
-        depends_on("py-grpcio@1.32.0:1.32", type=("build", "run"), when="@2.4.0:2.4")
-        depends_on("py-grpcio@1.34.0:1.34", type=("build", "run"), when="@2.5.0:2.5")
-        depends_on("py-grpcio@1.37.0:1", type=("build", "run"), when="@2.6.0:2.6")
-        depends_on("py-grpcio@1.24.3:1", type=("build", "run"), when="@2.7.0:")
+        depends_on("py-grpcio@1.24.3:1", type=("build", "run"), when="@2.7:")
+        depends_on("py-grpcio@1.37.0:1", type=("build", "run"), when="@2.6")
+        depends_on("py-grpcio@1.34", type=("build", "run"), when="@2.5")
+        depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
+        depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
+
+    depends_on("py-tensorboard@2.9", type=("build", "run"), when="@2.9")
+    depends_on("py-tensorboard@2.8", type=("build", "run"), when="@2.8")
+    depends_on("py-tensorboard@2.7", type=("build", "run"), when="@2.7")
+    depends_on("py-tensorboard@2.6", type=("build", "run"), when="@2.6")
+    depends_on("py-tensorboard@2.5", type=("build", "run"), when="@2.5")
+    # TODO: is this still true? We now install tensorboard from wheel for all versions
+    # depends_on('py-tensorboard', when='@:2.4')  # circular dep
+    # depends_on('py-tensorflow-estimator')  # circular dep
+    # depends_on('py-keras')  # circular dep
+
+    # No longer a dependency in latest versions
+    depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
+    depends_on("py-backports-weakref@1.0:", type=("build", "run"), when="@1.3: ^python@:3.3")
+    depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
+    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.5: ^python@:3.3")
+    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.4.0:1.4.1")
+    depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
+    depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
+    depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")
+    depends_on("py-mock@2:", type=("build", "run"), when="@0.10: ^python@:2")
+    depends_on("py-functools32@3.2.3:", type=("build", "run"), when="@1.15: ^python@:2")
+    depends_on("py-scipy@1.4.1", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:")
+    depends_on("py-scipy@1.2.2", type=("build", "run"), when="@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2")
+    depends_on("py-wheel@0.32:0", type=("build", "run"), when="@2.7")
+    depends_on("py-wheel@0.35:0", type=("build", "run"), when="@2.4:2.6 ^python@3:")
+    depends_on("py-wheel@0.26:", type=("build", "run"), when="@0.6:2.3 ^python@3:")
 
     # TODO: add packages for some of these dependencies
     depends_on("mkl", when="+mkl")
@@ -266,7 +321,7 @@ class PyTensorflow(Package, CudaPackage):
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
     depends_on("cuda@:10.2", when="+cuda @:2.3")
-    depends_on("cuda@:11.4", when="+cuda @2.4:")
+    depends_on("cuda@:11.4", when="+cuda @2.4:2.7")
     depends_on("cudnn", when="+cuda")
     depends_on("cudnn@:6", when="@0.5:0.6 +cuda")
     depends_on("cudnn@:7", when="@0.7:2.2 +cuda")
@@ -275,9 +330,6 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
-
-    # TODO: add support for tensorflow-io-gcs-filesystem
-    # depends_on('tensorflow-io-gcs-filesystem
 
     # Check configure and configure.py to see when these variants are supported
     conflicts("+mkl", when="@:1.0")
@@ -360,6 +412,10 @@ class PyTensorflow(Package, CudaPackage):
     conflicts("+monolithic", when="@:1.3")
     conflicts("+numa", when="@:1.12.0,1.12.2:1.13")
     conflicts("+dynamic_kernels", when="@:1.12.0,1.12.2:1.12.3")
+    # https://github.com/tensorflow/tensorflow/pull/45404
+    conflicts("platform=darwin target=aarch64:", when="@:2.4")
+    # https://github.com/tensorflow/tensorflow/pull/39225
+    conflicts("target=aarch64:", when="@:2.2")
 
     # TODO: why is this needed?
     patch("url-zlib.patch", when="@0.10.0")
@@ -389,8 +445,8 @@ class PyTensorflow(Package, CudaPackage):
     patch("contrib_cloud_1.4.patch", when="@1.4:1.8")
     patch("contrib_cloud_1.1.patch", when="@1.1:1.3")
 
-    # needed for protobuf-3.16 and greater
-    patch("example_parsing.patch", when="^protobuf@3.16:")
+    # needed for protobuf 3.16+
+    patch("example_parsing.patch", when="@:2.7 ^protobuf@3.16:")
 
     # allow linker to be found in PATH
     # https://github.com/tensorflow/tensorflow/issues/39263
@@ -687,7 +743,7 @@ def protobuf_deps():
             filter_file(
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
                 '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
-                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',
+                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
                 file_to_patch,
                 string=True,
             )
@@ -893,6 +949,9 @@ def protobuf_deps():
         if spec.satisfies("^bazel@:3.5"):
             # removed in bazel 3.6
             args.append("--incompatible_no_support_tools_in_action_inputs=false")
+
+        if spec.satisfies("@2.9: platform=darwin"):
+            args.append("--macos_sdk_version={}".format(macos_version()))
 
         # See .bazelrc for when each config flag is supported
         if spec.satisfies("@1.12.1:"):
