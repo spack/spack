@@ -69,11 +69,10 @@ class Swig(AutotoolsPackage, SourceforgePackage):
 
     conflicts("%nvhpc", when="@:4.0.2")
 
-
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("-version", output=str, error=str)
-        match = re.search(r"SWIG Version\s+(\S+)", output)
+        match = re.search(r"SWIG\s+Version\s+(\S+)", output)
         return match.group(1) if match else None
 
     @run_after("install")
