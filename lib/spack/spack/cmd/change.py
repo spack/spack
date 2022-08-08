@@ -8,7 +8,7 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
-description = "add a spec to an environment"
+description = "change an existing spec in an environment"
 section = "environments"
 level = "long"
 
@@ -24,13 +24,10 @@ def setup_parser(subparser):
     arguments.add_common_arguments(subparser, ["specs"])
 
 
-def add(parser, args):
-    env = spack.cmd.require_active_env(cmd_name="add")
+def change(parser, args):
+    env = spack.cmd.require_active_env(cmd_name="change")
 
     with env.write_transaction():
         for spec in spack.cmd.parse_specs(args.specs):
-            if not env.add(spec, args.list_name):
-                tty.msg("Package {0} was already added to {1}".format(spec.name, env.name))
-            else:
-                tty.msg("Adding %s to environment %s" % (spec, env.name))
+            env.change_existing_spec(spec)
         env.write()
