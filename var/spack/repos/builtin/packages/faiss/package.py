@@ -45,7 +45,7 @@ class Faiss(CMakePackage, CudaPackage):
 
     conflicts("+tests", when="~python", msg="+tests must be accompanied by +python")
 
-    depends_on("cmake@3.17:", type="build")
+    depends_on("cmake@3.17:", type="build", when="@1.7.2:")
     depends_on("blas")
 
     depends_on("py-pip", when="+python", type="build")
