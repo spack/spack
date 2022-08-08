@@ -100,6 +100,7 @@ spack:
   - amrex
   - arborx
   - argobots
+  - axom
   - bolt
   - bricks
   - butterflypack
@@ -190,7 +191,6 @@ spack:
   #- adios2@2.8.0                                     # adios2
   #- archer@2.0.0                                     # binutils
   #- ascent ^vtk-m ~openmp                            # ascent
-  #- axom@0.6.1                                       # axom
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
@@ -216,7 +216,6 @@ spack:
   # CPU BUILD FAILURES - NOTES
   # adios2: /usr/bin/ld: ../../lib/libadios2_fortran.so.2.8.2: version node not found for symbol adios2_adios_init_mod@adios2_adios_init_serial_smod._; /usr/bin/ld: failed to set dynamic section sizes: bad value
   # ascent: examples/proxies/cloverleaf3d-ref/clover_main.cpp:24: multiple definition of `main'; /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin/for_main.o:for_main.c:(.text+0x0): first defined here
-  # axom: /usr/bin/ld: /lib/x86_64-linux-gnu/crt1.o: in function `_start': (.text+0x24): undefined reference to `main'
   # binutils: gold/powerpc.cc:3590: undefined reference to `gold::Sized_symbol<64>::Value_type gold::Symbol_table::compute_final_value<64>(gold::Sized_symbol<64> const*, gold::Symbol_table::Compute_final_value_status*) const'
   # boost@1.79.0 cxxstd=17: clang++: error: unsupported argument 'h-create' to option '-pc'; clang++: error: no such file or directory: 'bin.v2/libs/math/build/intel-linux-2022.1.0/release/cxxstd-17-iso/threading-multi/visibility-hidden/pch.pchi'
   # charliecloud: autoreconf phase: RuntimeError: configure script not found in ...
