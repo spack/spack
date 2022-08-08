@@ -1111,11 +1111,15 @@ class TestSpecSematics(object):
         with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
             spec.splice(dep, transitive)
 
-    def test_override(self):
+    def test_spec_override(self):
         init_spec = Spec("a foo=baz foobar=baz")
         change_spec = Spec("a foo=fee")
         new_spec = Spec.override(init_spec, change_spec)
+        new_spec.concretize()
         assert "foo=fee" in new_spec
+        # This check fails without concretizing: apparently if both specs are
+        # abstract, then the spec will always be considered to satisfy
+        # 'variant=value' (regardless of whether it in fact does).
         assert "foo=baz" not in new_spec
         assert "foobar=baz" in new_spec
 
