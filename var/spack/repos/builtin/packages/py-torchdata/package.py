@@ -16,14 +16,16 @@ class PyTorchdata(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("main", branch="main")
+    version("0.4.1", sha256="71c0aa3aca3b04a986a2cd4cc2e0be114984ca836dc4def2c700bf1bd1ff087e")
     version("0.4.0", sha256="b4ec446a701680faa620fcb828b98ba36a63fa79da62a1e568d4a683889172da")
     version("0.3.0", sha256="ac36188bf133cf5f1041a28ccb3ee82ba52d4b5d99617be37d64d740acd6cfd4")
 
     # https://github.com/pytorch/data#version-compatibility
     depends_on("python@3.7:3.10", type=("build", "run"))
     depends_on("py-torch@master", when="@main", type=("build", "run"))
-    depends_on("py-torch@1.12", when="@0.4", type=("build", "run"))
-    depends_on("py-torch@1.11", when="@0.3", type=("build", "run"))
+    depends_on("py-torch@1.12.1", when="@0.4.1", type=("build", "run"))
+    depends_on("py-torch@1.12.0", when="@0.4.0", type=("build", "run"))
+    depends_on("py-torch@1.11.0", when="@0.3.0", type=("build", "run"))
 
     # requirements.txt
     depends_on("py-setuptools", type="build")
