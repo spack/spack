@@ -106,7 +106,7 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - catalyst
+  - catalyst %oneapi ^binutils%gcc
   - chai ~benchmarks ~tests
   - conduit
   - darshan-runtime
