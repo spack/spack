@@ -131,10 +131,12 @@ def test_exclude_specs(mock_packages, config):
     )
 
     mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
-    expected_include = set(spack.spec.Spec(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"])
+    expected_include = set(
+        spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
+    )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
-    assert not expected_exclude & set(mirror_specs)
+    assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
 
 def test_exclude_file(mock_packages, tmpdir, config):
@@ -150,10 +152,12 @@ mpich@1.0
     args = MockMirrorArgs(specs=["mpich"], versions_per_spec="all", exclude_file=exclude_path)
 
     mirror_specs = spack.cmd.mirror.concrete_specs_from_user(args)
-    expected_include = set(spack.spec.Spec(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"])
+    expected_include = set(
+        spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
+    )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
-    assert not expected_exclude & set(mirror_specs)
+    assert not any(spec.satisfies(y) for spec in mirror_specs for y in expected_exclude)
 
 
 def test_mirror_crud(tmp_scope, capsys):
@@ -414,3 +418,27 @@ class TestMirrorCreate(object):
 
         # Ensure they are the same
         assert specs_from_cli == specs_from_file
+
+    @pytest.mark.parametrize(
+        "input_specs,nversions",
+        [
+            ("callpath", 1),
+            ("mpich", 4),
+            ("callpath bowtie", 3),
+            ("callpath bowtie", "all"),
+        ],
+    )
+    def test_versions_per_spec_produces_concrete_specs(self, input_specs, nversions, config):
+        args = Bunch(
+            **{
+                "specs": input_specs,
+                "all": None,
+                "file": None,
+                "versions_per_spec": nversions,
+                "dependencies": False,
+                "exclude_specs": None,
+                "exclude_file": None,
+            }
+        )
+        specs = spack.cmd.mirror.concrete_specs_from_user(args)
+        assert all(s.concrete for s in specs)

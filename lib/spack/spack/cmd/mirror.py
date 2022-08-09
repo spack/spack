@@ -268,6 +268,7 @@ def concrete_specs_from_user(args):
     mirror_specs, _ = spack.spec.partition_spec_list(
         mirror_specs, predicate_fn=not_excluded_fn(args)
     )
+    mirror_specs = [x.concretized() for x in mirror_specs]
     return mirror_specs
 
 
