@@ -399,8 +399,8 @@ class TestMirrorCreate(object):
         [
             ("callpath", 1),
             ("mpich", 4),
-            ("callpath bowtie", 3),
-            ("callpath bowtie", "all"),
+            ("callpath mpich", 3),
+            ("callpath mpich", "all"),
         ],
     )
     def test_versions_per_spec_produces_concrete_specs(self, input_specs, nversions, config):
