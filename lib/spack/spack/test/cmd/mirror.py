@@ -292,9 +292,9 @@ def test_mirror_destroy(
     mirror("remove", "atest")
 
 
+@pytest.mark.usefixtures("mock_packages")
 class TestMirrorCreate(object):
     @pytest.mark.regression("31736", "31985")
-    @pytest.mark.maybeslow
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = Bunch(exclude_file=None, exclude_specs=None)
         specs = spack.cmd.mirror.all_specs_with_all_versions(args)
@@ -338,3 +338,79 @@ class TestMirrorCreate(object):
         directory = spack.cmd.mirror.mirror_directory_from_cli(args)
         assert directory.startswith("file:")
         assert directory.endswith(expected_end)
+
+    @pytest.mark.parametrize(
+        "cli_args,not_expected",
+        [
+            (
+                {
+                    "specs": "boost bowtie callpath",
+                    "exclude_specs": "bowtie",
+                    "dependencies": False,
+                },
+                ["bowtie"],
+            ),
+            (
+                {
+                    "specs": "boost bowtie callpath",
+                    "exclude_specs": "bowtie callpath",
+                    "dependencies": False,
+                },
+                ["bowtie", "callpath"],
+            ),
+            (
+                {
+                    "specs": "boost bowtie callpath",
+                    "exclude_specs": "bowtie",
+                    "dependencies": True,
+                },
+                ["bowtie"],
+            ),
+        ],
+    )
+    def test_exclude_specs_from_user(self, cli_args, not_expected, config):
+        cli_args.update(
+            {
+                "all": None,
+                "file": None,
+                "versions_per_spec": None,
+                "exclude_file": None,
+            }
+        )
+        args = Bunch(**cli_args)
+        specs = spack.cmd.mirror.concrete_specs_from_user(args)
+        assert not any(s.satisfies(y) for s in specs for y in not_expected)
+
+    @pytest.mark.parametrize(
+        "abstract_specs",
+        [
+            ("bowtie", "callpath"),
+        ],
+    )
+    def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):
+        template_args = {
+            "specs": None,
+            "file": None,
+            "all": None,
+            "versions_per_spec": None,
+            "dependencies": False,
+            "exclude_specs": None,
+            "exclude_file": None,
+        }
+        # Mock parsing from specs
+        from_cli_args = template_args.copy()
+        from_cli_args["specs"] = " ".join(abstract_specs)
+        args = Bunch(**from_cli_args)
+        specs_from_cli = spack.cmd.mirror.concrete_specs_from_user(args)
+
+        # Mock parsing from file
+        input_file = tmpdir.join("input.txt")
+        input_file.write("\n".join(abstract_specs))
+
+        from_file_args = template_args.copy()
+        from_file_args["file"] = str(input_file)
+        args = Bunch(**from_file_args)
+        specs_from_file = spack.cmd.mirror.concrete_specs_from_user(args)
+
+        # Ensure they are the same
+        assert specs_from_cli == specs_from_file
