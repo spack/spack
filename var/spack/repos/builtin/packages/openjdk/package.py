@@ -341,3 +341,10 @@ class Openjdk(Package):
             class_paths = find(dependent_spec.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
             env.prepend_path("CLASSPATH", classpath)
+
+    @property
+    def non_bindable_shared_objects(self):
+        # Since we provide openjdk as a binary, we can't remove an obsolete glibc
+        # fix that prevents us from modifying the soname of libjvm.so. If we move
+        # to source builds this should be possible.
+        return ["libjvm.so"]

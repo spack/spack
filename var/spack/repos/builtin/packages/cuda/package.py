@@ -547,3 +547,8 @@ class Cuda(Package):
             if "compat" not in parts and "stubs" not in parts:
                 filtered_libs.append(lib)
         return LibraryList(filtered_libs)
+
+    @property
+    def non_bindable_shared_objects(self):
+        # Avoid binding stub libraries by absolute path
+        return ["stubs"]
