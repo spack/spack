@@ -12,7 +12,6 @@ import spack.cmd.mirror
 import spack.config
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
-from spack.util.pattern import Bunch
 
 mirror = SpackCommand("mirror")
 env = SpackCommand("env")
@@ -115,6 +114,7 @@ class MockMirrorArgs(object):
         dependencies=False,
         exclude_file=None,
         exclude_specs=None,
+        directory=None,
     ):
         self.specs = specs or []
         self.all = all
@@ -123,6 +123,7 @@ class MockMirrorArgs(object):
         self.dependencies = dependencies
         self.exclude_file = exclude_file
         self.exclude_specs = exclude_specs
+        self.directory = directory
 
 
 def test_exclude_specs(mock_packages, config):
@@ -300,7 +301,7 @@ def test_mirror_destroy(
 class TestMirrorCreate(object):
     @pytest.mark.regression("31736", "31985")
     def test_all_specs_with_all_versions_dont_concretize(self):
-        args = Bunch(exclude_file=None, exclude_specs=None)
+        args = MockMirrorArgs(exclude_file=None, exclude_specs=None)
         specs = spack.cmd.mirror.all_specs_with_all_versions(args)
         assert all(not s.concrete for s in specs)
 
@@ -326,7 +327,7 @@ class TestMirrorCreate(object):
         ],
     )
     def test_error_conditions(self, cli_args, error_str):
-        args = Bunch(**cli_args)
+        args = MockMirrorArgs(**cli_args)
         with pytest.raises(spack.error.SpackError, match=error_str):
             spack.cmd.mirror.mirror_create(args)
 
@@ -338,7 +339,7 @@ class TestMirrorCreate(object):
         ],
     )
     def test_mirror_path_is_valid(self, cli_args, expected_end):
-        args = Bunch(**cli_args)
+        args = MockMirrorArgs(**cli_args)
         directory = spack.cmd.mirror.mirror_directory_from_cli(args)
         assert directory.startswith("file:")
         assert directory.endswith(expected_end)
@@ -373,16 +374,7 @@ class TestMirrorCreate(object):
         ],
     )
     def test_exclude_specs_from_user(self, cli_args, not_expected, config):
-        cli_args.update(
-            {
-                "all": None,
-                "file": None,
-                "versions_per_spec": None,
-                "exclude_file": None,
-            }
-        )
-        args = Bunch(**cli_args)
-        specs = spack.cmd.mirror.concrete_specs_from_user(args)
+        specs = spack.cmd.mirror.concrete_specs_from_user(MockMirrorArgs(**cli_args))
         assert not any(s.satisfies(y) for s in specs for y in not_expected)
 
     @pytest.mark.parametrize(
@@ -392,31 +384,14 @@ class TestMirrorCreate(object):
         ],
     )
     def test_specs_from_cli_are_the_same_as_from_file(self, abstract_specs, config, tmpdir):
-        template_args = {
-            "specs": None,
-            "file": None,
-            "all": None,
-            "versions_per_spec": None,
-            "dependencies": False,
-            "exclude_specs": None,
-            "exclude_file": None,
-        }
-        # Mock parsing from specs
-        from_cli_args = template_args.copy()
-        from_cli_args["specs"] = " ".join(abstract_specs)
-        args = Bunch(**from_cli_args)
+        args = MockMirrorArgs(specs=" ".join(abstract_specs))
         specs_from_cli = spack.cmd.mirror.concrete_specs_from_user(args)
 
-        # Mock parsing from file
         input_file = tmpdir.join("input.txt")
         input_file.write("\n".join(abstract_specs))
-
-        from_file_args = template_args.copy()
-        from_file_args["file"] = str(input_file)
-        args = Bunch(**from_file_args)
+        args = MockMirrorArgs(file=str(input_file))
         specs_from_file = spack.cmd.mirror.concrete_specs_from_user(args)
 
-        # Ensure they are the same
         assert specs_from_cli == specs_from_file
 
     @pytest.mark.parametrize(
@@ -429,16 +404,6 @@ class TestMirrorCreate(object):
         ],
     )
     def test_versions_per_spec_produces_concrete_specs(self, input_specs, nversions, config):
-        args = Bunch(
-            **{
-                "specs": input_specs,
-                "all": None,
-                "file": None,
-                "versions_per_spec": nversions,
-                "dependencies": False,
-                "exclude_specs": None,
-                "exclude_file": None,
-            }
-        )
+        args = MockMirrorArgs(specs=input_specs, versions_per_spec=nversions)
         specs = spack.cmd.mirror.concrete_specs_from_user(args)
         assert all(s.concrete for s in specs)
