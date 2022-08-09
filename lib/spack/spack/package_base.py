@@ -2758,6 +2758,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+    @property
+    def non_bindable_shared_objects(self):
+        """List of shared objects that should be replaced with a different library at
+        runtime. Typically includes stub libraries like libcuda.so. When linking
+        against a library listed here, the dependent will only record its soname
+        or filename, not its absolute path, so that the dynamic linker will search
+        for it. Note: accepts both file names and directory names, for example
+        ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
+        stubs directory are not bound by path."""
+        return []
+
     def _run_test_callbacks(self, method_names, callback_type="install"):
         """Tries to call all of the listed methods, returning immediately
         if the list is None."""
