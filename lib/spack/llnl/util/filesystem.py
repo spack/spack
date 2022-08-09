@@ -81,6 +81,8 @@ __all__ = [
     "unset_executable_mode",
     "working_dir",
     "keep_modification_time",
+    "BaseDirectoryVisitor",
+    "visit_directory_tree",
 ]
 
 
@@ -1133,21 +1135,31 @@ def lexists_islink_isdir(path):
     return True, is_link, is_dir
 
 
-def visit_directory_tree(root, visitor, rel_path="", depth=0):
-    """
-    Recurses the directory root depth-first through a visitor pattern
+class BaseDirectoryVisitor(object):
+    """Base class and interface for visit_directory_tree."""
 
-    The visitor interface is as follows:
-    - visit_file(root, rel_path, depth)
-    - before_visit_dir(root, rel_path, depth) -> bool
-        if True, descends into this directory
-    - before_visit_symlinked_dir(root, rel_path, depth) -> bool
-        if True, descends into this directory
-    - after_visit_dir(root, rel_path, depth) -> void
-        only called when before_visit_dir returns True
-    - after_visit_symlinked_dir(root, rel_path, depth) -> void
-        only called when before_visit_symlinked_dir returns True
-    """
+    def visit_file(self, root, rel_path, depth):
+        pass
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        pass
+
+    def before_visit_dir(self, root, rel_path, depth):
+        return False
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        return False
+
+    def after_visit_dir(self, root, rel_path, depth):
+        pass
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        pass
+
+
+def visit_directory_tree(root, visitor, rel_path="", depth=0):
+    """Recurses the directory root depth-first through a visitor pattern using the
+    interface from BaseDirectoryVisitor"""
     dir = os.path.join(root, rel_path)
 
     if sys.version_info >= (3, 5, 0):
@@ -1190,9 +1202,11 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
             if not lexists:
                 continue
 
-        if not isdir:
-            # handle files
+        if not isdir and not islink:
+            # handle non-symlink files
             visitor.visit_file(root, rel_child, depth)
+        elif not isdir:
+            visitor.visit_symlinked_file(root, rel_child, depth)
         elif not islink and visitor.before_visit_dir(root, rel_child, depth):
             # Handle ordinary directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
