@@ -34,5 +34,5 @@ class PySetuptoolsRust(PythonPackage):
     depends_on("py-semantic-version@2.8.2:2", when="@1.2.0:", type=("build", "run"))
     depends_on("py-semantic-version@2.6.0:", type=("build", "run"))
     depends_on("py-typing-extensions@3.7.4.3:", when="@1.2.0:", type=("build", "run"))
-    depends_on("py-toml@0.9.0:", type=("build", "run"))
+    depends_on("py-toml@0.9.0:", type=("build", "run"), when="@0.12.1")
     depends_on("rust", type="run")
