@@ -498,10 +498,6 @@ def create(path, specs, skip_unstable_versions=False):
         * present:  Package specs that were already present.
         * mirrored: Package specs that were successfully mirrored.
         * error:    Package specs that failed to mirror due to some error.
-
-    This routine iterates through all known package versions, and
-    it creates specs for those versions.  If the version satisfies any spec
-    in the specs list, it is downloaded and added to the mirror.
     """
     # automatically spec-ify anything in the specs array.
     specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
