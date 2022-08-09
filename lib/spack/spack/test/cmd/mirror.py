@@ -293,9 +293,35 @@ def test_mirror_destroy(
 
 
 class TestMirrorCreate(object):
-    @pytest.mark.regression("31736")
+    @pytest.mark.regression("31736", "31985")
     @pytest.mark.maybeslow
     def test_all_specs_with_all_versions_dont_concretize(self):
         args = Bunch(exclude_file=None, exclude_specs=None)
         specs = spack.cmd.mirror.all_specs_with_all_versions(args)
         assert all(not s.concrete for s in specs)
+
+    @pytest.mark.parametrize(
+        "cli_args,error_str",
+        [
+            # Passed more than one among -f --all and specs
+            ({"specs": "hdf5", "file": None, "all": True}, "cannot specify specs on command line"),
+            (
+                {"specs": None, "file": "input.txt", "all": True},
+                "cannot specify specs with a file if",
+            ),
+            (
+                {"specs": "hdf5", "file": "input.txt", "all": False},
+                "cannot specify specs with a file AND",
+            ),
+            ({"specs": None, "file": None, "all": False}, "no packages were specified"),
+            # Passed -n along with --all
+            (
+                {"specs": None, "file": None, "all": True, "versions_per_spec": 2},
+                "cannot specify '--versions_per-spec'",
+            ),
+        ],
+    )
+    def test_error_conditions(self, cli_args, error_str):
+        args = Bunch(**cli_args)
+        with pytest.raises(spack.error.SpackError, match=error_str):
+            spack.cmd.mirror.mirror_create(args)
