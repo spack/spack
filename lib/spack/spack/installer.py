@@ -54,6 +54,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
+import spack.util.path
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -295,7 +296,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    print(colorize("@*g{[+]} ") + message)
+    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def _process_external_package(pkg, explicit):
@@ -1357,7 +1358,8 @@ class PackageInstaller(object):
             pkg (spack.package_base.Package): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
-            tty.debug("Creating the installation directory {0}".format(pkg.spec.prefix))
+            path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
+            tty.debug("Creating the installation directory {0}".format(path))
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
@@ -1637,7 +1639,8 @@ class PackageInstaller(object):
                 ltype, lock = self._ensure_locked("read", pkg)
                 if lock is not None:
                     self._update_installed(task)
-                    _print_installed_pkg(pkg.prefix)
+                    path = spack.util.path.debug_padded_filter(pkg.prefix)
+                    _print_installed_pkg(path)
 
                     # It's an already installed compiler, add it to the config
                     if task.compiler:
@@ -1805,8 +1808,8 @@ class BuildProcessInstaller(object):
 
         # If we are using a padded path, filter the output to compress padded paths
         # The real log still has full-length paths.
-        filter_padding = spack.config.get("config:install_tree:padded_length", None)
-        self.filter_fn = spack.util.path.padding_filter if filter_padding else None
+        padding = spack.config.get("config:install_tree:padded_length", None)
+        self.filter_fn = spack.util.path.padding_filter if padding else None
 
         # info/debug information
         pid = "{0}: ".format(os.getpid()) if tty.show_pid() else ""
@@ -2181,7 +2184,8 @@ class BuildTask(object):
             tty.debug(
                 "{0}: Removed {1} from uninstalled deps list: {2}".format(
                     self.pkg_id, pkg_id, self.uninstalled_deps
-                )
+                ),
+                level=2,
             )
 
     @property
