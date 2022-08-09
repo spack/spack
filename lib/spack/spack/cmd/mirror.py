@@ -6,6 +6,7 @@
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.tty.colify as colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -319,6 +320,14 @@ def concrete_specs_from_environment(args):
     return mirror_specs
 
 
+def all_specs_with_all_versions(args):
+    specs = [Spec(n) for n in spack.repo.all_package_names()]
+    mirror_specs = spack.mirror.get_all_versions(specs)
+    mirror_specs.sort(key=lambda s: (s.name, s.version))
+    mirror_specs = filter_mirror_specs(args, mirror_specs)
+    return mirror_specs[:10]
+
+
 def versions_per_spec(args):
     """Return how many versions should be mirrored per spec."""
     if not args.versions_per_spec:
@@ -334,6 +343,35 @@ def versions_per_spec(args):
                 " got '{0}'".format(args.versions_per_spec)
             )
     return num_versions
+
+
+def create_mirror_from_concrete_specs(mirror_specs, args):
+    directory = mirror_directory_from_cli(args)
+    present, mirrored, error = spack.mirror.create(
+        directory, mirror_specs, args.skip_unstable_versions
+    )
+    tty.msg("Summary for mirror in {}".format(directory))
+    process_mirror_stats(present, mirrored, error)
+
+
+def process_mirror_stats(present, mirrored, error):
+    p, m, e = len(present), len(mirrored), len(error)
+    tty.msg(
+        "Archive stats:",
+        "  %-4d already present" % p,
+        "  %-4d added" % m,
+        "  %-4d failed to fetch." % e,
+    )
+    if error:
+        tty.error("Failed downloads:")
+        colify.colify(s.cformat("{name}{@version}") for s in error)
+        sys.exit(1)
+
+
+def mirror_directory_from_cli(args):
+    mirror = spack.mirror.Mirror(args.directory or spack.config.get("config:source_cache"))
+    directory = url_util.format(mirror.push_url)
+    return directory
 
 
 def mirror_create(args):
@@ -367,8 +405,7 @@ def mirror_create(args):
         )
 
     if args.all and not ev.active_environment():
-        # create_mirror_for_all_specs()
-        raise RuntimeError("Not implemented yet")
+        create_mirror_for_all_specs(args)
         return
 
     if args.all and ev.active_environment():
@@ -376,6 +413,20 @@ def mirror_create(args):
         return
 
     create_mirror_for_individual_specs(args)
+
+
+def create_mirror_for_all_specs(args):
+    mirror_specs = all_specs_with_all_versions(args)
+    directory = mirror_directory_from_cli(args)
+    mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
+        directory, skip_unstable_versions=args.skip_unstable_versions
+    )
+    for candidate in mirror_specs:
+        pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
+        pkg_obj = pkg_cls(Spec(candidate))
+        mirror_stats.next_spec(pkg_obj.spec)
+        spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    process_mirror_stats(*mirror_stats.stats())
 
 
 def create_mirror_for_all_specs_inside_environment(args):
@@ -389,29 +440,6 @@ def create_mirror_for_individual_specs(args):
     """
     mirror_specs = concrete_specs_from_user(args)
     create_mirror_from_concrete_specs(mirror_specs, args)
-
-
-def create_mirror_from_concrete_specs(mirror_specs, args):
-    mirror = spack.mirror.Mirror(args.directory or spack.config.get("config:source_cache"))
-    directory = url_util.format(mirror.push_url)
-    existed = web_util.url_exists(directory)
-    # Actually do the work to create the mirror
-    present, mirrored, error = spack.mirror.create(
-        directory, mirror_specs, args.skip_unstable_versions
-    )
-    p, m, e = len(present), len(mirrored), len(error)
-    verb = "updated" if existed else "created"
-    tty.msg(
-        "Successfully %s mirror in %s" % (verb, directory),
-        "Archive stats:",
-        "  %-4d already present" % p,
-        "  %-4d added" % m,
-        "  %-4d failed to fetch." % e,
-    )
-    if error:
-        tty.error("Failed downloads:")
-        tty.colify(s.cformat("{name}{@version}") for s in error)
-        sys.exit(1)
 
 
 def mirror_destroy(args):

@@ -8,9 +8,11 @@ import sys
 
 import pytest
 
+import spack.cmd.mirror
 import spack.config
 import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
+from spack.util.pattern import Bunch
 
 mirror = SpackCommand("mirror")
 env = SpackCommand("env")
@@ -288,3 +290,12 @@ def test_mirror_destroy(
 
     uninstall("-y", spec_name)
     mirror("remove", "atest")
+
+
+class TestMirrorCreate(object):
+    @pytest.mark.regression("31736")
+    @pytest.mark.maybeslow
+    def test_all_specs_with_all_versions_dont_concretize(self):
+        args = Bunch(exclude_file=None, exclude_specs=None)
+        specs = spack.cmd.mirror.all_specs_with_all_versions(args)
+        assert all(not s.concrete for s in specs)
