@@ -72,6 +72,7 @@ def setup_parser(subparser):
         default=False,
         help="include virtual packages in list",
     )
+    arguments.add_common_arguments(subparser, ["long", "very_long", "tags"])
 
 
 def filter_by_name(pkgs, args):
@@ -115,6 +116,11 @@ def filter_by_name(pkgs, args):
         pkgs = [p for p in pkgs if any(match(p, f) for f in res)]
 
     return sorted(pkgs, key=lambda s: s.lower())
+
+     # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        results = [x for x in results if x.name in packages_with_tags]
 
 
 @formatter
