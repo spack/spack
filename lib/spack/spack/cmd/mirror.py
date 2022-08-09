@@ -15,11 +15,11 @@ import spack.config
 import spack.environment as ev
 import spack.mirror
 import spack.repo
+import spack.spec
 import spack.util.path
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.spec import Spec
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors (source and binary)"
@@ -256,14 +256,7 @@ def concrete_specs_from_user(args):
     specs = concrete_specs_from_cli_or_file(args)
     if args.dependencies:
         specs = extend_with_dependencies(specs)
-
-    # Skip external specs, as they are already installed
-    external_specs = [s for s in specs if s.external]
-    specs = [s for s in specs if not s.external]
-
-    for spec in external_specs:
-        msg = "Skipping {0} as it is an external spec."
-        tty.msg(msg.format(spec.cshort_spec))
+    specs = filter_externals(specs)
 
     if versions_per_spec(args) == "all":
         mirror_specs = spack.mirror.get_all_versions(specs)
@@ -272,8 +265,20 @@ def concrete_specs_from_user(args):
             specs, num_versions=versions_per_spec(args)
         )
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs = filter_mirror_specs(args, mirror_specs)
+    mirror_specs, _ = spack.spec.partition_spec_list(
+        mirror_specs, predicate_fn=not_excluded_fn(args)
+    )
     return mirror_specs
+
+
+def filter_externals(specs):
+    specs, external_specs = spack.spec.partition_spec_list(
+        specs, predicate_fn=lambda x: not x.external
+    )
+    for spec in external_specs:
+        msg = "Skipping {0} as it is an external spec."
+        tty.msg(msg.format(spec.cshort_spec))
+    return specs
 
 
 def extend_with_dependencies(specs):
@@ -300,32 +305,40 @@ def concrete_specs_from_cli_or_file(args):
     return specs
 
 
-def filter_mirror_specs(args, mirror_specs):
+def not_excluded_fn(args):
+    """Return a predicate that evaluate to True if a spec was not explicitly
+    excluded by the user.
+    """
     exclude_specs = []
     if args.exclude_file:
         exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
     if args.exclude_specs:
         exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
-    if exclude_specs:
-        mirror_specs = list(
-            x for x in mirror_specs if not any(x.satisfies(y, strict=True) for y in exclude_specs)
-        )
-    return mirror_specs
+
+    def not_excluded(x):
+        return not any(x.satisfies(y, strict=True) for y in exclude_specs)
+
+    return not_excluded
 
 
 def concrete_specs_from_environment(args):
     env = ev.active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
-    mirror_specs = filter_mirror_specs(args, mirror_specs)
+    mirror_specs = filter_externals(mirror_specs)
+    mirror_specs, _ = spack.spec.partition_spec_list(
+        mirror_specs, predicate_fn=not_excluded_fn(args)
+    )
     return mirror_specs
 
 
 def all_specs_with_all_versions(args):
-    specs = [Spec(n) for n in spack.repo.all_package_names()]
+    specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
     mirror_specs = spack.mirror.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs = filter_mirror_specs(args, mirror_specs)
+    mirror_specs, _ = spack.spec.partition_spec_list(
+        mirror_specs, predicate_fn=not_excluded_fn(args)
+    )
     return mirror_specs
 
 
@@ -427,7 +440,7 @@ def create_mirror_for_all_specs(args):
     )
     for candidate in mirror_specs:
         pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
-        pkg_obj = pkg_cls(Spec(candidate))
+        pkg_obj = pkg_cls(spack.spec.Spec(candidate))
         mirror_stats.next_spec(pkg_obj.spec)
         spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
     process_mirror_stats(*mirror_stats.stats())
