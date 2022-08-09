@@ -20,7 +20,18 @@ properties = {
         "type": "object",
         "default": {},
         "properties": {
-            "shared_linking": {"type": "string", "enum": ["rpath", "runpath"]},
+            "shared_linking": {
+                "anyOf": [
+                    {"type": "string", "enum": ["rpath", "runpath"]},
+                    {
+                        "type": "object",
+                        "properties": {
+                            "type": {"type": "string", "enum": ["rpath", "runpath"]},
+                            "bind": {"type": "boolean"},
+                        },
+                    },
+                ]
+            },
             "install_tree": {
                 "anyOf": [
                     {
@@ -134,6 +145,13 @@ def update(data):
     use_curl = data.pop("use_curl", None)
     if use_curl is not None:
         data["url_fetch_method"] = "curl" if use_curl else "urllib"
+        changed = True
+
+    shared_linking = data.get("shared_linking", None)
+    if isinstance(shared_linking, six.string_types):
+        # deprecated short-form shared_linking: rpath/runpath
+        # add value as `type` in updated shared_linking
+        data["shared_linking"] = {"type": shared_linking}
         changed = True
 
     return changed

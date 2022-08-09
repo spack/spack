@@ -27,7 +27,8 @@ This can be used to implement support for things like module
 systems (e.g. modules, lmod, etc.) or to add other custom
 features.
 """
-import llnl.util.lang
+
+from llnl.util.lang import ensure_last, list_modules
 
 import spack.paths
 
@@ -44,11 +45,11 @@ class _HookRunner(object):
     def _populate_hooks(cls):
         # Lazily populate the list of hooks
         cls._hooks = []
-        relative_names = list(llnl.util.lang.list_modules(spack.paths.hooks_path))
 
-        # We want this hook to be the last registered
-        relative_names.sort(key=lambda x: x == "write_install_manifest")
-        assert relative_names[-1] == "write_install_manifest"
+        # Since the order is important, we just fix it here, it's not like
+        # hooks get added every other day.
+        relative_names = list(list_modules(spack.paths.hooks_path))
+        ensure_last(relative_names, "absolutify_elf_sonames", "write_install_manifest")
 
         for name in relative_names:
             module_name = __name__ + "." + name
