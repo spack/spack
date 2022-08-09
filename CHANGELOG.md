@@ -6,7 +6,7 @@
   Python 2 and Python 3 (#31092)
 * Fixed compiler flags for oneAPI and DPC++ (#30856)
 * Fixed several issues related to concretization (#31142,#31153,#31170,#31226)
-* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173.#31186)
+* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173,#31186)
 * Assign a version to openSUSE Tumbleweed according to the GLIBC version
   in the system (#19895) 
 * Improved Dockerfile generation for `spack containerize` (#29741,#31321)
