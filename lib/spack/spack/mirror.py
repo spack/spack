@@ -643,7 +643,7 @@ def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
     with a concrete version.
 
     Args:
-        pkg_obj (spack.spec.PackageBase): package object with to be added.
+        pkg_obj (spack.package_base.PackageBase): package object with to be added.
         mirror_cache (spack.caches.MirrorCache): mirror where to add the spec.
         mirror_stats (spack.mirror.MirrorStats): statistics on the current mirror
 
