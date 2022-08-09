@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import sys
 
 import pytest
@@ -156,7 +155,7 @@ spack:
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == install_root 
+        assert str(spack.store.root) == install_root
 
 
 def test_nested_use_of_context_manager(mutable_config):

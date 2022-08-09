@@ -2740,10 +2740,6 @@ spack:
       root: {0}
 """.format(install_root)
     )
-    if sys.platform == "win32":
-        sep = "\\"
-    else:
-        sep = "/"
     current_store_root = str(spack.store.root)
     assert str(current_store_root) != install_root
     with spack.environment.Environment(str(tmpdir)):
