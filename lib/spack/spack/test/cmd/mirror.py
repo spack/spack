@@ -325,3 +325,16 @@ class TestMirrorCreate(object):
         args = Bunch(**cli_args)
         with pytest.raises(spack.error.SpackError, match=error_str):
             spack.cmd.mirror.mirror_create(args)
+
+    @pytest.mark.parametrize(
+        "cli_args,expected_end",
+        [
+            ({"directory": None}, os.path.join("var", "spack", "cache")),
+            ({"directory": os.path.join("foo", "bar")}, os.path.join("foo", "bar")),
+        ],
+    )
+    def test_mirror_path_is_valid(self, cli_args, expected_end):
+        args = Bunch(**cli_args)
+        directory = spack.cmd.mirror.mirror_directory_from_cli(args)
+        assert directory.startswith("file:")
+        assert directory.endswith(expected_end)

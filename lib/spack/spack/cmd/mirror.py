@@ -15,6 +15,7 @@ import spack.config
 import spack.environment as ev
 import spack.mirror
 import spack.repo
+import spack.util.path
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
@@ -369,7 +370,10 @@ def process_mirror_stats(present, mirrored, error):
 
 
 def mirror_directory_from_cli(args):
-    mirror = spack.mirror.Mirror(args.directory or spack.config.get("config:source_cache"))
+    mirror_path = args.directory or spack.util.path.canonicalize_path(
+        spack.config.get("config:source_cache")
+    )
+    mirror = spack.mirror.Mirror(mirror_path)
     directory = url_util.format(mirror.push_url)
     return directory
 
