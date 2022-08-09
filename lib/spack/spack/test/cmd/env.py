@@ -2738,7 +2738,9 @@ spack:
   config:
     install_tree:
       root: {0}
-""".format(install_root)
+""".format(
+            install_root
+        )
     )
     current_store_root = str(spack.store.root)
     assert str(current_store_root) != install_root
