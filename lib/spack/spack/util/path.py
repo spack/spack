@@ -371,6 +371,7 @@ def padding_filter(string):
     entirety at least one time. e.g., "/spack/" would not be filtered, but
     "/__spack_path_placeholder__/spack/" would be.
 
+    Note that only the first padded path in the string is filtered.
     """
     global _filter_re
 
@@ -408,3 +409,22 @@ def filter_padding():
             yield
     else:
         yield  # no-op: don't filter unless padding is actually enabled
+
+
+def debug_padded_filter(string, level=1):
+    """
+    Return string, path padding filtered if debug level and not windows
+
+    Args:
+        string (str): string containing path
+        level (int): maximum debug level value for filtering (e.g., 1
+            means filter path padding if the current debug level is 0 or 1
+            but return the original string if it is 2 or more)
+
+    Returns (str): filtered string if current debug level does not exceed
+        level and not windows; otherwise, unfiltered string
+    """
+    if is_windows:
+        return string
+
+    return padding_filter(string) if tty.debug_level() <= level else string
