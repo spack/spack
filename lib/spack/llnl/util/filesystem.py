@@ -1136,30 +1136,89 @@ def lexists_islink_isdir(path):
 
 
 class BaseDirectoryVisitor(object):
-    """Base class and interface for visit_directory_tree."""
+    """Base class and interface for :py:func:`visit_directory_tree`."""
 
     def visit_file(self, root, rel_path, depth):
+        """Handle the non-symlink file at ``os.path.join(root, rel_path)``
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current file from ``root``
+            depth (int): depth of current file from the ``root`` directory"""
         pass
 
     def visit_symlinked_file(self, root, rel_path, depth):
+        """Handle the symlink to a file at ``os.path.join(root, rel_path)``.
+        Note: ``rel_path`` is the location of the symlink, not to what it is
+        pointing to. The symlink may be dangling.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory"""
         pass
 
     def before_visit_dir(self, root, rel_path, depth):
+        """Return True from this function to recurse into the directory at
+        os.path.join(root, rel_path). Return False in order not to recurse further.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current directory from ``root``
+            depth (int): depth of current directory from the ``root`` directory
+
+        Returns:
+            bool: ``True`` when the directory should be recursed into. ``False`` when
+            not"""
         return False
 
     def before_visit_symlinked_dir(self, root, rel_path, depth):
+        """Return ``True`` to recurse into the symlinked directory and ``False`` in
+        order not to. Note: ``rel_path`` is the path to the symlink itself.
+        Following symlinked directories blindly can cause infinite recursion due to
+        cycles.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory
+
+        Returns:
+            bool: ``True`` when the directory should be recursed into. ``False`` when
+            not"""
         return False
 
     def after_visit_dir(self, root, rel_path, depth):
+        """Called after recursion into ``rel_path`` finished. This function is not
+        called when ``rel_path`` was not recursed into.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current directory from ``root``
+            depth (int): depth of current directory from the ``root`` directory"""
         pass
 
     def after_visit_symlinked_dir(self, root, rel_path, depth):
+        """Called after recursion into ``rel_path`` finished. This function is not
+        called when ``rel_path`` was not recursed into.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory"""
         pass
 
 
 def visit_directory_tree(root, visitor, rel_path="", depth=0):
     """Recurses the directory root depth-first through a visitor pattern using the
-    interface from BaseDirectoryVisitor"""
+    interface from :py:class:`BaseDirectoryVisitor`
+
+    Parameters:
+        root (str): path of directory to recurse into
+        visitor (BaseDirectoryVisitor): what visitor to use
+        rel_path (str): current relative path from the root
+        depth (str): current depth from the root
+    """
     dir = os.path.join(root, rel_path)
 
     if sys.version_info >= (3, 5, 0):
