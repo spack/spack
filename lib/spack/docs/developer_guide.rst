@@ -965,8 +965,13 @@ completed, the steps to make the point release are:
 
       $ git checkout releases/v0.15
 
+#. If a pull request to the release branch named ``Backports vX.Y.Z`` is not already
+   in the project, create it. This pull request ought to be created as early as
+   possible when working on a release project, so that we can build the release
+   commits incrementally, and identify potential conflicts at an early stage.
+
 #. Cherry-pick each pull request in the ``Done`` column of the release
-   project board onto the release branch.
+   project board onto the ``Backports vX.Y.Z`` pull request.
 
    This is **usually** fairly simple since we squash the commits from the
    vast majority of pull requests. That means there is only one commit
@@ -991,7 +996,7 @@ completed, the steps to make the point release are:
 
       It is important to cherry-pick commits in the order they happened,
       otherwise you can get conflicts while cherry-picking. When
-      cherry-picking onto a point release, look at the merge date,
+      cherry-picking look at the merge date,
       **not** the number of the pull request or the date it was opened.
 
       Sometimes you may **still** get merge conflicts even if you have
@@ -1012,15 +1017,19 @@ completed, the steps to make the point release are:
          branch if neither of the above options makes sense, but this can
          require a lot of work. It's seldom the right choice.
 
-#. Bump the version in ``lib/spack/spack/__init__.py``.
+#. When all the commits from the project board are cherry-picked into
+   the ``Backports vX.Y.Z`` pull request, you can push a commit to:
 
-#. Update ``CHANGELOG.md`` with a list of the changes.
+   1. Bump the version in ``lib/spack/spack/__init__.py``.
+   2. Update ``CHANGELOG.md`` with a list of the changes.
 
    This is typically a summary of the commits you cherry-picked onto the
    release branch. See `the changelog from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
 
-#. Push the release branch to GitHub.
+#. Merge the ``Backports vX.Y.Z`` PR with the **Rebase and merge** strategy. This
+   is needed to keep track in the release branch of all the commits that were
+   cherry-picked.
 
 #. Make sure CI passes on the release branch, including:
 
@@ -1039,6 +1048,8 @@ completed, the steps to make the point release are:
 
 #. Follow the steps in :ref:`announcing-releases`.
 
+#. Submit a PR to update the CHANGELOG in the `develop` branch
+   with the addition of this point release.
 
 .. _publishing-releases:
 
