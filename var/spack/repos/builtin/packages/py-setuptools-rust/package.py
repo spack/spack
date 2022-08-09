@@ -13,7 +13,7 @@ class PySetuptoolsRust(PythonPackage):
     pypi = "setuptools-rust/setuptools-rust-0.12.1.tar.gz"
 
     version("1.4.1", sha256="18ff850831f58ee21d5783825c99fad632da21e47645e9427fd7dec048029e76")
-    version("1.2.0", sha256="a47d72d3723d03c7f66c283e301bbbf4260c2a0e7f02cda30ac2b8f65e42720b")
+    version("1.2.0", sha256="0a4ada479e8c7e3d8bd7cb56e1a29acc2b2bb98c2325051b0cdcb57d7f056de8")
     version("0.12.1", sha256="647009e924f0ae439c7f3e0141a184a69ad247ecb9044c511dabde232d3d570e")
 
     # Version 0.10.6 is not available on pypi and can only be found on github
