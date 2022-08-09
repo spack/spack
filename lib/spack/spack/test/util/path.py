@@ -111,3 +111,21 @@ class TestPathPadding:
         tty.msg("here is a long path: %s/with/a/suffix" % long_path)
         out, err = capfd.readouterr()
         assert padding_string not in out
+
+
+@pytest.mark.parametrize("debug", [1, 2])
+def test_path_debug_padded_filter(debug, monkeypatch):
+    """Ensure padded filter works as expected with different debug levels."""
+    fmt = "{0}{1}{2}{1}{3}"
+    prefix = "[+] {0}home{0}user{0}install".format(os.sep)
+    suffix = "mypackage"
+    string = fmt.format(prefix, os.sep, os.sep.join([sup.SPACK_PATH_PADDING_CHARS] * 2), suffix)
+    expected = (
+        fmt.format(prefix, os.sep, "[padded-to-{0}-chars]".format(72), suffix)
+        if debug <= 1 and not is_windows
+        else string
+    )
+
+    monkeypatch.setattr(tty, "_debug", debug)
+    with spack.config.override("config:install_tree", {"padded_length": 128}):
+        assert expected == sup.debug_padded_filter(string)
