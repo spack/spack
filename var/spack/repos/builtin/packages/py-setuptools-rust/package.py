@@ -12,6 +12,8 @@ class PySetuptoolsRust(PythonPackage):
     homepage = "https://github.com/PyO3/setuptools-rust"
     pypi = "setuptools-rust/setuptools-rust-0.12.1.tar.gz"
 
+    version("1.4.1", sha256="18ff850831f58ee21d5783825c99fad632da21e47645e9427fd7dec048029e76")
+    version("1.2.0", sha256="a47d72d3723d03c7f66c283e301bbbf4260c2a0e7f02cda30ac2b8f65e42720b")
     version("0.12.1", sha256="647009e924f0ae439c7f3e0141a184a69ad247ecb9044c511dabde232d3d570e")
 
     # Version 0.10.6 is not available on pypi and can only be found on github
@@ -22,10 +24,15 @@ class PySetuptoolsRust(PythonPackage):
         deprecated=True,
     )
 
+    depends_on("python@3.7:", when="@1.2.0:", type=("build", "run"))
     depends_on("python@3.6:", when="@0.12:", type=("build", "run"))
+    depends_on("py-setuptools@62.4:", when="@1.4.0:", type=("build", "run"))
     depends_on("py-setuptools@46.1:", when="@0.11.6:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm+toml@6.3.2:", when="@1.2.0:", type="build")
     depends_on("py-setuptools-scm+toml@3.4.3:", when="@0.11:", type="build")
+    depends_on("py-semantic-version@2.8.2:2", when="@1.2.0:", type=("build", "run"))
     depends_on("py-semantic-version@2.6.0:", type=("build", "run"))
+    depends_on("py-typing-extensions@3.7.4.3:", when="@1.2.0:", type=("build", "run"))
     depends_on("py-toml@0.9.0:", type=("build", "run"))
     depends_on("rust", type="run")
