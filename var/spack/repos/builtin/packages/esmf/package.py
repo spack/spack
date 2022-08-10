@@ -35,9 +35,9 @@ class Esmf(MakefilePackage):
     variant("pnetcdf", default=True, description="Build with pNetCDF support")
     variant("xerces", default=True, description="Build with Xerces support")
     variant(
-        "external-pio", 
-        default=False, 
-        description="Build with external parallelio library", 
+        "external-pio",
+        default=False,
+        description="Build with external parallelio library",
         when="@8.3:",
     )
     variant("pio", default=True, description="Enable ParallelIO support")
