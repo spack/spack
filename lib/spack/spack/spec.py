@@ -5364,26 +5364,6 @@ def save_dependency_specfiles(
             fd.write(dep_spec.to_json(hash=ht.dag_hash))
 
 
-def partition_spec_list(input_specs, predicate_fn):
-    """Partition a list of specs according to a custom predicate.
-
-    Args:
-        input_specs (list of Spec): input specs to be partitioned.
-        predicate_fn (callable): predicate function accepting a spec as argument.
-
-    Return:
-        Tuple of the list of elements evaluating to True, and
-        list of elements evaluating to False.
-    """
-    true_items, false_items = [], []
-    for item in input_specs:
-        if predicate_fn(item):
-            true_items.append(item)
-            continue
-        false_items.append(item)
-    return true_items, false_items
-
-
 class SpecParseError(spack.error.SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
 

@@ -5,6 +5,7 @@
 
 import sys
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.colify as colify
 
@@ -265,17 +266,13 @@ def concrete_specs_from_user(args):
             specs, num_versions=versions_per_spec(args)
         )
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = spack.spec.partition_spec_list(
-        mirror_specs, predicate_fn=not_excluded_fn(args)
-    )
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
     mirror_specs = [x.concretized() for x in mirror_specs]
     return mirror_specs
 
 
 def filter_externals(specs):
-    specs, external_specs = spack.spec.partition_spec_list(
-        specs, predicate_fn=lambda x: not x.external
-    )
+    specs, external_specs = lang.stable_partition(specs, predicate_fn=lambda x: not x.external)
     for spec in external_specs:
         msg = "Skipping {0} as it is an external spec."
         tty.msg(msg.format(spec.cshort_spec))
@@ -327,9 +324,7 @@ def concrete_specs_from_environment(args):
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
-    mirror_specs, _ = spack.spec.partition_spec_list(
-        mirror_specs, predicate_fn=not_excluded_fn(args)
-    )
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
     return mirror_specs
 
 
@@ -337,9 +332,7 @@ def all_specs_with_all_versions(args):
     specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
     mirror_specs = spack.mirror.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = spack.spec.partition_spec_list(
-        mirror_specs, predicate_fn=not_excluded_fn(args)
-    )
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
     return mirror_specs
 
 

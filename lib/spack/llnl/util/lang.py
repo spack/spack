@@ -977,6 +977,27 @@ def enum(**kwargs):
     return type("Enum", (object,), kwargs)
 
 
+def stable_partition(input_iterable, predicate_fn):
+    """Partition the input iterable according to a custom predicate.
+
+    Args:
+        input_iterable (list of Spec): input iterable to be partitioned.
+        predicate_fn (callable): predicate function accepting an iterable item
+            as argument.
+
+    Return:
+        Tuple of the list of elements evaluating to True, and
+        list of elements evaluating to False.
+    """
+    true_items, false_items = [], []
+    for item in input_iterable:
+        if predicate_fn(item):
+            true_items.append(item)
+            continue
+        false_items.append(item)
+    return true_items, false_items
+
+
 class TypedMutableSequence(MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
