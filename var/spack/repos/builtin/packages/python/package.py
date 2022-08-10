@@ -336,18 +336,18 @@ class Python(Package):
 
         # Some variants enable multiple modules
         try:
-            python("-c", "import ssl", error=os.devnull)
-            python("-c", "import hashlib", error=os.devnull)
-            variants += "+ssl"
-        except ProcessError:
-            variants += "~ssl"
-
-        try:
             python("-c", "import xml.parsers.expat", error=os.devnull)
             python("-c", "import xml.etree.ElementTree", error=os.devnull)
             variants += "+pyexpat"
         except ProcessError:
             variants += "~pyexpat"
+
+        try:
+            python("-c", "import ssl", error=os.devnull)
+            python("-c", "import hashlib", error=os.devnull)
+            variants += "+ssl"
+        except ProcessError:
+            variants += "~ssl"
 
         # Some modules are version-dependent
         if Version(version_str) >= Version("3.3"):
