@@ -1478,6 +1478,8 @@ class UnknownPackageError(UnknownEntityError):
             if name.endswith(".yaml"):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
+            else:
+                long_msg = "You may need to run 'spack clean -m'."
         else:
             msg = "Attempting to retrieve anonymous package."
 
