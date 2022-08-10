@@ -18,7 +18,7 @@ class Esmf(MakefilePackage):
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf/"
-    
+
     maintainers = ["climbfuji"]
 
     version("develop", branch="develop")
@@ -34,7 +34,12 @@ class Esmf(MakefilePackage):
     variant("netcdf", default=True, description="Build with NetCDF support")
     variant("pnetcdf", default=True, description="Build with pNetCDF support")
     variant("xerces", default=True, description="Build with Xerces support")
-    variant("external-pio", default=False, description="Build with external parallelio library", when="@8.3:")
+    variant(
+        "external-pio", 
+        default=False, 
+        description="Build with external parallelio library", 
+        when="@8.3:",
+    )
     variant("pio", default=True, description="Enable ParallelIO support")
     variant("debug", default=False, description="Make a debuggable version of the library")
 
