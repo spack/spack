@@ -17,8 +17,8 @@ class PyTensorflowEstimator(Package):
 
     maintainers = ["aweits"]
 
-    version('2.9.0', sha256='62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6')
-    version('2.8.0', sha256='58a2c3562ca6491c257e9a4d9bd8825667883257edcdb452181efa691c586b17')
+    version("2.9.0", sha256="62d7b5a574d9c995542f6cb485ff1c18ad115afd9ec6d63437b2aab227c35ef6")
+    version("2.8.0", sha256="58a2c3562ca6491c257e9a4d9bd8825667883257edcdb452181efa691c586b17")
     version("2.7.0", sha256="e5164e802638d3cf110ecc17912be9d514a9d3354ec48e77200b9403dcc15965")
     version("2.6.0", sha256="947705c60c50da0b4a8ceec1bc058aaf6bf567a7efdcd50d5173ebf6bafcf30f")
     version("2.5.0", sha256="66661f30ea05d57377c45267ca770935fb8c54f85b7901f0a7deb91766fe9f45")
