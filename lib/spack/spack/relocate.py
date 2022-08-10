@@ -60,21 +60,23 @@ class BinaryStringReplacementError(spack.error.SpackError):
 
 class BinaryTextReplaceError(spack.error.SpackError):
     def __init__(self, old_path, new_path):
-        """Raised when the new install path is longer than the
-        old one, so binary text replacement cannot occur.
+        """Raised when the new install path is longer or has an incompatible suffix,
+        so binary text replacement cannot occur.
 
         Args:
             old_path (str): original path to be substituted
             new_path (str): candidate path for substitution
         """
 
-        msg = "New path longer than old path: binary text"
-        msg += " replacement not possible."
-        err_msg = "The new path %s" % new_path
-        err_msg += " is longer than the old path %s.\n" % old_path
+        msg = "New path incompatible with old path: binary text replacement not possible."
+        err_msg = "The new path `%s`\n" % new_path
+        err_msg += "Has an incompatible suffix %s != %s.\n" % (old_path[-16:], new_path[-16:])
         err_msg += "Text replacement in binaries will not work.\n"
         err_msg += "Create buildcache from an install path "
-        err_msg += "longer than new path."
+        err_msg += "longer than or equal to new path"
+        err_msg += "where at least the last 16 characters match.\n"
+        err_msg += "If you have removed the hash from your projection"
+        err_msg += "consider restoring it."
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
 
@@ -467,14 +469,26 @@ def _replace_prefix_bin(filename, byte_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in binary files.
 
-    The new install prefix is prefixed with ``os.sep`` until the
-    lengths of the prefixes are the same.
+    The new install prefix is required to be at either:
+
+    1. At least 16 characters shorter than the original, or
+    2. Share the same 16-character suffix with the original
+
+    This is to avoid, with high probability, replacing a path suffix that's
+    getting re-used as the storage for another string constant.  For more
+    detail, see:
+    - https://github.com/spack/spack/pull/31739
+    - TODO: add pr with this fix here
+
+    No longer prefixed with with ``os.sep`` until the lengths of the prefixes
+    are the same, instead the new prefix is terminated at its original length to
+    leave a suffix unmodified as much as possible.
 
     Args:
         filename (str): target binary file
         byte_prefixes (OrderedDict): OrderedDictionary where the keys are
-        precompiled regex of the old prefixes and the values are the new
-        prefixes (uft-8 encoded)
+        bytes representing the old prefixes and the values are the new
+        prefixes (all bytes utf-8 encoded)
     """
 
     with open(filename, "rb+") as f:
@@ -485,15 +499,15 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Skip this hassle if not found
             if orig_bytes not in data:
                 continue
-            # We only care about this problem if we are about to replace
-            length_compatible = len(new_bytes) <= len(orig_bytes)
-            if not length_compatible:
-                tty.debug("Binary failing to relocate is %s" % filename)
+            # Check relocation suffix safety, we only care about this problem if we are about to replace
+            if not (new_bytes[-16:] == orig_bytes[-16:] and len(new_bytes) <= len(orig_bytes)):
+                tty.debug('Binary failing to relocate is %s' % filename)
                 raise BinaryTextReplaceError(orig_bytes, new_bytes)
+
             pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length
             padding = padding.encode("utf-8")
-            data = data.replace(orig_bytes, new_bytes + padding)
+            data = data.replace(orig_bytes, padding + new_bytes)
             # Really needs to be the same length
             if not len(data) == original_data_len:
                 print("Length of pad:", pad_length, "should be", len(padding))

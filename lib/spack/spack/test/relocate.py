@@ -399,7 +399,7 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     )
     new_binary = copy_binary(orig_binary)
 
-    # Check original directory is in the executabel and the new one is not
+    # Check original directory is in the executable and the new one is not
     assert text_in_bin(str(tmpdir), new_binary)
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
