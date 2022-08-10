@@ -44,9 +44,12 @@ import spack.build_environment
 import spack.config
 import spack.environment
 import spack.error
+import spack.modules.common
 import spack.paths
 import spack.projections as proj
+import spack.repo
 import spack.schema.environment
+import spack.store
 import spack.tengine as tengine
 import spack.util.environment
 import spack.util.file_permissions as fp
