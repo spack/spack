@@ -13,19 +13,19 @@ from spack.package_base import run_after
 
 def cmake_cache_path(name, value, comment=""):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE PATH "{2}")\n'.format(name, value, comment)
+    return "set({0} "{1}" CACHE PATH "{2}")\n".format(name, value, comment)
 
 
 def cmake_cache_string(name, value, comment=""):
     """Generate a string for a cmake cache variable"""
-    return 'set({0} "{1}" CACHE STRING "{2}")\n'.format(name, value, comment)
+    return "set({0} "{1}" CACHE STRING "{2}")\n".format(name, value, comment)
 
 
 def cmake_cache_option(name, boolean_value, comment=""):
     """Generate a string for a cmake configuration option"""
 
     value = "ON" if boolean_value else "OFF"
-    return 'set({0} {1} CACHE BOOL "{2}")\n'.format(name, value, comment)
+    return "set({0} {1} CACHE BOOL "{2}")\n".format(name, value, comment)
 
 
 class CachedCMakePackage(CMakePackage):
@@ -92,7 +92,7 @@ class CachedCMakePackage(CMakePackage):
         # use global spack compiler flags
         cppflags = " ".join(flags["cppflags"])
         if cppflags:
-            # avoid always ending up with ' ' with no flags defined
+            # avoid always ending up with " " with no flags defined
             cppflags += " "
         cflags = cppflags + " ".join(flags["cflags"])
         if cflags:
@@ -106,19 +106,19 @@ class CachedCMakePackage(CMakePackage):
 
         # Cmake has different linker arguments for different build types.
         # We specify for each of them.
-        if flags['ldflags']:
-            ld_flags = ' '.join(flags['ldflags'])
-            ld_format_string = 'CMAKE_{0}_LINKER_FLAGS'
+        if flags["ldflags"]:
+            ld_flags = " ".join(flags["ldflags"])
+            ld_format_string = "CMAKE_{0}_LINKER_FLAGS"
             # CMake has separate linker arguments for types of builds.
-            for ld_type in ['EXE', 'MODULE', 'SHARED', 'STATIC']:
+            for ld_type in ["EXE", "MODULE", "SHARED", "STATIC"]:
                 ld_string = ld_format_string.format(ld_type)
                 entries.append(cmake_cache_string(ld_string, ld_flags))
 
         # CMake has libs options separated by language. Apply ours to each.
-        if flags['ldlibs']:
-            libs_flags = ' '.join(flags['ldlibs'])
-            libs_format_string = 'CMAKE_{0}_STANDARD_LIBRARIES'
-            langs = ['C', 'CXX', 'Fortran']
+        if flags["ldlibs"]:
+            libs_flags = " ".join(flags["ldlibs"])
+            libs_format_string = "CMAKE_{0}_STANDARD_LIBRARIES"
+            langs = ["C", "CXX", "Fortran"]
             for lang in langs:
                 libs_string = libs_format_string.format(lang)
                 entries.append(cmake_cache_string(libs_string, libs_flags))
