@@ -876,6 +876,7 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
         keep_stage (bool): whether to keep staging area when command completes
         batch (bool): whether to ask user how many versions to fetch (false)
             or fetch all versions (true)
+        limit (int): maximum number of versions to fetch (default 0 === all)
         latest (bool): whether to take the latest version (true) or all (false)
         fetch_options (dict): Options used for the fetcher (such as timeout
             or cookies)
@@ -889,10 +890,13 @@ def get_checksums_for_versions(url_dict, name, **kwargs):
     first_stage_function = kwargs.get("first_stage_function", None)
     keep_stage = kwargs.get("keep_stage", False)
     latest = kwargs.get("latest", False)
+    limit = kwargs.get("limit", 0)
 
     sorted_versions = sorted(url_dict.keys(), reverse=True)
     if latest:
         sorted_versions = sorted_versions[:1]
+    elif limit:
+        sorted_versions = sorted_versions[:limit]
 
     # Find length of longest string in the list for padding
     max_len = max(len(str(v)) for v in sorted_versions)
