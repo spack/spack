@@ -33,7 +33,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-cheetah3',                  type='run')
     depends_on('py-elephant',                  type='run')
     depends_on('py-neo',                       type='run')
-    depends_on('py-pyarrow+parquet',           type='run')
+    depends_on('py-pyarrow+parquet@:6',        type='run')
 
     # extra deps to include in the module
     # depend on a version with BBP ca root patch

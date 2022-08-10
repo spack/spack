@@ -1,0 +1,33 @@
+diff --git a/sbin/spark-daemon.sh b/sbin/spark-daemon.sh
+index 3cfd5ac..3c46826 100755
+--- a/sbin/spark-daemon.sh
++++ b/sbin/spark-daemon.sh
+@@ -132,13 +132,13 @@ fi
+ 
+ execute_command() {
+   if [ -z ${SPARK_NO_DAEMONIZE+set} ]; then
+-      nohup -- "$@" >> $log 2>&1 < /dev/null &
++      nohup -- "$@" >> "$log" 2>&1 < /dev/null &
+       newpid="$!"
+ 
+       echo "$newpid" > "$pid"
+ 
+-      # Poll for up to 5 seconds for the java process to start
+-      for i in {1..10}
++      # Poll for up to 30 seconds for the java process to start
++      for i in {1..60}
+       do
+         if [[ $(ps -p "$newpid" -o comm=) =~ "java" ]]; then
+            break
+@@ -152,9 +152,11 @@ execute_command() {
+         echo "failed to launch: $@"
+         tail -10 "$log" | sed 's/^/  /'
+         echo "full log in $log"
++        exit 1
+       fi
+   else
+       "$@"
++      exit $?
+   fi
+ }
+ 
