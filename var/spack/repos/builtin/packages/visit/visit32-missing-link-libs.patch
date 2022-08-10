@@ -17,7 +17,7 @@ index 162ed1c439..7ddd0a7144 100644
      ADD_PARALLEL_LIBRARY(avtquery_par ${AVTQUERY_SOURCES})
      TARGET_LINK_LIBRARIES(avtquery_par visitcommon avtmath avtshapelets avtexpressions_par avtfilters_par visit_vtk)
 +    IF(CMAKE_SYSTEM_NAME MATCHES Linux)
-+        TARGET_LINK_LIBRARIES(avtquery_ser rt)
++        TARGET_LINK_LIBRARIES(avtquery_par rt)
 +    ENDIF(CMAKE_SYSTEM_NAME MATCHES Linux)
      IF(VISIT_PYTHON_FILTERS)
          TARGET_LINK_LIBRARIES(avtquery_par avtpythonfilters_par)
