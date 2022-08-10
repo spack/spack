@@ -16,7 +16,7 @@ class RTxdbHsapiensUcscHg18Knowngene(RPackage):
     bioc = "TxDb.Hsapiens.UCSC.hg18.knownGene"
     url = "https://bioconductor.org/packages/release/data/annotation/src/contrib/TxDb.Hsapiens.UCSC.hg18.knownGene_3.2.2.tar.gz"
 
-    version('3.2.2', sha256='bc9ca40b4eab87f5ca64a4b876d42502b9b8e9f5983d745bfe0ee349d97b69fa')
+    version("3.2.2", sha256="bc9ca40b4eab87f5ca64a4b876d42502b9b8e9f5983d745bfe0ee349d97b69fa")
 
-    depends_on('r-genomicfeatures@1.21.30:', type=('build', 'run'))
-    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on("r-genomicfeatures@1.21.30:", type=("build", "run"))
+    depends_on("r-annotationdbi", type=("build", "run"))

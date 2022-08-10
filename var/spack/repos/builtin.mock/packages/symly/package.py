@@ -15,31 +15,29 @@ class Symly(Package):
 
     homepage = "https://www.example.com"
     has_code = False
-    version('3.0.0')
+    version("3.0.0")
 
     def install(self, spec, prefix):
-        symly_c = '''
+        symly_c = """
 #include <stdio.h>
 
 int main() {
     printf("I'm just here to give the build system something to do...");
     return 0;
 }
-'''
-        mkdirp('%s/symly' % self.stage.source_path)
-        with open('%s/symly/symly.c' % self.stage.source_path, 'w') as f:
+"""
+        mkdirp("%s/symly" % self.stage.source_path)
+        with open("%s/symly/symly.c" % self.stage.source_path, "w") as f:
             f.write(symly_c)
-        gcc = which('/usr/bin/gcc')
-        if sys.platform == 'darwin':
-            gcc = which('/usr/bin/clang')
+        gcc = which("/usr/bin/gcc")
+        if sys.platform == "darwin":
+            gcc = which("/usr/bin/clang")
         mkdirp(prefix.bin)
         mkdirp(prefix.lib64)
-        gcc('-o', 'symly.bin',
-            'symly/symly.c')
+        gcc("-o", "symly.bin", "symly/symly.c")
         print("prefix.bin", prefix.bin)
-        copy('symly.bin', '%s/symly' % prefix.bin)
+        copy("symly.bin", "%s/symly" % prefix.bin)
         # create a symlinked file.
-        os.symlink('%s/symly' % prefix.bin,
-                   '%s/symly' % prefix.lib64)
+        os.symlink("%s/symly" % prefix.bin, "%s/symly" % prefix.lib64)
         # Create a symlinked directory.
         os.symlink(prefix.bin, prefix.include)
