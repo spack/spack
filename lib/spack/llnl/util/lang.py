@@ -981,8 +981,8 @@ def stable_partition(input_iterable, predicate_fn):
     """Partition the input iterable according to a custom predicate.
 
     Args:
-        input_iterable (list of Spec): input iterable to be partitioned.
-        predicate_fn (callable): predicate function accepting an iterable item
+        input_iterable: input iterable to be partitioned.
+        predicate_fn: predicate function accepting an iterable item
             as argument.
 
     Return:
