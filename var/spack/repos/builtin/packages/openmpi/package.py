@@ -536,7 +536,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     with when("fabrics=ucx"):
         depends_on("ucx")
         depends_on("ucx +thread_multiple", when="+thread_multiple")
-        depends_on("ucx +thread_multiple", when="@3.0.0:")
         depends_on("ucx@1.9.0:", when="@4.0.6:4.0")
         depends_on("ucx@1.9.0:", when="@4.1.1:4.1")
         depends_on("ucx@1.9.0:", when="@5.0.0:")
