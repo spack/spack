@@ -17,9 +17,12 @@ class Esmf(MakefilePackage):
 
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
-
+    git = "https://github.com/esmf-org/esmf/"
+    
     maintainers = ["climbfuji"]
 
+    version("develop", branch="develop")
+    version("8.3.0", tag="v8.3.0")
     version("8.2.0", sha256="3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485")
     version("8.1.1", sha256="58c2e739356f21a1b32673aa17a713d3c4af9d45d572f4ba9168c357d586dc75")
     version("8.0.1", sha256="9172fb73f3fe95c8188d889ee72fdadb4f978b1d969e1d8e401e8d106def1d84")
@@ -31,6 +34,7 @@ class Esmf(MakefilePackage):
     variant("netcdf", default=True, description="Build with NetCDF support")
     variant("pnetcdf", default=True, description="Build with pNetCDF support")
     variant("xerces", default=True, description="Build with Xerces support")
+    variant("external-pio", default=False, description="Build with external parallelio library", when="@8.3:")
     variant("pio", default=True, description="Enable ParallelIO support")
     variant("debug", default=False, description="Make a debuggable version of the library")
 
@@ -44,6 +48,7 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-c@3.6:", when="+netcdf")
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
+    depends_on("parallelio@2.5.8:", when="+external-pio")
     depends_on("xerces-c@3.1.0:", when="+xerces")
 
     # Testing dependencies
@@ -199,6 +204,8 @@ class Esmf(MakefilePackage):
                 os.environ["ESMF_CXXLINKLIBS"] = "-lmpifort"
             elif "^openmpi" in spec or "^hpcx-mpi" in spec:
                 os.environ["ESMF_COMM"] = "openmpi"
+            elif "^mpt" in spec:
+                os.environ["ESMF_COMM"] = "mpt"
             elif (
                 "^intel-parallel-studio+mpi" in spec
                 or "^intel-mpi" in spec
@@ -271,7 +278,11 @@ class Esmf(MakefilePackage):
         # ParallelIO #
         ##############
 
-        if "+pio" in spec and "+mpi" in spec:
+        if "+external-pio" in spec and "+mpi" in spec:
+            os.environ["ESMF_PIO"] = "external"
+            os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
+            os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
+        elif "+pio" in spec and "+mpi" in spec:
             # ESMF provides the ability to read and write data in both binary
             # and NetCDF formats through ParallelIO (PIO), a third-party IO
             # software library that is integrated in the ESMF library.
