@@ -16,11 +16,10 @@ import sys
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
-import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
-
 
 if sys.version_info > (3, 1):
     from html import escape  # novm
@@ -120,14 +119,9 @@ def filter_by_name(pkgs, args):
     # If tags have been specified on the command line, filter by tags
     if args.tags:
         packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
-        pkgs = [p for p in pkgs if p in packages_with_tags] 
-        
-         
-        
+        pkgs = [p for p in pkgs if p in packages_with_tags]
 
     return sorted(pkgs, key=lambda s: s.lower())
-
-     
 
 
 @formatter
