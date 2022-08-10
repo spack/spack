@@ -205,6 +205,7 @@ class Hdf5(CMakePackage):
     depends_on('zlib@1.1.2:')
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
+    depends_on("pkgconfig", type="run")
 
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
