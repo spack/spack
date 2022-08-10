@@ -129,8 +129,6 @@ class Libfabric(AutotoolsPackage):
             # handle conditional variants
             if isinstance(fabric, spack.variant._ConditionalVariantValues):
                 fabric = str(fabric[0])
-                if "fabrics=" + fabric not in self.spec:
-                    continue
 
             if "fabrics=" + fabric in self.spec:
                 args.append("--enable-{0}=yes".format(fabric))
