@@ -17,12 +17,25 @@ class Libjxl(CMakePackage):
     version("0.6.1", tag="v0.6.1", submodules=True)
 
     depends_on("cmake@3.10:", type="build")
-    # TODO: is it possible to use external installations of these?
-    # depends_on("highway")
-    # depends_on("lodepng")
-    # depends_on("sjpeg")
-    # depends_on("googletest+gmock", type="test")
+    depends_on("brotli")
+    depends_on("highway")
+
+    # Only needed at test time, but unfortunately "test" doesn't cause the dep to be added
+    # by Spack's compiler wrappers. Solution of adding "link" means that dependency is now
+    # always required...
+    depends_on("googletest+gmock", type=("link", "test"))
 
     # https://github.com/libjxl/libjxl/pull/582
     conflicts("%clang", when="@0.6")
     conflicts("%apple-clang", when="@0.6")
+
+    def cmake_args(self):
+        args = [
+            self.define("JPEGXL_FORCE_SYSTEM_BROTLI", True),
+            self.define("JPEGXL_FORCE_SYSTEM_HWY", True),
+        ]
+
+        if self.run_tests:
+            args.append(self.define("JPEGXL_FORCE_SYSTEM_GTEST", True))
+
+        return args
