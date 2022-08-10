@@ -647,6 +647,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         "-b", "--batch", action="store_true", help="don't ask which versions to checksum"
     )
+    subparser.add_argument(
+        "--limit", action="store", type=int, default=0,
+        help="maximum number of versions to checksum (implies --batch)"
+    )
 
 
 class BuildSystemGuesser:
@@ -852,7 +856,8 @@ def get_versions(args, name):
             name,
             first_stage_function=guesser,
             keep_stage=args.keep_stage,
-            batch=(args.batch or len(url_dict) == 1),
+            batch=(args.batch or len(url_dict) == 1 or args.limit > 0),
+            limit=args.limit
         )
     else:
         versions = unhashed_versions
