@@ -25,7 +25,10 @@ class Salmon(CMakePackage):
         values=("DEBUG", "RELEASE"),
     )
 
-    depends_on("tbb")
+    # 1.8.0 relies on tbb provided config, earlier versions make
+    # assumptions about the layout of tbb files.
+    depends_on("tbb@:2020.3", when="@:1.7.0")
+    depends_on("tbb", when="@1.8.0:")
     depends_on(
         "boost@1.66.0:"
         "+program_options+exception+filesystem+system+chrono+serialization"

@@ -67,7 +67,7 @@ class Dyninst(CMakePackage):
     # libdwarf before that.
     depends_on("libdwarf", when="@:9")
 
-    depends_on("tbb@2018.6:", when="@10.0.0:")
+    depends_on("tbb@2018.6:2020.3", when="@10.0.0:")
 
     depends_on("cmake@3.4.0:", type="build", when="@10.1.0:")
     depends_on("cmake@3.0.0:", type="build", when="@10.0.0:10.0")
