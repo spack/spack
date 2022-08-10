@@ -1209,7 +1209,7 @@ _spack_license_update_copyright_year() {
 _spack_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals"
+        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals -t --tag"
     else
         _all_packages
     fi
