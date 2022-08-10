@@ -19,11 +19,6 @@ class RiscvGnuToolchain(Package):
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
     
     phases = ['configure', 'build']
-    build_targets = ""
-    if "+Newlib" in self.spec:
-        build_targets = ""
-    elif "+Linux" in self.spec:
-        build_targets = "linux"
 
     maintainers = ['wanlinwang']
 
@@ -31,6 +26,7 @@ class RiscvGnuToolchain(Package):
     version('2022.08.08', tag='2022.08.08', submodules=True)
 
     # Dependencies:
+    depends_on('pkg-config', type=('build', 'link'))
     depends_on('autoconf', type=('build', 'link'))
     depends_on('automake', type=('build', 'link'))
     depends_on('python', type=('build', 'link'))
@@ -84,5 +80,10 @@ class RiscvGnuToolchain(Package):
             p = Popen(shlex.split(cmd))
             p.communicate()
 
-            params = self.build_targets
+            params = ""
+            if "+Newlib" in self.spec:
+                params = ""
+            elif "+Linux" in self.spec:
+                params = "linux"
+
             make(*params)
