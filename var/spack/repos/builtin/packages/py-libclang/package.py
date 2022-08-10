@@ -14,6 +14,7 @@ class PyLibclang(PythonPackage):
 
     url = "https://github.com/sighingnow/libclang/archive/refs/tags/llvm-11.1.0.tar.gz"
 
+    version("13.0.0", sha256="2638e81fe3976f4ad487dc6094dacf306dcb161e11b0830391d58d1ae1e05c80")
     version(
         "11.1.0",
         sha256="0b53b3c237725e193c4d2bbbe096f1a1da0f0e5cd528f2892e4dfed3c8fe9506",
@@ -38,12 +39,13 @@ class PyLibclang(PythonPackage):
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    for ver in ["9", "10", "11"]:
+    for ver in ["9", "10", "11", "13"]:
         depends_on("llvm+clang@" + ver, when="@" + ver, type="build")
 
     def patch(self):
         filter_file(
             "source_dir = './native/'",
             "source_dir = '{0}'".format(self.spec["llvm"].libs.directories[0]),
-            "setup.py", string=True,
+            "setup.py",
+            string=True,
         )

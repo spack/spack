@@ -12,21 +12,29 @@ class Nvtop(CMakePackage, CudaPackage):
     information about them in a htop familiar way"""
 
     homepage = "https://github.com/Syllo/nvtop"
-    url      = "https://github.com/Syllo/nvtop/archive/refs/tags/2.0.1.zip"
+    url = "https://github.com/Syllo/nvtop/archive/refs/tags/2.0.2.zip"
 
-    maintainers = ['marcost2']
+    maintainers = ["marcost2"]
 
-    version('2.0.1', sha256='ef18ce85d632eb1c22d3a3653976b2c088260039702df39fd0181f7cd3ae277d')
-    version('2.0.0', sha256='1651f34274c334a682f280dcb2f28d9642d44c7b22afe8c431cab91345b50f31')
-    version('1.2.2', sha256='543cbfdae3241fab1ea022402734c12e69d5988583193adaab69fdfae6e14c84')
-    version('1.2.1', sha256='197992cdd0e2e151fce91a7ba56f717e4d85b317c396001e8dbd84dc2ba363cd')
+    version("2.0.2", sha256="9a85c083e45be0a2d3e2135ce8df5a97340388fa7c72f086571826d501fec1de")
+    version("2.0.1", sha256="ef18ce85d632eb1c22d3a3653976b2c088260039702df39fd0181f7cd3ae277d")
+    version("2.0.0", sha256="1651f34274c334a682f280dcb2f28d9642d44c7b22afe8c431cab91345b50f31")
+    version("1.2.2", sha256="543cbfdae3241fab1ea022402734c12e69d5988583193adaab69fdfae6e14c84")
+    version("1.2.1", sha256="197992cdd0e2e151fce91a7ba56f717e4d85b317c396001e8dbd84dc2ba363cd")
 
-    variant('support', values=('nvidia', 'amd'), default='nvidia,amd', multi=True,
-            description='Which GPU vendors to build support for')
+    variant(
+        "support",
+        values=("nvidia", "amd"),
+        default="nvidia,amd",
+        multi=True,
+        description="Which GPU vendors to build support for",
+    )
 
-    depends_on('ncurses')
-    depends_on('libdrm', when='support=amd')
+    depends_on("ncurses")
+    depends_on("libdrm", when="support=amd")
 
     def cmake_args(self):
-        return [self.define('NVIDIA_SUPPORT', self.spec.satisfies('support=nvidia')),
-                self.define('AMDGPU_SUPPORT', self.spec.satisfies('support=amd'))]
+        return [
+            self.define("NVIDIA_SUPPORT", self.spec.satisfies("support=nvidia")),
+            self.define("AMDGPU_SUPPORT", self.spec.satisfies("support=amd")),
+        ]

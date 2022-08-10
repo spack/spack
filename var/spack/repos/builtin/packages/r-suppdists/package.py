@@ -17,7 +17,7 @@ class RSuppdists(RPackage):
 
     cran = "SuppDists"
 
-    version('1.1-9.7', sha256='6b5527e2635c0ff762eb7af8154704c85e66d7f79a9524089a5c98dfa94dab08')
-    version('1.1-9.5', sha256='680b67145c07d44e200275e08e48602fe19cd99fb106c05422b3f4a244c071c4')
+    version("1.1-9.7", sha256="6b5527e2635c0ff762eb7af8154704c85e66d7f79a9524089a5c98dfa94dab08")
+    version("1.1-9.5", sha256="680b67145c07d44e200275e08e48602fe19cd99fb106c05422b3f4a244c071c4")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))

@@ -1,0 +1,12 @@
+diff -Naur a/src/main/cpp/blaze_util_posix.cc b/src/main/cpp/blaze_util_posix.cc
+--- a/src/main/cpp/blaze_util_posix.cc	1980-01-01 00:00:00.000000000 -0800
++++ b/src/main/cpp/blaze_util_posix.cc	2022-06-30 23:34:08.000000000 -0700
+@@ -600,7 +600,7 @@
+   // Prefer OFD locks if available.  POSIX locks can be lost "accidentally"
+   // due to any close() on the lock file, and are not reliably preserved
+   // across execve() on Linux, which we need for --batch mode.
+-  if (fcntl(fd, F_OFD_SETLK, lock) == 0) return 0;
++  if (fcntl(fd, F_SETLK, lock) == 0) return 0;
+   if (errno != EINVAL) {
+     if (errno != EACCES && errno != EAGAIN) {
+       BAZEL_DIE(blaze_exit_code::LOCAL_ENVIRONMENTAL_ERROR)

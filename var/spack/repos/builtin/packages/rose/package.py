@@ -9,14 +9,14 @@ from spack.pkg.builtin.boost import Boost
 
 class Rose(AutotoolsPackage):
     """A compiler infrastructure to build source-to-source program
-       transformation and analysis tools.
-       (Developed at Lawrence Livermore National Lab)"""
+    transformation and analysis tools.
+    (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
     url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
     git = "https://github.com/rose-compiler/rose.git"
 
-    maintainers = ['pinnown']
+    maintainers = ["pinnown"]
 
     # --------------------------------------------------------------------------
     # ROSE Versions
@@ -26,33 +26,41 @@ class Rose(AutotoolsPackage):
 
     # Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION
     # EDG_VERSION may be different from ROSE_VERSION
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
-             expand=False,
-             placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@4.9.0:4.9",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
-             sha256="fb4b50606bdc681b864bbece46d344d7775780ffe7883aa96305d732c9c04a1c")
+    resource(
+        name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
+        expand=False,
+        placement="rose-build/src/frontend/CxxFrontend/",
+        when="@0.9.13.0 %gcc@4.9.0:4.9",
+        url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
+        sha256="fb4b50606bdc681b864bbece46d344d7775780ffe7883aa96305d732c9c04a1c",
+    )
 
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
-             expand=False,
-             placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@5.0:5",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
-             sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb")
+    resource(
+        name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
+        expand=False,
+        placement="rose-build/src/frontend/CxxFrontend/",
+        when="@0.9.13.0 %gcc@5.0:5",
+        url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
+        sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb",
+    )
 
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
-             expand=False,
-             placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@6.0:6",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
-             sha256="561cd5a944d0dd01689aa0bea8eccf30fc994cd20c4c05da7943c6f36cec25b5")
+    resource(
+        name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
+        expand=False,
+        placement="rose-build/src/frontend/CxxFrontend/",
+        when="@0.9.13.0 %gcc@6.0:6",
+        url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
+        sha256="561cd5a944d0dd01689aa0bea8eccf30fc994cd20c4c05da7943c6f36cec25b5",
+    )
 
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
-             expand=False,
-             placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.13.0 %gcc@7.0:7",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
-             sha256="800a178804e8b5e936942b4eb036cc61e5d5ad43551cb4fd901ec42ba7e7a176")
+    resource(
+        name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
+        expand=False,
+        placement="rose-build/src/frontend/CxxFrontend/",
+        when="@0.9.13.0 %gcc@7.0:7",
+        url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
+        sha256="800a178804e8b5e936942b4eb036cc61e5d5ad43551cb4fd901ec42ba7e7a176",
+    )
 
     # git versions depends on internet connection at build time
     version("develop", branch="develop")
@@ -68,7 +76,7 @@ class Rose(AutotoolsPackage):
 
     # C++11 compatible boost and gcc versions required for +cxx11 variant:
     depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0 cxxstd=11", when="+cxx11")
-    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0",           when="~cxx11")
+    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0", when="~cxx11")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')
@@ -120,11 +128,7 @@ class Rose(AutotoolsPackage):
     # ROSE-based Projects
     # ------------------------------------------------------------------------
     variant("codethorn", default=False, description="Enable the CodeThorn project")
-    variant(
-        "autopar",
-        default=False,
-        description="Enable the autoParallelization project"
-    )
+    variant("autopar", default=False, description="Enable the autoParallelization project")
     variant("polyopt", default=False, description="Enable the PolyOpt project")
 
     build_directory = "rose-build"
@@ -246,12 +250,7 @@ class Rose(AutotoolsPackage):
                     env["ROSE_ROOT"] = self.prefix
 
                     bash = which("bash")
-                    bash(
-                        join_path(
-                            self.stage.source_path,
-                            "projects/PolyOpt2/install.sh"
-                        )
-                    )
+                    bash(join_path(self.stage.source_path, "projects/PolyOpt2/install.sh"))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
