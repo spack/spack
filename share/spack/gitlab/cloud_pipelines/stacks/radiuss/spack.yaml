@@ -54,7 +54,7 @@ spack:
       - zfp
 
   mirrors:
-    mirror: "s3://spack-binaries/develop/radiuss-noexist"
+    mirror: "s3://spack-binaries/develop/radiuss-noexist2"
 
   specs:
   - matrix:

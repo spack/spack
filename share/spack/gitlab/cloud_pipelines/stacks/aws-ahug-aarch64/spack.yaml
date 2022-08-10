@@ -236,7 +236,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug-aarch64-noexist" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug-aarch64-noexist2" }
 
   gitlab-ci:
 

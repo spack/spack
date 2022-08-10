@@ -155,7 +155,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc-noexist" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc-noexist2" }
 
   gitlab-ci:
 

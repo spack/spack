@@ -59,7 +59,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries/develop/tutorial-noexist'
+    mirror: 's3://spack-binaries/develop/tutorial-noexist2'
 
   gitlab-ci:
     script:
