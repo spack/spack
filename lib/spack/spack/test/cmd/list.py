@@ -84,3 +84,12 @@ def test_list_update(tmpdir, mock_packages):
     assert update_file.exists()
     with update_file.open() as f:
         assert f.read() == "empty\n"
+        
+def test_tag1(parser, specs):
+
+    args = parser.parse_args(["--tag", "tag1"])
+    spack.cmd.find.find(parser, args)
+
+    assert len(specs) == 2
+    assert "mpich" in [x.name for x in specs]
+    assert "mpich2" in [x.name for x in specs]       
