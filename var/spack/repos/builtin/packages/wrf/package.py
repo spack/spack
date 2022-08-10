@@ -156,6 +156,7 @@ class Wrf(Package):
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
 
+    patch("patches/4.4/arch.postamble.patch", when="@4.4:")
     patch("patches/4.4/configure.patch", when="@4.4:")
     # Various syntax fixes found by FPT tool
     patch(
@@ -166,7 +167,7 @@ class Wrf(Package):
     patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
 
     patch("patches/4.3/Makefile.patch", when="@4.3:")
-    patch("patches/4.3/arch.postamble.patch", when="@4.3:")
+    patch("patches/4.3/arch.postamble.patch", when="@4.3:4.3.3")
     patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
     # Syntax errors in physics routines
     patch(
