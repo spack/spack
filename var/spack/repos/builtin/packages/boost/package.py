@@ -231,7 +231,7 @@ class Boost(Package):
     conflicts("context-impl=fcontext", when="@:1.65.0")
     conflicts("context-impl=ucontext", when="@:1.65.0")
     conflicts("context-impl=winfib", when="@:1.65.0")
-=
+
     # Coroutine, Context, Fiber, etc., are not straightforward.
     conflicts("+context", when="@:1.50")  # Context since 1.51.0.
     conflicts("cxxstd=98", when="+context")  # Context requires >=C++11.
