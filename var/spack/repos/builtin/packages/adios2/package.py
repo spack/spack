@@ -106,7 +106,7 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("c-blosc", when="+blosc")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
-    depends_on("zfp@0.5.1:", when="+zfp")
+    depends_on("zfp@0.5.1:0.5", when="+zfp")
     depends_on("sz@2.0.2.0:", when="+sz")
 
     extends("python", when="+python")
