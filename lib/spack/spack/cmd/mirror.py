@@ -331,11 +331,11 @@ def concrete_specs_from_environment(args):
     return mirror_specs
 
 
-def all_specs_with_all_versions(args):
+def all_specs_with_all_versions(selection_fn):
     specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
     mirror_specs = spack.mirror.get_all_versions(specs)
     mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
@@ -425,7 +425,11 @@ def mirror_create(args):
         )
 
     if args.all and not ev.active_environment():
-        create_mirror_for_all_specs(args)
+        create_mirror_for_all_specs(
+            directory_hint=args.directory,
+            skip_unstable_versions=args.skip_unstable_versions,
+            selection_fn=not_excluded_fn(args),
+        )
         return
 
     if args.all and ev.active_environment():
@@ -440,11 +444,11 @@ def mirror_create(args):
     )
 
 
-def create_mirror_for_all_specs(args):
-    mirror_specs = all_specs_with_all_versions(args)
-    local_push_url = local_mirror_url_from_user(args.directory)
+def create_mirror_for_all_specs(directory_hint, skip_unstable_versions, selection_fn):
+    mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
+    local_push_url = local_mirror_url_from_user(directory_hint=directory_hint)
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
-        local_push_url, skip_unstable_versions=args.skip_unstable_versions
+        local_push_url, skip_unstable_versions=skip_unstable_versions
     )
     for candidate in mirror_specs:
         pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
