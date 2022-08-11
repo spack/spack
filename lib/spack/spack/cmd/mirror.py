@@ -377,8 +377,8 @@ def process_mirror_stats(present, mirrored, error):
 
 
 def mirror_directory_from_cli(args):
-    mirror_path = args.directory or spack.util.path.canonicalize_path(
-        spack.config.get("config:source_cache")
+    mirror_path = spack.util.path.canonicalize_path(
+        args.directory or spack.config.get("config:source_cache")
     )
     mirror = spack.mirror.Mirror(mirror_path)
     directory = url_util.format(mirror.push_url)
