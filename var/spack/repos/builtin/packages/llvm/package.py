@@ -636,7 +636,7 @@ class Llvm(CMakePackage, CudaPackage):
         if "+lldb" in spec:
             projects.append("lldb")
             cmake_args.append(define("LLDB_ENABLE_LIBEDIT", True))
-            cmake_args.append(define("LLDB_ENABLE_NCURSES", True))
+            cmake_args.append(define("LLDB_ENABLE_CURSES", True))
             cmake_args.append(define("LLDB_ENABLE_LIBXML2", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))
