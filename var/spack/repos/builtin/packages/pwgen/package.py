@@ -19,8 +19,3 @@ class Pwgen(AutotoolsPackage):
 
     depends_on("coreutils", type="build")
 
-    def build(self, spec, prefix):
-        make()
-
-    def install(self, spec, prefix):
-        make("install")
