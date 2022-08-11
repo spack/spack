@@ -73,7 +73,8 @@ class Wrf(Package):
     version(
         "4.4",
         sha256="6b649e5ac5532f74d74ab913950b632777ce349d26ebfb7f0042b80f9f4ee83e",
-        url="https://github.com/wrf-model/WRF/releases/download/v4.4/v4.4.tar.gz")
+        url="https://github.com/wrf-model/WRF/releases/download/v4.4/v4.4.tar.gz",
+    )
     version("4.3.3", sha256="1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86")
     version("4.3.2", sha256="2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec")
     version("4.3.1", sha256="6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87")
