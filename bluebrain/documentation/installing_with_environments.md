@@ -38,7 +38,8 @@ Now we can tell see which software needs to be installed:
     …
 
 Now we can add an already existing source directory for the dependency of
-`mvdtool`:
+`mvdtool` (if it were not already added as dependency by `touchdetector` 
+you would have had to still add it maually with: `spack add mvdtool`):
 
     $ git clone git@github.com:BlueBrain/MVDTool.git
     $ spack develop -p ${PWD}/MVDTool --no-clone mvdtool@develop
