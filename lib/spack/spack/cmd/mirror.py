@@ -356,7 +356,7 @@ def versions_per_spec(args):
     return num_versions
 
 
-def create_mirror_from_concrete_specs(mirror_specs, directory_hint, skip_unstable_versions):
+def create_mirror_for_individual_specs(mirror_specs, directory_hint, skip_unstable_versions):
     local_push_url = local_mirror_url_from_user(directory_hint)
     present, mirrored, error = spack.mirror.create(
         local_push_url, mirror_specs, skip_unstable_versions
@@ -432,7 +432,12 @@ def mirror_create(args):
         create_mirror_for_all_specs_inside_environment(args)
         return
 
-    create_mirror_for_individual_specs(args)
+    mirror_specs = concrete_specs_from_user(args)
+    create_mirror_for_individual_specs(
+        mirror_specs,
+        directory_hint=args.directory,
+        skip_unstable_versions=args.skip_unstable_versions,
+    )
 
 
 def create_mirror_for_all_specs(args):
@@ -451,19 +456,7 @@ def create_mirror_for_all_specs(args):
 
 def create_mirror_for_all_specs_inside_environment(args):
     mirror_specs = concrete_specs_from_environment(args)
-    create_mirror_from_concrete_specs(
-        mirror_specs,
-        directory_hint=args.directory,
-        skip_unstable_versions=args.skip_unstable_versions,
-    )
-
-
-def create_mirror_for_individual_specs(args):
-    """Create a mirror from a list of individual specs, read from either the command line
-    or from a file.
-    """
-    mirror_specs = concrete_specs_from_user(args)
-    create_mirror_from_concrete_specs(
+    create_mirror_for_individual_specs(
         mirror_specs,
         directory_hint=args.directory,
         skip_unstable_versions=args.skip_unstable_versions,
