@@ -72,6 +72,4 @@ class Ninja(Package):
 
     def setup_dependent_package(self, module, dspec):
         name = "ninja"
-        if sys.platform == "win32":
-            name = name + ".exe"
         module.ninja = which(name, path=[self.spec.prefix.bin], required=True)
