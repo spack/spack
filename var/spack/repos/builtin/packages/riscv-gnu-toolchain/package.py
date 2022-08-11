@@ -6,39 +6,38 @@
 import shlex
 from subprocess import Popen
 
-from spack import *
+from spack.package import *
 
 
 class RiscvGnuToolchain(Package):
-    """A cross-compilation tool for RISC-V.
-    """
+    """A cross-compilation tool for RISC-V."""
 
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    phases = ['configure', 'build']
+    phases = ["configure", "build"]
 
-    maintainers = ['wanlinwang']
+    maintainers = ["wanlinwang"]
 
-    version('develop', branch='master', submodules=True)
-    version('2022.08.08', tag='2022.08.08', submodules=True)
+    version("develop", branch="master", submodules=True)
+    version("2022.08.08", tag="2022.08.08", submodules=True)
 
     # Dependencies:
-    depends_on('pkg-config', type=('build', 'link'))
-    depends_on('autoconf', type=('build', 'link'))
-    depends_on('automake', type=('build', 'link'))
-    depends_on('python', type=('build', 'link'))
-    depends_on('gawk', type=('build', 'link'))
-    depends_on('bison', type=('build', 'link'))
-    depends_on('flex@:2.6.1,2.6.4:', type=('build', 'link'))
-    depends_on('texinfo', type=('build', 'link'))
-    depends_on('patchutils', type=('build', 'link'))
-    depends_on('mpc', type=('build', 'link'))
-    depends_on('gmp', type=('build', 'link'))
-    depends_on('mpfr', type=('build', 'link'))
-    depends_on('gcc', type=('build', 'link'))
-    depends_on('zlib', type=('build', 'link'))
-    depends_on('expat', type=('build', 'link'))
+    depends_on("pkg-config", type=("build", "link"))
+    depends_on("autoconf", type=("build", "link"))
+    depends_on("automake", type=("build", "link"))
+    depends_on("python", type=("build", "link"))
+    depends_on("gawk", type=("build", "link"))
+    depends_on("bison", type=("build", "link"))
+    depends_on("flex@:2.6.1,2.6.4:", type=("build", "link"))
+    depends_on("texinfo", type=("build", "link"))
+    depends_on("patchutils", type=("build", "link"))
+    depends_on("mpc", type=("build", "link"))
+    depends_on("gmp", type=("build", "link"))
+    depends_on("mpfr", type=("build", "link"))
+    depends_on("gcc", type=("build", "link"))
+    depends_on("zlib", type=("build", "link"))
+    depends_on("expat", type=("build", "link"))
 
     conflicts("platform=windows", msg="Windows is not supported.")
 
@@ -55,8 +54,8 @@ class RiscvGnuToolchain(Package):
         and an appropriately set prefix.
         """
         with working_dir(self.stage.source_path, create=True):
-            options = getattr(self, 'configure_flag_args', [])
-            options += ['--prefix={0}'.format(prefix)]
+            options = getattr(self, "configure_flag_args", [])
+            options += ["--prefix={0}".format(prefix)]
             options += self.configure_args()
             configure(*options)
 
