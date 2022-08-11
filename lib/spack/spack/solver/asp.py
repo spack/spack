@@ -993,8 +993,7 @@ class SpackSolverSetup(object):
 
         self.cfg_required_rules(pkg)
 
-    def condition(self, required_spec, imposed_spec=None, name=None, msg=None,
-                  _id=None):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None, _id=None):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:

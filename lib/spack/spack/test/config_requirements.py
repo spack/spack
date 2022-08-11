@@ -98,9 +98,10 @@ class MakeStage(object):
 
 @pytest.fixture
 def fake_installs(monkeypatch, tmpdir):
-    universal_unused_stage = spack.stage.DIYStage(tmpdir.ensure('fake-stage', dir=True))
-    monkeypatch.setattr(spack.package_base.Package, "_make_stage",
-                        MakeStage(universal_unused_stage))
+    universal_unused_stage = spack.stage.DIYStage(tmpdir.ensure("fake-stage", dir=True))
+    monkeypatch.setattr(
+        spack.package_base.Package, "_make_stage", MakeStage(universal_unused_stage)
+    )
 
 
 def test_requirement_isnt_optional(concretize_scope, test_repo):
@@ -254,8 +255,7 @@ packages:
     assert s2.satisfies("@2.5")
 
 
-def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database,
-                     fake_installs):
+def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database, fake_installs):
     if spack.config.get("config:concretizer") == "original":
         pytest.skip("Original concretizer does not support configuration" " requirements")
 
