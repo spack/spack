@@ -69,10 +69,7 @@ class Keepassxc(CMakePackage):
             args.append("-DWITH_XC_ALL=ON")
         else:
             args.append("-DWITH_XC_ALL=OFF")
-        if "+docs" in spec:
-            args.append("-DWITH_XC_DOCS=ON")
-        else:
-            args.append("-DWITH_XC_DOCS=OFF")
+        args.append(self.define_from_variant("WITH_XC_DOCS", "doc"))
 
         if spec.satisfies("platform=darwin"):
             args.append("-DCMAKE_OSX_ARCHITECTURES=x86_64")
