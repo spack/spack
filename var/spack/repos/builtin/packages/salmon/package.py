@@ -25,6 +25,11 @@ class Salmon(CMakePackage):
         values=("DEBUG", "RELEASE"),
     )
 
+    # 1.8.0 relies on tbb provided config, earlier versions make
+    # assumptions about the layout of tbb files that are not true in
+    # 2021.1 and later
+    conflicts("intel-tbb@2021.1:", when="@:1.7.0")
+    conflicts("intel-oneapi-tbb@2021.1:", when="@:1.7.0")
     depends_on("tbb")
     depends_on(
         "boost@1.66.0:"
