@@ -39,12 +39,8 @@ class PyPyyaml(PythonPackage):
 
         return modules
 
-    def global_options(self, spec, prefix):
-        args = []
-
+    @property
+    def global_options(self):
         if "+libyaml" in self.spec:
-            args.append("--with-libyaml")
-        else:
-            args.append("--without-libyaml")
-
-        return args
+            return ["--with-libyaml"]
+        return ["--without-libyaml"]
