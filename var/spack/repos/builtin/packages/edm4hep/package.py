@@ -42,6 +42,7 @@ class Edm4hep(CMakePackage):
     depends_on("python", type="build")
 
     depends_on("root@6.08:")
+    depends_on("podio@0.15:", when="@0.6:")
     depends_on("podio@0.14.1:", when="@0.4.1:")
     depends_on("podio@0.14", when="@0.4")
     depends_on("podio@0.13.0:0.13", when="@:0.3")
