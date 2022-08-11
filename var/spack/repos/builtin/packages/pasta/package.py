@@ -11,7 +11,7 @@ class Pasta(Package):
 
     homepage = "https://github.com/smirarab/pasta"
     git = "https://github.com/smirarab/pasta"
-    maintainer = ["snehring"]
+    maintainers = ["snehring"]
 
     version("1.9.0", commit="370ae2d21ef461bcb2cef7c20cb5a4a1db7ff99d")
     version("1.8.3", commit="738bec5e0d5a18d013c193d7453374bed47456c9")
