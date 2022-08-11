@@ -896,8 +896,8 @@ your path:
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
-These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
+These commands will add appropriate directories to your ``PATH``
+and ``MANPATH`` according to the
 :ref:`prefix inspections <customize-env-modifications>` defined in your
 modules configuration.
 When you no longer want to use a package, you can type unload or

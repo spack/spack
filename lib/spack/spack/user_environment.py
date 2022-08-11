@@ -32,12 +32,9 @@ def prefix_inspections(platform):
 
     inspections = {
         "bin": ["PATH"],
-        "lib": ["LD_LIBRARY_PATH", "LIBRARY_PATH"],
-        "lib64": ["LD_LIBRARY_PATH", "LIBRARY_PATH"],
         "man": ["MANPATH"],
         "share/man": ["MANPATH"],
         "share/aclocal": ["ACLOCAL_PATH"],
-        "include": ["CPATH"],
         "lib/pkgconfig": ["PKG_CONFIG_PATH"],
         "lib64/pkgconfig": ["PKG_CONFIG_PATH"],
         "share/pkgconfig": ["PKG_CONFIG_PATH"],
@@ -45,8 +42,8 @@ def prefix_inspections(platform):
     }
 
     if platform == "darwin":
-        for subdir in ("lib", "lib64"):
-            inspections[subdir].append("DYLD_FALLBACK_LIBRARY_PATH")
+        inspections["lib"] = ["DYLD_FALLBACK_LIBRARY_PATH"]
+        inspections["lib64"] = ["DYLD_FALLBACK_LIBRARY_PATH"]
 
     return inspections
 
