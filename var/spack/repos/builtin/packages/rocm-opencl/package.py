@@ -117,7 +117,8 @@ class RocmOpencl(CMakePackage):
             placement="rocclr",
             when="@{0}".format(d_version),
         )
-    patch("0001-fix-build-error-rocm-opencl-5.1.0.patch", when="@5.1.0:5.1.3")
+    # Patch to set package installation path for OpenCL.
+    patch("0001-fix-build-error-rocm-opencl-5.1.0.patch", when="@5.1.0:5.1")
 
     for ver in [
         "3.5.0",

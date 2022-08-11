@@ -172,8 +172,8 @@ class RocmDebugAgent(CMakePackage):
                 )
             )
 
-        if spec.satisfies("@3.7.0:5.1.3"):
-            args.append("-DCMAKE_MODULE_PATH={0}".format(spec["hip"].prefix.cmake))
+        if spec.satisfies("@3.7.0:5.1"):
+            args.append(self.define("CMAKE_MODULE_PATH", spec["hip"].prefix.cmake))
         elif spec.satisfies("@5.2.0:"):
-            args.append("-DCMAKE_MODULE_PATH={0}".format(spec["hip"].prefix.lib.cmake.hip))
+            args.append(self.define("CMAKE_MODULE_PATH", spec["hip"].prefix.lib.cmake.hip))
         return args

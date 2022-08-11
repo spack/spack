@@ -199,6 +199,7 @@ class Rocblas(CMakePackage):
     patch("0001-Fix-compilation-error-with-StringRef-to-basic-string.patch", when="@:3.8")
     patch("0002-Fix-rocblas-clients-blas.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
+    # Finding Python package and set command python as python3
     patch("0004-Find-python.patch", when="@5.2.0:")
 
     def setup_build_environment(self, env):
@@ -250,6 +251,6 @@ class Rocblas(CMakePackage):
             args.append(self.define("__skip_rocmclang", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "True"))
 
         return args

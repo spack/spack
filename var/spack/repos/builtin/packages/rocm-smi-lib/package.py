@@ -111,7 +111,7 @@ class RocmSmiLib(CMakePackage):
 
     @run_after("install")
     def post_install(self):
-        if self.spec.satisfies("@:5.1.3"):
+        if self.spec.satisfies("@:5.1"):
             shutil.rmtree(self.prefix.lib)
             install_tree(self.prefix.rocm_smi, self.prefix)
             shutil.rmtree(self.prefix.rocm_smi)

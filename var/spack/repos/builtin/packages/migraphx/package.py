@@ -94,7 +94,8 @@ class Migraphx(CMakePackage):
     )
 
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@3.9.0:")
-    # Restrict Python 2.7 usage to fix the issue 24429
+    # Restrict Python 2.7 usage to fix the issue below
+    # https://github.com/spack/spack/issues/24429
     patch("0002-restrict-python-2.7-usage.patch", when="@3.9.0:5.1.3")
     patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:")
 

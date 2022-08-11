@@ -191,8 +191,8 @@ class HipRocclr(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DUSE_COMGR_LIBRARY=yes",
-            "-DOPENCL_DIR={0}/opencl-on-vdi".format(self.stage.source_path),
+            self.define("USE_COMGR_LIBRARY", "yes"),
+            self.define("OPENCL_DIR", join_path(self.stage.source_path, "opencl-on-vdi")),
         ]
         return args
 

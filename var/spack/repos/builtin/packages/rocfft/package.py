@@ -125,8 +125,9 @@ class Rocfft(CMakePackage):
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     patch("0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch", when="@5.0.0:5.0.2")
+    # Patch to add spack build test support. No longer required from 5.2
     patch("0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch", when="@4.2.0:4.3.1")
-    patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1.3")
+    patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -174,5 +175,5 @@ class Rocfft(CMakePackage):
             args.append(self.define("SQLITE_USE_SYSTEM_PACKAGE", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "True"))
         return args

@@ -105,7 +105,7 @@ class Mivisionx(CMakePackage):
                 "utilities/mv_deploy/CMakeLists.txt",
                 string=True,
             )
-        if "@4.5.0:5.1.3" in self.spec:
+        if "@4.5.0:5.1" in self.spec:
             filter_file(
                 "${ROCM_PATH}/miopen",
                 self.spec["miopen-hip"].prefix.miopen,
