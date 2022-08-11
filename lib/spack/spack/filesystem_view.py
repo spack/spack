@@ -769,7 +769,7 @@ class SimpleFilesystemView(FilesystemView):
         # Inform about file-file conflicts.
         if visitor.file_conflicts:
             if self.ignore_conflicts:
-                tty.debug("{0} file conflicts".format(len(visitor.file_conflicts)))
+                tty.info(MergeConflictSummary(visitor.file_conflicts))
             else:
                 raise MergeConflictSummary(visitor.file_conflicts)
 

@@ -276,15 +276,17 @@ def test_destination_merge_visitor_always_errors_on_symlinked_dirs(tmpdir):
     visit_directory_tree(str(tmpdir.join("src")), visitor)
     visit_directory_tree(str(tmpdir.join("dst")), DestinationMergeVisitor(visitor))
 
-    assert visitor.fatal_conflicts
-    conflicts = [c.dst for c in visitor.fatal_conflicts]
-    assert "example_a" in conflicts
-    assert "example_b" in conflicts
+    assert "example_a" in visitor.fatal_conflicts
+    assert "example_b" in visitor.fatal_conflicts
+    assert str(tmpdir.join("src").join("example_a")) in visitor.fatal_conflicts["example_a"]
+    assert str(tmpdir.join("dst").join("example_a")) in visitor.fatal_conflicts["example_a"]
+    assert str(tmpdir.join("src").join("example_b")) in visitor.fatal_conflicts["example_b"]
+    assert str(tmpdir.join("dst").join("example_b")) in visitor.fatal_conflicts["example_b"]
 
 
 def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     """Tests whether non-symlink file-dir and dir-file clashes as registered as fatal
-    errors"""
+    errors when the destination directory is non-empty."""
     with tmpdir.mkdir("a").as_cwd():
         os.mkdir("example")
 
@@ -295,11 +297,17 @@ def test_destination_merge_visitor_file_dir_clashes(tmpdir):
     a_to_b = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir.join("a")), a_to_b)
     visit_directory_tree(str(tmpdir.join("b")), DestinationMergeVisitor(a_to_b))
-    assert a_to_b.fatal_conflicts
-    assert a_to_b.fatal_conflicts[0].dst == "example"
+
+    # Did we register the actual conflict
+    assert "example" in a_to_b.fatal_conflicts
+    assert str(tmpdir.join("a").join("example")) in a_to_b.fatal_conflicts["example"]
+    assert str(tmpdir.join("b").join("example")) in a_to_b.fatal_conflicts["example"]
 
     b_to_a = SourceMergeVisitor()
     visit_directory_tree(str(tmpdir.join("b")), b_to_a)
     visit_directory_tree(str(tmpdir.join("a")), DestinationMergeVisitor(b_to_a))
-    assert b_to_a.fatal_conflicts
-    assert b_to_a.fatal_conflicts[0].dst == "example"
+
+    # Did we register the actual conflict
+    assert "example" in b_to_a.fatal_conflicts
+    assert str(tmpdir.join("a").join("example")) in a_to_b.fatal_conflicts["example"]
+    assert str(tmpdir.join("b").join("example")) in a_to_b.fatal_conflicts["example"]

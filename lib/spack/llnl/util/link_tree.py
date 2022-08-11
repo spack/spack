@@ -64,12 +64,15 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         # When a file blocks another file, the conflict can sometimes
         # be resolved / ignored (e.g. <prefix>/LICENSE or
         # or <site-packages>/<namespace>/__init__.py conflicts can be
-        # ignored).
-        self.file_conflicts = []
+        # ignored). This dict maps the projection to the list of
+        # conflicting source paths.
+        self.file_conflicts = OrderedDict()
 
         # When we have to create a dir where a file is, or a file
-        # where a dir is, we have fatal errors, listed here.
-        self.fatal_conflicts = []
+        # where a dir is, we have fatal errors, listed here as a
+        # mapping from projection to a list of conflicting source
+        # paths.
+        self.fatal_conflicts = OrderedDict()
 
         # What directories we have to make; this is an ordered set,
         # so that we have a fast lookup and can run mkdir in order.
@@ -77,6 +80,13 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
 
         # Files to link. Maps dst_rel to (src_rel, src_root)
         self.files = OrderedDict()
+
+    def register_conflict(self, error_dict, projection, src_a, src_b):
+        """Register that src_a and src_b project to the same desitination"""
+        if projection in error_dict:
+            error_dict[projection].append(src_b)
+        else:
+            error_dict[projection] = [src_a, src_b]
 
     def before_visit_dir(self, root, rel_path, depth):
         """
@@ -90,12 +100,11 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         elif proj_rel_path in self.files:
             # Can't create a dir where a file is.
             src_a_root, src_a_relpath = self.files[proj_rel_path]
-            self.fatal_conflicts.append(
-                MergeConflict(
-                    dst=proj_rel_path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join(root, rel_path),
-                )
+            self.register_conflict(
+                self.fatal_conflicts,
+                proj_rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
             return False
         elif proj_rel_path in self.directories:
@@ -146,22 +155,20 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
         elif proj_rel_path in self.directories:
             # Can't create a file where a dir is; fatal error
             src_a_root, src_a_relpath = self.directories[proj_rel_path]
-            self.fatal_conflicts.append(
-                MergeConflict(
-                    dst=proj_rel_path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join(root, rel_path),
-                )
+            self.register_conflict(
+                self.fatal_conflicts,
+                proj_rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
         elif proj_rel_path in self.files:
             # In some cases we can resolve file-file conflicts
             src_a_root, src_a_relpath = self.files[proj_rel_path]
-            self.file_conflicts.append(
-                MergeConflict(
-                    dst=proj_rel_path,
-                    src_a=os.path.join(src_a_root, src_a_relpath),
-                    src_b=os.path.join(root, rel_path),
-                )
+            self.register_conflict(
+                self.file_conflicts,
+                proj_rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
         else:
             # Otherwise register this file to be linked.
@@ -189,17 +196,16 @@ class SourceMergeVisitor(BaseDirectoryVisitor):
             else:
                 # Can't create a dir where a file is.
                 src_a_root, src_a_relpath = self.files[path]
-                self.fatal_conflicts.append(
-                    MergeConflict(
-                        dst=path,
-                        src_a=os.path.join(src_a_root, src_a_relpath),
-                        src_b=os.path.join("<projection>", path),
-                    )
+                self.register_conflict(
+                    self.fatal_conflicts,
+                    path,
+                    os.path.join(src_a_root, src_a_relpath),
+                    os.path.join("<projection>", path),
                 )
 
 
 class DestinationMergeVisitor(BaseDirectoryVisitor):
-    """DestinatinoMergeVisitor takes a SourceMergeVisitor
+    """DestinationMergeVisitor takes a SourceMergeVisitor
     and:
 
     a. registers additional conflicts when merging
@@ -214,17 +220,18 @@ class DestinationMergeVisitor(BaseDirectoryVisitor):
     """
 
     def __init__(self, source_merge_visitor):
-        self.src = source_merge_visitor
+        self.src = source_merge_visitor  # type: SourceMergeVisitor
 
     def before_visit_dir(self, root, rel_path, depth):
         # If destination dir is a file in a src dir, add a conflict,
         # and don't traverse deeper
         if rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(
-                MergeConflict(
-                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
-                )
+            self.src.register_conflict(
+                self.src.fatal_conflicts,
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
             return False
 
@@ -247,18 +254,20 @@ class DestinationMergeVisitor(BaseDirectoryVisitor):
         # Always conflict
         if rel_path in self.src.directories:
             src_a_root, src_a_relpath = self.src.directories[rel_path]
-            self.src.fatal_conflicts.append(
-                MergeConflict(
-                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
-                )
+            self.src.register_conflict(
+                self.src.fatal_conflicts,
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
 
         if rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(
-                MergeConflict(
-                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
-                )
+            self.src.register_conflict(
+                self.src.fatal_conflicts,
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
 
         # Never descend into symlinked target dirs.
@@ -268,18 +277,20 @@ class DestinationMergeVisitor(BaseDirectoryVisitor):
         # Can't merge a file if target already exists
         if rel_path in self.src.directories:
             src_a_root, src_a_relpath = self.src.directories[rel_path]
-            self.src.fatal_conflicts.append(
-                MergeConflict(
-                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
-                )
+            self.src.register_conflict(
+                self.src.fatal_conflicts,
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
 
         elif rel_path in self.src.files:
             src_a_root, src_a_relpath = self.src.files[rel_path]
-            self.src.fatal_conflicts.append(
-                MergeConflict(
-                    rel_path, os.path.join(src_a_root, src_a_relpath), os.path.join(root, rel_path)
-                )
+            self.src.register_conflict(
+                self.src.fatal_conflicts,
+                rel_path,
+                os.path.join(src_a_root, src_a_relpath),
+                os.path.join(root, rel_path),
             )
 
     def visit_symlinked_file(self, root, rel_path, depth):
@@ -441,10 +452,15 @@ class MergeConflictSummary(MergeConflictError):
         A human-readable summary of file system view merge conflicts (showing only the
         first 3 issues.)
         """
-        msg = "{0} fatal error(s) when merging prefixes:".format(len(conflicts))
-        # show the first 3 merge conflicts.
-        for conflict in conflicts[:3]:
-            msg += "\n    `{0}` and `{1}` both project to `{2}`".format(
-                conflict.src_a, conflict.src_b, conflict.dst
-            )
+        if len(conflicts) == 1:
+            msg = "An issue occurred when merging prefixes:"
+        else:
+            msg = "{0} issues when merging prefixes:".format(len(conflicts))
+        i = 0
+        for (projection, sources) in conflicts.items():
+            msg += "\n    {0} map to {1}".format(":".join(sources), projection)
+            i += 1
+            if i > 3:
+                msg += "\n    ..."
+                break
         super(MergeConflictSummary, self).__init__(msg)
