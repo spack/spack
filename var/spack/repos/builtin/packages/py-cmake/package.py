@@ -40,5 +40,4 @@ class PyCmake(PythonPackage):
             placement="cmake-src",
         )
 
-    def install_options(self, spec, prefix):
-        return ["-DBUILD_CMAKE_FROM_SOURCE=ON", "-DCMakeProject_SOURCE_DIR=cmake-src"]
+    install_options = ["-DBUILD_CMAKE_FROM_SOURCE=ON", "-DCMakeProject_SOURCE_DIR=cmake-src"]

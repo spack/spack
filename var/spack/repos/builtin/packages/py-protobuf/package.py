@@ -85,9 +85,11 @@ class PyProtobuf(PythonPackage):
         protobuf_dir = self.spec["protobuf"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", protobuf_dir)
 
-    @when("+cpp")
-    def install_options(self, spec, prefix):
-        return ["--cpp_implementation"]
+    @property
+    def install_options(self):
+        if self.spec.satisfies("+cpp"):
+            return ["--cpp_implementation"]
+        return []
 
     @run_after("install")
     def fix_import_error(self):

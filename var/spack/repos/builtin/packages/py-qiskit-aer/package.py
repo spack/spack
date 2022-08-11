@@ -39,9 +39,9 @@ class PyQiskitAer(PythonPackage, CudaPackage):
         env.set("DISABLE_DEPENDENCY_INSTALL", "1")
         env.set("CUDAHOSTCXX", spack_cxx)
 
-    def install_options(self, spec, prefix):
-        args = []
-        args.append("-DDISABLE_CONAN=ON")
+    @property
+    def install_options(self):
+        args = ["-DDISABLE_CONAN=ON"]
         if "~gdr" in self.spec:
             args.append("-DAER_DISABLE_GDR=True")
         else:
@@ -52,7 +52,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
             args.append("-DAER_MPI=False")
         if "+cuda" in self.spec:
             args.append("-DAER_THRUST_BACKEND=CUDA")
-            cuda_archs = spec.variants["cuda_arch"].value
+            cuda_archs = self.spec.variants["cuda_arch"].value
             if "none" not in cuda_archs:
                 args.append("-DCUDA_NVCC_FLAGS={0}".format(" ".join(self.cuda_flags(cuda_archs))))
         return args

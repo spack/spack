@@ -47,18 +47,19 @@ class PyPyside2(PythonPackage):
     depends_on("libxslt@1.1.19:", when="+doc", type="build")
     depends_on("py-sphinx", when="+doc", type="build")
 
-    def install_options(self, spec, prefix):
+    @property
+    def install_options(self):
         args = [
             "--parallel={0}".format(make_jobs),
             "--ignore-git",
-            "--qmake={0}".format(spec["qt"].prefix.bin.qmake),
+            "--qmake={0}".format(self.spec["qt"].prefix.bin.qmake),
         ]
         if self.run_tests:
             args.append("--build-tests")
         return args
 
     def install(self, spec, prefix):
-        python("setup.py", "install", "--prefix=" + prefix, *self.install_options(spec, prefix))
+        python("setup.py", "install", "--prefix=" + prefix, *self.install_options)
 
     @run_after("install")
     def install_docs(self):

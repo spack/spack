@@ -45,6 +45,7 @@ class PyNetworkit(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("python@3:", type=("build", "run"))
 
-    def install_options(self, spec, prefix):
+    @property
+    def install_options(self):
         # Enable ext. core-library + parallel build
         return ["-j{0}".format(make_jobs)]
