@@ -354,11 +354,11 @@ def versions_per_spec(args):
 
 
 def create_mirror_from_concrete_specs(mirror_specs, args):
-    directory = mirror_directory_from_cli(args)
+    local_push_url = local_mirror_url_from_user(args.directory)
     present, mirrored, error = spack.mirror.create(
-        directory, mirror_specs, args.skip_unstable_versions
+        local_push_url, mirror_specs, args.skip_unstable_versions
     )
-    tty.msg("Summary for mirror in {}".format(directory))
+    tty.msg("Summary for mirror in {}".format(local_push_url))
     process_mirror_stats(present, mirrored, error)
 
 
@@ -376,13 +376,19 @@ def process_mirror_stats(present, mirrored, error):
         sys.exit(1)
 
 
-def mirror_directory_from_cli(args):
-    mirror_path = spack.util.path.canonicalize_path(
-        args.directory or spack.config.get("config:source_cache")
+def local_mirror_url_from_user(directory_hint):
+    """Return a file:// url pointing to the local mirror to be used.
+
+    Args:
+        directory_hint (str or None): directory where to create the mirror. If None,
+            defaults to "config:source_cache".
+    """
+    mirror_directory = spack.util.path.canonicalize_path(
+        directory_hint or spack.config.get("config:source_cache")
     )
-    mirror = spack.mirror.Mirror(mirror_path)
-    directory = url_util.format(mirror.push_url)
-    return directory
+    tmp_mirror = spack.mirror.Mirror(mirror_directory)
+    local_url = url_util.format(tmp_mirror.push_url)
+    return local_url
 
 
 def mirror_create(args):
@@ -428,9 +434,9 @@ def mirror_create(args):
 
 def create_mirror_for_all_specs(args):
     mirror_specs = all_specs_with_all_versions(args)
-    directory = mirror_directory_from_cli(args)
+    local_push_url = local_mirror_url_from_user(args.directory)
     mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
-        directory, skip_unstable_versions=args.skip_unstable_versions
+        local_push_url, skip_unstable_versions=args.skip_unstable_versions
     )
     for candidate in mirror_specs:
         pkg_cls = spack.repo.path.get_pkg_class(candidate.name)

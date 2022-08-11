@@ -340,10 +340,10 @@ class TestMirrorCreate(object):
     )
     def test_mirror_path_is_valid(self, cli_args, expected_end, config):
         args = MockMirrorArgs(**cli_args)
-        directory = spack.cmd.mirror.mirror_directory_from_cli(args)
-        assert directory.startswith("file:")
-        assert os.path.isabs(directory.replace("file://", ""))
-        assert directory.endswith(expected_end)
+        local_push_url = spack.cmd.mirror.local_mirror_url_from_user(args.directory)
+        assert local_push_url.startswith("file:")
+        assert os.path.isabs(local_push_url.replace("file://", ""))
+        assert local_push_url.endswith(expected_end)
 
     @pytest.mark.parametrize(
         "cli_args,not_expected",
