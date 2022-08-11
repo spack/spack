@@ -993,7 +993,8 @@ class SpackSolverSetup(object):
 
         self.cfg_required_rules(pkg)
 
-    def condition(self, required_spec, imposed_spec=None, name=None, msg=None):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None,
+                  _id=None):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -1010,7 +1011,7 @@ class SpackSolverSetup(object):
         named_cond.name = named_cond.name or name
         assert named_cond.name, "must provide name for anonymous condtions!"
 
-        condition_id = next(self._condition_id_counter)
+        condition_id = _id or next(self._condition_id_counter)
         self.gen.fact(fn.condition(condition_id, msg))
 
         # requirements trigger the condition
@@ -1768,7 +1769,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.installed_hash(spec.name, h))
 
             # this describes what constraints it imposes on the solve
-            self.impose(h, spec, body=True)
+            self.condition(spec, imposed_spec=spec, name=spec.name, _id=h)
             self.gen.newline()
 
             # Declare as possible parts of specs that are not in package.py
