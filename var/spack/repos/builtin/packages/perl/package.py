@@ -14,6 +14,7 @@
 import os
 import platform
 import re
+import sys
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
