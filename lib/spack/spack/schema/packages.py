@@ -28,7 +28,10 @@ properties = {
                                 "type": "array",
                                 "items": {
                                     "type": "object",
-                                    "properties": {"one_of": {"type": "array"}},
+                                    "properties": {
+                                        "one_of": {"type": "array"},
+                                        "any_of": {"type": "array"},
+                                    },
                                 },
                             },
                             # Shorthand for a condition group with one member

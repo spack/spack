@@ -883,25 +883,24 @@ class SpackSolverSetup(object):
         config = spack.config.get("packages")
         requirements = config.get(pkg_name, {}).get("require", {})
         if isinstance(requirements, string_types):
-            rules = [(pkg_name, [requirements])]
+            rules = [(pkg_name, "one_of", [requirements])]
         else:
             rules = []
             for requirement in requirements:
-                rules.append((pkg_name, requirement["one_of"]))
-        cnd_grp_id = 0
-        for pkg_name, cnd_group in rules:
-            requirement_weight = 0
+                for policy in ("one_of", "any_of"):
+                    if policy in requirement:
+                        rules.append((pkg_name, policy, requirement[policy]))
+
+        for cnd_grp_id, (pkg_name, policy, cnd_group) in enumerate(rules):
             self.gen.fact(fn.requirement_group(pkg_name, cnd_grp_id))
-            for spec_str in cnd_group:
+            self.gen.fact(fn.requirement_policy(pkg_name, cnd_grp_id, policy))
+            for requirement_weight, spec_str in enumerate(cnd_group):
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
-                member_id = next(self._condition_id_counter)
+                member_id = self.condition(spec, imposed_spec=spec, name=pkg_name)
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, cnd_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
-                self.impose(member_id, spec, name=pkg_name, node=False)
-                requirement_weight += 1
-            cnd_grp_id += 1
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)

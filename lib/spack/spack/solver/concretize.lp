@@ -499,30 +499,40 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % Config required semantics
 %-----------------------------------------------------------------------------
 
-% A package may have an associated "requirement_group": a set of specs where
-% at least one must be applied. Each spec in the group is associated
-% with a condition via asp.impose().
-{ condition_holds(Y) : requirement_group_member(Y, Package, X) } :-
-  node(Package),
-  requirement_group(Package, X).
-
 requirement_group_satisfied(Package, X) :-
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
   node(Package),
-  requirement_group(Package, X),
-  requirement_group_member(Y, Package, X),
-  condition_holds(Y).
-
-error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
-  node(Package),
-  requirement_group(Package, X),
-  not requirement_group_satisfied(Package, X).
+  requirement_policy(Package, X, "one_of"),
+  requirement_group(Package, X).
 
 requirement_weight(Package, W) :-
   condition_holds(Y),
   requirement_has_weight(Y, W),
   requirement_group_member(Y, Package, X),
+  requirement_policy(Package, X, "one_of"),
+  requirement_group_satisfied(Package, X).
+
+requirement_group_satisfied(Package, X) :-
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
   node(Package),
+  requirement_policy(Package, X, "any_of"),
   requirement_group(Package, X).
+
+requirement_weight(Package, W) :-
+  W = #min {
+    Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, X);
+    % We need this to avoid an annoying warning during the solve
+    %   concretize.lp:1151:5-11: info: tuple ignored:
+    %   #sup@73
+    10000
+  },
+  requirement_policy(Package, X, "any_of"),
+  requirement_group_satisfied(Package, X).
+
+error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
+  node(Package),
+  requirement_group(Package, X),
+  not requirement_group_satisfied(Package, X).
 
 #defined requirement_group/2.
 #defined requirement_group_member/3.
