@@ -267,10 +267,11 @@ packages:
 """
 
     with spack.repo.use_repositories(create_test_repo):
-        update_packages_config(conf_str)
-
-        s1 = Spec("y@2.5").concretized()
+        s1 = Spec("y@2.5%gcc").concretized()
         s1.package.do_install(fake=True, explicit=True)
 
-        s2 = Spec("y%gcc").concretized()
-        assert not s2.satisfies("@2.5")
+        update_packages_config(conf_str)
+
+        with spack.config.override("concretizer:reuse", True):
+            s2 = Spec("y").concretized()
+            assert not s2.satisfies("@2.5 %gcc")
