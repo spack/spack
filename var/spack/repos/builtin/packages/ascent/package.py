@@ -107,6 +107,9 @@ class Ascent(CMakePackage, CudaPackage):
     # patch for finding Conduit python more reliably
     # https://github.com/Alpine-DAV/ascent/pull/935
     patch("ascent-find-conduit-python-pr935.patch", when="@0.8.0")
+    # patch for finding dependencies in configure file
+    # https://github.com/Alpine-DAV/ascent/pull/962
+    patch("ascent-configure-deps-pr962.patch", when="@0.8.0")
 
     ##########################################################################
     # package dependencies
@@ -220,11 +223,15 @@ class Ascent(CMakePackage, CudaPackage):
     # Note: cmake, build, and install stages are handled by CMakePackage
     ####################################################################
 
+    @property
+    def root_cmakelists_dir(self):
+        return os.path.join(self.stage.source_path, "src")
+
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
         options = []
-        options.extend(["-C", host_config, "../spack-src/src/"])
+        options.extend(["-C", host_config])
         return options
 
     @run_after("install")
@@ -449,7 +456,7 @@ class Ascent(CMakePackage, CudaPackage):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
+            if cpp_compiler == "CC" and "@3.14" in spec["cmake"]:
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"

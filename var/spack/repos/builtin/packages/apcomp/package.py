@@ -156,7 +156,7 @@ class Apcomp(Package):
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if cpp_compiler == "CC":
+            if cpp_compiler == "CC" and "@3.14" in spec["cmake"]:
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
