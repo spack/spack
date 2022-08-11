@@ -37,6 +37,7 @@ class PyMatplotlib(PythonPackage):
         "pylab",
     ]
 
+    version("3.5.3", sha256="339cac48b80ddbc8bfd05daae0a3a73414651a8596904c2a881cfd1edb65f26c")
     version("3.5.2", sha256="48cf850ce14fa18067f2d9e0d646763681948487a8080ec0af2686468b4607a2")
     version("3.5.1", sha256="b2e9810e09c3a47b73ce9cab5a72243a1258f61e7900969097a817232246ce1c")
     version("3.5.0", sha256="38892a254420d95594285077276162a5e9e9c30b6da08bdc2a4d53331ad9a6fa")
@@ -119,7 +120,7 @@ class PyMatplotlib(PythonPackage):
     depends_on("libpng@1.2:")
     depends_on("py-setuptools", type=("build", "run"))  # See #3813
     depends_on("py-certifi@2020.6.20:", when="@3.3.1:", type="build")
-    depends_on("py-setuptools-scm@4:", when="@3.5:", type="build")
+    depends_on("py-setuptools-scm@4:6", when="@3.5:", type="build")
     depends_on("py-setuptools-scm-git-archive", when="@3.5:", type="build")
     depends_on("py-cycler@0.10:", type=("build", "run"))
     depends_on("py-fonttools@4.22:", when="@3.5:", type=("build", "run"))
