@@ -39,14 +39,14 @@ class RiscvGnuToolchain(Package):
     depends_on('gcc', type=('build', 'link'))
     depends_on('zlib', type=('build', 'link'))
     depends_on('expat', type=('build', 'link'))
-    
+
     conflicts("platform=windows", msg="Windows is not supported.")
 
     variant("Newlib", default=True, description="To build the Newlib cross-compiler.")
     variant("Linux", default=False, description="To build the Linux cross-compiler.")
 
     def configure_args(self):
-        config_args = [] 
+        config_args = []
         return config_args
 
     def configure(self, spec, prefix):
@@ -67,8 +67,9 @@ class RiscvGnuToolchain(Package):
         # configure and build in one step
         with working_dir(self.stage.source_path):
             # modify Makefile not to git init submodules.
-            # /bin/sed -i -r '/^# Rule for auto init submodules/,/git submodule update.*$/d' Makefile
-            cmd = "/bin/sed -i -r '/^# Rule for auto init submodules/,/git submodule update.*$/d' Makefile"
+            cmd = "/bin/sed -i -r \
+            '/^# Rule for auto init submodules/,/git submodule update.*$/d' \
+            Makefile"
             p = Popen(shlex.split(cmd))
             p.communicate()
 
