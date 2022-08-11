@@ -61,7 +61,7 @@ class V(Package):
 
 
 @pytest.fixture
-def test_repo(tmpdir, mutable_config):
+def create_test_repo(tmpdir, mutable_config):
     repo_path = str(tmpdir)
     repo_yaml = tmpdir.join("repo.yaml")
     with open(str(repo_yaml), "w") as f:
@@ -79,9 +79,28 @@ repo:
         with open(str(pkg_file), "w") as f:
             f.write(pkg_str)
 
-    mock_repo = spack.repo.Repo(repo_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
+    yield spack.repo.Repo(repo_path)
+
+
+@pytest.fixture
+def test_repo(create_test_repo, monkeypatch, mock_stage):
+    with spack.repo.use_repositories(create_test_repo) as mock_repo_path:
         yield mock_repo_path
+
+
+class MakeStage(object):
+    def __init__(self, stage):
+        self.stage = stage
+
+    def __call__(self, *args, **kwargs):
+        return self.stage
+
+
+@pytest.fixture
+def fake_installs(monkeypatch, tmpdir):
+    universal_unused_stage = spack.stage.DIYStage(tmpdir.ensure('fake-stage', dir=True))
+    monkeypatch.setattr(spack.package_base.Package, "_make_stage",
+                        MakeStage(universal_unused_stage))
 
 
 def test_requirement_isnt_optional(concretize_scope, test_repo):
@@ -233,3 +252,25 @@ packages:
 
     s2 = Spec("y@2.5").concretized()
     assert s2.satisfies("@2.5")
+
+
+def test_reuse_oneof(concretize_scope, create_test_repo, mutable_database,
+                     fake_installs):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    conf_str = """\
+packages:
+  y:
+    require:
+    - one_of: ["@2.5", "%gcc"]
+"""
+
+    with spack.repo.use_repositories(create_test_repo):
+        update_packages_config(conf_str)
+
+        s1 = Spec("y@2.5").concretized()
+        s1.package.do_install(fake=True, explicit=True)
+
+        s2 = Spec("y%gcc").concretized()
+        assert not s2.satisfies("@2.5")
