@@ -87,20 +87,41 @@ class CachedCMakePackage(CMakePackage):
             "endif()\n",
         ]
 
+        flags = spec.compiler_flags
+
         # use global spack compiler flags
-        cppflags = " ".join(spec.compiler_flags["cppflags"])
+        cppflags = " ".join(flags["cppflags"])
         if cppflags:
-            # avoid always ending up with ' ' with no flags defined
+            # avoid always ending up with " " with no flags defined
             cppflags += " "
-        cflags = cppflags + " ".join(spec.compiler_flags["cflags"])
+        cflags = cppflags + " ".join(flags["cflags"])
         if cflags:
             entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
-        cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
+        cxxflags = cppflags + " ".join(flags["cxxflags"])
         if cxxflags:
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
-        fflags = " ".join(spec.compiler_flags["fflags"])
+        fflags = " ".join(flags["fflags"])
         if fflags:
             entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
+
+        # Cmake has different linker arguments for different build types.
+        # We specify for each of them.
+        if flags["ldflags"]:
+            ld_flags = " ".join(flags["ldflags"])
+            ld_format_string = "CMAKE_{0}_LINKER_FLAGS"
+            # CMake has separate linker arguments for types of builds.
+            for ld_type in ["EXE", "MODULE", "SHARED", "STATIC"]:
+                ld_string = ld_format_string.format(ld_type)
+                entries.append(cmake_cache_string(ld_string, ld_flags))
+
+        # CMake has libs options separated by language. Apply ours to each.
+        if flags["ldlibs"]:
+            libs_flags = " ".join(flags["ldlibs"])
+            libs_format_string = "CMAKE_{0}_STANDARD_LIBRARIES"
+            langs = ["C", "CXX", "Fortran"]
+            for lang in langs:
+                libs_string = libs_format_string.format(lang)
+                entries.append(cmake_cache_string(libs_string, libs_flags))
 
         return entries
 
