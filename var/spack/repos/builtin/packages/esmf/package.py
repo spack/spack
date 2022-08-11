@@ -35,12 +35,12 @@ class Esmf(MakefilePackage):
     variant("pnetcdf", default=True, description="Build with pNetCDF support")
     variant("xerces", default=True, description="Build with Xerces support")
     variant(
-        "external-pio",
-        default=False,
+        "parallelio",
+        default=True,
         description="Build with external parallelio library",
         when="@8.3:",
     )
-    variant("pio", default=True, description="Enable ParallelIO support")
+    variant("pio", default=True, description="Enable Internal ParallelIO support", when="@:8.2.99")
     variant("debug", default=False, description="Make a debuggable version of the library")
 
     # Required dependencies
@@ -53,7 +53,8 @@ class Esmf(MakefilePackage):
     depends_on("netcdf-c@3.6:", when="+netcdf")
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
-    depends_on("parallelio@2.5.8:", when="+external-pio")
+    depends_on("parallelio@2.5.8:~fortran", when="+parallelio")
+    depends_on("parallelio@2.5.8:+pnetcdf~fortran", when="+parallelio+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
 
     # Testing dependencies
@@ -210,6 +211,7 @@ class Esmf(MakefilePackage):
             elif "^openmpi" in spec or "^hpcx-mpi" in spec:
                 os.environ["ESMF_COMM"] = "openmpi"
             elif "^mpt" in spec:
+                # MPT is the HPE (SGI) variant of mpich
                 os.environ["ESMF_COMM"] = "mpt"
             elif (
                 "^intel-parallel-studio+mpi" in spec
@@ -283,7 +285,7 @@ class Esmf(MakefilePackage):
         # ParallelIO #
         ##############
 
-        if "+external-pio" in spec and "+mpi" in spec:
+        if "+parallelio" in spec and "+mpi" in spec:
             os.environ["ESMF_PIO"] = "external"
             os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
             os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
