@@ -39,6 +39,8 @@ class RiscvGnuToolchain(Package):
     depends_on('gcc', type=('build', 'link'))
     depends_on('zlib', type=('build', 'link'))
     depends_on('expat', type=('build', 'link'))
+    
+    conflicts("platform=windows", msg="Windows is not supported.")
 
     variant("Newlib", default=True, description="To build the Newlib cross-compiler.")
     variant("Linux", default=False, description="To build the Linux cross-compiler.")
