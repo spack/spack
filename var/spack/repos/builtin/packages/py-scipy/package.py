@@ -95,6 +95,9 @@ class PyScipy(PythonPackage):
     # https://github.com/scipy/scipy/wiki/Dropping-support-for-Accelerate
     depends_on("lapack@3.4.1:", when="@1.2:")
 
+    # https://github.com/scipy/scipy/pull/11324
+    conflicts("@1.4.0:1.4.1", when="target=ppc64le:")
+
     # https://github.com/scipy/scipy/issues/12860
     patch(
         "https://git.sagemath.org/sage.git/plain/build/pkgs/scipy/patches/extern_decls.patch?id=711fe05025795e44b84233e065d240859ccae5bd",
