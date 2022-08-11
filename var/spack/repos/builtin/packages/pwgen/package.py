@@ -11,7 +11,7 @@ class Pwgen(AutotoolsPackage):
     which can be easily memorized by a human."""
 
     homepage = "https://sourceforge.net/projects/pwgen"
-    url      = "https://downloads.sourceforge.net/project/pwgen/pwgen/2.08/pwgen-2.08.tar.gz"
+    url = "https://downloads.sourceforge.net/project/pwgen/pwgen/2.08/pwgen-2.08.tar.gz"
 
     maintainers = ["cessenat"]
 
