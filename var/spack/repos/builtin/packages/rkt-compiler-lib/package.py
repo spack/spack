@@ -20,6 +20,6 @@ class RktCompilerLib(RacketPackage):
     depends_on("rkt-rackunit-lib@8.3", type=("build", "run"), when="@8.3")
     depends_on("rkt-zo-lib@1.3", type=("build", "run"), when="@8.3")
 
-    name = "compiler-lib"
+    racket_name = "compiler-lib"
     pkgs = True
-    subdirectory = "pkgs/{0}".format(name)
+    subdirectory = "pkgs/{0}".format(racket_name)

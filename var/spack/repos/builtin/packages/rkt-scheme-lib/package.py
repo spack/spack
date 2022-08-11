@@ -16,5 +16,5 @@ class RktSchemeLib(RacketPackage):
     version("8.3", commit="a36e729680818712820ee5269f5208c3c0715a6a")  # tag='v8.3'
     depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
 
-    name = "scheme-lib"
+    racket_name = "scheme-lib"
     pkgs = True
