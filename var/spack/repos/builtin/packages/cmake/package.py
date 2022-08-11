@@ -28,9 +28,11 @@ class Cmake(Package):
     executables = ["^cmake$"]
 
     version("master", branch="master")
+    version("3.23.3", sha256="06fefaf0ad94989724b56f733093c2623f6f84356e5beb955957f9ce3ee28809")
     version("3.23.2", sha256="f316b40053466f9a416adf981efda41b160ca859e97f6a484b447ea299ff26aa")
     version("3.23.1", sha256="33fd10a8ec687a4d0d5b42473f10459bb92b3ae7def2b745dc10b192760869f3")
     version("3.23.0", sha256="5ab0a12f702f44013be7e19534cd9094d65cc9fe7b2cd0f8c9e5318e0fe4ac82")
+    version("3.22.6", sha256="73933163670ea4ea95c231549007b0c7243282293506a2cf4443714826ad5ec3")
     version("3.22.5", sha256="d3987c3f7759fa0a401c5fcd5076be44a19613bfaa8baee1b5d1835750dc5375")
     version("3.22.4", sha256="5c55d0b0bc4c191549e3502b8f99a4fe892077611df22b4178cc020626e22a47")
     version("3.22.3", sha256="9f8469166f94553b6978a16ee29227ec49a2eb5ceb608275dec40d8ae0d1b5a0")
