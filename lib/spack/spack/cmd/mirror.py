@@ -255,18 +255,21 @@ def concrete_specs_from_user(args):
     is passed either from command line or from a text file.
     """
     specs = concrete_specs_from_cli_or_file(args)
+    specs = extend_with_additional_versions(specs, num_versions=versions_per_spec(args))
     if args.dependencies:
         specs = extend_with_dependencies(specs)
     specs = filter_externals(specs)
+    specs = list(set(specs))
+    specs.sort(key=lambda s: (s.name, s.version))
+    specs, _ = lang.stable_partition(specs, predicate_fn=not_excluded_fn(args))
+    return specs
 
-    if versions_per_spec(args) == "all":
+
+def extend_with_additional_versions(specs, num_versions):
+    if num_versions == "all":
         mirror_specs = spack.mirror.get_all_versions(specs)
     else:
-        mirror_specs = spack.mirror.get_matching_versions(
-            specs, num_versions=versions_per_spec(args)
-        )
-    mirror_specs.sort(key=lambda s: (s.name, s.version))
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
+        mirror_specs = spack.mirror.get_matching_versions(specs, num_versions=num_versions)
     mirror_specs = [x.concretized() for x in mirror_specs]
     return mirror_specs
 
