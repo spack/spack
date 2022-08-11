@@ -13,7 +13,6 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_global_activation(install_mockery, mock_fetch):
     """This test ensures that views which are maintained inside of an extendee
     package's prefix are maintained as expected and are compatible with
@@ -33,7 +32,6 @@ def test_global_activation(install_mockery, mock_fetch):
     assert view.extensions_layout.extension_file_path(extendee_spec) == expected_path
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
     view_dir = str(tmpdir.join("view"))
     layout = DirectoryLayout(view_dir)
