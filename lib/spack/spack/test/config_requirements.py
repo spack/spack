@@ -98,7 +98,8 @@ class MakeStage(object):
 
 @pytest.fixture
 def fake_installs(monkeypatch, tmpdir):
-    universal_unused_stage = spack.stage.DIYStage(tmpdir.ensure("fake-stage", dir=True))
+    stage_path = str(tmpdir.ensure("fake-stage", dir=True))
+    universal_unused_stage = spack.stage.DIYStage(stage_path)
     monkeypatch.setattr(
         spack.package_base.Package, "_make_stage", MakeStage(universal_unused_stage)
     )
