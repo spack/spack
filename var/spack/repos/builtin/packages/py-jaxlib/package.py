@@ -26,7 +26,8 @@ class PyJaxlib(PythonPackage, CudaPackage):
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"))
-    depends_on("bazel@4.1.0:", type=("build"))
+    # Bazel 5 not yet supported: https://github.com/google/jax/issues/8440
+    depends_on("bazel@4.1.0:4", type=("build"))
     depends_on("cudnn@8.0.5:", when="+cuda")
     depends_on("cuda@11.1:", when="+cuda")
 

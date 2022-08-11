@@ -23,7 +23,7 @@ class Crmc(CMakePackage):
     version("1.5.6", sha256="a546a9352dcbdb8a1df3d63530eacf16f8b64a190e224b72afd434f78388a8a0")
 
     depends_on("hepmc")
-    depends_on("boost")
+    depends_on("boost+filesystem+iostreams+system+program_options")
     depends_on("root")
 
     patch(
@@ -50,6 +50,6 @@ class Crmc(CMakePackage):
         ]
         if self.spec.satisfies("@1.6.0:"):
             args.append("-D__HIJING__=ON")
-        if self.spec.satisfies("%gcc@9:"):
+        if self.spec.satisfies("%gcc@9:") or self.spec.satisfies("%clang@13:"):
             args.append("-DCMAKE_Fortran_FLAGS=-fallow-argument-mismatch")
         return args

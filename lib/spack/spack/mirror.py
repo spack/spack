@@ -632,9 +632,26 @@ class MirrorStats(object):
 
 
 def _add_single_spec(spec, mirror, mirror_stats):
+    """Add a single spec to a mirror.
+
+    Args:
+        spec (spack.spec.Spec): spec to be added. If not concrete it will
+            be concretized.
+        mirror (spack.mirror.Mirror): mirror where to add the spec.
+        mirror_stats (spack.mirror.MirrorStats): statistics on the current mirror
+
+    Return:
+        True if the spec was added successfully, False otherwise
+    """
     # Ensure that the spec is concrete, since we'll stage it later
-    if not spec.concrete:
-        spec = spec.concretized()
+    try:
+        if not spec.concrete:
+            spec = spec.concretized()
+    except Exception as e:
+        msg = "Skipping '{0}', as it fails to concretize [{1}]".format(spec, str(e))
+        tty.debug(msg)
+        mirror_stats.error()
+        return False
 
     tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("{name}{@version}")))
     num_retries = 3
@@ -662,6 +679,9 @@ def _add_single_spec(spec, mirror, mirror_stats):
                 getattr(exception, "message", exception),
             )
         mirror_stats.error()
+        return False
+
+    return True
 
 
 def push_url_from_directory(output_directory):
