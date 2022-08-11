@@ -84,7 +84,8 @@ def test_list_update(tmpdir, mock_packages):
     assert update_file.exists()
     with update_file.open() as f:
         assert f.read() == "empty\n"
-        
+
+
 def test_tag1(parser, specs):
     output = list("--tag", "tag1")
     assert "mpich" in output
