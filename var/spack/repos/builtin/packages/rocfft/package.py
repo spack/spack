@@ -175,5 +175,5 @@ class Rocfft(CMakePackage):
             args.append(self.define("SQLITE_USE_SYSTEM_PACKAGE", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "True"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         return args

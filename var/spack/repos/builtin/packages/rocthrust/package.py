@@ -120,6 +120,6 @@ class Rocthrust(CMakePackage):
             args.append(self.define("__skip_rocmclang", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "True"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args
