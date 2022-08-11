@@ -33,7 +33,7 @@ class Esmf(MakefilePackage):
     variant("external-lapack", default=False, description="Build with external LAPACK support")
     variant("netcdf", default=True, description="Build with NetCDF support")
     variant("pnetcdf", default=True, description="Build with pNetCDF support")
-    variant("xerces", default=True, description="Build with Xerces support")
+    variant("xerces", default=False, description="Build with Xerces support")
     variant(
         "parallelio",
         default=True,
@@ -275,11 +275,7 @@ class Esmf(MakefilePackage):
 
             # When defined, enables the use of Parallel-NetCDF.
             # ESMF_PNETCDF_LIBS will be set to "-lpnetcdf".
-            os.environ["ESMF_PNETCDF"] = "standard"
-
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_PNETCDF_INCLUDE
-            # ESMF_PNETCDF_LIBPATH
+            os.environ["ESMF_PNETCDF"] = "pnetcdf-config"
 
         ##############
         # ParallelIO #
