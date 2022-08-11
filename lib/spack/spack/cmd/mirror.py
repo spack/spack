@@ -322,12 +322,12 @@ def not_excluded_fn(args):
     return not_excluded
 
 
-def concrete_specs_from_environment(args):
+def concrete_specs_from_environment(selection_fn):
     env = ev.active_environment()
     assert env, "an active environment is required"
     mirror_specs = env.all_specs()
     mirror_specs = filter_externals(mirror_specs)
-    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=not_excluded_fn(args))
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
     return mirror_specs
 
 
@@ -433,7 +433,11 @@ def mirror_create(args):
         return
 
     if args.all and ev.active_environment():
-        create_mirror_for_all_specs_inside_environment(args)
+        create_mirror_for_all_specs_inside_environment(
+            directory_hint=args.directory,
+            skip_unstable_versions=args.skip_unstable_versions,
+            selection_fn=not_excluded_fn(args),
+        )
         return
 
     mirror_specs = concrete_specs_from_user(args)
@@ -458,12 +462,14 @@ def create_mirror_for_all_specs(directory_hint, skip_unstable_versions, selectio
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_all_specs_inside_environment(args):
-    mirror_specs = concrete_specs_from_environment(args)
+def create_mirror_for_all_specs_inside_environment(
+    directory_hint, skip_unstable_versions, selection_fn
+):
+    mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
     create_mirror_for_individual_specs(
         mirror_specs,
-        directory_hint=args.directory,
-        skip_unstable_versions=args.skip_unstable_versions,
+        directory_hint=directory_hint,
+        skip_unstable_versions=skip_unstable_versions,
     )
 
 
