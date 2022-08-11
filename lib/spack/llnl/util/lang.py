@@ -13,7 +13,7 @@ import re
 import sys
 import traceback
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import Any, Callable, Iterable, List, Tuple
 
 import six
 from six import string_types
@@ -977,7 +977,11 @@ def enum(**kwargs):
     return type("Enum", (object,), kwargs)
 
 
-def stable_partition(input_iterable, predicate_fn):
+def stable_partition(
+    input_iterable,  # type: Iterable
+    predicate_fn,  # type: Callable[[Any], bool]
+):
+    # type: (...) -> Tuple[List[Any], List[Any]]
     """Partition the input iterable according to a custom predicate.
 
     Args:
