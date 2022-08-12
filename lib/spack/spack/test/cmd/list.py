@@ -84,13 +84,15 @@ def test_list_update(tmpdir, mock_packages):
     assert update_file.exists()
     with update_file.open() as f:
         assert f.read() == "empty\n"
+<<<<<<< HEAD
 
 
 def test_tag1(mock_packages):
+=======
+>>>>>>> 5776319f7536add81ac14c940585ee410ca3257e
 
-    args = parser.parse_args(["--tag", "tag1"])
-    spack.cmd.find.find(parser, args)
 
-    assert len(specs) == 2
-    assert "mpich" in [x.name for x in specs]
-    assert "mpich2" in [x.name for x in specs]       
+def test_tag1(parser, specs):
+    output = list("--tag", "tag1")
+    assert "mpich" in output
+    assert "mpich2" in output
