@@ -5,6 +5,7 @@
 import sys
 
 from spack.package import *
+from spack.build_environment import MakeExecutable
 
 
 class Ninja(Package):
@@ -72,4 +73,4 @@ class Ninja(Package):
 
     def setup_dependent_package(self, module, dspec):
         name = "ninja"
-        module.ninja = which(name, path=[self.spec.prefix.bin], required=True)
+        module.ninja = which(name, exe_class=MakeExecutable, path=[self.spec.prefix.bin], required=True)

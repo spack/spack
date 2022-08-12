@@ -136,14 +136,16 @@ class MakeExecutable(Executable):
     -j).
     """
 
-    def __init__(self, name, jobs):
-        super(MakeExecutable, self).__init__(name)
+    def __init__(self, name, jobs, **kwargs):
+        super(MakeExecutable, self).__init__(name, **kwargs)
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
+        # TODO: figure out how to check if we are using a jobserver-supporting ninja,
+        # the two split ninja packages make this very difficult right now
         parallel = should_set_parallel_jobs(jobserver_support=True) and kwargs.pop(
             "parallel", self.jobs > 1
         )
@@ -533,6 +535,7 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
+    m.ninja = MakeExecutable("ninja", jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
