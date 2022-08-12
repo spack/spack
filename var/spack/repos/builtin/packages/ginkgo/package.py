@@ -23,6 +23,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
     version("glu", branch="glu")
+    version("glu_experimental", branch="glu_experimental")
     version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
     version("1.3.0", commit="4678668c66f634169def81620a85c9a20b7cec78")  # v1.3.0
     version("1.2.0", commit="b4be2be961fd5db45c3d02b5e004d73550722e31")  # v1.2.0
@@ -146,6 +147,10 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             if archs != "none":
                 arch_str = ";".join(archs)
                 args.append("-DGINKGO_HIP_AMDGPU={0}".format(arch_str))
+            if spec.satisfies("^hip@5.2.0:"):
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
         return args
 
     @run_after("install")

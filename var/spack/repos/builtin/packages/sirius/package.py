@@ -8,7 +8,7 @@ import os
 from spack.package import *
 
 
-class Sirius(CMakePackage, CudaPackage):
+class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     """Domain specific library for electronic structure calculations"""
 
     homepage = "https://github.com/electronic-structure/SIRIUS"
@@ -130,19 +130,6 @@ class Sirius(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    amdgpu_targets = (
-        "gfx701",
-        "gfx801",
-        "gfx802",
-        "gfx803",
-        "gfx900",
-        "gfx906",
-        "gfx908",
-        "gfx1010",
-        "gfx1011",
-        "gfx1012",
-    )
-
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant(
@@ -160,14 +147,6 @@ class Sirius(CMakePackage, CudaPackage):
     variant("scalapack", default=False, description="Enable scalapack support")
     variant("magma", default=False, description="Enable MAGMA support")
     variant("nlcglib", default=False, description="enable robust wave function optimization")
-    variant("rocm", default=False, description="Use ROCm GPU support")
-    variant(
-        "amdgpu_target",
-        default="gfx803,gfx900,gfx906",
-        multi=True,
-        values=amdgpu_targets,
-        when="+rocm",
-    )
     variant(
         "build_type",
         default="Release",
@@ -225,8 +204,6 @@ class Sirius(CMakePackage, CudaPackage):
 
     depends_on("scalapack", when="+scalapack")
 
-    # rocm
-    depends_on("hip", when="+rocm")
     depends_on("rocblas", when="+rocm")
 
     # FindHIP cmake script only works for < 4.1

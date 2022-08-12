@@ -15,7 +15,7 @@ class RocmOpencl(CMakePackage):
     git = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["libOpenCL"]
 
     def url_for_version(self, version):
@@ -28,7 +28,7 @@ class RocmOpencl(CMakePackage):
         return url.format(version)
 
     version("master", branch="main")
-
+    version("5.2.0", sha256="80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0")
     version("5.1.3", sha256="44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31")
     version("5.1.0", sha256="362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927")
     version("5.0.2", sha256="3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95")
@@ -98,6 +98,7 @@ class RocmOpencl(CMakePackage):
     depends_on("numactl", type="link", when="@3.7.0:")
 
     for d_version, d_shasum in [
+        ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
         ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
         ("5.1.0", "f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa"),
         ("5.0.2", "34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e"),
@@ -116,7 +117,8 @@ class RocmOpencl(CMakePackage):
             placement="rocclr",
             when="@{0}".format(d_version),
         )
-    patch("0001-fix-build-error-rocm-opencl-5.1.0.patch", when="@5.1.0:")
+    # Patch to set package installation path for OpenCL.
+    patch("0001-fix-build-error-rocm-opencl-5.1.0.patch", when="@5.1.0:5.1")
 
     for ver in [
         "3.5.0",
@@ -149,6 +151,7 @@ class RocmOpencl(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("comgr@" + ver, type="build", when="@" + ver)

@@ -78,12 +78,14 @@ class Visit(CMakePackage):
     variant("silo", default=True, description="Enable Silo file format")
     variant("python", default=True, description="Enable Python support")
     variant("mpi", default=True, description="Enable parallel engine")
+    variant("vtkm", default=False, description="Enable VTK-m support")
 
     patch("spack-changes-3.1.patch", when="@3.1.0:3.2.2")
     patch("spack-changes-3.0.1.patch", when="@3.0.1")
     patch("nonframework-qwt.patch", when="^qt~framework platform=darwin")
     patch("parallel-hdf5.patch", when="@3.0.1:3.2.2+hdf5+mpi")
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
+    patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
@@ -144,6 +146,14 @@ class Visit(CMakePackage):
     depends_on("adios2~mpi", when="+adios2~mpi")
     depends_on("adios2+python", when="+adios2+python")
     depends_on("adios2~python", when="+adios2~python")
+
+    # vtk-m also requires vtk-h. Disabling cuda since that requires
+    # later versions of vtk-m and vtk-h. The patch prevents vtk-m from
+    # throwing an exception whenever any vtk-m operations are performed.
+    depends_on("vtk-m@1.7.0+testlib~cuda", when="+vtkm")
+    depends_on("vtk-h@0.8.1+shared~mpi~openmp~cuda", when="+vtkm")
+
+    depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
 
     depends_on("zlib")
 
@@ -267,6 +277,10 @@ class Visit(CMakePackage):
             )
         else:
             args.append(self.define("VISIT_PARALLEL", False))
+
+        if "+vtkm" in spec:
+            args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
+            args.append(self.define("VISIT_VTKH_DIR", spec["vtk-h"].prefix))
 
         return args
 

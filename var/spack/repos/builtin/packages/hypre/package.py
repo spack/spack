@@ -14,7 +14,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     features parallel multigrid methods for both structured and
     unstructured grid problems."""
 
-    homepage = "https://computing.llnl.gov/project/linear_solvers/software.php"
+    homepage = (
+        "https://computing.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods"
+    )
     url = "https://github.com/hypre-space/hypre/archive/v2.14.0.tar.gz"
     git = "https://github.com/hypre-space/hypre.git"
     tags = ["e4s", "radiuss"]
@@ -140,6 +142,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             os.environ["CXX"] = spec["mpi"].mpicxx
             if "+fortran" in spec:
                 os.environ["F77"] = spec["mpi"].mpif77
+                os.environ["FC"] = spec["mpi"].mpifc
             configure_args.append("--with-MPI")
             configure_args.append("--with-MPI-lib-dirs={0}".format(spec["mpi"].prefix.lib))
             configure_args.append("--with-MPI-include={0}".format(spec["mpi"].prefix.include))

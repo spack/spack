@@ -81,6 +81,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("magma {0}".format(rocm_dep), when=rocm_dep)
         depends_on("raja {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
         depends_on("umpire {0}".format(rocm_dep), when="+raja {0}".format(rocm_dep))
+        depends_on("ginkgo {0}".format(rocm_dep), when="+ginkgo {0}".format(rocm_dep))
 
     magma_ver_constraints = (
         ("2.5.4", "0.4"),
@@ -96,10 +97,13 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@11:", when="@develop:+cuda")
 
     depends_on("raja", when="+raja")
-    depends_on("raja+openmp", when="+raja~cuda~rocm")
-    depends_on("raja@0.14.0:", when="@0.5.0:+raja")
     depends_on("umpire", when="+raja")
-    depends_on("umpire@6.0.0:", when="@0.5.0:+raja")
+    depends_on("raja+openmp", when="+raja~cuda~rocm")
+
+    # Umpire > 0.14 and RAJA > 6.0 require c++ std 14
+    depends_on("raja@0.14.0:0.14", when="@0.5.0:0.6.2+raja")
+    depends_on("umpire@6.0.0:", when="@0.5.0:0.6.2+raja")
+
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
@@ -109,7 +113,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
 
-    depends_on("ginkgo@glu+cuda", when="+ginkgo")
+    depends_on("ginkgo@glu_experimental", when="+ginkgo")
 
     conflicts(
         "+shared",

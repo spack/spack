@@ -40,6 +40,9 @@ class Plasma(CMakePackage):
     variant("shared", default=True, description="Build shared library (disables static library)")
     variant("lua", default=False, description="Build Lua support for tuning tile sizes")
 
+    # need a Python version to generate all precisions' code in repo
+    depends_on("python", when="@develop", type="build")
+
     depends_on("lua", when="+lua")
 
     depends_on("blas")
@@ -73,6 +76,10 @@ class Plasma(CMakePackage):
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("protect_cmake_version.patch", when="@19.8.0:19.8.9")
     patch("fix_cmake_include.patch", when="@19.8.0:19.8.9")
+
+    @when("@develop:")
+    def patch(self):
+        python("tools/generate_precisions.py")
 
     @when("@18.9.0:")
     def cmake_args(self):
