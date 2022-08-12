@@ -13,12 +13,13 @@ class Migraphx(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
     git = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX.git"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["libmigraphx"]
 
+    version("5.2.0", sha256="33afcdf52c6e0e3a2f939fcf30e87f712b8e8ef3633a3dc03a19fea359704925")
     version("5.1.3", sha256="686e068774500a46b6e6488370bbf5bd0bba6d19ecdb00636f951704d19c9ef2")
     version("5.1.0", sha256="6398efaef18a74f2a475aa21bd34bc7c077332a430ee3f6ba4fde6e6a6aa9f89")
     version("5.0.2", sha256="3ef48ac03b909d1a1aa1f91f365ce64af2ce66635b6efb5ad0b207dc51ff2fd6")
@@ -93,7 +94,10 @@ class Migraphx(CMakePackage):
     )
 
     patch("0001-Adding-nlohmann-json-include-directory.patch", when="@3.9.0:")
-    patch("0002-restrict-python-2.7-usage.patch", when="@3.9.0:")
+    # Restrict Python 2.7 usage to fix the issue below
+    # https://github.com/spack/spack/issues/24429
+    patch("0002-restrict-python-2.7-usage.patch", when="@3.9.0:5.1.3")
+    patch("0003-restrict-python-2.7-usage.patch", when="@5.2.0:")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("protobuf", type="link")
@@ -122,6 +126,7 @@ class Migraphx(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
