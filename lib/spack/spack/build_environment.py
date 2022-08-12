@@ -717,7 +717,9 @@ def get_rpaths(pkg):
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         path = path_from_modules([pkg.compiler.modules[1]])
         if path is None:
-            raise ValueError('No path found for compiler module {0}'.format(pkg.compiler.modules[1]))
+            raise ValueError(
+                "No path found for compiler module {0}".format(pkg.compiler.modules[1])
+            )
         rpaths.append(path)
 
     return list(dedupe(filter_system_paths(rpaths)))
