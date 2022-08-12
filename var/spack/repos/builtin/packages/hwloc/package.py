@@ -74,7 +74,8 @@ class Hwloc(AutotoolsPackage):
         default=(sys.platform != "darwin"),
         description="Support analyzing devices on PCI bus",
     )
-    variant("shared", default=True, description="Build shared libraries")
+    variant("libs", default="shared,static", values=("shared", "static"),
+        multi=True, description="Build shared libs, static libs or both")
     variant(
         "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
@@ -178,7 +179,7 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable("libxml2"))
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
-        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.enable_or_disable("libs"))
         args.extend(self.enable_or_disable("oneapi-level-zero"))
 
         if "+cuda" in self.spec:
