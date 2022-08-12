@@ -339,6 +339,58 @@ concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
 dependency.
 
+.. _package-requirements:
+
+--------------------
+Package Requirements
+--------------------
+
+Like preferences, you can specify requirements, which Spack must enforce
+when the associated package is built:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require: "@1.13.2"
+     openmpi:
+       require:
+       - any_of: ["~cuda", "gcc"]
+     mpich:
+      require:
+      - one of: ["+cuda", "+rocm"]
+
+Requirements are expressed using Spec syntax (the same as what is provided
+for example to ``spack install``). In the simplest case, you can specify
+attributes that you always want to the package by providing a single
+spec to ``require``; in the above example, ``libfabric`` will always build
+with version 1.13.2. Note that specifying requirements here does not force
+the package to build, they just constrain the package if it is requested
+(e.g. by ``spack install``).
+
+You can provide a more-relaxed constraint and allow the concretizer to
+choose between a set of options using ``any_of`` or ``one_of``:
+
+* ``any_of`` is a list of specs. One of those specs must be satisfied
+  and it is also allowed for the concretized spec to match more than one.
+  In the above example, that means you could build ``openmpi+cuda%gcc``,
+  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
+  note that both specs in the ``any_of`` for ``openmpi`` are
+  satisfied).
+* ``one_of`` is also a list of specs, and the final concretized spec
+  must match exactly one of them.  In the above example, that means
+  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
+  ``mpich+cuda+rocm`` (note the current package definition for
+  ``mpich`` already includes a conflict, so this is redundant but
+  still demonstrates the concept)
+
+Other notes about ``requires``:
+
+* You can only specify requirements for specific packages: you cannot
+  add ``requires`` under ``all``.
+* The order of specs in ``any_of`` indicates a preference: items that
+  appear earlier in the list are preferred (note that these
+  preferences can be ignored in favor of others).
 
 .. _package_permissions:
 
