@@ -6,8 +6,6 @@
 from spack.package import *
 from spack.util.executable import Executable
 
-ninja = Executable("ninja")  # to appease ninja test
-
 
 class Mpich(Package):
     homepage = "http://www.mpich.org"

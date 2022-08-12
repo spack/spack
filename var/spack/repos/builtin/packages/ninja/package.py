@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
+from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
@@ -72,4 +73,6 @@ class Ninja(Package):
 
     def setup_dependent_package(self, module, dspec):
         name = "ninja"
-        module.ninja = which(name, path=[self.spec.prefix.bin], required=True)
+        module.ninja = which(
+            name, exe_class=MakeExecutable, path=[self.spec.prefix.bin], required=True
+        )
