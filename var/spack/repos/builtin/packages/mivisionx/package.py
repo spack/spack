@@ -13,9 +13,10 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX"
     git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-5.2.0.tar.gz"
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
+    tags = ["rocm"]
 
     def url_for_version(self, version):
         if version == Version("1.7"):
@@ -24,6 +25,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.2.0", sha256="fee620a1edd3bce18b2cec9ef26ec2afe0a85d6da8a37ed713ab0d1342382503")
     version("5.1.3", sha256="62591d5caedc13832c3ccef629a88d9c2a43c884daad1124ddcb9c5f7d5470e9")
     version("5.1.0", sha256="e082415cc2fb859c53a6d6e5d72ca4529f6b4d56a4abe274dc374faaa5910513")
     version("5.0.2", sha256="da730c2347b7f2d0cb7a262f8305750988f18e9f1eb206cf297bacaab2f6b408")
@@ -103,7 +105,7 @@ class Mivisionx(CMakePackage):
                 "utilities/mv_deploy/CMakeLists.txt",
                 string=True,
             )
-        if "@4.5.0:" in self.spec:
+        if "@4.5.0:5.1" in self.spec:
             filter_file(
                 "${ROCM_PATH}/miopen",
                 self.spec["miopen-hip"].prefix.miopen,
@@ -162,11 +164,12 @@ class Mivisionx(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocm-opencl@" + ver, when="@" + ver)
         depends_on("miopengemm@" + ver, when="@" + ver)
         depends_on("miopen-opencl@" + ver, when="@" + ver)
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3"]:
+    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0"]:
         depends_on("miopen-hip@" + ver, when="@" + ver)
 
     def cmake_args(self):

@@ -11,12 +11,13 @@ class RocmClangOcl(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/clang-ocl"
     git = "https://github.com/RadeonOpenCompute/clang-ocl.git"
-    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/clang-ocl/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
     version("master", branch="master")
 
+    version("5.2.0", sha256="a2059f6aeccc119abbd444cb37128e00e4854e22a88a47f120f8f8b947d862c5")
     version("5.1.3", sha256="e19ee15f26fc03309398ac73cc738508c0e1617deccfd667d369a3948b5d3552")
     version("5.1.0", sha256="38d9e2e98cff1a262fdd45c3239fd76a9f6ad5eff38a31aa19c3bb0faea53375")
     version("5.0.2", sha256="5e8f39200227388817024ee7ce46a996e43e433ed308f8d5e8e4c03629d8a5e7")
@@ -100,6 +101,7 @@ class RocmClangOcl(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)

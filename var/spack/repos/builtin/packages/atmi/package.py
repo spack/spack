@@ -15,11 +15,12 @@ class Atmi(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/atmi"
     git = "https://github.com/RadeonOpenCompute/atmi.git"
-    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/atmi/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.2.0", sha256="33e77905a607734157d46c736c924c7c50b6b13f2b2ddbf711cb08e37f2efa4f")
     version("5.1.3", sha256="a43448d77705b2b07e1758ffe8035aa6ba146abc2167984e8cb0f1615797b341")
     version("5.1.0", sha256="6a758f5a8332e6774cd8e14a4e5ce05e43b1e05298d817b4068c35fa1793d333")
     version("5.0.2", sha256="3aea040f5a246539ab118f2183cf3e802a21e0e6215a53025eda77f382341747")
@@ -104,6 +105,7 @@ class Atmi(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("comgr@" + ver, type="link", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
@@ -112,12 +114,13 @@ class Atmi(CMakePackage):
     root_cmakelists_dir = "src"
 
     patch("0001-Remove-relative-link-paths-to-external-libraries.patch", when="@3.5.0")
-    patch("0002-Remove-usr-bin-rsync-reference.patch", when="@4.0.0:")
+    # Removing direct reference to /usr/bin/rysnc for rsync command.
+    patch("0002-Remove-usr-bin-rsync-reference.patch", when="@4.0.0:5.0.0")
+    # Reset the installation path and remove direct reference to rsync.
+    patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:")
 
     def cmake_args(self):
-        args = ["-DROCM_VERSION={0}".format(self.spec.version)]
-        if self.spec.satisfies("@5.0.2:"):
-            args.append(self.define("FILE_REORG_BACKWARD_COMPATIBILITY", "OFF"))
+        args = [self.define("ROCM_VERSION", self.spec.version)]
         return args
 
     @run_after("install")

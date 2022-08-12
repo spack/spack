@@ -16,11 +16,12 @@ class RocmValidationSuite(CMakePackage):
     compatible platform."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite"
-    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCmValidationSuite/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.2.0", sha256="2dfef5d66f544230957ac9aaf647b2f1dccf3cc7592cc322cae9fbdcf3321365")
     version("5.1.3", sha256="0140a4128c31749c078d9e1dc863cbbd690efc65843c34a4b80f0056e5b8c7b6")
     version("5.1.0", sha256="d9b9771b885bd94e5d0352290d3fe0fa12f94ce3f384c3844002cd7614880010")
     version("5.0.2", sha256="f249fe700a5a96c6dabf12130a3e366ae6025fe1442a5d11d08801d6c0265af4")
@@ -119,12 +120,26 @@ class RocmValidationSuite(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
-        depends_on("hip-rocclr@" + ver, when="@" + ver)
         depends_on("rocminfo@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
+
+    for ver in [
+        "3.5.0",
+        "3.7.0",
+        "3.8.0",
+        "3.9.0",
+        "3.10.0",
+        "4.0.0",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "4.3.1",
+    ]:
+        depends_on("hip-rocclr@" + ver, when="@" + ver)
 
     def patch(self):
         if "@4.5.0:" in self.spec:
