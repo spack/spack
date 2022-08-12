@@ -43,9 +43,9 @@ class RiscvGnuToolchain(AutotoolsPackage):
     conflicts("platform=windows", msg="Windows is not supported.")
 
     variant(
-        'compiler-type',
-        default='newlib',
-        values=('newlib', 'linux'),
+        "compiler-type",
+        default="newlib",
+        values=("newlib", "linux"),
         description="Compiler back-end to build"
     )
 
