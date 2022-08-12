@@ -46,7 +46,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
         "compiler-type",
         default="newlib",
         values=("newlib", "linux"),
-        description="Compiler back-end to build"
+        description="Compiler back-end to build",
     )
 
     def build(self, spec, prefix):
