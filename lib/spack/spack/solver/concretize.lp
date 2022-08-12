@@ -936,8 +936,7 @@ error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, 
 % the compiler associated with the node satisfy the same constraint
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
-     compiler_version_satisfies(Compiler, Constraint, Version),
-     build(Package).
+     compiler_version_satisfies(Compiler, Constraint, Version).
 
 #defined compiler_version_satisfies/3.
 
@@ -1130,25 +1129,25 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
-% Minimize the number of deprecated versions being used
-opt_criterion(75, "deprecated versions used").
-#minimize{ 0@275: #true }.
-#minimize{ 0@75: #true }.
-#minimize{
-    1@75+Priority,Package
-    : deprecated(Package, _),
-      build_priority(Package, Priority)
-}.
-
 % A condition group specifies one or more specs that must be satisfied.
 % Specs declared first are preferred, so we assign increasing weights and
 % minimize the weights.
-opt_criterion(73, "requirement weight").
+opt_criterion(75, "requirement weight").
+#minimize{ 0@275: #true }.
+#minimize{ 0@75: #true }.
+#minimize {
+    Weight@75+Priority
+    : requirement_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
+
+% Minimize the number of deprecated versions being used
+opt_criterion(73, "deprecated versions used").
 #minimize{ 0@273: #true }.
 #minimize{ 0@73: #true }.
-#minimize {
-    Weight@73+Priority
-    : requirement_weight(Package, Weight),
+#minimize{
+    1@73+Priority,Package
+    : deprecated(Package, _),
       build_priority(Package, Priority)
 }.
 

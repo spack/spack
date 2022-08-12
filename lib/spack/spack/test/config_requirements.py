@@ -43,6 +43,7 @@ _pkgy = (
 class Y(Package):
     version('2.5')
     version('2.4')
+    version('2.3', deprecated=True)
 
     variant('shared', default=True,
             description='Build shared libraries')
@@ -276,3 +277,23 @@ packages:
         with spack.config.override("concretizer:reuse", True):
             s2 = Spec("y").concretized()
             assert not s2.satisfies("@2.5 %gcc")
+
+
+def test_requirements_are_higher_priority_than_deprecation(concretize_scope, test_repo):
+    """Test that users can override a deprecated version with a requirement."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+    # since they are possible
+    conf_str = """\
+packages:
+  y:
+    require:
+    - any_of: ["@2.3", "%gcc"]
+"""
+    update_packages_config(conf_str)
+
+    s1 = Spec("y").concretized()
+    assert s1.satisfies("@2.3")
+    assert s1.satisfies("%gcc")
