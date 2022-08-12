@@ -74,8 +74,13 @@ class Hwloc(AutotoolsPackage):
         default=(sys.platform != "darwin"),
         description="Support analyzing devices on PCI bus",
     )
-    variant("libs", default="shared,static", values=("shared", "static"),
-        multi=True, description="Build shared libs, static libs or both")
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
     variant(
         "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
