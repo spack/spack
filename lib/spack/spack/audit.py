@@ -323,6 +323,7 @@ def _check_patch_urls(pkgs, error_cls):
 
 @package_attributes
 def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
+    """Ensure that packages don't override reserved names"""
     RESERVED_NAMES = ("name",)
     errors = []
     for pkg_name in pkgs:
