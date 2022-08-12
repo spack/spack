@@ -9,7 +9,7 @@ from subprocess import Popen
 from spack.package import *
 
 
-class RiscvGnuToolchain(Package):
+class RiscvGnuToolchain(AutotoolsPackage):
     """A cross-compilation tool for RISC-V."""
 
     homepage = "https://spack-tutorial.readthedocs.io/"
@@ -23,41 +23,26 @@ class RiscvGnuToolchain(Package):
     version("2022.08.08", tag="2022.08.08", submodules=True)
 
     # Dependencies:
-    depends_on("pkg-config", type=("build", "link"))
-    depends_on("autoconf", type=("build", "link"))
-    depends_on("automake", type=("build", "link"))
-    depends_on("python", type=("build", "link"))
-    depends_on("gawk", type=("build", "link"))
-    depends_on("bison", type=("build", "link"))
-    depends_on("flex@:2.6.1,2.6.4:", type=("build", "link"))
-    depends_on("texinfo", type=("build", "link"))
-    depends_on("patchutils", type=("build", "link"))
-    depends_on("mpc", type=("build", "link"))
-    depends_on("gmp", type=("build", "link"))
-    depends_on("mpfr", type=("build", "link"))
-    depends_on("gcc", type=("build", "link"))
+    depends_on("pkg-config", type=("build"))
+    depends_on("autoconf", type=("build"))
+    depends_on("automake", type=("build"))
+    depends_on("python", type=("build"))
+    depends_on("gawk", type=("build"))
+    depends_on("bison", type=("build"))
+    depends_on("flex@:2.6.1,2.6.4:", type=("build"))
+    depends_on("texinfo", type=("build"))
+    depends_on("patchutils", type=("build"))
+    depends_on("mpc", type=("build"))
+    depends_on("gmp", type=("build"))
+    depends_on("mpfr", type=("build"))
     depends_on("zlib", type=("build", "link"))
     depends_on("expat", type=("build", "link"))
+    depends_on("bzip2", type=("build"))
+    depends_on("gmake@4.3:", type=("build"))
 
     conflicts("platform=windows", msg="Windows is not supported.")
 
-    variant("Newlib", default=True, description="To build the Newlib cross-compiler.")
-    variant("Linux", default=False, description="To build the Linux cross-compiler.")
-
-    def configure_args(self):
-        config_args = []
-        return config_args
-
-    def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
-        and an appropriately set prefix.
-        """
-        with working_dir(self.stage.source_path, create=True):
-            options = getattr(self, "configure_flag_args", [])
-            options += ["--prefix={0}".format(prefix)]
-            options += self.configure_args()
-            configure(*options)
+    variant('compiler-type', default='newlib', values=('newlib', 'linux'), description="Compiler back-end to build")
 
     def build(self, spec, prefix):
         """Makes the build targets specified by
@@ -70,12 +55,11 @@ class RiscvGnuToolchain(Package):
             '/^# Rule for auto init submodules/,/git submodule update.*$/d' \
             Makefile"
             p = Popen(shlex.split(cmd))
+            p.wait()
             p.communicate()
 
-            params = ""
-            if "+Newlib" in self.spec:
-                params = ""
-            elif "+Linux" in self.spec:
-                params = "linux"
+            params = []
+            if self.spec.variants["compiler-type"].value == "linux":
+                params.append("linux")
 
             make(*params)
