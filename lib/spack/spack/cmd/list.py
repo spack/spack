@@ -116,10 +116,7 @@ def filter_by_name(pkgs, args):
 
         pkgs = [p for p in pkgs if any(match(p, f) for f in res)]
 
-    # If tags have been specified on the command line, filter by tags
-    if args.tags:
-        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
-        pkgs = [p for p in pkgs if p in packages_with_tags]
+   
 
     return sorted(pkgs, key=lambda s: s.lower())
 
@@ -312,6 +309,11 @@ def list(parser, args):
     pkgs = set(spack.repo.all_package_names(args.virtuals))
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
+
+     # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        pkgs = [p for p in pkgs if p in packages_with_tags]
 
     if args.update:
         # change output stream if user asked for update
