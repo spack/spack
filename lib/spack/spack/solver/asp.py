@@ -2033,7 +2033,10 @@ class SpecBuilder(object):
 
     def hash(self, pkg, h):
         if pkg not in self._specs:
-            self._specs[pkg] = self._hash_lookup[h]
+            try:
+                self._specs[pkg] = self._hash_lookup[h]
+            except Exception as e:
+                tty.die("solver hash lookup failure for ", pkg, ": ", e)
 
     def node(self, pkg):
         if pkg not in self._specs:
