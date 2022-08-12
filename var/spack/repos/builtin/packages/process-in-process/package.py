@@ -9,14 +9,14 @@ from spack.package import *
 class ProcessInProcess(Package):
     """Process-in-Process"""
 
-    enable_pip_v3  = False
+    enable_pip_v3 = False
     enable_pip_gdb = False
     # we cannot install PiP-gdb (PiP-aware GDB)
     # since the ncureses package cannot be installed by using Spack
     # --> https://github.com/spack/spack/issues/8675
 
     homepage = "https://github.com/procinproc/procinproc.github.io"
-    git      = "https://github.com/procinproc/PiP.git"
+    git = "https://github.com/procinproc/PiP.git"
 
     maintainers = ['ahori']
 
@@ -158,7 +158,7 @@ class ProcessInProcess(Package):
         "Install Process-in-Process including PiP-glibc (, PiP-gdb)"
 
         # checking os and arch
-        arch   = self.spec.architecture
+        arch = self.spec.architecture
         target = self.spec.target
         if arch.os not in ['centos7', 'rhel7', 'centos8', 'rhel8']:
             raise InstallError('PiP only supports rhel/centos 7 and 8')
