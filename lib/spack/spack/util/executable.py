@@ -335,7 +335,14 @@ def which(*args, **kwargs):
     """
     exe = which_string(*args, **kwargs)
     exe_class = kwargs.get("exe_class", Executable)
-    return exe_class(exe) if exe else None
+    if not exe:
+        return None
+    new_args = [exe]
+    if "jobs" in kwargs:
+        new_args = (exe, kwargs["jobs"])
+    else:
+        new_args = (exe,)
+    return exe_class(*new_args)
 
 
 class ProcessError(spack.error.SpackError):

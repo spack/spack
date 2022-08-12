@@ -74,5 +74,5 @@ class Ninja(Package):
     def setup_dependent_package(self, module, dspec):
         name = "ninja"
         module.ninja = which(
-            name, exe_class=MakeExecutable, path=[self.spec.prefix.bin], required=True
+            name, jobs=module.make_jobs, exe_class=MakeExecutable, path=[self.spec.prefix.bin], required=True,
         )
