@@ -437,7 +437,6 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
             env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
             env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
-            env.set("USE_PTHREADPOOL", True)
             if self.spec.satisfies("^hip@5.2.0:"):
                 env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
 
