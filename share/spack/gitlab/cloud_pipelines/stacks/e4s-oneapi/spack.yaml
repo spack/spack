@@ -122,6 +122,7 @@ spack:
   - gotcha
   - hdf5 +fortran +hl +shared
   - heffte +fftw
+  - hpx networking=mpi
   - hypre
   - kokkos-kernels +openmp
   - kokkos +openmp
@@ -199,7 +200,6 @@ spack:
   #- gptune@3.0.0                                     # intel-tbb
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit@2022.04.15                            # binutils
-  #- hpx@1.7.1 networking=mpi                         # boost@1.79.0
   #- nrm@0.1.0                                        # py-numpy@1.23.1
   #- openpmd-api@0.14.4                               # adios2
   #- paraview@5.10.1 +qt                              # binutils
@@ -217,7 +217,6 @@ spack:
   # adios2: /usr/bin/ld: ../../lib/libadios2_fortran.so.2.8.2: version node not found for symbol adios2_adios_init_mod@adios2_adios_init_serial_smod._; /usr/bin/ld: failed to set dynamic section sizes: bad value
   # ascent: examples/proxies/cloverleaf3d-ref/clover_main.cpp:24: multiple definition of `main'; /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin/for_main.o:for_main.c:(.text+0x0): first defined here
   # binutils: gold/powerpc.cc:3590: undefined reference to `gold::Sized_symbol<64>::Value_type gold::Symbol_table::compute_final_value<64>(gold::Sized_symbol<64> const*, gold::Symbol_table::Compute_final_value_status*) const'
-  # boost@1.79.0 cxxstd=17: clang++: error: unsupported argument 'h-create' to option '-pc'; clang++: error: no such file or directory: 'bin.v2/libs/math/build/intel-linux-2022.1.0/release/cxxstd-17-iso/threading-multi/visibility-hidden/pch.pchi'
   # charliecloud: autoreconf phase: RuntimeError: configure script not found in ...
   # flux-sched: include/yaml-cpp/emitter.h:164:9: error: comparison with NaN always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
