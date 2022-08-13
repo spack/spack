@@ -78,13 +78,14 @@ class Podio(CMakePackage):
         deprecated=True,
     )
 
-    variant("cxxstd",
-            default="17",
-            values=("17", "20"),
-            multi=False,
-            description="Use the specified C++ standard when building.")
-    variant("sio", default=False,
-            description="Build the SIO I/O backend")
+    variant(
+        "cxxstd",
+        default="17",
+        values=("17", conditional("20", when="@0.14:")),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
+    variant("sio", default=False, description="Build the SIO I/O backend")
 
     # cpack config throws an error on some systems
     patch("cpack.patch", when="@:0.10.0")
@@ -107,8 +108,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
-            self.define("CMAKE_CXX_STANDARD",
-                        self.spec.variants["cxxstd"].value),
+            self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
