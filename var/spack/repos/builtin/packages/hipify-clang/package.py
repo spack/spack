@@ -83,8 +83,10 @@ class HipifyClang(CMakePackage):
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+    # the patch was added to install the targets in the correct directory structure
+    # this will fix the issue https://github.com/spack/spack/issues/30711
 
-    patch("0001-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when = "@5.1.0:")
+    patch("0001-install-hipify-clang-in-bin-dir-and-llvm-clangs-head.patch", when="@5.1.0:")
 
     depends_on("cmake@3.5:", type="build")
     for ver in [
