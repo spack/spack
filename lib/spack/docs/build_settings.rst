@@ -345,8 +345,22 @@ dependency.
 Package Requirements
 --------------------
 
-Like preferences, you can specify requirements, which Spack must enforce
-when the associated package is built:
+You can use the configuration to force the concretizer to choose
+specific properties for packages when building them. Like preferences,
+these are only applied when the package is required by some other
+request (e.g. if the package is needed as a dependency of a
+request to ``spack install``).
+
+An example of where this is useful is if you have a package that
+is normally built as a dependency but only under certain circumstances
+(e.g. only when a variant on a dependent is active): you can make
+sure that it always builds the way you want it to; this distinguishes
+package configuration requirements from constraints that you add to
+``spack install`` or to environments (in those cases, the associated
+packages are always built).
+
+The following is an example of how to enforce package properties in
+``packages.yaml``:
 
 .. code-block:: yaml
 
@@ -361,12 +375,10 @@ when the associated package is built:
       - one of: ["+cuda", "+rocm"]
 
 Requirements are expressed using Spec syntax (the same as what is provided
-for example to ``spack install``). In the simplest case, you can specify
-attributes that you always want to the package by providing a single
-spec to ``require``; in the above example, ``libfabric`` will always build
-with version 1.13.2. Note that specifying requirements here does not force
-the package to build, they just constrain the package if it is requested
-(e.g. by ``spack install``).
+to ``spack install``). In the simplest case, you can specify attributes
+that you always want the package to have by providing a single spec to
+``require``; in the above example, ``libfabric`` will always build
+with version 1.13.2.
 
 You can provide a more-relaxed constraint and allow the concretizer to
 choose between a set of options using ``any_of`` or ``one_of``:
@@ -382,7 +394,7 @@ choose between a set of options using ``any_of`` or ``one_of``:
   you could build ``mpich+cuda`` or ``mpich+rocm`` but not
   ``mpich+cuda+rocm`` (note the current package definition for
   ``mpich`` already includes a conflict, so this is redundant but
-  still demonstrates the concept)
+  still demonstrates the concept).
 
 Other notes about ``requires``:
 
