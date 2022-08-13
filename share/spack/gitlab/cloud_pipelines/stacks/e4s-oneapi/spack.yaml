@@ -168,6 +168,7 @@ spack:
   - swig@4.0.2-fortran
   - sz
   - tasmanian
+  - tau +mpi +python %oneapi ^binutils%gcc
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
    +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
@@ -209,7 +210,6 @@ spack:
   #- py-warpx@22.05 ^warpx dims=2                     # adios2
   #- py-warpx@22.05 ^warpx dims=3                     # adios2
   #- py-warpx@22.05 ^warpx dims=rz                    # adios2
-  #- tau@2.31 +mpi +python                            # binutils
   #- unifyfs@0.9.2                                    # unifyfs
   #- variorum@0.4.1                                   # variorum
 
