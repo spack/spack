@@ -380,7 +380,7 @@ class Boost(Package):
     patch("pthread-stack-min-fix.patch", when="@1.69.0:1.72.0")
 
     # https://www.intel.com/content/www/us/en/developer/articles/technical/building-boost-with-oneapi.html
-    patch("1.78-intel-linux-jam.patch", when="@1.78 %oneapi")
+    patch("intel-oneapi-linux-jam.patch", when="@1.76:1.79 %oneapi")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
