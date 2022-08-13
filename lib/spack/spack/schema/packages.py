@@ -23,7 +23,12 @@ properties = {
                 "properties": {
                     "require": {
                         "oneOf": [
-                            # A condition group: at least one member is applied
+                            # 'require' can be a list of requirement_groups.
+                            # each requirement group is a list of one or more
+                            # specs. Either at least one or exactly one spec
+                            # in the group must be satisfied (depending on
+                            # whether you use "any_of" or "one_of",
+                            # repectively)
                             {
                                 "type": "array",
                                 "items": {
@@ -34,7 +39,8 @@ properties = {
                                     },
                                 },
                             },
-                            # Shorthand for a condition group with one member
+                            # Shorthand for a single requirement group with
+                            # one member
                             {"type": "string"},
                         ]
                     },
