@@ -81,7 +81,7 @@ class Podio(CMakePackage):
     variant(
         "cxxstd",
         default="17",
-        values=("17", conditional("20", when="@0.14:")),
+        values=("17", conditional("20", when="@0.15:")),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -103,7 +103,6 @@ class Podio(CMakePackage):
     depends_on("catch2@3.0.1:", type=("test"), when="@0.13:")
 
     conflicts("+sio", when="@:0.12", msg="sio support requires at least podio@0.13")
-    conflicts("cxxstd=20", when="@:0.14.0", msg="c++20 support was added in 0.14.1")
 
     def cmake_args(self):
         args = [
