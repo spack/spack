@@ -15,35 +15,33 @@ class RiscvGnuToolchain(AutotoolsPackage):
     homepage = "https://spack-tutorial.readthedocs.io/"
     git = "https://github.com/riscv-collab/riscv-gnu-toolchain.git"
 
-    phases = ["configure", "build"]
-
     maintainers = ["wanlinwang"]
 
     version("develop", branch="master", submodules=True)
     version("2022.08.08", tag="2022.08.08", submodules=True)
 
     # Dependencies:
-    depends_on("pkg-config", type=("build"))
-    depends_on("autoconf", type=("build"))
-    depends_on("automake", type=("build"))
-    depends_on("python", type=("build"))
-    depends_on("gawk", type=("build"))
-    depends_on("bison", type=("build"))
-    depends_on("flex@:2.6.1,2.6.4:", type=("build"))
-    depends_on("texinfo", type=("build"))
-    depends_on("patchutils", type=("build"))
-    depends_on("mpc", type=("build"))
-    depends_on("gmp", type=("build"))
-    depends_on("mpfr", type=("build"))
+    depends_on("pkg-config", type="build")
+    depends_on("autoconf", when="@main:", type="build")
+    depends_on("automake", type="build")
+    depends_on("python", type="build")
+    depends_on("gawk", type="build")
+    depends_on("bison", type="build")
+    depends_on("flex@:2.6.1,2.6.4:", type="build")
+    depends_on("texinfo", type="build")
+    depends_on("patchutils", type="build")
+    depends_on("mpc", type="build")
+    depends_on("gmp", type="build")
+    depends_on("mpfr", type="build")
     depends_on("zlib", type=("build", "link"))
     depends_on("expat", type=("build", "link"))
-    depends_on("bzip2", type=("build"))
-    depends_on("gmake@4.3:", type=("build"))
+    depends_on("bzip2", type="build")
+    depends_on("gmake@4.3:", type="build")
 
     conflicts("platform=windows", msg="Windows is not supported.")
 
     variant(
-        "compiler-type",
+        "compiler_type",
         default="newlib",
         values=("newlib", "linux"),
         description="Compiler back-end to build",
@@ -53,7 +51,6 @@ class RiscvGnuToolchain(AutotoolsPackage):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
         """
-        # configure and build in one step
         with working_dir(self.stage.source_path):
             # modify Makefile not to git init submodules.
             cmd = "/bin/sed -i -r \
@@ -64,7 +61,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
             p.communicate()
 
             params = []
-            if self.spec.variants["compiler-type"].value == "linux":
+            if self.spec.satisfies("compiler_type=linux"):
                 params.append("linux")
 
             make(*params)
