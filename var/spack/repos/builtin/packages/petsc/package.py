@@ -22,6 +22,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.17.4", sha256="99c127486722a3ffd95a268b4ceb0976cbf217926c681a9631bd7246eab8cb2a")
     version("3.17.3", sha256="5c24ade5e4b32cc04935ba0db1dafe48d633bebaaa30a3033f1e58788d37875f")
     version("3.17.2", sha256="2313dd1ca41bf0ace68671ea6f8d4abf90011ed899f5e1e08658d3f18478359d")
     version("3.17.1", sha256="c504609d9f532327c20b6363d6a6c7647ebd3c98acfb382c28fcd3852300ddd1")
@@ -252,6 +253,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("parmetis~int64", when="+metis+mpi~int64")
     depends_on("valgrind", when="+valgrind")
     depends_on("mmg", when="+mmg")
+    depends_on("mmg", when="+parmmg")
     depends_on("parmmg", when="+parmmg")
     depends_on("tetgen+pic", when="+tetgen")
     # hypre+/~fortran based on wheter fortran is enabled/disabled

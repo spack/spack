@@ -200,6 +200,7 @@ nitpick_ignore = [
     ("py:class", "_io.BufferedReader"),
     ("py:class", "unittest.case.TestCase"),
     ("py:class", "_frozen_importlib_external.SourceFileLoader"),
+    ("py:class", "clingo.Control"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),

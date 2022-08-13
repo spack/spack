@@ -17,6 +17,8 @@ import spack.util.path as sp
 class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
+    __slots__ = "type", "value", "start", "end"
+
     def __init__(self, type, value="", start=0, end=0):
         self.type = type
         self.value = value
@@ -38,6 +40,8 @@ class Token(object):
 
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
+
+    __slots__ = "scanner0", "scanner1", "mode", "mode_switches_01", "mode_switches_10"
 
     def __init__(self, lexicon0, mode_switches_01=[], lexicon1=[], mode_switches_10=[]):
         self.scanner0 = re.Scanner(lexicon0)
@@ -88,6 +92,8 @@ class Lexer(object):
 
 class Parser(object):
     """Base class for simple recursive descent parsers."""
+
+    __slots__ = "tokens", "token", "next", "lexer", "text"
 
     def __init__(self, lexer):
         self.tokens = iter([])  # iterators over tokens, handled in order.

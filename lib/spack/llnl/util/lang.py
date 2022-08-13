@@ -13,7 +13,7 @@ import re
 import sys
 import traceback
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import Any, Callable, Iterable, List, Tuple
 
 import six
 from six import string_types
@@ -485,6 +485,8 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
+
+    __slots__ = ("dict",)
 
     def __init__(self):
         self.dict = {}
@@ -973,6 +975,31 @@ def enum(**kwargs):
         **kwargs: explicit dictionary of enums
     """
     return type("Enum", (object,), kwargs)
+
+
+def stable_partition(
+    input_iterable,  # type: Iterable
+    predicate_fn,  # type: Callable[[Any], bool]
+):
+    # type: (...) -> Tuple[List[Any], List[Any]]
+    """Partition the input iterable according to a custom predicate.
+
+    Args:
+        input_iterable: input iterable to be partitioned.
+        predicate_fn: predicate function accepting an iterable item
+            as argument.
+
+    Return:
+        Tuple of the list of elements evaluating to True, and
+        list of elements evaluating to False.
+    """
+    true_items, false_items = [], []
+    for item in input_iterable:
+        if predicate_fn(item):
+            true_items.append(item)
+            continue
+        false_items.append(item)
+    return true_items, false_items
 
 
 class TypedMutableSequence(MutableSequence):

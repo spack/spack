@@ -53,3 +53,8 @@ class Xz(AutotoolsPackage, SourceforgePackage):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"xz \(XZ Utils\) (\S+)", output)
         return match.group(1) if match else None
+
+    @run_after("install")
+    def darwin_fix(self):
+        if self.spec.satisfies("platform=darwin"):
+            fix_darwin_install_name(self.prefix.lib)

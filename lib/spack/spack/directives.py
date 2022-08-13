@@ -513,7 +513,7 @@ def provides(*specs, **kwargs):
         for string in specs:
             for provided_spec in spack.spec.parse(string):
                 if pkg.name == provided_spec.name:
-                    raise CircularReferenceError("Package '%s' cannot provide itself.")
+                    raise CircularReferenceError("Package '%s' cannot provide itself." % pkg.name)
 
                 if provided_spec not in pkg.provided:
                     pkg.provided[provided_spec] = set()

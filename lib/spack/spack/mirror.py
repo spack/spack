@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 This file contains code for creating spack mirror directories.  A
 mirror is an organized hierarchy containing specially named archive
@@ -56,7 +55,7 @@ class Mirror(object):
 
     Mirrors have a fetch_url that indicate where and how artifacts are fetched
     from them, and a push_url that indicate where and how artifacts are pushed
-    to them.  These two URLs are usually the same.
+    to them. These two URLs are usually the same.
     """
 
     def __init__(self, fetch_url, push_url=None, name=None):
@@ -499,37 +498,43 @@ def create(path, specs, skip_unstable_versions=False):
         * present:  Package specs that were already present.
         * mirrored: Package specs that were successfully mirrored.
         * error:    Package specs that failed to mirror due to some error.
+    """
+    # automatically spec-ify anything in the specs array.
+    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
 
-    This routine iterates through all known package versions, and
-    it creates specs for those versions.  If the version satisfies any spec
-    in the specs list, it is downloaded and added to the mirror.
+    mirror_cache, mirror_stats = mirror_cache_and_stats(path, skip_unstable_versions)
+    for spec in specs:
+        mirror_stats.next_spec(spec)
+        create_mirror_from_package_object(spec.package, mirror_cache, mirror_stats)
+
+    return mirror_stats.stats()
+
+
+def mirror_cache_and_stats(path, skip_unstable_versions=False):
+    """Return both a mirror cache and a mirror stats, starting from the path
+    where a mirror ought to be created.
+
+    Args:
+        path (str): path to create a mirror directory hierarchy in.
+        skip_unstable_versions: if true, this skips adding resources when
+            they do not have a stable archive checksum (as determined by
+            ``fetch_strategy.stable_target``)
     """
     parsed = url_util.parse(path)
     mirror_root = url_util.local_file_path(parsed)
     if not mirror_root:
         raise spack.error.SpackError("MirrorCaches only work with file:// URLs")
-
-    # automatically spec-ify anything in the specs array.
-    specs = [s if isinstance(s, spack.spec.Spec) else spack.spec.Spec(s) for s in specs]
-
     # Get the absolute path of the root before we start jumping around.
     if not os.path.isdir(mirror_root):
         try:
             mkdirp(mirror_root)
         except OSError as e:
             raise MirrorError("Cannot create directory '%s':" % mirror_root, str(e))
-
     mirror_cache = spack.caches.MirrorCache(
         mirror_root, skip_unstable_versions=skip_unstable_versions
     )
     mirror_stats = MirrorStats()
-
-    # Iterate through packages and download all safe tarballs for each
-    for spec in specs:
-        mirror_stats.next_spec(spec)
-        _add_single_spec(spec, mirror_cache, mirror_stats)
-
-    return mirror_stats.stats()
+    return mirror_cache, mirror_stats
 
 
 def add(name, url, scope, args={}):
@@ -631,20 +636,29 @@ class MirrorStats(object):
         self.errors.add(self.current_spec)
 
 
-def _add_single_spec(spec, mirror, mirror_stats):
-    # Ensure that the spec is concrete, since we'll stage it later
-    if not spec.concrete:
-        spec = spec.concretized()
+def create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats):
+    """Add a single package object to a mirror.
 
-    tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("{name}{@version}")))
+    The package object is only required to have an associated spec
+    with a concrete version.
+
+    Args:
+        pkg_obj (spack.package_base.PackageBase): package object with to be added.
+        mirror_cache (spack.caches.MirrorCache): mirror where to add the spec.
+        mirror_stats (spack.mirror.MirrorStats): statistics on the current mirror
+
+    Return:
+        True if the spec was added successfully, False otherwise
+    """
+    tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
     num_retries = 3
     while num_retries > 0:
         try:
-            with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror, mirror_stats)
-                for patch in spec.package.all_patches():
+            with pkg_obj.stage as pkg_stage:
+                pkg_stage.cache_mirror(mirror_cache, mirror_stats)
+                for patch in pkg_obj.all_patches():
                     if patch.stage:
-                        patch.stage.cache_mirror(mirror, mirror_stats)
+                        patch.stage.cache_mirror(mirror_cache, mirror_stats)
                     patch.clean()
             exception = None
             break
@@ -652,16 +666,17 @@ def _add_single_spec(spec, mirror, mirror_stats):
             exc_tuple = sys.exc_info()
             exception = e
         num_retries -= 1
-
     if exception:
         if spack.config.get("config:debug"):
             traceback.print_exception(file=sys.stderr, *exc_tuple)
         else:
             tty.warn(
-                "Error while fetching %s" % spec.cformat("{name}{@version}"),
+                "Error while fetching %s" % pkg_obj.spec.cformat("{name}{@version}"),
                 getattr(exception, "message", exception),
             )
         mirror_stats.error()
+        return False
+    return True
 
 
 def push_url_from_directory(output_directory):

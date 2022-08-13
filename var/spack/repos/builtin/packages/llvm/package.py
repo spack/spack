@@ -356,7 +356,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     # add -lpthread to build OpenMP libraries with Fujitsu compiler
     patch("llvm12-thread.patch", when="@12 %fj")
-    patch("llvm13-thread.patch", when="@13 %fj")
+
+    # add -lpthread to build OpenMP libraries
+    patch("llvm13-14-thread.patch", when="@13:14")
 
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
@@ -636,7 +638,7 @@ class Llvm(CMakePackage, CudaPackage):
         if "+lldb" in spec:
             projects.append("lldb")
             cmake_args.append(define("LLDB_ENABLE_LIBEDIT", True))
-            cmake_args.append(define("LLDB_ENABLE_NCURSES", True))
+            cmake_args.append(define("LLDB_ENABLE_CURSES", True))
             cmake_args.append(define("LLDB_ENABLE_LIBXML2", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))

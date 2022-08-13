@@ -12,6 +12,7 @@ class PyPyflakes(PythonPackage):
     homepage = "https://github.com/PyCQA/pyflakes"
     pypi = "pyflakes/pyflakes-2.4.0.tar.gz"
 
+    version("2.5.0", sha256="491feb020dca48ccc562a8c0cbe8df07ee13078df59813b83959cbdada312ea3")
     version("2.4.0", sha256="05a85c2872edf37a4ed30b0cce2f6093e1d0581f8c19d7393122da7e25b2b24c")
     version("2.3.0", sha256="e59fd8e750e588358f1b8885e5a4751203a0516e0ee6d34811089ac294c8806f")
     version("2.2.0", sha256="35b2d75ee967ea93b55750aa9edbbf72813e06a66ba54438df2cfac9e3c27fc8")
@@ -30,6 +31,7 @@ class PyPyflakes(PythonPackage):
     version("0.9.1", sha256="baad29ac1e884c7077eb32ed1d9ee5cf30bf4b888329e1fcb51b9aa5298cb3b9")
     version("0.9.0", sha256="4c4d73085ce5de9d8147011c060d129659baa1111d1a5a3035f2bd03f2976538")
 
+    depends_on("python@3.6:", when="@2.5:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-pyflakes requires py-setuptools during runtime as well.

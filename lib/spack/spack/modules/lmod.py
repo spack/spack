@@ -17,6 +17,7 @@ import spack.error
 import spack.repo
 import spack.spec
 import spack.tengine as tengine
+import spack.util.environment
 
 from .common import BaseConfiguration, BaseContext, BaseFileLayout, BaseModuleFileWriter
 

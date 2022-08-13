@@ -59,7 +59,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("blt@0.4.0:", type="build", when="@0.13.0")
     depends_on("blt@0.3.6:", type="build", when="@:0.12.0")
 
-    depends_on("camp@0.2.2", when="@0.14.0")
+    depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
     depends_on("camp@2022.03.0:", when="@2022.03.0:")
 
@@ -133,7 +133,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
-        option_prefix = "RAJA_" if spec.satisfies("@2022.03.0:") else ""
+        option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "camp" in self.spec:

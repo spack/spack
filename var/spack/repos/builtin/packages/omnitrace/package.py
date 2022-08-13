@@ -16,6 +16,7 @@ class Omnitrace(CMakePackage):
     maintainers = ["jrmadsen"]
 
     version("main", branch="main", submodules=True)
+    version("1.3.1", commit="641225f88304909fd2ca5407aec062d0fdf0ed8b", submodules=True)
     version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
     version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
 

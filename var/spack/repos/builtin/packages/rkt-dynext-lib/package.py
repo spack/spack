@@ -16,6 +16,6 @@ class RktDynextLib(RacketPackage):
     version("8.3", commit="cc22e2456df881a9008240d70dd9012ef37395f5")  # tag = 'v8.3'
     depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
 
-    name = "dynext-lib"
+    racket_name = "dynext-lib"
     pkgs = True
-    subdirectory = name
+    subdirectory = racket_name

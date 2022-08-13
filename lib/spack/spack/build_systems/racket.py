@@ -40,13 +40,13 @@ class RacketPackage(PackageBase):
 
     pkgs = False
     subdirectory = None  # type: Optional[str]
-    name = None  # type: Optional[str]
+    racket_name = None  # type: Optional[str]
     parallel = True
 
     @lang.classproperty
     def homepage(cls):
         if cls.pkgs:
-            return "https://pkgs.racket-lang.org/package/{0}".format(cls.name)
+            return "https://pkgs.racket-lang.org/package/{0}".format(cls.racket_name)
 
     @property
     def build_directory(self):
@@ -66,7 +66,7 @@ class RacketPackage(PackageBase):
                 "-t",
                 "dir",
                 "-n",
-                self.name,
+                self.racket_name,
                 "--deps",
                 "fail",
                 "--ignore-implies",
@@ -86,5 +86,5 @@ class RacketPackage(PackageBase):
                     (
                         "Racket package {0} was already installed, uninstalling via "
                         "Spack may make someone unhappy!"
-                    ).format(self.name)
+                    ).format(self.racket_name)
                 )
