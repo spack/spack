@@ -242,7 +242,6 @@ class BinaryCacheIndex(object):
                         }
                     ]
         """
-        self.regenerate_spec_cache()
         return self.find_by_hash(spec.dag_hash(), mirrors_to_check=mirrors_to_check)
 
     def find_by_hash(self, find_hash, mirrors_to_check=None):
@@ -253,6 +252,9 @@ class BinaryCacheIndex(object):
             mirrors_to_check: Optional mapping containing mirrors to check.  If
                 None, just assumes all configured mirrors.
         """
+        if find_hash not in self._mirrors_for_spec:
+            # Not found in the cached index, pull the latest from the server.
+            self.update()
         if find_hash not in self._mirrors_for_spec:
             return None
         results = self._mirrors_for_spec[find_hash]
@@ -1878,8 +1880,8 @@ def get_mirrors_for_spec(spec=None, mirrors_to_check=None, index_only=False):
 
     results = binary_index.find_built_spec(spec, mirrors_to_check=mirrors_to_check)
 
-    # Maybe we just didn't have the latest information from the mirror, so
-    # try to fetch directly, unless we are only considering the indices.
+    # The index may be out-of-date. If we aren't only considering indices, try
+    # to fetch directly since we know where the file should be.
     if not results and not index_only:
         results = try_direct_fetch(spec, mirrors=mirrors_to_check)
         # We found a spec by the direct fetch approach, we might as well
