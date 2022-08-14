@@ -331,10 +331,10 @@ class Hdf5(CMakePackage):
         cmake_flags = []
 
         if name == "cflags":
-            if spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+            if spec.compiler.name in ["gcc", "clang", "apple-clang", "oneapi"]:
                 # Quiet warnings/errors about implicit declaration of functions
                 # in C99:
-                cmake_flags.append("-Wno-implicit-function-declaration")
+                cmake_flags.append("-Wno-error=implicit-function-declaration")
                 # Note that this flag will cause an error if building %nvhpc.
             if spec.satisfies("@:1.8.12~shared"):
                 # More recent versions set CMAKE_POSITION_INDEPENDENT_CODE to
