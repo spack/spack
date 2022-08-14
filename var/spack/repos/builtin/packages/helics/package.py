@@ -71,7 +71,12 @@ class Helics(CMakePackage):
         when="@3.2.0:",
         description="Enable support for encrypted communication",
     )
-    variant("python", default=False, when="@:2", description="Enable building Python interface (split into separate repo in v3)")
+    variant(
+        "python",
+        default=False,
+        when="@:2",
+        description="Enable building Python interface (split into separate repo in v3)",
+    )
 
     # Build dependency
     depends_on("git", type="build", when="@master:")
@@ -94,9 +99,11 @@ class Helics(CMakePackage):
     depends_on("python@3:", when="@:2 +python")
 
     # Compiler restrictions based on C++ standard supported
-    conflicts('%gcc@:6', when='@3.0.0:', msg='HELICS 3+ cannot be built with GCC older than 7.0')
-    conflicts('%clang@:4', when='@3.0.0:', msg='HELICS 3+ cannot be built with Clang older than 5.0')
-    conflicts('%intel@:18', when='@3.0.0:', msg='HELICS 3+ cannot be built with ICC older than 19')
+    conflicts("%gcc@:6", when="@3.0.0:", msg="HELICS 3+ cannot be built with GCC older than 7.0")
+    conflicts(
+        "%clang@:4", when="@3.0.0:", msg="HELICS 3+ cannot be built with Clang older than 5.0"
+    )
+    conflicts("%intel@:18", when="@3.0.0:", msg="HELICS 3+ cannot be built with ICC older than 19")
 
     # OpenMPI doesn't work with HELICS <=2.4.1
     conflicts("^openmpi", when="@:2.4.1 +mpi")
