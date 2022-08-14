@@ -129,6 +129,8 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             flags.append(self.compiler.cxx11_flag)
         if name == "cflags" and "%pgi" not in self.spec:
             flags.append("-std=c99")
+        if name == "cflags" and self.spec.satisfies("%oneapi"):
+            flags.append("-Wno-error=implicit-function-declaration")
         return (None, None, flags)
 
     examples_src_dir = "EXAMPLE"
