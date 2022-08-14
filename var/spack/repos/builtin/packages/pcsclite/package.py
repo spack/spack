@@ -14,7 +14,7 @@ class Pcsclite(AutotoolsPackage):
     homepage = "https://pcsclite.apdu.fr"
     url = "https://pcsclite.apdu.fr/files/pcsc-lite-1.9.8.tar.bz2"
     git = "https://salsa.debian.org/rousseau/PCSC.git"
-    
+
     maintainers = ["cessenat"]
 
     version("master", branch="master")
