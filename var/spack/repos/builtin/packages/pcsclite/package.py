@@ -13,9 +13,11 @@ class Pcsclite(AutotoolsPackage):
 
     homepage = "https://pcsclite.apdu.fr"
     url = "https://pcsclite.apdu.fr/files/pcsc-lite-1.9.8.tar.bz2"
-
+    git = "https://salsa.debian.org/rousseau/PCSC.git"
+    
     maintainers = ["cessenat"]
 
+    version("master", branch="master")
     version("1.9.8", sha256="502d80c557ecbee285eb99fe8703eeb667bcfe067577467b50efe3420d1b2289")
 
     # no libudev/systemd package currently in spack
@@ -31,7 +33,17 @@ class Pcsclite(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("pkgconfig", type="build")
 
+    phases = ["bootstrap", "configure", "build", "install"]
     force_autoreconf = True
+
+    @when("@master")
+    def bootstrap(self, spec, prefix):
+        bootstrap = Executable("./bootstrap")
+        bootstrap()
+
+    @when("@1.9.8")
+    def bootstrap(self, spec, prefix):
+        pass
 
     def configure_args(self):
         args = []
