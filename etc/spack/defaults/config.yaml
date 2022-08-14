@@ -41,12 +41,20 @@ config:
   # Recommended options are given below.
   #
   # Builds can be faster in temporary directories on some (e.g., HPC) systems.
-  # Specifying `$tempdir` will ensure use of the default temporary directory
-  # (i.e., ``$TMP` or ``$TMPDIR``).
+  # The string `$tempdir$ will be substituted with the results of a call to
+  # tempfile.gettempdir().  The results will be, in order of decreasing 
+  # preference:
+  #   1) The contents of the $TMPDIR environment variable
+  #   2) The contents of the $TEMP environment variable
+  #   3) The contents of the $TMP environment variable
+  #   4) On Windows:  C:\TEMP, C:\TMP, \TEMP and TMP (in that order)
+  #      On all other platforms: /tmp, /var/tmp and /usr./tmp, in that order.
+  #   5) The current working directory
   #
   # Another option that prevents conflicts and potential permission issues is
   # to specify `$user_cache_path/stage`, which ensures each user builds in their
-  # home directory.
+  # home directory.  `$user_cache_path` maps to the environment variable
+  # $SPACK_USER_CACHE_PATH.
   #
   # A more traditional path uses the value of `$spack/var/spack/stage`, which
   # builds directly inside Spack's instance without staging them in a
