@@ -88,7 +88,7 @@ class Helics(CMakePackage):
 
     depends_on("libzmq@4.3:", when="+zmq")
     depends_on("mpi@2", when="+mpi")
-    depends_on("openssl@1.1.1:1.1.2", when="+encryption")
+    depends_on("openssl@1.1.1:", when="+encryption")
 
     # SWIG generated Python interface only works with HELICS <=2.x
     depends_on("python@3:", when="@:2 +python")
