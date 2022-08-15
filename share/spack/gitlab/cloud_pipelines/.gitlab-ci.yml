@@ -45,6 +45,9 @@ default:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags: ["spack", "aws", "public", "medium", "x86_64"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 8G
   interruptible: true
   retry:
     max: 2
@@ -190,6 +193,7 @@ e4s-mac-pr-generate:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
@@ -261,9 +265,11 @@ e4s-mac-protected-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
+  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
+  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -286,6 +292,43 @@ e4s-protected-build:
   needs:
     - artifacts: True
       job: e4s-protected-generate
+
+########################################
+# E4S OneAPI Pipeline
+########################################
+.e4s-oneapi:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-oneapi
+
+e4s-oneapi-pr-generate:
+  extends: [ ".e4s-oneapi", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-protected-generate:
+  extends: [ ".e4s-oneapi", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-pr-build:
+  extends: [ ".e4s-oneapi", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-pr-generate
+
+e4s-oneapi-protected-build:
+  extends: [ ".e4s-oneapi", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-protected-generate
 
 ########################################
 # E4S on Power
@@ -397,6 +440,85 @@ radiuss-protected-build:
   needs:
     - artifacts: True
       job: radiuss-protected-generate
+
+########################################
+# RADIUSS for AWS
+########################################
+
+# Call this AFTER .*-generate
+.radiuss-aws-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.radiuss-aws:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss-aws
+
+radiuss-aws-pr-generate:
+  extends: [ ".radiuss-aws", ".pr-generate", ".radiuss-aws-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+radiuss-aws-protected-generate:
+  extends: [ ".radiuss-aws", ".protected-generate", ".radiuss-aws-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+radiuss-aws-pr-build:
+  extends: [ ".radiuss-aws", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-pr-generate
+
+radiuss-aws-protected-build:
+  extends: [ ".radiuss-aws", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+.radiuss-aws-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss-aws-aarch64
+
+radiuss-aws-aarch64-pr-generate:
+  extends: [ ".radiuss-aws-aarch64", ".pr-generate-aarch64", ".radiuss-aws-overrides" ]
+
+radiuss-aws-aarch64-protected-generate:
+  extends: [ ".radiuss-aws-aarch64", ".protected-generate-aarch64", ".radiuss-aws-overrides" ]
+
+radiuss-aws-aarch64-pr-build:
+  extends: [ ".radiuss-aws-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-aarch64-pr-generate
+
+radiuss-aws-aarch64-protected-build:
+  extends: [ ".radiuss-aws-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-aarch64-protected-generate
 
 ########################################
 # ECP Data & Vis SDK

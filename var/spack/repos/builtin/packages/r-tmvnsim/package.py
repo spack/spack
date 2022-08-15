@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTmvnsim(RPackage):
@@ -21,4 +21,4 @@ class RTmvnsim(RPackage):
 
     cran = "tmvnsim"
 
-    version('1.0-2', sha256='97f63d0bab3b240cc7bdbe6e6e74e90ad25a4382a345ee51a26fe3959edeba0f')
+    version("1.0-2", sha256="97f63d0bab3b240cc7bdbe6e6e74e90ad25a4382a345ee51a26fe3959edeba0f")

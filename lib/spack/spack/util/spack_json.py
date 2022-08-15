@@ -12,21 +12,18 @@ from six import PY3, iteritems, string_types
 
 import spack.error
 
-__all__ = ['load', 'dump', 'SpackJSONError', 'encode_json_dict', 'decode_json_dict']
+__all__ = ["load", "dump", "SpackJSONError", "encode_json_dict", "decode_json_dict"]
 
-_json_dump_args = {
-    'indent': 2,
-    'separators': (',', ': ')
-}
+_json_dump_args = {"indent": 2, "separators": (",", ": ")}
 
 
 def load(stream):
     # type: (Any) -> Dict
     """Spack JSON needs to be ordered to support specs."""
     if isinstance(stream, string_types):
-        load = json.loads       # type: ignore[assignment]
+        load = json.loads  # type: ignore[assignment]
     else:
-        load = json.load        # type: ignore[assignment]
+        load = json.load  # type: ignore[assignment]
 
     return _strify(load(stream, object_hook=_strify), ignore_dicts=True)
 
@@ -42,8 +39,8 @@ def dump(data, stream=None):
     """Dump JSON with a reasonable amount of indentation and separation."""
     data = _strify(data)
     if stream is None:
-        return json.dumps(data, **_json_dump_args)     # type: ignore[arg-type]
-    json.dump(data, stream, **_json_dump_args)         # type: ignore[arg-type]
+        return json.dumps(data, **_json_dump_args)  # type: ignore[arg-type]
+    json.dump(data, stream, **_json_dump_args)  # type: ignore[arg-type]
     return None
 
 
@@ -64,7 +61,7 @@ def _strify(data, ignore_dicts=False):
 
     # if this is a unicode string in python 2, return its string representation
     if isinstance(data, string_types):
-        return data.encode('utf-8')
+        return data.encode("utf-8")
 
     # if this is a list of values, return list of byteified values
     if isinstance(data, list):

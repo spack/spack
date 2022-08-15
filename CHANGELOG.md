@@ -6,7 +6,7 @@
   Python 2 and Python 3 (#31092)
 * Fixed compiler flags for oneAPI and DPC++ (#30856)
 * Fixed several issues related to concretization (#31142,#31153,#31170,#31226)
-* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173.#31186)
+* Improved support for Cray manifest file and `spack external find` (#31144,#31201,#31173,#31186)
 * Assign a version to openSUSE Tumbleweed according to the GLIBC version
   in the system (#19895) 
 * Improved Dockerfile generation for `spack containerize` (#29741,#31321)
@@ -217,6 +217,15 @@
     * 337 committers to packages
     * 85 committers to core
 
+# v0.17.3 (2022-07-14)
+
+### Spack bugfixes
+
+* Fix missing chgrp on symlinks in package installations (#30743)
+* Allow having non-existing upstreams (#30744, #30746)
+* Fix `spack stage` with custom paths (#30448)
+* Fix failing call for `spack buildcache save-specfile` (#30637)
+* Fix globbing in compiler wrapper (#30699)
 
 # v0.17.2 (2022-04-13)
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dnsmap(MakefilePackage):
@@ -11,10 +11,10 @@ class Dnsmap(MakefilePackage):
     by the fictional story."""
 
     homepage = "https://github.com/makefu/dnsmap"
-    git      = "https://github.com/makefu/dnsmap.git"
+    git = "https://github.com/makefu/dnsmap.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('dnsmap', prefix.bin)
+        install("dnsmap", prefix.bin)
