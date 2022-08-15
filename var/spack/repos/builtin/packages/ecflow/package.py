@@ -49,8 +49,14 @@ class Ecflow(CMakePackage):
     depends_on(Boost.with_default_variants, when="@:4")
 
     # Use newer boost with v5
-    depends_on("boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer", when="@5:")
-    depends_on("boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer+pic", when="@5: +static_boost")
+    depends_on(
+        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer",
+        when="@5:"
+    )
+    depends_on(
+        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer+pic",
+        when="@5: +static_boost"
+    )
 
     depends_on("openssl@1:", when="@5:")
     depends_on("qt@5:", when="+ui")
