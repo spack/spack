@@ -18,38 +18,24 @@ class Fms(CMakePackage):
 
     maintainers = ["kgerheiser", "Hang-Lei-NOAA", "edwardhartnett", "rem1776"]
 
+    version("2022.03", sha256="42d2ac53d3c889a8177a6d7a132583364c0f6e5d5cbde0d980443b6797ad4838")
+    version("2022.02", sha256="ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874")
+    version("2022.01", sha256="a1cba1f536923f5953c28729a28e5431e127b45d6bc2c15d230939f0c02daa9b")
+    version("2021.04", sha256="dcb4fe80cb3b7846f7cf89b812afff09a78a10261ea048a851f28935d6b241b1")
+    version(
+        "2021.03.01", sha256="1f70e2a57f0d01e80fceb9ca9ce9661f5c1565d0437ab67618c2c4dfea0da6e9"
+    )
+    version("2021.03", sha256="a9fb6e85f44ff79e6f9e61e65f42a5ffd38fa661fe1a3e4da6f85ffacd2697ac")
+    version(
+        "2021.02.01", sha256="9b11d9474d7c90464af66d81fb86c4798cfa309b9a0da20b0fccf33c4f65386b"
+    )
+    version("2021.02", sha256="db810b2452a6952239f064b52c0c5c58fc62126057982111b9fcd64f1b3bd879")
+    version("2021.01", sha256="38c748e2edb94ffeb021095d8bde4d74b7834610ce0ef1dbb4dce353eeb5cd96")
     version(
         "2020.04.02", sha256="bd6ce752b1018d4418398f14b9fc486f217de76bcbaaf2cdbf4c43e0b3f39f69"
     )
     version(
         "2020.04.01", sha256="2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c"
-    )
-    version(
-        "2022.03", sha256="42d2ac53d3c889a8177a6d7a132583364c0f6e5d5cbde0d980443b6797ad4838"
-    )
-    version(
-        "2022.02", sha256="ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874"
-    )
-    version(
-        "2022.01", sha256="a1cba1f536923f5953c28729a28e5431e127b45d6bc2c15d230939f0c02daa9b"
-    )
-    version(
-        "2021.04", sha256="dcb4fe80cb3b7846f7cf89b812afff09a78a10261ea048a851f28935d6b241b1"
-    )
-    version(
-        "2021.03.01", sha256="1f70e2a57f0d01e80fceb9ca9ce9661f5c1565d0437ab67618c2c4dfea0da6e9"
-    )
-    version(
-        "2021.03", sha256="a9fb6e85f44ff79e6f9e61e65f42a5ffd38fa661fe1a3e4da6f85ffacd2697ac"
-    )
-    version(
-        "2021.02.01", sha256="9b11d9474d7c90464af66d81fb86c4798cfa309b9a0da20b0fccf33c4f65386b"
-    )
-    version(
-        "2021.02", sha256="db810b2452a6952239f064b52c0c5c58fc62126057982111b9fcd64f1b3bd879"
-    )
-    version(
-        "2021.01", sha256="38c748e2edb94ffeb021095d8bde4d74b7834610ce0ef1dbb4dce353eeb5cd96"
     )
 
     # DH* 20220602
