@@ -98,7 +98,7 @@ class PyPip(Package):
         # prefix path as well as the system path.  This works around it in a way that
         # will let us largely ignore it.  See: https://github.com/spack/spack/pull/31939
         local_path = os.path.join(prefix, "local")
-        if os.path.isdir(local_path) and not os.path.isdir(os.path.join(prefix, "lib")):
+        if os.path.isdir(local_path):
             for p in os.listdir(local_path):
                 os.symlink(os.path.join(local_path, p), os.path.join(prefix, p))
 
