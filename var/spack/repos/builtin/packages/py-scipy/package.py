@@ -122,9 +122,9 @@ class PyScipy(PythonPackage):
     #         |          ^~~~~~~~~~~
     #   compilation terminated.
     # See also: https://github.com/macports/macports-ports/commit/d45376ea224ffa9184c6a0ecbcbdf024ee447f12
-    patch('use_stdc_no_threads.patch', when='platform=darwin %gcc')
+    patch("use_stdc_no_threads.patch", when="platform=darwin %gcc")
     # Additional changes needed for scipy-1.8.0
-    patch('use_stdc_no_threads_scipy180_addon.patch', when='@1.8: platform=darwin %gcc')
+    patch("use_stdc_no_threads_scipy180_addon.patch", when="@1.8: platform=darwin %gcc")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -142,15 +142,15 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/14935
         # Disable pythran backend with latest Intel compilers
         # Turns out it also doesn't work with previous versions
-        if self.spec.satisfies('%intel') or \
-                self.spec.satisfies('%intel-oneapi-compilers'):
-            env.set('SCIPY_USE_PYTHRAN', '0')
+        if self.spec.satisfies("%intel") or \
+                self.spec.satisfies("%intel-oneapi-compilers"):
+            env.set("SCIPY_USE_PYTHRAN", "0")
 
         # Kluge to get the gfortran linker to work correctly on Big
         # Sur, at least until a gcc release > 10.2 is out with a fix.
         # (There is a fix in their development tree.)
-        if platform.mac_ver()[0][0:2] == '11':
-            env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
+        if platform.mac_ver()[0][0:2] == "11":
+            env.set("MACOSX_DEPLOYMENT_TARGET", "10.15")
 
     def install_options(self, spec, prefix):
         args = []
