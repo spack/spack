@@ -182,6 +182,7 @@ spack:
   - superlu-dist +cuda cuda_arch=80
   - tasmanian +cuda cuda_arch=80
   - tau +mpi +cuda
+  - trilinos@13.4.0 +cuda cuda_arch=80
   - umpire ~shared +cuda cuda_arch=80
   - vtk-m +cuda cuda_arch=80
   - zfp +cuda cuda_arch=80
@@ -222,7 +223,6 @@ spack:
   # CUDA failures
   #- caliper +cuda cuda_arch=80               # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- parsec +cuda cuda_arch=80                # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
-  #- trilinos@13.2.0 +cuda cuda_arch=80       # /usr/include/c++/11/bits/std_function.h:435:145: error: parameter packs not expanded with '...':
 
   # ROCm failures
   #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
