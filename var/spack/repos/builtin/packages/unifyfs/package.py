@@ -84,6 +84,8 @@ class Unifyfs(AutotoolsPackage):
         # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
         if "%gcc@11" in self.spec:
             env.append_flags("CFLAGS", "-Wno-array-bounds")
+        if self.spec.satisfies("%oneapi"):
+            env.append_flags("CFLAGS", "-Wno-unused-function")
 
     def configure_args(self):
         spec = self.spec
