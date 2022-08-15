@@ -15,9 +15,9 @@ class PyBotocore(PythonPackage):
     version("1.24.29", sha256="c6f419a79c816297646d228dd07599859df6ee701c6f65a6dd4a35015269eb38")
     version("1.21.12", sha256="8710d03b9de3e3d94ed410f3e83809ca02050b091100d68c22ff7bf986f29fb6")
     version("1.20.27", sha256="4477803f07649f4d80b17d054820e7a09bb2cb0792d0decc2812108bc3759c4a")
-    version("1.19.52",  sha256="dc5ec23deadbe9327d3c81d03fddf80805c549059baabd80dea605941fe6a221")
-    version("1.13.44",  sha256="a4409008c32a3305b9c469c5cc92edb5b79d6fcbf6f56fe126886b545f0a4f3f")
-    version("1.13.38",  sha256="15766a367f39dba9de3c6296aaa7da31030f08a0117fd12685e7df682d8acee2")
+    version("1.19.52", sha256="dc5ec23deadbe9327d3c81d03fddf80805c549059baabd80dea605941fe6a221")
+    version("1.13.44", sha256="a4409008c32a3305b9c469c5cc92edb5b79d6fcbf6f56fe126886b545f0a4f3f")
+    version("1.13.38", sha256="15766a367f39dba9de3c6296aaa7da31030f08a0117fd12685e7df682d8acee2")
     version("1.12.169", sha256="25b44c3253b5ed1c9093efb57ffca440c5099a2d62fa793e8b6c52e72f54b01e")
 
     depends_on("python@2.6:", when="@1.12:1.13", type=("build", "run"))
