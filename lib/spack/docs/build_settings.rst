@@ -372,7 +372,7 @@ The following is an example of how to enforce package properties in
        - any_of: ["~cuda", "gcc"]
      mpich:
       require:
-      - one of: ["+cuda", "+rocm"]
+      - one_of: ["+cuda", "+rocm"]
 
 Requirements are expressed using Spec syntax (the same as what is provided
 to ``spack install``). In the simplest case, you can specify attributes
@@ -400,9 +400,11 @@ Other notes about ``requires``:
 
 * You can only specify requirements for specific packages: you cannot
   add ``requires`` under ``all``.
-* The order of specs in ``any_of`` indicates a preference: items that
-  appear earlier in the list are preferred (note that these
-  preferences can be ignored in favor of others).
+* You cannot specify requirements for virtual packages (e.g. you can
+  specify requirements for ``openmpi`` but not ``mpi``).
+* For ``any_of`` and ``one_of``, the order of specs indicates a
+  preference: items that appear earlier in the list are preferred
+  (note that these preferences can be ignored in favor of others).
 
 .. _package_permissions:
 
