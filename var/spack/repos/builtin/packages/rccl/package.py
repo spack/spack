@@ -22,6 +22,7 @@ class Rccl(CMakePackage):
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librccl"]
 
+    version("5.2.1", sha256="cfd17dc003f19900e44928d81111570d3720d4905321f2a18c909909c4bee822")
     version("5.2.0", sha256="6ee3a04da0d16eb53f768a088633a7d8ecc4416a2d0c07f7ba8426ab7892b060")
     version("5.1.3", sha256="56491257f27b48bf85f4b91434a2a6e49a448337c889db181b02c8a4a260a4bc")
     version("5.1.0", sha256="02b0180857e615326f9cab775573436b9162899ad8e526830f54392b8a51b1f5")
@@ -112,6 +113,7 @@ class Rccl(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -135,9 +137,10 @@ class Rccl(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("numactl@2:", when="@" + ver)
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0"]:
+    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0", "5.2.1"]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     @classmethod

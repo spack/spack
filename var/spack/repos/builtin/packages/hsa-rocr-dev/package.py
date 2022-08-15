@@ -24,6 +24,8 @@ class HsaRocrDev(CMakePackage):
     libraries = ["libhsa-runtime64"]
 
     version("master", branch="master")
+
+    version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
     version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
     version("5.1.3", sha256="479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d")
     version("5.1.0", sha256="a5f7245059c3d28dbc037e1e6fa3f09084e29147096dd61f7ce5560291ab330f")
@@ -116,6 +118,7 @@ class HsaRocrDev(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)

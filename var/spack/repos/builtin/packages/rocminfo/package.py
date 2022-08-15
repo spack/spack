@@ -18,6 +18,7 @@ class Rocminfo(CMakePackage):
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
     version("master", branch="master")
+    version("5.2.1", sha256="e8a3b3228387d164e21de060e18ac018eecb5e9abe0ae45830c51ead4b7f1004")
     version("5.2.0", sha256="e721eb81efd384abd22ff01cdcbb6245b11084dc11a867c74c8ad6b028aa0404")
     version("5.1.3", sha256="7aecd7b189e129b77c8f2af70be2926a0f3a5ee89814879bc8477924a7e6f2ae")
     version("5.1.0", sha256="76f6cc9e69d9fc7e692e5c7db35e89079d3b1d2d47632e4742d612e743c396d3")
@@ -103,6 +104,7 @@ class Rocminfo(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
