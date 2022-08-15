@@ -32,11 +32,10 @@ class Scr(CMakePackage):
     version("develop", branch="develop")
     version("legacy", branch="legacy")
 
-    version(
-        "3.0",
-        sha256="e204d3e99a49efac50b4bedc7ac05f55a05f1a65429500d919900c82490532cc",
-        preferred=True,
-    )
+    version("3.0.1",
+            sha256="ba8f9e676aec8176ecc46c31a4f470ac95047101654de8cc88e01a1f9d95665a",
+            preferred=True)
+    version("3.0", sha256="e204d3e99a49efac50b4bedc7ac05f55a05f1a65429500d919900c82490532cc")
     version(
         "3.0rc2",
         sha256="4b2a718af56b3683e428d25a2269c038e9452db734221d370e3023a491477fad",
