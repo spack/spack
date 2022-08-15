@@ -22,6 +22,10 @@ class Rose(AutotoolsPackage):
     # ROSE Versions
     # --------------------------------------------------------------------------
 
+    version("0.11.93.3", sha256="761117fb0e9d62a8382ad92cb835f394c49b7cc4a02e3832a096e8c007dcd811")
+    version("0.11.92.5", sha256="ce53df72106ca8c6384d8d5cb1004445ca762c34bd0acfde64a17223c2ff8b3d")
+    version("0.11.91.8", sha256="340a83003c2f6e13789d1c6b7500258fa8cf540774da6e25a7d4f35a56bdfee2")
+    version("0.11.90.6", sha256="1989f7d944df0e444516f6796a0670cf7fafb1edddf8ddc81333bb13c0f1d5ea")
     version("0.9.13.0", sha256="64092793dfd38d476152696721e29a410bb31dc3eeb6064c7520087aa8c904a6")
 
     # Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION
@@ -73,6 +77,7 @@ class Rose(AutotoolsPackage):
     depends_on("libtool@2.4:", type="build")
     depends_on("flex@2.6.4:", type="build")
     depends_on("bison@3.4.2:", type="build")
+    depends_on("ghostscript@9.54.0:", type="build")
 
     # C++11 compatible boost and gcc versions required for +cxx11 variant:
     depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0 cxxstd=11", when="+cxx11")
@@ -109,7 +114,8 @@ class Rose(AutotoolsPackage):
     variant("cxx", default=True, description="Enable c++ language support")
 
     # Use spack install cxxflags=-std=c++11
-    variant("cxx11", default=True, description="Enable c++11 language support")
+    variant("cxx11", default=False, description="Enable c++11 language support")
+    variant("cxx14", default=True, description="Enable c++14 language support")
 
     variant("fortran", default=False, description="Enable fortran language support")
     depends_on("java@8", when="+fortran")
@@ -209,12 +215,16 @@ class Rose(AutotoolsPackage):
 
         if "+cxx11" in spec:
             args.append("CXXFLAGS=-std=c++11")
+        if "+cxx14" in spec:
+            args.append("CXXFLAGS=-std=c++14")
 
         return args
 
     def setup_build_environment(self, env):
         if "+codethorn" in self.spec:
             env.set("CXXFLAGS", "-std=c++11")
+        if "+codethorn" in self.spec and "+cxx14" in self.spec:
+            env.set("CXXFLAGS", "-std=c++14")
 
     def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.
