@@ -87,19 +87,19 @@ class Ycsb(MavenPackage):
     }
 
     for key in bindings:
-        variant_name = key.replace('.','_') if '.' in key else key
+        variant_name = key.replace('.', '_') if '.' in key else key
         variant(variant_name, default=False, description='Build the %s binding' % key,
                 when='@%s' % bindings[key])
 
     depends_on("maven@3.1.0:", type="build")
     depends_on("mongodb-async-driver", when='+mongodb', type="build")
 
-
     def build(self, spec, prefix):
         mvn = which("mvn")
         if '+mangodb' in spec:
+            mongodb_async_driver_version = spec["mongodb-async-driver"].version.string
             jar_name = (
-                "target/mongodb-async-driver-" + spec["mongodb-async-driver"].version.string + ".jar"
+                "target/mongodb-async-driver-" + mongodb_async_driver_version + ".jar"
             )
             path = join_path(self.spec["mongodb-async-driver"].prefix, jar_name)
             mvn(
@@ -112,7 +112,7 @@ class Ycsb(MavenPackage):
             )
         projects = ['site.ycsb:binding-parent']
         for key in Ycsb.bindings:
-            variant_name = key.replace('.','_') if '.' in key else key
+            variant_name = key.replace('.', '_') if '.' in key else key
             if '+' + variant_name in spec:
                 projects.append('site.ycsb:%s-binding' % key)
         mvn("-pl", ','.join(projects), "package", "-DskipTests")
