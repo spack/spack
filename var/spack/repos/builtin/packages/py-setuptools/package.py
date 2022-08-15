@@ -19,7 +19,7 @@ class PySetuptools(Package):
     version(
         "65.0.0",
         sha256="fe9a97f68b064a6ddd4bacfb0b4b93a4c65a556d97ce906255540439d0c35cef",
-        expand=False
+        expand=False,
     )
     version(
         "64.0.0",
