@@ -56,8 +56,7 @@ class Esmf(MakefilePackage):
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
-    depends_on("parallelio@2.5.8:~fortran", when="+parallelio")
-    depends_on("parallelio@2.5.8:+pnetcdf~fortran", when="+parallelio+pnetcdf")
+    depends_on("parallelio@2.5.8:", when="+parallelio")
 
     # Testing dependencies
     depends_on('perl', type='test')
