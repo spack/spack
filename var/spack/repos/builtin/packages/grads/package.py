@@ -78,7 +78,6 @@ class Grads(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-
         args.extend(self.with_or_without("geotiff"))
 
         # GCC on macOS complained about these directories not existing
@@ -94,8 +93,3 @@ class Grads(AutotoolsPackage):
         with working_dir(self.package_dir):
             install("udpt", self.prefix.data)
             filter_file(r"({lib})", self.prefix.lib, self.prefix.data.udpt)
-
-    def configure_args(self):
-        args = []
-        args.extend(self.with_or_without("geotiff"))
-        return args
