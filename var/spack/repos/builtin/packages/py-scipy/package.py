@@ -50,6 +50,7 @@ class PyScipy(PythonPackage):
     version("0.15.0", sha256="0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1")
 
     # pyproject.toml
+    depends_on("py-pip@22.1:", when="@1.3:", type="build")  # needed for config_settings
     depends_on("py-wheel@:0.37", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:51.0.0", when="@1.6", type="build")
@@ -125,11 +126,19 @@ class PyScipy(PythonPackage):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
 
-    def install_options(self, spec, prefix):
-        args = []
+    @when("@1.3:")
+    def config_settings(self, spec, prefix):
+        settings = {}
         if spec.satisfies("%fj"):
-            args.extend(["config_fc", "--fcompiler=fujitsu"])
-        return args
+            settings.update({"fcompiler": "fujitsu"})
+        return settings
+
+    @when("@:1.2")
+    def install_options(self, spec, prefix):
+        options = []
+        if spec.satisfies("%fj"):
+            options.extend(["config_fc", "--fcompiler=fujitsu"])
+        return options
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
