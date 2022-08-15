@@ -21,6 +21,8 @@ class Esmf(MakefilePackage):
 
     maintainers = ['climbfuji']
 
+    # Develop is a special name for spack and is always considered the newest version
+    version("develop", branch="develop")
     version('8.3.0',  sha256='0ff43ede83d1ac6beabd3d5e2a646f7574174b28a48d1b9f2c318a054ba268fd')
     version('8.3.0b09', commit='5b7e546c4b')
     version('8.2.0',  sha256='3693987aba2c8ae8af67a0e222bea4099a48afe09b8d3d334106f9d7fc311485')
@@ -34,7 +36,13 @@ class Esmf(MakefilePackage):
     variant('netcdf',  default=True,  description='Build with NetCDF support')
     variant('pnetcdf', default=True,  description='Build with pNetCDF support')
     variant('xerces',  default=True,  description='Build with Xerces support')
-    variant('pio',     default=True,  description='Enable ParallelIO support')
+    variant(
+        "parallelio",
+        default=True,
+        description="Build with external parallelio library",
+        when="@8.3:",
+    )
+    variant("pio", default=True, description="Enable Internal ParallelIO support", when="@:8.2.99")
     variant('debug',   default=False, description='Make a debuggable version of the library')
 
     # Required dependencies
@@ -48,7 +56,8 @@ class Esmf(MakefilePackage):
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
-    depends_on('parallelio@2.5.7:', when='@8.3.0: +pio')
+    depends_on("parallelio@2.5.8:~fortran", when="+parallelio")
+    depends_on("parallelio@2.5.8:+pnetcdf~fortran", when="+parallelio+pnetcdf")
 
     # Testing dependencies
     depends_on('perl', type='test')
@@ -204,6 +213,9 @@ class Esmf(MakefilePackage):
                  '^intel-mpi' in spec or \
                  '^intel-oneapi-mpi' in spec:
                 os.environ['ESMF_COMM'] = 'intelmpi'
+            elif "^mpt" in spec:
+                # MPT is the HPE (SGI) variant of mpich
+                os.environ["ESMF_COMM"] = "mpt"
         else:
             # Force use of the single-processor MPI-bypass library.
             os.environ['ESMF_COMM'] = 'mpiuni'
@@ -248,7 +260,7 @@ class Esmf(MakefilePackage):
 
             # When defined, enables the use of Parallel-NetCDF.
             # ESMF_PNETCDF_LIBS will be set to "-lpnetcdf".
-            os.environ['ESMF_PNETCDF'] = 'standard'
+            os.environ['ESMF_PNETCDF'] = 'pnetcdf-config'
 
             # FIXME: determine whether or not we need to set these.
             # ESMF_PNETCDF_INCLUDE
@@ -257,23 +269,17 @@ class Esmf(MakefilePackage):
         ##############
         # ParallelIO #
         ##############
-
-        if '+pio' in spec and '+mpi' in spec:
+        if "+parallelio" in spec and "+mpi" in spec:
+            os.environ["ESMF_PIO"] = "external"
+            os.environ["ESMF_PIO_LIBPATH"] = spec["parallelio"].prefix.lib
+            os.environ["ESMF_PIO_INCLUDE"] = spec["parallelio"].prefix.include
+        elif "+pio" in spec and "+mpi" in spec:
             # ESMF provides the ability to read and write data in both binary
             # and NetCDF formats through ParallelIO (PIO), a third-party IO
             # software library that is integrated in the ESMF library.
-
-            # FIXME - When ESMF beta is no longer needed set this to 8.3.0:
-            if spec.satisfies('@8.3.0b12:'):
-                # ESMF 8.3.0 introduced external PIO
-                os.environ['ESMF_PIO'] = 'external'
-                os.environ['ESMF_PIO_INCLUDE'] = spec['parallelio'].prefix.include
-                os.environ['ESMF_PIO_LIBPATH'] = spec['parallelio'].prefix.lib
-            else:
-                # PIO-dependent features will be enabled and will use the
-                # PIO library that is included and built with ESMF.
-                os.environ['ESMF_PIO'] = 'internal'
-
+            # PIO-dependent features will be enabled and will use the
+            # PIO library that is included and built with ESMF.
+            os.environ['ESMF_PIO'] = 'internal'
         else:
             # Disables PIO-dependent code.
             os.environ['ESMF_PIO'] = 'OFF'
