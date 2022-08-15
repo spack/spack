@@ -1041,6 +1041,10 @@ class Environment(object):
         match_spec = match_spec or Spec(change_spec.name)
 
         list_to_change = self.spec_lists[list_name]
+        if list_to_change.is_matrix:
+            raise SpackEnvironmentError(
+                "Cannot directly change specs in matrices:"
+                " specify a named list that is not a matrix")
 
         matches = list(x for x in list_to_change if x.satisfies(match_spec))
         if len(matches) == 0:

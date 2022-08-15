@@ -66,9 +66,7 @@ def test_env_change_spec(tmpdir, mock_packages, config):
     assert spec == spack.spec.Spec("mpileaks@2.2~shared~debug")
 
 
-def test_env_change_spec_in_matrix(tmpdir, mock_packages, config, mutable_mock_env_path):
-    initial_yaml = StringIO(
-        """\
+_test_matrix_yaml = """\
 env:
   definitions:
   - compilers: ["%gcc", "%clang"]
@@ -78,7 +76,10 @@ env:
     - [$compilers]
     - [$desired_specs]
 """
-    )
+
+
+def test_env_change_spec_in_matrix(tmpdir, mock_packages, config, mutable_mock_env_path):
+    initial_yaml = StringIO(_test_matrix_yaml)
     e = ev.create("test", initial_yaml)
     e.concretize()
     e.write()
@@ -90,6 +91,17 @@ env:
 
     assert any(x.satisfies("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
+
+
+def test_env_change_spec_in_matrix_raises_error(tmpdir, mock_packages, config, mutable_mock_env_path):
+    initial_yaml = StringIO(_test_matrix_yaml)
+    e = ev.create("test", initial_yaml)
+    e.concretize()
+    e.write()
+
+    with pytest.raises(spack.environment.SpackEnvironmentError) as error:
+        e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"))
+    assert "Cannot directly change specs in matrices" in str(error)
 
 
 def test_activate_should_require_an_env():
