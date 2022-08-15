@@ -40,7 +40,7 @@ class Faiss(CMakePackage, CudaPackage):
     )
 
     variant("python", default=False, description="Build Python bindings")
-    variant("shlib", default=False, description="Build shared library")
+    variant("shared", default=False, description="Build shared library")
     variant("tests", default=False, description="Build tests")
 
     conflicts("+tests", when="~python", msg="+tests must be accompanied by +python")
@@ -86,68 +86,70 @@ class Faiss(CMakePackage, CudaPackage):
     def prefix_and_install(self, infile, prefix="faiss"):
 
         outfile = infile
-        already_has = len(prefix) > 0 and prefix == outfile[: len(prefix)]
 
-        if not already_has:
+        if prefix and not outfile.startswith(prefix):
             outfile = prefix + "_" + outfile
             os.rename(infile, outfile)
 
         install(outfile, self.prefix.bin)
 
-    # --------------------------------------------------------------------------
-    # different versions of faiss create different targets. this functin gives
-    #   cpu_targets and gpu_targets as two lists
-    #   cpu_installs and gpu_installs as two dictionaries
-    #       where key = build subdir, and val = list of exe to copy
-    def fetch_targets_v163(self):
+    def fetch_targets(self):
+        """
+        Different versions of faiss create different targets.
+        This function gives
+           cpu_targets and gpu_targets as two lists
+           cpu_installs and gpu_installs as two dictionaries
+               where key = build subdir, and val = list of exe to copy
+        """
+        # version 1.6.3 and earlier!
+        if "@:1.6.3" in self.spec:
 
-        ctargets = ["tests"]
-        gtargets = ["build", "demo_ivfpq_indexing_gpu"]  # target added by the patch
+            ctargets = ["tests"]
+            gtargets = ["build", "demo_ivfpq_indexing_gpu"]  # target added by the patch
 
-        cinstalls = {"tests": ["tests"]}
-        ginstalls = {
-            "gpu/test": [
-                "TestGpuIndexFlat",
+            cinstalls = {"tests": ["tests"]}
+            ginstalls = {
+                "gpu/test": [
+                    "TestGpuIndexFlat",
+                    "TestGpuIndexBinaryFlat",
+                    "TestGpuIndexIVFFlat",
+                    "TestGpuIndexIVFPQ",
+                    "TestGpuMemoryException",
+                    "TestGpuSelect",
+                    "demo_ivfpq_indexing_gpu",
+                ]
+            }
+
+        # version 1.7.2
+        else:
+            ctargets = [
+                "demo_imi_flat",
+                "demo_imi_pq",
+                "demo_ivfpq_indexing",
+                "demo_nndescent",
+                "demo_sift1M",
+                "demo_weighted_kmeans",
+            ]
+            gtargets = [
+                "TestCodePacking",
+                "TestGpuDistance",
                 "TestGpuIndexBinaryFlat",
+                "TestGpuIndexFlat",
                 "TestGpuIndexIVFFlat",
                 "TestGpuIndexIVFPQ",
-                "TestGpuMemoryException",
+                "TestGpuIndexIVFScalarQuantizer",
                 "TestGpuSelect",
+                "TestGpuMemoryException",
                 "demo_ivfpq_indexing_gpu",
             ]
-        }
+
+            cinstalls = {"tests": ["faiss_test"], "demos": ctargets}
+            ginstalls = {"faiss/gpu/test": gtargets}
 
         return (ctargets, gtargets), (cinstalls, ginstalls)
 
-    def fetch_targets_v172(self):
-
-        ctargets = [
-            "demo_imi_flat",
-            "demo_imi_pq",
-            "demo_ivfpq_indexing",
-            "demo_nndescent",
-            "demo_sift1M",
-            "demo_weighted_kmeans",
-        ]
-
-        gtargets = [
-            "TestCodePacking",
-            "TestGpuDistance",
-            "TestGpuIndexBinaryFlat",
-            "TestGpuIndexFlat",
-            "TestGpuIndexIVFFlat",
-            "TestGpuIndexIVFPQ",
-            "TestGpuIndexIVFScalarQuantizer",
-            "TestGpuSelect",
-            "TestGpuMemoryException",
-            "demo_ivfpq_indexing_gpu",
-        ]
-
-        cinstalls = {"tests": ["faiss_test"], "demos": ctargets}
-        ginstalls = {"faiss/gpu/test": gtargets}
-
-        return (ctargets, gtargets), (cinstalls, ginstalls)
-
+    # --------------------------------------------------------------------------
+    # build for 1.7.2 onwards
     # --------------------------------------------------------------------------
     @when("@1.7.2:")
     def cmake_args(self):
@@ -168,7 +170,7 @@ class Faiss(CMakePackage, CudaPackage):
 
         return cmake_args
 
-    # --------------------------------------------------------------------------
+    @when("@1.7.2:")
     def build(self, spec, prefix):
 
         with working_dir(self.build_directory):
@@ -184,7 +186,7 @@ class Faiss(CMakePackage, CudaPackage):
                 return
 
             # build tests
-            (ctargets, gtargets), (_, _) = self.fetch_targets_v172()
+            (ctargets, gtargets), (_, _) = self.fetch_targets()
 
             # CPU tests
             make("gtest")
@@ -196,7 +198,7 @@ class Faiss(CMakePackage, CudaPackage):
                 for t in gtargets:
                     make(t)
 
-    # --------------------------------------------------------------------------
+    @when("@1.7.2:")
     def install(self, spec, prefix):
 
         with working_dir(self.build_directory):
@@ -213,7 +215,7 @@ class Faiss(CMakePackage, CudaPackage):
             if not os.path.isdir(self.prefix.bin):
                 os.makedirs(self.prefix.bin)
 
-            (_, _), (cinstalls, ginstalls) = self.fetch_targets_v172()
+            (_, _), (cinstalls, ginstalls) = self.fetch_targets()
 
             # CPU tests and demos
             for bdir, targets in cinstalls.items():
@@ -265,7 +267,7 @@ class Faiss(CMakePackage, CudaPackage):
             return
 
         # build tests
-        (ctargets, gtargets), (_, _) = self.fetch_targets_v163()
+        (ctargets, gtargets), (_, _) = self.fetch_targets()
 
         # CPU tests
         with working_dir("tests"):
@@ -295,7 +297,7 @@ class Faiss(CMakePackage, CudaPackage):
         if not os.path.isdir(self.prefix.bin):
             os.makedirs(self.prefix.bin)
 
-        (_, _), (cinstalls, ginstalls) = self.fetch_targets_v163()
+        (_, _), (cinstalls, ginstalls) = self.fetch_targets()
 
         # CPU tests
         for bdir, targets in cinstalls.items():
@@ -309,8 +311,3 @@ class Faiss(CMakePackage, CudaPackage):
                 with working_dir(bdir):
                     for t in targets:
                         self.prefix_and_install(t)
-
-    # --------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
