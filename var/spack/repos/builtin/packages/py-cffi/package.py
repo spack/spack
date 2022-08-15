@@ -32,7 +32,7 @@ class PyCffi(PythonPackage):
     #    extra_compile_args += ['-iwithsysroot/usr/include/ffi']
     # are added as a fallback to SDK's libffi, but this only
     # works with "gcc" being clang, not with gnu gcc
-    patch('macos_gnu.patch', when='platform=darwin %gcc')
+    patch("macos_gnu.patch", when="platform=darwin %gcc")
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies("%clang@13:"):
