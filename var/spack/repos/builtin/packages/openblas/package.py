@@ -64,7 +64,7 @@ class Openblas(MakefilePackage):
     variant(
         "noavx512",
         default=False,
-        description="Disable AVX-512 with NO_AVX512=1 (internal compiler error with AVX512 " + \
+        description="Disable AVX-512 with NO_AVX512=1 (internal compiler error with AVX512 " +
                     "when using Intel 2021/2022)",
     )
     variant("symbol_suffix", default="none", description="Set a symbol suffix")
