@@ -162,14 +162,15 @@ spack:
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpctoolkit +cuda
   - hpx +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
-  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
   - kokkos +wrapper +cuda cuda_arch=80
+  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
   - magma +cuda cuda_arch=80
   - mfem +cuda cuda_arch=80
   - papi +cuda
