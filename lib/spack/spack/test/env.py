@@ -78,7 +78,7 @@ env:
 """
 
 
-def test_env_change_spec_in_matrix(tmpdir, mock_packages, config, mutable_mock_env_path):
+def test_env_change_spec_in_definition(tmpdir, mock_packages, config, mutable_mock_env_path):
     initial_yaml = StringIO(_test_matrix_yaml)
     e = ev.create("test", initial_yaml)
     e.concretize()
