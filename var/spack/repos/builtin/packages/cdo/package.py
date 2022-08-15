@@ -176,7 +176,7 @@ class Cdo(AutotoolsPackage):
 
     # Internal compiler error when building with Intel 2022.1.2
     # https://github.com/NOAA-EMC/spack-stack/issues/248
-    patch('intel-compare.patch', when='%intel')
+    patch("intel-compare.patch", when="%intel")
 
     def configure_args(self):
         config_args = []

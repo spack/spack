@@ -1896,14 +1896,9 @@ class SpackSolverSetup(object):
         # Inject dev_path from environment
         env = ev.active_environment()
         if env:
-            for name, info in env.dev_specs.items():
-                dev_spec = spack.spec.Spec(info['spec'])
-                dev_spec.constrain(
-                    'dev_path=%s' % spack.util.path.canonicalize_path(info['path'])
-                )
-
-                self.condition(spack.spec.Spec(name), dev_spec,
-                               msg="%s is a develop spec" % name)
+            for spec in sorted(specs):
+                for dep in spec.traverse():
+                    _develop_specs_from_env(dep, env)
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)

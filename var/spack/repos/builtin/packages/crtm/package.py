@@ -18,7 +18,11 @@ class Crtm(CMakePackage):
 
     maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
 
-    variant("fix", default=False, description="Download CRTM coeffecient or "fix" files (several GBs).")
+    variant(
+        "fix",
+        default=False,
+        description="Download CRTM coeffecient or "fix" files (several GBs)."
+    )
 
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")

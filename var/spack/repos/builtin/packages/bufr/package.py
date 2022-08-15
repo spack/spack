@@ -3,13 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-<<<<<<< HEAD
 import os
 
-from spack import *
-=======
 from spack.package import *
->>>>>>> b1e499d009bbf85f90672a776923083a50e1e136
 
 
 class Bufr(CMakePackage):

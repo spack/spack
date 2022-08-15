@@ -226,9 +226,6 @@ def ci_rebuild(args):
         )
     )
 
-    tty.msg('SPACK_BUILDCACHE_DESTINATION={0}'.format(
-        os.environ.get('SPACK_BUILDCACHE_DESTINATION', None)))
-
     # Grab the environment variables we need.  These either come from the
     # pipeline generation step ("spack ci generate"), where they were written
     # out as variables, or else provided by GitLab itself.
@@ -294,10 +291,6 @@ def ci_rebuild(args):
             spack_is_pr_pipeline, spack_is_develop_pipeline
         )
     )
-
-    # If no override url exists, then just push binary package to the
-    # normal remote mirror url.
-    buildcache_mirror_url = remote_mirror_override or remote_mirror_url
 
     # If no override url exists, then just push binary package to the
     # normal remote mirror url.
