@@ -31,7 +31,11 @@ def change(parser, args):
     env = spack.cmd.require_active_env(cmd_name="change")
 
     with env.write_transaction():
+        if args.match_spec:
+            match_spec = spack.spec.Spec(args.match_spec)
+        else:
+            match_spec = None
         for spec in spack.cmd.parse_specs(args.specs):
             env.change_existing_spec(spec, list_name=args.list_name,
-                                     match_spec=args.match_spec)
+                                     match_spec=match_spec)
         env.write()

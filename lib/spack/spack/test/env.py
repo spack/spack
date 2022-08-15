@@ -7,6 +7,7 @@
 import sys
 
 import pytest
+from six import StringIO
 
 import spack.environment as ev
 import spack.spec
@@ -64,6 +65,32 @@ def test_env_change_spec(tmpdir, mock_packages, config):
     (spec,) = env.added_specs()
     assert spec == spack.spec.Spec("mpileaks@2.2~shared~debug")
 
+
+def test_env_change_spec_in_matrix(tmpdir, mock_packages, config, mutable_mock_env_path):
+    initial_yaml = StringIO(
+        """\
+env:
+  definitions:
+  - compilers: ["%gcc", "%clang"]
+  - desired_specs: ["mpileaks@2.1"]
+  specs:
+  - matrix:
+    - [$compilers]
+    - [$desired_specs]
+"""
+    )
+    e = ev.create("test", initial_yaml)
+    e.concretize()
+    e.write()
+
+    assert any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
+
+    e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"),
+                           list_name="desired_specs")
+    e.write()
+
+    assert any(x.satisfies("mpileaks@2.2%gcc") for x in e.user_specs)
+    assert not any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
 
 def test_activate_should_require_an_env():
     with pytest.raises(TypeError):

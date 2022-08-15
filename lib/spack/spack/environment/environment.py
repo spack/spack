@@ -1061,6 +1061,7 @@ class Environment(object):
                 new_speclist.add(spec)
 
         self.spec_lists[list_name] = new_speclist
+        self.update_stale_references()
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
