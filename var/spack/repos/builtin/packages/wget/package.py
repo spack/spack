@@ -57,12 +57,12 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     patch("gnulib.patch", when="@1.21.3")
 
     # For spack external find
-    executables = ['^wget$']
+    executables = ["^wget$"]
 
     @classmethod
     def determine_version(cls, exe):
-        regex = re.compile('^GNU Wget (.*) built on .*')
-        output = Executable(exe)('--version', output=str, error=str).strip()
+        regex = re.compile("^GNU Wget (.*) built on .*")
+        output = Executable(exe)("--version", output=str, error=str).strip()
         match = regex.match(output)
         version = match.group(1)
         return version
