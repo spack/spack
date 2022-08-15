@@ -21,7 +21,7 @@ class Crtm(CMakePackage):
     variant(
         "fix",
         default=False,
-        description="Download CRTM coeffecient or "fix" files (several GBs)."
+        description='Download CRTM coeffecient or "fix" files (several GBs).',
     )
 
     depends_on("git-lfs")
