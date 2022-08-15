@@ -387,6 +387,13 @@ class Nvhpc(Package):
             self.spec.mpifc = join_path(mpi_prefix.bin, "mpif90")
 
     @property
+    def headers(self):
+        prefix = Prefix(
+            join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
+        )
+        return find_headers(["cblas.h","lapacke.h",], prefix)
+
+    @property
     def libs(self):
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
