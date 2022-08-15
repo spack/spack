@@ -636,7 +636,7 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("lldb")
             cmake_args.append(define("LLDB_ENABLE_LIBEDIT", True))
             cmake_args.append(define("LLDB_ENABLE_CURSES", True))
-            if spec['ncurses'].satisfies('+termlib'):
+            if spec["ncurses"].satisfies("+termlib"):
                 cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
             else:
                 cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
