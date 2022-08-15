@@ -601,6 +601,9 @@ class Root(CMakePackage):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
+        # the following vars are copied from thisroot.sh; silence a cppyy warning
+        env.set("CLING_STANDARD_PCH", "none")
+        env.set("CPPYY_API_PATH", "none")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
