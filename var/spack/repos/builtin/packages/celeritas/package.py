@@ -13,7 +13,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://github.com/celeritas-project/celeritas"
-    url = "https://github.com/celeritas-project/celeritas/archive/refs/tags/v0.1.0.tar.gz"
+    url = "https://github.com/celeritas-project/celeritas/releases/download/v0.1.0/celeritas-0.1.0.tar.gz"
 
     maintainers = ["sethrj"]
 
