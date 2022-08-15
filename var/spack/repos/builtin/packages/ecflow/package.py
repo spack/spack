@@ -50,13 +50,11 @@ class Ecflow(CMakePackage):
 
     # Use newer boost with v5
     depends_on(
-        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+" +
-            "serialization+system+test+thread+timer",
+        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer", # noqa: E131
         when="@5:"
     )
     depends_on(
-        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+" +
-            "serialization+system+test+thread+timer+pic",
+        "boost@1.72:+chrono+date_time+exception+filesystem+program_options+python+regex+serialization+system+test+thread+timer+pic", # noqa: E131
         when="@5: +static_boost"
     )
 
