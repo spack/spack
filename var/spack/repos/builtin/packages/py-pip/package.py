@@ -93,6 +93,15 @@ class PyPip(Package):
         args = [os.path.join(whl, "pip")] + std_pip_args + ["--prefix=" + prefix, whl]
         python(*args)
 
+        # NOTE: Debian, and some other distros, inject `local` into the path in
+        # sysconfig, newer versions of pip (and pip's installer) apply this to the
+        # prefix path as well as the system path.  This works around it in a way that
+        # will let us largely ignore it.  See: https://github.com/spack/spack/pull/31939
+        local_path = os.path.join(prefix, "local")
+        if os.path.isdir(local_path) and not os.path.isdir(os.path.join(prefix, "lib")):
+            for p in os.listdir(local_path):
+                os.symlink(os.path.join(local_path, p), os.path.join(prefix, p))
+
     def setup_dependent_package(self, module, dependent_spec):
         pip = self.spec["python"].command
         pip.add_default_arg("-m")
