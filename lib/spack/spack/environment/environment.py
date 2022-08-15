@@ -1024,8 +1024,7 @@ class Environment(object):
 
         return bool(not existing)
 
-    def change_existing_spec(self, change_spec, list_name=user_speclist_name,
-                             match_spec=None):
+    def change_existing_spec(self, change_spec, list_name=user_speclist_name, match_spec=None):
         """
         Provide a single spec and assume you want to find another spec with the
         same name and override it with any conflicting details in change_spec.
@@ -1049,9 +1048,7 @@ class Environment(object):
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
             )
         elif len(matches) > 1:
-            raise ValueError(
-                "{0} matches multiple specs".format(str(match_spec))
-            )
+            raise ValueError("{0} matches multiple specs".format(str(match_spec)))
 
         new_speclist = SpecList(list_name)
         for i, spec in enumerate(list_to_change):

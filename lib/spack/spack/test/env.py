@@ -85,12 +85,12 @@ env:
 
     assert any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
 
-    e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"),
-                           list_name="desired_specs")
+    e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
     assert any(x.satisfies("mpileaks@2.2%gcc") for x in e.user_specs)
     assert not any(x.satisfies("mpileaks@2.1%gcc") for x in e.user_specs)
+
 
 def test_activate_should_require_an_env():
     with pytest.raises(TypeError):
