@@ -29,6 +29,10 @@ class Tophat(AutotoolsPackage):
 
     parallel = False
 
+    def patch(self):
+        # Newer versions of autoconf hate calling AM_INIT_AUTOMAKE twice
+        filter_file(r"^AM_INIT_AUTOMAKE$", "", "configure.ac")
+
     def setup_build_environment(self, env):
         env.append_flags("CFLAGS", self.compiler.cxx98_flag)
 
