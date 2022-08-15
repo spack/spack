@@ -36,6 +36,7 @@ the decorator object, that will forward the keyword arguments passed
 as input.
 """
 import collections
+import inspect
 import itertools
 import re
 
@@ -252,6 +253,13 @@ package_directives = AuditClass(
     kwargs=("pkgs",),
 )
 
+package_attributes = AuditClass(
+    group="packages",
+    tag="PKG-ATTRIBUTES",
+    description="Sanity checks on reserved attributes of packages",
+    kwargs=("pkgs",),
+)
+
 
 #: Sanity checks on linting
 # This can take some time, so it's run separately from packages
@@ -309,6 +317,38 @@ def _check_patch_urls(pkgs, error_cls):
                             [patch.url],
                         )
                     )
+
+    return errors
+
+
+@package_attributes
+def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
+    """Ensure that packages don't override reserved names"""
+    RESERVED_NAMES = ("name",)
+    errors = []
+    for pkg_name in pkgs:
+        name_definitions = collections.defaultdict(list)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+
+        for cls_item in inspect.getmro(pkg_cls):
+            for name in RESERVED_NAMES:
+                current_value = cls_item.__dict__.get(name)
+                if current_value is None:
+                    continue
+                name_definitions[name].append((cls_item, current_value))
+
+        for name in RESERVED_NAMES:
+            if len(name_definitions[name]) == 1:
+                continue
+
+            error_msg = (
+                "Package '{}' overrides the '{}' attribute or method, "
+                "which is reserved for Spack internal use"
+            )
+            definitions = [
+                "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
+            ]
+            errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
 
     return errors
 
