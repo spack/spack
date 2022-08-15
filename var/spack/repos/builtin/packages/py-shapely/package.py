@@ -51,7 +51,6 @@ class PyShapely(PythonPackage):
     patch("shapely-1.8.0-geos.py.patch", when="@1.8.0:1.8.3")
 
     @when("^python@3.7:")
-
     def patch(self):
         # Python 3.7 changed the thread storage API, precompiled *.c files
         # need to be re-cythonized
