@@ -47,7 +47,7 @@ class Fms(CMakePackage):
     # version("dev-jcsda", branch="dev/jcsda", no_cache=True)
 
     with when("@release-jcsda"):
-        git      = "https://github.com/JCSDA/fms.git"
+        git = "https://github.com/JCSDA/fms.git"
     # *DH 20220602
 
     variant(
