@@ -423,17 +423,13 @@ class LmodContext(BaseContext):
     def version_part(self):
         """Version of this provider."""
         s = self.spec
-<<<<<<< HEAD
 
         # Use the hash length that the user specied, not something else
         if get_hash_length() > 0:
-            return '-'.join([str(s.version), s.dag_hash(length=get_hash_length())])
+            return "-".join([str(s.version), s.dag_hash(length=get_hash_length())])
         else:
             return str(s.version)
-        # return '-'.join([str(s.version), s.dag_hash(length=7)])
-=======
-        return "-".join([str(s.version), s.dag_hash(length=7)])
->>>>>>> b1e499d009bbf85f90672a776923083a50e1e136
+        # return "-".join([str(s.version), s.dag_hash(length=7)])
 
     @tengine.context_property
     def provides(self):
