@@ -12,7 +12,7 @@ class CrtmFix(Package):
     """CRTM coeffecient files"""
 
     homepage = "https://github.com/NOAA-EMC/crtm"
-    url      = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-2.3.0_emc.tgz"
+    url = "ftp://ftp.ucar.edu/pub/cpaess/bjohns/fix_REL-2.3.0_emc.tgz"
 
     maintainers = ["kgerheiser"]
 
