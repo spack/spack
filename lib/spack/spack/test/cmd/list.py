@@ -35,6 +35,9 @@ def test_list_search_description(mock_packages):
     assert "depb" in output
 
 
+   
+
+
 def test_list_format_name_only(mock_packages):
     output = list("--format", "name_only")
     assert "zmpi" in output
@@ -89,6 +92,8 @@ def test_list_update(tmpdir, mock_packages):
 
 def test_tag1(mock_packages):
 
+    output = list("--tag","tag1")
+
     args = parser.parse_args(["--tag", "tag1"])
     spack.cmd.find.find(parser, args)
 
@@ -96,3 +101,4 @@ def test_tag1(mock_packages):
     assert "mpich" in [x.name for x in specs]
     assert "mpich2" in [x.name for x in specs] 
     assert "openmpi" not in output      
+
