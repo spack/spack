@@ -89,7 +89,6 @@ def test_list_update(tmpdir, mock_packages):
         assert f.read() == "empty\n"
 
 
-
 def test_tag1(mock_packages):
 
     output = list("--tag","tag1")
@@ -99,6 +98,11 @@ def test_tag1(mock_packages):
 
     assert len(specs) == 2
     assert "mpich" in [x.name for x in specs]
+<<<<<<< HEAD
     assert "mpich2" in [x.name for x in specs] 
     assert "openmpi" not in output      
 
+=======
+    assert "mpich2" in [x.name for x in specs]
+    assert "openmpi" not in output
+>>>>>>> 468f51e056b37f1fd198e3fc7a593f7c124a5e8a
