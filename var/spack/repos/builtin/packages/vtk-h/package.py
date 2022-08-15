@@ -98,6 +98,8 @@ class VtkH(CMakePackage, CudaPackage):
 
     depends_on("vtk-m~shared", when="~shared")
 
+    patch("vtk-h-shared-cuda.patch", when="@0.8")
+
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
