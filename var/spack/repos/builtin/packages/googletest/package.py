@@ -29,24 +29,31 @@ class Googletest(CMakePackage):
     variant("pthreads", default=True, description="Build multithreaded version with pthreads")
     variant("shared", default=True, description="Build shared libraries (DLLs)")
 
+    variant(
+        "cxxstd",
+        default="11",
+        values=("98", "11", "14", "17"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
+    conflicts("cxxstd=98", when="@1.9:")
+    conflicts("cxxstd=11", when="@1.13:")
+
     def cmake_args(self):
         spec = self.spec
-        if "@1.8.0:" in spec:
+        args = [
+            self.define_from_variant("gtest_disable_pthreads", "pthreads"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+        ]
+        if spec.satisfies("@1.8.0:"):
             # New style (contains both Google Mock and Google Test)
-            options = ["-DBUILD_GTEST=ON"]
-            if "+gmock" in spec:
-                options.append("-DBUILD_GMOCK=ON")
-            else:
-                options.append("-DBUILD_GMOCK=OFF")
-        else:
-            # Old style (contains only GTest)
-            options = []
+            args.extend([
+                self.define('BUILD_GTEST', True),
+                self.define_from_variant("BUILD_GMOCK", "gmock")
+            ])
 
-        options.append(
-            "-Dgtest_disable_pthreads={0}".format("OFF" if "+pthreads" in spec else "ON")
-        )
-        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        return options
+        return args
 
     @when("@:1.7.0")
     def install(self, spec, prefix):
