@@ -160,6 +160,7 @@ spack:
   gitlab-ci:
 
     script:
+      - (cd "$(mktemp -d)" || exit 1; curl -LfsO https://github.com/NixOS/patchelf/releases/download/0.15.0/patchelf-0.15.0-x86_64.tar.gz; echo "0b9b93da52f51b3262f783596421a0d1376893d5f865d93f1493da293bd1d4b5  patchelf-0.15.0-x86_64.tar.gz" | sha256sum --check --quiet || exit 1; tar -xf patchelf-0.15.0-x86_64.tar.gz -C /usr; patchelf --version)
       - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
