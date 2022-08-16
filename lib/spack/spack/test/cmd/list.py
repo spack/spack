@@ -35,9 +35,6 @@ def test_list_search_description(mock_packages):
     assert "depb" in output
 
 
-   
-
-
 def test_list_format_name_only(mock_packages):
     output = list("--format", "name_only")
     assert "zmpi" in output

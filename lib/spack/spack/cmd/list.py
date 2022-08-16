@@ -311,7 +311,7 @@ def list(parser, args):
     # If tags have been specified on the command line, filter by tags
     if args.tags:
         packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
-        pkgs = [p for p in pkgs if p in packages_with_tags]
+        sorted_packages = [p for p in sorted_packages if p in packages_with_tags]
 
     if args.update:
         # change output stream if user asked for update
