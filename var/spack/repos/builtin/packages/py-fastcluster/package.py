@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyFastcluster(PythonPackage):
@@ -12,7 +12,7 @@ class PyFastcluster(PythonPackage):
     homepage = "http://danifold.net/"
     pypi = "fastcluster/fastcluster-1.1.26.tar.gz"
 
-    version('1.1.26', sha256='a202f44a3b06f5cf9cdba3c67d6c523288922d6e6a1cdf737292f93759aa82f7')
+    version("1.1.26", sha256="a202f44a3b06f5cf9cdba3c67d6c523288922d6e6a1cdf737292f93759aa82f7")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.9:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.9:", type=("build", "run"))

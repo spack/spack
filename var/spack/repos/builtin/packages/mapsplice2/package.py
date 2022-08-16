@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Mapsplice2(MakefilePackage):
     """MapSplice is a software for mapping RNA-seq data to reference genome
-       for splice junction discovery that depends only on reference genome,
-       and not on any further annotations."""
+    for splice junction discovery that depends only on reference genome,
+    and not on any further annotations."""
 
     homepage = "http://www.netlab.uky.edu/p/bioinfo/MapSplice2"
     url = "https://protocols.netlab.uky.edu/~zeng/MapSplice-v2.2.1.zip"

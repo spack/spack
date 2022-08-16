@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyAiofiles(PythonPackage):
@@ -13,7 +13,7 @@ class PyAiofiles(PythonPackage):
     homepage = "https://github.com/Tinche/aiofiles"
     pypi = "aiofiles/aiofiles-0.5.0.tar.gz"
 
-    version('0.5.0', sha256='98e6bcfd1b50f97db4980e182ddd509b7cc35909e903a8fe50d8849e02d815af')
+    version("0.5.0", sha256="98e6bcfd1b50f97db4980e182ddd509b7cc35909e903a8fe50d8849e02d815af")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")

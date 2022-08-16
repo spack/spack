@@ -22,25 +22,33 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.epilog = 'If called without argument returns ' \
-                       'the list of all valid extendable packages'
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
-    subparser.add_argument('-d', '--deps', action='store_true',
-                           help='output dependencies along with found specs')
-
-    subparser.add_argument('-p', '--paths', action='store_true',
-                           help='show paths to package install directories')
+    subparser.epilog = (
+        "If called without argument returns " "the list of all valid extendable packages"
+    )
+    arguments.add_common_arguments(subparser, ["long", "very_long"])
     subparser.add_argument(
-        '-s', '--show', action='store', default='all',
+        "-d", "--deps", action="store_true", help="output dependencies along with found specs"
+    )
+
+    subparser.add_argument(
+        "-p", "--paths", action="store_true", help="show paths to package install directories"
+    )
+    subparser.add_argument(
+        "-s",
+        "--show",
+        action="store",
+        default="all",
         choices=("packages", "installed", "activated", "all"),
-        help="show only part of output")
-    subparser.add_argument(
-        '-v', '--view', metavar='VIEW', type=str,
-        help="the view to operate on")
+        help="show only part of output",
+    )
+    subparser.add_argument("-v", "--view", metavar="VIEW", type=str, help="the view to operate on")
 
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help='spec of package to list extensions for', metavar='extendable')
+        "spec",
+        nargs=argparse.REMAINDER,
+        help="spec of package to list extensions for",
+        metavar="extendable",
+    )
 
 
 def extensions(parser, args):
@@ -48,12 +56,12 @@ def extensions(parser, args):
         # If called without arguments, list all the extendable packages
         isatty = sys.stdout.isatty()
         if isatty:
-            tty.info('Extendable packages:')
+            tty.info("Extendable packages:")
 
         extendable_pkgs = []
         for name in spack.repo.all_package_names():
-            pkg = spack.repo.get(name)
-            if pkg.extendable:
+            pkg_cls = spack.repo.path.get_pkg_class(name)
+            if pkg_cls.extendable:
                 extendable_pkgs.append(name)
 
         colify(extendable_pkgs, indent=4)
@@ -64,11 +72,11 @@ def extensions(parser, args):
     if len(spec) > 1:
         tty.die("Can only list extensions for one package.")
 
-    if not spec[0].package.extendable:
-        tty.die("%s is not an extendable package." % spec[0].name)
-
     env = ev.active_environment()
     spec = cmd.disambiguate_spec(spec[0], env)
+
+    if not spec.package.extendable:
+        tty.die("%s is not an extendable package." % spec[0].name)
 
     if not spec.package.extendable:
         tty.die("%s does not have extensions." % spec.short_spec)
@@ -92,8 +100,7 @@ def extensions(parser, args):
 
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
-        installed = [
-            s.spec for s in spack.store.db.installed_extensions_for(spec)]
+        installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
 
         if args.show == "all":
             print

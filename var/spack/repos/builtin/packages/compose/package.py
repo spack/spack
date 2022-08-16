@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Compose(MakefilePackage):
@@ -14,8 +14,8 @@ class Compose(MakefilePackage):
     in astrophysical applications, nuclear physics and beyond."""
 
     homepage = "https://compose.obspm.fr/home"
-    url      = "https://compose.obspm.fr/download/code/codehdf5.zip"
-    maintainers = ['eschnett']
+    url = "https://compose.obspm.fr/download/code/codehdf5.zip"
+    maintainers = ["eschnett"]
 
     # Spack must not modify our url which doesn't contain a version number
     def url_for_version(self, version):
@@ -23,13 +23,13 @@ class Compose(MakefilePackage):
 
     # There is no version number for the zip file itself. This is the version
     # number output by the `compose` executable.
-    version('2.17', sha256='f3f68203a50bb898abe31ee0b3dc750a1f1164c9e5d7fb9c4546b4eaa0cd172b')
+    version("2.17", sha256="f3f68203a50bb898abe31ee0b3dc750a1f1164c9e5d7fb9c4546b4eaa0cd172b")
 
-    depends_on('hdf5 +fortran')
+    depends_on("hdf5 +fortran")
 
     parallel = False
 
-    executables = ['compose', 'test_read_hdf5', 'test_read_opacity']
+    executables = ["compose", "test_read_hdf5", "test_read_opacity"]
 
     @property
     def build_targets(self):

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dtbuild1(Package):
@@ -13,8 +13,9 @@ class Dtbuild1(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dtbuild1-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("0.5", "fedcba9876543210fedcba9876543210")
 
-    depends_on('dtbuild2', type='build')
-    depends_on('dtlink2')
-    depends_on('dtrun2', type='run')
+    depends_on("dtbuild2", type="build")
+    depends_on("dtlink2")
+    depends_on("dtrun2", type="run")

@@ -1,0 +1,16 @@
+diff --git a/CPP/7zip/UI/Common/Update.cpp b/CPP/7zip/UI/Common/Update.prev.cpp
+index 451b12c..3be3781 100644
+--- a/CPP/7zip/UI/Common/Update.cpp
++++ b/CPP/7zip/UI/Common/Update.prev.cpp
+@@ -1075,11 +1075,7 @@ static HRESULT EnumerateInArchiveItems(
+ 
+ #if defined(_WIN32) && !defined(UNDER_CE)
+ 
+-#pragma push_macro("WIN_NOEXCEPT")
+-#undef WIN_NOEXCEPT
+-#define WIN_NOEXCEPT
+ #include <MAPI.h>
+-#pragma pop_macro("WIN_NOEXCEPT")
+ 
+ #endif
+ 
