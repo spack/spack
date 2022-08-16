@@ -187,12 +187,12 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            "-DGEANT4_USE_SYSTEM_CLHEP=ON",
-            "-DGEANT4_USE_SYSTEM_EXPAT=ON",
-            "-DGEANT4_USE_SYSTEM_ZLIB=ON",
-            "-DGEANT4_USE_G3TOG4=ON",
-            "-DGEANT4_USE_GDML=ON",
-            "-DXERCESC_ROOT_DIR={0}".format(spec["xerces-c"].prefix),
+            self.define("GEANT4_USE_SYSTEM_CLHEP", True),
+            self.define("GEANT4_USE_SYSTEM_EXPAT", True),
+            self.define("GEANT4_USE_SYSTEM_ZLIB", True),
+            self.define("GEANT4_USE_G3TOG4", True),
+            self.define("GEANT4_USE_GDML", True),
+            self.define("XERCESC_ROOT_DIR", spec["xerces-c"].prefix),
         ]
 
         # Use the correct C++ standard option for the requested version
@@ -223,21 +223,21 @@ class Geant4(CMakePackage):
 
         # Vecgeom
         if "+vecgeom" in spec:
-            options.append("-DGEANT4_USE_USOLIDS=ON")
-            options.append("-DUSolids_DIR=%s" % spec["vecgeom"].prefix.lib.CMake.USolids)
+            options.append(self.define("GEANT4_USE_USOLIDS", True))
+            options.append(self.define("USolids_DIR", spec["vecgeom"].prefix.lib.CMake.USolids))
 
         # Visualization options
         if "platform=darwin" not in spec:
             if "+x11" in spec and "+opengl" in spec:
-                options.append("-DGEANT4_USE_OPENGL_X11=ON")
+                options.append(self.define("GEANT4_USE_OPENGL_X11", True))
             if "+motif" in spec and "+opengl" in spec:
-                options.append("-DGEANT4_USE_XM=ON")
+                options.append(self.define("GEANT4_USE_XM", True))
             if "+x11" in spec:
-                options.append("-DGEANT4_USE_RAYTRACER_X11=ON")
+                options.append(self.define("GEANT4_USE_RAYTRACER_X11", True))
 
         if "+qt" in spec:
-            options.append("-DGEANT4_USE_QT=ON")
-            options.append("-DQT_QMAKE_EXECUTABLE=%s" % spec["qt"].prefix.bin.qmake)
+            options.append(self.define("GEANT4_USE_QT", True))
+            options.append(self.define("QT_QMAKE_EXECUTABLE", spec["qt"].prefix.bin.qmake))
 
         options.append(self.define_from_variant("GEANT4_USE_VTK", "vtk"))
 
