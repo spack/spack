@@ -589,7 +589,7 @@ class Boost(Package):
                 cxxflags.append("-std=c++11")
 
         if cxxflags:
-            options.append('cxxflags="{0}"'.format(" ".join(cxxflags)))
+            options.append("cxxflags={0}".format(" ".join(cxxflags)))
 
         # Visibility was added in 1.69.0.
         if spec.satisfies("@1.69.0:"):
