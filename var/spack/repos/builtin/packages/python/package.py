@@ -1017,7 +1017,7 @@ config.update(get_paths())
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed.
         """
-        return Prefix(self.config_vars["prefix"])
+        return Prefix(self.config_vars["base"])
 
     def find_library(self, library):
         # Spack installs libraries into lib, except on openSUSE where it installs them
