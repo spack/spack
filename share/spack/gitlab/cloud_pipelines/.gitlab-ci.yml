@@ -91,12 +91,28 @@ protected-publish:
   extends: [ ".protected-refs" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
+  interruptible: true
+  retry:
+    max: 2
+    when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/e4s" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/e4s-oneapi" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/build_systems" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/radiuss" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/radiuss-aws" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/radiuss-aws-aarch64" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/data-vis-sdk" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/aws-ahug" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/aws-ahug-aarch64" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/aws-isc" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/aws-isc-aarch64" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/tutorial" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
     - spack buildcache update-index --mirror-url "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
 
 ########################################
@@ -136,6 +152,16 @@ protected-publish:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: my-super-cool-stack-protected-generate
 #     strategy: depend
+########################################
+#
+# If the stack should be published, and most are, add a line like
+# this one to the "protected-publish" job:
+#
+#     - aws s3 sync --exclude *index.json* --exclude *pgp* "s3://spack-binaries/${CI_COMMIT_REF_NAME}/<SPACK_CI_STACK_NAME>" "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+#
+# Replace "SPACK_CI_STACK_NAME" with the name of your new stack
+#
+########################################
 
 ########################################
 #          E4S Mac Stack
