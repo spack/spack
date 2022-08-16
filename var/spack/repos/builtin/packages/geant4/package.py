@@ -132,6 +132,9 @@ class Geant4(CMakePackage):
     patch("cxx17_geant4_10_0.patch", level=1, when="@10.4.0 cxxstd=17")
     patch("geant4-10.4.3-cxx17-removed-features.patch", level=1, when="@10.4.3 cxxstd=17")
 
+    # NVHPC: "thread-local declaration follows non-thread-local declaration"
+    conflicts("%nvhpc", when="+threads")
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
@@ -178,6 +181,15 @@ class Geant4(CMakePackage):
         # Should we have a (version dependent) warning message for these?
 
         return " ".join(variants)
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "cxxflags":
+            if spec.satisfies("%nvhpc"):
+                # error: excessive recursion at instantiation of class
+                # "G4Number<191>" (G4CTCounter.hh)
+                cmake_flags.append("-Wc,--pending_instantiations=256")
+        return flags, None, None
 
     def cmake_args(self):
         spec = self.spec
