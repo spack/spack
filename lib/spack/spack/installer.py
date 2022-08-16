@@ -1302,12 +1302,7 @@ class PackageInstaller(object):
                     pkg, 'compiler_search_prefix', pkg.spec.prefix
                 )
                 spack.compilers.add_compilers_to_config(
-<<<<<<< HEAD
-                    spack.compilers.find_compilers([pkg.spec.prefix])
-                )
-=======
                     spack.compilers.find_compilers([compiler_search_prefix]))
->>>>>>> make bootstrapped compilers detectable in non-standard locations
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -1730,12 +1725,7 @@ class PackageInstaller(object):
                             pkg, 'compiler_search_prefix', pkg.spec.prefix
                         )
                         spack.compilers.add_compilers_to_config(
-<<<<<<< HEAD
-                            spack.compilers.find_compilers([pkg.spec.prefix])
-                        )
-=======
                             spack.compilers.find_compilers([compiler_search_prefix]))
->>>>>>> make bootstrapped compilers detectable in non-standard locations
 
                 else:
                     # At this point we've failed to get a write or a read
