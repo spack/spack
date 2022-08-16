@@ -12,18 +12,20 @@ class SingularityEos(CMakePackage, CudaPackage):
     """Singularity-EOS: A collection of closure models and tools useful for
     multiphysics codes."""
 
-    homepage    = "https://lanl.github.io/singularity-eos/main/index.html"
-    git         = "https://github.com/lanl/singularity-eos.git"
-    url         = "https://github.com/lanl/singularity-eos/archive/refs/tags/release-1.6.1.tar.gz"
+    homepage = "https://lanl.github.io/singularity-eos/main/index.html"
+    git = "https://github.com/lanl/singularity-eos.git"
+    url = "https://github.com/lanl/singularity-eos/archive/refs/tags/release-1.6.1.tar.gz"
 
-    maintainers = ['rbberger']
+    maintainers = ["rbberger"]
 
     version("main", branch="main")
-    version('1.6.1', sha256='c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7')
+    version("1.6.1", sha256="c6d92dfecf9689ffe2df615791c039f7e527e9f47799a862e26fa4e3420fe5d7")
 
     # build with kokkos, kokkos-kernels for offloading support
     variant("kokkos", default=False, description="Enable kokkos")
-    variant("kokkos-kernels", default=False, description="Enable kokkos-kernals for linear algebra")
+    variant(
+        "kokkos-kernels", default=False, description="Enable kokkos-kernals for linear algebra"
+    )
 
     variant("openmp", default=False, description="Enable openmp")
 
@@ -31,7 +33,11 @@ class SingularityEos(CMakePackage, CudaPackage):
     variant("mpi", default=False, description="Build with MPI support")
 
     # build converters for sesame, stellarcollapse eos's
-    variant("build_extra", description="Build converters", values=any_combination_of("sesame", "stellarcollapse").with_default("none"))
+    variant(
+        "build_extra",
+        description="Build converters",
+        values=any_combination_of("sesame", "stellarcollapse").with_default("none"),
+    )
 
     # build tests
     variant("tests", default=False, description="Build tests")
@@ -54,11 +60,12 @@ class SingularityEos(CMakePackage, CudaPackage):
     depends_on("cmake@3.14:")
     depends_on("catch2@2.13.7", when="+tests")
     depends_on("python@3:", when="+python")
-#    depends_on("py-h5py", when="+tests build_extra=stellarcollapse")
+    depends_on("py-pybind11@2.9.1:", when="+python")
+    #    depends_on("py-h5py", when="+tests build_extra=stellarcollapse")
     depends_on("py-sphinx", when="+doc")
     depends_on("py-sphinx-rtd-theme@0.4.3", when="+doc")
     depends_on("py-sphinx-multiversion", when="+doc")
-    depends_on('llvm@12.0.0+clang', when='+format')
+    depends_on("llvm@12.0.0+clang", when="+format")
 
     # linear algebra when not using GPUs
     depends_on("eigen@3.3.8", when="~cuda")
@@ -68,10 +75,14 @@ class SingularityEos(CMakePackage, CudaPackage):
     depends_on("spiner +kokkos", when="+kokkos")
 
     depends_on("mpark-variant")
-    depends_on("mpark-variant",
-               patches=patch("https://raw.githubusercontent.com/lanl/singularity-eos/main/utils/cuda_compatibility.patch",
-                             sha256="7b3eaa52b5ab23dc45fbfb456528e36742e04b838a5df859eca96c4e8274bb38"),
-               when="+cuda")
+    depends_on(
+        "mpark-variant",
+        patches=patch(
+            "https://raw.githubusercontent.com/lanl/singularity-eos/main/utils/cuda_compatibility.patch",
+            sha256="7b3eaa52b5ab23dc45fbfb456528e36742e04b838a5df859eca96c4e8274bb38",
+        ),
+        when="+cuda",
+    )
 
     # set up kokkos offloading dependencies
     for _flag in ("~cuda", "+cuda", "~openmp", "+openmp"):
@@ -105,7 +116,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     for _flag in ("~mpi", "+mpi"):
         depends_on("hdf5~cxx+hl" + _flag, when=_flag)
         depends_on("py-h5py" + _flag, when="+tests build_extra=stellarcollapse " + _flag)
-#        depends_on("hdf5+hl" + _flag, when=_flag)
+        #        depends_on("hdf5+hl" + _flag, when=_flag)
         depends_on("py-h5py" + _flag, when=_flag)
         depends_on("kokkos-nvcc-wrapper" + _flag, when="+cuda+kokkos" + _flag)
 
@@ -119,25 +130,30 @@ class SingularityEos(CMakePackage, CudaPackage):
             self.define_from_variant("SINGULARITY_BUILD_CLOSURE", "fortran"),
             self.define_from_variant("SINGULARITY_BUILD_PYTHON", "python"),
             self.define_from_variant("SINGULARITY_BUILD_TESTS", "tests"),
-            self.define("SINGULARITY_BUILD_SESAME2SPINER",
-                        "sesame" in self.spec.variants["build_extra"]),
-            self.define("SINGULARITY_TEST_SESAME",
-                        ("sesame" in self.spec.variants["build_extra"] and
-                         "tests" in self.spec)),
-            self.define("SINGULARITY_BUILD_STELLARCOLLAPSE2SPINER",
-                        "stellarcollapse" in self.spec.variants["build_extra"]),
-            self.define("SINGULARITY_TEST_STELLARCOLLAPSE2SPINER",
-                        ("stellarcollapse" in self.spec.variants["build_extra"] and
-                         "tests" in self.spec)),
-            self.define("SINGULARITY_TEST_PYTHON",
-                        ("python" in self.spec and "tests" in self.spec)),
+            self.define(
+                "SINGULARITY_BUILD_SESAME2SPINER", "sesame" in self.spec.variants["build_extra"]
+            ),
+            self.define(
+                "SINGULARITY_TEST_SESAME",
+                ("sesame" in self.spec.variants["build_extra"] and "tests" in self.spec),
+            ),
+            self.define(
+                "SINGULARITY_BUILD_STELLARCOLLAPSE2SPINER",
+                "stellarcollapse" in self.spec.variants["build_extra"],
+            ),
+            self.define(
+                "SINGULARITY_TEST_STELLARCOLLAPSE2SPINER",
+                ("stellarcollapse" in self.spec.variants["build_extra"] and "tests" in self.spec),
+            ),
+            self.define(
+                "SINGULARITY_TEST_PYTHON", ("python" in self.spec and "tests" in self.spec)
+            ),
             self.define("SINGULARITY_USE_HDF5", "^hdf5" in self.spec),
-            self.define("SINGULARITY_USE_EOSPAC", "^eospac" in self.spec)
+            self.define("SINGULARITY_USE_EOSPAC", "^eospac" in self.spec),
         ]
 
-        if '+kokkos+cuda' in self.spec:
-            args.append(self.define("CMAKE_CXX_COMPILER",
-                                    self.spec["kokkos"].kokkos_cxx))
+        if "+kokkos+cuda" in self.spec:
+            args.append(self.define("CMAKE_CXX_COMPILER", self.spec["kokkos"].kokkos_cxx))
 
         return args
 
@@ -149,7 +165,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # generate the pre-configured cmake cache file that reflects the spec options
     # NOTE: this file isn't replaced if the same spec is already installed -
     # you may need to uninstall the old spec first
-    @run_after('cmake')
+    @run_after("cmake")
     def generate_cmake_configuration(self):
         config_fname = self.cmake_config_fname
         cmake_config = self.cmake_args()
@@ -159,23 +175,24 @@ class SingularityEos(CMakePackage, CudaPackage):
                 for arg in cmake_config:
                     kt, v = arg.replace("-D", "").split("=")
                     k, t = kt.split(":")
-                    cmc.write("set({} \"{}\" CACHE {} \"\" FORCE)\n".format(k, v, t))
+                    cmc.write('set({} "{}" CACHE {} "" FORCE)\n'.format(k, v, t))
             install(config_fname, join_path(prefix, config_fname))
 
     # run when loaded
     # NOTE: to use:
     #   cmake -C $SINGULARITY_SPACK_CMAKE_CONFIG ...
     def setup_run_environment(self, env):
-        env.set("SINGULARITY_SPACK_CMAKE_CONFIG",
-                os.path.join(self.prefix, self.cmake_config_fname))
+        env.set(
+            "SINGULARITY_SPACK_CMAKE_CONFIG", os.path.join(self.prefix, self.cmake_config_fname)
+        )
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
 
-        if '+python' in self.spec:
-            python_version = self.spec['python'].version.up_to(2)
-            python_inst_dir = join_path(lib_dir,
-                                        'python{0}'.format(python_version),
-                                        'site-packages')
-            env.prepend_path('PYTHONPATH', python_inst_dir)
+        if "+python" in self.spec:
+            python_version = self.spec["python"].version.up_to(2)
+            python_inst_dir = join_path(
+                lib_dir, "python{0}".format(python_version), "site-packages"
+            )
+            env.prepend_path("PYTHONPATH", python_inst_dir)
