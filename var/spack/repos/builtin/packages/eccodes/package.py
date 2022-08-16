@@ -455,12 +455,11 @@ class Eccodes(CMakePackage):
                     for f in patch["files"]:
                         patch["fn"](join_path(center_placement_path, f))
 
-    def create_memfs_view(self):
-        pass
-
     @run_before("cmake")
-    @when("+create-view+memfs")
     def create_memfs_view(self):
+        if not self.spec.satisfies("+create-view+memfs"):
+            return
+
         for das_type in das.keys():
             value = self._get_das_value(das_type)
 
@@ -604,12 +603,11 @@ class Eccodes(CMakePackage):
 
                 install_tree(center_src_path, join_path(self.prefix.share.eccodes, center_dir))
 
-    def create_file_view(self):
-        pass
-
     @run_after("install")
-    @when("+create-view~memfs")
     def create_file_view(self):
+        if not self.spec.satisfies("+create-view~memfs"):
+            return
+
         for das_type in das.keys():
             value = self._get_das_value(das_type)
 
