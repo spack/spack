@@ -160,6 +160,7 @@ spack:
   - adios2 +cuda cuda_arch=80
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
+  - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
