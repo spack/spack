@@ -40,6 +40,7 @@ import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
+import spack.version
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
@@ -794,10 +795,26 @@ def patchelf_root_spec():
     return _root_spec("patchelf@0.13.1:")
 
 
+def verify_patchelf(patchelf):
+    """Older patchelf versions can produce broken binaries in many, many
+    different ways, we should guard against that."""
+    out = patchelf("--version", output=str, error=os.devnull, fail_on_error=False).strip()
+    if patchelf.returncode != 0:
+        return False
+    parts = out.split(" ")
+    if len(parts) < 2:
+        return False
+    try:
+        version = spack.version.Version(parts[1])
+    except ValueError:
+        return False
+    return version >= spack.version.Version("0.13.1")
+
+
 def ensure_patchelf_in_path_or_raise():
     """Ensure patchelf is in the PATH or raise."""
     return ensure_executables_in_path_or_raise(
-        executables=["patchelf"], abstract_spec=patchelf_root_spec()
+        executables=["patchelf"], abstract_spec=patchelf_root_spec(), cmd_check=verify_patchelf
     )
 
 
