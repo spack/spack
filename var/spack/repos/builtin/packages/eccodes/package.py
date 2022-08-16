@@ -79,9 +79,8 @@ das = {
 
 def das_values(centers, only_with=None):
     def permutations(seq, ow=None):
-        """Returns an iterable that provides all permutations of all lengths of
-        elements in a sequence. Optionally returns only those permutations that
-        contain element only_with."""
+        """Returns an iterable that provides all permutations of all lengths of elements in a
+        sequence. Optionally returns only those permutations that contain element only_with."""
         if ow is None:
             return itertools.chain.from_iterable(
                 itertools.permutations(seq, length + 1) for length in range(len(seq))
@@ -132,8 +131,8 @@ def declare_das_conflicts():
 
 
 class Eccodes(CMakePackage):
-    """ecCodes is a package developed by ECMWF for processing meteorological
-    data in GRIB (1/2), BUFR (3/4) and GTS header formats."""
+    """ecCodes is a package developed by ECMWF for processing meteorological data in GRIB (1/2),
+    BUFR (3/4) and GTS header formats."""
 
     homepage = "https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home"
     url = "https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
@@ -246,16 +245,14 @@ class Eccodes(CMakePackage):
 
     @when("%nag+fortran")
     def patch(self):
-        # A number of Fortran source files assume that the kinds of integer and
-        # real variables are specified in bytes. However, the NAG compiler
-        # accepts such code only with an additional compiler flag -kind=byte.
-        # We do not simply add the flag because all user applications would
-        # have to be compiled with this flag too, which goes against one of the
-        # purposes of using the NAG compiler: make sure the code does not
-        # contradict the Fortran standards. The following logic could have been
-        # implemented as regular patch files, which would, however, be quite
-        # large. We would also have to introduce several versions of each patch
-        # file to support different versions of the package.
+        # A number of Fortran source files assume that the kinds of integer and real variables are
+        # specified in bytes. However, the NAG compiler accepts such code only with an additional
+        # compiler flag -kind=byte. We do not simply add the flag because all user applications
+        # would have to be compiled with this flag too, which goes against one of the purposes of
+        # using the NAG compiler: make sure the code does not contradict the Fortran standards. The
+        # following logic could have been implemented as regular patch files, which would, however,
+        # be quite large. We would also have to introduce several versions of each patch file to
+        # support different versions of the package.
 
         patch_kind_files = [
             "fortran/eccodes_f90_head.f90",
@@ -272,23 +269,23 @@ class Eccodes(CMakePackage):
                 [
                     "examples/F90/grib_print_data.f90",
                     "examples/F90/grib_print_data_static.f90",
-                    # Files that need patching only when the extended regression
-                    # tests are enabled, which we disable unconditionally:
-                    # 'examples/F90/bufr_attributes.f90',
-                    # 'examples/F90/bufr_expanded.f90',
-                    # 'examples/F90/bufr_get_keys.f90',
-                    # 'examples/F90/bufr_read_scatterometer.f90',
-                    # 'examples/F90/bufr_read_synop.f90',
-                    # 'examples/F90/bufr_read_temp.f90',
-                    # 'examples/F90/bufr_read_tempf.f90',
-                    # 'examples/F90/bufr_read_tropical_cyclone.f90',
-                    # 'examples/F90/grib_clone.f90',
-                    # 'examples/F90/grib_get_data.f90',
-                    # 'examples/F90/grib_nearest.f90',
-                    # 'examples/F90/grib_precision.f90',
-                    # 'examples/F90/grib_read_from_file.f90',
-                    # 'examples/F90/grib_samples.f90',
-                    # 'examples/F90/grib_set_keys.f90'
+                    # Files that need patching only when the extended regression tests are enabled,
+                    # which we disable unconditionally:
+                    # "examples/F90/bufr_attributes.f90",
+                    # "examples/F90/bufr_expanded.f90",
+                    # "examples/F90/bufr_get_keys.f90",
+                    # "examples/F90/bufr_read_scatterometer.f90",
+                    # "examples/F90/bufr_read_synop.f90",
+                    # "examples/F90/bufr_read_temp.f90",
+                    # "examples/F90/bufr_read_tempf.f90",
+                    # "examples/F90/bufr_read_tropical_cyclone.f90",
+                    # "examples/F90/grib_clone.f90",
+                    # "examples/F90/grib_get_data.f90",
+                    # "examples/F90/grib_nearest.f90",
+                    # "examples/F90/grib_precision.f90",
+                    # "examples/F90/grib_read_from_file.f90",
+                    # "examples/F90/grib_samples.f90",
+                    # "examples/F90/grib_set_keys.f90",
                 ]
             )
 
@@ -297,13 +294,13 @@ class Eccodes(CMakePackage):
                     "examples/F90/bufr_ecc-1284.f90",
                     "examples/F90/grib_set_data.f90",
                     "examples/F90/grib_set_packing.f90",
-                    # Files that need patching only when the extended regression
-                    # tests are enabled, which we disable unconditionally:
-                    # 'examples/F90/bufr_copy_data.f90',
-                    # 'examples/F90/bufr_get_string_array.f90',
-                    # 'examples/F90/bufr_keys_iterator.f90',
-                    # 'examples/F90/get_product_kind.f90',
-                    # 'examples/F90/grib_count_messages_multi.f90'
+                    # Files that need patching only when the extended regression tests are enabled,
+                    # which we disable unconditionally:
+                    # "examples/F90/bufr_copy_data.f90",
+                    # "examples/F90/bufr_get_string_array.f90",
+                    # "examples/F90/bufr_keys_iterator.f90",
+                    # "examples/F90/get_product_kind.f90",
+                    # "examples/F90/grib_count_messages_multi.f90",
                 ]
             )
 
@@ -391,12 +388,10 @@ class Eccodes(CMakePackage):
 
         # Return Fortran library if requested:
         return_fortran = "fortran" in query_parameters
-        # Return C library if either requested or the Fortran library is not
-        # requested (to avoid overlinking) or the static libraries are
-        # requested:
+        # Return C library if either requested or the Fortran library is not requested (to avoid
+        # overlinking) or the static libraries are requested:
         return_c = "c" in query_parameters or not (return_fortran and shared)
-        # Return MEMFS library only if enabled and the static libraries are
-        # requested:
+        # Return MEMFS library only if enabled and the static libraries are requested:
         return_memfs = "+memfs" in self.spec and not shared
 
         if return_fortran:
@@ -438,8 +433,8 @@ class Eccodes(CMakePackage):
                     das_placement_dirname(das_type, center),
                 )
 
-                # Make sure the directory exists to cover the case when no
-                # resources are assigned to the center:
+                # Make sure the directory exists to cover the case when no resources are assigned
+                # to the center:
                 mkdirp(center_placement_path)
 
                 # Copy files from the default definitions/samples directory:
@@ -475,8 +470,8 @@ class Eccodes(CMakePackage):
             # Path to the root directory with extra definitions/samples:
             das_destination_dir = join_path(self.stage.source_path, "spack-{0}".format(das_type))
 
-            # Path to the view directory to be searched for files when
-            # generating the in-memory representation on definitions/samples:
+            # Path to the view directory to be searched for files when generating the in-memory
+            # representation on definitions/samples:
             view_dir = join_path(das_destination_dir, das_type)
 
             # List of the projected directories:
@@ -489,8 +484,8 @@ class Eccodes(CMakePackage):
             # Create the view:
             self._create_view(view_dir, *projected_dirs)
 
-            # Tell Cmake where to search for definitions/samples files when
-            # generating their in-memory representation:
+            # Tell Cmake where to search for definitions/samples files when generating their
+            # in-memory representation:
             filter_file(
                 "${{PROJECT_SOURCE_DIR}}/{0}".format(das_type),
                 view_dir,
@@ -528,16 +523,16 @@ class Eccodes(CMakePackage):
             self.define("ENABLE_TESTS", self.run_tests),
             # Examples are not installed and are just part of the test suite:
             self.define("ENABLE_EXAMPLES", self.run_tests),
-            # Unconditionally disable the extended regression tests, since they
-            # download additional data (~134MB):
+            # Unconditionally disable the extended regression tests, since they download additional
+            # data (~134MB):
             self.define("ENABLE_EXTRA_TESTS", False),
         ]
 
         if "+netcdf" in self.spec:
             args.extend(
                 [
-                    # Prevent possible overriding by environment variables
-                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
+                    # Prevent possible overriding by environment variables NETCDF_ROOT, NETCDF_DIR,
+                    # and NETCDF_PATH:
                     self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
                     # Prevent overriding by environment variable HDF5_ROOT:
                     self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
@@ -563,14 +558,13 @@ class Eccodes(CMakePackage):
                     continue
 
                 if "+memfs" in self.spec:
-                    # Enforce installation of the default definitions/samples to
-                    # let the user override the in-memory representation if
-                    # needed:
+                    # Enforce installation of the default definitions/samples to let the user
+                    # override the in-memory representation if needed:
                     var_name = "ENABLE_INSTALL_ECCODES_{0}".format(das_type.upper())
                     var_value = True
                 else:
-                    # Make the view directory the default one to be searched for
-                    # the definitions/samples:
+                    # Make the view directory the default one to be searched for the
+                    # definitions/samples:
                     var_name = "ECCODES_{0}_SUFF".format(self._get_var_stem(das_type))
                     var_value = join_path(
                         "share", "eccodes", das_placement_dirname(das_type, "all")
@@ -622,14 +616,13 @@ class Eccodes(CMakePackage):
             if value == "none":
                 continue
 
-            # Path to the default directory (i.e. the one that the library
-            # searches for the definitions/samples by default):
+            # Path to the default directory (i.e. the one that the library searches for the
+            # definitions/samples by default):
             default_dir = join_path(
                 self.prefix.share.eccodes, das_placement_dirname(das_type, "all")
             )
 
-            # Path to the usual installation directory for the
-            # definitions/samples:
+            # Path to the usual installation directory for the definitions/samples:
             usual_dir = join_path(self.prefix.share.eccodes, das_type)
 
             # Move the default definitions/samples to the usual directory:
@@ -649,8 +642,7 @@ class Eccodes(CMakePackage):
             readme_path = join_path(default_dir, "README")
             with open(readme_path, "w") as f:
                 f.write(
-                    "This directory is a projection of {0} from the "
-                    "following directories:\n"
+                    "This directory is a projection of {0} from the following directories:\n"
                     "{1}".format(das_type, "\n".join(projected_dirs))
                 )
             set_install_permissions(readme_path)
@@ -680,9 +672,8 @@ class Eccodes(CMakePackage):
 
             def ignore(file_or_dir):
                 dst_file_or_dir = join_path(dst_path, file_or_dir)
-                # Ignore if dst_file_or_dir exists and it's either a file (not a
-                # directory) or a directory that conflicts with a file (not a
-                # directory) from src_path:
+                # Ignore if dst_file_or_dir exists and it's either a file (not a directory) or a
+                # directory that conflicts with a file (not a directory) from src_path:
                 return os.path.exists(dst_file_or_dir) and (
                     not os.path.isdir(dst_file_or_dir)
                     or not os.path.isdir(join_path(src_path, file_or_dir))
