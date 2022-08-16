@@ -113,6 +113,8 @@ from language interpreters into their extensions. The latter two instead permit 
 fine tune the filesystem layout, content and creation of module files to meet
 site specific conventions.
 
+.. _overide-api-calls-in-package-py:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Override API calls in ``package.py``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -134,7 +136,7 @@ The second method:
        pass
 
 can instead inject run-time environment modifications in the module files of packages
-that depend on it. In both cases you need to fill ``run_env`` with the desired
+that depend on it. In both cases you need to fill ``env`` with the desired
 list of environment modifications.
 
 .. admonition:: The ``r`` package and callback APIs
@@ -518,18 +520,33 @@ inspections and customize them per-module-set.
     prefix_inspections:
       bin:
         - PATH
-      lib:
-        - LIBRARY_PATH
+      man:
+        - MANPATH
       '':
         - CMAKE_PREFIX_PATH
 
 Prefix inspections are only applied if the relative path inside the
 installation prefix exists. In this case, for a Spack package ``foo``
 installed to ``/spack/prefix/foo``, if ``foo`` installs executables to
-``bin`` but no libraries in ``lib``, the generated module file for
+``bin`` but no manpages in ``man``, the generated module file for
 ``foo`` would update ``PATH`` to contain ``/spack/prefix/foo/bin`` and
 ``CMAKE_PREFIX_PATH`` to contain ``/spack/prefix/foo``, but would not
-update ``LIBRARY_PATH``.
+update ``MANPATH``.
+
+The default list of environment variables in this config section
+inludes ``PATH``, ``MANPATH``, ``ACLOCAL_PATH``, ``PKG_CONFIG_PATH``
+and ``CMAKE_PREFIX_PATH``, as well as ``DYLD_FALLBACK_LIBRARY_PATH``
+on macOS. On Linux however, the corresponding ``LD_LIBRARY_PATH``
+variable is *not* set, because it affects the behavior of
+system executables too.
+
+.. note::
+
+   In general, the ``LD_LIBRARY_PATH`` variable is not required
+   when using packages built with Spack, thanks to the use of RPATH.
+   Some packages may still need the variable, which is best handled
+   on a per-package basis instead of globally, as explained in
+   :ref:`overide-api-calls-in-package-py`.
 
 There is a special case for prefix inspections relative to environment
 views. If all of the following conditions hold for a module set

@@ -18,13 +18,14 @@ class Hip(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/HIP"
     git = "https://github.com/ROCm-Developer-Tools/HIP.git"
-    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
+    version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
     version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
     version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
     version("5.0.2", sha256="e23601e6f4f62083899ea6356fffbe88d1deb20fa61f2c970e3c0474cd8886ca")
@@ -124,6 +125,7 @@ class Hip(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -142,6 +144,7 @@ class Hip(CMakePackage):
 
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
+        ("5.2.0", "8774958bebc29a4b7eb9dc2d38808d79d9a24bf9c1f44e801ff99d2d5ba82240"),
         ("5.1.3", "707f2217f0e7aeb62d7b76830a271056d665542bf5f7a54e40adf4d5f299ca93"),
         ("5.1.0", "77984854bfe00f938353fe4c7604d09967eaf5c609d05f1e6423d3c3dea86e61"),
         ("5.0.2", "80e7268dd22eba0f2f9222932480dede1d80e56227c0168c6a0cc8e4f23d3b76"),
@@ -162,6 +165,7 @@ class Hip(CMakePackage):
         )
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
         ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
         ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
         ("5.0.2", "3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95"),
@@ -181,6 +185,7 @@ class Hip(CMakePackage):
             when="@{0}".format(d_version),
         )
     for d_version, d_shasum in [
+        ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
         ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
         ("5.1.0", "f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa"),
         ("5.0.2", "34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e"),
@@ -214,7 +219,16 @@ class Hip(CMakePackage):
     patch(
         "0011-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
         ".5.0.2.patch",
-        when="@5.0.2:",
+        when="@5.0.2:5.1.3",
+    )
+
+    # Improve compilation without git repo and remove compiler rt linkage
+    # for host and correction in CMake target path variable and
+    # correcting the CMake path variable.
+    patch(
+        "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
+        ".5.2.0.patch",
+        when="@5.2.0:",
     )
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141

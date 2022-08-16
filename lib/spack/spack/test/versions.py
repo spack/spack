@@ -585,7 +585,7 @@ def test_list_highest():
     assert vl2.lowest() == Version("master")
 
 
-@pytest.mark.parametrize("version_str", ["foo 1.2.0", "!", "1!2"])
+@pytest.mark.parametrize("version_str", ["foo 1.2.0", "!", "1!2", "=1.2.0"])
 def test_invalid_versions(version_str):
     """Ensure invalid versions are rejected with a ValueError"""
     with pytest.raises(ValueError):
@@ -727,3 +727,22 @@ def test_version_list_with_range_included_in_concrete_version_interpreted_as_ran
 def test_version_list_with_range_and_concrete_version_is_not_concrete():
     v = VersionList([Version("3.1"), VersionRange("3.1.1", "3.1.2")])
     assert v.concrete
+
+
+@pytest.mark.parametrize(
+    "vstring, eq_vstring, is_commit",
+    (
+        ("abc12" * 8 + "=develop", "develop", True),
+        ("git." + "abc12" * 8 + "=main", "main", True),
+        ("a" * 40 + "=develop", "develop", True),
+        ("b" * 40 + "=3.2", "3.2", True),
+        ("git.foo=3.2", "3.2", False),
+    ),
+)
+def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):
+    v = Version(vstring)
+    v_equivalent = Version(eq_vstring)
+    assert v.is_commit == is_commit
+    assert v.is_ref
+    assert not v._ref_lookup
+    assert v_equivalent.version == v.ref_version

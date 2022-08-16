@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
 import sys
 
 import pytest
@@ -139,6 +138,7 @@ def test_custom_store_in_environment(mutable_config, tmpdir):
     # Test that the custom store in an environment is taken into account
     # during bootstrapping
     spack_yaml = tmpdir.join("spack.yaml")
+    install_root = tmpdir.join("store")
     spack_yaml.write(
         """
 spack:
@@ -146,16 +146,18 @@ spack:
   - libelf
   config:
     install_tree:
-      root: /tmp/store
-"""
+      root: {0}
+""".format(
+            install_root
+        )
     )
     with spack.environment.Environment(str(tmpdir)):
         assert spack.environment.active_environment()
-        assert spack.config.get("config:install_tree:root") == "/tmp/store"
+        assert spack.config.get("config:install_tree:root") == install_root
         # Don't trigger evaluation here
         with spack.bootstrap.ensure_bootstrap_configuration():
             pass
-        assert str(spack.store.root) == os.sep + os.path.join("tmp", "store")
+        assert str(spack.store.root) == install_root
 
 
 def test_nested_use_of_context_manager(mutable_config):

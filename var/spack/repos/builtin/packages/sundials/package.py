@@ -237,6 +237,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # Patches
     # ==========================================================================
+    # https://github.com/spack/spack/issues/29526
+    patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")
 
     # remove OpenMP header file and function from hypre vector test code
     patch("test_nvector_parhyp.patch", when="@2.7.0:3.0.0")

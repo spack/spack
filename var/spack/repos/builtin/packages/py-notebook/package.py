@@ -13,6 +13,7 @@ class PyNotebook(PythonPackage):
     homepage = "https://github.com/jupyter/notebook"
     pypi = "notebook/notebook-6.1.4.tar.gz"
 
+    version("6.4.12", sha256="6268c9ec9048cff7a45405c990c29ac9ca40b0bc3ec29263d218c5e01f2b4e86")
     version("6.4.11", sha256="709b1856a564fe53054796c80e17a67262071c86bfbdfa6b96aaa346113c555a")
     version("6.4.5", sha256="872e20da9ae518bbcac3e4e0092d5bd35454e847dedb8cb9739e9f3b68406be0")
     version("6.1.4", sha256="687d01f963ea20360c0b904ee7a37c3d8cda553858c8d6e33fd0afd13e89de32")

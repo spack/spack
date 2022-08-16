@@ -60,6 +60,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     depends_on("cmake@3.14:")
     depends_on("catch2@2.13.7", when="+tests")
     depends_on("python@3:", when="+python")
+    depends_on("py-pybind11@2.9.1:", when="+python")
     #    depends_on("py-h5py", when="+tests build_extra=stellarcollapse")
     depends_on("py-sphinx", when="+doc")
     depends_on("py-sphinx-rtd-theme@0.4.3", when="+doc")

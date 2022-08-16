@@ -16,13 +16,14 @@ class RocmDbgapi(CMakePackage):
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCdbgapi"
     git = "https://github.com/ROCm-Developer-Tools/ROCdbgapi.git"
-    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.0.0.tar.gz"
+    url = "https://github.com/ROCm-Developer-Tools/ROCdbgapi/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librocm-dbgapi"]
 
     version("master", branch="amd-master")
+    version("5.2.0", sha256="44f0528a7583bc59b6585166d2289970b20115c4c70e3bcc218aff19fc242b3f")
     version("5.1.3", sha256="880f80ebf741e3451676837f720551e02cffd0b9346ca4dfa6cf7f7043282f2b")
     version("5.1.0", sha256="406db4b20bda12f6f32cbef88b03110aa001bf7bef6676f36e909b53c8354e43")
     version("5.0.2", sha256="b7554dfe96bda6c2ee762ad6e3e5f91f0f52b5a525e3fb29d5e1fe6f003652b5")
@@ -106,6 +107,7 @@ class RocmDbgapi(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("hsa-rocr-dev@" + ver, type="build", when="@" + ver)

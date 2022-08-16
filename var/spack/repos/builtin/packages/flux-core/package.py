@@ -5,6 +5,7 @@
 
 import os
 
+import spack.util.executable
 from spack.package import *
 
 
@@ -103,7 +104,7 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
-    variant("docs", default=False, description="Build flux manpages")
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     depends_on("libarchive", when="@0.38.0:")
@@ -130,9 +131,10 @@ class FluxCore(AutotoolsPackage):
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("lz4")
+    depends_on("sqlite")
 
     depends_on("asciidoc", type="build", when="+docs")
-    depends_on("py-docutils", type="build", when="@0.32.0:")
+    depends_on("py-docutils", type="build", when="@0.32.0: +docs")
 
     # Need autotools when building on master:
     depends_on("autoconf", type="build", when="@master")
@@ -173,9 +175,13 @@ class FluxCore(AutotoolsPackage):
         with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which("git")
-            git("fetch", "--unshallow")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
+            # When using spack develop, this will already be unshallow
+            try:
+                git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
+            except spack.util.executable.ProcessError:
+                git("fetch")
 
     def autoreconf(self, spec, prefix):
         self.setup()

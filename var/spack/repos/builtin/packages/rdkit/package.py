@@ -43,7 +43,7 @@ class Rdkit(CMakePackage):
     version("2020_03_6", sha256="a3663295a149aa0307ace6d1995094d0334180bc8f892fa325558a110154272b")
 
     depends_on("python@3:")
-    depends_on("boost@1.53.0: +python +serialization")
+    depends_on("boost@1.53.0: +python +serialization +iostreams +system")
 
     depends_on("py-numpy")
     depends_on("sqlite")

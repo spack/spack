@@ -239,6 +239,15 @@ To resolve this problem, please try the following:
             os.chmod(abs_path, mode)
 
     @run_before("configure")
+    def _patch_usr_bin_file(self):
+        """On NixOS file is not available in /usr/bin/file. Patch configure
+        scripts to use file from path."""
+
+        if self.spec.os.startswith("nixos"):
+            for configure_file in fs.find(".", files=["configure"], recursive=True):
+                fs.filter_file("/usr/bin/file", "file", configure_file, string=True)
+
+    @run_before("configure")
     def _set_autotools_environment_variables(self):
         """Many autotools builds use a version of mknod.m4 that fails when
         running as root unless FORCE_UNSAFE_CONFIGURE is set to 1.
