@@ -837,3 +837,7 @@ class TestSpecSyntax(object):
         for a, b in itertools.product(specs, repeat=2):
             # Check that we can compare without raising an error
             assert a <= b or b < a
+
+    def test_git_ref_specs_with_variants(self):
+        spec_str = 'develop-branch-version@git.{h}=develop+var1+var2'.format(h='a'*40)
+        self.check_parse(spec_str)
