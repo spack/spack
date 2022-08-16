@@ -15,6 +15,7 @@ class PyFenicsFfcx(PythonPackage):
     maintainers = ["chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
+    version("0.5.0", sha256="147cf02b3debad4d9eae7725daf010d99267ba456b82fc5094da5a81e2898e03")
     version("0.4.2", sha256="3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4")
     version("0.3.0", sha256="33fa1a0cc5762f360033c25a99ec9462be933f8ba413279e35cd2c3b5c3e6096")
     version("0.2.0", sha256="562a704163a6427e0341d267e69b8bf55d8f53d673829170b443191577e8d9b6")
