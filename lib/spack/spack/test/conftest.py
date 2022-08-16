@@ -706,6 +706,20 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
         yield cfg
 
 
+@pytest.fixture(scope="function")
+def concretize_scope(mutable_config, tmpdir):
+    """Adds a scope for concretization preferences"""
+    tmpdir.ensure_dir("concretize")
+    mutable_config.push_scope(
+        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+    )
+
+    yield
+
+    mutable_config.pop_scope()
+    spack.repo.path._provider_index = None
+
+
 @pytest.fixture
 def no_compilers_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
