@@ -2254,10 +2254,6 @@ class WindowsSimulatedRuntimePath(object):
             if hasattr(self.pkg, 'libs') else set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
         return pkg_libs | set((self.pkg.prefix.bin)) | self.internal_links
 
-    @property.setter
-    def internal_links(self, *dest):
-        self._internal_links = self._internal_links | set(dest)
-
     @property
     def internal_links(self):
         """
@@ -2265,6 +2261,10 @@ class WindowsSimulatedRuntimePath(object):
         against extension modules/build time executables/internal linkage
         """
         return self._internal_links
+
+    @internal_links.setter
+    def internal_links(self, *dest):
+        self._internal_links = self._internal_links | set(dest)
 
     @property
     def link_targets(self):
