@@ -23,9 +23,7 @@ class Googletest(CMakePackage):
     version("1.7.0", sha256="9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b")
     version("1.6.0", sha256="a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a")
 
-    variant("gmock", default=False, description="Build with gmock")
-    conflicts("+gmock", when="@:1.7.0")
-
+    variant("gmock", default=True, when="@1.8:", description="Build with gmock")
     variant("pthreads", default=True, description="Build multithreaded version with pthreads")
     variant("shared", default=True, description="Build shared libraries (DLLs)")
 
@@ -46,12 +44,10 @@ class Googletest(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]
-        if spec.satisfies("@1.8.0:"):
+        if spec.satisfies("@1.8:"):
             # New style (contains both Google Mock and Google Test)
-            args.extend([
-                self.define('BUILD_GTEST', True),
-                self.define_from_variant("BUILD_GMOCK", "gmock")
-            ])
+            args.append(self.define("BUILD_GTEST", True))
+            args.append(self.define_from_variant("BUILD_GMOCK", "gmock"))
 
         return args
 
