@@ -69,6 +69,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("pugixml", when="@main")
 
     depends_on("fenics-ufcx@main", when="@main")
+    depends_on("fenics-ufcx@0.5.0", when="@0.5.0")
     depends_on("fenics-ufcx@0.4.2", when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type=("build", "run"), when="@0.3.0")
     depends_on("py-fenics-ffcx@0.2.0", type=("build", "run"), when="@0.2.0")
@@ -76,6 +77,7 @@ class FenicsDolfinx(CMakePackage):
 
     depends_on("fenics-basix")
     depends_on("fenics-basix@main", when="@main")
+    depends_on("fenics-basix@0.5.0", when="@0.5.0")
     depends_on("fenics-basix@0.4.2", when="@0.4.1")
     depends_on("fenics-basix@0.3.0", when="@0.3.0")
     depends_on("fenics-basix@0.2.0", when="@0.2.0")
