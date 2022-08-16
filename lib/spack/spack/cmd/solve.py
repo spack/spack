@@ -42,13 +42,6 @@ def setup_parser(subparser):
         "  solutions    models found by asp program\n"
         "  all          all of the above",
     )
-    subparser.add_argument(
-        "--models",
-        action="store",
-        type=int,
-        default=0,
-        help="number of solutions to search (default 0 for all)",
-    )
 
     # Below are arguments w.r.t. spec display (like spack spec)
     arguments.add_common_arguments(subparser, ["long", "very_long", "install_status"])
@@ -170,10 +163,6 @@ def solve(parser, args):
                 % (d, ", ".join(show_options + ("all",)))
             )
 
-    models = args.models
-    if models < 0:
-        tty.die("model count must be non-negative: %d")
-
     # Format required for the output (JSON, YAML or None)
     required_format = args.format
 
@@ -195,7 +184,6 @@ def solve(parser, args):
         result = solver.solve(
             specs,
             out=output,
-            models=models,
             timers=args.timers,
             stats=args.stats,
             setup_only=setup_only,
@@ -204,9 +192,7 @@ def solve(parser, args):
             _process_result(result, show, required_format, kwargs)
     else:
         for idx, result in enumerate(
-            solver.solve_in_rounds(
-                specs, out=output, models=models, timers=args.timers, stats=args.stats
-            )
+            solver.solve_in_rounds(specs, out=output, timers=args.timers, stats=args.stats)
         ):
             if "solutions" in show:
                 tty.msg("ROUND {0}".format(idx))

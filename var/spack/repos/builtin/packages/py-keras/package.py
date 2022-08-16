@@ -9,17 +9,30 @@ from spack.package import *
 
 
 class PyKeras(PythonPackage):
-    """Deep Learning library for Python. Convnets, recurrent neural networks,
-    and more. Runs on Theano or TensorFlow."""
+    """Deep Learning for humans.
+
+    Keras is a deep learning API written in Python, running on top of the machine
+    learning platform TensorFlow. It was developed with a focus on enabling fast
+    experimentation. Being able to go from idea to result as fast as possible is
+    key to doing good research.
+    """
 
     homepage = "https://keras.io"
-    git = "https://github.com/keras-team/keras"
+    git = "https://github.com/keras-team/keras.git"
     url = "https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz"
 
+    version("2.9.0", sha256="90226eaa0337573304f3e5ab44d4d9e3a65fe002776c5cbd0f65b738152c1084")
+    version("2.8.0", sha256="5e777b0101d8385d3a90fc9056f1b2f6313f2c830d2e8181828b300c9229ec0c")
     version("2.7.0", sha256="7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04")
     version("2.6.0", sha256="15586a3f3e1ed9182e6e0d4c0dbd052dfb7250e779ceb7e24f8839db5c63fcae")
-    version("2.5.0", commit="9c266106163390f173625c4e7b1ccb03ae145ffc")
+    version("2.5.0", commit="9c266106163390f173625c4e7b1ccb03ae145ffc", deprecated=True)
     version("2.4.3", sha256="fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973")
+    version("2.4.2", sha256="e26bc51b7b8fb7add452cdf6fba77d6509e6c78b9d9ef5fd32fe132c6d9182d2")
+    version("2.4.1", sha256="e282cc9c5c996043b21d045765c0c5bf541c1879232a97a574c51af0ce132cb1")
+    version("2.4.0", sha256="e31c6d2910767ab72f630309286fb7bf5476810dd64fde3e254054478442e9b0")
+    version("2.3.1", sha256="321d43772006a25a1d58eea17401ef2a34d388b588c9f7646c34796151ebc8cc")
+    version("2.3.0", sha256="a0d6ecf1d71cd0b85ea1da27ea7314a9d4723f5b468b7cedd87dcad0a491b354")
+    version("2.2.5", sha256="0fb448b95643a708d25d2394183a2f3a84eefb55fb64917152a46826990113ea")
     version("2.2.4", sha256="90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9")
     version("2.2.3", sha256="694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de")
     version("2.2.2", sha256="468d98da104ec5c3dbb10c2ef6bb345ab154f6ca2d722d4c250ef4d6105de17a")
@@ -39,6 +52,9 @@ class PyKeras(PythonPackage):
     version("2.0.5", sha256="cbce24758530e070fe1b403d6d21391cbea78c037b70bf6afc1ca9f1f8269eff")
     version("2.0.4", sha256="1cbe62af6821963321b275d5598fd94e63c11feaa1d4deaa79c9eb9ee0e1d68a")
     version("2.0.3", sha256="398dbd4a95e9d3ab2b2941d3e0c19362d397a2a6c3a667ab89d3d6aad30997f4")
+    version("2.0.2", sha256="53fd0a6e9eaca2563e13d2266eac2da478fa25092de3c665aa26e380a8126841")
+    version("2.0.1", sha256="c5c2727518f76606794363c01430f4992e482b4ab0dc6a8fa137c896855c09a8")
+    version("2.0.0", sha256="02846dceb36e98368f47ca090d0f5fe6828e22ece10668a07047bea4c92b157f")
     version("1.2.2", sha256="d2b18c4336eb9c4f0d03469870257efa7980a9b036c9d46dcf4d49e7f4487e2d")
     version("1.2.1", sha256="6adce75b2050608e6683c3046ef938bfdc5bfcd4c6b6c522df5e50d18e0ac7c6")
     version("1.2.0", sha256="33d5297cd0c280640dc5c075466995c05911bc1da35c83ae57b2a48188b605e2")
@@ -46,30 +62,50 @@ class PyKeras(PythonPackage):
     version("1.1.1", sha256="be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6")
     version("1.1.0", sha256="36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@2.4")
-    depends_on("py-numpy@1.9.1:", type=("build", "run"), when="@2.4")
-    depends_on("py-scipy@0.14:", type=("build", "run"), when="@2.4")
-    depends_on("py-h5py", type=("build", "run"), when="@2.4")
-    depends_on("py-keras-applications", type="run", when="@2.2:2.4")
-    depends_on("py-keras-preprocessing", type="run", when="@2.2:2.4")
+    # Supported Python versions listed in multiple places:
+    # * keras/tools/pip_package/setup.py
+    # * CONTRIBUTING.md
+    # * PKG-INFO
+    depends_on("python@3.7:", type=("build", "run"), when="@2.7:")
+    depends_on("python@3.6:", type=("build", "run"), when="@2.4:")
     depends_on("py-setuptools", type="build")
-    depends_on("py-theano", type=("build", "run"), when="@:2.2")
-    depends_on("py-pyyaml", type=("build", "run"), when="@:2.4")
-    depends_on("py-six", type=("build", "run"), when="@:2.2")
-    depends_on("py-tensorflow@2.5.0:2.5", type=("build", "run"), when="@2.5.0:2.5")
-    depends_on("py-tensorflow@2.6.0:2.6", type=("build", "run"), when="@2.6.0:2.6")
-    depends_on("py-tensorflow@2.7.0:2.7", type=("build", "run"), when="@2.7.0:2.7")
-    depends_on("bazel", type="build", when="@2.5.0:")
-    depends_on("protobuf", type="build", when="@2.5.0:")
+
+    # Required dependencies listed in multiple places:
+    # * BUILD
+    # * WORKSPACE
+    # * requirements.txt
+    # * setup.py
+    depends_on("pil", type=("build", "run"))
+    depends_on("py-absl-py", type=("build", "run"), when="@2.6:")
+    depends_on("py-h5py", type=("build", "run"))
+    depends_on("py-numpy@1.21.4:1.21", type=("build", "run"), when="@2.8:")
+    depends_on("py-numpy@1.19.2:1.19", type=("build", "run"), when="@2.7")
+    depends_on("py-numpy@1.9.1:", type=("build", "run"), when="@2.0.8:")
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"), when="@2.0.9:")
+    depends_on("py-pydot", type=("build", "run"))
+    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-scipy@1.5.2:1.5", type=("build", "run"), when="@2.6:")
+    depends_on("py-scipy@0.14:", type=("build", "run"), when="@2.0.8:")
+    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))
+    for ver in ["2.9", "2.8", "2.7", "2.6", "2.5"]:
+        depends_on("py-tensorflow@" + ver, type=("build", "run"), when="@" + ver)
+        depends_on("py-tensorboard@" + ver, type=("build", "run"), when="@" + ver)
+    depends_on("py-theano", type=("build", "run"), when="@:2.0.7")
+
+    # Required dependencies not listed anywhere?
+    depends_on("bazel", type="build", when="@2.5:")
+    depends_on("protobuf", type="build", when="@2.5:")
 
     def url_for_version(self, version):
-        if version >= Version("2.6.0"):
+        if version >= Version("2.6"):
             return super(PyKeras, self).url_for_version(version)
         else:
             url = "https://pypi.io/packages/source/K/Keras/Keras-{0}.tar.gz"
             return url.format(version.dotted)
 
-    @when("@2.5.0:")
+    @when("@2.5:")
     def patch(self):
         infile = join_path(self.package_dir, "protobuf_build.patch")
         with open(infile, "r") as source_file:
@@ -84,7 +120,7 @@ class PyKeras(PythonPackage):
             string=True,
         )
 
-    @when("@2.5.0:")
+    @when("@2.5:")
     def install(self, spec, prefix):
         self.tmp_path = tempfile.mkdtemp(prefix="spack")
         env["HOME"] = self.tmp_path

@@ -21,6 +21,11 @@ class Spack(Package):
     maintainers = ["haampie"]
 
     version("develop", branch="develop")
+    version("0.18.1", sha256="d1491374ce280653ee0bc48cd80527d06860b886af8b0d4a7cf1d0a2309191b7")
+    version("0.18.0", sha256="7b8d1e6bb49cd4f46f79a93fa577e00336dafeb5452712e36efeafd02711d38e")
+    version("0.17.3", sha256="e9bf38917fa3b5231a65930aa657ef19fd380bebcc9ee44204167b1593f6fa06")
+    version("0.17.2", sha256="3c3c0eccc5c0a1fa89223cbdfd48c71c5be8b4645f5fa4e921426062a9b32d51")
+    version("0.17.1", sha256="96850f750c5a17675275aa059eabc2ae09b7a8c7b59c5762d571925b6897acfb")
     version("0.17.0", sha256="93df99256a892ceefb153d48e2080c01d18e58e27773da2c2a469063d67cb582")
     version("0.16.3", sha256="26636a2e2cc066184f12651ac6949f978fc041990dba73934960a4c9c1ea383d")
     version("0.16.2", sha256="ed3e5d479732b0ba82489435b4e0f9088571604e789f7ab9bc5ce89030793350")
@@ -32,6 +37,7 @@ class Spack(Package):
     # Python (with spack python -i ipython support)
     depends_on("python@2.6.0:2.7,3.5:", type="run")
     depends_on("python@2.7.0:2.7,3.5:", type="run", when="@0.18.0:")
+    depends_on("python@2.7.0:2.7,3.6:", type="run", when="@0.19.0:")
     depends_on("py-ipython", type="run")
 
     # Concretizer

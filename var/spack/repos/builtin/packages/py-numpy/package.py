@@ -23,6 +23,7 @@ class PyNumpy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("main", branch="main")
+    version("1.23.2", sha256="b78d00e48261fbbd04aa0d7427cf78d18401ee0abd89c7559bbf422e5b1c7d01")
     version("1.23.1", sha256="d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624")
     version("1.23.0", sha256="bd3fa4fe2e38533d5336e1272fc4e765cabbbde144309ccee8675509d5cd7b05")
     version("1.22.4", sha256="425b390e4619f58d8526b3dcf656dde069133ae5c240229821f01b5f44ea07af")
@@ -161,6 +162,7 @@ class PyNumpy(PythonPackage):
 
     # Newer versions will not build with Intel https://github.com/numpy/numpy/issues/22011
     conflicts("%intel", when="@1.23.0:")
+    conflicts("%oneapi", when="@1.23.0:")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/n/numpy/numpy-{}.{}"

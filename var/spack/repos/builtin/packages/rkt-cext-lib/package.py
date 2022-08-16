@@ -20,6 +20,6 @@ class RktCextLib(RacketPackage):
     depends_on("rkt-dynext-lib@8.3", type=("build", "run"), when="@8.3")
     depends_on("rkt-scheme-lib@8.3", type=("build", "run"), when="@8.3")
 
-    name = "cext-lib"
+    racket_name = "cext-lib"
     pkgs = True
-    subdirectory = name
+    subdirectory = racket_name
