@@ -542,6 +542,7 @@ error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
 #defined requirement_group/2.
 #defined requirement_group_member/3.
 #defined requirement_has_weight/2.
+#defined requirement_policy/3.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
