@@ -52,7 +52,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
         """
         with working_dir(self.stage.source_path):
             # modify Makefile not to git init submodules.
-            cmd = "/bin/sed -i -r \
+            cmd = "/bin/sed -i.bak -r \
             '/^# Rule for auto init submodules/,/git submodule update.*$/d' \
             Makefile"
             p = Popen(shlex.split(cmd))
