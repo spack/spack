@@ -16,7 +16,7 @@ class HipRocclr(CMakePackage):
     git = "https://github.com/ROCm-Developer-Tools/ROCclr.git"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
 
     def url_for_version(self, version):
         # Fix up a typo in the 3.5.0 release.
@@ -27,6 +27,7 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version("master", branch="main")
+    version("5.2.0", sha256="37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb")
     version("5.1.3", sha256="ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48")
     version("5.1.0", sha256="f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa")
     version("5.0.2", sha256="34decd84652268dde865f38e66f8fb4750a08c2457fea52ad962bced82a03e5e")
@@ -113,6 +114,7 @@ class HipRocclr(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
@@ -135,6 +137,7 @@ class HipRocclr(CMakePackage):
 
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
         ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
         ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
         ("5.0.2", "3edb1992ba28b4a7f82dd66fbd121f62bd859c1afb7ceb47fa856bd68feedc95"),
@@ -188,8 +191,8 @@ class HipRocclr(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DUSE_COMGR_LIBRARY=yes",
-            "-DOPENCL_DIR={0}/opencl-on-vdi".format(self.stage.source_path),
+            self.define("USE_COMGR_LIBRARY", "yes"),
+            self.define("OPENCL_DIR", join_path(self.stage.source_path, "opencl-on-vdi")),
         ]
         return args
 
