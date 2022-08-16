@@ -1296,6 +1296,7 @@ def last_modification_time_recursive(path):
         os.stat(os.path.join(root, name)).st_mtime
         for root, dirs, files in os.walk(path)
         for name in dirs + files
+        if os.path.exists(os.path.join(root, name))
     )
     return max(times)
 
