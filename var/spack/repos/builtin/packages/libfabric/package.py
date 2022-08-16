@@ -48,6 +48,7 @@ class Libfabric(AutotoolsPackage):
         "gni",
         "mlx",
         "mrail",
+        "opx",
         "psm",
         "psm2",
         "psm3",
@@ -102,6 +103,7 @@ class Libfabric(AutotoolsPackage):
     depends_on("libtool", when="@develop", type="build")
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
+    conflicts("fabrics=opx", when="@:1.14.99")
 
     def setup_build_environment(self, env):
         if self.run_tests:
