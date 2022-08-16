@@ -157,6 +157,7 @@ class Eccodes(CMakePackage):
     maintainers = ["skosukhin"]
 
     version("develop", branch="develop")
+    version("2.26.0", sha256="392f632612e16a8c0bb0b8f6d627cbc3f54e56f51ace05bceac368377ab52e49")
     version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
     version("2.24.2", sha256="c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403")
     version("2.23.0", sha256="cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c")
