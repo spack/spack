@@ -164,6 +164,7 @@ spack:
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
