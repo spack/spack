@@ -54,7 +54,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
-    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
+    conflicts("@:3.5 +sycl", when="%dpcpp@2022:")
+    conflicts("@:3.5 +sycl", when="%oneapi@2022:")
 
     tpls_variants = {
         "hpx": [False, "Whether to enable the HPX library"],
