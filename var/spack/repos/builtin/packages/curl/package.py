@@ -81,7 +81,7 @@ class Curl(AutotoolsPackage):
     )
     variant("nghttp2", default=False, description="build nghttp2 library (requires C++11)")
     variant("libssh2", default=False, description="enable libssh2 support")
-    variant("libssh", default=False, description="enable libssh support")  # , when='7.58:')
+    variant("libssh", default=False, description="enable libssh support", when="@7.58:")
     variant("gssapi", default=False, description="enable Kerberos support")
     variant("librtmp", default=False, description="enable Rtmp support")
     variant("ldap", default=False, description="enable ldap support")
@@ -94,14 +94,6 @@ class Curl(AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
-    conflicts("+libssh", when="@:7.57")
-    # on OSX and --with-ssh the configure steps fails with
-    # one or more libs available at link-time are not available run-time
-    # unless the libssh are installed externally (e.g. via homebrew), even
-    # though spack isn't supposed to know about such a libssh installation.
-    # C.f. https://github.com/spack/spack/issues/7777
-    conflicts("platform=darwin", when="+libssh2")
-    conflicts("platform=darwin", when="+libssh")
     conflicts("platform=cray", when="tls=secure_transport", msg="Only supported on macOS")
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
 
@@ -194,11 +186,11 @@ class Curl(AutotoolsPackage):
             args.append("--without-gssapi")
 
         args += self.with_or_without("tls")
-        args += self.with_or_without("libidn2", "prefix")
+        args += self.with_or_without("libidn2", activation_value="prefix")
         args += self.with_or_without("librtmp")
-        args += self.with_or_without("nghttp2")
-        args += self.with_or_without("libssh2")
-        args += self.with_or_without("libssh")
+        args += self.with_or_without("nghttp2", activation_value="prefix")
+        args += self.with_or_without("libssh2", activation_value="prefix")
+        args += self.with_or_without("libssh", activation_value="prefix")
         args += self.enable_or_disable("ldap")
 
         return args

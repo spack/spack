@@ -208,6 +208,8 @@ class QuantumEspresso(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
+    depends_on("git@2.13:", type="build")
+    depends_on("m4", type="build")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
