@@ -142,6 +142,7 @@ class Visit(CMakePackage):
     depends_on("silo~mpi", when="+silo~mpi")
 
     depends_on("conduit@0.8.3:", when="+conduit")
+    depends_on("conduit+python", when="+conduit")
     depends_on("conduit+hdf5", when="+conduit+hdf5")
     depends_on("conduit~hdf5", when="+conduit~hdf5")
     depends_on("conduit+mpi", when="+conduit+mpi")
@@ -281,7 +282,12 @@ class Visit(CMakePackage):
             args.append(self.define("VISIT_SILO_DIR", spec["silo"].prefix))
 
         if "+conduit" in spec:
-            args.append(self.define("VISIT_CONDUIT_DIR", spec["conduit"].prefix))
+            args.extend(
+                [
+                    self.define("VISIT_CONDUIT_DIR", spec["conduit"].prefix),
+                    self.define("CONDUIT_VERSION", spec["conduit"].version),
+                ]
+            )
 
         if "+mfem" in spec:
             args.extend(
