@@ -89,20 +89,15 @@ def test_list_update(tmpdir, mock_packages):
         assert f.read() == "empty\n"
 
 
-def test_tag1(mock_packages):
+def test_list_tags(mock_packages):
+     output = list('--tag', 'tag1')
+     assert 'mpich' in output
+     assert 'mpich2' in output
 
-    output = list("--tag","tag1")
+     output = list('--tag', 'tag2')
+     assert 'mpich\n' in output
+     assert 'mpich2' not in output
 
-    args = parser.parse_args(["--tag", "tag1"])
-    spack.cmd.find.find(parser, args)
-
-    assert len(specs) == 2
-    assert "mpich" in [x.name for x in specs]
-
-    assert "mpich2" in [x.name for x in specs] 
-    assert "openmpi" not in output      
-
-
-    assert "mpich2" in [x.name for x in specs]
-    assert "openmpi" not in output
-
+     output = list('--tag', 'tag3')
+     assert 'mpich\n' not in output
+     assert 'mpich2' in output
