@@ -127,21 +127,14 @@ class Helics(CMakePackage):
         ]
 
         # HELICS core type CMake options
-        if spec.satisfies("@3:"):
-            # Options were renamed in v3
-            args.append(from_variant("HELICS_ENABLE_ZMQ_CORE", "zmq"))
-            args.append(from_variant("HELICS_ENABLE_TCP_CORE", "tcp"))
-            args.append(from_variant("HELICS_ENABLE_UDP_CORE", "udp"))
-            args.append(from_variant("HELICS_ENABLE_IPC_CORE", "ipc"))
-            args.append(from_variant("HELICS_ENABLE_INPROC_CORE", "inproc"))
-            args.append(from_variant("HELICS_ENABLE_MPI_CORE", "mpi"))
-        else:
-            args.append(from_variant("ENABLE_ZMQ_CORE", "zmq"))
-            args.append(from_variant("ENABLE_TCP_CORE", "tcp"))
-            args.append(from_variant("ENABLE_UDP_CORE", "udp"))
-            args.append(from_variant("ENABLE_IPC_CORE", "ipc"))
-            args.append(from_variant("ENABLE_INPROC_CORE", "inproc"))
-            args.append(from_variant("ENABLE_MPI_CORE", "mpi"))
+        # Options were renamed in v3
+        pre = "HELICS_" if spec.satisfies("@3:") else ""
+        args.append(from_variant("{0}ENABLE_ZMQ_CORE".format(pre), "zmq"))
+        args.append(from_variant("{0}ENABLE_TCP_CORE".format(pre), "tcp"))
+        args.append(from_variant("{0}ENABLE_UDP_CORE".format(pre), "udp"))
+        args.append(from_variant("{0}ENABLE_IPC_CORE".format(pre), "ipc"))
+        args.append(from_variant("{0}ENABLE_INPROC_CORE".format(pre), "inproc"))
+        args.append(from_variant("{0}ENABLE_MPI_CORE".format(pre), "mpi"))
 
         # HELICS shared library options
         args.append(
