@@ -81,10 +81,8 @@ def _patchelf():
     if is_macos:
         return None
 
-    patchelf = executable.which("patchelf")
-    if patchelf is None:
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
     return patchelf.path
 
