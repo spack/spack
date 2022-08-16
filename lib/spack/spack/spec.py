@@ -5271,6 +5271,9 @@ class SpecParser(spack.parse.Parser):
                 start += self.token.value
                 self.expect(VAL)
                 start += self.token.value
+                if '+' in self.token.value:
+                    print(self.token.value)
+                    assert False
 
         if self.accept(COLON):
             if self.accept(ID):
