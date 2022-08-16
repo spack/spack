@@ -104,7 +104,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
-    dav_sdk_depends_on("hdf5@1.12: +shared+mpi+fortran", when="+hdf5")
+    # SDK requires HDF5 minimum version of 1.13 for the VOL connectors
+    dav_sdk_depends_on("hdf5@1.13: +shared+mpi+fortran", when="+hdf5")
 
     dav_sdk_depends_on("parallel-netcdf+shared+fortran", when="+pnetcdf")
 
