@@ -174,6 +174,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+cuda", when="@:2.7.0")
     conflicts("+rocm", when="@:5.6.0")
+    conflicts("+cuda", when="+rocm")
     conflicts("~int64", when="@:2.7.0")
     conflicts("+f2003", when="@:4.1.0")
 

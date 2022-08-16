@@ -90,6 +90,10 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # Language Options
     variant("fortran", default=True, sticky=True, description="Enable fortran language features.")
 
+    conflicts(
+        "+cuda", when="+rocm", msg="Only one of CUDA or ROCm support may be configured at once"
+    )
+
     ############################################################
     # Dependencies
     ############################################################

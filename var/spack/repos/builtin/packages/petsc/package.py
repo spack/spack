@@ -181,6 +181,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     conflicts("+trilinos", when="~mpi", msg=mpi_msg)
     conflicts("+kokkos", when="~mpi", msg=mpi_msg)
     conflicts("^openmpi~cuda", when="+cuda")  # +cuda requires CUDA enabled OpenMPI
+    conflicts("+rocm", when="+cuda")
 
     # older versions of petsc did not support mumps when +int64
     conflicts("+mumps", when="@:3.12+int64")

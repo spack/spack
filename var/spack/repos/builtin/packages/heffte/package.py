@@ -49,6 +49,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^openmpi~cuda", when="+cuda")  # +cuda requires CUDA enabled OpenMPI
     conflicts("~cuda~rocm", when="+magma")  # magma requires CUDA or HIP
     conflicts("+rocm", when="@:2.1.0")  # heffte+rocm is in in development in spack
+    conflicts("+cuda", when="+rocm")  # Cannot build using both cuda and rocm
     conflicts("+python", when="@:1.0")  # python support was added post v1.0
     conflicts("+fortran", when="@:1.0")  # fortran support was added post v1.0
     conflicts("+magma", when="@:1.0")  # magma support was added post v1.0

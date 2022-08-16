@@ -52,6 +52,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:3.0")
     conflicts("+sycl", when="@:3.3")
     conflicts("+openmptarget", when="@:3.5")
+    conflicts("+cuda", when="+rocm")
 
     # https://github.com/spack/spack/issues/29052
     conflicts("@:3.5 +sycl", when="%dpcpp@2022:")
