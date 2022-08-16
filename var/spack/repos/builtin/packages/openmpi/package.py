@@ -914,7 +914,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
             tty.warn(
                 self.spec.format(
                     "The preferred way to run an application when Slurm is the scheduler is to "
-                    "let Slurm manage process spawning via PMI: consider building {name} with "
+                    "let Slurm manage process spawning: consider building {name} with"
                     "'~legacylaunchers'"
                 )
             )
