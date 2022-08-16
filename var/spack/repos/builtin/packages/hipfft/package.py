@@ -22,6 +22,8 @@ class Hipfft(CMakePackage):
     maintainers = ["renjithravindrankannath", "srekolam"]
 
     version("master", branch="master")
+
+    version("5.2.1", sha256="6c8fbace2864ca992b2fca9dc8d0bb4488aef62045acdfcf249d53dd005ebd35")
     version("5.2.0", sha256="ec37edcd61837281c403802ccc1cb01ec3fa3ba135b5ab16617961b66d4cc3e2")
     version("5.1.3", sha256="c26fa64499293b25d0686bed04feb61378c878a4bb4a6d559e6cb7be1f6bf2ec")
     version("5.1.0", sha256="1bac7761c055355216cd262cdc0450aabb383addcb739b56ba849b2e6e013fa5")
@@ -71,6 +73,7 @@ class Hipfft(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
