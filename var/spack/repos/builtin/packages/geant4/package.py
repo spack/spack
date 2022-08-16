@@ -188,8 +188,9 @@ class Geant4(CMakePackage):
             if spec.satisfies("%nvhpc"):
                 # error: excessive recursion at instantiation of class
                 # "G4Number<191>" (G4CTCounter.hh)
-                cmake_flags.append("-Wc,--pending_instantiations=256")
-        return flags, None, None
+                flags.append("-Wc,--pending_instantiations=256")
+                return (None, flags, None)
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
