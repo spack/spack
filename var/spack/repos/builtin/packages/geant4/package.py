@@ -58,7 +58,7 @@ class Geant4(CMakePackage):
     variant("x11", default=False, description="Optional X11 support")
     variant("motif", default=False, description="Optional motif support")
     variant("qt", default=False, description="Enable Qt support")
-    variant("python", default=False, description="Enable Python bindings")
+    variant("python", default=False, when="@10.6.2:", description="Enable Python bindings")
     variant("tbb", default=False, description="Use TBB as a tasking backend", when="@11:")
     variant("vtk", default=False, description="Enable VTK support", when="@11:")
 
@@ -92,9 +92,6 @@ class Geant4(CMakePackage):
     # Python, with boost requirement dealt with in cxxstd section
     depends_on("python@3:", when="+python")
     extends("python", when="+python")
-    conflicts(
-        "+python", when="@:10.6.1", msg="Geant4 <= 10.6.1 cannot be built with Python bindings"
-    )
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
