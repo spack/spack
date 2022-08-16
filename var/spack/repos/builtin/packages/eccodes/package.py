@@ -36,9 +36,24 @@ das = {
                     "sha256": "be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389",
                 },
                 {
-                    "when": "@2.23.0:",
+                    "when": "@2.23.0:2.24.1",
                     "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2",
                     "sha256": "c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338",
+                },
+                {
+                    "when": "@2.24.2:2.24",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.24.2-1.tar.bz2",
+                    "sha256": "7a49b2f7ba072ce23fff6f81ecfe802615396d96cb90e08e4fe9e0f490fd153c",
+                },
+                {
+                    "when": "@2.25.0:2.25",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.25.0-1.tar.bz2",
+                    "sha256": "2ec059d8eaddb4f534954bc46944e57c765f33f0879d6c2288032586105434c4",
+                },
+                {
+                    "when": "@2.26.0:",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.26.0-1.tar.bz2",
+                    "sha256": "e64d2968a03c82ceb4875d7fc14f616bb5ac65cf0d3785fe6561921db4241829",
                 },
             ],
             "patches": [
