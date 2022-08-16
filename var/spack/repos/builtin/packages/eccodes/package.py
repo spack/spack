@@ -10,77 +10,70 @@ from spack.package import *
 
 
 def das_placement_dirname(das_type, center):
-    return '{0}.{1}'.format(das_type, center)
+    return "{0}.{1}".format(das_type, center)
 
 
 # Extra definitions and samples:
 das = {
-    'definitions': {
+    "definitions": {
         # German Meteorological Service (Deutscher Wetterdienst, DWD):
-        'edzw': {
-            'conflicts': {'when': '@:2.19'},
-            'resources': [
+        "edzw": {
+            "conflicts": {"when": "@:2.19"},
+            "resources": [
                 {
-                    'when': '@2.20.0:2.20',
-                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz',
-                    'sha256': 'a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4'
+                    "when": "@2.20.0:2.20",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.20.0-1.tar.gz",
+                    "sha256": "a92932f8a13c33cba65d3a33aa06c7fb4a37ed12a78e9abe2c5e966402b99af4",
                 },
                 {
-                    'when': '@2.21.0:2.22.0',
-                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2',
-                    'sha256': '046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9'
+                    "when": "@2.21.0:2.22.0",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.21.0-3.tar.bz2",
+                    "sha256": "046f1f6450abb3b44c31dee6229f4aab06ca0d3576e27e93e05ccb7cd6e2d9d9",
                 },
                 {
-                    'when': '@2.22.1:2.22',
-                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2',
-                    'sha256': 'be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389'
+                    "when": "@2.22.1:2.22",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.22.1-1.tar.bz2",
+                    "sha256": "be73102a0dcabb236bacd2a70c7b5475f673fda91b49e34df61bef0fa5ad3389",
                 },
                 {
-                    'when': '@2.23.0:',
-                    'url': 'http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2',
-                    'sha256': 'c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338'
-                }
+                    "when": "@2.23.0:",
+                    "url": "http://opendata.dwd.de/weather/lib/grib/eccodes_definitions.edzw-2.23.0-4.tar.bz2",
+                    "sha256": "c5db32861c7d23410aed466ffef3ca661410d252870a3949442d3ecb176aa338",
+                },
             ],
-            'patches': [
-                {
-                    'when': '@2.23.0:',
-                    'files': ['grib2/tables/1'],
-                    'fn': lambda f: os.remove(f)
-                }
-            ]
+            "patches": [
+                {"when": "@2.23.0:", "files": ["grib2/tables/1"], "fn": lambda f: os.remove(f)}
+            ],
         },
-        'mpim': {
-            'conflicts': {'when': '@:2.19'},
-            'resources': [
+        "mpim": {
+            "conflicts": {"when": "@:2.19"},
+            "resources": [
                 {
-                    'when': '@2.20:',
-                    'git': 'https://gitlab.dkrz.de/m214089/grib2-db.git',
-                    'branch': 'master',
-                    'placement': {
+                    "when": "@2.20:",
+                    "git": "https://gitlab.dkrz.de/m214089/grib2-db.git",
+                    "branch": "master",
+                    "placement": {
                         # The definitions reside in a subdirectory:
-                        'definitions.mpim':
-                            das_placement_dirname('definitions', 'mpim')
-                    }
+                        "definitions.mpim": das_placement_dirname("definitions", "mpim")
+                    },
                 }
             ],
-            'copies': [
+            "copies": [{"when": "@2.20:", "files": ["boot.def"]}],
+            "patches": [
                 {
-                    'when': '@2.20:',
-                    'files': ['boot.def']
+                    "when": "@2.20:",
+                    "files": ["boot.def"],
+                    "fn": lambda f: filter_file(
+                        r"(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)",
+                        r"\11\2",
+                        f,
+                        backup=False,
+                    ),
                 }
             ],
-            'patches': [
-                {
-                    'when': '@2.20:',
-                    'files': ['boot.def'],
-                    'fn': lambda f: filter_file(
-                        r'(^\s*transient\s*preferLocalConcepts\s*=\s*)0(.*$)',
-                        r'\11\2', f, backup=False)
-                }
-            ]
-        }
+        },
     },
-    'samples': {}
+    "samples": {},
 }
 
 
@@ -91,164 +84,174 @@ def das_values(centers, only_with=None):
         contain element only_with."""
         if ow is None:
             return itertools.chain.from_iterable(
-                itertools.permutations(seq, length + 1)
-                for length in range(len(seq)))
+                itertools.permutations(seq, length + 1) for length in range(len(seq))
+            )
         else:
+
             def filtered_permutations():
                 for perm in permutations(seq):
                     if ow in perm:
                         yield perm
+
             return filtered_permutations()
 
     for p in permutations(centers, only_with):
-        yield ':'.join(p)
+        yield ":".join(p)
 
 
 def declare_das_variants():
     for das_type, das_dict in das.items():
-        variant('extra-{0}'.format(das_type), default='none', sticky=True,
-                values=('none',) + tuple(das_values(das_dict.keys())),
-                description='Colon-separated list of extra '
-                            '{0} to install'.format(das_type))
+        variant(
+            "extra-{0}".format(das_type),
+            default="none",
+            sticky=True,
+            values=("none",) + tuple(das_values(das_dict.keys())),
+            description="Colon-separated list of extra " "{0} to install".format(das_type),
+        )
 
 
 def declare_das_resources():
     for das_type, das_dict in das.items():
         for center, center_dict in das_dict.items():
-            for kwargs in center_dict.get('resources', ()):
+            for kwargs in center_dict.get("resources", ()):
                 kwargs = kwargs.copy()
-                if 'placement' not in kwargs:
-                    kwargs['placement'] = {
-                        '': das_placement_dirname(das_type, center)}
-                when = Spec(kwargs.get('when', None))
+                if "placement" not in kwargs:
+                    kwargs["placement"] = {"": das_placement_dirname(das_type, center)}
+                when = Spec(kwargs.get("when", None))
                 for value in das_values(das_dict.keys(), only_with=center):
-                    kwargs['when'] = when.constrained(
-                        'extra-{0}={1}'.format(das_type, value))
-                    resource(name=center,
-                             destination='spack-{0}'.format(das_type), **kwargs)
+                    kwargs["when"] = when.constrained("extra-{0}={1}".format(das_type, value))
+                    resource(name=center, destination="spack-{0}".format(das_type), **kwargs)
 
 
 def declare_das_conflicts():
     for das_type, das_dict in das.items():
         for center, center_dict in das_dict.items():
-            if 'conflicts' in center_dict:
+            if "conflicts" in center_dict:
                 for value in das_values(das_dict.keys(), only_with=center):
-                    conflicts('extra-{0}={1}'.format(das_type, value),
-                              **center_dict['conflicts'])
+                    conflicts("extra-{0}={1}".format(das_type, value), **center_dict["conflicts"])
 
 
 class Eccodes(CMakePackage):
     """ecCodes is a package developed by ECMWF for processing meteorological
     data in GRIB (1/2), BUFR (3/4) and GTS header formats."""
 
-    homepage = 'https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home'
-    url = 'https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2'
-    git = 'https://github.com/ecmwf/eccodes.git'
-    list_url = 'https://confluence.ecmwf.int/display/ECC/Releases'
+    homepage = "https://software.ecmwf.int/wiki/display/ECC/ecCodes+Home"
+    url = "https://confluence.ecmwf.int/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
+    git = "https://github.com/ecmwf/eccodes.git"
+    list_url = "https://confluence.ecmwf.int/display/ECC/Releases"
 
-    maintainers = ['skosukhin']
+    maintainers = ["skosukhin"]
 
-    version('develop', branch='develop')
-    version('2.25.0', sha256='8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e')
-    version('2.24.2', sha256='c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403')
-    version('2.23.0', sha256='cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c')
-    version('2.22.1', sha256='75c7ee96469bb30b0c8f7edbdc4429ece4415897969f75c36173545242bc9e85')
-    version('2.21.0', sha256='da0a0bf184bb436052e3eae582defafecdb7c08cdaab7216780476e49b509755')
-    version('2.20.0', sha256='207a3d7966e75d85920569b55a19824673e8cd0b50db4c4dac2d3d52eacd7985')
-    version('2.19.1', sha256='9964bed5058e873d514bd4920951122a95963128b12f55aa199d9afbafdd5d4b')
-    version('2.18.0', sha256='d88943df0f246843a1a062796edbf709ef911de7269648eef864be259e9704e3')
-    version('2.13.0', sha256='c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272')
-    version('2.5.0', sha256='18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e')
-    version('2.2.0', sha256='1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3')
+    version("develop", branch="develop")
+    version("2.25.0", sha256="8975131aac54d406e5457706fd4e6ba46a8cc9c7dd817a41f2aa64ce1193c04e")
+    version("2.24.2", sha256="c60ad0fd89e11918ace0d84c01489f21222b11d6cad3ff7495856a0add610403")
+    version("2.23.0", sha256="cbdc8532537e9682f1a93ddb03440416b66906a4cc25dec3cbd73940d194bf0c")
+    version("2.22.1", sha256="75c7ee96469bb30b0c8f7edbdc4429ece4415897969f75c36173545242bc9e85")
+    version("2.21.0", sha256="da0a0bf184bb436052e3eae582defafecdb7c08cdaab7216780476e49b509755")
+    version("2.20.0", sha256="207a3d7966e75d85920569b55a19824673e8cd0b50db4c4dac2d3d52eacd7985")
+    version("2.19.1", sha256="9964bed5058e873d514bd4920951122a95963128b12f55aa199d9afbafdd5d4b")
+    version("2.18.0", sha256="d88943df0f246843a1a062796edbf709ef911de7269648eef864be259e9704e3")
+    version("2.13.0", sha256="c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272")
+    version("2.5.0", sha256="18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e")
+    version("2.2.0", sha256="1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3")
 
-    variant('tools', default=False, description='Build the command line tools')
-    variant('netcdf', default=False,
-            description='Enable GRIB to NetCDF conversion tool')
-    variant('jp2k', default='openjpeg', values=('openjpeg', 'jasper', 'none'),
-            description='Specify JPEG2000 decoding/encoding backend')
-    variant('png', default=False,
-            description='Enable PNG support for decoding/encoding')
-    variant('aec', default=False,
-            description='Enable Adaptive Entropy Coding for decoding/encoding')
-    variant('pthreads', default=False,
-            description='Enable POSIX threads')
-    variant('openmp', default=False,
-            description='Enable OpenMP threads')
-    variant('memfs', default=False,
-            description='Enable memory based access to definitions/samples')
-    variant('python', default=False,
-            description='Enable the Python 2 interface')
-    variant('fortran', default=False, description='Enable the Fortran support')
-    variant('shared', default=True,
-            description='Build shared versions of the libraries')
+    variant("tools", default=False, description="Build the command line tools")
+    variant("netcdf", default=False, description="Enable GRIB to NetCDF conversion tool")
+    variant(
+        "jp2k",
+        default="openjpeg",
+        values=("openjpeg", "jasper", "none"),
+        description="Specify JPEG2000 decoding/encoding backend",
+    )
+    variant("png", default=False, description="Enable PNG support for decoding/encoding")
+    variant(
+        "aec", default=False, description="Enable Adaptive Entropy Coding for decoding/encoding"
+    )
+    variant("pthreads", default=False, description="Enable POSIX threads")
+    variant("openmp", default=False, description="Enable OpenMP threads")
+    variant(
+        "memfs", default=False, description="Enable memory based access to definitions/samples"
+    )
+    variant("python", default=False, description="Enable the Python 2 interface")
+    variant("fortran", default=False, description="Enable the Fortran support")
+    variant("shared", default=True, description="Build shared versions of the libraries")
 
     declare_das_variants()
 
-    variant('create-view', default=False,
-            # Enabling this option allows for using the library without setting
-            # the environment variables:
-            description='Project definitions and samples to a single directory')
+    variant(
+        "create-view",
+        default=False,
+        # Enabling this option allows for using the library without setting
+        # the environment variables:
+        description="Project definitions and samples to a single directory",
+    )
 
-    depends_on('netcdf-c', when='+netcdf')
+    depends_on("netcdf-c", when="+netcdf")
     # Cannot be built with openjpeg@2.0.x.
-    depends_on('openjpeg@1.5.0:1.5,2.1.0:2.3', when='jp2k=openjpeg')
+    depends_on("openjpeg@1.5.0:1.5,2.1.0:2.3", when="jp2k=openjpeg")
     # Additional constraint for older versions.
-    depends_on('openjpeg@:2.1', when='@:2.16 jp2k=openjpeg')
+    depends_on("openjpeg@:2.1", when="@:2.16 jp2k=openjpeg")
 
-    with when('jp2k=jasper'):
-        depends_on('jasper')
+    with when("jp2k=jasper"):
+        depends_on("jasper")
         # jasper 3.x compat from commit 86f0b35f1a8492cb16f82fb976a0a5acd2986ac2
-        depends_on('jasper@:2', when='@:2.25.0')
+        depends_on("jasper@:2", when="@:2.25.0")
 
-    depends_on('libpng', when='+png')
-    depends_on('libaec', when='+aec')
+    depends_on("libpng", when="+png")
+    depends_on("libaec", when="+aec")
     # Can be built with Python 2 or Python 3.
-    depends_on('python', when='+memfs', type='build')
+    depends_on("python", when="+memfs", type="build")
     # The interface is available only for Python 2.
     # Python 3 interface is available as a separate packages:
     # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on('python@2.6:2', when='+python',
-               type=('build', 'link', 'run'))
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
-    extends('python', when='+python')
+    depends_on("python@2.6:2", when="+python", type=("build", "link", "run"))
+    depends_on("py-numpy", when="+python", type=("build", "run"))
+    extends("python", when="+python")
 
-    depends_on('cmake@3.6:', type='build')
-    depends_on('cmake@3.12:', when='@2.19:', type='build')
+    depends_on("cmake@3.6:", type="build")
+    depends_on("cmake@3.12:", when="@2.19:", type="build")
 
-    depends_on('ecbuild', type='build', when='@develop')
+    depends_on("ecbuild", type="build", when="@develop")
 
     declare_das_resources()
 
-    conflicts('+openmp', when='+pthreads',
-              msg='Cannot enable both POSIX threads and OMP')
+    conflicts("+openmp", when="+pthreads", msg="Cannot enable both POSIX threads and OMP")
 
-    conflicts('+netcdf', when='~tools',
-              msg='Cannot enable the NetCDF conversion tool '
-                  'when the command line tools are disabled')
+    conflicts(
+        "+netcdf",
+        when="~tools",
+        msg="Cannot enable the NetCDF conversion tool " "when the command line tools are disabled",
+    )
 
-    conflicts('~tools', when='@:2.18.0',
-              msg='The command line tools can be disabled '
-                  'only starting version 2.19.0')
+    conflicts(
+        "~tools",
+        when="@:2.18.0",
+        msg="The command line tools can be disabled " "only starting version 2.19.0",
+    )
 
-    conflicts('+create-view', when='extra-definitions=none extra-samples=none',
-              msg='Creating the view without extra definitions and samples '
-                  'does not make sense')
+    conflicts(
+        "+create-view",
+        when="extra-definitions=none extra-samples=none",
+        msg="Creating the view without extra definitions and samples " "does not make sense",
+    )
 
     declare_das_conflicts()
 
     # Enforce linking against the specified JPEG2000 backend, see also
     # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
-    patch('openjpeg_jasper.patch', when='@:2.15')
+    patch("openjpeg_jasper.patch", when="@:2.15")
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
-    patch('cmake_install_rpath.patch', when='@:2.10')
+    patch("cmake_install_rpath.patch", when="@:2.10")
 
     # Fix a bug preventing cmake from finding NetCDF:
-    patch('https://github.com/ecmwf/ecbuild/commit/3916c7d22575c45166fcc89edcbe02a6e9b81aa2.patch?full_index=1',
-          sha256='9dcc4affaaa850d4b7247baa939d0f9ffedea132369f1afc3f248dbf720386c9',
-          when='@:2.4.0+netcdf')
+    patch(
+        "https://github.com/ecmwf/ecbuild/commit/3916c7d22575c45166fcc89edcbe02a6e9b81aa2.patch?full_index=1",
+        sha256="9dcc4affaaa850d4b7247baa939d0f9ffedea132369f1afc3f248dbf720386c9",
+        when="@:2.4.0+netcdf",
+    )
 
-    @when('%nag+fortran')
+    @when("%nag+fortran")
     def patch(self):
         # A number of Fortran source files assume that the kinds of integer and
         # real variables are specified in bytes. However, the NAG compiler
@@ -261,102 +264,123 @@ class Eccodes(CMakePackage):
         # large. We would also have to introduce several versions of each patch
         # file to support different versions of the package.
 
-        patch_kind_files = ['fortran/eccodes_f90_head.f90',
-                            'fortran/eccodes_f90_tail.f90',
-                            'fortran/grib_f90_head.f90',
-                            'fortran/grib_f90_tail.f90',
-                            'fortran/grib_types.f90']
+        patch_kind_files = [
+            "fortran/eccodes_f90_head.f90",
+            "fortran/eccodes_f90_tail.f90",
+            "fortran/grib_f90_head.f90",
+            "fortran/grib_f90_tail.f90",
+            "fortran/grib_types.f90",
+        ]
 
         patch_unix_ext_files = []
 
         if self.run_tests:
-            patch_kind_files.extend([
-                'examples/F90/grib_print_data.f90',
-                'examples/F90/grib_print_data_static.f90',
-                # Files that need patching only when the extended regression
-                # tests are enabled, which we disable unconditionally:
-                # 'examples/F90/bufr_attributes.f90',
-                # 'examples/F90/bufr_expanded.f90',
-                # 'examples/F90/bufr_get_keys.f90',
-                # 'examples/F90/bufr_read_scatterometer.f90',
-                # 'examples/F90/bufr_read_synop.f90',
-                # 'examples/F90/bufr_read_temp.f90',
-                # 'examples/F90/bufr_read_tempf.f90',
-                # 'examples/F90/bufr_read_tropical_cyclone.f90',
-                # 'examples/F90/grib_clone.f90',
-                # 'examples/F90/grib_get_data.f90',
-                # 'examples/F90/grib_nearest.f90',
-                # 'examples/F90/grib_precision.f90',
-                # 'examples/F90/grib_read_from_file.f90',
-                # 'examples/F90/grib_samples.f90',
-                # 'examples/F90/grib_set_keys.f90'
-            ])
+            patch_kind_files.extend(
+                [
+                    "examples/F90/grib_print_data.f90",
+                    "examples/F90/grib_print_data_static.f90",
+                    # Files that need patching only when the extended regression
+                    # tests are enabled, which we disable unconditionally:
+                    # 'examples/F90/bufr_attributes.f90',
+                    # 'examples/F90/bufr_expanded.f90',
+                    # 'examples/F90/bufr_get_keys.f90',
+                    # 'examples/F90/bufr_read_scatterometer.f90',
+                    # 'examples/F90/bufr_read_synop.f90',
+                    # 'examples/F90/bufr_read_temp.f90',
+                    # 'examples/F90/bufr_read_tempf.f90',
+                    # 'examples/F90/bufr_read_tropical_cyclone.f90',
+                    # 'examples/F90/grib_clone.f90',
+                    # 'examples/F90/grib_get_data.f90',
+                    # 'examples/F90/grib_nearest.f90',
+                    # 'examples/F90/grib_precision.f90',
+                    # 'examples/F90/grib_read_from_file.f90',
+                    # 'examples/F90/grib_samples.f90',
+                    # 'examples/F90/grib_set_keys.f90'
+                ]
+            )
 
-            patch_unix_ext_files.extend([
-                'examples/F90/bufr_ecc-1284.f90',
-                'examples/F90/grib_set_data.f90',
-                'examples/F90/grib_set_packing.f90',
-                # Files that need patching only when the extended regression
-                # tests are enabled, which we disable unconditionally:
-                # 'examples/F90/bufr_copy_data.f90',
-                # 'examples/F90/bufr_get_string_array.f90',
-                # 'examples/F90/bufr_keys_iterator.f90',
-                # 'examples/F90/get_product_kind.f90',
-                # 'examples/F90/grib_count_messages_multi.f90'
-            ])
+            patch_unix_ext_files.extend(
+                [
+                    "examples/F90/bufr_ecc-1284.f90",
+                    "examples/F90/grib_set_data.f90",
+                    "examples/F90/grib_set_packing.f90",
+                    # Files that need patching only when the extended regression
+                    # tests are enabled, which we disable unconditionally:
+                    # 'examples/F90/bufr_copy_data.f90',
+                    # 'examples/F90/bufr_get_string_array.f90',
+                    # 'examples/F90/bufr_keys_iterator.f90',
+                    # 'examples/F90/get_product_kind.f90',
+                    # 'examples/F90/grib_count_messages_multi.f90'
+                ]
+            )
 
-        kwargs = {'string': False, 'backup': False, 'ignore_absent': True}
+        kwargs = {"string": False, "backup": False, "ignore_absent": True}
 
         # Return the kind and not the size:
-        filter_file(r'(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)',
-                    '\\1kind(real\\2)\\3',
-                    'fortran/grib_types.f90', **kwargs)
-        filter_file(r'(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)',
-                    '\\1kind(x\\2)\\3',
-                    'fortran/grib_types.f90', **kwargs)
+        filter_file(
+            r"(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)",
+            "\\1kind(real\\2)\\3",
+            "fortran/grib_types.f90",
+            **kwargs
+        )
+        filter_file(
+            r"(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)",
+            "\\1kind(x\\2)\\3",
+            "fortran/grib_types.f90",
+            **kwargs
+        )
 
         # Replace integer kinds:
         for size, r in [(2, 4), (4, 9), (8, 18)]:
-            filter_file(r'(^\s*integer\((?:kind=)?){0}(\).*)'.format(size),
-                        '\\1selected_int_kind({0})\\2'.format(r),
-                        *patch_kind_files, **kwargs)
+            filter_file(
+                r"(^\s*integer\((?:kind=)?){0}(\).*)".format(size),
+                "\\1selected_int_kind({0})\\2".format(r),
+                *patch_kind_files,
+                **kwargs
+            )
 
         # Replace real kinds:
         for size, p, r in [(4, 6, 37), (8, 15, 307)]:
-            filter_file(r'(^\s*real\((?:kind=)?){0}(\).*)'.format(size),
-                        '\\1selected_real_kind({0}, {1})\\2'.format(p, r),
-                        *patch_kind_files, **kwargs)
+            filter_file(
+                r"(^\s*real\((?:kind=)?){0}(\).*)".format(size),
+                "\\1selected_real_kind({0}, {1})\\2".format(p, r),
+                *patch_kind_files,
+                **kwargs
+            )
 
         # Enable getarg and exit subroutines:
-        filter_file(r'(^\s*program\s+\w+)(\s*$)',
-                    '\\1; use f90_unix_env; use f90_unix_proc\\2',
-                    *patch_unix_ext_files, **kwargs)
+        filter_file(
+            r"(^\s*program\s+\w+)(\s*$)",
+            "\\1; use f90_unix_env; use f90_unix_proc\\2",
+            *patch_unix_ext_files,
+            **kwargs
+        )
 
     def setup_run_environment(self, env):
         for das_type in das.keys():
             value = self._get_das_value(das_type)
 
-            if '+memfs' in self.spec:
+            if "+memfs" in self.spec:
                 # The following is a marker, not a real path:
-                default_path = '/MEMFS/{0}'.format(das_type)
-            elif '+create-view' in self.spec and value != 'none':
+                default_path = "/MEMFS/{0}".format(das_type)
+            elif "+create-view" in self.spec and value != "none":
                 default_path = join_path(
-                    self.prefix.share.eccodes,
-                    das_placement_dirname(das_type, 'all'))
+                    self.prefix.share.eccodes, das_placement_dirname(das_type, "all")
+                )
             else:
                 default_path = join_path(self.prefix.share.eccodes, das_type)
 
-            env_var_name = 'ECCODES_{0}_PATH'.format(
-                self._get_var_stem(das_type))
+            env_var_name = "ECCODES_{0}_PATH".format(self._get_var_stem(das_type))
 
             env.prepend_path(env_var_name, default_path)
 
-            if '+create-view' in self.spec or value == 'none':
+            if "+create-view" in self.spec or value == "none":
                 continue
 
-            for center in reversed(value.split(':')):
-                center_path = join_path(self.prefix.share.eccodes,
-                                        das_placement_dirname(das_type, center))
+            for center in reversed(value.split(":")):
+                center_path = join_path(
+                    self.prefix.share.eccodes, das_placement_dirname(das_type, center)
+                )
                 env.prepend_path(env_var_name, center_path)
 
     @property
@@ -365,102 +389,98 @@ class Eccodes(CMakePackage):
 
         query_parameters = self.spec.last_query.extra_parameters
 
-        if 'shared' in query_parameters:
+        if "shared" in query_parameters:
             shared = True
-        elif 'static' in query_parameters:
+        elif "static" in query_parameters:
             shared = False
         else:
-            shared = '+shared' in self.spec
+            shared = "+shared" in self.spec
 
         # Return Fortran library if requested:
-        return_fortran = 'fortran' in query_parameters
+        return_fortran = "fortran" in query_parameters
         # Return C library if either requested or the Fortran library is not
         # requested (to avoid overlinking) or the static libraries are
         # requested:
-        return_c = 'c' in query_parameters or not (return_fortran and shared)
+        return_c = "c" in query_parameters or not (return_fortran and shared)
         # Return MEMFS library only if enabled and the static libraries are
         # requested:
-        return_memfs = '+memfs' in self.spec and not shared
+        return_memfs = "+memfs" in self.spec and not shared
 
         if return_fortran:
-            libraries.append('libeccodes_f90')
+            libraries.append("libeccodes_f90")
 
         if return_c:
-            libraries.append('libeccodes')
+            libraries.append("libeccodes")
 
         if return_memfs:
-            libraries.append('libeccodes_memfs')
+            libraries.append("libeccodes_memfs")
 
-        libs = find_libraries(
-            libraries, root=self.prefix, shared=shared, recursive=True
-        )
+        libs = find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
         if libs and len(libs) == len(libraries):
             return libs
 
-        msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+        msg = "Unable to recursively locate {0} {1} libraries in {2}"
         raise spack.error.NoLibrariesError(
-            msg.format('shared' if shared else 'static',
-                       self.spec.name,
-                       self.spec.prefix))
+            msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
+        )
 
-    @run_before('cmake')
+    @run_before("cmake")
     def check_fortran(self):
-        if '+fortran' in self.spec and self.compiler.fc is None:
-            raise InstallError(
-                'Fortran interface requires a Fortran compiler!')
+        if "+fortran" in self.spec and self.compiler.fc is None:
+            raise InstallError("Fortran interface requires a Fortran compiler!")
 
-    @run_before('cmake')
+    @run_before("cmake")
     def prepare_extra_das(self):
         for das_type, das_dict in das.items():
             value = self._get_das_value(das_type)
 
-            if value == 'none':
+            if value == "none":
                 continue
 
-            for center in value.split(':'):
+            for center in value.split(":"):
                 center_placement_path = join_path(
-                    self.stage.source_path, 'spack-{0}'.format(das_type),
-                    das_placement_dirname(das_type, center))
+                    self.stage.source_path,
+                    "spack-{0}".format(das_type),
+                    das_placement_dirname(das_type, center),
+                )
 
                 # Make sure the directory exists to cover the case when no
                 # resources are assigned to the center:
                 mkdirp(center_placement_path)
 
                 # Copy files from the default definitions/samples directory:
-                for cp in das_dict[center].get('copies', ()):
-                    if 'when' in cp and cp['when'] not in self.spec:
+                for cp in das_dict[center].get("copies", ()):
+                    if "when" in cp and cp["when"] not in self.spec:
                         continue
 
-                    for f in cp['files']:
-                        cp_src_path = join_path(
-                            self.stage.source_path, das_type, f)
+                    for f in cp["files"]:
+                        cp_src_path = join_path(self.stage.source_path, das_type, f)
                         cp_dst_path = join_path(center_placement_path, f)
                         copy(cp_src_path, cp_dst_path)
 
                 # Patch the definitions/samples:
-                for patch in das_dict[center].get('patches', ()):
-                    if 'when' in patch and patch['when'] not in self.spec:
+                for patch in das_dict[center].get("patches", ()):
+                    if "when" in patch and patch["when"] not in self.spec:
                         continue
 
-                    for f in patch['files']:
-                        patch['fn'](join_path(center_placement_path, f))
+                    for f in patch["files"]:
+                        patch["fn"](join_path(center_placement_path, f))
 
     def create_memfs_view(self):
         pass
 
-    @run_before('cmake')
-    @when('+create-view+memfs')
+    @run_before("cmake")
+    @when("+create-view+memfs")
     def create_memfs_view(self):
         for das_type in das.keys():
             value = self._get_das_value(das_type)
 
-            if value == 'none':
+            if value == "none":
                 continue
 
             # Path to the root directory with extra definitions/samples:
-            das_destination_dir = join_path(self.stage.source_path,
-                                            'spack-{0}'.format(das_type))
+            das_destination_dir = join_path(self.stage.source_path, "spack-{0}".format(das_type))
 
             # Path to the view directory to be searched for files when
             # generating the in-memory representation on definitions/samples:
@@ -468,9 +488,9 @@ class Eccodes(CMakePackage):
 
             # List of the projected directories:
             projected_dirs = [
-                join_path(das_destination_dir,
-                          das_placement_dirname(das_type, center))
-                for center in value.split(':')]
+                join_path(das_destination_dir, das_placement_dirname(das_type, center))
+                for center in value.split(":")
+            ]
             projected_dirs.append(join_path(self.root_cmakelists_dir, das_type))
 
             # Create the view:
@@ -478,139 +498,145 @@ class Eccodes(CMakePackage):
 
             # Tell Cmake where to search for definitions/samples files when
             # generating their in-memory representation:
-            filter_file('${{PROJECT_SOURCE_DIR}}/{0}'.format(das_type),
-                        view_dir,
-                        join_path(self.root_cmakelists_dir,
-                                  'memfs', 'CMakeLists.txt'),
-                        string=True, backup=False)
+            filter_file(
+                "${{PROJECT_SOURCE_DIR}}/{0}".format(das_type),
+                view_dir,
+                join_path(self.root_cmakelists_dir, "memfs", "CMakeLists.txt"),
+                string=True,
+                backup=False,
+            )
 
         if self.run_tests:
             # Run the tests using unmodified definitions/samples from the files:
-            filter_file('HAVE_MEMFS=@HAVE_MEMFS@', 'HAVE_MEMFS=0',
-                        *find(self.root_cmakelists_dir, 'include.ctest.sh.in',
-                              recursive=True),
-                        string=True, backup=False)
+            filter_file(
+                "HAVE_MEMFS=@HAVE_MEMFS@",
+                "HAVE_MEMFS=0",
+                *find(self.root_cmakelists_dir, "include.ctest.sh.in", recursive=True),
+                string=True,
+                backup=False
+            )
 
     def cmake_args(self):
-        jp2k = self.spec.variants['jp2k'].value
+        jp2k = self.spec.variants["jp2k"].value
 
         args = [
-            self.define_from_variant('ENABLE_BUILD_TOOLS', 'tools'),
-            self.define_from_variant('ENABLE_NETCDF', 'netcdf'),
-            self.define('ENABLE_JPG', jp2k != 'none'),
-            self.define('ENABLE_JPG_LIBJASPER', jp2k == 'jasper'),
-            self.define('ENABLE_JPG_LIBOPENJPEG', jp2k == 'openjpeg'),
-            self.define_from_variant('ENABLE_PNG', 'png'),
-            self.define_from_variant('ENABLE_AEC', 'aec'),
-            self.define_from_variant('ENABLE_ECCODES_THREADS', 'pthreads'),
-            self.define_from_variant('ENABLE_ECCODES_OMP_THREADS', 'openmp'),
-            self.define_from_variant('ENABLE_MEMFS', 'memfs'),
+            self.define_from_variant("ENABLE_BUILD_TOOLS", "tools"),
+            self.define_from_variant("ENABLE_NETCDF", "netcdf"),
+            self.define("ENABLE_JPG", jp2k != "none"),
+            self.define("ENABLE_JPG_LIBJASPER", jp2k == "jasper"),
+            self.define("ENABLE_JPG_LIBOPENJPEG", jp2k == "openjpeg"),
+            self.define_from_variant("ENABLE_PNG", "png"),
+            self.define_from_variant("ENABLE_AEC", "aec"),
+            self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
+            self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
+            self.define_from_variant("ENABLE_MEMFS", "memfs"),
             self.define_from_variant(
-                'ENABLE_PYTHON{0}'.format(
-                    '2' if self.spec.satisfies('@2.20.0:') else ''),
-                'python'),
-            self.define_from_variant('ENABLE_FORTRAN', 'fortran'),
-            self.define('BUILD_SHARED_LIBS',
-                        'BOTH' if '+shared' in self.spec else 'OFF'),
-            self.define('ENABLE_TESTS', self.run_tests),
+                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), "python"
+            ),
+            self.define_from_variant("ENABLE_FORTRAN", "fortran"),
+            self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
+            self.define("ENABLE_TESTS", self.run_tests),
             # Examples are not installed and are just part of the test suite:
-            self.define('ENABLE_EXAMPLES', self.run_tests),
+            self.define("ENABLE_EXAMPLES", self.run_tests),
             # Unconditionally disable the extended regression tests, since they
             # download additional data (~134MB):
-            self.define('ENABLE_EXTRA_TESTS', False)
+            self.define("ENABLE_EXTRA_TESTS", False),
         ]
 
-        if '+netcdf' in self.spec:
-            args.extend([
-                # Prevent possible overriding by environment variables
-                # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
-                self.define('NETCDF_PATH', self.spec['netcdf-c'].prefix),
-                # Prevent overriding by environment variable HDF5_ROOT:
-                self.define('HDF5_ROOT', self.spec['hdf5'].prefix)])
+        if "+netcdf" in self.spec:
+            args.extend(
+                [
+                    # Prevent possible overriding by environment variables
+                    # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH:
+                    self.define("NETCDF_PATH", self.spec["netcdf-c"].prefix),
+                    # Prevent overriding by environment variable HDF5_ROOT:
+                    self.define("HDF5_ROOT", self.spec["hdf5"].prefix),
+                ]
+            )
 
-        if jp2k == 'openjpeg':
-            args.append(self.define('OPENJPEG_PATH',
-                                    self.spec['openjpeg'].prefix))
+        if jp2k == "openjpeg":
+            args.append(self.define("OPENJPEG_PATH", self.spec["openjpeg"].prefix))
 
-        if '+png' in self.spec:
-            args.append(self.define('ZLIB_ROOT', self.spec['zlib'].prefix))
+        if "+png" in self.spec:
+            args.append(self.define("ZLIB_ROOT", self.spec["zlib"].prefix))
 
-        if '+aec' in self.spec:
+        if "+aec" in self.spec:
             # Prevent overriding by environment variables AEC_DIR and AEC_PATH:
-            args.append(self.define('AEC_DIR', self.spec['libaec'].prefix))
+            args.append(self.define("AEC_DIR", self.spec["libaec"].prefix))
 
-        if '^python' in self.spec:
-            args.append(self.define('PYTHON_EXECUTABLE', python.path))
+        if "^python" in self.spec:
+            args.append(self.define("PYTHON_EXECUTABLE", python.path))
 
-        if '+create-view' in self.spec:
+        if "+create-view" in self.spec:
             for das_type in das.keys():
-                if self._get_das_value(das_type) == 'none':
+                if self._get_das_value(das_type) == "none":
                     continue
 
-                if '+memfs' in self.spec:
+                if "+memfs" in self.spec:
                     # Enforce installation of the default definitions/samples to
                     # let the user override the in-memory representation if
                     # needed:
-                    var_name = 'ENABLE_INSTALL_ECCODES_{0}'.format(
-                        das_type.upper())
+                    var_name = "ENABLE_INSTALL_ECCODES_{0}".format(das_type.upper())
                     var_value = True
                 else:
                     # Make the view directory the default one to be searched for
                     # the definitions/samples:
-                    var_name = 'ECCODES_{0}_SUFF'.format(
-                        self._get_var_stem(das_type))
+                    var_name = "ECCODES_{0}_SUFF".format(self._get_var_stem(das_type))
                     var_value = join_path(
-                        'share', 'eccodes',
-                        das_placement_dirname(das_type, 'all'))
+                        "share", "eccodes", das_placement_dirname(das_type, "all")
+                    )
 
                 args.append(self.define(var_name, var_value))
 
         return args
 
-    @run_after('install')
+    @run_after("install")
     def install_extra_das(self):
         for das_type, das_dict in das.items():
             value = self._get_das_value(das_type)
 
-            if value == 'none':
+            if value == "none":
                 continue
 
-            for center in value.split(':'):
+            for center in value.split(":"):
                 center_dir = das_placement_dirname(das_type, center)
-                center_src_path = join_path(self.stage.source_path,
-                                            'spack-{0}'.format(das_type),
-                                            center_dir)
+                center_src_path = join_path(
+                    self.stage.source_path, "spack-{0}".format(das_type), center_dir
+                )
 
                 # Generate README file for the curious users:
-                readme_msg = ['This directory contains extra {0} from {1}, '
-                              'fetched from:'.format(das_type, center)]
+                readme_msg = [
+                    "This directory contains extra {0} from {1}, "
+                    "fetched from:".format(das_type, center)
+                ]
                 for key in self.resources:
                     if key in self.spec:
                         for res in self.resources[key]:
                             if res.name == center:
                                 readme_msg.append(str(res.fetcher))
-                self._create_or_prepend(join_path(center_src_path, 'README'),
-                                        '\n'.join(readme_msg))
+                self._create_or_prepend(
+                    join_path(center_src_path, "README"), "\n".join(readme_msg)
+                )
 
-                install_tree(center_src_path,
-                             join_path(self.prefix.share.eccodes, center_dir))
+                install_tree(center_src_path, join_path(self.prefix.share.eccodes, center_dir))
 
     def create_file_view(self):
         pass
 
-    @run_after('install')
-    @when('+create-view~memfs')
+    @run_after("install")
+    @when("+create-view~memfs")
     def create_file_view(self):
         for das_type in das.keys():
             value = self._get_das_value(das_type)
 
-            if value == 'none':
+            if value == "none":
                 continue
 
             # Path to the default directory (i.e. the one that the library
             # searches for the definitions/samples by default):
-            default_dir = join_path(self.prefix.share.eccodes,
-                                    das_placement_dirname(das_type, 'all'))
+            default_dir = join_path(
+                self.prefix.share.eccodes, das_placement_dirname(das_type, "all")
+            )
 
             # Path to the usual installation directory for the
             # definitions/samples:
@@ -624,17 +650,19 @@ class Eccodes(CMakePackage):
 
             # List of the projected directories:
             projected_dirs = [
-                join_path(self.prefix.share.eccodes,
-                          das_placement_dirname(das_type, center))
-                for center in value.split(':')]
+                join_path(self.prefix.share.eccodes, das_placement_dirname(das_type, center))
+                for center in value.split(":")
+            ]
             projected_dirs.append(usual_dir)
 
             # Generate README file for the curious users:
-            readme_path = join_path(default_dir, 'README')
-            with open(readme_path, 'w') as f:
-                f.write('This directory is a projection of {0} from the '
-                        'following directories:\n'
-                        '{1}'.format(das_type, '\n'.join(projected_dirs)))
+            readme_path = join_path(default_dir, "README")
+            with open(readme_path, "w") as f:
+                f.write(
+                    "This directory is a projection of {0} from the "
+                    "following directories:\n"
+                    "{1}".format(das_type, "\n".join(projected_dirs))
+                )
             set_install_permissions(readme_path)
 
             # Create the view:
@@ -646,16 +674,17 @@ class Eccodes(CMakePackage):
             ctest()
 
     def _get_das_value(self, das_type):
-        return self.spec.variants['extra-{0}'.format(das_type)].value
+        return self.spec.variants["extra-{0}".format(das_type)].value
 
     @staticmethod
     def _get_var_stem(das_type):
         # Workaround for the inconsistent name:
-        return das_type.upper() if das_type != 'definitions' else 'DEFINITION'
+        return das_type.upper() if das_type != "definitions" else "DEFINITION"
 
     @staticmethod
     def _create_view(dst_path, *src_paths):
         from llnl.util.link_tree import LinkTree
+
         for src_path in src_paths:
             tree = LinkTree(src_path)
 
@@ -664,18 +693,19 @@ class Eccodes(CMakePackage):
                 # Ignore if dst_file_or_dir exists and it's either a file (not a
                 # directory) or a directory that conflicts with a file (not a
                 # directory) from src_path:
-                return (os.path.exists(dst_file_or_dir) and
-                        (not os.path.isdir(dst_file_or_dir) or
-                         not os.path.isdir(join_path(src_path, file_or_dir))))
+                return os.path.exists(dst_file_or_dir) and (
+                    not os.path.isdir(dst_file_or_dir)
+                    or not os.path.isdir(join_path(src_path, file_or_dir))
+                )
 
             tree.merge(dst_path, ignore=ignore, relative=True)
 
     @staticmethod
-    def _create_or_prepend(fname, msg, separator='#' * 80):
-        lines = [msg, '\n']
+    def _create_or_prepend(fname, msg, separator="#" * 80):
+        lines = [msg, "\n"]
         if os.path.exists(fname):
-            with open(fname, 'r') as f:
-                lines.extend([separator, '\n', f.read()])
+            with open(fname, "r") as f:
+                lines.extend([separator, "\n", f.read()])
 
-        with open(fname, 'w') as f:
+        with open(fname, "w") as f:
             f.writelines(lines)
