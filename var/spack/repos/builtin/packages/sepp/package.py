@@ -25,9 +25,37 @@ class Sepp(Package):
     depends_on("blast-plus@2.10.1:", type="run")
 
     def install(self, spec, prefix):
-        install_tree(".", prefix)
+        dirs = ["sepp", "tools"]
+        for d in dirs:
+            install_tree(d, join_path(prefix, d))
+        files = ["default.main.config", "*.py"]
+        for f in files:
+            install(f, prefix)
         with working_dir(prefix):
             prefix_string = "--prefix=" + prefix
             python("setup.py", "config", "-c")
             python("setup.py", "install", prefix_string)
             python("setup.py", "upp", "-c")
+            for f in ["merge_script.py", "run_ensemble.py"]:
+                install(f, prefix.bin)
+                set_executable(join_path(prefix.bin, f))
+            remove_files = [
+                "merge_script.py",
+                "run_ensemble.py",
+                "run_sepp.py",
+                "run_upp.py",
+                "setup.py",
+                "split_sequences.py",
+                "distribute_setup.py",
+                "home.path",
+                "default.main.config",
+            ]
+            for f in remove_files:
+                force_remove(f)
+            dirs = ["sepp", "tools", "build", "dist", "__pycache__", "sepp.egg-info"]
+            for d in dirs:
+                remove_linked_tree(d)
+
+    def setup_run_environment(self, env):
+        python_lib_path = self.spec["python"].package.platlib
+        env.set("PYTHONPATH", join_path(self.prefix, python_lib_path))
