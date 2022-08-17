@@ -5263,25 +5263,14 @@ class SpecParser(spack.parse.Parser):
     def version(self):
         start = None
         end = None
-
-        def variant_scrubber(text):
-            scrubbed = text
-            split = re.split(r'\+|~| ', text)
-            if split and len(split)>1:
-                scrubbed = split[0]
-            return scrubbed
-
         if self.accept(ID):
             start = self.token.value
             if self.accept(EQ):
                 # This is for versions that are associated with a hash
                 # i.e. @[40 char hash]=version
-                start += variant_scrubber(self.token.value)
+                start += self.token.value
                 self.expect(VAL)
-                start += variant_scrubber(self.token.value)
-                if '+' in start:
-                    print(start)
-                    assert False
+                start += self.token.value
 
         if self.accept(COLON):
             if self.accept(ID):
