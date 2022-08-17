@@ -573,7 +573,7 @@ class GitVersion(VersionBase):
         # need to append the string for version with a space due to parsing behavior with the `=`
         str = super(GitVersion, self).__str__()
         if self.user_supplied_reference:
-           str += ' '
+            str += " "
         return str
 
     def _cmp(self, other_lookups=None):
