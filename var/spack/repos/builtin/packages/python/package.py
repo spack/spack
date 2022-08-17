@@ -32,7 +32,7 @@ class Python(Package):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
-    url = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
+    url = "https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz"
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
