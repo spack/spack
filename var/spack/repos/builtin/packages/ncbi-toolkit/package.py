@@ -6,7 +6,6 @@
 from glob import glob
 
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
 class NcbiToolkit(AutotoolsPackage):
@@ -15,6 +14,11 @@ class NcbiToolkit(AutotoolsPackage):
     homepage = "https://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/"
     url = "ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--22_0_0.tar.gz"
 
+    version(
+        "25_2_0",
+        sha256="9f824a92750e64e7b9be98d82b84414ab4f7e5d73392dadbb87c94ff5ccf9111",
+        url="https://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--25_2_0.tar.gz",
+    )
     version(
         "22_0_0",
         sha256="ef39429bbc7f13c44c0d327432d9cfb430f9f20d10d825e6b2c4ddd7ccce457f",
@@ -28,12 +32,7 @@ class NcbiToolkit(AutotoolsPackage):
 
     variant("debug", default=False, description="Build debug versions of libs and apps")
 
-    depends_on("boost@1.35.0:")
-
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
+    depends_on("boost@1.35.0:+test+log")
     depends_on("bzip2")
     depends_on("jpeg")
     depends_on("libpng")
@@ -64,10 +63,10 @@ class NcbiToolkit(AutotoolsPackage):
             )
         # TODO: Convert these substitutions into BOOST_VERSION preprocessor
         # patches to send upstream.
-        if self.spec.satisfies("^boost@1.69:"):
+        if self.spec.satisfies("@:22_0_0 ^boost@1.69:"):
             with working_dir(join_path("include", "corelib")):
                 filter_file(r"(boost::unit_test::decorator::collector)", r"\1_t", "test_boost.hpp")
-        if self.spec.satisfies("^boost@1.70:"):
+        if self.spec.satisfies("@:22_0_0 ^boost@1.70:"):
             with working_dir(join_path("include", "corelib")):
                 filter_file(
                     ("unit_test::ut_detail::" "ignore_unused_variable_warning"),
