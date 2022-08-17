@@ -5229,16 +5229,14 @@ class SpecParser(spack.parse.Parser):
 
             elif self.accept(ID):
                 self.previous = self.token
-                if self.accept(EQ):
+                if self.accept(FLAGS) or self.accept(LIBS):
                     # We're adding a key-value pair to the spec
-                    if self.accept(VAL) or self.accept(ID):
-                        spec._add_flag(self.previous.value, self.token.value)
-                        self.previous = None
-                    else:
-                        if self.next:
-                            self.unexpected_token()
-                        else:
-                            self.next_token_error("Unexpected end of input")
+                    self.expect(VAL)
+                    spec._add_flag(self.previous.value, self.token.value)
+                    self.previous = None
+                elif self.accept(EQ):
+                    self.expect(ID)
+                    spec._add_flag(self.previous.value, self.token.value)
                 else:
                     # We've found the start of a new spec. Go back to do_parse
                     # and read this token again.
