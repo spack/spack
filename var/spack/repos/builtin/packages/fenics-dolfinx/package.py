@@ -23,7 +23,7 @@ class FenicsDolfinx(CMakePackage):
 
     conflicts("%gcc@:9.10", when="@0.5.0:",
               msg="fenics-dolfinx requires GCC-10 or newer for C++20 support")
-    conflicts("%clang@:6.10", when="@0.5.0:",
+    conflicts("%llvm@:7.10", when="@0.5.0:",
               msg="fenics-dolfinx requires Clang-8 or newer for C++20 support")
 
     # Graph partitioner variants
