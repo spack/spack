@@ -2749,6 +2749,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+
+        from llnl.util.lang import dedupe
+        from spack.util.environment import filter_system_paths
+
+        rpaths = list(dedupe(filter_system_paths(rpaths)))
         return rpaths
 
     def _run_test_callbacks(self, method_names, callback_type="install"):
