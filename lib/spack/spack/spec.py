@@ -4938,7 +4938,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, FLAGS, LIBS = range(14)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -4976,8 +4976,10 @@ class SpecLexer(spack.parse.Lexer):
                 # Identifiers match after filenames and hashes.
                 (spec_id_re, lambda scanner, val: self.token(ID, val)),
                 (r"\s+", lambda scanner, val: None),
+                (r"[a-z]*flags*\s\=*\s", lambda scanner, val: self.token(FLAGS, val)),
+                (r"[a-z]*libs*\s\=*\s", lambda scanner, val: self.token(LIBS, val)),
             ],
-            [EQ],
+            [FLAGS, LIBS],
             [
                 (r"[\S].*", lambda scanner, val: self.token(VAL, val)),
                 (r"\s+", lambda scanner, val: None),
@@ -5009,6 +5011,9 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
+        tokens = list(self.tokens)
+        self.tokens = iter(tokens)
+        print(tokens)
 
         try:
             while self.next:
@@ -5226,9 +5231,14 @@ class SpecParser(spack.parse.Parser):
                 self.previous = self.token
                 if self.accept(EQ):
                     # We're adding a key-value pair to the spec
-                    self.expect(VAL)
-                    spec._add_flag(self.previous.value, self.token.value)
-                    self.previous = None
+                    if self.accept(VAL) or self.accept(ID):
+                        spec._add_flag(self.previous.value, self.token.value)
+                        self.previous = None
+                    else:
+                        if self.next:
+                            self.unexpected_token()
+                        else:
+                            self.next_token_error("Unexpected end of input")
                 else:
                     # We've found the start of a new spec. Go back to do_parse
                     # and read this token again.
@@ -5269,7 +5279,7 @@ class SpecParser(spack.parse.Parser):
                 # This is for versions that are associated with a hash
                 # i.e. @[40 char hash]=version
                 start += self.token.value
-                self.expect(VAL)
+                self.expect(ID)
                 start += self.token.value
 
         if self.accept(COLON):
