@@ -15,4 +15,4 @@ class PyMacholib(PythonPackage):
     version("1.11", "c4180ffc6f909bf8db6cd81cff4b6f601d575568f4d5dee148c830e9851eb9db")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-altgraph", type=("build", "run"))
+    depends_on("py-altgraph@0.15:", type=("build", "run"))
