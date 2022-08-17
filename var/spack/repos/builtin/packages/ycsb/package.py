@@ -110,7 +110,11 @@ class Ycsb(MavenPackage):
                 '-Dversion=2.0.1',
                 '-Dpackaging=jar',
             )
-        projects = ['site.ycsb:core', 'site.ycsb:binding-parent']
+        projects = [
+            'site.ycsb:core',
+            'site.ycsb:binding-parent',
+            'site.ycsb:distribution'
+        ]
         for key in Ycsb.bindings:
             variant_name = key.replace('.', '_') if '.' in key else key
             if '+' + variant_name in spec:
