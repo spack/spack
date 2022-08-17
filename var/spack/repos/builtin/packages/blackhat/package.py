@@ -10,22 +10,23 @@ class Blackhat(AutotoolsPackage):
     """Blackhat MC generator"""
 
     homepage = "https://blackhat.hepforge.org"
-    git      = "https://github.com/cms-externals/blackhat.git"
+    git = "https://github.com/cms-externals/blackhat.git"
 
-    version('0.9.9', branch='cms/v0.9.9')
+    version("0.9.9", branch="cms/v0.9.9")
 
-    depends_on('qd')
-    depends_on('python')
-    extends('python')
+    depends_on("qd")
+    depends_on("python")
+    extends("python")
 
     def patch(self):
-        filter_file('else return Cached_OLHA_user_normal',
-                    'else return new Cached_OLHA_user_normal',
-                    'src/cached_OLHA.cpp')
+        filter_file(
+            "else return Cached_OLHA_user_normal",
+            "else return new Cached_OLHA_user_normal",
+            "src/cached_OLHA.cpp",
+        )
 
     def configure_args(self):
-        return ['--with-QDpath=' + self.spec['qd'].prefix,
-                '--enable-pythoninterface=no']
+        return ["--with-QDpath=" + self.spec["qd"].prefix, "--enable-pythoninterface=no"]
 
     def setup_build_environment(self, env):
-        env.append_flags('CXXFLAGS', '-Wno-deprecated')
+        env.append_flags("CXXFLAGS", "-Wno-deprecated")

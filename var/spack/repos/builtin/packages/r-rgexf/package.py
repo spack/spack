@@ -19,12 +19,12 @@ class RRgexf(RPackage):
 
     cran = "rgexf"
 
-    version('0.16.2', sha256='6ee052b0de99d0c7492366b991d345a51b3d0cc890d10a68b8670e1bd4fc8201')
-    version('0.16.0', sha256='2a671df9ac70cfefd4092754317cb28e32a33df345b80e1975bf838e838245ee')
-    version('0.15.3', sha256='2e8a7978d1fb977318e6310ba65b70a9c8890185c819a7951ac23425c6dc8147')
+    version("0.16.2", sha256="6ee052b0de99d0c7492366b991d345a51b3d0cc890d10a68b8670e1bd4fc8201")
+    version("0.16.0", sha256="2a671df9ac70cfefd4092754317cb28e32a33df345b80e1975bf838e838245ee")
+    version("0.15.3", sha256="2e8a7978d1fb977318e6310ba65b70a9c8890185c819a7951ac23425c6dc8147")
 
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-servr', type=('build', 'run'), when='@0.16.0:')
+    depends_on("r-xml", type=("build", "run"))
+    depends_on("r-igraph", type=("build", "run"))
+    depends_on("r-servr", type=("build", "run"), when="@0.16.0:")
 
-    depends_on('r-rook', type=('build', 'run'), when='@:0.15.3')
+    depends_on("r-rook", type=("build", "run"), when="@:0.15.3")

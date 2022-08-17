@@ -13,26 +13,29 @@ class MofemFractureModule(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     git = "https://bitbucket.org/likask/mofem_um_fracture_mechanics.git"
 
-    maintainers = ['likask']
+    maintainers = ["likask"]
 
-    version('develop', branch='develop')
-    version('0.9.50', tag='v0.9.50')
-    version('0.9.49', tag='v0.9.49')
-    version('0.9.48', tag='v0.9.48')
-    version('0.9.47', tag='v0.9.47')
-    version('0.9.46', tag='v0.9.46')
-    version('0.9.45', tag='v0.9.45')
-    version('0.9.44', tag='v0.9.44')
-    version('0.9.42', tag='v0.9.42')
+    version("develop", branch="develop")
+    version("0.9.50", tag="v0.9.50")
+    version("0.9.49", tag="v0.9.49")
+    version("0.9.48", tag="v0.9.48")
+    version("0.9.47", tag="v0.9.47")
+    version("0.9.46", tag="v0.9.46")
+    version("0.9.45", tag="v0.9.45")
+    version("0.9.44", tag="v0.9.44")
+    version("0.9.42", tag="v0.9.42")
 
-    variant('copy_user_modules', default=True,
-            description='Copy user modules directory instead linking')
+    variant(
+        "copy_user_modules",
+        default=True,
+        description="Copy user modules directory instead linking",
+    )
 
-    extends('mofem-cephas')
-    depends_on('mofem-users-modules@0.8.17', when='@0.9.50')
-    depends_on('mofem-users-modules@0.8.16', when='@0.9.49')
-    depends_on('mofem-users-modules@0.8.15', when='@0.9.48')
-    depends_on("mofem-users-modules", type=('build', 'link', 'run'))
+    extends("mofem-cephas")
+    depends_on("mofem-users-modules@0.8.17", when="@0.9.50")
+    depends_on("mofem-users-modules@0.8.16", when="@0.9.49")
+    depends_on("mofem-users-modules@0.8.15", when="@0.9.48")
+    depends_on("mofem-users-modules", type=("build", "link", "run"))
 
     # The CMakeLists.txt installed with mofem-cephas package set cmake
     # environment to install extension from extension repository. It searches
@@ -50,36 +53,40 @@ class MofemFractureModule(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return spec['mofem-users-modules'].prefix.users_modules
+        return spec["mofem-users-modules"].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
 
         # obligatory options
         options = [
-            self.define('WITH_SPACK', True),
-            self.define('EXTERNAL_MODULES_BUILD', True),
-            self.define('UM_INSTALL_BREFIX',
-                        spec['mofem-users-modules'].prefix),
-            self.define('EXTERNAL_MODULE_SOURCE_DIRS', self.stage.source_path),
-            self.define_from_variant('STAND_ALLONE_USERS_MODULES',
-                                     'copy_user_modules')
+            self.define("WITH_SPACK", True),
+            self.define("EXTERNAL_MODULES_BUILD", True),
+            self.define("UM_INSTALL_BREFIX", spec["mofem-users-modules"].prefix),
+            self.define("EXTERNAL_MODULE_SOURCE_DIRS", self.stage.source_path),
+            self.define_from_variant("STAND_ALLONE_USERS_MODULES", "copy_user_modules"),
         ]
 
         # Set module version
-        if self.spec.version == Version('develop'):
-            options.extend([
-                '-DFM_VERSION_MAJOR=%s' % 0,
-                '-DFM_VERSION_MINOR=%s' % 0,
-                '-DFM_VERSION_BUILD=%s' % 0])
+        if self.spec.version == Version("develop"):
+            options.extend(
+                [
+                    "-DFM_VERSION_MAJOR=%s" % 0,
+                    "-DFM_VERSION_MINOR=%s" % 0,
+                    "-DFM_VERSION_BUILD=%s" % 0,
+                ]
+            )
         else:
-            options.extend([
-                '-DFM_VERSION_MAJOR=%s' % self.spec.version[0],
-                '-DFM_VERSION_MINOR=%s' % self.spec.version[1],
-                '-DFM_VERSION_BUILD=%s' % self.spec.version[2]])
+            options.extend(
+                [
+                    "-DFM_VERSION_MAJOR=%s" % self.spec.version[0],
+                    "-DFM_VERSION_MINOR=%s" % self.spec.version[1],
+                    "-DFM_VERSION_BUILD=%s" % self.spec.version[2],
+                ]
+            )
 
         # build tests
-        options.append(self.define('MOFEM_UM_BUILD_TESTS', self.run_tests))
+        options.append(self.define("MOFEM_UM_BUILD_TESTS", self.run_tests))
 
         return options
 
@@ -88,7 +95,7 @@ class MofemFractureModule(CMakePackage):
     # code to play, change and make it. Having source code at hand one can
     # compile in own build directory it in package view when the extension is
     # activated.
-    @run_after('install')
+    @run_after("install")
     def copy_source_code(self):
         source = self.stage.source_path
         prefix = self.prefix
