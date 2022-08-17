@@ -39,7 +39,6 @@ spack:
         - +cuda ^cuda@10.2
         - +cuda ^cuda@11
         - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
-        - +opencl
         - +level_zero
       - [$target]
     # Latest release with minimum supported dependencies
