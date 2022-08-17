@@ -77,7 +77,6 @@ class PyScipy(PythonPackage):
         "py-numpy@1.16.5:1.22+blas+lapack", when="@1.6.2:1.7", type=("build", "link", "run")
     )
     depends_on("py-numpy@1.17.3:1.24+blas+lapack", when="@1.8:", type=("build", "link", "run"))
-    depends_on("py-numpy %fj", when="%fj", type=("build", "link", "run"))
     depends_on("python@2.6:2.8,3.2:", when="@:0.17", type=("build", "link", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@0.18:1.2", type=("build", "link", "run"))
     depends_on("python@3.5:", when="@1.3:1.4", type=("build", "link", "run"))
@@ -112,6 +111,13 @@ class PyScipy(PythonPackage):
     def set_blas_lapack(self):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.set_blas_lapack()
+
+    @run_before("install")
+    def set_fortran_compiler(self):
+        if self.spec.satisfies("%fj"):
+            with open("setup.cfg", "w") as f:
+                f.write("[config_fc]\n")
+                f.write("fcompiler = fujitsu\n")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080

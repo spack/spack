@@ -150,14 +150,6 @@ class PyNumpy(PythonPackage):
         when="@1.22.0:1.22.3",
     )
 
-    # Change compiler search order for Fujitsu compiler
-    def patch(self):
-        f = join_path("numpy", "distutils", "fcompiler", "__init__.py")
-        if self.spec.satisfies("%fj"):
-            r = FileFilter(f)
-            r.filter(r", 'fujitsu'", "")
-            r.filter(r"'linux\.\*', \('", "'linux.*', ('fujitsu', '")
-
     # version 1.21.0 runs into an infinit loop during printing
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts("%gcc@11:", when="@1.21.0")
