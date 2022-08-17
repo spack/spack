@@ -62,4 +62,3 @@ class Ycsb(MavenPackage):
             dist_file = glob(distribution)[0]
         tar = which("tar")
         tar("xf", dist_file, "-C", prefix, "--strip-components=1")
-
