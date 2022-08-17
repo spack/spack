@@ -1,10 +1,8 @@
 spack:
   view: false
-
   concretizer:
     reuse: false
     unify: when_possible
-
   config:
     concretizer: clingo
     install_tree:
@@ -12,13 +10,14 @@ spack:
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
   packages:
     all:
       compiler: [gcc@11.2.0]
       providers:
         blas: [openblas]
         mpi: [mpich]
+        glx: [mesa+glx]
+        osmesa: [mesa+osmesa]
       target: [x86_64]
       variants: +mpi
     binutils:
@@ -33,12 +32,22 @@ spack:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
+    llvm:
+      version: [13.0.1]
+      variants: ~lldb~lld~polly~internal_unwind~libcxx~compiler-rt+llvm_dylib
+    llvm_amdgpu:
+      variants: +openmp+llvm_dylib
     mpich:
       variants: ~wrapperrpath
+    mesa:
+      version: [21.3.8] # Needed for swr
+      variants: +glx+osmesa
     ncurses:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    paraview:
+      variants: ~qt+osmesa use_vtkm=off
     python:
       version: [3.8.13]
     trilinos:
@@ -48,69 +57,73 @@ spack:
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
-
   specs:
+  
+  # Specs for providers that are not required E4S packages
+  - mesa
+  - mpich
+  - openblas # Added to ensure openblas is used instead of nvhpc
+  
   # CPU
   - adios
   - alquimia
   - aml
-  - amrex
-  - arborx
-  - archer
+  - amrex ~cuda ~rocm
+  - arborx ~cuda ~rocm
   - argobots
-  - axom
+  - axom ~cuda
   - bolt
   - bricks
   - butterflypack
   - cabana
-  - chai ~benchmarks ~tests
+  - chai ~cuda ~benchmarks ~rocm ~tests
   - datatransferkit
   - dyninst
-  - ecp-data-vis-sdk +adios2 +ascent +cinema ~cuda +darshan +faodel +hdf5 +paraview +pnetcdf ~rocm ~sensei +sz +unifyfs+ veloc +visit +vtkm +zfp ^mesa +osmesa ~glx
+  - ecp-data-vis-sdk +adios2 +ascent +cinema ~cuda +darshan +faodel +hdf5 +paraview
+    +pnetcdf ~rocm ~sensei +sz ~unifyfs+ veloc +visit +vtkm +zfp
   - exaworks
   - faodel
-  - flecsi
+  - flecsi ~cuda
   - flit
   - flux-core
   - fortrilinos
-  - gasnet
-  - ginkgo
+  - gasnet ~cuda ~rocm
+  - ginkgo ~cuda ~rocm
   - globalarrays
   - gmp
   - gptune
   - hdf5-vol-async
-  - heffte +fftw
+  - heffte ~cuda +fftw ~rocm
   - hpctoolkit
-  - hpx networking=mpi
-  - hypre
-  - kokkos +openmp
-  - kokkos-kernels +openmp
-  - lammps
-  - legion
+  - hpx ~cuda networking=mpi ~rocm
+  - hypre ~cuda ~rocm
+  - kokkos ~cuda +openmp ~rocm
+  - kokkos-kernels ~cuda +openmp
+  - lammps ~cuda
+  - legion ~cuda ~rocm
   - libnrm
   - libquo
   - libunwind
+  # - archer # Archer was moved into llvm
+  - llvm +omp_tsan
   - mercury
   - metall
-  - mfem
+  - mfem ~cuda ~rocm
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
   - nco
   - netlib-scalapack
   - nrm
-  - nvhpc
-  - omega-h
-  - openmpi
+  - omega-h ~cuda
+  - openmpi ~cuda
   - openpmd-api
-  - papi
+  - papi ~cuda ~rocm
   - papyrus
   - parallel-netcdf
   - parsec ~cuda
   - pdt
-  - petsc
+  - petsc ~cuda ~rocm
   - phist
   - plasma
   - plumed
@@ -124,30 +137,51 @@ spack:
   - py-warpx ^warpx dims=3
   - py-warpx ^warpx dims=rz
   - qthreads scheduler=distrib
-  - raja
+  - raja ~cuda ~rocm
   - scr
-  - slate ~cuda
-  - slepc
+  - slate ~cuda ~rocm
+  - slepc ~cuda ~rocm
   - stc
-  - strumpack ~slate
-  - sundials
+  - strumpack ~cuda ~rocm ~slate
+  - sundials ~cuda ~rocm
   - superlu
-  - superlu-dist
+  - superlu-dist ~cuda ~rocm
   - swig
   - swig@4.0.2-fortran
-  - tasmanian
+  - tasmanian ~cuda ~rocm
   - tau +mpi +python
-  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
-    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - trilinos@13.0.1 ~cuda ~rocm
   - turbine
   - umap
-  - upcxx
+  - upcxx ~cuda ~rocm
   - wannier90
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   # CUDA
-  - ecp-data-vis-sdk +adios2 +ascent +cinema +cuda +darshan +faodel +hdf5 ~paraview +pnetcdf ~rocm ~sensei +sz +unifyfs +veloc +visit +vtkm +zfp cuda_arch=80  ^mesa +osmesa ~glx
+  - ecp-data-vis-sdk +adios2 ~ascent +cinema +cuda +darshan +faodel +hdf5 ~paraview
+    +pnetcdf ~rocm ~sensei +sz ~unifyfs +veloc +visit +vtkm +zfp cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
@@ -173,10 +207,32 @@ spack:
   - tasmanian +cuda cuda_arch=80
   - tau +mpi +cuda
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
-  - ecp-data-vis-sdk +vtkm +rocm amdgpu_target=gfx90a ^mesa +osmesa ~glx
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
@@ -200,7 +256,8 @@ spack:
   #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
   #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- paraview +qt   # llvm@14
+  #- nvhpc          # Spack currently cannot handle the BLAS/LAPACK installations from nvhpc (header and library ambiguiity)
+  #- paraview ~qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
   #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
   #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
@@ -212,212 +269,205 @@ spack:
   #- trilinos@13.2.0 +cuda cuda_arch=80       # /usr/include/c++/11/bits/std_function.h:435:145: error: parameter packs not expanded with '...':
 
   # ROCm failures
+  #- ecp-data-vis-sdk +vtkm +rocm amdgpu_target=gfx90a
   #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
   #- hpctoolkit +rocm                             # roctracer-dev: core/memory_pool.h:155:64: error: 'int pthread_yield()' is deprecated: pthread_yield is deprecated, use sched_yield instead [-Werror=deprecated-declarations]
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
   #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
-
+  mirrors: {"mirror": "s3://spack-binaries/develop/e4s"}
   gitlab-ci:
-
     script:
-      - . "./share/spack/setup-env.sh"
-      - spack --version
-      - cd ${SPACK_CONCRETE_ENV_DIR}
-      - spack env activate --without-view .
-      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
-      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
-      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
-      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd ${SPACK_CONCRETE_ENV_DIR}
+    - spack env activate --without-view .
+    - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+    - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+    - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg;
+      fi
+    - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg;
+      fi
+    - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt)
+      2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
-    
     mappings:
-      - match:
-          - hipblas
-          - llvm
-          - llvm-amdgpu
-          - rocblas
-        runner-attributes:
-          tags: [ "spack", "huge", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: huge
-            KUBERNETES_CPU_REQUEST: 11000m
-            KUBERNETES_MEMORY_REQUEST: 42G
-
-      - match:
-          - cuda
-          - dyninst
-          - ginkgo
-          - hpx
-          - kokkos-kernels
-          - kokkos-nvcc-wrapper
-          - magma
-          - mfem
-          - mpich
-          - openturns
-          - precice
-          - raja
-          - rust
-          - slate
-          - trilinos
-          - vtk-m
-          - warpx
-        runner-attributes:
-          tags: [ "spack", "large", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: large
-            KUBERNETES_CPU_REQUEST: 8000m
-            KUBERNETES_MEMORY_REQUEST: 12G
-
-      - match:
-          - adios2
-          - amrex
-          - archer
-          - ascent
-          - axom
-          - binutils
-          - blaspp
-          - boost
-          - butterflypack
-          - cabana
-          - caliper
-          - camp
-          - chai
-          - conduit
-          - datatransferkit
-          - faodel
-          - ffmpeg
-          - fftw
-          - fortrilinos
-          - gperftools
-          - gptune
-          - hdf5
-          - heffte
-          - hpctoolkit
-          - hwloc
-          - hypre
-          - kokkos
-          - lammps
-          - lapackpp
-          - legion
-          - libzmq
-          - llvm-openmp-ompt
-          - mbedtls
-          - netlib-scalapack
-          - omega-h
-          - openmpi
-          - openpmd-api
-          - pagmo2
-          - papyrus
-          - parsec
-          - pdt
-          - petsc
-          - pumi
-          - py-ipython-genutils
-          - py-petsc4py
-          - py-scipy
-          - py-statsmodels
-          - py-warlock
-          - py-warpx
-          - pygmo
-          - slepc
-          - slurm
-          - strumpack
-          - sundials
-          - superlu-dist
-          - tasmanian
-          - tau
-          - upcxx
-          - vtk-h
-          - zfp
-        runner-attributes:
-          tags: [ "spack", "medium", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: "medium"
-            KUBERNETES_CPU_REQUEST: "2000m"
-            KUBERNETES_MEMORY_REQUEST: "4G"
-
-      - match:
-          - alsa-lib
-          - ant
-          - antlr
-          - argobots
-          - automake
-          - berkeley-db
-          - bison
-          - blt
-          - cmake
-          - curl
-          - darshan-util
-          - diffutils
-          - exmcutils
-          - expat
-          - flit
-          - freetype
-          - gdbm
-          - gotcha
-          - hpcviewer
-          - jansson
-          - json-c
-          - libbsd
-          - libevent
-          - libjpeg-turbo
-          - libnrm
-          - libpng
-          - libunistring
-          - lua-luaposix
-          - m4
-          - mpfr
-          - ncurses
-          - openblas
-          - openjdk
-          - papi
-          - parallel-netcdf
-          - pcre2
-          - perl-data-dumper
-          - pkgconf
-          - py-alembic
-          - py-idna
-          - py-testpath
-          - qhull
-          - snappy
-          - swig
-          - tar
-          - tcl
-          - texinfo
-          - unzip
-          - util-linux-uuid
-          - util-macros
-          - yaml-cpp
-          - zlib
-          - zstd
-        runner-attributes:
-          tags: [ "spack", "small", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: "small"
-            KUBERNETES_CPU_REQUEST: "500m"
-            KUBERNETES_MEMORY_REQUEST: "500M"
-
-      - match: ['os=ubuntu22.04']
-        runner-attributes:
-          tags: ["spack", "x86_64"]
-          variables:
-            CI_JOB_SIZE: "default"
-
-    broken-specs-url: "s3://spack-binaries/broken-specs"
-
+    - match:
+      - hipblas
+      - llvm
+      - llvm-amdgpu
+      - rocblas
+      runner-attributes:
+        tags: [spack, huge, x86_64]
+        variables:
+          CI_JOB_SIZE: huge
+          KUBERNETES_CPU_REQUEST: 11000m
+          KUBERNETES_MEMORY_REQUEST: 42G
+    - match:
+      - cuda
+      - dyninst
+      - ginkgo
+      - hpx
+      - kokkos-kernels
+      - kokkos-nvcc-wrapper
+      - magma
+      - mfem
+      - mpich
+      - openturns
+      - precice
+      - raja
+      - rust
+      - slate
+      - trilinos
+      - vtk-m
+      - warpx
+      runner-attributes:
+        tags: [spack, large, x86_64]
+        variables:
+          CI_JOB_SIZE: large
+          KUBERNETES_CPU_REQUEST: 8000m
+          KUBERNETES_MEMORY_REQUEST: 12G
+    - match:
+      - adios2
+      - amrex
+      - ascent
+      - axom
+      - binutils
+      - blaspp
+      - boost
+      - butterflypack
+      - cabana
+      - caliper
+      - camp
+      - chai
+      - conduit
+      - datatransferkit
+      - faodel
+      - ffmpeg
+      - fftw
+      - fortrilinos
+      - gperftools
+      - gptune
+      - hdf5
+      - heffte
+      - hpctoolkit
+      - hwloc
+      - hypre
+      - kokkos
+      - lammps
+      - lapackpp
+      - legion
+      - libzmq
+      - llvm-openmp-ompt
+      - mbedtls
+      - netlib-scalapack
+      - omega-h
+      - openmpi
+      - openpmd-api
+      - pagmo2
+      - papyrus
+      - parsec
+      - pdt
+      - petsc
+      - pumi
+      - py-ipython-genutils
+      - py-petsc4py
+      - py-scipy
+      - py-statsmodels
+      - py-warlock
+      - py-warpx
+      - pygmo
+      - slepc
+      - slurm
+      - strumpack
+      - sundials
+      - superlu-dist
+      - tasmanian
+      - tau
+      - upcxx
+      - vtk-h
+      - zfp
+      runner-attributes:
+        tags: [spack, medium, x86_64]
+        variables:
+          CI_JOB_SIZE: medium
+          KUBERNETES_CPU_REQUEST: 2000m
+          KUBERNETES_MEMORY_REQUEST: 4G
+    - match:
+      - alsa-lib
+      - ant
+      - antlr
+      - argobots
+      - automake
+      - berkeley-db
+      - bison
+      - blt
+      - cmake
+      - curl
+      - darshan-util
+      - diffutils
+      - exmcutils
+      - expat
+      - flit
+      - freetype
+      - gdbm
+      - gotcha
+      - hpcviewer
+      - jansson
+      - json-c
+      - libbsd
+      - libevent
+      - libjpeg-turbo
+      - libnrm
+      - libpng
+      - libunistring
+      - lua-luaposix
+      - m4
+      - mpfr
+      - ncurses
+      - openblas
+      - openjdk
+      - papi
+      - parallel-netcdf
+      - pcre2
+      - perl-data-dumper
+      - pkgconf
+      - py-alembic
+      - py-idna
+      - py-testpath
+      - qhull
+      - snappy
+      - swig
+      - tar
+      - tcl
+      - texinfo
+      - unzip
+      - util-linux-uuid
+      - util-macros
+      - yaml-cpp
+      - zlib
+      - zstd
+      runner-attributes:
+        tags: [spack, small, x86_64]
+        variables:
+          CI_JOB_SIZE: small
+          KUBERNETES_CPU_REQUEST: 500m
+          KUBERNETES_MEMORY_REQUEST: 500M
+    - match: [os=ubuntu22.04]
+      runner-attributes:
+        tags: [spack, x86_64]
+        variables:
+          CI_JOB_SIZE: default
+    broken-specs-url: s3://spack-binaries/broken-specs
     service-job-attributes:
       before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
+      - . "./share/spack/setup-env.sh"
+      - spack --version
       image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
-      tags: ["spack", "public", "x86_64"]
-
+      tags: [spack, public, x86_64]
     signing-job-attributes:
-      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      image: {"name": "ghcr.io/spack/notary:latest", "entrypoint": [""]}
       tags: ["spack", "aws"]
       script:
         - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
@@ -429,3 +479,17 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
+  compilers:
+  - compiler:
+      spec: gcc@11.2.0
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: ubuntu22.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
