@@ -106,8 +106,6 @@ jobs:
         include:
         - python-version: 2.7
           concretizer: original
-        - python-version: 3.6
-          concretizer: original
         - python-version: 3.9
           concretizer: original
     steps:

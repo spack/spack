@@ -29,7 +29,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("tests", default=True, description="Activate regression tests")
 
-    depends_on("hypre~int64+shared@2.20.0:", when="+hypre")
+    depends_on("hypre~int64@2.20.0:", when="+hypre")
     depends_on("hypre+mpi", when="+hypre+mpi")
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
@@ -42,10 +42,6 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     # propagate variants to ascent
     depends_on("ascent~mpi", when="+ascent~mpi")
     depends_on("ascent+mpi", when="+ascent+mpi")
-    depends_on("ascent~shared", when="+ascent~shared")
-    depends_on("ascent+shared", when="+ascent+shared")
-    depends_on("ascent~openmp", when="+ascent~openmp")
-    depends_on("ascent+openmp", when="+ascent+openmp")
     for arch in CudaPackage.cuda_arch_values:
         depends_on("ascent+cuda cuda_arch=%s" % arch, when="+ascent+cuda cuda_arch=%s" % arch)
 
