@@ -15,6 +15,7 @@ class PyAntlr4Python3Runtime(PythonPackage):
     homepage = "https://www.antlr.org"
     pypi = "antlr4-python3-runtime/antlr4-python3-runtime-4.7.2.tar.gz"
 
+    version('4.10', sha256='061a49bc72ae05a35d9b61c0ba0ac36c0397708819f02fbfb20a80e47d287a1b')
     version("4.8", sha256="15793f5d0512a372b4e7d2284058ad32ce7dd27126b105fb0b2245130445db33")
     version("4.7.2", sha256="168cdcec8fb9152e84a87ca6fd261b3d54c8f6358f42ab3b813b14a7193bb50b")
 
