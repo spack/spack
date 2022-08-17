@@ -805,6 +805,13 @@ class PackageInstaller(object):
         for (comp_pkg, is_compiler) in packages:
             if package_id(comp_pkg) not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
+            elif is_compiler:
+                # Requeue ensuring we treat it as a compiler
+                for i, tup in enumerate(self.build_pq):
+                    key, task = tup
+                    if task.pkg_id == package_id(comp_pkg):
+                        task.compiler = True
+                        self.build_pq[i] = (key, task)
 
     def _add_init_task(self, pkg, request, is_compiler, all_deps):
         """
