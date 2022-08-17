@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty, match_predicate, memoized, nullcontext
+from llnl.util.lang import classproperty, dedupe, match_predicate, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -2763,10 +2763,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
 
-        from llnl.util.lang import dedupe
-        from spack.util.environment import filter_system_paths
-
-        rpaths = list(dedupe(filter_system_paths(rpaths)))
+        rpaths = list(dedupe(spack.util.environment.filter_system_paths(rpaths)))
         return rpaths
 
     def _run_test_callbacks(self, method_names, callback_type="install"):
