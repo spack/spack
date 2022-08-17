@@ -328,14 +328,12 @@ def which(*args, **kwargs):
     Keyword Arguments:
         path (list or str): The path to search. Defaults to ``PATH``
         required (bool): If set to True, raise an error if executable not found
-        exe_class (callable): If not None, used instead of Executable
 
     Returns:
         Executable: The first executable that is found in the path
     """
     exe = which_string(*args, **kwargs)
-    exe_class = kwargs.get("exe_class", Executable)
-    return exe_class(exe) if exe else None
+    return Executable(exe) if exe else None
 
 
 class ProcessError(spack.error.SpackError):
