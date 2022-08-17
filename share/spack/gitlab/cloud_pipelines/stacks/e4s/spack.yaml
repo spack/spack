@@ -232,12 +232,9 @@ spack:
   
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
-  - arborx +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
-  - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
   - hpx +rocm amdgpu_target=gfx90a
-  - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
   - slate +rocm amdgpu_target=gfx90a
@@ -269,9 +266,12 @@ spack:
   #- trilinos@13.2.0 +cuda cuda_arch=80       # /usr/include/c++/11/bits/std_function.h:435:145: error: parameter packs not expanded with '...':
 
   # ROCm failures
+  #- arborx +rocm amdgpu_target=gfx90a  # Kokkos having issues building
   #- ecp-data-vis-sdk +vtkm +rocm amdgpu_target=gfx90a
   #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
+  #- ginkgo +rocm amdgpu_target=gfx90a
   #- hpctoolkit +rocm                             # roctracer-dev: core/memory_pool.h:155:64: error: 'int pthread_yield()' is deprecated: pthread_yield is deprecated, use sched_yield instead [-Werror=deprecated-declarations]
+  #- kokkos +rocm amdgpu_target=gfx90a
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
   #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
