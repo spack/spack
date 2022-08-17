@@ -193,7 +193,6 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
-    variant("ensurepip", default=True, description="Build ensurepip module", when="@2.7.9:2,3.4:")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -356,15 +355,6 @@ class Python(Package):
                 variants += "+lzma"
             except ProcessError:
                 variants += "~lzma"
-
-        if Version(version_str) in ver("2.7.9:2,3.4:"):
-            # The ensurepip module is always available, but won't work if built with
-            # --without-ensurepip. A more reliable check to see if the package was built
-            # with --with-ensurepip is to check for the presence of a pip executable.
-            if glob.glob(os.path.join(os.path.dirname(exes[0]), "pip*")):
-                variants += "+ensurepip"
-            else:
-                variants += "~ensurepip"
 
         if Version(version_str) >= Version("3"):
             try:
@@ -622,10 +612,7 @@ class Python(Package):
                 raise ValueError("+ucs4 variant not compatible with Python 3.3 and beyond")
 
         if spec.satisfies("@2.7.9:2,3.4:"):
-            if "+ensurepip" in spec:
-                config_args.append("--with-ensurepip=install")
-            else:
-                config_args.append("--without-ensurepip")
+            config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -851,10 +838,6 @@ class Python(Package):
                 else:
                     self.command("-c", "import Tix")
 
-            # Ensure that ensurepip module works
-            if "+ensurepip" in spec:
-                self.command("-c", "import ensurepip")
-
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -1034,7 +1017,7 @@ config.update(get_paths())
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed.
         """
-        return Prefix(self.config_vars["prefix"])
+        return Prefix(self.config_vars["base"])
 
     def find_library(self, library):
         # Spack installs libraries into lib, except on openSUSE where it installs them
