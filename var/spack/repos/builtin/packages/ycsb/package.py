@@ -56,9 +56,10 @@ class Ycsb(MavenPackage):
         # The build process builds a tar.gz archive in distribution/target
         # that can easily be installed by untaring it into the install prefix.
         from glob import glob
+
         distribution = "distribution/target/ycsb-*.tar.gz"
         with working_dir(self.build_directory):
             dist_file = glob(distribution)[0]
         tar = which("tar")
-        tar('xf', dist_file, '-C', prefix, '--strip-components=1')
+        tar("xf", dist_file, "-C", prefix, "--strip-components=1")
 
