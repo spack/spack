@@ -137,7 +137,7 @@ class RocprofilerDev(CMakePackage):
     def cmake_args(self):
         return [
             self.define(
-                "PROF_API_HEADER_PATH", self.spec["roctracer-dev-api"].prefix.roctracer.include.ext
+                "PROF_API_HEADER_PATH", self.spec["roctracer-dev-api"].prefix.roctracer.inc.ext
             ),
             self.define("ROCM_ROOT_DIR", self.spec["hsakmt-roct"].prefix.include),
         ]
