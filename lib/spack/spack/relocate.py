@@ -776,7 +776,7 @@ def relocate_text(files, prefixes, concurrency=32):
     args = []
     for filename in files:
         # Passing a directory to _replace_prefix_text will still throw error
-        if os.path.isdir(filename):
+        if os.path.isdir(filename) and os.path.islink(filename):
             continue
         args.append((filename, compiled_prefixes))
 
