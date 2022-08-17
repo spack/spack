@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-import sys
 
 from spack.package import *
 
@@ -44,10 +43,7 @@ class Ccache(CMakePackage):
     version("3.3", sha256="b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a")
     version("3.2.9", sha256="1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f")
 
-    is_darwin = sys.platform == "darwin"
-
-    # macOS ships a redis lib by default, which at runtime crashes ccache
-    variant("redis", default=not is_darwin, description="Enable Redis secondary storage")
+    variant("redis", default=True, description="Enable Redis secondary storage")
 
     depends_on("cmake@3.15:", when="@4.7:", type="build")
     depends_on("cmake@3.10:", when="@4.4:", type="build")
