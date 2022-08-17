@@ -17,4 +17,4 @@ class Metaeuk(CMakePackage):
 
     version("6-a5d39d9", sha256="be19c26f5bdb7dcdd7bc48172105afecf19e5a2e5555edb3ba0c4aa0e4aac126")
 
-    depends_on("cmake@3:", type="build")
+    depends_on("cmake@2.8.12:", type="build")
