@@ -19,6 +19,7 @@ class Pasta(Package):
     depends_on("python@3:", when="@1.9.0:")
     depends_on("python@:2", when="@:1.8.3")
     depends_on("py-dendropy")
+    depends_on("py-setuptools")
     depends_on("java")
 
     resource(
