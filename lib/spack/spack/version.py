@@ -569,13 +569,6 @@ class GitVersion(VersionBase):
         canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
         super(GitVersion, self).__init__(canonical_string)
 
-    def __str__(self):
-        # need to append the string for version with a space due to parsing behavior with the `=`
-        str = super(GitVersion, self).__str__()
-        if self.user_supplied_reference:
-            str += " "
-        return str
-
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs
         if len(self.version) == 2 and self.isdevelop():
