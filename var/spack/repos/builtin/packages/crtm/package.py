@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Crtm(CMakePackage):
@@ -13,28 +13,33 @@ class Crtm(CMakePackage):
     scattering, and a solver for a radiative transfer."""
 
     homepage = "https://www.jcsda.org/jcsda-project-community-radiative-transfer-model"
-    git = 'https://github.com/JCSDA/crtm.git'
+    git = "https://github.com/JCSDA/crtm.git"
+    url = "https://github.com/NOAA-EMC/EMC_crtm/archive/refs/tags/v2.3.0.tar.gz"
 
-    maintainers = ['t-brown', 'edwardhartnett', 'kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
 
-    variant('fix', default=False, description='Download CRTM coeffecient or "fix" files (several GBs).')
+    variant(
+        "fix",
+        default=False,
+        description='Download CRTM coeffecient or "fix" files (several GBs).',
+    )
 
-    depends_on('git-lfs')
-    depends_on('netcdf-fortran', when='@2.4.0:')
-    depends_on('netcdf-fortran', when='@v2.3-jedi.4')
+    depends_on("git-lfs")
+    depends_on("netcdf-fortran", when="@2.4.0:")
+    depends_on("netcdf-fortran", when="@v2.3-jedi.4")
 
-    depends_on('crtm-fix@2.3.0_emc', when='@2.3.0 +fix')
-    depends_on('crtm-fix@2.4.0_emc', when='@2.4.0 +fix')
+    depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
+    depends_on("crtm-fix@2.4.0_emc", when="@2.4.0 +fix")
 
-    depends_on('ecbuild', type=('build'), when='@v2.3-jedi.4')
+    depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
 
     # ecbuild release v2.4.0 is broken
     # add ecbuild dependency for next release with fix
-    # depends_on('ecbuild', when='@2.4.0:', type=('build'))
+    # depends_on("ecbuild", when="@2.4.0:", type=("build"))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
-    version('2.4.0', commit='a831626')
+    version("2.4.0", commit="a831626")
     # Uses the tip of REL-2.3.0_emc branch
-    version('2.3.0', commit='99760e6')
+    version("2.3.0", commit="99760e6")
     # JEDI applications so far use this version
-    version('v2.3-jedi.4', commit='bfede42')
+    version("v2.3-jedi.4", commit="bfede42")

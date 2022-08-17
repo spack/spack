@@ -13,7 +13,7 @@ import re
 import sys
 import traceback
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import Any, Callable, Iterable, List, Tuple
 
 import six
 from six import string_types
@@ -21,7 +21,7 @@ from six import string_types
 from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
-ignore_modules = [r'^\.#', '~$']
+ignore_modules = [r"^\.#", "~$"]
 
 
 def index_by(objects, *funcs):
@@ -91,9 +91,9 @@ def index_by(objects, *funcs):
 
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
-       This allows a function to insert variables into its caller's
-       scope.  Yes, this is some black magic, and yes it's useful
-       for implementing things like depends_on and provides.
+    This allows a function to insert variables into its caller's
+    scope.  Yes, this is some black magic, and yes it's useful
+    for implementing things like depends_on and provides.
     """
     # Passing zero here skips line context for speed.
     stack = inspect.stack(0)
@@ -105,7 +105,7 @@ def caller_locals():
 
 def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
-       enclosing module's name.
+    enclosing module's name.
     """
     # Passing zero here skips line context for speed.
     stack = inspect.stack(0)
@@ -115,12 +115,13 @@ def get_calling_module_name():
     finally:
         del stack
 
-    if '__module__' not in caller_locals:
-        raise RuntimeError("Must invoke get_calling_module_name() "
-                           "from inside a class definition!")
+    if "__module__" not in caller_locals:
+        raise RuntimeError(
+            "Must invoke get_calling_module_name() " "from inside a class definition!"
+        )
 
-    module_name = caller_locals['__module__']
-    base_name = module_name.split('.')[-1]
+    module_name = caller_locals["__module__"]
+    base_name = module_name.split(".")[-1]
     return base_name
 
 
@@ -128,8 +129,8 @@ def attr_required(obj, attr_name):
     """Ensure that a class has a required attribute."""
     if not hasattr(obj, attr_name):
         raise RequiredAttributeError(
-            "No required attribute '%s' in class '%s'"
-            % (attr_name, obj.__class__.__name__))
+            "No required attribute '%s' in class '%s'" % (attr_name, obj.__class__.__name__)
+        )
 
 
 def attr_setdefault(obj, name, value):
@@ -201,33 +202,35 @@ def memoized(func):
             # TypeError is raised when indexing into a dict if the key is unhashable.
             raise six.raise_from(
                 UnhashableArguments(
-                    "args + kwargs '{}' was not hashable for function '{}'"
-                    .format(key, func.__name__),
+                    "args + kwargs '{}' was not hashable for function '{}'".format(
+                        key, func.__name__
+                    ),
                 ),
-                e)
+                e,
+            )
 
     return _memoized_function
 
 
 def list_modules(directory, **kwargs):
     """Lists all of the modules, excluding ``__init__.py``, in a
-       particular directory.  Listed packages have no particular
-       order."""
-    list_directories = kwargs.setdefault('directories', True)
+    particular directory.  Listed packages have no particular
+    order."""
+    list_directories = kwargs.setdefault("directories", True)
 
     for name in os.listdir(directory):
-        if name == '__init__.py':
+        if name == "__init__.py":
             continue
 
         path = os.path.join(directory, name)
         if list_directories and os.path.isdir(path):
-            init_py = os.path.join(path, '__init__.py')
+            init_py = os.path.join(path, "__init__.py")
             if os.path.isfile(init_py):
                 yield name
 
-        elif name.endswith('.py'):
+        elif name.endswith(".py"):
             if not any(re.search(pattern, name) for pattern in ignore_modules):
-                yield re.sub('.py$', '', name)
+                yield re.sub(".py$", "", name)
 
 
 def decorator_with_or_without_args(decorator):
@@ -257,41 +260,34 @@ def decorator_with_or_without_args(decorator):
 
 def key_ordering(cls):
     """Decorates a class with extra methods that implement rich comparison
-       operations and ``__hash__``.  The decorator assumes that the class
-       implements a function called ``_cmp_key()``.  The rich comparison
-       operations will compare objects using this key, and the ``__hash__``
-       function will return the hash of this key.
+    operations and ``__hash__``.  The decorator assumes that the class
+    implements a function called ``_cmp_key()``.  The rich comparison
+    operations will compare objects using this key, and the ``__hash__``
+    function will return the hash of this key.
 
-       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
-       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+    If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
+    ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
 
-       Raises:
-           TypeError: If the class does not have a ``_cmp_key`` method
+    Raises:
+        TypeError: If the class does not have a ``_cmp_key`` method
     """
+
     def setter(name, value):
         value.__name__ = name
         setattr(cls, name, value)
 
-    if not has_method(cls, '_cmp_key'):
+    if not has_method(cls, "_cmp_key"):
         raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
 
-    setter('__eq__',
-           lambda s, o:
-           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
-    setter('__lt__',
-           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
-    setter('__le__',
-           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
+    setter("__eq__", lambda s, o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
+    setter("__lt__", lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
+    setter("__le__", lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__',
-           lambda s, o:
-           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
-    setter('__gt__',
-           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
-    setter('__ge__',
-           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
+    setter("__ne__", lambda s, o: (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
+    setter("__gt__", lambda s, o: o is None or s._cmp_key() > o._cmp_key())
+    setter("__ge__", lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
 
-    setter('__hash__', lambda self: hash(self._cmp_key()))
+    setter("__hash__", lambda self: hash(self._cmp_key()))
 
     return cls
 
@@ -458,8 +454,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     def le(self, other):
         if self is other:
             return True
-        return (other is not None) and not lazy_lt(other._cmp_iter,
-                                                   self._cmp_iter)
+        return (other is not None) and not lazy_lt(other._cmp_iter, self._cmp_iter)
 
     def ge(self, other):
         if self is other:
@@ -489,7 +484,9 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 @lazy_lexicographic_ordering
 class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
-       a tuple of the values in the dictionary."""
+    a tuple of the values in the dictionary."""
+
+    __slots__ = ("dict",)
 
     def __init__(self):
         self.dict = {}
@@ -527,7 +524,7 @@ class HashableMap(MutableMapping):
 
 def in_function(function_name):
     """True if the caller was called from some function with
-       the supplied Name, False otherwise."""
+    the supplied Name, False otherwise."""
     stack = inspect.stack()
     try:
         for elt in stack[2:]:
@@ -540,24 +537,25 @@ def in_function(function_name):
 
 def check_kwargs(kwargs, fun):
     """Helper for making functions with kwargs.  Checks whether the kwargs
-       are empty after all of them have been popped off.  If they're
-       not, raises an error describing which kwargs are invalid.
+    are empty after all of them have been popped off.  If they're
+    not, raises an error describing which kwargs are invalid.
 
-       Example::
+    Example::
 
-          def foo(self, **kwargs):
-              x = kwargs.pop('x', None)
-              y = kwargs.pop('y', None)
-              z = kwargs.pop('z', None)
-              check_kwargs(kwargs, self.foo)
+       def foo(self, **kwargs):
+           x = kwargs.pop('x', None)
+           y = kwargs.pop('y', None)
+           z = kwargs.pop('z', None)
+           check_kwargs(kwargs, self.foo)
 
-          # This raises a TypeError:
-          foo(w='bad kwarg')
+       # This raises a TypeError:
+       foo(w='bad kwarg')
     """
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(iter(kwargs)), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__)
+        )
 
 
 def match_predicate(*args):
@@ -573,6 +571,7 @@ def match_predicate(*args):
     * any regex in a list or tuple of regexes matches.
     * any predicate in args matches.
     """
+
     def match(string):
         for arg in args:
             if isinstance(arg, string_types):
@@ -585,9 +584,11 @@ def match_predicate(*args):
                 if arg(string):
                     return True
             else:
-                raise ValueError("args to match_predicate must be regex, "
-                                 "list of regexes, or callable.")
+                raise ValueError(
+                    "args to match_predicate must be regex, " "list of regexes, or callable."
+                )
         return False
+
     return match
 
 
@@ -647,7 +648,7 @@ def pretty_date(time, now=None):
     day_diff = diff.days
 
     if day_diff < 0:
-        return ''
+        return ""
 
     if day_diff == 0:
         if second_diff < 10:
@@ -705,43 +706,40 @@ def pretty_string_to_date(date_str, now=None):
     now = now or datetime.now()
 
     # datetime formats
-    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
-    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
-        x, '%Y-%m'
+    pattern[re.compile(r"^\d{4}$")] = lambda x: datetime.strptime(x, "%Y")
+    pattern[re.compile(r"^\d{4}-\d{2}$")] = lambda x: datetime.strptime(x, "%Y-%m")
+    pattern[re.compile(r"^\d{4}-\d{2}-\d{2}$")] = lambda x: datetime.strptime(x, "%Y-%m-%d")
+    pattern[re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")] = lambda x: datetime.strptime(
+        x, "%Y-%m-%d %H:%M"
     )
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
-        x, '%Y-%m-%d'
+    pattern[re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")] = lambda x: datetime.strptime(
+        x, "%Y-%m-%d %H:%M:%S"
     )
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
-        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
-    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
-        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
-    pretty_regex = re.compile(
-        r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
+    pretty_regex = re.compile(r"(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago")
 
     def _n_xxx_ago(x):
         how_many, time_period = pretty_regex.search(x).groups()
 
-        how_many = 1 if how_many == 'a' else int(how_many)
+        how_many = 1 if how_many == "a" else int(how_many)
 
         # timedelta natively supports time periods up to 'weeks'.
         # To apply month or year we convert to 30 and 365 days
-        if time_period == 'month':
+        if time_period == "month":
             how_many *= 30
-            time_period = 'day'
-        elif time_period == 'year':
+            time_period = "day"
+        elif time_period == "year":
             how_many *= 365
-            time_period = 'day'
+            time_period = "day"
 
-        kwargs = {(time_period + 's'): how_many}
+        kwargs = {(time_period + "s"): how_many}
         return now - timedelta(**kwargs)
 
     pattern[pretty_regex] = _n_xxx_ago
 
     # yesterday
     callback = lambda x: now - timedelta(days=1)
-    pattern[re.compile('^yesterday$')] = callback
+    pattern[re.compile("^yesterday$")] = callback
 
     for regexp, parser in pattern.items():
         if bool(regexp.match(date_str)):
@@ -752,7 +750,6 @@ def pretty_string_to_date(date_str, now=None):
 
 
 class RequiredAttributeError(ValueError):
-
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
 
@@ -764,6 +761,7 @@ class ObjectWrapper(object):
     This class is modeled after the stackoverflow answer:
     * http://stackoverflow.com/a/1445289/771663
     """
+
     def __init__(self, wrapped_object):
         wrapped_cls = type(wrapped_object)
         wrapped_name = wrapped_cls.__name__
@@ -807,7 +805,7 @@ class Singleton(object):
         # requested but not yet set. The final 'getattr' line here requires
         # 'instance'/'_instance' to be defined or it will enter an infinite
         # loop, so protect against that here.
-        if name in ['_instance', 'instance']:
+        if name in ["_instance", "instance"]:
             raise AttributeError()
         return getattr(self.instance, name)
 
@@ -837,7 +835,7 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
-        if name == 'ref_function':
+        if name == "ref_function":
             raise AttributeError()
         return getattr(self.ref_function(), name)
 
@@ -875,8 +873,8 @@ def load_module_from_file(module_name, module_path):
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
     if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
         import importlib.util
-        spec = importlib.util.spec_from_file_location(  # novm
-            module_name, module_path)
+
+        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
         module = importlib.util.module_from_spec(spec)  # novm
         # The module object needs to exist in sys.modules before the
         # loader executes the module code.
@@ -893,6 +891,7 @@ def load_module_from_file(module_name, module_path):
             raise
     elif sys.version_info[0] == 2:
         import imp
+
         module = imp.load_source(module_name, module_path)
     return module
 
@@ -924,8 +923,10 @@ def uniq(sequence):
 
 def star(func):
     """Unpacks arguments for use with Multiprocessing mapping functions"""
+
     def _wrapper(args):
         return func(*args)
+
     return _wrapper
 
 
@@ -934,22 +935,23 @@ class Devnull(object):
 
     See https://stackoverflow.com/a/2929954.
     """
+
     def write(self, *_):
         pass
 
 
 def elide_list(line_list, max_num=10):
     """Takes a long list and limits it to a smaller number of elements,
-       replacing intervening elements with '...'.  For example::
+    replacing intervening elements with '...'.  For example::
 
-           elide_list([1,2,3,4,5,6], 4)
+        elide_list([1,2,3,4,5,6], 4)
 
-       gives::
+    gives::
 
-           [1, 2, 3, '...', 6]
+        [1, 2, 3, '...', 6]
     """
     if len(line_list) > max_num:
-        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
+        return line_list[: max_num - 1] + ["..."] + line_list[-1:]
     else:
         return line_list
 
@@ -972,7 +974,32 @@ def enum(**kwargs):
     Args:
         **kwargs: explicit dictionary of enums
     """
-    return type('Enum', (object,), kwargs)
+    return type("Enum", (object,), kwargs)
+
+
+def stable_partition(
+    input_iterable,  # type: Iterable
+    predicate_fn,  # type: Callable[[Any], bool]
+):
+    # type: (...) -> Tuple[List[Any], List[Any]]
+    """Partition the input iterable according to a custom predicate.
+
+    Args:
+        input_iterable: input iterable to be partitioned.
+        predicate_fn: predicate function accepting an iterable item
+            as argument.
+
+    Return:
+        Tuple of the list of elements evaluating to True, and
+        list of elements evaluating to False.
+    """
+    true_items, false_items = [], []
+    for item in input_iterable:
+        if predicate_fn(item):
+            true_items.append(item)
+            continue
+        false_items.append(item)
+    return true_items, false_items
 
 
 class TypedMutableSequence(MutableSequence):
@@ -988,6 +1015,7 @@ class TypedMutableSequence(MutableSequence):
         if isinstance(l, Foo):
             # do something
     """
+
     def __init__(self, iterable):
         self.data = list(iterable)
 
@@ -1017,7 +1045,7 @@ class GroupedExceptionHandler(object):
     """A generic mechanism to coalesce multiple exceptions and preserve tracebacks."""
 
     def __init__(self):
-        self.exceptions = []    # type: List[Tuple[str, Exception, List[str]]]
+        self.exceptions = []  # type: List[Tuple[str, Exception, List[str]]]
 
     def __bool__(self):
         """Whether any exceptions were handled."""
@@ -1036,17 +1064,15 @@ class GroupedExceptionHandler(object):
         # type: (bool) -> str
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            '{0} raised {1}: {2}{3}'.format(
+            "{0} raised {1}: {2}{3}".format(
                 context,
                 exc.__class__.__name__,
                 exc,
-                '\n{0}'.format(''.join(tb)) if with_tracebacks else '',
+                "\n{0}".format("".join(tb)) if with_tracebacks else "",
             )
             for context, exc, tb in self.exceptions
         ]
-        return 'due to the following failures:\n{0}'.format(
-            '\n'.join(each_exception_message)
-        )
+        return "due to the following failures:\n{0}".format("\n".join(each_exception_message))
 
 
 class GroupedExceptionForwarder(object):
@@ -1072,3 +1098,16 @@ class GroupedExceptionForwarder(object):
         # Suppress any exception from being re-raised:
         # https://docs.python.org/3/reference/datamodel.html#object.__exit__.
         return True
+
+
+class classproperty(object):
+    """Non-data descriptor to evaluate a class-level property. The function that performs
+    the evaluation is injected at creation time and take an instance (could be None) and
+    an owner (i.e. the class that originated the instance)
+    """
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    def __get__(self, instance, owner):
+        return self.callback(owner)

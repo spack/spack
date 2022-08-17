@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlXmlWriter(PerlPackage):
@@ -22,6 +22,6 @@ class PerlXmlWriter(PerlPackage):
     itself, and will perform additional checks on the output."""
 
     homepage = "https://metacpan.org/pod/XML::Writer"
-    url      = "https://cpan.metacpan.org/authors/id/J/JO/JOSEPHW/XML-Writer-0.625.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/J/JO/JOSEPHW/XML-Writer-0.625.tar.gz"
 
-    version('0.625', sha256='e080522c6ce050397af482665f3965a93c5d16f5e81d93f6e2fe98084ed15fbe')
+    version("0.625", sha256="e080522c6ce050397af482665f3965a93c5d16f5e81d93f6e2fe98084ed15fbe")

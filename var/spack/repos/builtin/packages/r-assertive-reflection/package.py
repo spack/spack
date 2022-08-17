@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RAssertiveReflection(RPackage):
@@ -17,7 +17,7 @@ class RAssertiveReflection(RPackage):
 
     cran = "assertive.reflection"
 
-    version('0.0-5',   sha256='c2ca9b27cdddb9b9876351afd2ebfaf0fbe72c636cd12aa2af5d64e33fbf34bd')
+    version("0.0-5", sha256="c2ca9b27cdddb9b9876351afd2ebfaf0fbe72c636cd12aa2af5d64e33fbf34bd")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-assertive-base@0.0-7:', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-assertive-base@0.0-7:", type=("build", "run"))

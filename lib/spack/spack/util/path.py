@@ -22,23 +22,22 @@ from llnl.util.lang import memoized
 
 import spack.util.spack_yaml as syaml
 
-is_windows = sys.platform == 'win32'
+is_windows = sys.platform == "win32"
 
-__all__ = [
-    'substitute_config_variables',
-    'substitute_path_variables',
-    'canonicalize_path']
+__all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
 # Substitutions to perform
 def replacements():
     # break circular import from spack.util.executable
     import spack.paths
+
     return {
-        'spack': spack.paths.prefix,
-        'user': getpass.getuser(),
-        'tempdir': tempfile.gettempdir(),
-        'user_cache_path': spack.paths.user_cache_path}
+        "spack": spack.paths.prefix,
+        "user": getpass.getuser(),
+        "tempdir": tempfile.gettempdir(),
+        "user_cache_path": spack.paths.user_cache_path,
+    }
 
 
 # This is intended to be longer than the part of the install path
@@ -58,18 +57,18 @@ SPACK_MAX_INSTALL_PATH_LENGTH = 300
 #: Padded paths comprise directories with this name (or some prefix of it). :
 #: It starts with two underscores to make it unlikely that prefix matches would
 #: include some other component of the intallation path.
-SPACK_PATH_PADDING_CHARS = '__spack_path_placeholder__'
+SPACK_PATH_PADDING_CHARS = "__spack_path_placeholder__"
 
 
 def is_path_url(path):
-    if '\\' in path:
+    if "\\" in path:
         return False
     url_tuple = urlparse(path)
     return bool(url_tuple.scheme) and len(url_tuple.scheme) > 1
 
 
 def win_exe_ext():
-    return '.exe'
+    return ".exe"
 
 
 def path_to_os_path(*pths):
@@ -80,11 +79,46 @@ def path_to_os_path(*pths):
     """
     ret_pths = []
     for pth in pths:
-        if type(pth) is str and\
-                not is_path_url(pth):
+        if type(pth) is str and not is_path_url(pth):
             pth = convert_to_platform_path(pth)
         ret_pths.append(pth)
     return ret_pths
+
+
+def sanitize_file_path(pth):
+    """
+    Formats strings to contain only characters that can
+    be used to generate legal file paths.
+
+    Criteria for legal files based on
+    https://en.wikipedia.org/wiki/Filename#Comparison_of_filename_limitations
+
+    Args:
+        pth: string containing path to be created
+            on the host filesystem
+
+    Return:
+        sanitized string that can legally be made into a path
+    """
+    # on unix, splitting path by seperators will remove
+    # instances of illegal characters on join
+    pth_cmpnts = pth.split(os.path.sep)
+
+    if is_windows:
+        drive_match = r"[a-zA-Z]:"
+        is_abs = bool(re.match(drive_match, pth_cmpnts[0]))
+        drive = pth_cmpnts[0] + os.path.sep if is_abs else ""
+        pth_cmpnts = pth_cmpnts[1:] if drive else pth_cmpnts
+        illegal_chars = r'[<>?:"|*\\]'
+    else:
+        drive = "/" if not pth_cmpnts[0] else ""
+        illegal_chars = r"[/]"
+
+    pth = []
+    for cmp in pth_cmpnts:
+        san_cmp = re.sub(illegal_chars, "", cmp)
+        pth.append(san_cmp)
+    return drive + os.path.join(*pth)
 
 
 def system_path_filter(_func=None, arg_slice=None):
@@ -115,7 +149,9 @@ def system_path_filter(_func=None, arg_slice=None):
             else:
                 args = path_to_os_path(*args)
             return func(*args, **kwargs)
+
         return path_filter_caller
+
     if _func:
         return holder_func(_func)
     return holder_func
@@ -129,14 +165,15 @@ def get_system_path_max():
         sys_max_path_length = 260
     else:
         try:
-            path_max_proc  = subprocess.Popen(['getconf', 'PATH_MAX', '/'],
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.STDOUT)
+            path_max_proc = subprocess.Popen(
+                ["getconf", "PATH_MAX", "/"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
             proc_output = str(path_max_proc.communicate()[0].decode())
             sys_max_path_length = int(proc_output)
         except (ValueError, subprocess.CalledProcessError, OSError):
-            tty.msg('Unable to find system max path length, using: {0}'.format(
-                sys_max_path_length))
+            tty.msg(
+                "Unable to find system max path length, using: {0}".format(sys_max_path_length)
+            )
 
     return sys_max_path_length
 
@@ -149,10 +186,10 @@ class Path:
     exposing the path type of
     the current platform.
     """
+
     unix = 0
     windows = 1
-    platform_path = windows if is_windows\
-        else unix
+    platform_path = windows if is_windows else unix
 
 
 def format_os_path(path, mode=Path.unix):
@@ -171,9 +208,9 @@ def format_os_path(path, mode=Path.unix):
     if not path:
         return path
     if mode == Path.windows:
-        path = path.replace('/', '\\')
+        path = path.replace("/", "\\")
     else:
-        path = path.replace('\\', '/')
+        path = path.replace("\\", "/")
     return path
 
 
@@ -206,21 +243,22 @@ def substitute_config_variables(path):
     environment yaml files.
     """
     import spack.environment as ev  # break circular
+
     _replacements = replacements()
     env = ev.active_environment()
     if env:
-        _replacements.update({'env': env.path})
+        _replacements.update({"env": env.path})
     else:
         # If a previous invocation added env, remove it
-        _replacements.pop('env', None)
+        _replacements.pop("env", None)
 
     # Look up replacements
     def repl(match):
-        m = match.group(0).strip('${}')
+        m = match.group(0).strip("${}")
         return _replacements.get(m.lower(), match.group(0))
 
     # Replace $var or ${var}.
-    return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
+    return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
 def substitute_path_variables(path):
@@ -306,7 +344,7 @@ def longest_prefix_re(string, capture=True):
     return "(%s%s%s?)" % (
         "" if capture else "?:",
         string[0],
-        longest_prefix_re(string[1:], capture=False)
+        longest_prefix_re(string[1:], capture=False),
     )
 
 
@@ -333,6 +371,7 @@ def padding_filter(string):
     entirety at least one time. e.g., "/spack/" would not be filtered, but
     "/__spack_path_placeholder__/spack/" would be.
 
+    Note that only the first padded path in the string is filtered.
     """
     global _filter_re
 
@@ -341,7 +380,7 @@ def padding_filter(string):
         longest_prefix = longest_prefix_re(pad)
         regex = (
             r"((?:/[^/\s]*)*?)"  # zero or more leading non-whitespace path components
-            r"(/{pad})+"         # the padding string repeated one or more times
+            r"(/{pad})+"  # the padding string repeated one or more times
             r"(/{longest_prefix})?(?=/)"  # trailing prefix of padding as path component
         )
         regex = regex.replace("/", os.sep)
@@ -349,11 +388,8 @@ def padding_filter(string):
         _filter_re = re.compile(regex)
 
     def replacer(match):
-        return "%s%s[padded-to-%d-chars]" % (
-            match.group(1),
-            os.sep,
-            len(match.group(0))
-        )
+        return "%s%s[padded-to-%d-chars]" % (match.group(1), os.sep, len(match.group(0)))
+
     return _filter_re.sub(replacer, string)
 
 
@@ -365,6 +401,7 @@ def filter_padding():
     long padded installation path.
     """
     import spack.config
+
     padding = spack.config.get("config:install_tree:padded_length", None)
     if padding:
         # filter out all padding from the intsall command output
@@ -372,3 +409,22 @@ def filter_padding():
             yield
     else:
         yield  # no-op: don't filter unless padding is actually enabled
+
+
+def debug_padded_filter(string, level=1):
+    """
+    Return string, path padding filtered if debug level and not windows
+
+    Args:
+        string (str): string containing path
+        level (int): maximum debug level value for filtering (e.g., 1
+            means filter path padding if the current debug level is 0 or 1
+            but return the original string if it is 2 or more)
+
+    Returns (str): filtered string if current debug level does not exceed
+        level and not windows; otherwise, unfiltered string
+    """
+    if is_windows:
+        return string
+
+    return padding_filter(string) if tty.debug_level() <= level else string
