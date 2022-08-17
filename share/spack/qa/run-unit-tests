@@ -47,8 +47,11 @@ $coverage_run $(which spack) python -c "import spack.pkg.builtin.mpileaks; repr(
 # Run unit tests with code coverage
 #-----------------------------------------------------------
 if [[ "$ONLY_PACKAGES" == "true" ]]; then
-  echo "ONLY PACKAGE RECIPES CHANGED [skipping slow unit tests]"
+  echo "ONLY PACKAGE RECIPES CHANGED [running only package sanity]"
   export PYTEST_ADDOPTS='-k "package_sanity" -m "not maybeslow"'
+elif [[ "$SPACK_TEST_SOLVER" == "original" ]]; then
+  echo "ORIGINAL CONCRETIZER [skipping slow unit tests]"
+  export PYTEST_ADDOPTS='-m "not maybeslow"'
 fi
 
 $coverage_run $(which spack) unit-test -x --verbose
