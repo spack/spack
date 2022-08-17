@@ -70,9 +70,7 @@ class Esmf(MakefilePackage):
         description="Enable Internal ParallelIO support",
         when="@:8.2.99",
     )
-    variant(
-        "debug", default=False, description="Make a debuggable version of the library"
-    )
+    variant("debug", default=False, description="Make a debuggable version of the library")
 
     # Required dependencies
     depends_on("zlib")
@@ -126,9 +124,7 @@ class Esmf(MakefilePackage):
             )
         else:
             # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
-            return "https://github.com/esmf-org/esmf/archive/v{0}.tar.gz".format(
-                version
-            )
+            return "[https://github.com/esmf-org/esmf/archive/v{0}.tar.gz]".format(version)
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
@@ -177,18 +173,18 @@ class Esmf(MakefilePackage):
         if self.compiler.name == "gcc":
             os.environ["ESMF_COMPILER"] = "gfortran"
             gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(
-                    self.compiler.fc, "-dumpversion"
-                ).split(".")[0]
+                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
+                    "."
+                )[0]
             )
         elif self.compiler.name == "intel":
             os.environ["ESMF_COMPILER"] = "intel"
         elif self.compiler.name in ["clang", "apple-clang"]:
             os.environ["ESMF_COMPILER"] = "gfortranclang"
             gfortran_major_version = int(
-                spack.compiler.get_compiler_version_output(
-                    self.compiler.fc, "-dumpversion"
-                ).split(".")[0]
+                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
+                    "."
+                )[0]
             )
         elif self.compiler.name == "nag":
             os.environ["ESMF_COMPILER"] = "nag"
@@ -214,10 +210,7 @@ class Esmf(MakefilePackage):
             # Build an optimized version of the library.
             os.environ["ESMF_BOPT"] = "O"
 
-        if (
-            self.compiler.name in ["gcc", "clang", "apple-clang"]
-            and gfortran_major_version >= 10
-        ):
+        if self.compiler.name in ["gcc", "clang", "apple-clang"] and gfortran_major_version >= 10:
             os.environ["ESMF_F90COMPILEOPTS"] = "-fallow-argument-mismatch"
 
         #######
