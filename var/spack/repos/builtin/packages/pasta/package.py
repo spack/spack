@@ -39,7 +39,5 @@ class Pasta(Package):
         install_tree(".", prefix)
 
         # run the 'build' from within the prefix
-        python = which("python")
-
         with working_dir(prefix):
             python("setup.py", "develop")
