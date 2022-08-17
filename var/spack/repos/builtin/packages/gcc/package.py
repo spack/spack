@@ -719,6 +719,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             str(self.spec.target.family),
             [None] * 2,
         )
+        # TODO: the usage of self.rpath is deprecated.
+        #  See comments in the implementation of the property for more details.
         stage1_ldflags = " ".join("{0}{1}".format(compiler.cc_rpath_arg, d) for d in self.rpath)
         boot_ldflags = stage1_ldflags + " -static-libstdc++ -static-libgcc"
         options.append("--with-stage1-ldflags=" + stage1_ldflags)

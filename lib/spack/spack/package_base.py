@@ -2745,6 +2745,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
+        # TODO: this method is deprecated and will be removed in the future versions of Spack:
+        #  1. The method duplicates the logic of build_environment.set_wrapper_variables(), which
+        #     sets the actual rpath flags to be used when building the package. Therefore, the
+        #     output of this method is prone to not delivering what it promises. For example, the
+        #     current implementation does not return the contents of SPACK_COMPILER_IMPLICIT_RPATHS
+        #     and SPACK_COMPILER_EXTRA_RPATHS, which would be fair to assume that it does.
+        #  2. Most of the packages should not need this method: the compiler wrappers are supposed
+        #     to do the injection of the rpaths automatically, and if they do not, it is a bug in
+        #     the core functionality of Spack, which should be fixed.
+        #  3. A few packages that can make reasonable use of this method (e.g. gcc, which needs
+        #     the rpath flags at the bootstrapping stage) should take over the responsibility and
+        #     implement their own versions of the method that deliver what they actually need (e.g.
+        #     gcc does not need its installation prefix on the list).
         rpaths = [self.prefix.lib, self.prefix.lib64]
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))

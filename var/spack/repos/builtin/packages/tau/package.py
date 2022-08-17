@@ -142,6 +142,8 @@ class Tau(Package):
 
         useropt = [
             "-O2 -g",
+            # TODO: the usage of self.rpath is deprecated.
+            #  See comments in the implementation of the property for more details.
             " ".join("{0}{1}".format(self.compiler.cc_rpath_arg, d) for d in self.rpath),
         ]
 

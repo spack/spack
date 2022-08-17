@@ -128,6 +128,8 @@ class Rdc(CMakePackage):
         return ver
 
     def cmake_args(self):
+        # TODO: the usage of self.rpath is deprecated.
+        #  See comments in the implementation of the property for more details.
         rpath = self.rpath
         rpath.append(self.prefix.opt.rocm.rdc.lib)
         rpath = ";".join(rpath)

@@ -30,6 +30,8 @@ class PyShiboken(PythonPackage):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
+        # TODO: the usage of self.rpath is deprecated.
+        #  See comments in the implementation of the property for more details.
         rpath = self.rpath
         rpath.append(os.path.join(python_platlib, "Shiboken"))
 

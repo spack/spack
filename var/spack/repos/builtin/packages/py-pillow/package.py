@@ -78,6 +78,8 @@ class PyPillowBase(PythonPackage):
             for variant in variants:
                 setup.write(variant_to_cfg(variant))
 
+            # TODO: the usage of self.rpath is deprecated.
+            #  See comments in the implementation of the property for more details.
             setup.write("rpath={0}\n".format(":".join(self.rpath)))
             setup.write("[install]\n")
 
