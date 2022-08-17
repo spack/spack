@@ -15,6 +15,9 @@ spack:
   packages:
     all:
       target: [x86_64_v4]
+      variants: +cuda cuda_arch=80
+    cuda:
+      version: [11.7.0]
   specs:
     # Horovod
     - py-horovod
