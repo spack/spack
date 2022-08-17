@@ -24,6 +24,8 @@ class Sepp(Package):
     depends_on("pasta@1:", type="run")
     depends_on("blast-plus@2.10.1:", type="run")
 
+    extends("python")
+
     def install(self, spec, prefix):
         dirs = ["sepp", "tools"]
         for d in dirs:
@@ -55,7 +57,3 @@ class Sepp(Package):
             dirs = ["sepp", "tools", "build", "dist", "__pycache__", "sepp.egg-info"]
             for d in dirs:
                 remove_linked_tree(d)
-
-    def setup_run_environment(self, env):
-        python_lib_path = self.spec["python"].package.platlib
-        env.set("PYTHONPATH", join_path(self.prefix, python_lib_path))
