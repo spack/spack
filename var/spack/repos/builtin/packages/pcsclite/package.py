@@ -50,4 +50,5 @@ class Pcsclite(AutotoolsPackage):
         # no libudev/systemd package currently in spack
         args.append("--disable-libsystemd")
         args.extend(self.enable_or_disable("libudev"))
+        args.append("--with-systemdsystemunitdir=no")
         return args
