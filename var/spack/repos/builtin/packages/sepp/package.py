@@ -16,17 +16,18 @@ class Sepp(Package):
 
     version("4.5.1", sha256="51e052569ae89f586a1a94c804f09fe1b7910a3ffff7664e2005f18c7d3f717b")
 
-    depends_on("python@3.7:", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-dendropy@4:", type=("build", "run"))
 
     depends_on("java@1.8:", type="run")
     depends_on("pasta@1:", type="run")
     depends_on("blast-plus@2.10.1:", type="run")
 
     def install(self, spec, prefix):
-        python = which("python")
         install_tree(".", prefix)
         with working_dir(prefix):
+            prefix_string = "--prefix=" + prefix
             python("setup.py", "config", "-c")
-            python("setup.py", "install")
+            python("setup.py", "install", prefix_string)
             python("setup.py", "upp", "-c")
