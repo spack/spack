@@ -10,8 +10,8 @@ class Molden(MakefilePackage):
     """A package for displaying Molecular Density from various
     Ab Initio packages"""
 
-    homepage = "https://www3.cmbi.umcn.nl/molden/"
-    url = "ftp://ftp.cmbi.umcn.nl/pub/molgraph/molden/molden6.5.tar.gz"
+    homepage = "https://www.theochem.ru.nl/molden/"
+    url = "https://ftp.science.ru.nl/Molden/molden6.5.tar.gz"
 
     maintainers = ["dev-zero"]
 
