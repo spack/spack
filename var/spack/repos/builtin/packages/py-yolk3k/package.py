@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyYolk3k(PythonPackage):
@@ -15,6 +15,6 @@ class PyYolk3k(PythonPackage):
     homepage = "https://github.com/myint/yolk"
     pypi = "yolk3k/yolk3k-0.9.tar.gz"
 
-    version('0.9', sha256='cf8731dd0a9f7ef50b5dc253fe0174383e3fed295a653672aa918c059eef86ae')
+    version("0.9", sha256="cf8731dd0a9f7ef50b5dc253fe0174383e3fed295a653672aa918c059eef86ae")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

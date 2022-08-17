@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RTriebeard(RPackage):
@@ -16,6 +16,6 @@ class RTriebeard(RPackage):
 
     cran = "triebeard"
 
-    version('0.3.0', sha256='bf1dd6209cea1aab24e21a85375ca473ad11c2eff400d65c6202c0fb4ef91ec3')
+    version("0.3.0", sha256="bf1dd6209cea1aab24e21a85375ca473ad11c2eff400d65c6202c0fb4ef91ec3")
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on("r-rcpp", type=("build", "run"))
