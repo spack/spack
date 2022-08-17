@@ -20,6 +20,11 @@ class Fasta(MakefilePackage):
     url = "https://github.com/wrpearson/fasta36/archive/fasta-v36.3.8g.tar.gz"
 
     version("36.3.8g", sha256="fa5318b6f8d6a3cfdef0d29de530eb005bfd3ca05835faa6ad63663f8dce7b2e")
+    version(
+        "36.3.8h_2020-05-04",
+        sha256="d13ec06a040e4d77bf6913af44b705d3ecc921131da018e71d24daf47d3664d3",
+        url="https://github.com/wrpearson/fasta36/archive/refs/tags/v36.3.8h_04-May-2020.tar.gz",
+    )
 
     depends_on("zlib")
 
