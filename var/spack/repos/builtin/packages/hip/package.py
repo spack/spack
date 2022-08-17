@@ -55,6 +55,8 @@ class Hip(CMakePackage):
 
     depends_on("cmake@3.16.8:", type="build")
     depends_on("perl@5.10:", type=("build", "run"))
+    depends_on("gl@4.5:")
+    depends_on("glx")
 
     test_requires_compiler = True
 
