@@ -472,7 +472,7 @@ class Hip(CMakePackage):
         args = [
             self.define(
                 "PROF_API_HEADER_PATH",
-                join_path(self.spec["roctracer-dev-api"].prefix, "roctracer", "inc", "ext"),
+                join_path(self.spec["roctracer-dev-api"].prefix, "roctracer", "include", "ext"),
             ),
             self.define("HIP_COMPILER", "clang"),
             self.define("HSA_PATH", self.spec["hsa-rocr-dev"].prefix),

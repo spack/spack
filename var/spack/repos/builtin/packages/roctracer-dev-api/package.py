@@ -84,5 +84,5 @@ class RoctracerDevApi(Package):
         def only_headers(p):
             return p.endswith("CMakeLists.txt") or p.endswith("RPM") or p.endswith("DEBIAN")
 
-        mkdirp(prefix.roctracer.inc)
-        install_tree(include, prefix.roctracer.inc, ignore=only_headers)
+        mkdirp(prefix.roctracer.include)
+        install_tree(include, prefix.roctracer.include, ignore=only_headers)
