@@ -713,7 +713,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
 
         # enable appropriate bootstrapping flags
-        stage1_ldflags = str(self.rpath_args)
+        compiler = spack.compilers.gcc.Gcc(
+            "gcc@{0}".format(self.spec.version),
+            self.spec.os,
+            str(self.spec.target.family),
+            [None] * 2,
+        )
+        stage1_ldflags = " ".join("{0}{1}".format(compiler.cc_rpath_arg, d) for d in self.rpath)
         boot_ldflags = stage1_ldflags + " -static-libstdc++ -static-libgcc"
         options.append("--with-stage1-ldflags=" + stage1_ldflags)
         options.append("--with-boot-ldflags=" + boot_ldflags)

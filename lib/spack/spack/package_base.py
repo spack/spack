@@ -2751,13 +2751,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
         return rpaths
 
-    @property
-    def rpath_args(self):
-        """
-        Get the rpath args as a string, with -Wl,-rpath, for each element
-        """
-        return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
-
     def _run_test_callbacks(self, method_names, callback_type="install"):
         """Tries to call all of the listed methods, returning immediately
         if the list is None."""

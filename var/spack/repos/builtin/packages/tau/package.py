@@ -140,7 +140,10 @@ class Tau(Package):
 
     def set_compiler_options(self, spec):
 
-        useropt = ["-O2 -g", self.rpath_args]
+        useropt = [
+            "-O2 -g",
+            " ".join("{0}{1}".format(self.compiler.cc_rpath_arg, d) for d in self.rpath),
+        ]
 
         ##########
         # Selecting a compiler with TAU configure is quite tricky:
