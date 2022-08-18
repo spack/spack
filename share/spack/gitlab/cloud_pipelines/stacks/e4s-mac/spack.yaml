@@ -27,6 +27,11 @@ spack:
     - py-scipy
     - py-matplotlib
     - py-pandas
+    - superlu-dist
+    - raja
+    - kokkos
+    - kokkos-kernels
+    - butterflypack
 
   - arch:
     - '%apple-clang@13.1.6 target=m1'
