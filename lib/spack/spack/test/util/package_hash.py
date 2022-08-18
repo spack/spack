@@ -429,6 +429,7 @@ class Pkg:
 @pytest.mark.parametrize(
     "spec_str,source,expected,not_expected",
     [
+        # all are false but the default
         ("pkg@4.0", many_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
         # we know first @when overrides default and others are false
         ("pkg@1.0", many_multimethods, ["TWO", "FIVE"], ["ONE", "THREE", "FOUR"]),
@@ -448,7 +449,6 @@ class Pkg:
     ],
 )
 def test_multimethod_resolution(spec_str, source, expected, not_expected):
-    # all are false but the default
     filtered = ph.canonical_source(Spec(spec_str), source=source)
     for item in expected:
         assert item in filtered
