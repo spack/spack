@@ -68,9 +68,8 @@ class Ccache(CMakePackage):
             self.define("ENABLE_DOCUMENTATION", False),
             self.define_from_variant("REDIS_STORAGE_BACKEND", "redis"),
             self.define("ZSTD_FROM_INTERNET", False),
+            self.define("HIREDIS_FROM_INTERNET", False),
         ]
-        if spec.satisfies("+redis"):
-            args.append(self.define("HIREDIS_FROM_INTERNET", False))
 
         return args
 
