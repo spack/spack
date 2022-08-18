@@ -193,7 +193,7 @@ create = SpackCommand("create")
                 r"ExampleGitTag(Package)",
                 r"def install(self",
                 r'git = "file:///tmp/example.git',
-                r"version('v2.3.4', tag='v4.3.2')",
+                r'version("v2.3.4", tag="v4.3.2")',
             ],
         ),
         (
