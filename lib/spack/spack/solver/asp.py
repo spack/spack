@@ -833,8 +833,7 @@ class SpackSolverSetup(object):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
         msg = (
-            "Internal Error: spec with no name occured. Please report to the spack"
-            " maintainers."
+            "Internal Error: spec with no name occured. Please report to the spack" " maintainers."
         )
         assert spec.name, msg
 
@@ -2254,8 +2253,8 @@ def _develop_specs_from_env(spec, env):
 
     if "dev_path" in spec.variants:
         error_msg = (
-            "Internal Error: The dev_path for spec {name} is not connected to a valid environment path."
-            "Please note that develop specs can only be used inside an environment"
+            "Internal Error: The dev_path for spec {name} is not connected to a valid environment"
+            "path. Please note that develop specs can only be used inside an environment"
             "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
         )
         error_msg.format(name=spec.name, dev_path=spec.variants("dev_path"), env_path=path)
