@@ -245,7 +245,8 @@ To resolve this problem, please try the following:
 
         if self.spec.os.startswith("nixos"):
             x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
-            x.filter(regex="/usr/bin/file", repl="file", string=True)
+            with fs.keep_modification_time(*x.filenames):
+                x.filter(regex="/usr/bin/file", repl="file", string=True)
 
     @run_before("configure")
     def _set_autotools_environment_variables(self):
@@ -275,14 +276,18 @@ To resolve this problem, please try the following:
 
         x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
 
-        # Fix parsing of compiler output when collecting predeps and postdeps
-        # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
-        x.filter(regex=r'^(\s*if test x-L = )("\$p" \|\|\s*)$', repl=r"\1x\2")
-        x.filter(
-            regex=r'^(\s*test x-R = )("\$p")(; then\s*)$', repl=r'\1x\2 || test x-l = x"$p"\3'
-        )
-        # Support Libtool 2.4.2 and older:
-        x.filter(regex=r'^(\s*test \$p = "-R")(; then\s*)$', repl=r'\1 || test x-l = x"$p"\2')
+        # There are distributed automatically generated files that depend on the configure script
+        # and require additional tools for rebuilding.
+        # See https://github.com/spack/spack/pull/30768#issuecomment-1219329860
+        with fs.keep_modification_time(*x.filenames):
+            # Fix parsing of compiler output when collecting predeps and postdeps
+            # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
+            x.filter(regex=r'^(\s*if test x-L = )("\$p" \|\|\s*)$', repl=r"\1x\2")
+            x.filter(
+                regex=r'^(\s*test x-R = )("\$p")(; then\s*)$', repl=r'\1x\2 || test x-l = x"$p"\3'
+            )
+            # Support Libtool 2.4.2 and older:
+            x.filter(regex=r'^(\s*test \$p = "-R")(; then\s*)$', repl=r'\1 || test x-l = x"$p"\2')
 
     @run_after("configure")
     def _do_patch_libtool(self):
