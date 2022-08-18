@@ -42,7 +42,7 @@ import spack.util.path
 from spack.util.executable import which
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
-ROOT_PYTHON_NAMESPACE = 'spack.pkg'
+ROOT_PYTHON_NAMESPACE = "spack.pkg"
 
 
 def python_package_for_repo(namespace):
@@ -55,7 +55,7 @@ def python_package_for_repo(namespace):
     Args:
         namespace (str): repo namespace
     """
-    return '{0}.{1}'.format(ROOT_PYTHON_NAMESPACE, namespace)
+    return "{0}.{1}".format(ROOT_PYTHON_NAMESPACE, namespace)
 
 
 def namespace_from_fullname(fullname):
@@ -68,10 +68,10 @@ def namespace_from_fullname(fullname):
     Args:
         fullname (str): full name for the Python module
     """
-    namespace, dot, module = fullname.rpartition('.')
-    prefix_and_dot = '{0}.'.format(ROOT_PYTHON_NAMESPACE)
+    namespace, dot, module = fullname.rpartition(".")
+    prefix_and_dot = "{0}.".format(ROOT_PYTHON_NAMESPACE)
     if namespace.startswith(prefix_and_dot):
-        namespace = namespace[len(prefix_and_dot):]
+        namespace = namespace[len(prefix_and_dot) :]
     return namespace
 
 
@@ -121,12 +121,12 @@ if sys.version_info[0] == 2:
         See the ``importlib``-based importer for a faster way to do this in
         later versions of python.
         """
-        text = kwargs.get('text', None)
+        text = kwargs.get("text", None)
 
         with open(f, *args) as f:
-            with tempfile.NamedTemporaryFile(mode='w+') as tf:
+            with tempfile.NamedTemporaryFile(mode="w+") as tf:
                 if text:
-                    tf.write(text + '\n')
+                    tf.write(text + "\n")
                 tf.write(f.read())
                 tf.seek(0)
                 yield tf.file
@@ -141,14 +141,12 @@ if sys.version_info[0] == 2:
 
         def package_module(self):
             try:
-                module = load_source(
-                    self.fullname, self.package_py, prepend=self._package_prepend
-                )
+                module = load_source(self.fullname, self.package_py, prepend=self._package_prepend)
             except SyntaxError as e:
                 # SyntaxError strips the path from the filename, so we need to
                 # manually construct the error message in order to give the
                 # user the correct package.py where the syntax error is located
-                msg = 'invalid syntax in {0:}, line {1:}'
+                msg = "invalid syntax in {0:}, line {1:}"
                 raise SyntaxError(msg.format(self.package_py, e.lineno))
 
             module.__package__ = self.repo.full_namespace
@@ -160,7 +158,7 @@ if sys.version_info[0] == 2:
             if fullname in sys.modules:
                 return sys.modules[fullname]
 
-            namespace, dot, module_name = fullname.rpartition('.')
+            namespace, dot, module_name = fullname.rpartition(".")
 
             try:
                 module = self.package_module()
@@ -200,13 +198,13 @@ else:
 
 class RepoLoader(_PrependFileLoader):
     """Loads a Python module associated with a package in specific repository"""
+
     #: Code in ``_package_prepend`` is prepended to imported packages.
     #:
     #: Spack packages are expected to call `from spack.package import *`
     #: themselves, but we are allowing a deprecation period before breaking
     #: external repos that don't do this yet.
-    _package_prepend = ('from __future__ import absolute_import;'
-                        'from spack.package import *')
+    _package_prepend = "from __future__ import absolute_import;" "from spack.package import *"
 
     def __init__(self, fullname, repo, package_name):
         self.repo = repo
@@ -232,7 +230,7 @@ class SpackNamespaceLoader(object):
         module = SpackNamespace(fullname)
         self.exec_module(module)
 
-        namespace, dot, module_name = fullname.rpartition('.')
+        namespace, dot, module_name = fullname.rpartition(".")
         sys.modules[fullname] = module
         if namespace != fullname:
             parent = sys.modules[namespace]
@@ -247,6 +245,7 @@ class ReposFinder(object):
 
     Return a loader based on the inspection of the current global repository list.
     """
+
     def find_spec(self, fullname, python_path, target=None):
         # This function is Python 3 only and will not be called by Python 2.7
         import importlib.util
@@ -266,7 +265,7 @@ class ReposFinder(object):
 
     def compute_loader(self, fullname):
         # namespaces are added to repo, and package modules are leaves.
-        namespace, dot, module_name = fullname.rpartition('.')
+        namespace, dot, module_name = fullname.rpartition(".")
 
         # If it's a module in some repo, or if it is the repo's
         # namespace, let the repo handle it.
@@ -299,10 +298,10 @@ class ReposFinder(object):
 #
 # These names describe how repos should be laid out in the filesystem.
 #
-repo_config_name   = 'repo.yaml'   # Top-level filename for repo config.
-repo_index_name    = 'index.yaml'  # Top-level filename for repository index.
-packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
-package_file_name  = 'package.py'  # Filename for packages in a repository.
+repo_config_name = "repo.yaml"  # Top-level filename for repo config.
+repo_index_name = "index.yaml"  # Top-level filename for repository index.
+packages_dir_name = "packages"  # Top-level repo directory containing pkgs.
+package_file_name = "package.py"  # Filename for packages in a repository.
 
 #: Guaranteed unused default value for some functions.
 NOT_PROVIDED = object()
@@ -311,9 +310,9 @@ NOT_PROVIDED = object()
 def packages_path():
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return spack.repo.path.get_repo('builtin.mock').packages_path
+        return spack.repo.path.get_repo("builtin.mock").packages_path
     except spack.repo.UnknownNamespaceError:
-        return spack.repo.path.get_repo('builtin').packages_path
+        return spack.repo.path.get_repo("builtin").packages_path
 
 
 class GitExe:
@@ -322,7 +321,7 @@ class GitExe:
     #
     # Not using -C as that is not supported for git < 1.8.5.
     def __init__(self):
-        self._git_cmd = which('git', required=True)
+        self._git_cmd = which("git", required=True)
 
     def __call__(self, *args, **kwargs):
         with working_dir(packages_path()):
@@ -345,11 +344,11 @@ def list_packages(rev):
     git = get_git()
 
     # git ls-tree does not support ... merge-base syntax, so do it manually
-    if rev.endswith('...'):
-        ref = rev.replace('...', '')
-        rev = git('merge-base', ref, 'HEAD', output=str).strip()
+    if rev.endswith("..."):
+        ref = rev.replace("...", "")
+        rev = git("merge-base", ref, "HEAD", output=str).strip()
 
-    output = git('ls-tree', '-r', '--name-only', rev, output=str)
+    output = git("ls-tree", "-r", "--name-only", rev, output=str)
 
     # recursively list the packages directory
     package_paths = [
@@ -364,14 +363,14 @@ def list_packages(rev):
 
 def diff_packages(rev1, rev2):
     """Compute packages lists for the two revisions and return a tuple
-       containing all the packages in rev1 but not in rev2 and all the
-       packages in rev2 but not in rev1."""
+    containing all the packages in rev1 but not in rev2 and all the
+    packages in rev2 but not in rev1."""
     p1 = set(list_packages(rev1))
     p2 = set(list_packages(rev2))
     return p1.difference(p2), p2.difference(p1)
 
 
-def get_all_package_diffs(type, rev1='HEAD^1', rev2='HEAD'):
+def get_all_package_diffs(type, rev1="HEAD^1", rev2="HEAD"):
     """Show packages changed, added, or removed (or any combination of those)
        since a commit.
 
@@ -386,17 +385,18 @@ def get_all_package_diffs(type, rev1='HEAD^1', rev2='HEAD'):
         A set contain names of affected packages.
     """
     lower_type = type.lower()
-    if not re.match('^[arc]*$', lower_type):
-        tty.die("Invald change type: '%s'." % type,
-                "Can contain only A (added), R (removed), or C (changed)")
+    if not re.match("^[arc]*$", lower_type):
+        tty.die(
+            "Invald change type: '%s'." % type,
+            "Can contain only A (added), R (removed), or C (changed)",
+        )
 
     removed, added = diff_packages(rev1, rev2)
 
     git = get_git()
-    out = git('diff', '--relative', '--name-only', rev1, rev2,
-              output=str).strip()
+    out = git("diff", "--relative", "--name-only", rev1, rev2, output=str).strip()
 
-    lines = [] if not out else re.split(r'\s+', out)
+    lines = [] if not out else re.split(r"\s+", out)
     changed = set()
     for path in lines:
         pkg_name, _, _ = path.partition(os.sep)
@@ -404,11 +404,11 @@ def get_all_package_diffs(type, rev1='HEAD^1', rev2='HEAD'):
             changed.add(pkg_name)
 
     packages = set()
-    if 'a' in lower_type:
+    if "a" in lower_type:
         packages |= added
-    if 'r' in lower_type:
+    if "r" in lower_type:
         packages |= removed
-    if 'c' in lower_type:
+    if "c" in lower_type:
         packages |= changed
 
     return packages
@@ -421,21 +421,22 @@ def add_package_to_git_stage(packages):
     for pkg_name in packages:
         filename = spack.repo.path.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
-            tty.die("No such package: %s.  Path does not exist:" %
-                    pkg_name, filename)
+            tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
-        git('add', filename)
+        git("add", filename)
 
 
 def autospec(function):
     """Decorator that automatically converts the first argument of a
     function to a Spec.
     """
+
     @functools.wraps(function)
     def converter(self, spec_like, *args, **kwargs):
         if not isinstance(spec_like, spack.spec.Spec):
             spec_like = spack.spec.Spec(spec_like)
         return function(self, spec_like, *args, **kwargs)
+
     return converter
 
 
@@ -445,15 +446,19 @@ def is_package_file(filename):
     # We have to remove the file extension because it can be .py and can be
     # .pyc depending on context, and can differ between the files
     import spack.package_base  # break cycle
+
     filename_noext = os.path.splitext(filename)[0]
-    packagebase_filename_noext = os.path.splitext(
-        inspect.getfile(spack.package_base.PackageBase))[0]
-    return (filename_noext != packagebase_filename_noext and
-            os.path.basename(filename_noext) == 'package')
+    packagebase_filename_noext = os.path.splitext(inspect.getfile(spack.package_base.PackageBase))[
+        0
+    ]
+    return (
+        filename_noext != packagebase_filename_noext
+        and os.path.basename(filename_noext) == "package"
+    )
 
 
 class SpackNamespace(types.ModuleType):
-    """ Allow lazy loading of modules."""
+    """Allow lazy loading of modules."""
 
     def __init__(self, namespace):
         super(SpackNamespace, self).__init__(namespace)
@@ -465,7 +470,7 @@ class SpackNamespace(types.ModuleType):
 
     def __getattr__(self, name):
         """Getattr lazily loads modules if they're not already loaded."""
-        submodule = self.__package__ + '.' + name
+        submodule = self.__package__ + "." + name
         try:
             setattr(self, name, __import__(submodule))
         except ImportError:
@@ -482,6 +487,7 @@ class FastPackageChecker(Mapping):
     all instances referring to it. Update of the global cache is done lazily
     during instance initialization.
     """
+
     #: Global cache, reused by every instance
     _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
 
@@ -518,16 +524,15 @@ class FastPackageChecker(Mapping):
 
             # Warn about invalid names that look like packages.
             if not nm.valid_module_name(pkg_name):
-                if not pkg_name.startswith('.'):
-                    tty.warn('Skipping package at {0}. "{1}" is not '
-                             'a valid Spack module name.'.format(
-                                 pkg_dir, pkg_name))
+                if not pkg_name.startswith("."):
+                    tty.warn(
+                        'Skipping package at {0}. "{1}" is not '
+                        "a valid Spack module name.".format(pkg_dir, pkg_name)
+                    )
                 continue
 
             # Construct the file name from the directory
-            pkg_file = os.path.join(
-                self.packages_path, pkg_name, package_file_name
-            )
+            pkg_file = os.path.join(self.packages_path, pkg_name, package_file_name)
 
             # Use stat here to avoid lots of calls to the filesystem.
             try:
@@ -552,8 +557,7 @@ class FastPackageChecker(Mapping):
         return cache
 
     def last_mtime(self):
-        return max(
-            sinfo.st_mtime for sinfo in self._packages_to_stats.values())
+        return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
     def __getitem__(self, item):
         return self._packages_to_stats[item]
@@ -607,6 +611,7 @@ class Indexer(object):
 
 class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
+
     def _create(self):
         return spack.tag.TagIndex()
 
@@ -622,6 +627,7 @@ class TagIndexer(Indexer):
 
 class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
+
     def _create(self):
         return spack.provider_index.ProviderIndex()
 
@@ -629,7 +635,7 @@ class ProviderIndexer(Indexer):
         self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        name = pkg_fullname.split('.')[-1]
+        name = pkg_fullname.split(".")[-1]
         if spack.repo.path.is_virtual(name, use_index=False):
             return
         self.index.remove_provider(pkg_fullname)
@@ -641,6 +647,7 @@ class ProviderIndexer(Indexer):
 
 class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
+
     def _create(self):
         return spack.patch.PatchCache()
 
@@ -676,12 +683,12 @@ class RepoIndex(object):
     Generated indexes are accessed by name via ``__getitem__()``.
 
     """
+
     def __init__(self, package_checker, namespace):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
-        if sys.platform == 'win32':
-            self.packages_path = \
-                spack.util.path.convert_to_posix_path(self.packages_path)
+        if sys.platform == "win32":
+            self.packages_path = spack.util.path.convert_to_posix_path(self.packages_path)
         self.namespace = namespace
 
         self.indexers = {}
@@ -703,7 +710,7 @@ class RepoIndex(object):
         """Get the index with the specified name, reindexing if needed."""
         indexer = self.indexers.get(name)
         if not indexer:
-            raise KeyError('no such index: %s' % name)
+            raise KeyError("no such index: %s" % name)
 
         if name not in self.indexes:
             self._build_all_indexes()
@@ -727,16 +734,13 @@ class RepoIndex(object):
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = '{0}/{1}-index.json'.format(name, self.namespace)
+        cache_filename = "{0}/{1}-index.json".format(name, self.namespace)
 
         # Compute which packages needs to be updated in the cache
         misc_cache = spack.caches.misc_cache
         index_mtime = misc_cache.mtime(cache_filename)
 
-        needs_update = [
-            x for x, sinfo in self.checker.items()
-            if sinfo.st_mtime > index_mtime
-        ]
+        needs_update = [x for x, sinfo in self.checker.items() if sinfo.st_mtime > index_mtime]
 
         index_existed = misc_cache.init_entry(cache_filename)
         if index_existed and not needs_update:
@@ -750,7 +754,7 @@ class RepoIndex(object):
                 indexer.read(old) if old else indexer.create()
 
                 for pkg_name in needs_update:
-                    namespaced_name = '%s.%s' % (self.namespace, pkg_name)
+                    namespaced_name = "%s.%s" % (self.namespace, pkg_name)
                     indexer.update(namespaced_name)
 
                 indexer.write(new)
@@ -784,10 +788,12 @@ class RepoPath(object):
                     repo = Repo(repo)
                 self.put_last(repo)
             except RepoError as e:
-                tty.warn("Failed to initialize repository: '%s'." % repo,
-                         e.message,
-                         "To remove the bad repository, run this command:",
-                         "    spack repo rm %s" % repo)
+                tty.warn(
+                    "Failed to initialize repository: '%s'." % repo,
+                    e.message,
+                    "To remove the bad repository, run this command:",
+                    "    spack repo rm %s" % repo,
+                )
 
     def put_first(self, repo):
         """Add repo first in the search path."""
@@ -862,10 +868,6 @@ class RepoPath(object):
             r |= set(repo.packages_with_tags(*tags))
         return sorted(r)
 
-    def all_packages(self):
-        for name in self.all_package_names():
-            yield self.get(name)
-
     def all_package_classes(self):
         for name in self.all_package_names():
             yield self.get_pkg_class(name)
@@ -909,7 +911,11 @@ class RepoPath(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [
+            pkg_cls(spack.spec.Spec(pkg_cls.name))
+            for pkg_cls in self.all_package_classes()
+            if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
+        ]
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
@@ -925,7 +931,7 @@ class RepoPath(object):
             name = spec.name
         else:
             # handle strings directly for speed instead of @_autospec'ing
-            namespace, _, name = spec.rpartition('.')
+            namespace, _, name = spec.rpartition(".")
 
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
@@ -945,9 +951,10 @@ class RepoPath(object):
         # that can operate on packages that don't exist yet.
         return self.first_repo()
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "RepoPath.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
     def get_pkg_class(self, pkg_name):
@@ -958,8 +965,8 @@ class RepoPath(object):
     def dump_provenance(self, spec, path):
         """Dump provenance information for a spec to a particular path.
 
-           This dumps the package file and any associated patch files.
-           Raises UnknownPackageError if not found.
+        This dumps the package file and any associated patch files.
+        Raises UnknownPackageError if not found.
         """
         return self.repo_for_pkg(spec).dump_provenance(spec, path)
 
@@ -983,13 +990,13 @@ class RepoPath(object):
         be run during the computation of the provider index."""
         have_name = pkg_name is not None
         if have_name and not isinstance(pkg_name, str):
-            raise ValueError(
-                "is_virtual(): expected package name, got %s" % type(pkg_name))
+            raise ValueError("is_virtual(): expected package name, got %s" % type(pkg_name))
         if use_index:
             return have_name and pkg_name in self.provider_index
         else:
-            return have_name and (not self.exists(pkg_name) or
-                                  self.get_pkg_class(pkg_name).virtual)
+            return have_name and (
+                not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
+            )
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1025,29 +1032,33 @@ class Repo(object):
 
         # Validate repository layout.
         self.config_file = os.path.join(self.root, repo_config_name)
-        check(os.path.isfile(self.config_file),
-              "No %s found in '%s'" % (repo_config_name, root))
+        check(os.path.isfile(self.config_file), "No %s found in '%s'" % (repo_config_name, root))
 
         self.packages_path = os.path.join(self.root, packages_dir_name)
-        check(os.path.isdir(self.packages_path),
-              "No directory '%s' found in '%s'" % (packages_dir_name, root))
+        check(
+            os.path.isdir(self.packages_path),
+            "No directory '%s' found in '%s'" % (packages_dir_name, root),
+        )
 
         # Read configuration and validate namespace
         config = self._read_config()
-        check('namespace' in config, '%s must define a namespace.'
-              % os.path.join(root, repo_config_name))
+        check(
+            "namespace" in config,
+            "%s must define a namespace." % os.path.join(root, repo_config_name),
+        )
 
-        self.namespace = config['namespace']
-        check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
-              ("Invalid namespace '%s' in repo '%s'. "
-               % (self.namespace, self.root)) +
-              "Namespaces must be valid python identifiers separated by '.'")
+        self.namespace = config["namespace"]
+        check(
+            re.match(r"[a-zA-Z][a-zA-Z0-9_.]+", self.namespace),
+            ("Invalid namespace '%s' in repo '%s'. " % (self.namespace, self.root))
+            + "Namespaces must be valid python identifiers separated by '.'",
+        )
 
         # Set up 'full_namespace' to include the super-namespace
         self.full_namespace = python_package_for_repo(self.namespace)
 
         # Keep name components around for checking prefixes.
-        self._names = self.full_namespace.split('.')
+        self._names = self.full_namespace.split(".")
 
         # These are internal cache variables.
         self._modules = {}
@@ -1087,8 +1098,8 @@ class Repo(object):
 
     def is_prefix(self, fullname):
         """True if fullname is a prefix of this Repo's namespace."""
-        parts = fullname.split('.')
-        return self._names[:len(parts)] == parts
+        parts = fullname.split(".")
+        return self._names[: len(parts)] == parts
 
     def _read_config(self):
         """Check for a YAML config file in this db's root directory."""
@@ -1096,20 +1107,22 @@ class Repo(object):
             with open(self.config_file) as reponame_file:
                 yaml_data = yaml.load(reponame_file)
 
-                if (not yaml_data or 'repo' not in yaml_data or
-                        not isinstance(yaml_data['repo'], dict)):
-                    tty.die("Invalid %s in repository %s" % (
-                        repo_config_name, self.root))
+                if (
+                    not yaml_data
+                    or "repo" not in yaml_data
+                    or not isinstance(yaml_data["repo"], dict)
+                ):
+                    tty.die("Invalid %s in repository %s" % (repo_config_name, self.root))
 
-                return yaml_data['repo']
+                return yaml_data["repo"]
 
         except IOError:
-            tty.die("Error reading %s when opening %s"
-                    % (self.config_file, self.root))
+            tty.die("Error reading %s when opening %s" % (self.config_file, self.root))
 
-    @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
+        msg = "Repo.get can only be called on concrete specs"
+        assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         # NOTE: we only check whether the package is None here, not whether it
         # actually exists, because we have to load it anyway, and that ends up
         # checking for existence. We avoid constructing FastPackageChecker,
@@ -1131,7 +1144,7 @@ class Repo(object):
 
             # Make sure other errors in constructors hit the error
             # handler by wrapping them
-            if spack.config.get('config:debug'):
+            if spack.config.get("config:debug"):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
@@ -1139,18 +1152,17 @@ class Repo(object):
     def dump_provenance(self, spec, path):
         """Dump provenance information for a spec to a particular path.
 
-           This dumps the package file and any associated patch files.
-           Raises UnknownPackageError if not found.
+        This dumps the package file and any associated patch files.
+        Raises UnknownPackageError if not found.
         """
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(
-                "Repository %s does not contain package %s."
-                % (self.namespace, spec.fullname))
+                "Repository %s does not contain package %s." % (self.namespace, spec.fullname)
+            )
 
         # Install patch files needed by the package.
         fs.mkdirp(path)
-        for patch in itertools.chain.from_iterable(
-                spec.package.patches.values()):
+        for patch in itertools.chain.from_iterable(spec.package.patches.values()):
 
             if patch.path:
                 if os.path.exists(patch.path):
@@ -1170,25 +1182,25 @@ class Repo(object):
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
             self._repo_index = RepoIndex(self._pkg_checker, self.namespace)
-            self._repo_index.add_indexer('providers', ProviderIndexer())
-            self._repo_index.add_indexer('tags', TagIndexer())
-            self._repo_index.add_indexer('patches', PatchIndexer())
+            self._repo_index.add_indexer("providers", ProviderIndexer())
+            self._repo_index.add_indexer("tags", TagIndexer())
+            self._repo_index.add_indexer("patches", PatchIndexer())
         return self._repo_index
 
     @property
     def provider_index(self):
         """A provider index with names *specific* to this repo."""
-        return self.index['providers']
+        return self.index["providers"]
 
     @property
     def tag_index(self):
         """Index of tags and which packages they're defined on."""
-        return self.index['tags']
+        return self.index["tags"]
 
     @property
     def patch_index(self):
         """Index of patches and packages they're defined on."""
-        return self.index['patches']
+        return self.index["patches"]
 
     @autospec
     def providers_for(self, vpkg_spec):
@@ -1199,21 +1211,25 @@ class Repo(object):
 
     @autospec
     def extensions_for(self, extendee_spec):
-        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+        return [
+            pkg_cls(spack.spec.Spec(pkg_cls.name))
+            for pkg_cls in self.all_package_classes()
+            if pkg_cls(spack.spec.Spec(pkg_cls.name)).extends(extendee_spec)
+        ]
 
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
-           directory that contains its package.py file."""
+        directory that contains its package.py file."""
         return os.path.join(self.packages_path, pkg_name)
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
-           package.  Packages for a Repo live in
-           ``$root/<package_name>/package.py``
+        package.  Packages for a Repo live in
+        ``$root/<package_name>/package.py``
 
-           This will return a proper package.py path even if the
-           package doesn't exist yet, so callers will need to ensure
-           the package exists before importing.
+        This will return a proper package.py path even if the
+        package doesn't exist yet, so callers will need to ensure
+        the package exists before importing.
         """
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return os.path.join(pkg_dir, package_file_name)
@@ -1240,15 +1256,6 @@ class Repo(object):
             v &= set(index[t])
 
         return sorted(v)
-
-    def all_packages(self):
-        """Iterator over all packages in the repository.
-
-        Use this with care, because loading packages is slow.
-
-        """
-        for name in self.all_package_names():
-            yield self.get(name)
 
     def all_package_classes(self):
         """Iterator over all package *classes* in the repository.
@@ -1286,10 +1293,11 @@ class Repo(object):
         package. Then extracts the package class from the module
         according to Spack's naming convention.
         """
-        namespace, _, pkg_name = pkg_name.rpartition('.')
+        namespace, _, pkg_name = pkg_name.rpartition(".")
         if namespace and (namespace != self.namespace):
-            raise InvalidNamespaceError('Invalid namespace for %s repo: %s'
-                                        % (self.namespace, namespace))
+            raise InvalidNamespaceError(
+                "Invalid namespace for %s repo: %s" % (self.namespace, namespace)
+            )
 
         class_name = nm.mod_to_class(pkg_name)
 
@@ -1318,45 +1326,38 @@ class Repo(object):
 def create_repo(root, namespace=None):
     """Create a new repository in root with the specified namespace.
 
-       If the namespace is not provided, use basename of root.
-       Return the canonicalized path and namespace of the created repository.
+    If the namespace is not provided, use basename of root.
+    Return the canonicalized path and namespace of the created repository.
     """
     root = spack.util.path.canonicalize_path(root)
     if not namespace:
         namespace = os.path.basename(root)
 
-    if not re.match(r'\w[\.\w-]*', namespace):
-        raise InvalidNamespaceError(
-            "'%s' is not a valid namespace." % namespace)
+    if not re.match(r"\w[\.\w-]*", namespace):
+        raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)
 
     existed = False
     if os.path.exists(root):
         if os.path.isfile(root):
-            raise BadRepoError('File %s already exists and is not a directory'
-                               % root)
+            raise BadRepoError("File %s already exists and is not a directory" % root)
         elif os.path.isdir(root):
             if not os.access(root, os.R_OK | os.W_OK):
-                raise BadRepoError(
-                    'Cannot create new repo in %s: cannot access directory.'
-                    % root)
+                raise BadRepoError("Cannot create new repo in %s: cannot access directory." % root)
             if os.listdir(root):
-                raise BadRepoError(
-                    'Cannot create new repo in %s: directory is not empty.'
-                    % root)
+                raise BadRepoError("Cannot create new repo in %s: directory is not empty." % root)
         existed = True
 
     full_path = os.path.realpath(root)
     parent = os.path.dirname(full_path)
     if not os.access(parent, os.R_OK | os.W_OK):
-        raise BadRepoError(
-            "Cannot create repository in %s: can't access parent!" % root)
+        raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)
 
     try:
         config_path = os.path.join(root, repo_config_name)
         packages_path = os.path.join(root, packages_dir_name)
 
         fs.mkdirp(packages_path)
-        with open(config_path, 'w') as config:
+        with open(config_path, "w") as config:
             config.write("repo:\n")
             config.write("  namespace: '%s'\n" % namespace)
 
@@ -1368,8 +1369,9 @@ def create_repo(root, namespace=None):
         else:
             shutil.rmtree(root, ignore_errors=True)
 
-        raise BadRepoError('Failed to create new repository in %s.' % root,
-                           "Caused by %s: %s" % (type(e), e))
+        raise BadRepoError(
+            "Failed to create new repository in %s." % root, "Caused by %s: %s" % (type(e), e)
+        )
 
     return full_path, namespace
 
@@ -1384,10 +1386,9 @@ def create_or_construct(path, namespace=None):
 
 def _path(repo_dirs=None):
     """Get the singleton RepoPath instance for Spack."""
-    repo_dirs = repo_dirs or spack.config.get('repos')
+    repo_dirs = repo_dirs or spack.config.get("repos")
     if not repo_dirs:
-        raise NoRepoConfiguredError(
-            "Spack configuration contains no package repositories.")
+        raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
     return RepoPath(*repo_dirs)
 
 
@@ -1396,11 +1397,6 @@ path = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
 sys.meta_path.append(ReposFinder())
-
-
-def get(spec):
-    """Convenience wrapper around ``spack.repo.get()``."""
-    return path.get(spec)
 
 
 def all_package_names(include_virtuals=False):
@@ -1482,6 +1478,8 @@ class UnknownPackageError(UnknownEntityError):
             if name.endswith(".yaml"):
                 long_msg = "Did you mean to specify a filename with './{0}'?"
                 long_msg = long_msg.format(name)
+            else:
+                long_msg = "You may need to run 'spack clean -m'."
         else:
             msg = "Attempting to retrieve anonymous package."
 
@@ -1493,8 +1491,7 @@ class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
     def __init__(self, namespace):
-        super(UnknownNamespaceError, self).__init__(
-            "Unknown namespace: %s" % namespace)
+        super(UnknownNamespaceError, self).__init__("Unknown namespace: %s" % namespace)
 
 
 class FailedConstructorError(RepoError):
@@ -1503,7 +1500,8 @@ class FailedConstructorError(RepoError):
     def __init__(self, name, exc_type, exc_obj, exc_tb):
         super(FailedConstructorError, self).__init__(
             "Class constructor failed for package '%s'." % name,
-            '\nCaused by:\n' +
-            ('%s: %s\n' % (exc_type.__name__, exc_obj)) +
-            ''.join(traceback.format_tb(exc_tb)))
+            "\nCaused by:\n"
+            + ("%s: %s\n" % (exc_type.__name__, exc_obj))
+            + "".join(traceback.format_tb(exc_tb)),
+        )
         self.name = name

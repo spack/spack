@@ -15,23 +15,16 @@ spack:
 
   packages:
     all:
-      compiler:
-        - gcc@7.5.0
+      compiler: [gcc@11.2.0]
       providers:
-        blas:
-          - openblas
-        mpi:
-          - mpich
-      target:
-        - x86_64
+        blas: [openblas]
+        mpi: [mpich]
+      target: [x86_64]
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
-      version:
-        - 2.36.1
-    doxygen:
-      version:
-        - 1.8.20
+    cuda:
+      version: [11.7.0]
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
@@ -40,187 +33,206 @@ spack:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
-    mesa:
-      variants: ~llvm
-    mesa18:
-      variants: ~llvm
     mpich:
       variants: ~wrapperrpath
     ncurses:
       variants: +termlib
     openblas:
       variants: threads=openmp
-    openturns:
-      version: [1.18]
+    python:
+      version: [3.8.13]
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
-
-  definitions:
-
-  - cuda_specs:
-    - amrex +cuda cuda_arch=70
-    - caliper +cuda cuda_arch=70
-    - chai ~benchmarks ~tests +cuda cuda_arch=70 ^umpire ~shared
-    - ginkgo +cuda cuda_arch=70
-    - heffte +cuda cuda_arch=70
-    - hpx +cuda cuda_arch=70
-    - hypre +cuda cuda_arch=70
-    - kokkos +wrapper +cuda cuda_arch=70
-    - kokkos-kernels +cuda cuda_arch=70 ^kokkos +wrapper +cuda cuda_arch=70
-    - magma +cuda cuda_arch=70
-    - mfem +cuda cuda_arch=70
-    - parsec +cuda cuda_arch=70
-    - petsc +cuda cuda_arch=70
-    - raja +cuda cuda_arch=70
-    - slate +cuda cuda_arch=70
-    - slepc +cuda cuda_arch=70
-    - strumpack ~slate +cuda cuda_arch=70
-    - sundials +cuda cuda_arch=70
-    - superlu-dist +cuda cuda_arch=70
-    - tasmanian +cuda cuda_arch=70
-    # Trilinos: enable CUDA, Kokkos, and important Tpetra-era solver packages;
-    # disable Epetra; disable ETI to speed up CI; disable all other TPLs
-    - trilinos@13.2.0 +cuda cuda_arch=70 +wrapper    +amesos2 +belos +ifpack2 +kokkos +muelu +nox +stratimikos +tpetra    ~amesos ~anasazi ~aztec ~epetraext ~ifpack ~isorropia ~ml ~teko ~tempus ~zoltan ~zoltan2     ~explicit_template_instantiation ~adios2~basker~boost~chaco~complex~debug~dtk~epetraextbtf~epetraextexperimental~epetraextgraphreorderings~exodus~float~fortran~gtest~hypre~intrepid~intrepid2~ipo~mesquite~minitensor~mumps~openmp~phalanx~piro~rocm~rol~rythmos~sacado~scorec~shards~shared~shylu~stk~stokhos~strumpack~suite-sparse~superlu~superlu-dist~trilinoscouplings~x11
-    - umpire ~shared +cuda cuda_arch=70
-    - vtk-m +cuda cuda_arch=70
-    - zfp +cuda cuda_arch=70
-   #- ascent ~shared +cuda cuda_arch=70
-   #- axom +cuda cuda_arch=70 ^umpire ~shared
-   #- dealii +cuda cuda_arch=70 # gmsh
-   #- flecsi +cuda cuda_arch=70
-   #- paraview +cuda cuda_arch=70
-
-  - rocm_specs:
-    - kokkos +rocm amdgpu_target=gfx906
-    #- amrex +rocm amdgpu_target=gfx906
-    #- chai +rocm ~benchmarks amdgpu_target=gfx906
-    #- ginkgo +rocm amdgpu_target=gfx906 # needs hip<4.1
-    #- raja +rocm ~openmp amdgpu_target=gfx906 # blt 0.3.6 issue with rocm
-    #- slate +rocm amdgpu_target=gfx906
-    #- strumpack +rocm ~slate amdgpu_target=gfx906
-    #- sundials +rocm amdgpu_target=gfx906
-    #- tasmanian +rocm amdgpu_target=gfx906
-    #- umpire+rocm amdgpu_target=gfx906 # blt 0.3.6 issue with rocm
-
-  - default_specs:
-    - adios
-    - adios2
-    - aml
-    - amrex
-    - arborx
-    - archer
-    - argobots
-    - ascent
-    - axom
-    - bolt
-    - cabana
-    - caliper
-    - chai ~benchmarks ~tests
-    - conduit
-    - darshan-runtime
-    - darshan-util
-    - datatransferkit
-    - dyninst
-    - faodel
-    - flecsi@1.4.2 +external_cinch
-    - flit
-    - flux-core
-    - fortrilinos
-    - gasnet
-    - ginkgo
-    - globalarrays
-    - gmp
-    - gotcha
-    - gptune
-    - h5bench
-    - hdf5
-    - heffte +fftw
-    - hpctoolkit
-    - hpx
-    - hypre
-    - kokkos +openmp
-    - kokkos-kernels +openmp
-    - lammps
-    - legion
-    - libnrm
-    - libquo
-    - libunwind
-    - llvm targets=amdgpu,nvptx +clang +compiler-rt +libcxx +lld +lldb +llvm_dylib +flang ~cuda
-    - loki
-    - mercury
-    - metall
-    - mfem
-    - mpark-variant
-    - mpifileutils ~xattr
-    - nccmp
-    - nco
-    - ninja
-    - nrm
-    - omega-h
-    - openmpi
-    - openpmd-api
-    - papi
-    - papyrus@1.0.1
-    - parallel-netcdf
-    - parsec ~cuda
-    - pdt
-    - petsc
-    - phist
-    - plasma
-    - precice
-    - pumi
-    - py-jupyterhub
-    - py-libensemble
-    - py-petsc4py
-    - py-warpx ^warpx dims=2
-    - py-warpx ^warpx dims=3
-    - py-warpx ^warpx dims=rz
-    - qthreads scheduler=distrib
-    - raja
-    - rempi
-    - scr
-    - slate ~cuda
-    - slepc
-    - stc
-    - strumpack ~slate
-    - sundials
-    - superlu
-    - superlu-dist
-    - swig
-    - swig@4.0.2-fortran
-    - sz
-    - tasmanian
-    - tau +mpi +python
-    - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
-    - turbine
-    - umap
-    - umpire
-    - unifyfs@0.9.1
-    - upcxx
-    - variorum
-    - veloc
-    - wannier90
-    - zfp
-    #- dealii
-    #- geopm
-    #- qt
-    #- qwt
-
-  - arch:
-    - '%gcc target=x86_64'
-
+    mesa:
+      version: [21.3.8]
 
   specs:
+  # CPU
+  - adios
+  - adios2
+  - alquimia
+  - aml
+  - amrex
+  - arborx
+  - archer
+  - argobots
+  - ascent
+  - axom
+  - bolt
+  - bricks
+  - butterflypack
+  - cabana
+  - chai ~benchmarks ~tests
+  - conduit
+  - darshan-runtime
+  - darshan-util
+  - datatransferkit
+  - dyninst
+  - exaworks
+  - faodel
+  - flecsi
+  - flit
+  - flux-core
+  - fortrilinos
+  - gasnet
+  - ginkgo
+  - globalarrays
+  - gmp
+  - gptune
+  - hdf5 +fortran +hl +shared
+  - hdf5-vol-async
+  - heffte +fftw
+  - hpctoolkit
+  - hpx networking=mpi
+  - hypre
+  - kokkos +openmp
+  - kokkos-kernels +openmp
+  - lammps
+  - legion
+  - libnrm
+  - libquo
+  - libunwind
+  - mercury
+  - metall
+  - mfem
+  - mpark-variant
+  - mpifileutils ~xattr
+  - nccmp
+  - nco
+  - netlib-scalapack
+  - nrm
+  - nvhpc
+  - omega-h
+  - openmpi
+  - openpmd-api
+  - papi
+  - papyrus
+  - parallel-netcdf
+  - parsec ~cuda
+  - pdt
+  - petsc
+  - phist
+  - plasma
+  - plumed
+  - precice
+  - pumi
+  - py-cinemasci
+  - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
+  - py-warpx ^warpx dims=2
+  - py-warpx ^warpx dims=3
+  - py-warpx ^warpx dims=rz
+  - qthreads scheduler=distrib
+  - raja
+  - scr
+  - slate ~cuda
+  - slepc
+  - stc
+  - strumpack ~slate
+  - sundials
+  - superlu
+  - superlu-dist
+  - swig
+  - swig@4.0.2-fortran
+  - sz
+  - tasmanian
+  - tau +mpi +python
+  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
+    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
+    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
+    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - turbine
+  - umap
+  - umpire
+  - upcxx
+  - veloc
+  - vtk-m
+  - wannier90
+  - zfp
 
-  - matrix:
-    - - $default_specs
-    - - $arch
+  # CUDA
+  - adios2 +cuda cuda_arch=80
+  - amrex +cuda cuda_arch=80
+  - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
+  - ascent +cuda cuda_arch=80
+  - bricks +cuda
+  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
+  - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - flecsi +cuda cuda_arch=80
+  - flux-core +cuda
+  - ginkgo +cuda cuda_arch=80
+  - heffte +cuda cuda_arch=80
+  - hpctoolkit +cuda
+  - hpx +cuda cuda_arch=80
+  - hypre +cuda cuda_arch=80
+  - kokkos +wrapper +cuda cuda_arch=80
+  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
+  - magma +cuda cuda_arch=80
+  - mfem +cuda cuda_arch=80
+  - papi +cuda
+  - petsc +cuda cuda_arch=80
+  - raja +cuda cuda_arch=80
+  - slate +cuda cuda_arch=80
+  - slepc +cuda cuda_arch=80
+  - strumpack ~slate +cuda cuda_arch=80
+  - sundials +cuda cuda_arch=80
+  - superlu-dist +cuda cuda_arch=80
+  - tasmanian +cuda cuda_arch=80
+  - tau +mpi +cuda
+  - trilinos@13.4.0 +cuda cuda_arch=80
+  - umpire ~shared +cuda cuda_arch=80
+  - vtk-m +cuda cuda_arch=80
+  - zfp +cuda cuda_arch=80
 
-  - matrix:
-    - - $cuda_specs
-    - - $arch
+  # ROCm
+  - amrex +rocm amdgpu_target=gfx90a
+  - arborx +rocm amdgpu_target=gfx90a
+  - caliper +rocm amdgpu_target=gfx90a
+  - gasnet +rocm amdgpu_target=gfx90a
+  - ginkgo +rocm amdgpu_target=gfx90a
+  - heffte +rocm amdgpu_target=gfx90a
+  - hpctoolkit +rocm
+  - hpx +rocm amdgpu_target=gfx90a
+  - kokkos +rocm amdgpu_target=gfx90a
+  - magma ~cuda +rocm amdgpu_target=gfx90a
+  - papi +rocm amdgpu_target=gfx90a
+  - petsc +rocm amdgpu_target=gfx90a
+  - slate +rocm amdgpu_target=gfx90a
+  - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
+  - strumpack ~slate +rocm amdgpu_target=gfx90a
+  - sundials +rocm amdgpu_target=gfx90a
+  - superlu-dist +rocm amdgpu_target=gfx90a
+  - tasmanian ~openmp +rocm amdgpu_target=gfx90a
+  - tau +mpi +rocm
+  - upcxx +rocm amdgpu_target=gfx90a
+
+  # CPU failures
+  #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
+  #- charliecloud   # autogen.sh: 6: [[: not found
+  #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
+  #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
+  #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  #- paraview +qt   # llvm@14
+  #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
+  #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
+  #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
+
+  # CUDA failures
+  #- caliper +cuda cuda_arch=80               # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
+  #- parsec +cuda cuda_arch=80                # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+
+  # ROCm failures
+  #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
+  #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
+  #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
@@ -237,10 +249,14 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
-    image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+    image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+    
     mappings:
       - match:
+          - hipblas
           - llvm
+          - llvm-amdgpu
+          - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
@@ -402,7 +418,7 @@ spack:
             KUBERNETES_CPU_REQUEST: "500m"
             KUBERNETES_MEMORY_REQUEST: "500M"
 
-      - match: ['os=ubuntu18.04']
+      - match: ['os=ubuntu22.04']
         runner-attributes:
           tags: ["spack", "x86_64"]
           variables:
@@ -414,7 +430,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+      image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:

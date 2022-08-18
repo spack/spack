@@ -1,0 +1,20 @@
+diff -Naur a/tools/cpp/unix_cc_configure.bzl b/tools/cpp/unix_cc_configure.bzl
+--- a/tools/cpp/unix_cc_configure.bzl	1980-01-01 00:00:00.000000000 -0800
++++ b/tools/cpp/unix_cc_configure.bzl	2022-06-30 23:53:17.000000000 -0700
+@@ -379,7 +379,7 @@
+         "",
+         False,
+     ), ":")
+-    gold_linker_path = _find_gold_linker_path(repository_ctx, cc)
++    gold_linker_path = None
+     cc_path = repository_ctx.path(cc)
+     if not str(cc_path).startswith(str(repository_ctx.path(".")) + "/"):
+         # cc is outside the repository, set -B
+@@ -468,7 +468,6 @@
+                     # Security hardening requires optimization.
+                     # We need to undef it as some distributions now have it enabled by default.
+                     "-U_FORTIFY_SOURCE",
+-                    "-fstack-protector",
+                     # All warnings are enabled. Maybe enable -Werror as well?
+                     "-Wall",
+                     # Enable a few more warnings that aren't part of -Wall.

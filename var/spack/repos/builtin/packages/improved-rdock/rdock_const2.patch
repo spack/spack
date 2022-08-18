@@ -1,0 +1,11 @@
+--- a/src/exe/rbdock.cxx	2021-02-04 13:32:41.561458052 +0900
++++ b/src/exe/rbdock.cxx	2021-02-04 13:33:07.033202240 +0900
+@@ -465,7 +465,7 @@
+ 
+ #ifdef _VISUAL_STUDIO 
+ #else
+-	optCon = poptGetContext(NULL, argc, argv, optionsTable, 0);
++	optCon = poptGetContext(NULL, argc, (const char **) argv, optionsTable, 0);
+ 	poptSetOtherOptionHelp(optCon, "-r<receptor.prm> -p<protocol.prm> -i<infile> -o<outfile> [options]");
+ #endif
+ 	

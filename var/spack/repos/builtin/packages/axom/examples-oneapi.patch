@@ -1,0 +1,12 @@
+diff -ruN spack-src/src/axom/quest/examples/CMakeLists.txt spack-src-patched/src/axom/quest/examples/CMakeLists.txt
+--- spack-src/src/axom/quest/examples/CMakeLists.txt	2022-08-08 08:51:26.746637415 -0700
++++ spack-src-patched/src/axom/quest/examples/CMakeLists.txt	2022-08-08 08:52:26.238959054 -0700
+@@ -103,7 +103,7 @@
+     # When CUDA is enabled, BLT will determine the correct linker, so don't override it here
+     if (NOT ENABLE_CUDA)
+         # When using the Intel compiler we need to link with the Fortran compiler to get openmp to work correctly.
+-        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
++	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+             set_target_properties( quest_signed_distance_interface_F_ex
+                                    PROPERTIES LINKER_LANGUAGE Fortran)
+ 

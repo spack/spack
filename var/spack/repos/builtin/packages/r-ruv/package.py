@@ -24,8 +24,8 @@ class RRuv(RPackage):
 
     cran = "ruv"
 
-    version('0.9.7.1', sha256='a0c54e56ba3d8f6ae178ae4d0e417a79295abf5dcb68bbae26c4b874734d98d8')
+    version("0.9.7.1", sha256="a0c54e56ba3d8f6ae178ae4d0e417a79295abf5dcb68bbae26c4b874734d98d8")
 
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on("r-ggplot2", type=("build", "run"))
+    depends_on("r-scales", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))

@@ -10,28 +10,28 @@ class Henson(CMakePackage):
     """Cooperative multitasking for in situ processing."""
 
     homepage = "https://github.com/henson-insitu/henson"
-    git      = "https://github.com/henson-insitu/henson.git"
+    git = "https://github.com/henson-insitu/henson.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('mpi')
+    depends_on("mpi")
 
-    variant('python', default=False, description='Build Python bindings')
-    extends('python', when='+python')
-    variant('mpi-wrappers', default=False, description='Build MPI wrappers (PMPI)')
+    variant("python", default=False, description="Build Python bindings")
+    extends("python", when="+python")
+    variant("mpi-wrappers", default=False, description="Build MPI wrappers (PMPI)")
 
-    conflicts('^openmpi', when='+mpi-wrappers')
+    conflicts("^openmpi", when="+mpi-wrappers")
 
     def cmake_args(self):
         args = []
-        if '+python' in self.spec:
-            args += ['-Dpython=on']
+        if "+python" in self.spec:
+            args += ["-Dpython=on"]
         else:
-            args += ['-Dpython=off']
+            args += ["-Dpython=off"]
 
-        if '+mpi-wrappers' in self.spec:
-            args += ['-Dmpi-wrappers=on']
+        if "+mpi-wrappers" in self.spec:
+            args += ["-Dmpi-wrappers=on"]
         else:
-            args += ['-Dmpi-wrappers=off']
+            args += ["-Dmpi-wrappers=off"]
 
         return args

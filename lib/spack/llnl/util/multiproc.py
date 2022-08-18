@@ -10,7 +10,7 @@ to pickle functions if they're passed indirectly as parameters.
 """
 from multiprocessing import Semaphore, Value
 
-__all__ = ['Barrier']
+__all__ = ["Barrier"]
 
 
 class Barrier:
@@ -24,7 +24,7 @@ class Barrier:
     def __init__(self, n, timeout=None):
         self.n = n
         self.to = timeout
-        self.count = Value('i', 0)
+        self.count = Value("i", 0)
         self.mutex = Semaphore(1)
         self.turnstile1 = Semaphore(0)
         self.turnstile2 = Semaphore(1)

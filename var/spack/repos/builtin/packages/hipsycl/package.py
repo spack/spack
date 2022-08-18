@@ -24,14 +24,8 @@ class Hipsycl(CMakePackage):
     provides("sycl")
 
     version("stable", branch="stable", submodules=True)
-    version(
-        "0.9.2",
-        commit="49fd02499841ae884c61c738610e58c27ab51fdb",
-        submodules=True)
-    version(
-        "0.9.1",
-        commit="fe8465cd5399a932f7221343c07c9942b0fe644c",
-        submodules=True)
+    version("0.9.2", commit="49fd02499841ae884c61c738610e58c27ab51fdb", submodules=True)
+    version("0.9.1", commit="fe8465cd5399a932f7221343c07c9942b0fe644c", submodules=True)
     version(
         "0.8.0",
         commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a",
@@ -46,7 +40,7 @@ class Hipsycl(CMakePackage):
 
     depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem", when="@:0.8")
-    depends_on("boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when='@0.9.1:')
+    depends_on("boost@1.67.0:1.69.0 +filesystem +fiber +context cxxstd=17", when="@0.9.1:")
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
@@ -57,13 +51,14 @@ class Hipsycl(CMakePackage):
 
     conflicts(
         "%gcc@:4",
-        when='@:0.9.0',
+        when="@:0.9.0",
         msg="hipSYCL needs proper C++14 support to be built, %gcc is too old",
     )
     conflicts(
         "%gcc@:8",
-        when='@0.9.1:',
-        msg="hipSYCL needs proper C++17 support to be built, %gcc is too old")
+        when="@0.9.1:",
+        msg="hipSYCL needs proper C++17 support to be built, %gcc is too old",
+    )
     conflicts(
         "^llvm build_type=Debug",
         when="+cuda",
@@ -78,27 +73,21 @@ class Hipsycl(CMakePackage):
             "-DWITH_CPU_BACKEND:Bool=TRUE",
             # TODO: no ROCm stuff available in spack yet
             "-DWITH_ROCM_BACKEND:Bool=FALSE",
-            "-DWITH_CUDA_BACKEND:Bool={0}".format(
-                "TRUE" if "+cuda" in spec else "FALSE"
-            ),
+            "-DWITH_CUDA_BACKEND:Bool={0}".format("TRUE" if "+cuda" in spec else "FALSE"),
             # prevent hipSYCL's cmake to look for other LLVM installations
             # if the specified one isn't compatible
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
         ]
         # LLVM directory containing all installed CMake files
         # (e.g.: configs consumed by client projects)
-        llvm_cmake_dirs = filesystem.find(
-            spec["llvm"].prefix, "LLVMExports.cmake"
-        )
+        llvm_cmake_dirs = filesystem.find(spec["llvm"].prefix, "LLVMExports.cmake")
         if len(llvm_cmake_dirs) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide "
                 "a unique directory containing CMake client "
                 "files, found: {0}".format(llvm_cmake_dirs)
             )
-        args.append(
-            "-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0]))
-        )
+        args.append("-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0])))
         # clang internal headers directory
         llvm_clang_include_dirs = filesystem.find(
             spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h"
@@ -110,9 +99,7 @@ class Hipsycl(CMakePackage):
                 "headers, found: {0}".format(llvm_clang_include_dirs)
             )
         args.append(
-            "-DCLANG_INCLUDE_PATH:String={0}".format(
-                path.dirname(llvm_clang_include_dirs[0])
-            )
+            "-DCLANG_INCLUDE_PATH:String={0}".format(path.dirname(llvm_clang_include_dirs[0]))
         )
         # target clang++ executable
         llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang++")
@@ -122,16 +109,10 @@ class Hipsycl(CMakePackage):
                 "valid clang++ executable, found invalid: "
                 "{0}".format(llvm_clang_bin)
             )
-        args.append(
-            "-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin)
-        )
+        args.append("-DCLANG_EXECUTABLE_PATH:String={0}".format(llvm_clang_bin))
         # explicit CUDA toolkit
         if "+cuda" in spec:
-            args.append(
-                "-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(
-                    spec["cuda"].prefix
-                )
-            )
+            args.append("-DCUDA_TOOLKIT_ROOT_DIR:String={0}".format(spec["cuda"].prefix))
         return args
 
     @run_after("install")
@@ -167,9 +148,7 @@ class Hipsycl(CMakePackage):
                 "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))
-        config["default-cuda-link-line"] += " " + " ".join(
-            "-rpath {0}".format(p) for p in rpaths
-        )
+        config["default-cuda-link-line"] += " " + " ".join("-rpath {0}".format(p) for p in rpaths)
         # Replace the installed config file
         with open(config_file_path, "w") as f:
             json.dump(config, f, indent=2)

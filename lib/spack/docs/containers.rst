@@ -59,7 +59,7 @@ other techniques to minimize the size of the final image:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretizer: together" \
+   &&   echo "  concretizer:" \
    &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \

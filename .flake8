@@ -1,43 +1,25 @@
 # -*- conf -*-
-# flake8 settings for Spack core files.
+# flake8 settings for Spack.
 #
 # These exceptions are for Spack core files. We're slightly more lenient
 # with packages.  See .flake8_packages for that.
 #
-# E1: Indentation
-# - E129: visually indented line with same indent as next logical line
-#
-# E2: Whitespace
-# - E221: multiple spaces before operator
-# - E241: multiple spaces after ','
-# - E272: multiple spaces before keyword
-#
-# E7: Statement
+# This is the only flake8 rule Spack violates somewhat flagrantly
 # - E731: do not assign a lambda expression, use a def
 #
-# W5: Line break warning
-# - W503: line break before binary operator
-# - W504: line break after binary operator
-#
-# These are required to get the package.py files to test clean:
-# - F999: syntax error in doctest
-#
-# N8: PEP8-naming
-# - N801: class names should use CapWords convention
-# - N813: camelcase imported as lowercase
-# - N814: camelcase imported as constant
-#
-# F4: pyflakes import checks, these are now checked by mypy more precisely
-# - F403: from module import *
-# - F405: undefined name or from *
-#
-# Black ignores, these are incompatible with black style and do not follow PEP-8
+# This is the only flake8 exception needed when using Black.
 # - E203: white space around slice operators can be required, ignore : warn
-# - W503: see above, already ignored for line-breaks
+#
+# We still allow these in packages (Would like to get rid of them or rely on mypy
+# in the future)
+# - F403: from/import * used; unable to detect undefined names
+# - F405: undefined name or from *
+# - F821: undefined name (needed with from/import *)
 #
 [flake8]
-ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405
-max-line-length = 88
+#ignore = E129,,W503,W504,F999,N801,N813,N814,F403,F405,E203
+extend-ignore = E731,E203
+max-line-length = 99
 
 # F4: Import
 # - F405: `name` may be undefined, or undefined from star imports: `module`
@@ -46,7 +28,7 @@ max-line-length = 88
 # - F821: undefined name `name`
 #
 per-file-ignores =
-  var/spack/repos/*/package.py:F405,F821
+  var/spack/repos/*/package.py:F403,F405,F821
 
 # exclude things we usually do not want linting for.
 # These still get linted when passed explicitly, as when spack flake8 passes
