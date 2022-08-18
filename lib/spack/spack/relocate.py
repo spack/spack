@@ -889,7 +889,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
 
     m_type, m_subtype = mime_type(filename)
     if m_type == "application":
-        tty.debug("{0},{1}".format(m_type, m_subtype))
+        tty.debug("{0},{1}".format(m_type, m_subtype), level=2)
 
     if not is_macos:
         if m_subtype == "x-executable" or m_subtype == "x-sharedlib":
@@ -908,7 +908,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
             # One binary has the root folder not in the RPATH,
             # meaning that this spec is not relocatable
             msg = 'Found "{0}" in {1} strings'
-            tty.debug(msg.format(path_to_relocate, filename))
+            tty.debug(msg.format(path_to_relocate, filename), level=2)
             return False
 
     return True
@@ -953,7 +953,7 @@ def mime_type(filename):
         Tuple containing the MIME type and subtype
     """
     output = _get_mime_type()(filename, output=str, error=str).strip()
-    tty.debug("==> " + output)
+    tty.debug("==> " + output, level=2)
     type, _, subtype = output.partition("/")
     return type, subtype
 

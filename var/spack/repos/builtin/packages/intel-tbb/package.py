@@ -21,20 +21,25 @@ class IntelTbb(CMakePackage):
     homepage = "https://www.threadingbuildingblocks.org/"
     url_prefix = "https://github.com/oneapi-src/oneTBB/"
     url = url_prefix + "archive/v2020.1.tar.gz"
+    git = "https://github.com/oneapi-src/oneTBB.git"
 
     maintainers = ["rscohn2"]
 
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    version("master", branch="master")
+    version("2021.6.0-rc1", tag="v2021.6.0-rc1")
+    version(
+        "2021.5.0",
+        sha256="e5b57537c741400cf6134b428fc1689a649d7d38d9bb9c1b6d64f092ea28178a",
+        preferred=True,
+    )
+    version("2021.4.0", sha256="021796c7845e155e616f5ecda16daa606ebb4c6f90b996e5c08aebab7a8d3de3")
     version("2021.3.0", sha256="8f616561603695bbb83871875d2c6051ea28f8187dbe59299961369904d1d49e")
     version("2021.2.0", sha256="cee20b0a71d977416f3e3b4ec643ee4f38cedeb2a9ff015303431dd9d8d79854")
     version("2021.1.1", sha256="b182c73caaaabc44ddc5ad13113aca7e453af73c1690e4061f71dfe4935d74e8")
-    version(
-        "2020.3",
-        sha256="ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3",
-        preferred=True,
-    )
+    version("2020.3", sha256="ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3")
     version("2020.2", sha256="4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500")
     version("2020.1", sha256="7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971")
     version("2020.0", sha256="57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118")

@@ -972,9 +972,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========

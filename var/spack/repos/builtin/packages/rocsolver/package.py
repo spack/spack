@@ -15,10 +15,10 @@ class Rocsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/rocSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.0.2.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSOLVER/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["librocsolver"]
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -34,6 +34,7 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("5.2.0", sha256="94d46ebe1266eaa05df50c1789dc27d3f2dbf3cb5af156e757777a82ed6ef356")
     version("5.1.3", sha256="5a8f3b95ac9a131c31538196e954ea53b863009c092cce0c0ef869a0cd5dd554")
     version("5.1.0", sha256="88de515a6e75eaa3c50c9c8ae1e7ae8e3b46e712e388f44f79b63fefa9fc0831")
     version("5.0.2", sha256="298e0903f1ba8074055ab072690f967062d6e06a9371574de23e4e38d2997688")
@@ -137,6 +138,7 @@ class Rocsolver(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
@@ -186,7 +188,7 @@ class Rocsolver(CMakePackage):
             args.append(self.define("ROCSOLVER_EMBED_FMT", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args
 

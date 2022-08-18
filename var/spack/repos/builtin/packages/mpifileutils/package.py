@@ -68,6 +68,14 @@ class Mpifileutils(Package):
     variant("experimental", default=False, description="Install experimental tools")
     conflicts("+experimental", when="@:0.6")
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == "cflags":
+            if spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
+
     def cmake_args(self):
         args = std_cmake_args
         args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.spec.prefix)
