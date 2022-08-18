@@ -657,16 +657,16 @@ def setup_parser(subparser):
                                 "Not guaranteed to be reproducible, use "
                                 "`--commit` when possible. "
                                 "Only used for git URLs.",
-                           nargs='+')
+                           action="append")
     subparser.add_argument('-T', '--tag',
                            help="specify tag(s) of git repository. "
                                 "Separate multiple tags with space.",
-                           nargs='+')
+                           action="append")
     subparser.add_argument('-C', '--commit',
                            help="specify commit id(s) of git repository. "
                                 "Separate multiple commit ids with space. "
                                 "Only used for git URLs.",
-                           nargs='+')
+                           action="append")
 
 
 class BuildSystemGuesser:
