@@ -92,8 +92,8 @@ class BundlePackageTemplate(object):
     # FIXME: Add dependencies if required.
     # depends_on("foo")"""
 
-    url_def  = "    # There is no URL since there is no code to download."
-    git_def  = "    # There is no git since there is no code to download"
+    url_def = "    # There is no URL since there is no code to download."
+    git_def = "    # There is no git since there is no code to download"
     body_def = "    # There is no need for install() since there is no code."
 
     def __init__(self, name, versions):
@@ -106,7 +106,7 @@ class BundlePackageTemplate(object):
 
         # Write out a template for the file
         with open(pkg_path, "w") as pkg_file:
-           pkg_file.write(
+            pkg_file.write(
                 package_template.format(
                     name=self.name,
                     class_name=self.class_name,
@@ -115,7 +115,7 @@ class BundlePackageTemplate(object):
                     git_def=self.git_def,
                     versions=self.versions,
                     dependencies=self.dependencies,
-                    body_def=self.body_def
+                    body_def=self.body_def,
                 )
             )
 
@@ -141,8 +141,10 @@ class PackageTemplate(BundlePackageTemplate):
         if git_url:
             self.git_def = self.git_line.format(git_url=git_url)
         else:
-            self.git_def = '    # FIXME: add git repository if it exists\n'\
-                           '    # git = "https://github.com/example/example.git"'
+            self.git_def = (
+                "    # FIXME: add git repository if it exists\n"
+                '    # git = "https://github.com/example/example.git"'
+            )
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
@@ -655,30 +657,41 @@ def setup_parser(subparser):
         help="skip the edit session for the package (e.g., automation)",
     )
     subparser.add_argument(
-        "-b", "--batch", action="store_true",
-        help="don't ask which versions to checksum")
+        "-b", "--batch", action="store_true", help="don't ask which versions to checksum"
+    )
     subparser.add_argument(
-        "-g", "--git", action="store", nargs="?", default="#AUTO-GIT-URL#",
-        help="use git to download source from repository passed in url argument")
+        "-g",
+        "--git",
+        action="store",
+        nargs="?",
+        default="#AUTO-GIT-URL#",
+        help="use git to download source from repository passed in url argument",
+    )
+    subparser.add_argument("-V", "--version", help="override derived package version")
     subparser.add_argument(
-        "-V", "--version",
-        help="override derived package version")
-    subparser.add_argument("-B", "--branch",
-                           help="specify branch(es) of git repository. "
-                                "Separate multiple branches with space. "
-                                "Not guaranteed to be reproducible, use "
-                                "`--commit` or `--tag` when possible. "
-                                "Only used for git URLs.",
-                           action="append")
-    subparser.add_argument("-T", "--tag",
-                           help="specify tag(s) of git repository. "
-                                "Separate multiple tags with space.",
-                           action="append")
-    subparser.add_argument("-C", "--commit",
-                           help="specify commit id(s) of git repository. "
-                                "Separate multiple commit ids with space. "
-                                "Only used for git URLs.",
-                           action="append")
+        "-B",
+        "--branch",
+        help="specify branch(es) of git repository. "
+        "Separate multiple branches with space. "
+        "Not guaranteed to be reproducible, use "
+        "`--commit` or `--tag` when possible. "
+        "Only used for git URLs.",
+        action="append",
+    )
+    subparser.add_argument(
+        "-T",
+        "--tag",
+        help="specify tag(s) of git repository. " "Separate multiple tags with space.",
+        action="append",
+    )
+    subparser.add_argument(
+        "-C",
+        "--commit",
+        help="specify commit id(s) of git repository. "
+        "Separate multiple commit ids with space. "
+        "Only used for git URLs.",
+        action="append",
+    )
 
 
 class BuildSystemGuesser:
@@ -836,15 +849,15 @@ def is_git_url(url):
         return False
     else:
         try:
-            path = path.rsplit('/', 1)[1]
+            path = path.rsplit("/", 1)[1]
         except (IndexError, AttributeError):
             # path is None or doesn't contain '/'
             return False
 
-        if path.endswith('.git'):
+        if path.endswith(".git"):
             return True
 
-        if (schema is None or schema == 'ssh://') and user == 'git':
+        if (schema is None or schema == "ssh://") and user == "git":
             return True
 
         return False
@@ -872,7 +885,7 @@ def get_url_and_git(args):
     # spack create -g <git_url> <url> -> args.git = <git_url>, args.url = <url>
 
     # Default URLs
-    url = 'https://www.example.com/example-1.2.3.tar.gz'
+    url = "https://www.example.com/example-1.2.3.tar.gz"
     git = None
 
     # No source and no git urls were provided
@@ -880,14 +893,14 @@ def get_url_and_git(args):
         return url, git
 
     # Git url not set explicitly
-    if (args.git == '#AUTO-GIT-URL#' and is_git_url(args.url)) or args.git is None:
+    if (args.git == "#AUTO-GIT-URL#" and is_git_url(args.url)) or args.git is None:
         git = args.url
         return args.url, git
     else:
         url = args.url or url
 
     # Git is forced
-    if args.git != '#AUTO-GIT-URL#':
+    if args.git != "#AUTO-GIT-URL#":
         git = args.git
 
     return url, git
@@ -932,9 +945,9 @@ def get_versions(args, name):
 
     has_git_option = args.commit or args.tag or args.branch
 
-    git_single_version = (len(args.branch or []) +
-                          len(args.commit or []) +
-                          len(args.tag or [])) == 1
+    git_single_version = (
+        len(args.branch or []) + len(args.commit or []) + len(args.tag or [])
+    ) == 1
     git_single_version = git_single_version and (args.version is not None)
 
     if git:
@@ -944,23 +957,26 @@ def get_versions(args, name):
 
             if args.branch is not None:
                 for br in args.branch:
-                    versions.append(version_tpl.format(args.version
-                                                       if git_single_version
-                                                       else br, 'branch', br))
+                    versions.append(
+                        version_tpl.format(
+                            args.version if git_single_version else br, "branch", br
+                        )
+                    )
             if args.tag is not None:
                 for tag in args.tag:
-                    versions.append(version_tpl.format(args.version
-                                                       if git_single_version
-                                                       else tag, 'tag', tag))
+                    versions.append(
+                        version_tpl.format(args.version if git_single_version else tag, "tag", tag)
+                    )
             if args.commit is not None:
                 if not git_single_version:
-                    versions.append('    # FIXME: add proper version(s) here')
+                    versions.append("    # FIXME: add proper version(s) here")
                 for commit in args.commit:
                     # Use short commit id if version not specified
-                    versions.append(version_tpl.format(args.version
-                                                       if git_single_version
-                                                       else commit[:7],
-                                                       'commit', commit))
+                    versions.append(
+                        version_tpl.format(
+                            args.version if git_single_version else commit[:7], "commit", commit
+                        )
+                    )
         else:
             versions = [git_versions]
 
