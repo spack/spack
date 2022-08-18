@@ -307,7 +307,7 @@ def check_same_flags(flag_dict_1, flag_dict_2):
     for t in types:
         values1 = set(flag_dict_1.get(t, []))
         values2 = set(flag_dict_2.get(t, []))
-        error_msg = "A mismatch in flags has occured:"
+        error_msg = "Internal Error: A mismatch in flags has occurred:"
         error_msg += "\n\tvalues1: {v1}\n\tvalues2: {v2}".format(v1=values1, v2=values2)
         error_msg += "\n Please report this as an issue to the spack maintainers"
         assert values1 == values2, error_msg
@@ -367,7 +367,7 @@ class Result(object):
         Modeled after traceback.format_stack.
         """
         error_msg = (
-            "Internal Error: ASP Result.control not populated. Pleasse report to spack"
+            "Internal Error: ASP Result.control not populated. Pleasse report to the spack"
             " maintainers"
         )
         assert self.control, error_msg
@@ -390,7 +390,7 @@ class Result(object):
         essential facts.
         """
         error_msg = (
-            "Internal Error: ASP Result.control not populated. Pleasse report to spack"
+            "Internal Error: ASP Result.control not populated. Pleasse report to the spack"
             " maintainers"
         )
         assert self.control, error_msg
@@ -833,7 +833,7 @@ class SpackSolverSetup(object):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
         msg = (
-            "Internal Error: spec with no name occured. Please report this to the spack"
+            "Internal Error: spec with no name occured. Please report to the spack"
             " maintainers."
         )
         assert spec.name, msg
@@ -2254,9 +2254,9 @@ def _develop_specs_from_env(spec, env):
 
     if "dev_path" in spec.variants:
         error_msg = (
-            "The dev_path for spec {name} is not connected to a valid environment path."
+            "Internal Error: The dev_path for spec {name} is not connected to a valid environment path."
             "Please note that develop specs can only be used inside an environment"
-            "Path difs are \n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
+            "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
         )
         error_msg.format(name=spec.name, dev_path=spec.variants("dev_path"), env_path=path)
 
