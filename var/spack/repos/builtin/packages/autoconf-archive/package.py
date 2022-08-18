@@ -27,6 +27,9 @@ class AutoconfArchive(AutotoolsPackage, GNUMirrorPackage):
         when="@2022.02.11",
     )
 
+    # The package does not produce any libraries and does not use libtool:
+    patch_libtool = False
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
