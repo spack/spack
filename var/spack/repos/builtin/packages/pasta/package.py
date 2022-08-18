@@ -20,7 +20,7 @@ class Pasta(PythonPackage):
 
     depends_on("python@3:", when="@1.9.0:", type=("build", "run"))
     depends_on("python@:2", when="@:1.8.3", type=("build", "run"))
-    depends_on("py-dendropy", type=("build", "run"))
+    depends_on("py-dendropy@4:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("java", type="run")
 
