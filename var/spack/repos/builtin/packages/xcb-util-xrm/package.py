@@ -11,16 +11,16 @@ class XcbUtilXrm(AutotoolsPackage):
     for the X resource manager."""
 
     homepage = "https://github.com/Airblader/xcb-util-xrm"
-    git      = "https://github.com/Airblader/xcb-util-xrm.git"
+    git = "https://github.com/Airblader/xcb-util-xrm.git"
 
     # This GitHub project includes some git submodules, which must be fetched
     # in order to build it.
-    version('1.2', tag='v1.2', submodules=True)
+    version("1.2", tag="v1.2", submodules=True)
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('pkgconfig', type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("pkgconfig", type="build")
 
-    depends_on('libxcb@1.4:')
+    depends_on("libxcb@1.4:")

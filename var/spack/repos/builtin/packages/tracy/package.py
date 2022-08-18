@@ -16,6 +16,10 @@ class Tracy(MakefilePackage):
 
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
     version(
+        "0.8.2",
+        sha256="4784eddd89c17a5fa030d408392992b3da3c503c872800e9d3746d985cfcc92a",
+    )
+    version(
         "0.8.1",
         sha256="004992012b2dc879a9f6d143cbf94d7ea30e88135db3ef08951605d214892891",
     )

@@ -12,40 +12,45 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import (
     filter_file,
     find,
+    find_all_headers,
+    find_libraries,
     is_nonsymlink_exe_with_shebang,
     path_contains_subdirectory,
     same_path,
     working_dir,
 )
-from llnl.util.lang import match_predicate
+from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
+from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.package_base import PackageBase, run_after
+from spack.version import Version
 
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using pip."""
+
     #: Package name, version, and extension on PyPI
     pypi = None  # type: Optional[str]
 
-    maintainers = ['adamjstewart']
+    maintainers = ["adamjstewart"]
 
     # Default phases
-    phases = ['install']
+    phases = ["install"]
 
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'PythonPackage'
+    build_system_class = "PythonPackage"
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['test']
+    install_time_test_callbacks = ["test"]
 
-    extends('python')
-    depends_on('py-pip', type='build')
+    extends("python")
+    depends_on("py-pip", type="build")
     # FIXME: technically wheel is only needed when building from source, not when
     # installing a downloaded wheel, but I don't want to add wheel as a dep to every
     # package manually
-    depends_on('py-wheel', type='build')
+    depends_on("py-wheel", type="build")
 
     py_namespace = None  # type: Optional[str]
 
@@ -53,46 +58,43 @@ class PythonPackage(PackageBase):
     def _std_args(cls):
         return [
             # Verbose
-            '-vvv',
+            "-vvv",
             # Disable prompting for input
-            '--no-input',
+            "--no-input",
             # Disable the cache
-            '--no-cache-dir',
+            "--no-cache-dir",
             # Don't check to see if pip is up-to-date
-            '--disable-pip-version-check',
+            "--disable-pip-version-check",
             # Install packages
-            'install',
+            "install",
             # Don't install package dependencies
-            '--no-deps',
+            "--no-deps",
             # Overwrite existing packages
-            '--ignore-installed',
+            "--ignore-installed",
             # Use env vars like PYTHONPATH
-            '--no-build-isolation',
+            "--no-build-isolation",
             # Don't warn that prefix.bin is not in PATH
-            '--no-warn-script-location',
+            "--no-warn-script-location",
             # Ignore the PyPI package index
-            '--no-index',
+            "--no-index",
         ]
 
-    @property
-    def homepage(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/project/' + name + '/'
+    @classproperty
+    def homepage(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/project/" + name + "/"
 
-    @property
-    def url(self):
-        if self.pypi:
-            return (
-                'https://files.pythonhosted.org/packages/source/'
-                + self.pypi[0] + '/' + self.pypi
-            )
+    @classproperty
+    def url(cls):
+        if cls.pypi:
+            return "https://files.pythonhosted.org/packages/source/" + cls.pypi[0] + "/" + cls.pypi
 
-    @property
-    def list_url(self):
-        if self.pypi:
-            name = self.pypi.split('/')[0]
-            return 'https://pypi.org/simple/' + name + '/'
+    @classproperty
+    def list_url(cls):
+        if cls.pypi:
+            name = cls.pypi.split("/")[0]
+            return "https://pypi.org/simple/" + name + "/"
 
     @property
     def import_modules(self):
@@ -113,7 +115,7 @@ class PythonPackage(PackageBase):
             list: list of strings of module names
         """
         modules = []
-        pkg = self.spec['python'].package
+        pkg = self.spec["python"].package
 
         # Packages may be installed in platform-specific or platform-independent
         # site-packages directories
@@ -122,19 +124,23 @@ class PythonPackage(PackageBase):
 
             # Some Python libraries are packages: collections of modules
             # distributed in directories containing __init__.py files
-            for path in find(root, '__init__.py', recursive=True):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    os.sep + '__init__.py', '').replace('/', '.'))
+            for path in find(root, "__init__.py", recursive=True):
+                modules.append(
+                    path.replace(root + os.sep, "", 1)
+                    .replace(os.sep + "__init__.py", "")
+                    .replace("/", ".")
+                )
 
             # Some Python libraries are modules: individual *.py files
             # found in the site-packages directory
-            for path in find(root, '*.py', recursive=False):
-                modules.append(path.replace(root + os.sep, '', 1).replace(
-                    '.py', '').replace('/', '.'))
+            for path in find(root, "*.py", recursive=False):
+                modules.append(
+                    path.replace(root + os.sep, "", 1).replace(".py", "").replace("/", ".")
+                )
 
-        modules = [mod for mod in modules if re.match('[a-zA-Z0-9._]+$', mod)]
+        modules = [mod for mod in modules if re.match("[a-zA-Z0-9._]+$", mod)]
 
-        tty.debug('Detected the following modules: {0}'.format(modules))
+        tty.debug("Detected the following modules: {0}".format(modules))
 
         return modules
 
@@ -150,33 +156,102 @@ class PythonPackage(PackageBase):
         """
         return self.stage.source_path
 
+    def config_settings(self, spec, prefix):
+        """Configuration settings to be passed to the PEP 517 build backend.
+
+        Requires pip 22.1+, which requires Python 3.7+.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            dict: dictionary of KEY, VALUE settings
+        """
+        return {}
+
     def install_options(self, spec, prefix):
-        """Extra arguments to be supplied to the setup.py install command."""
+        """Extra arguments to be supplied to the setup.py install command.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            list: list of options
+        """
         return []
 
     def global_options(self, spec, prefix):
         """Extra global options to be supplied to the setup.py call before the install
-        or bdist_wheel command."""
+        or bdist_wheel command.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            list: list of options
+        """
         return []
 
     def install(self, spec, prefix):
         """Install everything from build directory."""
 
-        args = PythonPackage._std_args(self) + ['--prefix=' + prefix]
+        args = PythonPackage._std_args(self) + ["--prefix=" + prefix]
 
+        for key, value in self.config_settings(spec, prefix).items():
+            if spec["py-pip"].version < Version("22.1"):
+                raise SpecError(
+                    "'{}' package uses 'config_settings' which is only supported by "
+                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
+                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
+                )
+            args.append("--config-settings={}={}".format(key, value))
         for option in self.install_options(spec, prefix):
-            args.append('--install-option=' + option)
+            args.append("--install-option=" + option)
         for option in self.global_options(spec, prefix):
-            args.append('--global-option=' + option)
+            args.append("--global-option=" + option)
 
-        if self.stage.archive_file and self.stage.archive_file.endswith('.whl'):
+        if self.stage.archive_file and self.stage.archive_file.endswith(".whl"):
             args.append(self.stage.archive_file)
         else:
-            args.append('.')
+            args.append(".")
 
         pip = inspect.getmodule(self).pip
         with working_dir(self.build_directory):
             pip(*args)
+
+    @property
+    def headers(self):
+        """Discover header files in platlib."""
+
+        # Headers may be in either location
+        include = inspect.getmodule(self).include
+        platlib = inspect.getmodule(self).platlib
+        headers = find_all_headers(include) + find_all_headers(platlib)
+
+        if headers:
+            return headers
+
+        msg = "Unable to locate {} headers in {} or {}"
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
+
+    @property
+    def libs(self):
+        """Discover libraries in platlib."""
+
+        # Remove py- prefix in package name
+        library = "lib" + self.spec.name[3:].replace("-", "?")
+        root = inspect.getmodule(self).platlib
+
+        for shared in [True, False]:
+            libs = find_libraries(library, root, shared=shared, recursive=True)
+            if libs:
+                return libs
+
+        msg = "Unable to recursively locate {} libraries in {}"
+        raise NoLibrariesError(msg.format(self.spec.name, root))
 
     # Testing
 
@@ -186,34 +261,32 @@ class PythonPackage(PackageBase):
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
         for module in self.import_modules:
-            self.run_test(inspect.getmodule(self).python.path,
-                          ['-c', 'import {0}'.format(module)],
-                          purpose='checking import of {0}'.format(module),
-                          work_dir='spack-test')
+            self.run_test(
+                inspect.getmodule(self).python.path,
+                ["-c", "import {0}".format(module)],
+                purpose="checking import of {0}".format(module),
+                work_dir="spack-test",
+            )
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    run_after("install")(PackageBase._run_default_install_time_test_callbacks)
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)
 
     def view_file_conflicts(self, view, merge_map):
         """Report all file conflicts, excepting special cases for python.
-           Specifically, this does not report errors for duplicate
-           __init__.py files for packages in the same namespace.
+        Specifically, this does not report errors for duplicate
+        __init__.py files for packages in the same namespace.
         """
-        conflicts = list(dst for src, dst in merge_map.items()
-                         if os.path.exists(dst))
+        conflicts = list(dst for src, dst in merge_map.items() if os.path.exists(dst))
 
         if conflicts and self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
-            namespaces = set(
-                x.package.py_namespace for x in ext_map.values())
-            namespace_re = (
-                r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+            namespaces = set(x.package.py_namespace for x in ext_map.values())
+            namespace_re = r"site-packages/{0}/__init__.py".format(self.py_namespace)
             find_namespace = match_predicate(namespace_re)
             if self.py_namespace in namespaces:
-                conflicts = list(
-                    x for x in conflicts if not find_namespace(x))
+                conflicts = list(x for x in conflicts if not find_namespace(x))
 
         return conflicts
 
@@ -221,9 +294,7 @@ class PythonPackage(PackageBase):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
         python_is_external = self.extendee_spec.external
-        global_view = same_path(python_prefix, view.get_projection_for_spec(
-            self.spec
-        ))
+        global_view = same_path(python_prefix, view.get_projection_for_spec(self.spec))
         for src, dst in merge_map.items():
             if os.path.exists(dst):
                 continue
@@ -234,8 +305,9 @@ class PythonPackage(PackageBase):
                 is_script = is_nonsymlink_exe_with_shebang(src)
                 if is_script and not python_is_external:
                     filter_file(
-                        python_prefix, os.path.abspath(
-                            view.get_projection_for_spec(self.spec)), dst
+                        python_prefix,
+                        os.path.abspath(view.get_projection_for_spec(self.spec)),
+                        dst,
                     )
             else:
                 orig_link_target = os.path.realpath(src)
@@ -247,19 +319,16 @@ class PythonPackage(PackageBase):
         if self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
             remaining_namespaces = set(
-                spec.package.py_namespace for name, spec in ext_map.items()
-                if name != self.name)
+                spec.package.py_namespace for name, spec in ext_map.items() if name != self.name
+            )
             if self.py_namespace in remaining_namespaces:
                 namespace_init = match_predicate(
-                    r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+                    r"site-packages/{0}/__init__.py".format(self.py_namespace)
+                )
                 ignore_namespace = True
 
         bin_dir = self.spec.prefix.bin
-        global_view = (
-            self.extendee_spec.prefix == view.get_projection_for_spec(
-                self.spec
-            )
-        )
+        global_view = self.extendee_spec.prefix == view.get_projection_for_spec(self.spec)
 
         to_remove = []
         for src, dst in merge_map.items():

@@ -48,8 +48,10 @@ important to understand.
 **build backend**
    Libraries used to define how to build a wheel. Examples
    include `setuptools <https://setuptools.pypa.io/>`__,
-   `flit <https://flit.readthedocs.io/>`_, and
-   `poetry <https://python-poetry.org/>`_.
+   `flit <https://flit.pypa.io/>`_,
+   `poetry <https://python-poetry.org/>`_,
+   `hatchling <https://hatch.pypa.io/latest/>`_, and
+   `meson <https://meson-python.readthedocs.io/>`_.
 
 ^^^^^^^^^^^
 Downloading
@@ -173,9 +175,9 @@ package. The "Project description" tab may also contain a longer
 description of the package. Either of these can be used to populate
 the package docstring.
 
-^^^^^^^^^^^^^
-Build backend
-^^^^^^^^^^^^^
+^^^^^^^^^^^^
+Dependencies
+^^^^^^^^^^^^
 
 Once you've determined the basic metadata for a package, the next
 step is to determine the build backend. ``PythonPackage`` uses
@@ -213,12 +215,33 @@ Note that ``py-wheel`` is already listed as a build dependency in the
 need to specify a specific version requirement or change the
 dependency type.
 
-See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`_ and
+See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`__ and
 `PEP 518 <https://www.python.org/dev/peps/pep-0518/>`_ for more
 information on the design of ``pyproject.toml``.
 
 Depending on which build backend a project uses, there are various
-places that run-time dependencies can be listed.
+places that run-time dependencies can be listed. Most modern build
+backends support listing dependencies directly in ``pyproject.toml``.
+Look for dependencies under the following keys:
+
+* ``requires-python`` under ``[project]``
+
+  This specifies the version of Python that is required
+
+* ``dependencies`` under ``[project]``
+
+  These packages are required for building and installation. You can
+  add them with ``type=('build', 'run')``.
+
+* ``[project.optional-dependencies]``
+
+  This section includes keys with lists of optional dependencies
+  needed to enable those features. You should add a variant that
+  optionally adds these dependencies. This variant should be ``False``
+  by default.
+
+Some build backends may have additional locations where dependencies
+can be found.
 
 """""""""
 distutils
@@ -244,9 +267,9 @@ If the ``pyproject.toml`` lists ``setuptools.build_meta`` as a
 ``build-backend``, or if the package has a ``setup.py`` that imports
 ``setuptools``, or if the package has a ``setup.cfg`` file, then it
 uses setuptools to build. Setuptools is a replacement for the
-distutils library, and has almost the exact same API. Dependencies
-can be listed in the ``setup.py`` or ``setup.cfg`` file. Look for the
-following arguments:
+distutils library, and has almost the exact same API. In addition to
+``pyproject.toml``, dependencies can be listed in the ``setup.py`` or
+``setup.cfg`` file. Look for the following arguments:
 
 * ``python_requires``
 
@@ -291,25 +314,22 @@ listed directly in the ``pyproject.toml`` file. Older versions of
 flit used to store this info in a ``flit.ini`` file, so check for
 this too.
 
-Either of these files may contain keys like:
+In addition to the default ``pyproject.toml`` keys listed above,
+older versions of flit may use the following keys:
 
-* ``requires-python``
-
-  This specifies the version of Python that is required
-
-* ``dependencies`` or ``requires``
+* ``requires`` under ``[tool.flit.metadata]``
 
   These packages are required for building and installation. You can
   add them with ``type=('build', 'run')``.
 
-* ``project.optional-dependencies`` or ``requires-extra``
+* ``[tool.flit.metadata.requires-extra]``
 
   This section includes keys with lists of optional dependencies
   needed to enable those features. You should add a variant that
   optionally adds these dependencies. This variant should be False
   by default.
 
-See https://flit.readthedocs.io/en/latest/pyproject_toml.html for
+See https://flit.pypa.io/en/latest/pyproject_toml.html for
 more information.
 
 """"""
@@ -325,6 +345,28 @@ listed in a ``[tool.poetry.dependencies]`` section, and use a
 for specifying the version requirements. Note that ``~=`` works
 differently in poetry than in setuptools and flit for versions that
 start with a zero.
+
+"""""""""
+hatchling
+"""""""""
+
+If the ``pyproject.toml`` lists ``hatchling.build`` as the
+``build-backend``, it uses the hatchling build system. Hatchling
+uses the default ``pyproject.toml`` keys to list dependencies.
+
+See https://hatch.pypa.io/latest/config/dependency/ for more
+information.
+
+"""""
+meson
+"""""
+
+If the ``pyproject.toml`` lists ``mesonpy`` as the ``build-backend``,
+it uses the meson build system. Meson uses the default
+``pyproject.toml`` keys to list dependencies.
+
+See https://meson-python.readthedocs.io/en/latest/usage/start.html
+for more information.
 
 """"""
 wheels
@@ -370,6 +412,34 @@ packages. However, the installation instructions for a package may
 suggest passing certain flags to the ``setup.py`` call. The
 ``PythonPackage`` class has two techniques for doing this.
 
+"""""""""""""""
+Config settings
+"""""""""""""""
+
+These settings are passed to
+`PEP 517 <https://peps.python.org/pep-0517/>`__ build backends.
+For example, ``py-scipy`` package allows you to specify the name of
+the BLAS/LAPACK library you want pkg-config to search for:
+
+.. code-block:: python
+
+   depends_on('py-pip@22.1:', type='build')
+
+   def config_settings(self, spec, prefix):
+       return {
+           'blas': spec['blas'].libs.names[0],
+           'lapack': spec['lapack'].libs.names[0],
+       }
+
+
+.. note::
+
+   This flag only works for packages that define a ``build-backend``
+   in ``pyproject.toml``. Also, it is only supported by pip 22.1+,
+   which requires Python 3.7+. For packages that still support Python
+   3.6 and older, ``install_options`` should be used instead.
+
+
 """"""""""""""
 Global options
 """"""""""""""
@@ -387,6 +457,16 @@ has an optional dependency on ``libyaml`` that can be enabled like so:
        else:
            options.append('--without-libyaml')
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 """""""""""""""
@@ -407,6 +487,16 @@ allows you to specify the directories to search for ``libyaml``:
                spec['libyaml'].headers.include_flags,
            ])
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 ^^^^^^^
@@ -664,5 +754,7 @@ For more information on build and installation frontend tools, see:
 For more information on build backend tools, see:
 
 * setuptools: https://setuptools.pypa.io/
-* flit: https://flit.readthedocs.io/
+* flit: https://flit.pypa.io/
 * poetry: https://python-poetry.org/
+* hatchling: https://hatch.pypa.io/latest/
+* meson: https://meson-python.readthedocs.io/

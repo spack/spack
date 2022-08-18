@@ -11,12 +11,12 @@ class PyMarkdownInclude(PythonPackage):
     function, similar to that found in LaTeX (and also the
     C pre-processor and Fortran)."""
 
-    pypi     = "markdown-include/markdown-include-0.6.0.tar.gz"
+    pypi = "markdown-include/markdown-include-0.6.0.tar.gz"
 
-    maintainers = ['wscullin']
+    maintainers = ["wscullin"]
 
-    version('0.6.0', sha256='6f5d680e36f7780c7f0f61dca53ca581bd50d1b56137ddcd6353efafa0c3e4a2')
+    version("0.6.0", sha256="6f5d680e36f7780c7f0f61dca53ca581bd50d1b56137ddcd6353efafa0c3e4a2")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")
 
-    depends_on('py-markdown', type=('build', 'run'))
+    depends_on("py-markdown", type=("build", "run"))

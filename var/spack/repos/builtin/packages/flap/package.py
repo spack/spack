@@ -10,16 +10,16 @@ class Flap(CMakePackage):
     """Fortran command Line Arguments Parser"""
 
     homepage = "https://github.com/szaghi/FLAP"
-    url      = "https://github.com/szaghi/FLAP.git"
-    git      = "https://github.com/szaghi/FLAP.git"
+    url = "https://github.com/szaghi/FLAP.git"
+    git = "https://github.com/szaghi/FLAP.git"
 
-    maintainers = ['fluidnumerics-joe']
+    maintainers = ["fluidnumerics-joe"]
 
-    version('master', branch='master', submodules=True)
+    version("master", branch="master", submodules=True)
 
     def flag_handler(self, name, flags):
-        if name in ['cflags', 'cxxflags', 'cppflags']:
+        if name in ["cflags", "cxxflags", "cppflags"]:
             return (None, flags, None)
-        elif name == 'fflags':
-            flags.append('-cpp')
+        elif name == "fflags":
+            flags.append("-cpp")
         return (flags, None, None)

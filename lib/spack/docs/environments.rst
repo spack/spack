@@ -376,6 +376,30 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing Packages in a Spack Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack develop`` command allows one to develop Spack packages in
+an environment. It requires a spec containing a concrete version, and
+will configure Spack to install the package from local source. By
+default, it will also clone the package to a subdirectory in the
+environment. This package will have a special variant ``dev_path``
+set, and Spack will ensure the package and its dependents are rebuilt
+any time the environment is installed if the package's local source
+code has been modified. Spack ensures that all instances of a
+developed package in the environment are concretized to match the
+version (and other constraints) passed as the spec argument to the
+``spack develop`` command.
+
+For packages with ``git`` attributes, git branches, tags, and commits can
+also be used as valid concrete versions (see :ref:`version-specifier`).
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+the ``main`` branch of the package, and ``spack install`` will install from
+that git clone if ``foo`` is in the environment.
+Further development on ``foo`` can be tested by reinstalling the environment,
+and eventually committed and pushed to the upstream git repo.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -948,9 +972,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========
@@ -1013,7 +1034,7 @@ The following advanced example shows how generated targets can be used in a
 
    SPACK ?= spack
 
-   .PHONY: all clean fetch env
+   .PHONY: all clean env
 
    all: env
 
@@ -1022,9 +1043,6 @@ The following advanced example shows how generated targets can be used in a
 
    env.mk: spack.lock
    	$(SPACK) -e . env depfile -o $@ --make-target-prefix spack
-   
-   fetch: spack/fetch
-   	$(info Environment fetched!)
 
    env: spack/env
    	$(info Environment installed!)
@@ -1037,10 +1055,10 @@ The following advanced example shows how generated targets can be used in a
    endif
 
 When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
-from its rule, which triggers concretization. When done, the generated targets
-``spack/fetch`` and ``spack/env`` are available. In the above
-example, the ``env`` target uses the latter as a prerequisite, meaning
-that it can make use of the installed packages in its commands.
+from its rule, which triggers concretization. When done, the generated target
+``spack/env`` is available. In the above example, the ``env`` target uses this generated
+target as a prerequisite, meaning that it can make use of the installed packages in
+its commands.
 
 As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
 the include is conditional.
@@ -1048,7 +1066,6 @@ the include is conditional.
 .. note::
 
    When including generated ``Makefile``\s, it is important to use
-   the ``--make-target-prefix`` flag and use the non-phony targets
-   ``<target-prefix>/env`` and ``<target-prefix>/fetch`` as
-   prerequisites, instead of the phony targets ``<target-prefix>/all``
-   and ``<target-prefix>/fetch-all`` respectively.
+   the ``--make-target-prefix`` flag and use the non-phony target
+   ``<target-prefix>/env`` as prerequisite, instead of the phony target
+   ``<target-prefix>/all``.

@@ -15,7 +15,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['specs'])
+    arguments.add_common_arguments(subparser, ["specs"])
 
 
 def restage(parser, args):
@@ -24,5 +24,4 @@ def restage(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
-        package = spack.repo.get(spec)
-        package.do_restage()
+        spec.package.do_restage()

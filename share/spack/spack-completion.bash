@@ -337,7 +337,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add analyze arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module monitor patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch audit blame bootstrap build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -354,28 +354,6 @@ _spack_add() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -l --list-name"
-    else
-        _all_packages
-    fi
-}
-
-_spack_analyze() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix"
-    else
-        SPACK_COMPREPLY="list-analyzers run"
-    fi
-}
-
-_spack_analyze_list_analyzers() {
-    SPACK_COMPREPLY="-h --help"
-}
-
-_spack_analyze_run() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help --overwrite -p --path -a --analyzers"
     else
         _all_packages
     fi
@@ -829,7 +807,7 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --list-os --last-stage"
+    SPACK_COMPREPLY="-h --help --list-os --last-stage"
 }
 
 _spack_create() {
@@ -1201,7 +1179,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix --include-build-deps --no-check-signature --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --include-build-deps --no-check-signature --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete --no-add -f --file --clean --dirty --test --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1470,10 +1448,6 @@ _spack_module_tcl_setdefault() {
     fi
 }
 
-_spack_monitor() {
-    SPACK_COMPREPLY="-h --help --monitor --monitor-save-local --monitor-tags --monitor-keep-going --monitor-host --monitor-prefix"
-}
-
 _spack_patch() {
     if $list_options
     then
@@ -1696,7 +1670,7 @@ _spack_restage() {
 _spack_solve() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --show --models -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats -U --fresh --reuse"
+        SPACK_COMPREPLY="-h --help --show -l --long -L --very-long -I --install-status -y --yaml -j --json -c --cover -N --namespaces -t --types --timers --stats -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1714,7 +1688,7 @@ _spack_spec() {
 _spack_stage() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -p --path"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -p --path -U --fresh --reuse"
     else
         _all_packages
     fi
@@ -1723,7 +1697,7 @@ _spack_stage() {
 _spack_style() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -b --base -a --all -r --root-relative -U --no-untracked -f --fix --no-isort --no-flake8 --no-mypy --black --root"
+        SPACK_COMPREPLY="-h --help -b --base -a --all -r --root-relative -U --no-untracked -f --fix --root -t --tool -s --skip"
     else
         SPACK_COMPREPLY=""
     fi

@@ -14,4 +14,4 @@ class RGbrd(RPackage):
 
     cran = "gbRd"
 
-    version('0.4-11', sha256='0251f6dd6ca987a74acc4765838b858f1edb08b71dbad9e563669b58783ea91b')
+    version("0.4-11", sha256="0251f6dd6ca987a74acc4765838b858f1edb08b71dbad9e563669b58783ea91b")
