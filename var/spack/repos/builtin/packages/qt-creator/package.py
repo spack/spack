@@ -15,6 +15,7 @@ class QtCreator(QMakePackage):
     list_url = "https://download.qt.io/official_releases/qtcreator/"
     list_depth = 2
 
+    version("5.0.3", sha256="797fe2518b0b9d187b34215a7d08d2911bb0a2fb07b556c6e3762b334d107cc0")
     version("4.8.0", sha256="4c4813454637141a45aa8f18be5733e4ba993335d95940aadf12fda66cf6f849")
 
     depends_on("qt@5.6.0:+opengl")
