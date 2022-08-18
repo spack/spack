@@ -39,6 +39,7 @@ spack:
         - +cuda ^cuda@10.2
         - +cuda ^cuda@11
         - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
+        - +opencl
         - +level_zero
       - [$target]
     # Latest release with minimum supported dependencies
@@ -83,70 +84,79 @@ spack:
       CI_JOB_SIZE: default
 
     mappings:
-      # XXX: The following had to be generated because the combinatorics are huge
-      - matches: ['hipblas os=centos7 target=:86_64_v3', 'llvm os=centos7 target=:86_64_v3',
+      - match: ['hipblas os=centos7 target=:86_64_v3', 'llvm os=centos7 target=:86_64_v3',
           'llvm-amdgpu os=centos7 target=:86_64_v3', 'rocblas os=centos7 target=:86_64_v3']
         runner-attributes:
-          image: &id001 {name: 'ghcr.io/blue42u/e4s-centos-7:latest'}
-          tags: &id002 [huge]
-          variables: &id003 {CI_JOB_SIZE: huge, KUBERNETES_CPU_REQUEST: 11000m, KUBERNETES_MEMORY_REQUEST: 42G}
-      - matches: ['hipblas os=centos7 target=:graviton', 'llvm os=centos7 target=:graviton',
+          image: &id001
+            entrypoint: ['']
+            name: ghcr.io/blue42u/e4s-centos-7:latest@sha256:d74305ded85bbdf2b3a995c84d70700832654581f6b4b0c9e28f435284e32833
+          tags: [spack, huge, x86_64_v3]
+          variables: &id002 {CI_JOB_SIZE: huge, KUBERNETES_CPU_REQUEST: 11000m, KUBERNETES_MEMORY_REQUEST: 42G}
+      - match: ['hipblas os=centos7 target=:graviton', 'llvm os=centos7 target=:graviton',
           'llvm-amdgpu os=centos7 target=:graviton', 'rocblas os=centos7 target=:graviton']
         runner-attributes:
           image: *id001
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=fedora36 target=:86_64_v3', 'llvm os=fedora36 target=:86_64_v3',
+          tags: [spack, huge, graviton]
+          variables: *id002
+      - match: ['hipblas os=fedora36 target=:86_64_v3', 'llvm os=fedora36 target=:86_64_v3',
           'llvm-amdgpu os=fedora36 target=:86_64_v3', 'rocblas os=fedora36 target=:86_64_v3']
         runner-attributes:
-          image: &id004 {name: 'ghcr.io/blue42u/e4s-fedora-36:latest'}
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=fedora36 target=:graviton', 'llvm os=fedora36 target=:graviton',
+          image: &id003
+            entrypoint: ['']
+            name: ghcr.io/blue42u/e4s-fedora-36:latest@sha256:98f097c8a15cc61132b83d32909ed5fe7f7fcd89283ee6ffc4698c7085744074
+          tags: [spack, huge, x86_64_v3]
+          variables: *id002
+      - match: ['hipblas os=fedora36 target=:graviton', 'llvm os=fedora36 target=:graviton',
           'llvm-amdgpu os=fedora36 target=:graviton', 'rocblas os=fedora36 target=:graviton']
         runner-attributes:
-          image: *id004
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=opensuse_leap15 target=:86_64_v3', 'llvm os=opensuse_leap15
+          image: *id003
+          tags: [spack, huge, graviton]
+          variables: *id002
+      - match: ['hipblas os=opensuse_leap15 target=:86_64_v3', 'llvm os=opensuse_leap15
             target=:86_64_v3', 'llvm-amdgpu os=opensuse_leap15 target=:86_64_v3', 'rocblas
             os=opensuse_leap15 target=:86_64_v3']
         runner-attributes:
-          image: &id005 {name: 'ghcr.io/blue42u/e4s-leap-15:latest'}
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=opensuse_leap15 target=:graviton', 'llvm os=opensuse_leap15
+          image: &id004
+            entrypoint: ['']
+            name: ghcr.io/blue42u/e4s-leap-15:latest@sha256:39154fa3a24af562576c3a490b27ac9eef9ee0884710cf91924ace18f809c98d
+          tags: [spack, huge, x86_64_v3]
+          variables: *id002
+      - match: ['hipblas os=opensuse_leap15 target=:graviton', 'llvm os=opensuse_leap15
             target=:graviton', 'llvm-amdgpu os=opensuse_leap15 target=:graviton', 'rocblas
             os=opensuse_leap15 target=:graviton']
         runner-attributes:
-          image: *id005
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=almalinux8 target=:86_64_v3', 'llvm os=almalinux8 target=:86_64_v3',
+          image: *id004
+          tags: [spack, huge, graviton]
+          variables: *id002
+      - match: ['hipblas os=almalinux8 target=:86_64_v3', 'llvm os=almalinux8 target=:86_64_v3',
           'llvm-amdgpu os=almalinux8 target=:86_64_v3', 'rocblas os=almalinux8 target=:86_64_v3']
         runner-attributes:
-          image: &id006 {name: 'ghcr.io/blue42u/e4s-almalinux-8:latest'}
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=almalinux8 target=:graviton', 'llvm os=almalinux8 target=:graviton',
+          image: &id005
+            entrypoint: ['']
+            name: ghcr.io/blue42u/e4s-almalinux-8:latest@sha256:531f7efc206d916182590ce46637eaa06bffafc8382ef16ce498eb684bcae12e
+          tags: [spack, huge, x86_64_v3]
+          variables: *id002
+      - match: ['hipblas os=almalinux8 target=:graviton', 'llvm os=almalinux8 target=:graviton',
           'llvm-amdgpu os=almalinux8 target=:graviton', 'rocblas os=almalinux8 target=:graviton']
         runner-attributes:
-          image: *id006
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=ubuntu20.04 target=:86_64_v3', 'llvm os=ubuntu20.04 target=:86_64_v3',
+          image: *id005
+          tags: [spack, huge, graviton]
+          variables: *id002
+      - match: ['hipblas os=ubuntu20.04 target=:86_64_v3', 'llvm os=ubuntu20.04 target=:86_64_v3',
           'llvm-amdgpu os=ubuntu20.04 target=:86_64_v3', 'rocblas os=ubuntu20.04 target=:86_64_v3']
         runner-attributes:
-          image: &id007 {name: 'ghcr.io/spack/e4s-ubuntu-20.04:v2022-03-21'}
-          tags: *id002
-          variables: *id003
-      - matches: ['hipblas os=ubuntu20.04 target=:graviton', 'llvm os=ubuntu20.04 target=:graviton',
+          image: &id006
+            entrypoint: ['']
+            name: ghcr.io/spack/e4s-ubuntu-20.04:v2022-03-21
+          tags: [spack, huge, x86_64_v3]
+          variables: *id002
+      - match: ['hipblas os=ubuntu20.04 target=:graviton', 'llvm os=ubuntu20.04 target=:graviton',
           'llvm-amdgpu os=ubuntu20.04 target=:graviton', 'rocblas os=ubuntu20.04 target=:graviton']
         runner-attributes:
-          image: *id007
-          tags: *id002
-          variables: *id003
-      - matches: ['cuda os=centos7 target=:86_64_v3', 'dyninst os=centos7 target=:86_64_v3',
+          image: *id006
+          tags: [spack, huge, graviton]
+          variables: *id002
+      - match: ['cuda os=centos7 target=:86_64_v3', 'dyninst os=centos7 target=:86_64_v3',
           'ginkgo os=centos7 target=:86_64_v3', 'hpx os=centos7 target=:86_64_v3', 'kokkos-kernels
             os=centos7 target=:86_64_v3', 'kokkos-nvcc-wrapper os=centos7 target=:86_64_v3',
           'magma os=centos7 target=:86_64_v3', 'mfem os=centos7 target=:86_64_v3', 'mpich
@@ -156,9 +166,9 @@ spack:
             target=:86_64_v3', 'vtk-m os=centos7 target=:86_64_v3', 'warpx os=centos7 target=:86_64_v3']
         runner-attributes:
           image: *id001
-          tags: &id008 [large]
-          variables: &id009 {CI_JOB_SIZE: large, KUBERNETES_CPU_REQUEST: 8000m, KUBERNETES_MEMORY_REQUEST: 12G}
-      - matches: ['cuda os=centos7 target=:graviton', 'dyninst os=centos7 target=:graviton',
+          tags: [spack, large, x86_64_v3]
+          variables: &id007 {CI_JOB_SIZE: large, KUBERNETES_CPU_REQUEST: 8000m, KUBERNETES_MEMORY_REQUEST: 12G}
+      - match: ['cuda os=centos7 target=:graviton', 'dyninst os=centos7 target=:graviton',
           'ginkgo os=centos7 target=:graviton', 'hpx os=centos7 target=:graviton', 'kokkos-kernels
             os=centos7 target=:graviton', 'kokkos-nvcc-wrapper os=centos7 target=:graviton',
           'magma os=centos7 target=:graviton', 'mfem os=centos7 target=:graviton', 'mpich
@@ -168,9 +178,9 @@ spack:
             target=:graviton', 'vtk-m os=centos7 target=:graviton', 'warpx os=centos7 target=:graviton']
         runner-attributes:
           image: *id001
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=fedora36 target=:86_64_v3', 'dyninst os=fedora36 target=:86_64_v3',
+          tags: [spack, large, graviton]
+          variables: *id007
+      - match: ['cuda os=fedora36 target=:86_64_v3', 'dyninst os=fedora36 target=:86_64_v3',
           'ginkgo os=fedora36 target=:86_64_v3', 'hpx os=fedora36 target=:86_64_v3', 'kokkos-kernels
             os=fedora36 target=:86_64_v3', 'kokkos-nvcc-wrapper os=fedora36 target=:86_64_v3',
           'magma os=fedora36 target=:86_64_v3', 'mfem os=fedora36 target=:86_64_v3', 'mpich
@@ -180,10 +190,10 @@ spack:
             target=:86_64_v3', 'vtk-m os=fedora36 target=:86_64_v3', 'warpx os=fedora36
             target=:86_64_v3']
         runner-attributes:
-          image: *id004
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=fedora36 target=:graviton', 'dyninst os=fedora36 target=:graviton',
+          image: *id003
+          tags: [spack, large, x86_64_v3]
+          variables: *id007
+      - match: ['cuda os=fedora36 target=:graviton', 'dyninst os=fedora36 target=:graviton',
           'ginkgo os=fedora36 target=:graviton', 'hpx os=fedora36 target=:graviton', 'kokkos-kernels
             os=fedora36 target=:graviton', 'kokkos-nvcc-wrapper os=fedora36 target=:graviton',
           'magma os=fedora36 target=:graviton', 'mfem os=fedora36 target=:graviton', 'mpich
@@ -193,10 +203,10 @@ spack:
             target=:graviton', 'vtk-m os=fedora36 target=:graviton', 'warpx os=fedora36
             target=:graviton']
         runner-attributes:
-          image: *id004
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=opensuse_leap15 target=:86_64_v3', 'dyninst os=opensuse_leap15
+          image: *id003
+          tags: [spack, large, graviton]
+          variables: *id007
+      - match: ['cuda os=opensuse_leap15 target=:86_64_v3', 'dyninst os=opensuse_leap15
             target=:86_64_v3', 'ginkgo os=opensuse_leap15 target=:86_64_v3', 'hpx os=opensuse_leap15
             target=:86_64_v3', 'kokkos-kernels os=opensuse_leap15 target=:86_64_v3', 'kokkos-nvcc-wrapper
             os=opensuse_leap15 target=:86_64_v3', 'magma os=opensuse_leap15 target=:86_64_v3',
@@ -206,10 +216,10 @@ spack:
           'slate os=opensuse_leap15 target=:86_64_v3', 'trilinos os=opensuse_leap15 target=:86_64_v3',
           'vtk-m os=opensuse_leap15 target=:86_64_v3', 'warpx os=opensuse_leap15 target=:86_64_v3']
         runner-attributes:
-          image: *id005
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=opensuse_leap15 target=:graviton', 'dyninst os=opensuse_leap15
+          image: *id004
+          tags: [spack, large, x86_64_v3]
+          variables: *id007
+      - match: ['cuda os=opensuse_leap15 target=:graviton', 'dyninst os=opensuse_leap15
             target=:graviton', 'ginkgo os=opensuse_leap15 target=:graviton', 'hpx os=opensuse_leap15
             target=:graviton', 'kokkos-kernels os=opensuse_leap15 target=:graviton', 'kokkos-nvcc-wrapper
             os=opensuse_leap15 target=:graviton', 'magma os=opensuse_leap15 target=:graviton',
@@ -219,10 +229,10 @@ spack:
           'slate os=opensuse_leap15 target=:graviton', 'trilinos os=opensuse_leap15 target=:graviton',
           'vtk-m os=opensuse_leap15 target=:graviton', 'warpx os=opensuse_leap15 target=:graviton']
         runner-attributes:
-          image: *id005
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=almalinux8 target=:86_64_v3', 'dyninst os=almalinux8 target=:86_64_v3',
+          image: *id004
+          tags: [spack, large, graviton]
+          variables: *id007
+      - match: ['cuda os=almalinux8 target=:86_64_v3', 'dyninst os=almalinux8 target=:86_64_v3',
           'ginkgo os=almalinux8 target=:86_64_v3', 'hpx os=almalinux8 target=:86_64_v3',
           'kokkos-kernels os=almalinux8 target=:86_64_v3', 'kokkos-nvcc-wrapper os=almalinux8
             target=:86_64_v3', 'magma os=almalinux8 target=:86_64_v3', 'mfem os=almalinux8
@@ -232,10 +242,10 @@ spack:
             target=:86_64_v3', 'trilinos os=almalinux8 target=:86_64_v3', 'vtk-m os=almalinux8
             target=:86_64_v3', 'warpx os=almalinux8 target=:86_64_v3']
         runner-attributes:
-          image: *id006
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=almalinux8 target=:graviton', 'dyninst os=almalinux8 target=:graviton',
+          image: *id005
+          tags: [spack, large, x86_64_v3]
+          variables: *id007
+      - match: ['cuda os=almalinux8 target=:graviton', 'dyninst os=almalinux8 target=:graviton',
           'ginkgo os=almalinux8 target=:graviton', 'hpx os=almalinux8 target=:graviton',
           'kokkos-kernels os=almalinux8 target=:graviton', 'kokkos-nvcc-wrapper os=almalinux8
             target=:graviton', 'magma os=almalinux8 target=:graviton', 'mfem os=almalinux8
@@ -245,10 +255,10 @@ spack:
             target=:graviton', 'trilinos os=almalinux8 target=:graviton', 'vtk-m os=almalinux8
             target=:graviton', 'warpx os=almalinux8 target=:graviton']
         runner-attributes:
-          image: *id006
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=ubuntu20.04 target=:86_64_v3', 'dyninst os=ubuntu20.04 target=:86_64_v3',
+          image: *id005
+          tags: [spack, large, graviton]
+          variables: *id007
+      - match: ['cuda os=ubuntu20.04 target=:86_64_v3', 'dyninst os=ubuntu20.04 target=:86_64_v3',
           'ginkgo os=ubuntu20.04 target=:86_64_v3', 'hpx os=ubuntu20.04 target=:86_64_v3',
           'kokkos-kernels os=ubuntu20.04 target=:86_64_v3', 'kokkos-nvcc-wrapper os=ubuntu20.04
             target=:86_64_v3', 'magma os=ubuntu20.04 target=:86_64_v3', 'mfem os=ubuntu20.04
@@ -258,10 +268,10 @@ spack:
             target=:86_64_v3', 'trilinos os=ubuntu20.04 target=:86_64_v3', 'vtk-m os=ubuntu20.04
             target=:86_64_v3', 'warpx os=ubuntu20.04 target=:86_64_v3']
         runner-attributes:
-          image: *id007
-          tags: *id008
-          variables: *id009
-      - matches: ['cuda os=ubuntu20.04 target=:graviton', 'dyninst os=ubuntu20.04 target=:graviton',
+          image: *id006
+          tags: [spack, large, x86_64_v3]
+          variables: *id007
+      - match: ['cuda os=ubuntu20.04 target=:graviton', 'dyninst os=ubuntu20.04 target=:graviton',
           'ginkgo os=ubuntu20.04 target=:graviton', 'hpx os=ubuntu20.04 target=:graviton',
           'kokkos-kernels os=ubuntu20.04 target=:graviton', 'kokkos-nvcc-wrapper os=ubuntu20.04
             target=:graviton', 'magma os=ubuntu20.04 target=:graviton', 'mfem os=ubuntu20.04
@@ -271,10 +281,10 @@ spack:
             target=:graviton', 'trilinos os=ubuntu20.04 target=:graviton', 'vtk-m os=ubuntu20.04
             target=:graviton', 'warpx os=ubuntu20.04 target=:graviton']
         runner-attributes:
-          image: *id007
-          tags: *id008
-          variables: *id009
-      - matches: ['adios2 os=centos7 target=:86_64_v3', 'amrex os=centos7 target=:86_64_v3',
+          image: *id006
+          tags: [spack, large, graviton]
+          variables: *id007
+      - match: ['adios2 os=centos7 target=:86_64_v3', 'amrex os=centos7 target=:86_64_v3',
           'archer os=centos7 target=:86_64_v3', 'ascent os=centos7 target=:86_64_v3', 'axom
             os=centos7 target=:86_64_v3', 'binutils os=centos7 target=:86_64_v3', 'blaspp
             os=centos7 target=:86_64_v3', 'boost os=centos7 target=:86_64_v3', 'butterflypack
@@ -305,9 +315,9 @@ spack:
             target=:86_64_v3', 'vtk-h os=centos7 target=:86_64_v3', 'zfp os=centos7 target=:86_64_v3']
         runner-attributes:
           image: *id001
-          tags: &id010 [medium]
-          variables: &id011 {CI_JOB_SIZE: medium, KUBERNETES_CPU_REQUEST: 2000m, KUBERNETES_MEMORY_REQUEST: 4G}
-      - matches: ['adios2 os=centos7 target=:graviton', 'amrex os=centos7 target=:graviton',
+          tags: [spack, medium, x86_64_v3]
+          variables: &id008 {CI_JOB_SIZE: medium, KUBERNETES_CPU_REQUEST: 2000m, KUBERNETES_MEMORY_REQUEST: 4G}
+      - match: ['adios2 os=centos7 target=:graviton', 'amrex os=centos7 target=:graviton',
           'archer os=centos7 target=:graviton', 'ascent os=centos7 target=:graviton', 'axom
             os=centos7 target=:graviton', 'binutils os=centos7 target=:graviton', 'blaspp
             os=centos7 target=:graviton', 'boost os=centos7 target=:graviton', 'butterflypack
@@ -338,9 +348,9 @@ spack:
             target=:graviton', 'vtk-h os=centos7 target=:graviton', 'zfp os=centos7 target=:graviton']
         runner-attributes:
           image: *id001
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=fedora36 target=:86_64_v3', 'amrex os=fedora36 target=:86_64_v3',
+          tags: [spack, medium, graviton]
+          variables: *id008
+      - match: ['adios2 os=fedora36 target=:86_64_v3', 'amrex os=fedora36 target=:86_64_v3',
           'archer os=fedora36 target=:86_64_v3', 'ascent os=fedora36 target=:86_64_v3',
           'axom os=fedora36 target=:86_64_v3', 'binutils os=fedora36 target=:86_64_v3',
           'blaspp os=fedora36 target=:86_64_v3', 'boost os=fedora36 target=:86_64_v3', 'butterflypack
@@ -371,10 +381,10 @@ spack:
             os=fedora36 target=:86_64_v3', 'upcxx os=fedora36 target=:86_64_v3', 'vtk-h
             os=fedora36 target=:86_64_v3', 'zfp os=fedora36 target=:86_64_v3']
         runner-attributes:
-          image: *id004
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=fedora36 target=:graviton', 'amrex os=fedora36 target=:graviton',
+          image: *id003
+          tags: [spack, medium, x86_64_v3]
+          variables: *id008
+      - match: ['adios2 os=fedora36 target=:graviton', 'amrex os=fedora36 target=:graviton',
           'archer os=fedora36 target=:graviton', 'ascent os=fedora36 target=:graviton',
           'axom os=fedora36 target=:graviton', 'binutils os=fedora36 target=:graviton',
           'blaspp os=fedora36 target=:graviton', 'boost os=fedora36 target=:graviton', 'butterflypack
@@ -405,10 +415,10 @@ spack:
             os=fedora36 target=:graviton', 'upcxx os=fedora36 target=:graviton', 'vtk-h
             os=fedora36 target=:graviton', 'zfp os=fedora36 target=:graviton']
         runner-attributes:
-          image: *id004
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=opensuse_leap15 target=:86_64_v3', 'amrex os=opensuse_leap15
+          image: *id003
+          tags: [spack, medium, graviton]
+          variables: *id008
+      - match: ['adios2 os=opensuse_leap15 target=:86_64_v3', 'amrex os=opensuse_leap15
             target=:86_64_v3', 'archer os=opensuse_leap15 target=:86_64_v3', 'ascent os=opensuse_leap15
             target=:86_64_v3', 'axom os=opensuse_leap15 target=:86_64_v3', 'binutils os=opensuse_leap15
             target=:86_64_v3', 'blaspp os=opensuse_leap15 target=:86_64_v3', 'boost os=opensuse_leap15
@@ -442,10 +452,10 @@ spack:
             target=:86_64_v3', 'upcxx os=opensuse_leap15 target=:86_64_v3', 'vtk-h os=opensuse_leap15
             target=:86_64_v3', 'zfp os=opensuse_leap15 target=:86_64_v3']
         runner-attributes:
-          image: *id005
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=opensuse_leap15 target=:graviton', 'amrex os=opensuse_leap15
+          image: *id004
+          tags: [spack, medium, x86_64_v3]
+          variables: *id008
+      - match: ['adios2 os=opensuse_leap15 target=:graviton', 'amrex os=opensuse_leap15
             target=:graviton', 'archer os=opensuse_leap15 target=:graviton', 'ascent os=opensuse_leap15
             target=:graviton', 'axom os=opensuse_leap15 target=:graviton', 'binutils os=opensuse_leap15
             target=:graviton', 'blaspp os=opensuse_leap15 target=:graviton', 'boost os=opensuse_leap15
@@ -479,10 +489,10 @@ spack:
             target=:graviton', 'upcxx os=opensuse_leap15 target=:graviton', 'vtk-h os=opensuse_leap15
             target=:graviton', 'zfp os=opensuse_leap15 target=:graviton']
         runner-attributes:
-          image: *id005
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=almalinux8 target=:86_64_v3', 'amrex os=almalinux8 target=:86_64_v3',
+          image: *id004
+          tags: [spack, medium, graviton]
+          variables: *id008
+      - match: ['adios2 os=almalinux8 target=:86_64_v3', 'amrex os=almalinux8 target=:86_64_v3',
           'archer os=almalinux8 target=:86_64_v3', 'ascent os=almalinux8 target=:86_64_v3',
           'axom os=almalinux8 target=:86_64_v3', 'binutils os=almalinux8 target=:86_64_v3',
           'blaspp os=almalinux8 target=:86_64_v3', 'boost os=almalinux8 target=:86_64_v3',
@@ -513,10 +523,10 @@ spack:
           'tau os=almalinux8 target=:86_64_v3', 'upcxx os=almalinux8 target=:86_64_v3',
           'vtk-h os=almalinux8 target=:86_64_v3', 'zfp os=almalinux8 target=:86_64_v3']
         runner-attributes:
-          image: *id006
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=almalinux8 target=:graviton', 'amrex os=almalinux8 target=:graviton',
+          image: *id005
+          tags: [spack, medium, x86_64_v3]
+          variables: *id008
+      - match: ['adios2 os=almalinux8 target=:graviton', 'amrex os=almalinux8 target=:graviton',
           'archer os=almalinux8 target=:graviton', 'ascent os=almalinux8 target=:graviton',
           'axom os=almalinux8 target=:graviton', 'binutils os=almalinux8 target=:graviton',
           'blaspp os=almalinux8 target=:graviton', 'boost os=almalinux8 target=:graviton',
@@ -547,10 +557,10 @@ spack:
           'tau os=almalinux8 target=:graviton', 'upcxx os=almalinux8 target=:graviton',
           'vtk-h os=almalinux8 target=:graviton', 'zfp os=almalinux8 target=:graviton']
         runner-attributes:
-          image: *id006
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=ubuntu20.04 target=:86_64_v3', 'amrex os=ubuntu20.04 target=:86_64_v3',
+          image: *id005
+          tags: [spack, medium, graviton]
+          variables: *id008
+      - match: ['adios2 os=ubuntu20.04 target=:86_64_v3', 'amrex os=ubuntu20.04 target=:86_64_v3',
           'archer os=ubuntu20.04 target=:86_64_v3', 'ascent os=ubuntu20.04 target=:86_64_v3',
           'axom os=ubuntu20.04 target=:86_64_v3', 'binutils os=ubuntu20.04 target=:86_64_v3',
           'blaspp os=ubuntu20.04 target=:86_64_v3', 'boost os=ubuntu20.04 target=:86_64_v3',
@@ -581,10 +591,10 @@ spack:
           'tau os=ubuntu20.04 target=:86_64_v3', 'upcxx os=ubuntu20.04 target=:86_64_v3',
           'vtk-h os=ubuntu20.04 target=:86_64_v3', 'zfp os=ubuntu20.04 target=:86_64_v3']
         runner-attributes:
-          image: *id007
-          tags: *id010
-          variables: *id011
-      - matches: ['adios2 os=ubuntu20.04 target=:graviton', 'amrex os=ubuntu20.04 target=:graviton',
+          image: *id006
+          tags: [spack, medium, x86_64_v3]
+          variables: *id008
+      - match: ['adios2 os=ubuntu20.04 target=:graviton', 'amrex os=ubuntu20.04 target=:graviton',
           'archer os=ubuntu20.04 target=:graviton', 'ascent os=ubuntu20.04 target=:graviton',
           'axom os=ubuntu20.04 target=:graviton', 'binutils os=ubuntu20.04 target=:graviton',
           'blaspp os=ubuntu20.04 target=:graviton', 'boost os=ubuntu20.04 target=:graviton',
@@ -615,10 +625,10 @@ spack:
           'tau os=ubuntu20.04 target=:graviton', 'upcxx os=ubuntu20.04 target=:graviton',
           'vtk-h os=ubuntu20.04 target=:graviton', 'zfp os=ubuntu20.04 target=:graviton']
         runner-attributes:
-          image: *id007
-          tags: *id010
-          variables: *id011
-      - matches: ['alsa-lib os=centos7 target=:86_64_v3', 'ant os=centos7 target=:86_64_v3',
+          image: *id006
+          tags: [spack, medium, graviton]
+          variables: *id008
+      - match: ['alsa-lib os=centos7 target=:86_64_v3', 'ant os=centos7 target=:86_64_v3',
           'antlr os=centos7 target=:86_64_v3', 'argobots os=centos7 target=:86_64_v3', 'automake
             os=centos7 target=:86_64_v3', 'berkeley-db os=centos7 target=:86_64_v3', 'bison
             os=centos7 target=:86_64_v3', 'blt os=centos7 target=:86_64_v3', 'cmake os=centos7
@@ -645,9 +655,9 @@ spack:
             target=:86_64_v3', 'zlib os=centos7 target=:86_64_v3', 'zstd os=centos7 target=:86_64_v3']
         runner-attributes:
           image: *id001
-          tags: &id012 [small]
-          variables: &id013 {CI_JOB_SIZE: small, KUBERNETES_CPU_REQUEST: 500m, KUBERNETES_MEMORY_REQUEST: 500M}
-      - matches: ['alsa-lib os=centos7 target=:graviton', 'ant os=centos7 target=:graviton',
+          tags: [spack, small, x86_64_v3]
+          variables: &id009 {CI_JOB_SIZE: small, KUBERNETES_CPU_REQUEST: 500m, KUBERNETES_MEMORY_REQUEST: 500M}
+      - match: ['alsa-lib os=centos7 target=:graviton', 'ant os=centos7 target=:graviton',
           'antlr os=centos7 target=:graviton', 'argobots os=centos7 target=:graviton', 'automake
             os=centos7 target=:graviton', 'berkeley-db os=centos7 target=:graviton', 'bison
             os=centos7 target=:graviton', 'blt os=centos7 target=:graviton', 'cmake os=centos7
@@ -674,9 +684,9 @@ spack:
             target=:graviton', 'zlib os=centos7 target=:graviton', 'zstd os=centos7 target=:graviton']
         runner-attributes:
           image: *id001
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=fedora36 target=:86_64_v3', 'ant os=fedora36 target=:86_64_v3',
+          tags: [spack, small, graviton]
+          variables: *id009
+      - match: ['alsa-lib os=fedora36 target=:86_64_v3', 'ant os=fedora36 target=:86_64_v3',
           'antlr os=fedora36 target=:86_64_v3', 'argobots os=fedora36 target=:86_64_v3',
           'automake os=fedora36 target=:86_64_v3', 'berkeley-db os=fedora36 target=:86_64_v3',
           'bison os=fedora36 target=:86_64_v3', 'blt os=fedora36 target=:86_64_v3', 'cmake
@@ -703,10 +713,10 @@ spack:
           'util-macros os=fedora36 target=:86_64_v3', 'yaml-cpp os=fedora36 target=:86_64_v3',
           'zlib os=fedora36 target=:86_64_v3', 'zstd os=fedora36 target=:86_64_v3']
         runner-attributes:
-          image: *id004
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=fedora36 target=:graviton', 'ant os=fedora36 target=:graviton',
+          image: *id003
+          tags: [spack, small, x86_64_v3]
+          variables: *id009
+      - match: ['alsa-lib os=fedora36 target=:graviton', 'ant os=fedora36 target=:graviton',
           'antlr os=fedora36 target=:graviton', 'argobots os=fedora36 target=:graviton',
           'automake os=fedora36 target=:graviton', 'berkeley-db os=fedora36 target=:graviton',
           'bison os=fedora36 target=:graviton', 'blt os=fedora36 target=:graviton', 'cmake
@@ -733,10 +743,10 @@ spack:
           'util-macros os=fedora36 target=:graviton', 'yaml-cpp os=fedora36 target=:graviton',
           'zlib os=fedora36 target=:graviton', 'zstd os=fedora36 target=:graviton']
         runner-attributes:
-          image: *id004
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=opensuse_leap15 target=:86_64_v3', 'ant os=opensuse_leap15
+          image: *id003
+          tags: [spack, small, graviton]
+          variables: *id009
+      - match: ['alsa-lib os=opensuse_leap15 target=:86_64_v3', 'ant os=opensuse_leap15
             target=:86_64_v3', 'antlr os=opensuse_leap15 target=:86_64_v3', 'argobots os=opensuse_leap15
             target=:86_64_v3', 'automake os=opensuse_leap15 target=:86_64_v3', 'berkeley-db
             os=opensuse_leap15 target=:86_64_v3', 'bison os=opensuse_leap15 target=:86_64_v3',
@@ -767,10 +777,10 @@ spack:
             os=opensuse_leap15 target=:86_64_v3', 'zlib os=opensuse_leap15 target=:86_64_v3',
           'zstd os=opensuse_leap15 target=:86_64_v3']
         runner-attributes:
-          image: *id005
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=opensuse_leap15 target=:graviton', 'ant os=opensuse_leap15
+          image: *id004
+          tags: [spack, small, x86_64_v3]
+          variables: *id009
+      - match: ['alsa-lib os=opensuse_leap15 target=:graviton', 'ant os=opensuse_leap15
             target=:graviton', 'antlr os=opensuse_leap15 target=:graviton', 'argobots os=opensuse_leap15
             target=:graviton', 'automake os=opensuse_leap15 target=:graviton', 'berkeley-db
             os=opensuse_leap15 target=:graviton', 'bison os=opensuse_leap15 target=:graviton',
@@ -801,10 +811,10 @@ spack:
             os=opensuse_leap15 target=:graviton', 'zlib os=opensuse_leap15 target=:graviton',
           'zstd os=opensuse_leap15 target=:graviton']
         runner-attributes:
-          image: *id005
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=almalinux8 target=:86_64_v3', 'ant os=almalinux8 target=:86_64_v3',
+          image: *id004
+          tags: [spack, small, graviton]
+          variables: *id009
+      - match: ['alsa-lib os=almalinux8 target=:86_64_v3', 'ant os=almalinux8 target=:86_64_v3',
           'antlr os=almalinux8 target=:86_64_v3', 'argobots os=almalinux8 target=:86_64_v3',
           'automake os=almalinux8 target=:86_64_v3', 'berkeley-db os=almalinux8 target=:86_64_v3',
           'bison os=almalinux8 target=:86_64_v3', 'blt os=almalinux8 target=:86_64_v3',
@@ -832,10 +842,10 @@ spack:
           'yaml-cpp os=almalinux8 target=:86_64_v3', 'zlib os=almalinux8 target=:86_64_v3',
           'zstd os=almalinux8 target=:86_64_v3']
         runner-attributes:
-          image: *id006
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=almalinux8 target=:graviton', 'ant os=almalinux8 target=:graviton',
+          image: *id005
+          tags: [spack, small, x86_64_v3]
+          variables: *id009
+      - match: ['alsa-lib os=almalinux8 target=:graviton', 'ant os=almalinux8 target=:graviton',
           'antlr os=almalinux8 target=:graviton', 'argobots os=almalinux8 target=:graviton',
           'automake os=almalinux8 target=:graviton', 'berkeley-db os=almalinux8 target=:graviton',
           'bison os=almalinux8 target=:graviton', 'blt os=almalinux8 target=:graviton',
@@ -863,10 +873,10 @@ spack:
           'yaml-cpp os=almalinux8 target=:graviton', 'zlib os=almalinux8 target=:graviton',
           'zstd os=almalinux8 target=:graviton']
         runner-attributes:
-          image: *id006
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=ubuntu20.04 target=:86_64_v3', 'ant os=ubuntu20.04 target=:86_64_v3',
+          image: *id005
+          tags: [spack, small, graviton]
+          variables: *id009
+      - match: ['alsa-lib os=ubuntu20.04 target=:86_64_v3', 'ant os=ubuntu20.04 target=:86_64_v3',
           'antlr os=ubuntu20.04 target=:86_64_v3', 'argobots os=ubuntu20.04 target=:86_64_v3',
           'automake os=ubuntu20.04 target=:86_64_v3', 'berkeley-db os=ubuntu20.04 target=:86_64_v3',
           'bison os=ubuntu20.04 target=:86_64_v3', 'blt os=ubuntu20.04 target=:86_64_v3',
@@ -894,10 +904,10 @@ spack:
             target=:86_64_v3', 'yaml-cpp os=ubuntu20.04 target=:86_64_v3', 'zlib os=ubuntu20.04
             target=:86_64_v3', 'zstd os=ubuntu20.04 target=:86_64_v3']
         runner-attributes:
-          image: *id007
-          tags: *id012
-          variables: *id013
-      - matches: ['alsa-lib os=ubuntu20.04 target=:graviton', 'ant os=ubuntu20.04 target=:graviton',
+          image: *id006
+          tags: [spack, small, x86_64_v3]
+          variables: *id009
+      - match: ['alsa-lib os=ubuntu20.04 target=:graviton', 'ant os=ubuntu20.04 target=:graviton',
           'antlr os=ubuntu20.04 target=:graviton', 'argobots os=ubuntu20.04 target=:graviton',
           'automake os=ubuntu20.04 target=:graviton', 'berkeley-db os=ubuntu20.04 target=:graviton',
           'bison os=ubuntu20.04 target=:graviton', 'blt os=ubuntu20.04 target=:graviton',
@@ -925,59 +935,59 @@ spack:
             target=:graviton', 'yaml-cpp os=ubuntu20.04 target=:graviton', 'zlib os=ubuntu20.04
             target=:graviton', 'zstd os=ubuntu20.04 target=:graviton']
         runner-attributes:
-          image: *id007
-          tags: *id012
-          variables: *id013
-      - matches: ['os=centos7 target=:86_64_v3']
+          image: *id006
+          tags: [spack, small, graviton]
+          variables: *id009
+      - match: ['os=centos7 target=:86_64_v3']
         runner-attributes:
           image: *id001
-          tags: &id015 [x86_64_v3]
-          variables: &id014 {CI_JOB_SIZE: default}
-      - matches: ['os=centos7 target=:graviton']
+          tags: [spack, x86_64_v3]
+          variables: &id010 {CI_JOB_SIZE: default}
+      - match: ['os=centos7 target=:graviton']
         runner-attributes:
           image: *id001
-          tags: &id016 [graviton]
-          variables: *id014
-      - matches: ['os=fedora36 target=:86_64_v3']
+          tags: [spack, graviton]
+          variables: *id010
+      - match: ['os=fedora36 target=:86_64_v3']
+        runner-attributes:
+          image: *id003
+          tags: [spack, x86_64_v3]
+          variables: *id010
+      - match: ['os=fedora36 target=:graviton']
+        runner-attributes:
+          image: *id003
+          tags: [spack, graviton]
+          variables: *id010
+      - match: ['os=opensuse_leap15 target=:86_64_v3']
         runner-attributes:
           image: *id004
-          tags: *id015
-          variables: *id014
-      - matches: ['os=fedora36 target=:graviton']
+          tags: [spack, x86_64_v3]
+          variables: *id010
+      - match: ['os=opensuse_leap15 target=:graviton']
         runner-attributes:
           image: *id004
-          tags: *id016
-          variables: *id014
-      - matches: ['os=opensuse_leap15 target=:86_64_v3']
+          tags: [spack, graviton]
+          variables: *id010
+      - match: ['os=almalinux8 target=:86_64_v3']
         runner-attributes:
           image: *id005
-          tags: *id015
-          variables: *id014
-      - matches: ['os=opensuse_leap15 target=:graviton']
+          tags: [spack, x86_64_v3]
+          variables: *id010
+      - match: ['os=almalinux8 target=:graviton']
         runner-attributes:
           image: *id005
-          tags: *id016
-          variables: *id014
-      - matches: ['os=almalinux8 target=:86_64_v3']
+          tags: [spack, graviton]
+          variables: *id010
+      - match: ['os=ubuntu20.04 target=:86_64_v3']
         runner-attributes:
           image: *id006
-          tags: *id015
-          variables: *id014
-      - matches: ['os=almalinux8 target=:graviton']
+          tags: [spack, x86_64_v3]
+          variables: *id010
+      - match: ['os=ubuntu20.04 target=:graviton']
         runner-attributes:
           image: *id006
-          tags: *id016
-          variables: *id014
-      - matches: ['os=ubuntu20.04 target=:86_64_v3']
-        runner-attributes:
-          image: *id007
-          tags: *id015
-          variables: *id014
-      - matches: ['os=ubuntu20.04 target=:graviton']
-        runner-attributes:
-          image: *id007
-          tags: *id016
-          variables: *id014
+          tags: [spack, graviton]
+          variables: *id010
 
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
