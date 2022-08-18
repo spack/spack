@@ -30,6 +30,8 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.7.4-rocm-enhanced", sha256="45b79c125edfdc008274f1b150d8b5a53b3ff4713fd1ad1ff4738f515aad8191",
+            url = "https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/archive/refs/tags/v2.7.0.tar.gz")
     version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
     version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
     version("2.8.2", sha256="b3f860c02c22a30e9787e2548ca252ab289a76b7778af6e9fa763d4aafd904c7")
@@ -279,6 +281,21 @@ class PyTensorflow(Package, CudaPackage):
     #            type=('build', 'run'), when='@2.8:')
     # depends_on('py-tensorflow-io-gcs-filesystem@0.21:',
     #            type=('build', 'run'), when='@2.7')
+    with when("+rocm"):
+        depends_on('hip')
+        depends_on('rocrand')
+        depends_on('rocblas')
+        depends_on('rocfft')
+        depends_on('hipfft')
+        depends_on('rccl')
+        depends_on('hipsparse')
+        depends_on('hipcub')
+        depends_on('rocsolver')
+        depends_on('rocprim')
+        depends_on('miopen-hip')
+        depends_on('llvm-amdgpu')
+        depends_on('hsa-rocr-dev')
+        depends_on('rocminfo')
 
     if sys.byteorder == "little":
         # Only builds correctly on little-endian machines
@@ -720,6 +737,10 @@ class PyTensorflow(Package, CudaPackage):
             env.set("INCLUDEDIR", spec["protobuf"].prefix.include)
 
     def patch(self):
+        filter_file(
+            '"-U_FORTIFY_SOURCE",',
+            '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
+            "third_party/gpus/crosstool/BUILD.rocm.tpl")
         if self.spec.satisfies("@2.3.0:"):
             filter_file(
                 "deps = protodeps + well_known_proto_libs(),",
@@ -975,6 +996,9 @@ def protobuf_deps():
 
             if "+cuda" in spec:
                 args.append("--config=cuda")
+
+            if '+rocm' in spec:
+                args.append('--config=rocm')
 
             if "~aws" in spec:
                 args.append("--config=noaws")
