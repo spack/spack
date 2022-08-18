@@ -126,7 +126,7 @@ create = SpackCommand("create")
             [
                 r"ExampleAutoGit(Package)",
                 r"def install(self",
-                r'git      = "file:///tmp/example.git',
+                r'git = "file:///tmp/example.git',
             ],
         ),
         (
@@ -135,7 +135,7 @@ create = SpackCommand("create")
             [
                 r"ExampleAutoGit2(Package)",
                 r"def install(self",
-                r'git      = "git@example.com:tmp/example.git',
+                r'git = "git@example.com:tmp/example.git',
             ],
         ),
         (
@@ -144,7 +144,7 @@ create = SpackCommand("create")
             [
                 r"ExampleForceGit(Package)",
                 r"def install(self",
-                r'git      = "file://example.tar.gz',
+                r'git = "file://example.tar.gz',
             ],
         ),
         # Test git branch/tag/commit
@@ -154,7 +154,7 @@ create = SpackCommand("create")
             [
                 r"ExampleGitBranch(Package)",
                 r"def install(self",
-                r'git      = "file:///tmp/example.git',
+                r'git = "file:///tmp/example.git',
                 r"version('v3.2.1', branch='v3.2.1')",
             ],
         ),
@@ -173,7 +173,7 @@ create = SpackCommand("create")
             [
                 r"ExampleGitBranch2(Package)",
                 r"def install(self",
-                r'git      = "file:///tmp/example.git',
+                r'git = "file:///tmp/example.git',
                 r"version('v1.2.3', branch='v3.2.1')",
             ],
         ),
@@ -192,7 +192,7 @@ create = SpackCommand("create")
             [
                 r"ExampleGitTag(Package)",
                 r"def install(self",
-                r'git      = "file:///tmp/example.git',
+                r'git = "file:///tmp/example.git',
                 r"version('v2.3.4', tag='v4.3.2')",
             ],
         ),
