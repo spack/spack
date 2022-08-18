@@ -934,7 +934,7 @@ def get_versions(args, name):
     # Default git-based version
     git_versions = """\
     # FIXME: Add proper versions referencing branch/tag/commit here
-    # version('main', branch='main)"""
+    # version("main", branch="main")"""
 
     # Default guesser
     guesser = BuildSystemGuesser()
@@ -953,7 +953,7 @@ def get_versions(args, name):
     if git:
         if has_git_option:
             versions = []
-            version_tpl = "    version('{0}', {1}='{2}')"
+            version_tpl = '    version("{0}", {1}="{2}")'
 
             if args.branch is not None:
                 for br in args.branch:
