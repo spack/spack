@@ -135,7 +135,7 @@ class PackageTemplate(BundlePackageTemplate):
         super(PackageTemplate, self).__init__(name, versions)
 
         self.url_def = self.url_line.format(url=url)
-        if git_url is not None:
+        if git_url:
             self.git_def = self.git_line.format(git_url=git_url)
         else:
             self.git_def = '    # FIXME: add git repository if it exists\n'\
@@ -294,7 +294,7 @@ class RacketPackageTemplate(PackageTemplate):
     base_class_name = 'RacketPackage'
 
     url_line = "    # FIXME: set the proper location from which to fetch your package"
-    git_line = "    git      = 'git@github.com:example/example.git'"
+    git_line = "    git      = 'https://github.com/example/example.git'"
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the racket dependency
@@ -660,10 +660,7 @@ def setup_parser(subparser):
                            nargs='+')
     subparser.add_argument('-T', '--tag',
                            help="specify tag(s) of git repository. "
-                                "Separate multiple tags with space. "
-                                "Not guaranteed to be reproducible, "
-                                "use `--commit` when possible. "
-                                "Only used for git URLs.",
+                                "Separate multiple tags with space.",
                            nargs='+')
     subparser.add_argument('-C', '--commit',
                            help="specify commit id(s) of git repository. "
@@ -873,7 +870,7 @@ def get_url_and_git(args):
     # Git url not set explicitly
     if (args.git == '#AUTO-GIT-URL#' and is_git_url(args.url)) or args.git is None:
         git = args.url
-        return url, git
+        return args.url, git
     else:
         url = args.url or url
 
@@ -921,9 +918,7 @@ def get_versions(args, name):
 
     url, git = get_url_and_git(args)
 
-    has_git_option = args.commit is not None or \
-        args.tag is not None or \
-        args.branch is not None
+    has_git_option = args.commit or args.tag or args.branch
 
     git_single_version = (len(args.branch or []) +
                           len(args.commit or []) +
