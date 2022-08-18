@@ -499,9 +499,10 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Skip this hassle if not found
             if orig_bytes not in data:
                 continue
-            # Check relocation suffix safety, we only care about this problem if we are about to replace
+            # Check relocation suffix safety, we only care about this problem if we are about
+            # to replace
             if not (new_bytes[-16:] == orig_bytes[-16:] and len(new_bytes) <= len(orig_bytes)):
-                tty.debug('Binary failing to relocate is %s' % filename)
+                tty.debug("Binary failing to relocate is %s" % filename)
                 raise BinaryTextReplaceError(orig_bytes, new_bytes)
 
             pad_length = len(orig_bytes) - len(new_bytes)
