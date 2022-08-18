@@ -139,7 +139,7 @@ class PackageTemplate(BundlePackageTemplate):
             self.git_def = self.git_line.format(git_url=git_url)
         else:
             self.git_def = '    # FIXME: add git repository if it exists\n'\
-                           '    # git = git@example.com:example/example.git'
+                           '    # git = "https://github.com/example/example.git"'
 
 
 class AutotoolsPackageTemplate(PackageTemplate):
