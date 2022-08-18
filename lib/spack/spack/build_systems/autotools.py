@@ -244,7 +244,9 @@ To resolve this problem, please try the following:
         scripts to use file from path."""
 
         if self.spec.os.startswith("nixos"):
-            x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
+            x = fs.FileFilter(
+                *filter(fs.is_exe, fs.find(self.build_directory, "configure", recursive=True))
+            )
             with fs.keep_modification_time(*x.filenames):
                 x.filter(regex="/usr/bin/file", repl="file", string=True)
 
@@ -274,7 +276,9 @@ To resolve this problem, please try the following:
         if not self.patch_libtool:
             return
 
-        x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
+        x = fs.FileFilter(
+            *filter(fs.is_exe, fs.find(self.build_directory, "configure", recursive=True))
+        )
 
         # There are distributed automatically generated files that depend on the configure script
         # and require additional tools for rebuilding.
@@ -299,7 +303,9 @@ To resolve this problem, please try the following:
         if not self.patch_libtool:
             return
 
-        x = fs.FileFilter(*fs.find(self.build_directory, "libtool", recursive=True))
+        x = fs.FileFilter(
+            *filter(fs.is_exe, fs.find(self.build_directory, "libtool", recursive=True))
+        )
 
         # Exit early if there is nothing to patch:
         if not x.filenames:
