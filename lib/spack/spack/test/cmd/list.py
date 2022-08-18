@@ -87,14 +87,14 @@ def test_list_update(tmpdir, mock_packages):
 
 
 def test_list_tags(mock_packages):
-     output = list('--tag', 'tag1')
-     assert 'mpich' in output
-     assert 'mpich2' in output
+    output = list("--tag", "tag1")
+    assert "mpich" in output
+    assert "mpich2" in output
 
-     output = list('--tag', 'tag2')
-     assert 'mpich\n' in output
-     assert 'mpich2' not in output
+    output = list("--tag", "tag2")
+    assert "mpich\n" in output
+    assert "mpich2" not in output
 
-     output = list('--tag', 'tag3')
-     assert 'mpich\n' not in output
-     assert 'mpich2' in output
+    output = list("--tag", "tag3")
+    assert "mpich\n" not in output
+    assert "mpich2" in output
