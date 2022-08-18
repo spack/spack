@@ -13,20 +13,20 @@ class NvptxTools(AutotoolsPackage):
     GPUs."""
 
     homepage = "https://github.com/MentorEmbedded/nvptx-tools"
-    git      = "https://github.com/MentorEmbedded/nvptx-tools"
+    git = "https://github.com/MentorEmbedded/nvptx-tools"
 
-    version('2021-05-21', commit='d0524fbdc86dfca068db5a21cc78ac255b335be5')
-    version('2018-03-01', commit='5f6f343a302d620b0868edab376c00b15741e39e')
+    version("2021-05-21", commit="d0524fbdc86dfca068db5a21cc78ac255b335be5")
+    version("2018-03-01", commit="5f6f343a302d620b0868edab376c00b15741e39e")
 
-    depends_on('binutils')
-    depends_on('cuda')
+    depends_on("binutils")
+    depends_on("cuda")
 
     def configure_args(self):
-        cuda_dir = self.spec['cuda'].prefix
+        cuda_dir = self.spec["cuda"].prefix
 
         config_args = [
             "--with-cuda-driver-include={0}".format(cuda_dir.include),
-            "--with-cuda-driver-lib={0}".format(cuda_dir.lib64)
+            "--with-cuda-driver-lib={0}".format(cuda_dir.lib64),
         ]
 
         return config_args

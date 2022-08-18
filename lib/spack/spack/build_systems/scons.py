@@ -25,17 +25,18 @@ class SConsPackage(PackageBase):
     variables that control the build. You will likely need to override
     :py:meth:`~.SConsPackage.build_args` to pass the appropriate variables.
     """
+
     #: Phases of a SCons package
-    phases = ['build', 'install']
+    phases = ["build", "install"]
 
     #: To be used in UI queries that require to know which
     #: build-system class we are using
-    build_system_class = 'SConsPackage'
+    build_system_class = "SConsPackage"
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['build_test']
+    build_time_test_callbacks = ["build_test"]
 
-    depends_on('scons', type='build')
+    depends_on("scons", type="build")
 
     def build_args(self, spec, prefix):
         """Arguments to pass to build."""
@@ -55,7 +56,7 @@ class SConsPackage(PackageBase):
         """Install the package."""
         args = self.install_args(spec, prefix)
 
-        inspect.getmodule(self).scons('install', *args)
+        inspect.getmodule(self).scons("install", *args)
 
     # Testing
 
@@ -67,7 +68,7 @@ class SConsPackage(PackageBase):
         """
         pass
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

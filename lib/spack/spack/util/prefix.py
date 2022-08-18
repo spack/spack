@@ -36,6 +36,7 @@ class Prefix(str):
     This prints ``foobar /usr``. All of this is meant to make custom
     installs easy.
     """
+
     def __getattr__(self, attr):
         return Prefix(os.path.join(self, attr))
 

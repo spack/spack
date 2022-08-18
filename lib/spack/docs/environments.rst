@@ -376,6 +376,30 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing Packages in a Spack Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack develop`` command allows one to develop Spack packages in
+an environment. It requires a spec containing a concrete version, and
+will configure Spack to install the package from local source. By
+default, it will also clone the package to a subdirectory in the
+environment. This package will have a special variant ``dev_path``
+set, and Spack will ensure the package and its dependents are rebuilt
+any time the environment is installed if the package's local source
+code has been modified. Spack ensures that all instances of a
+developed package in the environment are concretized to match the
+version (and other constraints) passed as the spec argument to the
+``spack develop`` command.
+
+For packages with ``git`` attributes, git branches, tags, and commits can
+also be used as valid concrete versions (see :ref:`version-specifier`).
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+the ``main`` branch of the package, and ``spack install`` will install from
+that git clone if ``foo`` is in the environment.
+Further development on ``foo`` can be tested by reinstalling the environment,
+and eventually committed and pushed to the upstream git repo.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -948,9 +972,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========

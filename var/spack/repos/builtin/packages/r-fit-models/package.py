@@ -21,8 +21,8 @@ class RFitModels(RPackage):
 
     cran = "fit.models"
 
-    version('0.64', sha256='f70806bfa85a05337fa5a665264d640e307584714a07a329fbe96c86b0e864da')
-    version('0.5-14', sha256='93b9d119e97b36c648a19c891fc5e69f5306eb5b9bac16bf377555057afd4b6e')
-    version('0.5-13', sha256='7df545fce135159e9abf0a19076628d3ec2999e89f018e142a7a970428823d48')
+    version("0.64", sha256="f70806bfa85a05337fa5a665264d640e307584714a07a329fbe96c86b0e864da")
+    version("0.5-14", sha256="93b9d119e97b36c648a19c891fc5e69f5306eb5b9bac16bf377555057afd4b6e")
+    version("0.5-13", sha256="7df545fce135159e9abf0a19076628d3ec2999e89f018e142a7a970428823d48")
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on("r-lattice", type=("build", "run"))

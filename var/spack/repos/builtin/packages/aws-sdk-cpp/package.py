@@ -18,13 +18,15 @@ class AwsSdkCpp(CMakePackage):
     homepage = "https://github.com/aws/aws-sdk-cpp"
     git = "https://github.com/aws/aws-sdk-cpp.git"
 
-    version('1.9.247', tag='1.9.247', submodules=True)
+    version("1.9.247", tag="1.9.247", submodules=True)
 
-    depends_on('cmake@3.1:', type='build')
-    depends_on('zlib')
-    depends_on('curl')
+    depends_on("cmake@3.1:", type="build")
+    depends_on("zlib")
+    depends_on("curl")
 
     # https://github.com/aws/aws-sdk-cpp/issues/1816
-    patch('https://github.com/aws/aws-sdk-cpp/pull/1937.patch?full_index=1',
-          sha256='ba86e0556322604fb4b70e2dd4f4fb874701868b07353fc1d5c329d90777bf45',
-          when='@1.9.247')
+    patch(
+        "https://github.com/aws/aws-sdk-cpp/pull/1937.patch?full_index=1",
+        sha256="ba86e0556322604fb4b70e2dd4f4fb874701868b07353fc1d5c329d90777bf45",
+        when="@1.9.247",
+    )
