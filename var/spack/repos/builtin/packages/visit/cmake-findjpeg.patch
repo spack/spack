@@ -1,12 +1,16 @@
 --- a/src/CMake/FindJPEG.cmake	2022-07-22 15:00:18.831409000 -0700
 +++ b/src/CMake/FindJPEG.cmake	2022-07-22 15:01:07.682528000 -0700
-@@ -25,5 +25,9 @@
+@@ -25,5 +25,13 @@
    else() 
        SET_UP_THIRD_PARTY(JPEG lib include jpeg)
    endif()
 +ELSE()
 +  if (VISIT_JPEG_DIR)
-+      SET_UP_THIRD_PARTY(JPEG lib64 include jpeg)
++      if(EXISTS ${JPEG_DIR}/lib)
++          SET_UP_THIRD_PARTY(JPEG lib include jpeg)
++      elseif(EXISTS ${JPEG_DIR}/lib64)
++          SET_UP_THIRD_PARTY(JPEG lib64 include jpeg)
++      endif()
 +  endif()
  ENDIF (WIN32)
  
