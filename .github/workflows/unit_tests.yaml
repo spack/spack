@@ -1,103 +1,24 @@
 name: linux tests
 
 on:
-  push:
-    branches:
-      - develop
-      - releases/**
-  pull_request:
-    branches:
-      - develop
-      - releases/**
+  workflow_run:
+    workflows: [style and validate]
+    types:
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
   cancel-in-progress: true
 
 jobs:
-  # Validate that the code can be run on all the Python versions
-  # supported by Spack
-  validate:
-    runs-on: ubuntu-latest
+  style-check:
+    runs-on: windows-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
-      with:
-        python-version: '3.10'
-    - name: Install Python Packages
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade vermin
-    - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
-    - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv var/spack/repos
-  # Run style checks on the files that have been changed
-  style:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
-      with:
-        python-version: '3.10'
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip six setuptools types-six
-    - name: Setup git configuration
-      run: |
-        # Need this for the git tests to succeed.
-        git --version
-        . .github/workflows/setup_git.sh
-    - name: Run style tests
-      run: |
-          share/spack/qa/run-style-tests
-  # Check which files have been updated by the PR
-  changes:
-    runs-on: ubuntu-latest
-    # Set job outputs to values from filter step
-    outputs:
-      core: ${{ steps.filter.outputs.core }}
-      packages: ${{ steps.filter.outputs.packages }}
-      with_coverage: ${{ steps.coverage.outputs.with_coverage }}
-    steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
-      if: ${{ github.event_name == 'push' }}
-      with:
-        fetch-depth: 0
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721
-      id: filter
-      with:
-        # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
-        filters: |
-          core:
-          - './!(var/**)/**'
-          packages:
-          - 'var/**'
-    # Some links for easier reference:
-    #
-    # "github" context: https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-    # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-    # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-    #
-    - id: coverage
-      # Run the subsequent jobs with coverage if core has been modified,
-      # regardless of whether this is a pull request or a push to a branch
-      run: |
-        echo Core changes: ${{ steps.filter.outputs.core }}
-        echo Event name: ${{ github.event_name }}
-        if [ "${{ steps.filter.outputs.core }}" == "true" ]
-        then
-          echo "::set-output name=with_coverage::true"
-        else
-          echo "::set-output name=with_coverage::false"
-        fi
-
+      - run: echo "QA check passed, unit tests triggered"
   # Run unit tests with different configurations on linux
   unittests:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -171,7 +92,7 @@ jobs:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -211,7 +132,7 @@ jobs:
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
   rhel8-platform-python:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
@@ -237,7 +158,7 @@ jobs:
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -283,7 +204,7 @@ jobs:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   build:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: macos-latest
     strategy:
       matrix:
@@ -331,7 +252,7 @@ jobs:
 
   # Run audits on all the packages in the built-in repository
   package-audits:
-    needs: [ validate, style, changes ]
+    needs: [ style-check ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2

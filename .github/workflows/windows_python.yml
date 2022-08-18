@@ -1,14 +1,10 @@
 name: windows tests
 
 on:
-  push:
-    branches:
-      - develop
-      - releases/**
-  pull_request:
-    branches:
-      - develop
-      - releases/**
+  workflow_run:
+    workflows: [style and validate]
+    types:
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
@@ -18,46 +14,15 @@ defaults:
   run:
     shell:
      powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
+
 jobs:
-  validate:
+  style-check:
     runs-on: windows-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
-      with:
-        python-version: 3.9
-    - name: Install Python Packages
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade vermin
-    - name: vermin (Spack's Core)
-      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.6-' -v spack/lib/spack/spack/ spack/lib/spack/llnl/ spack/bin/
-    - name: vermin (Repositories)
-      run: vermin --backport argparse --backport typing -t='2.7-' -t='3.6-' -v spack/var/spack/repos
-  # Run style checks on the files that have been changed
-  style:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5
-      with:
-        python-version: 3.9
-    - name: Install Python packages
-      run: |
-        python -m pip install --upgrade pip six setuptools flake8 "isort>=4.3.5" "mypy>=0.800" "click==8.0.4" "black<=21.12b0" pywin32 types-python-dateutil
-    - name: Create local develop
-      run: |
-        .\spack\.github\workflows\setup_git.ps1
-    - name: Run style tests
-      run: |
-        spack style
-    - name: Verify license headers
-      run: |
-        python spack\bin\spack license verify
+      - run: echo "QA check passed, unit tests triggered"
   unittest:
-    needs: [ validate, style ]
+    needs: [ style-check ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -77,7 +42,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
   unittest-cmd:
-    needs: [ validate, style ]
+    needs: [ style-check ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -97,7 +62,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test lib/spack/spack/test/cmd --verbose
   buildtest:
-    needs: [ validate, style ]
+    needs: [ style-check ]
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -117,7 +82,7 @@ jobs:
         spack external find ninja
         spack install abseil-cpp
   generate-installer-test:
-    needs: [ validate, style ]
+    needs: [ style-check ]
     runs-on: windows-latest
     steps:
     - name: Disable Windows Symlinks
