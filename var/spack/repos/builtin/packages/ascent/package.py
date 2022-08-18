@@ -225,6 +225,8 @@ class Ascent(CMakePackage, CudaPackage):
         host_config = self._get_host_config_path(self.spec)
         options = []
         options.extend(["-C", host_config, "../spack-src/src/"])
+        if self.spec.satisfies("%oneapi"):
+            options.extend(["-D", "CMAKE_Fortran_FLAGS=-nofor-main"])
         return options
 
     @run_after("install")
