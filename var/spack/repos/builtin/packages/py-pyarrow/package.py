@@ -64,7 +64,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     patch("for_aarch64.patch", when="@0 target=aarch64:")
 
-    @property
     def install_options(self):
         args, spec = [], self.spec
         if spec.satisfies("+parquet"):

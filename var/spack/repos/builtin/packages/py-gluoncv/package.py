@@ -30,4 +30,5 @@ class PyGluoncv(PythonPackage):
 
     patch("no-unicode-readme.patch")
 
-    install_options = ["--with-cython"]
+    def install_options(self):
+        return ["--with-cython"]

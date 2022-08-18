@@ -91,6 +91,5 @@ class PyPyside(PythonPackage):
             "setup.py",
         )
 
-    @property
     def install_options(self):
         return ["--jobs={0}".format(make_jobs)]

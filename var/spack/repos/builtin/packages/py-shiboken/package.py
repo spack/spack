@@ -51,6 +51,5 @@ class PyShiboken(PythonPackage):
             "shiboken_postinstall.py",
         )
 
-    @property
     def install_options(self):
         return ["--jobs={0}".format(make_jobs)]

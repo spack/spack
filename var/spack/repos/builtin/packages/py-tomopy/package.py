@@ -48,7 +48,6 @@ class PyTomopy(PythonPackage):
     depends_on("py-dxchange", type=("build", "run"))
     depends_on("py-numexpr", when="@1.11:", type=("build", "run"))
 
-    @property
     def install_options(self):
         if not self.spec.satisfies("@1.10:"):
             return []

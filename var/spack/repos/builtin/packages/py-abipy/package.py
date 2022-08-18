@@ -57,7 +57,6 @@ class PyAbipy(PythonPackage):
     depends_on("py-jupyter", type=("build", "run"), when="+ipython")
     depends_on("py-nbformat", type=("build", "run"), when="+ipython")
 
-    @property
     def install_options(self):
         if "+ipython" in self.spec:
             return ["--with-ipython"]

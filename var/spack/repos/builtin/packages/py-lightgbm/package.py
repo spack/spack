@@ -27,7 +27,6 @@ class PyLightgbm(PythonPackage):
 
     depends_on("mpi", when="+mpi")
 
-    @property
     def install_options(self):
         if self.spec.satisfies("+mpi"):
             return ["--mpi"]

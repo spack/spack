@@ -125,7 +125,6 @@ class PyScipy(PythonPackage):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
 
-    @property
     def install_options(self):
         if self.spec.satisfies("%fj"):
             return ["config_fc", "--fcompiler=fujitsu"]

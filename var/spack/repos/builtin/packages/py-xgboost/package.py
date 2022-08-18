@@ -67,4 +67,5 @@ class PyXgboost(PythonPackage):
             string=True,
         )
 
-    install_options = ["--use-system-libxgboost"]
+    def install_options(self):
+        return ["--use-system-libxgboost"]

@@ -156,7 +156,6 @@ class PythonPackage(PackageBase):
         """
         return self.stage.source_path
 
-    @property
     def config_settings(self):
         """Configuration settings to be passed to the PEP 517 build backend.
 
@@ -171,7 +170,6 @@ class PythonPackage(PackageBase):
         """
         return {}
 
-    @property
     def install_options(self):
         """Extra arguments to be supplied to the setup.py install command.
 
@@ -184,7 +182,6 @@ class PythonPackage(PackageBase):
         """
         return []
 
-    @property
     def global_options(self):
         """Extra global options to be supplied to the setup.py call before the install
         or bdist_wheel command.
@@ -203,7 +200,7 @@ class PythonPackage(PackageBase):
 
         args = PythonPackage._std_args(self) + ["--prefix=" + prefix]
 
-        for key, value in self.config_settings.items():
+        for key, value in self.config_settings().items():
             if spec["py-pip"].version < Version("22.1"):
                 raise SpecError(
                     "'{}' package uses 'config_settings' which is only supported by "
@@ -211,9 +208,9 @@ class PythonPackage(PackageBase):
                     '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
                 )
             args.append("--config-settings={}={}".format(key, value))
-        for option in self.install_options:
+        for option in self.install_options():
             args.append("--install-option=" + option)
-        for option in self.global_options:
+        for option in self.global_options():
             args.append("--global-option=" + option)
 
         if self.stage.archive_file and self.stage.archive_file.endswith(".whl"):

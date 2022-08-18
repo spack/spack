@@ -32,4 +32,5 @@ class PyArcgis(PythonPackage):
     depends_on("py-requests-toolbelt", type=("build", "run"))
     depends_on("py-requests-ntlm", type=("build", "run"))
 
-    global_options = ["--conda-install-mode"]
+    def global_options(self):
+        return ["--conda-install-mode"]

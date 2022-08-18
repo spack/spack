@@ -62,7 +62,6 @@ class PyCharm4py(PythonPackage):
     def setup_build_environment(self, env):
         env.set("SPACK_CHARM4PY_EXTRALIBS", self.spec["cuda"].libs.ld_flags)
 
-    @property
     def install_options(self):
         if "+mpi" in self.spec:
             return ["--mpi"]

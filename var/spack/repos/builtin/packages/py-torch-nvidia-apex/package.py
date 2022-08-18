@@ -35,7 +35,6 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
                 )
                 env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
 
-    @property
     def install_options(self):
         args = []
         if self.spec.satisfies("^py-torch@1.0:"):

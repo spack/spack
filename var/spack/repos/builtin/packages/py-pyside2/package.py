@@ -47,7 +47,6 @@ class PyPyside2(PythonPackage):
     depends_on("libxslt@1.1.19:", when="+doc", type="build")
     depends_on("py-sphinx", when="+doc", type="build")
 
-    @property
     def install_options(self):
         args = [
             "--parallel={0}".format(make_jobs),
@@ -59,7 +58,7 @@ class PyPyside2(PythonPackage):
         return args
 
     def install(self, spec, prefix):
-        python("setup.py", "install", "--prefix=" + prefix, *self.install_options)
+        python("setup.py", "install", "--prefix=" + prefix, *self.install_options())
 
     @run_after("install")
     def install_docs(self):

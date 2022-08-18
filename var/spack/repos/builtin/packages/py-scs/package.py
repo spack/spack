@@ -28,7 +28,6 @@ class PyScs(PythonPackage, CudaPackage):
     depends_on("py-numpy@1.7:", type=("build", "run"))
     depends_on("py-scipy@0.13.2:", type=("build", "run"))
 
-    @property
     def install_options(self):
         args, spec = [], self.spec
         if (

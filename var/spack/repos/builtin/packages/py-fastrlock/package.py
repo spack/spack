@@ -18,4 +18,5 @@ class PyFastrlock(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type="build")
 
-    install_options = ["--with-cython"]
+    def install_options(self):
+        return ["--with-cython"]

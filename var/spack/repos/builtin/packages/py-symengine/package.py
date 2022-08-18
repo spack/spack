@@ -32,6 +32,5 @@ class PySymengine(PythonPackage):
     depends_on("symengine@0.2.0", when="@0.2.0")
     depends_on("symengine@0.8.1", when="@0.8.1")
 
-    @property
     def install_options(self):
         return ["--symengine-dir={0}".format(self.spec["symengine"].prefix)]
