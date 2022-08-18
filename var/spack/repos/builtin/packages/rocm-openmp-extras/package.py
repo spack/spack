@@ -225,7 +225,6 @@ class RocmOpenmpExtras(Package):
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@{0} ~openmp".format(ver), when="@" + ver)
 
         # tag changed to 'rocm-' in 4.0.0
         if ver == "3.9.0" or ver == "3.10.0":
@@ -272,6 +271,8 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when="@" + ver,
         )
+
+        patch("flang-extern-alarm.patch", when="@5")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix

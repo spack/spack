@@ -116,7 +116,6 @@ class LlvmAmdgpu(CMakePackage):
             "standalone spack package."
         ),
     )
-    variant("openmp", default=False, description="Enable OpenMP")
     variant(
         "llvm_dylib",
         default=False,
@@ -143,11 +142,6 @@ class LlvmAmdgpu(CMakePackage):
     depends_on("ncurses+termlib", type="link")
     depends_on("ninja", type="build")
     depends_on("pkgconfig", type="build")
-
-    # openmp dependencies
-    depends_on("perl-data-dumper", type=("build"), when="+openmp")
-    depends_on("hwloc", when="+openmp")
-    depends_on("elf", type="link", when="+openmp")
 
     # Will likely only be fixed in LLVM 12 upstream
     patch("fix-system-zlib-ncurses.patch", when="@3.5.0:3.8.0")
@@ -232,14 +226,13 @@ class LlvmAmdgpu(CMakePackage):
         if self.spec.satisfies("@4.3.0:4.5.2"):
             llvm_projects.append("libcxx")
             llvm_projects.append("libcxxabi")
+
         if self.spec.satisfies("@5.0.0:"):
             llvm_runtimes.append("libcxx")
             llvm_runtimes.append("libcxxabi")
             args.append(self.define("LLVM_TARGETS_TO_BUILD", "AMDGPU;X86"))
             args.append(self.define("LLVM_AMDGPU_ALLOW_NPI_TARGETS", "ON"))
             args.extend([self.define("LLVM_ENABLE_RUNTIMES", ";".join(llvm_runtimes))])
-        if "+openmp" in self.spec:
-            llvm_projects.append("openmp")
 
         args.extend([self.define("LLVM_ENABLE_PROJECTS", ";".join(llvm_projects))])
 
