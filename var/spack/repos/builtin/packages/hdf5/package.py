@@ -413,7 +413,7 @@ class Hdf5(CMakePackage):
                 "libhdf5_hl_cpp",
                 "libhdf5_hl",
                 "libhdf5",
-            ] ,
+            ],
             ("fortran", "hl"): [
                 "libhdf5_hl_fortran",
                 "libhdf5_hl_f90cstub",
