@@ -2182,7 +2182,7 @@ class SpecBuilder(object):
                 "Internal Error: Uncallable action found in asp.py.  Please report to the spack"
                 " maintainers."
             )
-            assert action and callable(action)
+            assert action and callable(action), msg
 
             # ignore predicates on virtual packages, as they're used for
             # solving but don't construct anything. Do not ignore error
@@ -2257,7 +2257,7 @@ def _develop_specs_from_env(spec, env):
             "path. Please note that develop specs can only be used inside an environment"
             "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
         )
-        error_msg.format(name=spec.name, dev_path=spec.variants("dev_path"), env_path=path)
+        error_msg.format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
 
         assert spec.variants["dev_path"].value == path, error_msg
     else:
