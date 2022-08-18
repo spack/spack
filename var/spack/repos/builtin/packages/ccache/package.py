@@ -43,6 +43,8 @@ class Ccache(CMakePackage):
     version("3.3", sha256="b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a")
     version("3.2.9", sha256="1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f")
 
+    variant("redis", default=True, description="Enable Redis secondary storage")
+
     depends_on("cmake@3.15:", when="@4.7:", type="build")
     depends_on("cmake@3.10:", when="@4.4:", type="build")
     depends_on("cmake@3.4.3:", when="@4.0:", type="build")
@@ -53,14 +55,20 @@ class Ccache(CMakePackage):
 
     depends_on("zstd", when="@4.0:")
 
-    depends_on("hiredis@0.13.3:", when="@4.4:")
+    depends_on("hiredis@0.13.3:", when="@4.4: +redis")
     depends_on("pkgconfig", type="build", when="@4.4:")
 
     conflicts("%gcc@:5", when="@4.4:")
     conflicts("%clang@:4", when="@4.4:")
 
     def cmake_args(self):
-        return [self.define("ENABLE_TESTING", False)]
+        return [
+            self.define("ENABLE_TESTING", False),
+            self.define("ENABLE_DOCUMENTATION", False),
+            self.define_from_variant("REDIS_STORAGE_BACKEND", "redis"),
+            self.define("ZSTD_FROM_INTERNET", False),
+            self.define("HIREDIS_FROM_INTERNET", False),
+        ]
 
     # Before 4.0 this was an Autotools package
     @when("@:3")
