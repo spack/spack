@@ -11,10 +11,13 @@ class Pasta(Package):
 
     homepage = "https://github.com/smirarab/pasta"
     git = "https://github.com/smirarab/pasta"
+    maintainers = ["snehring"]
 
+    version("1.9.0", commit="370ae2d21ef461bcb2cef7c20cb5a4a1db7ff99d")
     version("1.8.3", commit="738bec5e0d5a18d013c193d7453374bed47456c9")
 
-    depends_on("python@2.7:")
+    depends_on("python@3:", when="@1.9.0:")
+    depends_on("python@:2", when="@:1.8.3")
     depends_on("py-dendropy")
     depends_on("java")
 
@@ -35,7 +38,7 @@ class Pasta(Package):
         install_tree(".", prefix)
 
         # run the 'build' from within the prefix
-        python = which("python2.7")
+        python = which("python")
 
         with working_dir(prefix):
             python("setup.py", "develop")

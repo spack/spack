@@ -14,11 +14,12 @@ class PyRadicalSaga(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.saga.git"
-    pypi = "radical.saga/radical.saga-1.14.0.tar.gz"
+    pypi = "radical.saga/radical.saga-1.16.0.tar.gz"
 
     maintainers = ["andre-merzky"]
 
     version("develop", branch="devel")
+    version("1.16.0", sha256="d269e2e7043f05e8f1d45ca3d50be973857150d7928d53bedd6844f39b224786")
     version("1.14.0", sha256="337d8778bf392fd54845b1876de903c4c12f6fa938ef16220e1847561b66731a")
     version("1.13.0", sha256="90d8e875f48402deab87314ea5c08d591264fb576c461bd9663ac611fc2e547e")
     version("1.12.0", sha256="769c83bab95c0e3ef970da0fa6cb30878d7a31216ff8b542e894686357f7cb5b")
@@ -30,6 +31,8 @@ class PyRadicalSaga(PythonPackage):
     depends_on("py-radical-utils", type=("build", "run"))
 
     depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
+
+    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-apache-libcloud", type=("build", "run"))

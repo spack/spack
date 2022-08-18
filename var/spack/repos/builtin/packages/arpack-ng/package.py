@@ -81,6 +81,14 @@ class ArpackNg(Package):
 
     depends_on("mpi", when="+mpi")
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == "cflags":
+            if spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
+
     @property
     def libs(self):
         # TODO: do we need spec['arpack-ng:parallel'].libs ?
