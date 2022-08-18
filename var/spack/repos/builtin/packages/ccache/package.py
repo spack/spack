@@ -62,16 +62,13 @@ class Ccache(CMakePackage):
     conflicts("%clang@:4", when="@4.4:")
 
     def cmake_args(self):
-        spec = self.spec
-        args = [
+        return [
             self.define("ENABLE_TESTING", False),
             self.define("ENABLE_DOCUMENTATION", False),
             self.define_from_variant("REDIS_STORAGE_BACKEND", "redis"),
             self.define("ZSTD_FROM_INTERNET", False),
             self.define("HIREDIS_FROM_INTERNET", False),
         ]
-
-        return args
 
     # Before 4.0 this was an Autotools package
     @when("@:3")
