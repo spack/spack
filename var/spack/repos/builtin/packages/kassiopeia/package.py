@@ -18,6 +18,7 @@ class Kassiopeia(CMakePackage):
     maintainers = ["wdconinc"]
 
     version("main", branch="main")
+    version("3.8.2", sha256="98dc12ff91c56f46b425c34cbc3de99e465f81dd4784f7a8a7c4bda12de82200")
     version("3.8.0", sha256="ae44c2d485fadaa6f562388064a211ae51b7d06bab7add2723ab0c8b21eb7e8f")
     version("3.7.7", sha256="b5f62b2e796fac57698794b46b63acbc47ce02010bd1f716996918a550b22a21")
     version("3.7.6", sha256="fa20cf0f29ee2312bf96b07661d7b5c9303782d907671acd01032cc1f13edd55")
@@ -62,7 +63,10 @@ class Kassiopeia(CMakePackage):
         if "+root" in self.spec:
             cxxstd = self.spec["root"].variants["cxxstd"].value
         else:
-            cxxstd = "14"
+            if "@:3.8.1" in self.spec:
+                cxxstd = "14"
+            else:
+                cxxstd = "17"
         args = [
             self.define_from_variant("KASPER_USE_BOOST", "boost"),
             self.define_from_variant("KASPER_USE_VTK", "vtk"),
