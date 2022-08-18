@@ -63,7 +63,7 @@ class Kassiopeia(CMakePackage):
         if "+root" in self.spec:
             cxxstd = self.spec["root"].variants["cxxstd"].value
         else:
-            if "@:3.8.1" in self.spec:
+            if self.spec.satisfies("@:3.8.1"):
                 cxxstd = "14"
             else:
                 cxxstd = "17"
