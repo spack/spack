@@ -1106,7 +1106,7 @@ def get_repository(args, name):
 
 def create(parser, args):
     # Gather information about the package to be created
-    name = get_name(args)
+    name = get_name(args.name, args.url)
     url, git = get_url_and_git(args)
     versions, guesser = get_versions(args, name)
     build_system = get_build_system(args.template, url, guesser)
