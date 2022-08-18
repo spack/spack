@@ -399,6 +399,12 @@ class Cmake(Package):
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
                 filter_file("mpifc)", "mpifc mpifrt)", f, string=True)
 
+    def setup_dependent_package(self, module, dependent_spec):
+        """Called before cmake packages's install() methods."""
+
+        module.cmake = Executable(self.spec.prefix.bin.cmake)
+        module.ctest = Executable(self.spec.prefix.bin.ctest)
+
     def test(self):
         """Perform smoke tests on the installed package."""
         spec_vers_str = "version {0}".format(self.spec.version)

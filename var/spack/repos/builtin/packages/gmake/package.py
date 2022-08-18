@@ -5,6 +5,7 @@
 
 import re
 
+from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
@@ -71,3 +72,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
     def symlink_gmake(self):
         with working_dir(self.prefix.bin):
             symlink("make", "gmake")
+
+    def setup_dependent_package(self, module, dspec):
+        module.make = MakeExecutable(self.spec.prefix.bin.make, make_jobs)
+        module.gmake = MakeExecutable(self.spec.prefix.bin.gmake, make_jobs)

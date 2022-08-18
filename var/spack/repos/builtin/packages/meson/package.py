@@ -81,3 +81,6 @@ class Meson(PythonPackage):
         # https://github.com/pybind/pybind11/issues/595
         if self.spec.satisfies("platform=darwin"):
             env.set("STRIP", "strip -x")
+
+    def setup_dependent_package(self, module, dspec):
+        module.meson = Executable(self.spec.prefix.bin.meson)
