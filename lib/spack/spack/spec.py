@@ -2991,7 +2991,7 @@ class Spec(object):
         # Any specs that were concrete before finalization will already have a cached
         # DAG hash.
         for spec in self.traverse():
-            self._cached_hash(ht.dag_hash)
+            spec._cached_hash(ht.dag_hash)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().
