@@ -84,8 +84,8 @@ spack:
       CI_JOB_SIZE: default
 
     mappings:
-      - match: ['hipblas os=centos7 target=:86_64_v3', 'llvm os=centos7 target=:86_64_v3',
-          'llvm-amdgpu os=centos7 target=:86_64_v3', 'rocblas os=centos7 target=:86_64_v3']
+      - match: ['hipblas os=centos7 target=:x86_64_v3', 'llvm os=centos7 target=:x86_64_v3',
+          'llvm-amdgpu os=centos7 target=:x86_64_v3', 'rocblas os=centos7 target=:x86_64_v3']
         runner-attributes:
           image: &id001
             entrypoint: ['']
@@ -98,8 +98,8 @@ spack:
           image: *id001
           tags: [spack, huge, graviton]
           variables: *id002
-      - match: ['hipblas os=fedora36 target=:86_64_v3', 'llvm os=fedora36 target=:86_64_v3',
-          'llvm-amdgpu os=fedora36 target=:86_64_v3', 'rocblas os=fedora36 target=:86_64_v3']
+      - match: ['hipblas os=fedora36 target=:x86_64_v3', 'llvm os=fedora36 target=:x86_64_v3',
+          'llvm-amdgpu os=fedora36 target=:x86_64_v3', 'rocblas os=fedora36 target=:x86_64_v3']
         runner-attributes:
           image: &id003
             entrypoint: ['']
@@ -112,9 +112,9 @@ spack:
           image: *id003
           tags: [spack, huge, graviton]
           variables: *id002
-      - match: ['hipblas os=opensuse_leap15 target=:86_64_v3', 'llvm os=opensuse_leap15
-            target=:86_64_v3', 'llvm-amdgpu os=opensuse_leap15 target=:86_64_v3', 'rocblas
-            os=opensuse_leap15 target=:86_64_v3']
+      - match: ['hipblas os=opensuse_leap15 target=:x86_64_v3', 'llvm os=opensuse_leap15
+            target=:x86_64_v3', 'llvm-amdgpu os=opensuse_leap15 target=:x86_64_v3', 'rocblas
+            os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
           image: &id004
             entrypoint: ['']
@@ -128,8 +128,8 @@ spack:
           image: *id004
           tags: [spack, huge, graviton]
           variables: *id002
-      - match: ['hipblas os=almalinux8 target=:86_64_v3', 'llvm os=almalinux8 target=:86_64_v3',
-          'llvm-amdgpu os=almalinux8 target=:86_64_v3', 'rocblas os=almalinux8 target=:86_64_v3']
+      - match: ['hipblas os=almalinux8 target=:x86_64_v3', 'llvm os=almalinux8 target=:x86_64_v3',
+          'llvm-amdgpu os=almalinux8 target=:x86_64_v3', 'rocblas os=almalinux8 target=:x86_64_v3']
         runner-attributes:
           image: &id005
             entrypoint: ['']
@@ -142,8 +142,8 @@ spack:
           image: *id005
           tags: [spack, huge, graviton]
           variables: *id002
-      - match: ['hipblas os=ubuntu20.04 target=:86_64_v3', 'llvm os=ubuntu20.04 target=:86_64_v3',
-          'llvm-amdgpu os=ubuntu20.04 target=:86_64_v3', 'rocblas os=ubuntu20.04 target=:86_64_v3']
+      - match: ['hipblas os=ubuntu20.04 target=:x86_64_v3', 'llvm os=ubuntu20.04 target=:x86_64_v3',
+          'llvm-amdgpu os=ubuntu20.04 target=:x86_64_v3', 'rocblas os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
           image: &id006
             entrypoint: ['']
@@ -156,14 +156,15 @@ spack:
           image: *id006
           tags: [spack, huge, graviton]
           variables: *id002
-      - match: ['cuda os=centos7 target=:86_64_v3', 'dyninst os=centos7 target=:86_64_v3',
-          'ginkgo os=centos7 target=:86_64_v3', 'hpx os=centos7 target=:86_64_v3', 'kokkos-kernels
-            os=centos7 target=:86_64_v3', 'kokkos-nvcc-wrapper os=centos7 target=:86_64_v3',
-          'magma os=centos7 target=:86_64_v3', 'mfem os=centos7 target=:86_64_v3', 'mpich
-            os=centos7 target=:86_64_v3', 'openturns os=centos7 target=:86_64_v3', 'precice
-            os=centos7 target=:86_64_v3', 'raja os=centos7 target=:86_64_v3', 'rust os=centos7
-            target=:86_64_v3', 'slate os=centos7 target=:86_64_v3', 'trilinos os=centos7
-            target=:86_64_v3', 'vtk-m os=centos7 target=:86_64_v3', 'warpx os=centos7 target=:86_64_v3']
+      - match: ['cuda os=centos7 target=:x86_64_v3', 'dyninst os=centos7 target=:x86_64_v3',
+          'ginkgo os=centos7 target=:x86_64_v3', 'hpx os=centos7 target=:x86_64_v3', 'kokkos-kernels
+            os=centos7 target=:x86_64_v3', 'kokkos-nvcc-wrapper os=centos7 target=:x86_64_v3',
+          'magma os=centos7 target=:x86_64_v3', 'mfem os=centos7 target=:x86_64_v3', 'mpich
+            os=centos7 target=:x86_64_v3', 'openturns os=centos7 target=:x86_64_v3', 'precice
+            os=centos7 target=:x86_64_v3', 'raja os=centos7 target=:x86_64_v3', 'rust os=centos7
+            target=:x86_64_v3', 'slate os=centos7 target=:x86_64_v3', 'trilinos os=centos7
+            target=:x86_64_v3', 'vtk-m os=centos7 target=:x86_64_v3', 'warpx os=centos7
+            target=:x86_64_v3']
         runner-attributes:
           image: *id001
           tags: [spack, large, x86_64_v3]
@@ -180,15 +181,15 @@ spack:
           image: *id001
           tags: [spack, large, graviton]
           variables: *id007
-      - match: ['cuda os=fedora36 target=:86_64_v3', 'dyninst os=fedora36 target=:86_64_v3',
-          'ginkgo os=fedora36 target=:86_64_v3', 'hpx os=fedora36 target=:86_64_v3', 'kokkos-kernels
-            os=fedora36 target=:86_64_v3', 'kokkos-nvcc-wrapper os=fedora36 target=:86_64_v3',
-          'magma os=fedora36 target=:86_64_v3', 'mfem os=fedora36 target=:86_64_v3', 'mpich
-            os=fedora36 target=:86_64_v3', 'openturns os=fedora36 target=:86_64_v3', 'precice
-            os=fedora36 target=:86_64_v3', 'raja os=fedora36 target=:86_64_v3', 'rust os=fedora36
-            target=:86_64_v3', 'slate os=fedora36 target=:86_64_v3', 'trilinos os=fedora36
-            target=:86_64_v3', 'vtk-m os=fedora36 target=:86_64_v3', 'warpx os=fedora36
-            target=:86_64_v3']
+      - match: ['cuda os=fedora36 target=:x86_64_v3', 'dyninst os=fedora36 target=:x86_64_v3',
+          'ginkgo os=fedora36 target=:x86_64_v3', 'hpx os=fedora36 target=:x86_64_v3', 'kokkos-kernels
+            os=fedora36 target=:x86_64_v3', 'kokkos-nvcc-wrapper os=fedora36 target=:x86_64_v3',
+          'magma os=fedora36 target=:x86_64_v3', 'mfem os=fedora36 target=:x86_64_v3', 'mpich
+            os=fedora36 target=:x86_64_v3', 'openturns os=fedora36 target=:x86_64_v3', 'precice
+            os=fedora36 target=:x86_64_v3', 'raja os=fedora36 target=:x86_64_v3', 'rust
+            os=fedora36 target=:x86_64_v3', 'slate os=fedora36 target=:x86_64_v3', 'trilinos
+            os=fedora36 target=:x86_64_v3', 'vtk-m os=fedora36 target=:x86_64_v3', 'warpx
+            os=fedora36 target=:x86_64_v3']
         runner-attributes:
           image: *id003
           tags: [spack, large, x86_64_v3]
@@ -206,15 +207,16 @@ spack:
           image: *id003
           tags: [spack, large, graviton]
           variables: *id007
-      - match: ['cuda os=opensuse_leap15 target=:86_64_v3', 'dyninst os=opensuse_leap15
-            target=:86_64_v3', 'ginkgo os=opensuse_leap15 target=:86_64_v3', 'hpx os=opensuse_leap15
-            target=:86_64_v3', 'kokkos-kernels os=opensuse_leap15 target=:86_64_v3', 'kokkos-nvcc-wrapper
-            os=opensuse_leap15 target=:86_64_v3', 'magma os=opensuse_leap15 target=:86_64_v3',
-          'mfem os=opensuse_leap15 target=:86_64_v3', 'mpich os=opensuse_leap15 target=:86_64_v3',
-          'openturns os=opensuse_leap15 target=:86_64_v3', 'precice os=opensuse_leap15 target=:86_64_v3',
-          'raja os=opensuse_leap15 target=:86_64_v3', 'rust os=opensuse_leap15 target=:86_64_v3',
-          'slate os=opensuse_leap15 target=:86_64_v3', 'trilinos os=opensuse_leap15 target=:86_64_v3',
-          'vtk-m os=opensuse_leap15 target=:86_64_v3', 'warpx os=opensuse_leap15 target=:86_64_v3']
+      - match: ['cuda os=opensuse_leap15 target=:x86_64_v3', 'dyninst os=opensuse_leap15
+            target=:x86_64_v3', 'ginkgo os=opensuse_leap15 target=:x86_64_v3', 'hpx os=opensuse_leap15
+            target=:x86_64_v3', 'kokkos-kernels os=opensuse_leap15 target=:x86_64_v3', 'kokkos-nvcc-wrapper
+            os=opensuse_leap15 target=:x86_64_v3', 'magma os=opensuse_leap15 target=:x86_64_v3',
+          'mfem os=opensuse_leap15 target=:x86_64_v3', 'mpich os=opensuse_leap15 target=:x86_64_v3',
+          'openturns os=opensuse_leap15 target=:x86_64_v3', 'precice os=opensuse_leap15
+            target=:x86_64_v3', 'raja os=opensuse_leap15 target=:x86_64_v3', 'rust os=opensuse_leap15
+            target=:x86_64_v3', 'slate os=opensuse_leap15 target=:x86_64_v3', 'trilinos
+            os=opensuse_leap15 target=:x86_64_v3', 'vtk-m os=opensuse_leap15 target=:x86_64_v3',
+          'warpx os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
           image: *id004
           tags: [spack, large, x86_64_v3]
@@ -232,15 +234,15 @@ spack:
           image: *id004
           tags: [spack, large, graviton]
           variables: *id007
-      - match: ['cuda os=almalinux8 target=:86_64_v3', 'dyninst os=almalinux8 target=:86_64_v3',
-          'ginkgo os=almalinux8 target=:86_64_v3', 'hpx os=almalinux8 target=:86_64_v3',
-          'kokkos-kernels os=almalinux8 target=:86_64_v3', 'kokkos-nvcc-wrapper os=almalinux8
-            target=:86_64_v3', 'magma os=almalinux8 target=:86_64_v3', 'mfem os=almalinux8
-            target=:86_64_v3', 'mpich os=almalinux8 target=:86_64_v3', 'openturns os=almalinux8
-            target=:86_64_v3', 'precice os=almalinux8 target=:86_64_v3', 'raja os=almalinux8
-            target=:86_64_v3', 'rust os=almalinux8 target=:86_64_v3', 'slate os=almalinux8
-            target=:86_64_v3', 'trilinos os=almalinux8 target=:86_64_v3', 'vtk-m os=almalinux8
-            target=:86_64_v3', 'warpx os=almalinux8 target=:86_64_v3']
+      - match: ['cuda os=almalinux8 target=:x86_64_v3', 'dyninst os=almalinux8 target=:x86_64_v3',
+          'ginkgo os=almalinux8 target=:x86_64_v3', 'hpx os=almalinux8 target=:x86_64_v3',
+          'kokkos-kernels os=almalinux8 target=:x86_64_v3', 'kokkos-nvcc-wrapper os=almalinux8
+            target=:x86_64_v3', 'magma os=almalinux8 target=:x86_64_v3', 'mfem os=almalinux8
+            target=:x86_64_v3', 'mpich os=almalinux8 target=:x86_64_v3', 'openturns os=almalinux8
+            target=:x86_64_v3', 'precice os=almalinux8 target=:x86_64_v3', 'raja os=almalinux8
+            target=:x86_64_v3', 'rust os=almalinux8 target=:x86_64_v3', 'slate os=almalinux8
+            target=:x86_64_v3', 'trilinos os=almalinux8 target=:x86_64_v3', 'vtk-m os=almalinux8
+            target=:x86_64_v3', 'warpx os=almalinux8 target=:x86_64_v3']
         runner-attributes:
           image: *id005
           tags: [spack, large, x86_64_v3]
@@ -258,15 +260,15 @@ spack:
           image: *id005
           tags: [spack, large, graviton]
           variables: *id007
-      - match: ['cuda os=ubuntu20.04 target=:86_64_v3', 'dyninst os=ubuntu20.04 target=:86_64_v3',
-          'ginkgo os=ubuntu20.04 target=:86_64_v3', 'hpx os=ubuntu20.04 target=:86_64_v3',
-          'kokkos-kernels os=ubuntu20.04 target=:86_64_v3', 'kokkos-nvcc-wrapper os=ubuntu20.04
-            target=:86_64_v3', 'magma os=ubuntu20.04 target=:86_64_v3', 'mfem os=ubuntu20.04
-            target=:86_64_v3', 'mpich os=ubuntu20.04 target=:86_64_v3', 'openturns os=ubuntu20.04
-            target=:86_64_v3', 'precice os=ubuntu20.04 target=:86_64_v3', 'raja os=ubuntu20.04
-            target=:86_64_v3', 'rust os=ubuntu20.04 target=:86_64_v3', 'slate os=ubuntu20.04
-            target=:86_64_v3', 'trilinos os=ubuntu20.04 target=:86_64_v3', 'vtk-m os=ubuntu20.04
-            target=:86_64_v3', 'warpx os=ubuntu20.04 target=:86_64_v3']
+      - match: ['cuda os=ubuntu20.04 target=:x86_64_v3', 'dyninst os=ubuntu20.04 target=:x86_64_v3',
+          'ginkgo os=ubuntu20.04 target=:x86_64_v3', 'hpx os=ubuntu20.04 target=:x86_64_v3',
+          'kokkos-kernels os=ubuntu20.04 target=:x86_64_v3', 'kokkos-nvcc-wrapper os=ubuntu20.04
+            target=:x86_64_v3', 'magma os=ubuntu20.04 target=:x86_64_v3', 'mfem os=ubuntu20.04
+            target=:x86_64_v3', 'mpich os=ubuntu20.04 target=:x86_64_v3', 'openturns os=ubuntu20.04
+            target=:x86_64_v3', 'precice os=ubuntu20.04 target=:x86_64_v3', 'raja os=ubuntu20.04
+            target=:x86_64_v3', 'rust os=ubuntu20.04 target=:x86_64_v3', 'slate os=ubuntu20.04
+            target=:x86_64_v3', 'trilinos os=ubuntu20.04 target=:x86_64_v3', 'vtk-m os=ubuntu20.04
+            target=:x86_64_v3', 'warpx os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
           image: *id006
           tags: [spack, large, x86_64_v3]
@@ -284,35 +286,36 @@ spack:
           image: *id006
           tags: [spack, large, graviton]
           variables: *id007
-      - match: ['adios2 os=centos7 target=:86_64_v3', 'amrex os=centos7 target=:86_64_v3',
-          'archer os=centos7 target=:86_64_v3', 'ascent os=centos7 target=:86_64_v3', 'axom
-            os=centos7 target=:86_64_v3', 'binutils os=centos7 target=:86_64_v3', 'blaspp
-            os=centos7 target=:86_64_v3', 'boost os=centos7 target=:86_64_v3', 'butterflypack
-            os=centos7 target=:86_64_v3', 'cabana os=centos7 target=:86_64_v3', 'caliper
-            os=centos7 target=:86_64_v3', 'camp os=centos7 target=:86_64_v3', 'chai os=centos7
-            target=:86_64_v3', 'conduit os=centos7 target=:86_64_v3', 'datatransferkit os=centos7
-            target=:86_64_v3', 'faodel os=centos7 target=:86_64_v3', 'ffmpeg os=centos7
-            target=:86_64_v3', 'fftw os=centos7 target=:86_64_v3', 'fortrilinos os=centos7
-            target=:86_64_v3', 'gperftools os=centos7 target=:86_64_v3', 'gptune os=centos7
-            target=:86_64_v3', 'hdf5 os=centos7 target=:86_64_v3', 'heffte os=centos7 target=:86_64_v3',
-          'hpctoolkit os=centos7 target=:86_64_v3', 'hwloc os=centos7 target=:86_64_v3',
-          'hypre os=centos7 target=:86_64_v3', 'kokkos os=centos7 target=:86_64_v3', 'lammps
-            os=centos7 target=:86_64_v3', 'lapackpp os=centos7 target=:86_64_v3', 'legion
-            os=centos7 target=:86_64_v3', 'libzmq os=centos7 target=:86_64_v3', 'llvm-openmp-ompt
-            os=centos7 target=:86_64_v3', 'mbedtls os=centos7 target=:86_64_v3', 'netlib-scalapack
-            os=centos7 target=:86_64_v3', 'omega-h os=centos7 target=:86_64_v3', 'openmpi
-            os=centos7 target=:86_64_v3', 'openpmd-api os=centos7 target=:86_64_v3', 'pagmo2
-            os=centos7 target=:86_64_v3', 'papyrus os=centos7 target=:86_64_v3', 'parsec
-            os=centos7 target=:86_64_v3', 'pdt os=centos7 target=:86_64_v3', 'petsc os=centos7
-            target=:86_64_v3', 'pumi os=centos7 target=:86_64_v3', 'py-ipython-genutils
-            os=centos7 target=:86_64_v3', 'py-petsc4py os=centos7 target=:86_64_v3', 'py-scipy
-            os=centos7 target=:86_64_v3', 'py-statsmodels os=centos7 target=:86_64_v3',
-          'py-warlock os=centos7 target=:86_64_v3', 'py-warpx os=centos7 target=:86_64_v3',
-          'pygmo os=centos7 target=:86_64_v3', 'slepc os=centos7 target=:86_64_v3', 'slurm
-            os=centos7 target=:86_64_v3', 'strumpack os=centos7 target=:86_64_v3', 'sundials
-            os=centos7 target=:86_64_v3', 'superlu-dist os=centos7 target=:86_64_v3', 'tasmanian
-            os=centos7 target=:86_64_v3', 'tau os=centos7 target=:86_64_v3', 'upcxx os=centos7
-            target=:86_64_v3', 'vtk-h os=centos7 target=:86_64_v3', 'zfp os=centos7 target=:86_64_v3']
+      - match: ['adios2 os=centos7 target=:x86_64_v3', 'amrex os=centos7 target=:x86_64_v3',
+          'archer os=centos7 target=:x86_64_v3', 'ascent os=centos7 target=:x86_64_v3',
+          'axom os=centos7 target=:x86_64_v3', 'binutils os=centos7 target=:x86_64_v3',
+          'blaspp os=centos7 target=:x86_64_v3', 'boost os=centos7 target=:x86_64_v3', 'butterflypack
+            os=centos7 target=:x86_64_v3', 'cabana os=centos7 target=:x86_64_v3', 'caliper
+            os=centos7 target=:x86_64_v3', 'camp os=centos7 target=:x86_64_v3', 'chai os=centos7
+            target=:x86_64_v3', 'conduit os=centos7 target=:x86_64_v3', 'datatransferkit
+            os=centos7 target=:x86_64_v3', 'faodel os=centos7 target=:x86_64_v3', 'ffmpeg
+            os=centos7 target=:x86_64_v3', 'fftw os=centos7 target=:x86_64_v3', 'fortrilinos
+            os=centos7 target=:x86_64_v3', 'gperftools os=centos7 target=:x86_64_v3', 'gptune
+            os=centos7 target=:x86_64_v3', 'hdf5 os=centos7 target=:x86_64_v3', 'heffte
+            os=centos7 target=:x86_64_v3', 'hpctoolkit os=centos7 target=:x86_64_v3', 'hwloc
+            os=centos7 target=:x86_64_v3', 'hypre os=centos7 target=:x86_64_v3', 'kokkos
+            os=centos7 target=:x86_64_v3', 'lammps os=centos7 target=:x86_64_v3', 'lapackpp
+            os=centos7 target=:x86_64_v3', 'legion os=centos7 target=:x86_64_v3', 'libzmq
+            os=centos7 target=:x86_64_v3', 'llvm-openmp-ompt os=centos7 target=:x86_64_v3',
+          'mbedtls os=centos7 target=:x86_64_v3', 'netlib-scalapack os=centos7 target=:x86_64_v3',
+          'omega-h os=centos7 target=:x86_64_v3', 'openmpi os=centos7 target=:x86_64_v3',
+          'openpmd-api os=centos7 target=:x86_64_v3', 'pagmo2 os=centos7 target=:x86_64_v3',
+          'papyrus os=centos7 target=:x86_64_v3', 'parsec os=centos7 target=:x86_64_v3',
+          'pdt os=centos7 target=:x86_64_v3', 'petsc os=centos7 target=:x86_64_v3', 'pumi
+            os=centos7 target=:x86_64_v3', 'py-ipython-genutils os=centos7 target=:x86_64_v3',
+          'py-petsc4py os=centos7 target=:x86_64_v3', 'py-scipy os=centos7 target=:x86_64_v3',
+          'py-statsmodels os=centos7 target=:x86_64_v3', 'py-warlock os=centos7 target=:x86_64_v3',
+          'py-warpx os=centos7 target=:x86_64_v3', 'pygmo os=centos7 target=:x86_64_v3',
+          'slepc os=centos7 target=:x86_64_v3', 'slurm os=centos7 target=:x86_64_v3', 'strumpack
+            os=centos7 target=:x86_64_v3', 'sundials os=centos7 target=:x86_64_v3', 'superlu-dist
+            os=centos7 target=:x86_64_v3', 'tasmanian os=centos7 target=:x86_64_v3', 'tau
+            os=centos7 target=:x86_64_v3', 'upcxx os=centos7 target=:x86_64_v3', 'vtk-h
+            os=centos7 target=:x86_64_v3', 'zfp os=centos7 target=:x86_64_v3']
         runner-attributes:
           image: *id001
           tags: [spack, medium, x86_64_v3]
@@ -350,36 +353,36 @@ spack:
           image: *id001
           tags: [spack, medium, graviton]
           variables: *id008
-      - match: ['adios2 os=fedora36 target=:86_64_v3', 'amrex os=fedora36 target=:86_64_v3',
-          'archer os=fedora36 target=:86_64_v3', 'ascent os=fedora36 target=:86_64_v3',
-          'axom os=fedora36 target=:86_64_v3', 'binutils os=fedora36 target=:86_64_v3',
-          'blaspp os=fedora36 target=:86_64_v3', 'boost os=fedora36 target=:86_64_v3', 'butterflypack
-            os=fedora36 target=:86_64_v3', 'cabana os=fedora36 target=:86_64_v3', 'caliper
-            os=fedora36 target=:86_64_v3', 'camp os=fedora36 target=:86_64_v3', 'chai os=fedora36
-            target=:86_64_v3', 'conduit os=fedora36 target=:86_64_v3', 'datatransferkit
-            os=fedora36 target=:86_64_v3', 'faodel os=fedora36 target=:86_64_v3', 'ffmpeg
-            os=fedora36 target=:86_64_v3', 'fftw os=fedora36 target=:86_64_v3', 'fortrilinos
-            os=fedora36 target=:86_64_v3', 'gperftools os=fedora36 target=:86_64_v3', 'gptune
-            os=fedora36 target=:86_64_v3', 'hdf5 os=fedora36 target=:86_64_v3', 'heffte
-            os=fedora36 target=:86_64_v3', 'hpctoolkit os=fedora36 target=:86_64_v3', 'hwloc
-            os=fedora36 target=:86_64_v3', 'hypre os=fedora36 target=:86_64_v3', 'kokkos
-            os=fedora36 target=:86_64_v3', 'lammps os=fedora36 target=:86_64_v3', 'lapackpp
-            os=fedora36 target=:86_64_v3', 'legion os=fedora36 target=:86_64_v3', 'libzmq
-            os=fedora36 target=:86_64_v3', 'llvm-openmp-ompt os=fedora36 target=:86_64_v3',
-          'mbedtls os=fedora36 target=:86_64_v3', 'netlib-scalapack os=fedora36 target=:86_64_v3',
-          'omega-h os=fedora36 target=:86_64_v3', 'openmpi os=fedora36 target=:86_64_v3',
-          'openpmd-api os=fedora36 target=:86_64_v3', 'pagmo2 os=fedora36 target=:86_64_v3',
-          'papyrus os=fedora36 target=:86_64_v3', 'parsec os=fedora36 target=:86_64_v3',
-          'pdt os=fedora36 target=:86_64_v3', 'petsc os=fedora36 target=:86_64_v3', 'pumi
-            os=fedora36 target=:86_64_v3', 'py-ipython-genutils os=fedora36 target=:86_64_v3',
-          'py-petsc4py os=fedora36 target=:86_64_v3', 'py-scipy os=fedora36 target=:86_64_v3',
-          'py-statsmodels os=fedora36 target=:86_64_v3', 'py-warlock os=fedora36 target=:86_64_v3',
-          'py-warpx os=fedora36 target=:86_64_v3', 'pygmo os=fedora36 target=:86_64_v3',
-          'slepc os=fedora36 target=:86_64_v3', 'slurm os=fedora36 target=:86_64_v3', 'strumpack
-            os=fedora36 target=:86_64_v3', 'sundials os=fedora36 target=:86_64_v3', 'superlu-dist
-            os=fedora36 target=:86_64_v3', 'tasmanian os=fedora36 target=:86_64_v3', 'tau
-            os=fedora36 target=:86_64_v3', 'upcxx os=fedora36 target=:86_64_v3', 'vtk-h
-            os=fedora36 target=:86_64_v3', 'zfp os=fedora36 target=:86_64_v3']
+      - match: ['adios2 os=fedora36 target=:x86_64_v3', 'amrex os=fedora36 target=:x86_64_v3',
+          'archer os=fedora36 target=:x86_64_v3', 'ascent os=fedora36 target=:x86_64_v3',
+          'axom os=fedora36 target=:x86_64_v3', 'binutils os=fedora36 target=:x86_64_v3',
+          'blaspp os=fedora36 target=:x86_64_v3', 'boost os=fedora36 target=:x86_64_v3',
+          'butterflypack os=fedora36 target=:x86_64_v3', 'cabana os=fedora36 target=:x86_64_v3',
+          'caliper os=fedora36 target=:x86_64_v3', 'camp os=fedora36 target=:x86_64_v3',
+          'chai os=fedora36 target=:x86_64_v3', 'conduit os=fedora36 target=:x86_64_v3',
+          'datatransferkit os=fedora36 target=:x86_64_v3', 'faodel os=fedora36 target=:x86_64_v3',
+          'ffmpeg os=fedora36 target=:x86_64_v3', 'fftw os=fedora36 target=:x86_64_v3',
+          'fortrilinos os=fedora36 target=:x86_64_v3', 'gperftools os=fedora36 target=:x86_64_v3',
+          'gptune os=fedora36 target=:x86_64_v3', 'hdf5 os=fedora36 target=:x86_64_v3',
+          'heffte os=fedora36 target=:x86_64_v3', 'hpctoolkit os=fedora36 target=:x86_64_v3',
+          'hwloc os=fedora36 target=:x86_64_v3', 'hypre os=fedora36 target=:x86_64_v3',
+          'kokkos os=fedora36 target=:x86_64_v3', 'lammps os=fedora36 target=:x86_64_v3',
+          'lapackpp os=fedora36 target=:x86_64_v3', 'legion os=fedora36 target=:x86_64_v3',
+          'libzmq os=fedora36 target=:x86_64_v3', 'llvm-openmp-ompt os=fedora36 target=:x86_64_v3',
+          'mbedtls os=fedora36 target=:x86_64_v3', 'netlib-scalapack os=fedora36 target=:x86_64_v3',
+          'omega-h os=fedora36 target=:x86_64_v3', 'openmpi os=fedora36 target=:x86_64_v3',
+          'openpmd-api os=fedora36 target=:x86_64_v3', 'pagmo2 os=fedora36 target=:x86_64_v3',
+          'papyrus os=fedora36 target=:x86_64_v3', 'parsec os=fedora36 target=:x86_64_v3',
+          'pdt os=fedora36 target=:x86_64_v3', 'petsc os=fedora36 target=:x86_64_v3', 'pumi
+            os=fedora36 target=:x86_64_v3', 'py-ipython-genutils os=fedora36 target=:x86_64_v3',
+          'py-petsc4py os=fedora36 target=:x86_64_v3', 'py-scipy os=fedora36 target=:x86_64_v3',
+          'py-statsmodels os=fedora36 target=:x86_64_v3', 'py-warlock os=fedora36 target=:x86_64_v3',
+          'py-warpx os=fedora36 target=:x86_64_v3', 'pygmo os=fedora36 target=:x86_64_v3',
+          'slepc os=fedora36 target=:x86_64_v3', 'slurm os=fedora36 target=:x86_64_v3',
+          'strumpack os=fedora36 target=:x86_64_v3', 'sundials os=fedora36 target=:x86_64_v3',
+          'superlu-dist os=fedora36 target=:x86_64_v3', 'tasmanian os=fedora36 target=:x86_64_v3',
+          'tau os=fedora36 target=:x86_64_v3', 'upcxx os=fedora36 target=:x86_64_v3', 'vtk-h
+            os=fedora36 target=:x86_64_v3', 'zfp os=fedora36 target=:x86_64_v3']
         runner-attributes:
           image: *id003
           tags: [spack, medium, x86_64_v3]
@@ -418,39 +421,40 @@ spack:
           image: *id003
           tags: [spack, medium, graviton]
           variables: *id008
-      - match: ['adios2 os=opensuse_leap15 target=:86_64_v3', 'amrex os=opensuse_leap15
-            target=:86_64_v3', 'archer os=opensuse_leap15 target=:86_64_v3', 'ascent os=opensuse_leap15
-            target=:86_64_v3', 'axom os=opensuse_leap15 target=:86_64_v3', 'binutils os=opensuse_leap15
-            target=:86_64_v3', 'blaspp os=opensuse_leap15 target=:86_64_v3', 'boost os=opensuse_leap15
-            target=:86_64_v3', 'butterflypack os=opensuse_leap15 target=:86_64_v3', 'cabana
-            os=opensuse_leap15 target=:86_64_v3', 'caliper os=opensuse_leap15 target=:86_64_v3',
-          'camp os=opensuse_leap15 target=:86_64_v3', 'chai os=opensuse_leap15 target=:86_64_v3',
-          'conduit os=opensuse_leap15 target=:86_64_v3', 'datatransferkit os=opensuse_leap15
-            target=:86_64_v3', 'faodel os=opensuse_leap15 target=:86_64_v3', 'ffmpeg os=opensuse_leap15
-            target=:86_64_v3', 'fftw os=opensuse_leap15 target=:86_64_v3', 'fortrilinos
-            os=opensuse_leap15 target=:86_64_v3', 'gperftools os=opensuse_leap15 target=:86_64_v3',
-          'gptune os=opensuse_leap15 target=:86_64_v3', 'hdf5 os=opensuse_leap15 target=:86_64_v3',
-          'heffte os=opensuse_leap15 target=:86_64_v3', 'hpctoolkit os=opensuse_leap15 target=:86_64_v3',
-          'hwloc os=opensuse_leap15 target=:86_64_v3', 'hypre os=opensuse_leap15 target=:86_64_v3',
-          'kokkos os=opensuse_leap15 target=:86_64_v3', 'lammps os=opensuse_leap15 target=:86_64_v3',
-          'lapackpp os=opensuse_leap15 target=:86_64_v3', 'legion os=opensuse_leap15 target=:86_64_v3',
-          'libzmq os=opensuse_leap15 target=:86_64_v3', 'llvm-openmp-ompt os=opensuse_leap15
-            target=:86_64_v3', 'mbedtls os=opensuse_leap15 target=:86_64_v3', 'netlib-scalapack
-            os=opensuse_leap15 target=:86_64_v3', 'omega-h os=opensuse_leap15 target=:86_64_v3',
-          'openmpi os=opensuse_leap15 target=:86_64_v3', 'openpmd-api os=opensuse_leap15
-            target=:86_64_v3', 'pagmo2 os=opensuse_leap15 target=:86_64_v3', 'papyrus os=opensuse_leap15
-            target=:86_64_v3', 'parsec os=opensuse_leap15 target=:86_64_v3', 'pdt os=opensuse_leap15
-            target=:86_64_v3', 'petsc os=opensuse_leap15 target=:86_64_v3', 'pumi os=opensuse_leap15
-            target=:86_64_v3', 'py-ipython-genutils os=opensuse_leap15 target=:86_64_v3',
-          'py-petsc4py os=opensuse_leap15 target=:86_64_v3', 'py-scipy os=opensuse_leap15
-            target=:86_64_v3', 'py-statsmodels os=opensuse_leap15 target=:86_64_v3', 'py-warlock
-            os=opensuse_leap15 target=:86_64_v3', 'py-warpx os=opensuse_leap15 target=:86_64_v3',
-          'pygmo os=opensuse_leap15 target=:86_64_v3', 'slepc os=opensuse_leap15 target=:86_64_v3',
-          'slurm os=opensuse_leap15 target=:86_64_v3', 'strumpack os=opensuse_leap15 target=:86_64_v3',
-          'sundials os=opensuse_leap15 target=:86_64_v3', 'superlu-dist os=opensuse_leap15
-            target=:86_64_v3', 'tasmanian os=opensuse_leap15 target=:86_64_v3', 'tau os=opensuse_leap15
-            target=:86_64_v3', 'upcxx os=opensuse_leap15 target=:86_64_v3', 'vtk-h os=opensuse_leap15
-            target=:86_64_v3', 'zfp os=opensuse_leap15 target=:86_64_v3']
+      - match: ['adios2 os=opensuse_leap15 target=:x86_64_v3', 'amrex os=opensuse_leap15
+            target=:x86_64_v3', 'archer os=opensuse_leap15 target=:x86_64_v3', 'ascent os=opensuse_leap15
+            target=:x86_64_v3', 'axom os=opensuse_leap15 target=:x86_64_v3', 'binutils os=opensuse_leap15
+            target=:x86_64_v3', 'blaspp os=opensuse_leap15 target=:x86_64_v3', 'boost os=opensuse_leap15
+            target=:x86_64_v3', 'butterflypack os=opensuse_leap15 target=:x86_64_v3', 'cabana
+            os=opensuse_leap15 target=:x86_64_v3', 'caliper os=opensuse_leap15 target=:x86_64_v3',
+          'camp os=opensuse_leap15 target=:x86_64_v3', 'chai os=opensuse_leap15 target=:x86_64_v3',
+          'conduit os=opensuse_leap15 target=:x86_64_v3', 'datatransferkit os=opensuse_leap15
+            target=:x86_64_v3', 'faodel os=opensuse_leap15 target=:x86_64_v3', 'ffmpeg os=opensuse_leap15
+            target=:x86_64_v3', 'fftw os=opensuse_leap15 target=:x86_64_v3', 'fortrilinos
+            os=opensuse_leap15 target=:x86_64_v3', 'gperftools os=opensuse_leap15 target=:x86_64_v3',
+          'gptune os=opensuse_leap15 target=:x86_64_v3', 'hdf5 os=opensuse_leap15 target=:x86_64_v3',
+          'heffte os=opensuse_leap15 target=:x86_64_v3', 'hpctoolkit os=opensuse_leap15
+            target=:x86_64_v3', 'hwloc os=opensuse_leap15 target=:x86_64_v3', 'hypre os=opensuse_leap15
+            target=:x86_64_v3', 'kokkos os=opensuse_leap15 target=:x86_64_v3', 'lammps os=opensuse_leap15
+            target=:x86_64_v3', 'lapackpp os=opensuse_leap15 target=:x86_64_v3', 'legion
+            os=opensuse_leap15 target=:x86_64_v3', 'libzmq os=opensuse_leap15 target=:x86_64_v3',
+          'llvm-openmp-ompt os=opensuse_leap15 target=:x86_64_v3', 'mbedtls os=opensuse_leap15
+            target=:x86_64_v3', 'netlib-scalapack os=opensuse_leap15 target=:x86_64_v3',
+          'omega-h os=opensuse_leap15 target=:x86_64_v3', 'openmpi os=opensuse_leap15 target=:x86_64_v3',
+          'openpmd-api os=opensuse_leap15 target=:x86_64_v3', 'pagmo2 os=opensuse_leap15
+            target=:x86_64_v3', 'papyrus os=opensuse_leap15 target=:x86_64_v3', 'parsec
+            os=opensuse_leap15 target=:x86_64_v3', 'pdt os=opensuse_leap15 target=:x86_64_v3',
+          'petsc os=opensuse_leap15 target=:x86_64_v3', 'pumi os=opensuse_leap15 target=:x86_64_v3',
+          'py-ipython-genutils os=opensuse_leap15 target=:x86_64_v3', 'py-petsc4py os=opensuse_leap15
+            target=:x86_64_v3', 'py-scipy os=opensuse_leap15 target=:x86_64_v3', 'py-statsmodels
+            os=opensuse_leap15 target=:x86_64_v3', 'py-warlock os=opensuse_leap15 target=:x86_64_v3',
+          'py-warpx os=opensuse_leap15 target=:x86_64_v3', 'pygmo os=opensuse_leap15 target=:x86_64_v3',
+          'slepc os=opensuse_leap15 target=:x86_64_v3', 'slurm os=opensuse_leap15 target=:x86_64_v3',
+          'strumpack os=opensuse_leap15 target=:x86_64_v3', 'sundials os=opensuse_leap15
+            target=:x86_64_v3', 'superlu-dist os=opensuse_leap15 target=:x86_64_v3', 'tasmanian
+            os=opensuse_leap15 target=:x86_64_v3', 'tau os=opensuse_leap15 target=:x86_64_v3',
+          'upcxx os=opensuse_leap15 target=:x86_64_v3', 'vtk-h os=opensuse_leap15 target=:x86_64_v3',
+          'zfp os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
           image: *id004
           tags: [spack, medium, x86_64_v3]
@@ -492,36 +496,36 @@ spack:
           image: *id004
           tags: [spack, medium, graviton]
           variables: *id008
-      - match: ['adios2 os=almalinux8 target=:86_64_v3', 'amrex os=almalinux8 target=:86_64_v3',
-          'archer os=almalinux8 target=:86_64_v3', 'ascent os=almalinux8 target=:86_64_v3',
-          'axom os=almalinux8 target=:86_64_v3', 'binutils os=almalinux8 target=:86_64_v3',
-          'blaspp os=almalinux8 target=:86_64_v3', 'boost os=almalinux8 target=:86_64_v3',
-          'butterflypack os=almalinux8 target=:86_64_v3', 'cabana os=almalinux8 target=:86_64_v3',
-          'caliper os=almalinux8 target=:86_64_v3', 'camp os=almalinux8 target=:86_64_v3',
-          'chai os=almalinux8 target=:86_64_v3', 'conduit os=almalinux8 target=:86_64_v3',
-          'datatransferkit os=almalinux8 target=:86_64_v3', 'faodel os=almalinux8 target=:86_64_v3',
-          'ffmpeg os=almalinux8 target=:86_64_v3', 'fftw os=almalinux8 target=:86_64_v3',
-          'fortrilinos os=almalinux8 target=:86_64_v3', 'gperftools os=almalinux8 target=:86_64_v3',
-          'gptune os=almalinux8 target=:86_64_v3', 'hdf5 os=almalinux8 target=:86_64_v3',
-          'heffte os=almalinux8 target=:86_64_v3', 'hpctoolkit os=almalinux8 target=:86_64_v3',
-          'hwloc os=almalinux8 target=:86_64_v3', 'hypre os=almalinux8 target=:86_64_v3',
-          'kokkos os=almalinux8 target=:86_64_v3', 'lammps os=almalinux8 target=:86_64_v3',
-          'lapackpp os=almalinux8 target=:86_64_v3', 'legion os=almalinux8 target=:86_64_v3',
-          'libzmq os=almalinux8 target=:86_64_v3', 'llvm-openmp-ompt os=almalinux8 target=:86_64_v3',
-          'mbedtls os=almalinux8 target=:86_64_v3', 'netlib-scalapack os=almalinux8 target=:86_64_v3',
-          'omega-h os=almalinux8 target=:86_64_v3', 'openmpi os=almalinux8 target=:86_64_v3',
-          'openpmd-api os=almalinux8 target=:86_64_v3', 'pagmo2 os=almalinux8 target=:86_64_v3',
-          'papyrus os=almalinux8 target=:86_64_v3', 'parsec os=almalinux8 target=:86_64_v3',
-          'pdt os=almalinux8 target=:86_64_v3', 'petsc os=almalinux8 target=:86_64_v3',
-          'pumi os=almalinux8 target=:86_64_v3', 'py-ipython-genutils os=almalinux8 target=:86_64_v3',
-          'py-petsc4py os=almalinux8 target=:86_64_v3', 'py-scipy os=almalinux8 target=:86_64_v3',
-          'py-statsmodels os=almalinux8 target=:86_64_v3', 'py-warlock os=almalinux8 target=:86_64_v3',
-          'py-warpx os=almalinux8 target=:86_64_v3', 'pygmo os=almalinux8 target=:86_64_v3',
-          'slepc os=almalinux8 target=:86_64_v3', 'slurm os=almalinux8 target=:86_64_v3',
-          'strumpack os=almalinux8 target=:86_64_v3', 'sundials os=almalinux8 target=:86_64_v3',
-          'superlu-dist os=almalinux8 target=:86_64_v3', 'tasmanian os=almalinux8 target=:86_64_v3',
-          'tau os=almalinux8 target=:86_64_v3', 'upcxx os=almalinux8 target=:86_64_v3',
-          'vtk-h os=almalinux8 target=:86_64_v3', 'zfp os=almalinux8 target=:86_64_v3']
+      - match: ['adios2 os=almalinux8 target=:x86_64_v3', 'amrex os=almalinux8 target=:x86_64_v3',
+          'archer os=almalinux8 target=:x86_64_v3', 'ascent os=almalinux8 target=:x86_64_v3',
+          'axom os=almalinux8 target=:x86_64_v3', 'binutils os=almalinux8 target=:x86_64_v3',
+          'blaspp os=almalinux8 target=:x86_64_v3', 'boost os=almalinux8 target=:x86_64_v3',
+          'butterflypack os=almalinux8 target=:x86_64_v3', 'cabana os=almalinux8 target=:x86_64_v3',
+          'caliper os=almalinux8 target=:x86_64_v3', 'camp os=almalinux8 target=:x86_64_v3',
+          'chai os=almalinux8 target=:x86_64_v3', 'conduit os=almalinux8 target=:x86_64_v3',
+          'datatransferkit os=almalinux8 target=:x86_64_v3', 'faodel os=almalinux8 target=:x86_64_v3',
+          'ffmpeg os=almalinux8 target=:x86_64_v3', 'fftw os=almalinux8 target=:x86_64_v3',
+          'fortrilinos os=almalinux8 target=:x86_64_v3', 'gperftools os=almalinux8 target=:x86_64_v3',
+          'gptune os=almalinux8 target=:x86_64_v3', 'hdf5 os=almalinux8 target=:x86_64_v3',
+          'heffte os=almalinux8 target=:x86_64_v3', 'hpctoolkit os=almalinux8 target=:x86_64_v3',
+          'hwloc os=almalinux8 target=:x86_64_v3', 'hypre os=almalinux8 target=:x86_64_v3',
+          'kokkos os=almalinux8 target=:x86_64_v3', 'lammps os=almalinux8 target=:x86_64_v3',
+          'lapackpp os=almalinux8 target=:x86_64_v3', 'legion os=almalinux8 target=:x86_64_v3',
+          'libzmq os=almalinux8 target=:x86_64_v3', 'llvm-openmp-ompt os=almalinux8 target=:x86_64_v3',
+          'mbedtls os=almalinux8 target=:x86_64_v3', 'netlib-scalapack os=almalinux8 target=:x86_64_v3',
+          'omega-h os=almalinux8 target=:x86_64_v3', 'openmpi os=almalinux8 target=:x86_64_v3',
+          'openpmd-api os=almalinux8 target=:x86_64_v3', 'pagmo2 os=almalinux8 target=:x86_64_v3',
+          'papyrus os=almalinux8 target=:x86_64_v3', 'parsec os=almalinux8 target=:x86_64_v3',
+          'pdt os=almalinux8 target=:x86_64_v3', 'petsc os=almalinux8 target=:x86_64_v3',
+          'pumi os=almalinux8 target=:x86_64_v3', 'py-ipython-genutils os=almalinux8 target=:x86_64_v3',
+          'py-petsc4py os=almalinux8 target=:x86_64_v3', 'py-scipy os=almalinux8 target=:x86_64_v3',
+          'py-statsmodels os=almalinux8 target=:x86_64_v3', 'py-warlock os=almalinux8 target=:x86_64_v3',
+          'py-warpx os=almalinux8 target=:x86_64_v3', 'pygmo os=almalinux8 target=:x86_64_v3',
+          'slepc os=almalinux8 target=:x86_64_v3', 'slurm os=almalinux8 target=:x86_64_v3',
+          'strumpack os=almalinux8 target=:x86_64_v3', 'sundials os=almalinux8 target=:x86_64_v3',
+          'superlu-dist os=almalinux8 target=:x86_64_v3', 'tasmanian os=almalinux8 target=:x86_64_v3',
+          'tau os=almalinux8 target=:x86_64_v3', 'upcxx os=almalinux8 target=:x86_64_v3',
+          'vtk-h os=almalinux8 target=:x86_64_v3', 'zfp os=almalinux8 target=:x86_64_v3']
         runner-attributes:
           image: *id005
           tags: [spack, medium, x86_64_v3]
@@ -560,36 +564,37 @@ spack:
           image: *id005
           tags: [spack, medium, graviton]
           variables: *id008
-      - match: ['adios2 os=ubuntu20.04 target=:86_64_v3', 'amrex os=ubuntu20.04 target=:86_64_v3',
-          'archer os=ubuntu20.04 target=:86_64_v3', 'ascent os=ubuntu20.04 target=:86_64_v3',
-          'axom os=ubuntu20.04 target=:86_64_v3', 'binutils os=ubuntu20.04 target=:86_64_v3',
-          'blaspp os=ubuntu20.04 target=:86_64_v3', 'boost os=ubuntu20.04 target=:86_64_v3',
-          'butterflypack os=ubuntu20.04 target=:86_64_v3', 'cabana os=ubuntu20.04 target=:86_64_v3',
-          'caliper os=ubuntu20.04 target=:86_64_v3', 'camp os=ubuntu20.04 target=:86_64_v3',
-          'chai os=ubuntu20.04 target=:86_64_v3', 'conduit os=ubuntu20.04 target=:86_64_v3',
-          'datatransferkit os=ubuntu20.04 target=:86_64_v3', 'faodel os=ubuntu20.04 target=:86_64_v3',
-          'ffmpeg os=ubuntu20.04 target=:86_64_v3', 'fftw os=ubuntu20.04 target=:86_64_v3',
-          'fortrilinos os=ubuntu20.04 target=:86_64_v3', 'gperftools os=ubuntu20.04 target=:86_64_v3',
-          'gptune os=ubuntu20.04 target=:86_64_v3', 'hdf5 os=ubuntu20.04 target=:86_64_v3',
-          'heffte os=ubuntu20.04 target=:86_64_v3', 'hpctoolkit os=ubuntu20.04 target=:86_64_v3',
-          'hwloc os=ubuntu20.04 target=:86_64_v3', 'hypre os=ubuntu20.04 target=:86_64_v3',
-          'kokkos os=ubuntu20.04 target=:86_64_v3', 'lammps os=ubuntu20.04 target=:86_64_v3',
-          'lapackpp os=ubuntu20.04 target=:86_64_v3', 'legion os=ubuntu20.04 target=:86_64_v3',
-          'libzmq os=ubuntu20.04 target=:86_64_v3', 'llvm-openmp-ompt os=ubuntu20.04 target=:86_64_v3',
-          'mbedtls os=ubuntu20.04 target=:86_64_v3', 'netlib-scalapack os=ubuntu20.04 target=:86_64_v3',
-          'omega-h os=ubuntu20.04 target=:86_64_v3', 'openmpi os=ubuntu20.04 target=:86_64_v3',
-          'openpmd-api os=ubuntu20.04 target=:86_64_v3', 'pagmo2 os=ubuntu20.04 target=:86_64_v3',
-          'papyrus os=ubuntu20.04 target=:86_64_v3', 'parsec os=ubuntu20.04 target=:86_64_v3',
-          'pdt os=ubuntu20.04 target=:86_64_v3', 'petsc os=ubuntu20.04 target=:86_64_v3',
-          'pumi os=ubuntu20.04 target=:86_64_v3', 'py-ipython-genutils os=ubuntu20.04 target=:86_64_v3',
-          'py-petsc4py os=ubuntu20.04 target=:86_64_v3', 'py-scipy os=ubuntu20.04 target=:86_64_v3',
-          'py-statsmodels os=ubuntu20.04 target=:86_64_v3', 'py-warlock os=ubuntu20.04 target=:86_64_v3',
-          'py-warpx os=ubuntu20.04 target=:86_64_v3', 'pygmo os=ubuntu20.04 target=:86_64_v3',
-          'slepc os=ubuntu20.04 target=:86_64_v3', 'slurm os=ubuntu20.04 target=:86_64_v3',
-          'strumpack os=ubuntu20.04 target=:86_64_v3', 'sundials os=ubuntu20.04 target=:86_64_v3',
-          'superlu-dist os=ubuntu20.04 target=:86_64_v3', 'tasmanian os=ubuntu20.04 target=:86_64_v3',
-          'tau os=ubuntu20.04 target=:86_64_v3', 'upcxx os=ubuntu20.04 target=:86_64_v3',
-          'vtk-h os=ubuntu20.04 target=:86_64_v3', 'zfp os=ubuntu20.04 target=:86_64_v3']
+      - match: ['adios2 os=ubuntu20.04 target=:x86_64_v3', 'amrex os=ubuntu20.04 target=:x86_64_v3',
+          'archer os=ubuntu20.04 target=:x86_64_v3', 'ascent os=ubuntu20.04 target=:x86_64_v3',
+          'axom os=ubuntu20.04 target=:x86_64_v3', 'binutils os=ubuntu20.04 target=:x86_64_v3',
+          'blaspp os=ubuntu20.04 target=:x86_64_v3', 'boost os=ubuntu20.04 target=:x86_64_v3',
+          'butterflypack os=ubuntu20.04 target=:x86_64_v3', 'cabana os=ubuntu20.04 target=:x86_64_v3',
+          'caliper os=ubuntu20.04 target=:x86_64_v3', 'camp os=ubuntu20.04 target=:x86_64_v3',
+          'chai os=ubuntu20.04 target=:x86_64_v3', 'conduit os=ubuntu20.04 target=:x86_64_v3',
+          'datatransferkit os=ubuntu20.04 target=:x86_64_v3', 'faodel os=ubuntu20.04 target=:x86_64_v3',
+          'ffmpeg os=ubuntu20.04 target=:x86_64_v3', 'fftw os=ubuntu20.04 target=:x86_64_v3',
+          'fortrilinos os=ubuntu20.04 target=:x86_64_v3', 'gperftools os=ubuntu20.04 target=:x86_64_v3',
+          'gptune os=ubuntu20.04 target=:x86_64_v3', 'hdf5 os=ubuntu20.04 target=:x86_64_v3',
+          'heffte os=ubuntu20.04 target=:x86_64_v3', 'hpctoolkit os=ubuntu20.04 target=:x86_64_v3',
+          'hwloc os=ubuntu20.04 target=:x86_64_v3', 'hypre os=ubuntu20.04 target=:x86_64_v3',
+          'kokkos os=ubuntu20.04 target=:x86_64_v3', 'lammps os=ubuntu20.04 target=:x86_64_v3',
+          'lapackpp os=ubuntu20.04 target=:x86_64_v3', 'legion os=ubuntu20.04 target=:x86_64_v3',
+          'libzmq os=ubuntu20.04 target=:x86_64_v3', 'llvm-openmp-ompt os=ubuntu20.04 target=:x86_64_v3',
+          'mbedtls os=ubuntu20.04 target=:x86_64_v3', 'netlib-scalapack os=ubuntu20.04 target=:x86_64_v3',
+          'omega-h os=ubuntu20.04 target=:x86_64_v3', 'openmpi os=ubuntu20.04 target=:x86_64_v3',
+          'openpmd-api os=ubuntu20.04 target=:x86_64_v3', 'pagmo2 os=ubuntu20.04 target=:x86_64_v3',
+          'papyrus os=ubuntu20.04 target=:x86_64_v3', 'parsec os=ubuntu20.04 target=:x86_64_v3',
+          'pdt os=ubuntu20.04 target=:x86_64_v3', 'petsc os=ubuntu20.04 target=:x86_64_v3',
+          'pumi os=ubuntu20.04 target=:x86_64_v3', 'py-ipython-genutils os=ubuntu20.04 target=:x86_64_v3',
+          'py-petsc4py os=ubuntu20.04 target=:x86_64_v3', 'py-scipy os=ubuntu20.04 target=:x86_64_v3',
+          'py-statsmodels os=ubuntu20.04 target=:x86_64_v3', 'py-warlock os=ubuntu20.04
+            target=:x86_64_v3', 'py-warpx os=ubuntu20.04 target=:x86_64_v3', 'pygmo os=ubuntu20.04
+            target=:x86_64_v3', 'slepc os=ubuntu20.04 target=:x86_64_v3', 'slurm os=ubuntu20.04
+            target=:x86_64_v3', 'strumpack os=ubuntu20.04 target=:x86_64_v3', 'sundials
+            os=ubuntu20.04 target=:x86_64_v3', 'superlu-dist os=ubuntu20.04 target=:x86_64_v3',
+          'tasmanian os=ubuntu20.04 target=:x86_64_v3', 'tau os=ubuntu20.04 target=:x86_64_v3',
+          'upcxx os=ubuntu20.04 target=:x86_64_v3', 'vtk-h os=ubuntu20.04 target=:x86_64_v3',
+          'zfp os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
           image: *id006
           tags: [spack, medium, x86_64_v3]
@@ -628,31 +633,32 @@ spack:
           image: *id006
           tags: [spack, medium, graviton]
           variables: *id008
-      - match: ['alsa-lib os=centos7 target=:86_64_v3', 'ant os=centos7 target=:86_64_v3',
-          'antlr os=centos7 target=:86_64_v3', 'argobots os=centos7 target=:86_64_v3', 'automake
-            os=centos7 target=:86_64_v3', 'berkeley-db os=centos7 target=:86_64_v3', 'bison
-            os=centos7 target=:86_64_v3', 'blt os=centos7 target=:86_64_v3', 'cmake os=centos7
-            target=:86_64_v3', 'curl os=centos7 target=:86_64_v3', 'darshan-util os=centos7
-            target=:86_64_v3', 'diffutils os=centos7 target=:86_64_v3', 'exmcutils os=centos7
-            target=:86_64_v3', 'expat os=centos7 target=:86_64_v3', 'flit os=centos7 target=:86_64_v3',
-          'freetype os=centos7 target=:86_64_v3', 'gdbm os=centos7 target=:86_64_v3', 'gotcha
-            os=centos7 target=:86_64_v3', 'hpcviewer os=centos7 target=:86_64_v3', 'jansson
-            os=centos7 target=:86_64_v3', 'json-c os=centos7 target=:86_64_v3', 'libbsd
-            os=centos7 target=:86_64_v3', 'libevent os=centos7 target=:86_64_v3', 'libjpeg-turbo
-            os=centos7 target=:86_64_v3', 'libnrm os=centos7 target=:86_64_v3', 'libpng
-            os=centos7 target=:86_64_v3', 'libunistring os=centos7 target=:86_64_v3', 'lua-luaposix
-            os=centos7 target=:86_64_v3', 'm4 os=centos7 target=:86_64_v3', 'mpfr os=centos7
-            target=:86_64_v3', 'ncurses os=centos7 target=:86_64_v3', 'openblas os=centos7
-            target=:86_64_v3', 'openjdk os=centos7 target=:86_64_v3', 'papi os=centos7 target=:86_64_v3',
-          'parallel-netcdf os=centos7 target=:86_64_v3', 'pcre2 os=centos7 target=:86_64_v3',
-          'perl-data-dumper os=centos7 target=:86_64_v3', 'pkgconf os=centos7 target=:86_64_v3',
-          'py-alembic os=centos7 target=:86_64_v3', 'py-idna os=centos7 target=:86_64_v3',
-          'py-testpath os=centos7 target=:86_64_v3', 'qhull os=centos7 target=:86_64_v3',
-          'snappy os=centos7 target=:86_64_v3', 'swig os=centos7 target=:86_64_v3', 'tar
-            os=centos7 target=:86_64_v3', 'tcl os=centos7 target=:86_64_v3', 'texinfo os=centos7
-            target=:86_64_v3', 'unzip os=centos7 target=:86_64_v3', 'util-linux-uuid os=centos7
-            target=:86_64_v3', 'util-macros os=centos7 target=:86_64_v3', 'yaml-cpp os=centos7
-            target=:86_64_v3', 'zlib os=centos7 target=:86_64_v3', 'zstd os=centos7 target=:86_64_v3']
+      - match: ['alsa-lib os=centos7 target=:x86_64_v3', 'ant os=centos7 target=:x86_64_v3',
+          'antlr os=centos7 target=:x86_64_v3', 'argobots os=centos7 target=:x86_64_v3',
+          'automake os=centos7 target=:x86_64_v3', 'berkeley-db os=centos7 target=:x86_64_v3',
+          'bison os=centos7 target=:x86_64_v3', 'blt os=centos7 target=:x86_64_v3', 'cmake
+            os=centos7 target=:x86_64_v3', 'curl os=centos7 target=:x86_64_v3', 'darshan-util
+            os=centos7 target=:x86_64_v3', 'diffutils os=centos7 target=:x86_64_v3', 'exmcutils
+            os=centos7 target=:x86_64_v3', 'expat os=centos7 target=:x86_64_v3', 'flit os=centos7
+            target=:x86_64_v3', 'freetype os=centos7 target=:x86_64_v3', 'gdbm os=centos7
+            target=:x86_64_v3', 'gotcha os=centos7 target=:x86_64_v3', 'hpcviewer os=centos7
+            target=:x86_64_v3', 'jansson os=centos7 target=:x86_64_v3', 'json-c os=centos7
+            target=:x86_64_v3', 'libbsd os=centos7 target=:x86_64_v3', 'libevent os=centos7
+            target=:x86_64_v3', 'libjpeg-turbo os=centos7 target=:x86_64_v3', 'libnrm os=centos7
+            target=:x86_64_v3', 'libpng os=centos7 target=:x86_64_v3', 'libunistring os=centos7
+            target=:x86_64_v3', 'lua-luaposix os=centos7 target=:x86_64_v3', 'm4 os=centos7
+            target=:x86_64_v3', 'mpfr os=centos7 target=:x86_64_v3', 'ncurses os=centos7
+            target=:x86_64_v3', 'openblas os=centos7 target=:x86_64_v3', 'openjdk os=centos7
+            target=:x86_64_v3', 'papi os=centos7 target=:x86_64_v3', 'parallel-netcdf os=centos7
+            target=:x86_64_v3', 'pcre2 os=centos7 target=:x86_64_v3', 'perl-data-dumper
+            os=centos7 target=:x86_64_v3', 'pkgconf os=centos7 target=:x86_64_v3', 'py-alembic
+            os=centos7 target=:x86_64_v3', 'py-idna os=centos7 target=:x86_64_v3', 'py-testpath
+            os=centos7 target=:x86_64_v3', 'qhull os=centos7 target=:x86_64_v3', 'snappy
+            os=centos7 target=:x86_64_v3', 'swig os=centos7 target=:x86_64_v3', 'tar os=centos7
+            target=:x86_64_v3', 'tcl os=centos7 target=:x86_64_v3', 'texinfo os=centos7
+            target=:x86_64_v3', 'unzip os=centos7 target=:x86_64_v3', 'util-linux-uuid os=centos7
+            target=:x86_64_v3', 'util-macros os=centos7 target=:x86_64_v3', 'yaml-cpp os=centos7
+            target=:x86_64_v3', 'zlib os=centos7 target=:x86_64_v3', 'zstd os=centos7 target=:x86_64_v3']
         runner-attributes:
           image: *id001
           tags: [spack, small, x86_64_v3]
@@ -686,32 +692,33 @@ spack:
           image: *id001
           tags: [spack, small, graviton]
           variables: *id009
-      - match: ['alsa-lib os=fedora36 target=:86_64_v3', 'ant os=fedora36 target=:86_64_v3',
-          'antlr os=fedora36 target=:86_64_v3', 'argobots os=fedora36 target=:86_64_v3',
-          'automake os=fedora36 target=:86_64_v3', 'berkeley-db os=fedora36 target=:86_64_v3',
-          'bison os=fedora36 target=:86_64_v3', 'blt os=fedora36 target=:86_64_v3', 'cmake
-            os=fedora36 target=:86_64_v3', 'curl os=fedora36 target=:86_64_v3', 'darshan-util
-            os=fedora36 target=:86_64_v3', 'diffutils os=fedora36 target=:86_64_v3', 'exmcutils
-            os=fedora36 target=:86_64_v3', 'expat os=fedora36 target=:86_64_v3', 'flit os=fedora36
-            target=:86_64_v3', 'freetype os=fedora36 target=:86_64_v3', 'gdbm os=fedora36
-            target=:86_64_v3', 'gotcha os=fedora36 target=:86_64_v3', 'hpcviewer os=fedora36
-            target=:86_64_v3', 'jansson os=fedora36 target=:86_64_v3', 'json-c os=fedora36
-            target=:86_64_v3', 'libbsd os=fedora36 target=:86_64_v3', 'libevent os=fedora36
-            target=:86_64_v3', 'libjpeg-turbo os=fedora36 target=:86_64_v3', 'libnrm os=fedora36
-            target=:86_64_v3', 'libpng os=fedora36 target=:86_64_v3', 'libunistring os=fedora36
-            target=:86_64_v3', 'lua-luaposix os=fedora36 target=:86_64_v3', 'm4 os=fedora36
-            target=:86_64_v3', 'mpfr os=fedora36 target=:86_64_v3', 'ncurses os=fedora36
-            target=:86_64_v3', 'openblas os=fedora36 target=:86_64_v3', 'openjdk os=fedora36
-            target=:86_64_v3', 'papi os=fedora36 target=:86_64_v3', 'parallel-netcdf os=fedora36
-            target=:86_64_v3', 'pcre2 os=fedora36 target=:86_64_v3', 'perl-data-dumper os=fedora36
-            target=:86_64_v3', 'pkgconf os=fedora36 target=:86_64_v3', 'py-alembic os=fedora36
-            target=:86_64_v3', 'py-idna os=fedora36 target=:86_64_v3', 'py-testpath os=fedora36
-            target=:86_64_v3', 'qhull os=fedora36 target=:86_64_v3', 'snappy os=fedora36
-            target=:86_64_v3', 'swig os=fedora36 target=:86_64_v3', 'tar os=fedora36 target=:86_64_v3',
-          'tcl os=fedora36 target=:86_64_v3', 'texinfo os=fedora36 target=:86_64_v3', 'unzip
-            os=fedora36 target=:86_64_v3', 'util-linux-uuid os=fedora36 target=:86_64_v3',
-          'util-macros os=fedora36 target=:86_64_v3', 'yaml-cpp os=fedora36 target=:86_64_v3',
-          'zlib os=fedora36 target=:86_64_v3', 'zstd os=fedora36 target=:86_64_v3']
+      - match: ['alsa-lib os=fedora36 target=:x86_64_v3', 'ant os=fedora36 target=:x86_64_v3',
+          'antlr os=fedora36 target=:x86_64_v3', 'argobots os=fedora36 target=:x86_64_v3',
+          'automake os=fedora36 target=:x86_64_v3', 'berkeley-db os=fedora36 target=:x86_64_v3',
+          'bison os=fedora36 target=:x86_64_v3', 'blt os=fedora36 target=:x86_64_v3', 'cmake
+            os=fedora36 target=:x86_64_v3', 'curl os=fedora36 target=:x86_64_v3', 'darshan-util
+            os=fedora36 target=:x86_64_v3', 'diffutils os=fedora36 target=:x86_64_v3', 'exmcutils
+            os=fedora36 target=:x86_64_v3', 'expat os=fedora36 target=:x86_64_v3', 'flit
+            os=fedora36 target=:x86_64_v3', 'freetype os=fedora36 target=:x86_64_v3', 'gdbm
+            os=fedora36 target=:x86_64_v3', 'gotcha os=fedora36 target=:x86_64_v3', 'hpcviewer
+            os=fedora36 target=:x86_64_v3', 'jansson os=fedora36 target=:x86_64_v3', 'json-c
+            os=fedora36 target=:x86_64_v3', 'libbsd os=fedora36 target=:x86_64_v3', 'libevent
+            os=fedora36 target=:x86_64_v3', 'libjpeg-turbo os=fedora36 target=:x86_64_v3',
+          'libnrm os=fedora36 target=:x86_64_v3', 'libpng os=fedora36 target=:x86_64_v3',
+          'libunistring os=fedora36 target=:x86_64_v3', 'lua-luaposix os=fedora36 target=:x86_64_v3',
+          'm4 os=fedora36 target=:x86_64_v3', 'mpfr os=fedora36 target=:x86_64_v3', 'ncurses
+            os=fedora36 target=:x86_64_v3', 'openblas os=fedora36 target=:x86_64_v3', 'openjdk
+            os=fedora36 target=:x86_64_v3', 'papi os=fedora36 target=:x86_64_v3', 'parallel-netcdf
+            os=fedora36 target=:x86_64_v3', 'pcre2 os=fedora36 target=:x86_64_v3', 'perl-data-dumper
+            os=fedora36 target=:x86_64_v3', 'pkgconf os=fedora36 target=:x86_64_v3', 'py-alembic
+            os=fedora36 target=:x86_64_v3', 'py-idna os=fedora36 target=:x86_64_v3', 'py-testpath
+            os=fedora36 target=:x86_64_v3', 'qhull os=fedora36 target=:x86_64_v3', 'snappy
+            os=fedora36 target=:x86_64_v3', 'swig os=fedora36 target=:x86_64_v3', 'tar os=fedora36
+            target=:x86_64_v3', 'tcl os=fedora36 target=:x86_64_v3', 'texinfo os=fedora36
+            target=:x86_64_v3', 'unzip os=fedora36 target=:x86_64_v3', 'util-linux-uuid
+            os=fedora36 target=:x86_64_v3', 'util-macros os=fedora36 target=:x86_64_v3',
+          'yaml-cpp os=fedora36 target=:x86_64_v3', 'zlib os=fedora36 target=:x86_64_v3',
+          'zstd os=fedora36 target=:x86_64_v3']
         runner-attributes:
           image: *id003
           tags: [spack, small, x86_64_v3]
@@ -746,36 +753,36 @@ spack:
           image: *id003
           tags: [spack, small, graviton]
           variables: *id009
-      - match: ['alsa-lib os=opensuse_leap15 target=:86_64_v3', 'ant os=opensuse_leap15
-            target=:86_64_v3', 'antlr os=opensuse_leap15 target=:86_64_v3', 'argobots os=opensuse_leap15
-            target=:86_64_v3', 'automake os=opensuse_leap15 target=:86_64_v3', 'berkeley-db
-            os=opensuse_leap15 target=:86_64_v3', 'bison os=opensuse_leap15 target=:86_64_v3',
-          'blt os=opensuse_leap15 target=:86_64_v3', 'cmake os=opensuse_leap15 target=:86_64_v3',
-          'curl os=opensuse_leap15 target=:86_64_v3', 'darshan-util os=opensuse_leap15 target=:86_64_v3',
-          'diffutils os=opensuse_leap15 target=:86_64_v3', 'exmcutils os=opensuse_leap15
-            target=:86_64_v3', 'expat os=opensuse_leap15 target=:86_64_v3', 'flit os=opensuse_leap15
-            target=:86_64_v3', 'freetype os=opensuse_leap15 target=:86_64_v3', 'gdbm os=opensuse_leap15
-            target=:86_64_v3', 'gotcha os=opensuse_leap15 target=:86_64_v3', 'hpcviewer
-            os=opensuse_leap15 target=:86_64_v3', 'jansson os=opensuse_leap15 target=:86_64_v3',
-          'json-c os=opensuse_leap15 target=:86_64_v3', 'libbsd os=opensuse_leap15 target=:86_64_v3',
-          'libevent os=opensuse_leap15 target=:86_64_v3', 'libjpeg-turbo os=opensuse_leap15
-            target=:86_64_v3', 'libnrm os=opensuse_leap15 target=:86_64_v3', 'libpng os=opensuse_leap15
-            target=:86_64_v3', 'libunistring os=opensuse_leap15 target=:86_64_v3', 'lua-luaposix
-            os=opensuse_leap15 target=:86_64_v3', 'm4 os=opensuse_leap15 target=:86_64_v3',
-          'mpfr os=opensuse_leap15 target=:86_64_v3', 'ncurses os=opensuse_leap15 target=:86_64_v3',
-          'openblas os=opensuse_leap15 target=:86_64_v3', 'openjdk os=opensuse_leap15 target=:86_64_v3',
-          'papi os=opensuse_leap15 target=:86_64_v3', 'parallel-netcdf os=opensuse_leap15
-            target=:86_64_v3', 'pcre2 os=opensuse_leap15 target=:86_64_v3', 'perl-data-dumper
-            os=opensuse_leap15 target=:86_64_v3', 'pkgconf os=opensuse_leap15 target=:86_64_v3',
-          'py-alembic os=opensuse_leap15 target=:86_64_v3', 'py-idna os=opensuse_leap15
-            target=:86_64_v3', 'py-testpath os=opensuse_leap15 target=:86_64_v3', 'qhull
-            os=opensuse_leap15 target=:86_64_v3', 'snappy os=opensuse_leap15 target=:86_64_v3',
-          'swig os=opensuse_leap15 target=:86_64_v3', 'tar os=opensuse_leap15 target=:86_64_v3',
-          'tcl os=opensuse_leap15 target=:86_64_v3', 'texinfo os=opensuse_leap15 target=:86_64_v3',
-          'unzip os=opensuse_leap15 target=:86_64_v3', 'util-linux-uuid os=opensuse_leap15
-            target=:86_64_v3', 'util-macros os=opensuse_leap15 target=:86_64_v3', 'yaml-cpp
-            os=opensuse_leap15 target=:86_64_v3', 'zlib os=opensuse_leap15 target=:86_64_v3',
-          'zstd os=opensuse_leap15 target=:86_64_v3']
+      - match: ['alsa-lib os=opensuse_leap15 target=:x86_64_v3', 'ant os=opensuse_leap15
+            target=:x86_64_v3', 'antlr os=opensuse_leap15 target=:x86_64_v3', 'argobots
+            os=opensuse_leap15 target=:x86_64_v3', 'automake os=opensuse_leap15 target=:x86_64_v3',
+          'berkeley-db os=opensuse_leap15 target=:x86_64_v3', 'bison os=opensuse_leap15
+            target=:x86_64_v3', 'blt os=opensuse_leap15 target=:x86_64_v3', 'cmake os=opensuse_leap15
+            target=:x86_64_v3', 'curl os=opensuse_leap15 target=:x86_64_v3', 'darshan-util
+            os=opensuse_leap15 target=:x86_64_v3', 'diffutils os=opensuse_leap15 target=:x86_64_v3',
+          'exmcutils os=opensuse_leap15 target=:x86_64_v3', 'expat os=opensuse_leap15 target=:x86_64_v3',
+          'flit os=opensuse_leap15 target=:x86_64_v3', 'freetype os=opensuse_leap15 target=:x86_64_v3',
+          'gdbm os=opensuse_leap15 target=:x86_64_v3', 'gotcha os=opensuse_leap15 target=:x86_64_v3',
+          'hpcviewer os=opensuse_leap15 target=:x86_64_v3', 'jansson os=opensuse_leap15
+            target=:x86_64_v3', 'json-c os=opensuse_leap15 target=:x86_64_v3', 'libbsd os=opensuse_leap15
+            target=:x86_64_v3', 'libevent os=opensuse_leap15 target=:x86_64_v3', 'libjpeg-turbo
+            os=opensuse_leap15 target=:x86_64_v3', 'libnrm os=opensuse_leap15 target=:x86_64_v3',
+          'libpng os=opensuse_leap15 target=:x86_64_v3', 'libunistring os=opensuse_leap15
+            target=:x86_64_v3', 'lua-luaposix os=opensuse_leap15 target=:x86_64_v3', 'm4
+            os=opensuse_leap15 target=:x86_64_v3', 'mpfr os=opensuse_leap15 target=:x86_64_v3',
+          'ncurses os=opensuse_leap15 target=:x86_64_v3', 'openblas os=opensuse_leap15 target=:x86_64_v3',
+          'openjdk os=opensuse_leap15 target=:x86_64_v3', 'papi os=opensuse_leap15 target=:x86_64_v3',
+          'parallel-netcdf os=opensuse_leap15 target=:x86_64_v3', 'pcre2 os=opensuse_leap15
+            target=:x86_64_v3', 'perl-data-dumper os=opensuse_leap15 target=:x86_64_v3',
+          'pkgconf os=opensuse_leap15 target=:x86_64_v3', 'py-alembic os=opensuse_leap15
+            target=:x86_64_v3', 'py-idna os=opensuse_leap15 target=:x86_64_v3', 'py-testpath
+            os=opensuse_leap15 target=:x86_64_v3', 'qhull os=opensuse_leap15 target=:x86_64_v3',
+          'snappy os=opensuse_leap15 target=:x86_64_v3', 'swig os=opensuse_leap15 target=:x86_64_v3',
+          'tar os=opensuse_leap15 target=:x86_64_v3', 'tcl os=opensuse_leap15 target=:x86_64_v3',
+          'texinfo os=opensuse_leap15 target=:x86_64_v3', 'unzip os=opensuse_leap15 target=:x86_64_v3',
+          'util-linux-uuid os=opensuse_leap15 target=:x86_64_v3', 'util-macros os=opensuse_leap15
+            target=:x86_64_v3', 'yaml-cpp os=opensuse_leap15 target=:x86_64_v3', 'zlib os=opensuse_leap15
+            target=:x86_64_v3', 'zstd os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
           image: *id004
           tags: [spack, small, x86_64_v3]
@@ -814,33 +821,33 @@ spack:
           image: *id004
           tags: [spack, small, graviton]
           variables: *id009
-      - match: ['alsa-lib os=almalinux8 target=:86_64_v3', 'ant os=almalinux8 target=:86_64_v3',
-          'antlr os=almalinux8 target=:86_64_v3', 'argobots os=almalinux8 target=:86_64_v3',
-          'automake os=almalinux8 target=:86_64_v3', 'berkeley-db os=almalinux8 target=:86_64_v3',
-          'bison os=almalinux8 target=:86_64_v3', 'blt os=almalinux8 target=:86_64_v3',
-          'cmake os=almalinux8 target=:86_64_v3', 'curl os=almalinux8 target=:86_64_v3',
-          'darshan-util os=almalinux8 target=:86_64_v3', 'diffutils os=almalinux8 target=:86_64_v3',
-          'exmcutils os=almalinux8 target=:86_64_v3', 'expat os=almalinux8 target=:86_64_v3',
-          'flit os=almalinux8 target=:86_64_v3', 'freetype os=almalinux8 target=:86_64_v3',
-          'gdbm os=almalinux8 target=:86_64_v3', 'gotcha os=almalinux8 target=:86_64_v3',
-          'hpcviewer os=almalinux8 target=:86_64_v3', 'jansson os=almalinux8 target=:86_64_v3',
-          'json-c os=almalinux8 target=:86_64_v3', 'libbsd os=almalinux8 target=:86_64_v3',
-          'libevent os=almalinux8 target=:86_64_v3', 'libjpeg-turbo os=almalinux8 target=:86_64_v3',
-          'libnrm os=almalinux8 target=:86_64_v3', 'libpng os=almalinux8 target=:86_64_v3',
-          'libunistring os=almalinux8 target=:86_64_v3', 'lua-luaposix os=almalinux8 target=:86_64_v3',
-          'm4 os=almalinux8 target=:86_64_v3', 'mpfr os=almalinux8 target=:86_64_v3', 'ncurses
-            os=almalinux8 target=:86_64_v3', 'openblas os=almalinux8 target=:86_64_v3',
-          'openjdk os=almalinux8 target=:86_64_v3', 'papi os=almalinux8 target=:86_64_v3',
-          'parallel-netcdf os=almalinux8 target=:86_64_v3', 'pcre2 os=almalinux8 target=:86_64_v3',
-          'perl-data-dumper os=almalinux8 target=:86_64_v3', 'pkgconf os=almalinux8 target=:86_64_v3',
-          'py-alembic os=almalinux8 target=:86_64_v3', 'py-idna os=almalinux8 target=:86_64_v3',
-          'py-testpath os=almalinux8 target=:86_64_v3', 'qhull os=almalinux8 target=:86_64_v3',
-          'snappy os=almalinux8 target=:86_64_v3', 'swig os=almalinux8 target=:86_64_v3',
-          'tar os=almalinux8 target=:86_64_v3', 'tcl os=almalinux8 target=:86_64_v3', 'texinfo
-            os=almalinux8 target=:86_64_v3', 'unzip os=almalinux8 target=:86_64_v3', 'util-linux-uuid
-            os=almalinux8 target=:86_64_v3', 'util-macros os=almalinux8 target=:86_64_v3',
-          'yaml-cpp os=almalinux8 target=:86_64_v3', 'zlib os=almalinux8 target=:86_64_v3',
-          'zstd os=almalinux8 target=:86_64_v3']
+      - match: ['alsa-lib os=almalinux8 target=:x86_64_v3', 'ant os=almalinux8 target=:x86_64_v3',
+          'antlr os=almalinux8 target=:x86_64_v3', 'argobots os=almalinux8 target=:x86_64_v3',
+          'automake os=almalinux8 target=:x86_64_v3', 'berkeley-db os=almalinux8 target=:x86_64_v3',
+          'bison os=almalinux8 target=:x86_64_v3', 'blt os=almalinux8 target=:x86_64_v3',
+          'cmake os=almalinux8 target=:x86_64_v3', 'curl os=almalinux8 target=:x86_64_v3',
+          'darshan-util os=almalinux8 target=:x86_64_v3', 'diffutils os=almalinux8 target=:x86_64_v3',
+          'exmcutils os=almalinux8 target=:x86_64_v3', 'expat os=almalinux8 target=:x86_64_v3',
+          'flit os=almalinux8 target=:x86_64_v3', 'freetype os=almalinux8 target=:x86_64_v3',
+          'gdbm os=almalinux8 target=:x86_64_v3', 'gotcha os=almalinux8 target=:x86_64_v3',
+          'hpcviewer os=almalinux8 target=:x86_64_v3', 'jansson os=almalinux8 target=:x86_64_v3',
+          'json-c os=almalinux8 target=:x86_64_v3', 'libbsd os=almalinux8 target=:x86_64_v3',
+          'libevent os=almalinux8 target=:x86_64_v3', 'libjpeg-turbo os=almalinux8 target=:x86_64_v3',
+          'libnrm os=almalinux8 target=:x86_64_v3', 'libpng os=almalinux8 target=:x86_64_v3',
+          'libunistring os=almalinux8 target=:x86_64_v3', 'lua-luaposix os=almalinux8 target=:x86_64_v3',
+          'm4 os=almalinux8 target=:x86_64_v3', 'mpfr os=almalinux8 target=:x86_64_v3',
+          'ncurses os=almalinux8 target=:x86_64_v3', 'openblas os=almalinux8 target=:x86_64_v3',
+          'openjdk os=almalinux8 target=:x86_64_v3', 'papi os=almalinux8 target=:x86_64_v3',
+          'parallel-netcdf os=almalinux8 target=:x86_64_v3', 'pcre2 os=almalinux8 target=:x86_64_v3',
+          'perl-data-dumper os=almalinux8 target=:x86_64_v3', 'pkgconf os=almalinux8 target=:x86_64_v3',
+          'py-alembic os=almalinux8 target=:x86_64_v3', 'py-idna os=almalinux8 target=:x86_64_v3',
+          'py-testpath os=almalinux8 target=:x86_64_v3', 'qhull os=almalinux8 target=:x86_64_v3',
+          'snappy os=almalinux8 target=:x86_64_v3', 'swig os=almalinux8 target=:x86_64_v3',
+          'tar os=almalinux8 target=:x86_64_v3', 'tcl os=almalinux8 target=:x86_64_v3',
+          'texinfo os=almalinux8 target=:x86_64_v3', 'unzip os=almalinux8 target=:x86_64_v3',
+          'util-linux-uuid os=almalinux8 target=:x86_64_v3', 'util-macros os=almalinux8
+            target=:x86_64_v3', 'yaml-cpp os=almalinux8 target=:x86_64_v3', 'zlib os=almalinux8
+            target=:x86_64_v3', 'zstd os=almalinux8 target=:x86_64_v3']
         runner-attributes:
           image: *id005
           tags: [spack, small, x86_64_v3]
@@ -876,33 +883,33 @@ spack:
           image: *id005
           tags: [spack, small, graviton]
           variables: *id009
-      - match: ['alsa-lib os=ubuntu20.04 target=:86_64_v3', 'ant os=ubuntu20.04 target=:86_64_v3',
-          'antlr os=ubuntu20.04 target=:86_64_v3', 'argobots os=ubuntu20.04 target=:86_64_v3',
-          'automake os=ubuntu20.04 target=:86_64_v3', 'berkeley-db os=ubuntu20.04 target=:86_64_v3',
-          'bison os=ubuntu20.04 target=:86_64_v3', 'blt os=ubuntu20.04 target=:86_64_v3',
-          'cmake os=ubuntu20.04 target=:86_64_v3', 'curl os=ubuntu20.04 target=:86_64_v3',
-          'darshan-util os=ubuntu20.04 target=:86_64_v3', 'diffutils os=ubuntu20.04 target=:86_64_v3',
-          'exmcutils os=ubuntu20.04 target=:86_64_v3', 'expat os=ubuntu20.04 target=:86_64_v3',
-          'flit os=ubuntu20.04 target=:86_64_v3', 'freetype os=ubuntu20.04 target=:86_64_v3',
-          'gdbm os=ubuntu20.04 target=:86_64_v3', 'gotcha os=ubuntu20.04 target=:86_64_v3',
-          'hpcviewer os=ubuntu20.04 target=:86_64_v3', 'jansson os=ubuntu20.04 target=:86_64_v3',
-          'json-c os=ubuntu20.04 target=:86_64_v3', 'libbsd os=ubuntu20.04 target=:86_64_v3',
-          'libevent os=ubuntu20.04 target=:86_64_v3', 'libjpeg-turbo os=ubuntu20.04 target=:86_64_v3',
-          'libnrm os=ubuntu20.04 target=:86_64_v3', 'libpng os=ubuntu20.04 target=:86_64_v3',
-          'libunistring os=ubuntu20.04 target=:86_64_v3', 'lua-luaposix os=ubuntu20.04 target=:86_64_v3',
-          'm4 os=ubuntu20.04 target=:86_64_v3', 'mpfr os=ubuntu20.04 target=:86_64_v3',
-          'ncurses os=ubuntu20.04 target=:86_64_v3', 'openblas os=ubuntu20.04 target=:86_64_v3',
-          'openjdk os=ubuntu20.04 target=:86_64_v3', 'papi os=ubuntu20.04 target=:86_64_v3',
-          'parallel-netcdf os=ubuntu20.04 target=:86_64_v3', 'pcre2 os=ubuntu20.04 target=:86_64_v3',
-          'perl-data-dumper os=ubuntu20.04 target=:86_64_v3', 'pkgconf os=ubuntu20.04 target=:86_64_v3',
-          'py-alembic os=ubuntu20.04 target=:86_64_v3', 'py-idna os=ubuntu20.04 target=:86_64_v3',
-          'py-testpath os=ubuntu20.04 target=:86_64_v3', 'qhull os=ubuntu20.04 target=:86_64_v3',
-          'snappy os=ubuntu20.04 target=:86_64_v3', 'swig os=ubuntu20.04 target=:86_64_v3',
-          'tar os=ubuntu20.04 target=:86_64_v3', 'tcl os=ubuntu20.04 target=:86_64_v3',
-          'texinfo os=ubuntu20.04 target=:86_64_v3', 'unzip os=ubuntu20.04 target=:86_64_v3',
-          'util-linux-uuid os=ubuntu20.04 target=:86_64_v3', 'util-macros os=ubuntu20.04
-            target=:86_64_v3', 'yaml-cpp os=ubuntu20.04 target=:86_64_v3', 'zlib os=ubuntu20.04
-            target=:86_64_v3', 'zstd os=ubuntu20.04 target=:86_64_v3']
+      - match: ['alsa-lib os=ubuntu20.04 target=:x86_64_v3', 'ant os=ubuntu20.04 target=:x86_64_v3',
+          'antlr os=ubuntu20.04 target=:x86_64_v3', 'argobots os=ubuntu20.04 target=:x86_64_v3',
+          'automake os=ubuntu20.04 target=:x86_64_v3', 'berkeley-db os=ubuntu20.04 target=:x86_64_v3',
+          'bison os=ubuntu20.04 target=:x86_64_v3', 'blt os=ubuntu20.04 target=:x86_64_v3',
+          'cmake os=ubuntu20.04 target=:x86_64_v3', 'curl os=ubuntu20.04 target=:x86_64_v3',
+          'darshan-util os=ubuntu20.04 target=:x86_64_v3', 'diffutils os=ubuntu20.04 target=:x86_64_v3',
+          'exmcutils os=ubuntu20.04 target=:x86_64_v3', 'expat os=ubuntu20.04 target=:x86_64_v3',
+          'flit os=ubuntu20.04 target=:x86_64_v3', 'freetype os=ubuntu20.04 target=:x86_64_v3',
+          'gdbm os=ubuntu20.04 target=:x86_64_v3', 'gotcha os=ubuntu20.04 target=:x86_64_v3',
+          'hpcviewer os=ubuntu20.04 target=:x86_64_v3', 'jansson os=ubuntu20.04 target=:x86_64_v3',
+          'json-c os=ubuntu20.04 target=:x86_64_v3', 'libbsd os=ubuntu20.04 target=:x86_64_v3',
+          'libevent os=ubuntu20.04 target=:x86_64_v3', 'libjpeg-turbo os=ubuntu20.04 target=:x86_64_v3',
+          'libnrm os=ubuntu20.04 target=:x86_64_v3', 'libpng os=ubuntu20.04 target=:x86_64_v3',
+          'libunistring os=ubuntu20.04 target=:x86_64_v3', 'lua-luaposix os=ubuntu20.04
+            target=:x86_64_v3', 'm4 os=ubuntu20.04 target=:x86_64_v3', 'mpfr os=ubuntu20.04
+            target=:x86_64_v3', 'ncurses os=ubuntu20.04 target=:x86_64_v3', 'openblas os=ubuntu20.04
+            target=:x86_64_v3', 'openjdk os=ubuntu20.04 target=:x86_64_v3', 'papi os=ubuntu20.04
+            target=:x86_64_v3', 'parallel-netcdf os=ubuntu20.04 target=:x86_64_v3', 'pcre2
+            os=ubuntu20.04 target=:x86_64_v3', 'perl-data-dumper os=ubuntu20.04 target=:x86_64_v3',
+          'pkgconf os=ubuntu20.04 target=:x86_64_v3', 'py-alembic os=ubuntu20.04 target=:x86_64_v3',
+          'py-idna os=ubuntu20.04 target=:x86_64_v3', 'py-testpath os=ubuntu20.04 target=:x86_64_v3',
+          'qhull os=ubuntu20.04 target=:x86_64_v3', 'snappy os=ubuntu20.04 target=:x86_64_v3',
+          'swig os=ubuntu20.04 target=:x86_64_v3', 'tar os=ubuntu20.04 target=:x86_64_v3',
+          'tcl os=ubuntu20.04 target=:x86_64_v3', 'texinfo os=ubuntu20.04 target=:x86_64_v3',
+          'unzip os=ubuntu20.04 target=:x86_64_v3', 'util-linux-uuid os=ubuntu20.04 target=:x86_64_v3',
+          'util-macros os=ubuntu20.04 target=:x86_64_v3', 'yaml-cpp os=ubuntu20.04 target=:x86_64_v3',
+          'zlib os=ubuntu20.04 target=:x86_64_v3', 'zstd os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
           image: *id006
           tags: [spack, small, x86_64_v3]
@@ -938,7 +945,7 @@ spack:
           image: *id006
           tags: [spack, small, graviton]
           variables: *id009
-      - match: ['os=centos7 target=:86_64_v3']
+      - match: ['os=centos7 target=:x86_64_v3']
         runner-attributes:
           image: *id001
           tags: [spack, x86_64_v3]
@@ -948,7 +955,7 @@ spack:
           image: *id001
           tags: [spack, graviton]
           variables: *id010
-      - match: ['os=fedora36 target=:86_64_v3']
+      - match: ['os=fedora36 target=:x86_64_v3']
         runner-attributes:
           image: *id003
           tags: [spack, x86_64_v3]
@@ -958,7 +965,7 @@ spack:
           image: *id003
           tags: [spack, graviton]
           variables: *id010
-      - match: ['os=opensuse_leap15 target=:86_64_v3']
+      - match: ['os=opensuse_leap15 target=:x86_64_v3']
         runner-attributes:
           image: *id004
           tags: [spack, x86_64_v3]
@@ -968,7 +975,7 @@ spack:
           image: *id004
           tags: [spack, graviton]
           variables: *id010
-      - match: ['os=almalinux8 target=:86_64_v3']
+      - match: ['os=almalinux8 target=:x86_64_v3']
         runner-attributes:
           image: *id005
           tags: [spack, x86_64_v3]
@@ -978,7 +985,7 @@ spack:
           image: *id005
           tags: [spack, graviton]
           variables: *id010
-      - match: ['os=ubuntu20.04 target=:86_64_v3']
+      - match: ['os=ubuntu20.04 target=:x86_64_v3']
         runner-attributes:
           image: *id006
           tags: [spack, x86_64_v3]
