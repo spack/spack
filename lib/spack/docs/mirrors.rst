@@ -5,9 +5,9 @@
 
 .. _mirrors:
 
-=======
-Mirrors
-=======
+======================
+Mirrors (mirrors.yaml)
+======================
 
 Some sites may not have access to the internet for fetching packages.
 These sites will need a local repository of tarballs from which they

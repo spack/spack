@@ -5,8 +5,7 @@
 
 import os.path
 
-from spack import *
-from spack.util.executable import Executable
+from spack.package import *
 
 
 class Oommf(Package):
@@ -118,9 +117,7 @@ class Oommf(Package):
         Here, we try to find the relative path to that file, and return it.
         """
         if "oommf.tcl" in os.listdir():
-            print(
-                "Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)"
-            )
+            print("Found 'oommf.tcl' in " + os.getcwd() + " (looks like source from NIST)")
             return "."
         elif "oommf.tcl" in os.listdir("oommf"):
             print(
@@ -208,11 +205,7 @@ class Oommf(Package):
             test_env["PATH"] = os.environ["PATH"]
 
         output = self.tclsh(
-            self.oommf_tcl_path,
-            *oommf_args,
-            output=str.split,
-            error=str.split,
-            env=test_env
+            self.oommf_tcl_path, *oommf_args, output=str.split, error=str.split, env=test_env
         )
 
         print("output received from oommf is %s" % output)

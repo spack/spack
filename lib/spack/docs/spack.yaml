@@ -25,4 +25,5 @@ spack:
   - subversion
   # Plotting
   - graphviz
-  concretization: together
+  concretizer:
+    unify: true

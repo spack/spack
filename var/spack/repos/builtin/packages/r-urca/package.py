@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RUrca(RPackage):
@@ -14,7 +14,7 @@ class RUrca(RPackage):
 
     cran = "urca"
 
-    version('1.3-0', sha256='621cc82398e25b58b4a16edf000ed0a1484d9a0bc458f734e97b6f371cc76aaa')
+    version("1.3-0", sha256="621cc82398e25b58b4a16edf000ed0a1484d9a0bc458f734e97b6f371cc76aaa")
 
-    depends_on('r@2.0.0:', type=('build', 'run'))
-    depends_on('r-nlme', type=('build', 'run'))
+    depends_on("r@2.0.0:", type=("build", "run"))
+    depends_on("r-nlme", type=("build", "run"))

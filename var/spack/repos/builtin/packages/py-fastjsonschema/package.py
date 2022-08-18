@@ -4,12 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class PyFastjsonschema(PythonPackage):
     """Fast JSON schema validator for Python."""
 
     homepage = "https://github.com/horejsek/python-fastjsonschema"
     pypi = "fastjsonschema/fastjsonschema-2.15.1.tar.gz"
 
-    version('2.15.1', sha256='671f36d225b3493629b5e789428660109528f373cf4b8a22bac6fa2f8191c2d2')
+    version("2.15.1", sha256="671f36d225b3493629b5e789428660109528f373cf4b8a22bac6fa2f8191c2d2")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

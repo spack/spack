@@ -5,9 +5,9 @@
 
 .. _build-settings:
 
-===================
-Build Customization
-===================
+================================
+Package Settings (packages.yaml)
+================================
 
 Spack allows you to customize how your software is built through the
 ``packages.yaml`` file.  Using it, you can make Spack prefer particular
@@ -219,33 +219,65 @@ Concretizer options
 but you can also use ``concretizer.yaml`` to customize aspects of the
 algorithm it uses to select the dependencies you install:
 
-.. _code-block: yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+   :language: yaml
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reuse already installed packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
+whether it will do a "fresh" installation and prefer the latest settings from
+``package.py`` files and ``packages.yaml`` (``false``).
+You can use:
+
+.. code-block:: console
+
+   % spack install --reuse <spec>
+
+to enable reuse for a single installation, and you can use:
+
+.. code-block:: console
+
+   spack install --fresh <spec>
+
+to do a fresh install if ``reuse`` is enabled by default.
+``reuse: true`` is the default.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Selection of the target microarchitectures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The options under the ``targets`` attribute control which targets are considered during a solve.
+Currently the options in this section are only configurable from the ``concretization.yaml`` file
+and there are no corresponding command line arguments to enable them for a single solve.
+
+The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
+If set to:
+
+.. code-block:: yaml
 
    concretizer:
-     # Whether to consider installed packages or packages from buildcaches when
-     # concretizing specs. If `true`, we'll try to use as many installs/binaries
-     # as possible, rather than building. If `false`, we'll always give you a fresh
-     # concretization.
-     reuse: false
+     targets:
+       granularity: microarchitectures
 
-^^^^^^^^^^^^^^^^
-``reuse``
-^^^^^^^^^^^^^^^^
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
+compatibility. If instead the option is set to:
 
-This controls whether Spack will prefer to use installed packages (``true``), or
-whether it will do a "fresh" installation and prefer the latest settings from
-``package.py`` files and ``packages.yaml`` (``false``). .
+.. code-block:: yaml
 
-You can use ``spack install --reuse`` to enable reuse for a single installation,
-and you can use ``spack install --fresh`` to do a fresh install if ``reuse`` is
-enabled by default.
+   concretizer:
+     targets:
+       granularity: generic
 
-.. note::
+Spack will consider only generic microarchitectures. For instance, when running on an
+Haswell node, Spack will consider ``haswell`` as the best target in the former case and
+``x86_64_v3`` as the best target in the latter case.
 
-   ``reuse: false`` is the current default, but ``reuse: true`` will be the default
-   in the next Spack release. You will still be able to use ``spack install --fresh``
-   to get the old behavior.
-
+The ``host_compatible`` option is a Boolean option that determines whether or not the
+microarchitectures considered during the solve are constrained to be compatible with the
+host Spack is currently running on. For instance, if this option is set to ``true``, a
+user cannot concretize for ``target=icelake`` while running on an Haswell node.
 
 .. _package-preferences:
 
@@ -307,6 +339,72 @@ concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
 dependency.
 
+.. _package-requirements:
+
+--------------------
+Package Requirements
+--------------------
+
+You can use the configuration to force the concretizer to choose
+specific properties for packages when building them. Like preferences,
+these are only applied when the package is required by some other
+request (e.g. if the package is needed as a dependency of a
+request to ``spack install``).
+
+An example of where this is useful is if you have a package that
+is normally built as a dependency but only under certain circumstances
+(e.g. only when a variant on a dependent is active): you can make
+sure that it always builds the way you want it to; this distinguishes
+package configuration requirements from constraints that you add to
+``spack install`` or to environments (in those cases, the associated
+packages are always built).
+
+The following is an example of how to enforce package properties in
+``packages.yaml``:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require: "@1.13.2"
+     openmpi:
+       require:
+       - any_of: ["~cuda", "gcc"]
+     mpich:
+      require:
+      - one_of: ["+cuda", "+rocm"]
+
+Requirements are expressed using Spec syntax (the same as what is provided
+to ``spack install``). In the simplest case, you can specify attributes
+that you always want the package to have by providing a single spec to
+``require``; in the above example, ``libfabric`` will always build
+with version 1.13.2.
+
+You can provide a more-relaxed constraint and allow the concretizer to
+choose between a set of options using ``any_of`` or ``one_of``:
+
+* ``any_of`` is a list of specs. One of those specs must be satisfied
+  and it is also allowed for the concretized spec to match more than one.
+  In the above example, that means you could build ``openmpi+cuda%gcc``,
+  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
+  note that both specs in the ``any_of`` for ``openmpi`` are
+  satisfied).
+* ``one_of`` is also a list of specs, and the final concretized spec
+  must match exactly one of them.  In the above example, that means
+  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
+  ``mpich+cuda+rocm`` (note the current package definition for
+  ``mpich`` already includes a conflict, so this is redundant but
+  still demonstrates the concept).
+
+Other notes about ``requires``:
+
+* You can only specify requirements for specific packages: you cannot
+  add ``requires`` under ``all``.
+* You cannot specify requirements for virtual packages (e.g. you can
+  specify requirements for ``openmpi`` but not ``mpi``).
+* For ``any_of`` and ``one_of``, the order of specs indicates a
+  preference: items that appear earlier in the list are preferred
+  (note that these preferences can be ignored in favor of others).
 
 .. _package_permissions:
 

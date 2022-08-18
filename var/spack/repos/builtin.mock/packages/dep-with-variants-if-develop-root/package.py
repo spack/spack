@@ -2,10 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.package import *
+
+
 class DepWithVariantsIfDevelopRoot(Package):
     """Package that adds a dependency with many variants only at @develop"""
+
     homepage = "https://dev.null"
 
-    version('1.0')
+    version("1.0")
 
-    depends_on('dep-with-variants-if-develop')
+    depends_on("dep-with-variants-if-develop")
