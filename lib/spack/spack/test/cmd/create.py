@@ -155,7 +155,7 @@ create = SpackCommand("create")
                 r"ExampleGitBranch(Package)",
                 r"def install(self",
                 r'git = "file:///tmp/example.git',
-                r"version('v3.2.1', branch='v3.2.1')",
+                r'version("v3.2.1", branch="v3.2.1")',
             ],
         ),
         (
@@ -174,7 +174,7 @@ create = SpackCommand("create")
                 r"ExampleGitBranch2(Package)",
                 r"def install(self",
                 r'git = "file:///tmp/example.git',
-                r"version('v1.2.3', branch='v3.2.1')",
+                r'version("v1.2.3", branch="v3.2.1")',
             ],
         ),
         (
