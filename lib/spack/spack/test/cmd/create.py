@@ -209,7 +209,7 @@ create = SpackCommand("create")
             [
                 r"ExampleGitCommit(Package)",
                 r"def install(self",
-                r'git      = "file:///tmp/example.git',
+                r'git = "file:///tmp/example.git',
                 r"version('babc42a', commit='babc42a34cb565760ca875483de75ff94b2bc112')",
             ],
         ),
