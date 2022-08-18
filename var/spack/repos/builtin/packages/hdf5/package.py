@@ -409,11 +409,7 @@ class Hdf5(CMakePackage):
                 "libhdf5_java",
                 "libhdf5",
             ],
-            ("cxx", "hl"): [
-                "libhdf5_hl_cpp",
-                "libhdf5_hl",
-                "libhdf5",
-            ],
+            ("cxx", "hl"): ["libhdf5_hl_cpp", "libhdf5_hl", "libhdf5", ] ,
             ("fortran", "hl"): [
                 "libhdf5_hl_fortran",
                 "libhdf5_hl_f90cstub",
@@ -430,8 +426,8 @@ class Hdf5(CMakePackage):
                 "libhdf5",
             ],
             ("cxx", ): ["libhdf5_cpp", "libhdf5", ]  ,
-            ("fortran", ): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5", ],
-            ("java", ): ["libhdf5_java", "libhdf5", ],
+            ("fortran", ): ["libhdf5_fortran", "libhdf5_f90cstub", "libhdf5", ] ,
+            ("java", ): ["libhdf5_java", "libhdf5", ] ,
         }
 
         # Turn the query into the appropriate key
