@@ -17,6 +17,7 @@ class Ghostscript(AutotoolsPackage):
 
     executables = [r"^gs$"]
 
+    version("9.56.1", sha256="1598b9a38659cce8448d42a73054b2f9cbfcc40a9b97eeec5f22d4d6cd1de8e6")
     version("9.54.0", sha256="0646bb97f6f4d10a763f4919c54fa28b4fbdd3dff8e7de3410431c81762cade0")
     version("9.53.3", sha256="6eaf422f26a81854a230b80fd18aaef7e8d94d661485bd2e97e695b9dce7bf7f")
     version("9.50", sha256="0f53e89fd647815828fc5171613e860e8535b68f7afbc91bf89aee886769ce89")
