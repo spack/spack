@@ -104,8 +104,7 @@ class PyNumpy(PythonPackage):
     depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@1.19")
     depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@1.20:1.21")
     depends_on("python@3.8:", type=("build", "link", "run"), when="@1.22:")
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
+    depends_on("py-setuptools@:59", type=("build", "run"))
     # Check pyproject.toml for updates to the required cython version
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")
