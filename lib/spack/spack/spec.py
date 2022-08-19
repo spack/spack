@@ -5104,7 +5104,7 @@ class SpecParser(spack.parse.Parser):
                                 self.previous.value = self.previous.value.strip("=")
                                 self.expect(VAL)
                                 self.push_tokens([self.previous, self.token])
-                                self.previous=None
+                                self.previous = None
                                 dep_name = None
                             elif self.accept(ID):
                                 self.previous = self.token
