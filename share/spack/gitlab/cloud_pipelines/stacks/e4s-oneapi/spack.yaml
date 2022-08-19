@@ -25,7 +25,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: oneapi@2022.1.0
@@ -38,7 +40,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: gcc@9.4.0
@@ -121,6 +125,7 @@ spack:
   - globalarrays
   - gmp
   - gotcha
+  - gptune
   - hdf5 +fortran +hl +shared
   - heffte +fftw
   - hpx networking=mpi
@@ -199,7 +204,6 @@ spack:
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
   #- geopm@1.1.0                                      # ruby
-  #- gptune@3.0.0                                     # intel-tbb
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit@2022.04.15                            # binutils
   #- nrm@0.1.0                                        # py-numpy@1.23.1
