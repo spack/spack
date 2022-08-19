@@ -4938,7 +4938,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, FLAGS, LIBS = range(14)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, FLAGS, LIBS, TGT = range(15)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -4960,6 +4960,7 @@ class SpecLexer(spack.parse.Lexer):
             [
                 (r"[a-z]*flags\s*\=", lambda scanner, val: self.token(FLAGS, val)),
                 (r"[a-z]*libs\s*\=", lambda scanner, val: self.token(LIBS, val)),
+                (r"target\s*\=", lambda scanner, val: self.token(TGT, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),
@@ -4979,7 +4980,7 @@ class SpecLexer(spack.parse.Lexer):
                 (spec_id_re, lambda scanner, val: self.token(ID, val)),
                 (r"\s+", lambda scanner, val: None),
             ],
-            [FLAGS, LIBS],
+            [FLAGS, LIBS, TGT],
             [
                 (r"[\S].*", lambda scanner, val: self.token(VAL, val)),
                 (r"\s+", lambda scanner, val: None),
@@ -5025,7 +5026,29 @@ class SpecParser(spack.parse.Parser):
                         specs.append(spec)
                         continue
 
-                if self.accept(ID):
+                if self.accept(FLAGS) or self.accept(LIBS) or self.accept(TGT):
+                    if not specs:
+                        self.previous = self.token
+                        self.previous.value = self.previous.value.strip("=")
+                        self.expect(VAL)
+                        self.push_tokens([self.previous, self.token])
+                        self.previous = None
+                        specs.append(self.spec(None))
+                    else:
+                        if specs[-1].concrete:
+                            # Trying to add k-v pair to spec from hash
+                            raise RedundantSpecError(specs[-1], "key-value pair")
+                        # We should never end up here.
+                        # This requires starting a new spec with ID, EQ
+                        # After another spec that is not concrete
+                        # If the previous spec is not concrete, this is
+                        # handled in the spec parsing loop
+                        # If it is concrete, see the if statement above
+                        # If there is no previous spec, we don't land in
+                        # this else case.
+                        self.unexpected_token()
+
+                elif self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
                         # We're parsing an anonymous spec beginning with a
@@ -5076,7 +5099,14 @@ class SpecParser(spack.parse.Parser):
 
                         if not dep:
                             # We're adding a dependency to the last spec
-                            if self.accept(ID):
+                            if self.accept(FLAGS) or self.accept(LIBS) or self.accept(TGT):
+                                self.previous = self.token
+                                self.previous.value = self.previous.value.strip("=")
+                                self.expect(VAL)
+                                self.push_tokens([self.previous, self.token])
+                                self.previous=None
+                                dep_name = None
+                            elif self.accept(ID):
                                 self.previous = self.token
                                 if self.accept(EQ):
                                     # This is an anonymous dep with a key=value
@@ -5227,16 +5257,17 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
 
+            elif self.accept(FLAGS) or self.accept(LIBS) or self.accept(TGT):
+                flag = self.token.value.strip("=")
+                self.expect(VAL)
+                spec._add_flag(flag, self.token.value)
+
             elif self.accept(ID):
                 self.previous = self.token
-                if self.accept(FLAGS) or self.accept(LIBS):
-                    # We're adding a key-value pair to the spec
-                    self.expect(VAL)
-                    spec._add_flag(self.previous.value, self.token.value)
-                    self.previous = None
-                elif self.accept(EQ):
+                if self.accept(EQ):
                     self.expect(ID)
                     spec._add_flag(self.previous.value, self.token.value)
+                    self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
                     # and read this token again.

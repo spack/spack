@@ -63,7 +63,7 @@ kv_lex = [
     Token(sp.ID, "mvapich_foo"),
     Token(sp.ID, "debug"),
     Token(sp.EQ),
-    Token(sp.VAL, "4"),
+    Token(sp.ID, "4"),
     Token(sp.DEP),
     Token(sp.ID, "_openmpi"),
     Token(sp.AT),
@@ -819,11 +819,11 @@ class TestSpecSyntax(object):
         "expected_tokens,spec_string",
         [
             (
-                [Token(sp.ID, "target"), Token(sp.EQ, "="), Token(sp.VAL, "broadwell")],
+                [Token(sp.TGT, "target="), Token(sp.VAL, "broadwell")],
                 "target=broadwell",
             ),
             (
-                [Token(sp.ID, "target"), Token(sp.EQ, "="), Token(sp.VAL, ":broadwell,icelake")],
+                [Token(sp.TGT, "target"), Token(sp.VAL, ":broadwell,icelake")],
                 "target=:broadwell,icelake",
             ),
         ],
