@@ -112,14 +112,15 @@ class TagIndex(Mapping):
             spkgs, opkgs = self.tags[tag], other.tags[tag]
             self.tags[tag] = sorted(list(set(spkgs + opkgs)))
 
-    def update_package(self, pkg_name):
+    def update_package(self, pkg_name, repository=None):
         """Updates a package in the tag index.
 
         Args:
             pkg_name (str): name of the package to be removed from the index
 
         """
-        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        repository = repository or spack.repo.path
+        pkg_cls = repository.get_pkg_class(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():

@@ -12,13 +12,16 @@ import inspect
 import itertools
 import os
 import os.path
+import random
 import re
 import shutil
 import stat
+import string
 import sys
 import tempfile
 import traceback
 import types
+import uuid
 from typing import Dict  # novm
 
 import ruamel.yaml as yaml
@@ -37,6 +40,7 @@ import spack.patch
 import spack.provider_index
 import spack.spec
 import spack.tag
+import spack.util.file_cache
 import spack.util.naming as nm
 import spack.util.path
 from spack.util.executable import which
@@ -576,6 +580,9 @@ class FastPackageChecker(Mapping):
 class Indexer(object):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
+    def __init__(self, repository):
+        self.repository = repository
+
     def create(self):
         self.index = self._create()
 
@@ -622,7 +629,7 @@ class TagIndexer(Indexer):
         self.index = spack.tag.TagIndex.from_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+        self.index.update_package(pkg_fullname, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -632,17 +639,20 @@ class ProviderIndexer(Indexer):
     """Lifecycle methods for virtual package providers."""
 
     def _create(self):
-        return spack.provider_index.ProviderIndex()
+        return spack.provider_index.ProviderIndex(repository=self.repository)
 
     def read(self, stream):
         self.index = spack.provider_index.ProviderIndex.from_json(stream)
 
     def update(self, pkg_fullname):
         name = pkg_fullname.split(".")[-1]
-        if spack.repo.path.is_virtual(name, use_index=False):
+        is_virtual = (
+            not self.repository.exists(name) or self.repository.get_pkg_class(name).virtual
+        )
+        if is_virtual:
             return
         self.index.remove_provider(pkg_fullname)
-        self.index.update(pkg_fullname)
+        self.index.update(pkg_fullname, self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -652,7 +662,7 @@ class PatchIndexer(Indexer):
     """Lifecycle methods for patch cache."""
 
     def _create(self):
-        return spack.patch.PatchCache()
+        return spack.patch.PatchCache(repository=self.repository)
 
     def needs_update(self):
         # TODO: patches can change under a package and we should handle
@@ -668,7 +678,7 @@ class PatchIndexer(Indexer):
         self.index.to_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname)
+        self.index.update_package(pkg_fullname, self.repository)
 
 
 class RepoIndex(object):
@@ -687,7 +697,7 @@ class RepoIndex(object):
 
     """
 
-    def __init__(self, package_checker, namespace):
+    def __init__(self, package_checker, namespace, cache):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
         if sys.platform == "win32":
@@ -696,6 +706,7 @@ class RepoIndex(object):
 
         self.indexers = {}
         self.indexes = {}
+        self.cache = cache
 
     def add_indexer(self, name, indexer):
         """Add an indexer to the repo index.
@@ -740,19 +751,18 @@ class RepoIndex(object):
         cache_filename = "{0}/{1}-index.json".format(name, self.namespace)
 
         # Compute which packages needs to be updated in the cache
-        misc_cache = spack.caches.misc_cache
-        index_mtime = misc_cache.mtime(cache_filename)
+        index_mtime = self.cache.mtime(cache_filename)
         needs_update = self.checker.modified_since(index_mtime)
 
-        index_existed = misc_cache.init_entry(cache_filename)
+        index_existed = self.cache.init_entry(cache_filename)
         if index_existed and not needs_update:
             # If the index exists and doesn't need an update, read it
-            with misc_cache.read_transaction(cache_filename) as f:
+            with self.cache.read_transaction(cache_filename) as f:
                 indexer.read(f)
 
         else:
             # Otherwise update it and rewrite the cache file
-            with misc_cache.write_transaction(cache_filename) as (old, new):
+            with self.cache.write_transaction(cache_filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
 
                 # Compute which packages needs to be updated **again** in case someone updated them
@@ -781,7 +791,8 @@ class RepoPath(object):
         repos (list): list Repo objects or paths to put in this RepoPath
     """
 
-    def __init__(self, *repos):
+    def __init__(self, *repos, **kwargs):
+        cache = kwargs.get("cache", spack.caches.misc_cache)
         self.repos = []
         self.by_namespace = nm.NamespaceTrie()
 
@@ -793,7 +804,7 @@ class RepoPath(object):
         for repo in repos:
             try:
                 if isinstance(repo, six.string_types):
-                    repo = Repo(repo)
+                    repo = Repo(repo, cache=cache)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn(
@@ -904,7 +915,7 @@ class RepoPath(object):
     def patch_index(self):
         """Merged PatchIndex from all Repos in the RepoPath."""
         if self._patch_index is None:
-            self._patch_index = spack.patch.PatchCache()
+            self._patch_index = spack.patch.PatchCache(repository=self)
             for repo in reversed(self.repos):
                 self._patch_index.update(repo.patch_index)
 
@@ -1023,7 +1034,7 @@ class Repo(object):
 
     """
 
-    def __init__(self, root):
+    def __init__(self, root, cache=None):
         """Instantiate a package repository from a filesystem path.
 
         Args:
@@ -1078,6 +1089,7 @@ class Repo(object):
 
         # Indexes for this repository, computed lazily
         self._repo_index = None
+        self._cache = cache or spack.caches.misc_cache
 
     def real_name(self, import_name):
         """Allow users to import Spack packages using Python identifiers.
@@ -1189,10 +1201,10 @@ class Repo(object):
     def index(self):
         """Construct the index for this repo lazily."""
         if self._repo_index is None:
-            self._repo_index = RepoIndex(self._pkg_checker, self.namespace)
-            self._repo_index.add_indexer("providers", ProviderIndexer())
-            self._repo_index.add_indexer("tags", TagIndexer())
-            self._repo_index.add_indexer("patches", PatchIndexer())
+            self._repo_index = RepoIndex(self._pkg_checker, self.namespace, cache=self._cache)
+            self._repo_index.add_indexer("providers", ProviderIndexer(self))
+            self._repo_index.add_indexer("tags", TagIndexer(self))
+            self._repo_index.add_indexer("patches", PatchIndexer(self))
         return self._repo_index
 
     @property
@@ -1392,9 +1404,19 @@ def create_or_construct(path, namespace=None):
     return Repo(path)
 
 
-def _path(repo_dirs=None):
+def _path(configuration=None):
     """Get the singleton RepoPath instance for Spack."""
-    repo_dirs = repo_dirs or spack.config.get("repos")
+    configuration = configuration or spack.config.config
+    return create(configuration=configuration)
+
+
+def create(configuration):
+    """Create a RepoPath from a configuration object.
+
+    Args:
+        configuration (spack.config.Configuration): configuration object
+    """
+    repo_dirs = configuration.get("repos")
     if not repo_dirs:
         raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
     return RepoPath(*repo_dirs)
@@ -1404,7 +1426,8 @@ def _path(repo_dirs=None):
 path = llnl.util.lang.Singleton(_path)
 
 # Add the finder to sys.meta_path
-sys.meta_path.append(ReposFinder())
+REPOS_FINDER = ReposFinder()
+sys.meta_path.append(REPOS_FINDER)
 
 
 def all_package_names(include_virtuals=False):
@@ -1413,34 +1436,65 @@ def all_package_names(include_virtuals=False):
 
 
 @contextlib.contextmanager
-def additional_repository(repository):
-    """Adds temporarily a repository to the default one.
-
-    Args:
-        repository: repository to be added
-    """
-    path.put_first(repository)
-    yield
-    path.remove(repository)
-
-
-@contextlib.contextmanager
-def use_repositories(*paths_and_repos):
+def use_repositories(*paths_and_repos, **kwargs):
     """Use the repositories passed as arguments within the context manager.
 
     Args:
         *paths_and_repos: paths to the repositories to be used, or
             already constructed Repo objects
-
+        override (bool): if True use only the repositories passed as input,
+            if False add them to the top of the list of current repositories.
     Returns:
         Corresponding RepoPath object
     """
     global path
-    path, saved = RepoPath(*paths_and_repos), path
+    # TODO (Python 2.7): remove this kwargs on deprecation of Python 2.7 support
+    override = kwargs.get("override", True)
+    paths = [getattr(x, "root", x) for x in paths_and_repos]
+    scope_name = "use-repo-{}".format(uuid.uuid4())
+    repos_key = "repos:" if override else "repos"
+    spack.config.config.push_scope(
+        spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
+    )
+    path, saved = create(configuration=spack.config.config), path
     try:
         yield path
     finally:
+        spack.config.config.remove_scope(scope_name=scope_name)
         path = saved
+
+
+class MockRepositoryBuilder(object):
+    """Build a mock repository in a directory"""
+
+    def __init__(self, root_directory, namespace=None):
+        namespace = namespace or "".join(random.choice(string.ascii_uppercase) for _ in range(10))
+        self.root, self.namespace = create_repo(str(root_directory), namespace)
+
+    def add_package(self, name, dependencies=None):
+        """Create a mock package in the repository, using a Jinja2 template.
+
+        Args:
+            name (str): name of the new package
+            dependencies (list): list of ("dep_spec", "dep_type", "condition") tuples.
+                Both "dep_type" and "condition" can default to ``None`` in which case
+                ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
+        """
+        dependencies = dependencies or []
+        context = {"cls_name": spack.util.naming.mod_to_class(name), "dependencies": dependencies}
+        template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
+        text = template.render(context)
+        package_py = self.recipe_filename(name)
+        fs.mkdirp(os.path.dirname(package_py))
+        with open(package_py, "w") as f:
+            f.write(text)
+
+    def remove(self, name):
+        package_py = self.recipe_filename(name)
+        shutil.rmtree(os.path.dirname(package_py))
+
+    def recipe_filename(self, name):
+        return os.path.join(self.root, "packages", name, "package.py")
 
 
 class RepoError(spack.error.SpackError):

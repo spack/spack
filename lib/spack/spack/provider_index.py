@@ -129,7 +129,7 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, specs=None, restrict=False):
+    def __init__(self, specs=None, restrict=False, repository=None):
         """Provider index based on a single mapping of providers.
 
         Args:
@@ -146,6 +146,7 @@ class ProviderIndex(_IndexBase):
         if specs is None:
             specs = []
 
+        self.repository = repository or spack.repo.path
         self.restrict = restrict
         self.providers = {}
 
@@ -153,17 +154,23 @@ class ProviderIndex(_IndexBase):
             if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)
 
-            if spec.virtual:
+            # FIXME: This is repeated in Provider index
+            is_virtual = (
+                not self.repository.exists(spec.name)
+                or self.repository.get_pkg_class(spec.name).virtual
+            )
+            if is_virtual:
                 continue
 
-            self.update(spec)
+            self.update(spec, self.repository)
 
-    def update(self, spec):
+    def update(self, spec, repository=None):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
         """
+        repository = repository or spack.repo.path
         if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
 
@@ -171,9 +178,14 @@ class ProviderIndex(_IndexBase):
             # Empty specs do not have a package
             return
 
-        assert not spec.virtual, "cannot update an index using a virtual spec"
+        is_virtual = (
+            not repository.exists(spec.name) or repository.get_pkg_class(spec.name).virtual
+        )
+        assert not is_virtual, "cannot update an index passing the virtual spec '{}'".format(
+            spec.name
+        )
 
-        pkg_provided = spec.package_class.provided
+        pkg_provided = repository.get_pkg_class(spec.name).provided
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
