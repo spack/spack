@@ -5012,9 +5012,6 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
-        tokens = list(self.tokens)
-        self.tokens = iter(tokens)
-        print(tokens)
 
         try:
             while self.next:
