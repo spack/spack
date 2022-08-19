@@ -61,7 +61,7 @@ default:
 
 .generate-ppc64le:
   extends: .generate
-  tags: ["spack", "aws", "public", "medium", "ppc64le"]
+  tags: ["spack", "public", "medium", "ppc64le"]
 
 .pr-generate:
   extends: [ ".pr", ".generate" ]
