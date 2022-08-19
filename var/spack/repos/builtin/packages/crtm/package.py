@@ -14,9 +14,9 @@ class Crtm(CMakePackage):
 
     homepage = "https://www.jcsda.org/jcsda-project-community-radiative-transfer-model"
     git = "https://github.com/JCSDA/crtm.git"
-    url = "https://github.com/NOAA-EMC/EMC_crtm/archive/refs/tags/v2.3.0.tar.gz"
+    url = "https://github.com/JCSDA/crtm/archive/refs/tags/v2.3.0.tar.gz"
 
-    maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = ["BenjaminTJohnson", "edwardhartnett", "Hang-Lei-NOAA", "climbfuji"]
 
     variant(
         "fix",
@@ -41,5 +41,8 @@ class Crtm(CMakePackage):
     version("2.4.0", commit="a831626")
     # Uses the tip of REL-2.3.0_emc branch
     version("2.3.0", commit="99760e6")
-    # JEDI applications so far use this version
+    # JEDI applications so far use these versions
+    # Branch release/crtm_jedi
     version("v2.3-jedi.4", commit="bfede42")
+    # Branch release/crtm_jedi_v2.4.0
+    version("v2.4_jedi", commit="3119d66")
