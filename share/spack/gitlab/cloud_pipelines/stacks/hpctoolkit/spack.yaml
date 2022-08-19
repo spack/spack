@@ -8,7 +8,7 @@ spack:
   config:
     concretizer: clingo
     install_tree:
-      root: /home/software/spack
+      root: /tmp/foospack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
@@ -23,6 +23,20 @@ spack:
   - when: arch.satisfies('target=x86_64:')
     target_specific_mindeps: [^intel-xed @12.0.1]
 
+  - gpus:
+    - ~cuda ~rocm ~opencl ~level_zero ~gtpin
+    - +cuda ^cuda@10.2
+    - +cuda ^cuda@11
+    - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
+    - +level_zero
+  - when: arch.satisfies('target=aarch64:')
+    gpus:
+    - ~cuda ~rocm ~opencl ~level_zero ~gtpin
+    # CUDA on ARM is only supported in CUDA 11 and following
+    - +cuda ^cuda@11
+    # ROCm fails to build on ARM currently
+    - +level_zero
+
   specs:
     - matrix:
       - [libmonitor +hpctoolkit ~dlopen ~commrank]
@@ -34,19 +48,14 @@ spack:
       - [hpctoolkit +mpi +viewer]
       - - +papi
         - ~papi
-      - &gpus
-        - ~cuda ~rocm ~opencl ~level_zero ~gtpin
-        - +cuda ^cuda@10.2
-        - +cuda ^cuda@11
-        - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
-        - +level_zero
+      - [$gpus]
       - [$target]
     # Latest release with minimum supported dependencies
     - matrix:
       - [hpctoolkit +mpi +viewer]
       - - +papi ^papi @6.0.0.1
         - ~papi ^libpfm4 @4.11.0
-      - *gpus
+      - [$gpus]
       - - ^autoconf @2.69
           ^automake @1.15.1
           ^libtool @2.4.6
