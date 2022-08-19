@@ -1,10 +1,7 @@
 name: windows tests
 
 on:
-  workflow_run:
-    workflows: [ "style" ]
-    types:
-      - completed
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
@@ -16,7 +13,6 @@ defaults:
      powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
 jobs:
   unittest:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -36,7 +32,6 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
   unittest-cmd:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -56,7 +51,6 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test lib/spack/spack/test/cmd --verbose
   buildtest:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -76,7 +70,6 @@ jobs:
         spack external find ninja
         spack install abseil-cpp
   generate-installer-test:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: windows-latest
     steps:
     - name: Disable Windows Symlinks

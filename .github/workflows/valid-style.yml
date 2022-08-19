@@ -1,14 +1,7 @@
 name: style
 
 on:
-  push:
-    branches:
-      - develop
-      - releases/**
-  pull_request:
-    branches:
-      - develop
-      - releases/**
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
