@@ -297,3 +297,25 @@ packages:
     s1 = Spec("y").concretized()
     assert s1.satisfies("@2.3")
     assert s1.satisfies("%gcc")
+
+
+@pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
+def test_default_requirements_with_all(spec_str, requirement_str, concretize_scope, test_repo):
+    """Test that users can override a deprecated version with a requirement."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    # @2.3 is a deprecated versions. Ensure that any_of picks both constraints,
+    # since they are possible
+    conf_str = """\
+packages:
+  all:
+    require: "{}"
+""".format(
+        requirement_str
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec(spec_str).concretized()
+    for s in spec.traverse():
+        assert s.satisfies(requirement_str)
