@@ -33,17 +33,13 @@ class Pcsclite(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("pkgconfig", type="build")
 
-    phases = ["bootstrap", "configure", "build", "install"]
-    force_autoreconf = True
+    def autoreconf(self, spec, prefix):
+        pass
 
     @when("@master")
-    def bootstrap(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
         bootstrap = Executable("./bootstrap")
         bootstrap()
-
-    @when("@1.9.8")
-    def bootstrap(self, spec, prefix):
-        pass
 
     def configure_args(self):
         args = []
