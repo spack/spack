@@ -832,9 +832,7 @@ class SpackSolverSetup(object):
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
-        msg = (
-            "Internal Error: spec with no name occured. Please report to the spack maintainers."
-        )
+        msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
         assert spec.name, msg
 
         if spec.concrete:
