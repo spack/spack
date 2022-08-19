@@ -42,7 +42,9 @@ jobs:
           - '!var/spack/repos/builtin/packages/clingo/**'
           - '!var/spack/repos/builtin/packages/python/**'
           - '!var/spack/repos/builtin/packages/re2c/**'
-          - 'lib/spack/docs/**'
+          - '!lib/spack/docs/**'
+          - 'lib/spack/**'
+          - './share/spack/**'
   fedora-clingo-sources:
     needs: [ changes ]
     runs-on: ubuntu-latest
