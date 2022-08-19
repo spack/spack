@@ -192,6 +192,8 @@ class Warpx(CMakePackage):
         with when("+openpmd"):
             args.append("-DWarpX_openpmd_internal=OFF")
 
+        # Work-around for SENSEI 4.0: wrong install location for CMake config
+        #   https://github.com/SENSEI-insitu/SENSEI/issues/79
         if "+sensei" in spec:
             args.append(self.define("SENSEI_DIR", join_path(spec["sensei"].prefix.lib, "cmake")))
 
