@@ -1588,7 +1588,7 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix
     prefix_to_prefix_text[old_layout_root] = new_layout_root
-    prefix_to_prefix_bin[old_layout_root] = new_layout_root
+    # prefix_to_prefix_bin[old_layout_root] = new_layout_root
     for orig_prefix, hash in prefix_to_hash.items():
         prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
         prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)

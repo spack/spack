@@ -70,7 +70,8 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
         msg = "New path incompatible with old path: binary text replacement not possible."
         err_msg = "The new path `%s`\n" % new_path
-        err_msg += "Has an incompatible suffix %s != %s.\n" % (old_path[-16:], new_path[-16:])
+        err_msg += "and old path `%s`\n" % old_path
+        err_msg += "have incompatible suffixes %s != %s.\n" % (old_path[-16:], new_path[-16:])
         err_msg += "Text replacement in binaries will not work.\n"
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than or equal to new path"
