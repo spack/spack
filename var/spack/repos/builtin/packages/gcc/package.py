@@ -443,7 +443,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     @classmethod
     def determine_variants(cls, exes, version_str):
         languages, compilers = set(), {}
-        for exe in exes:
+        # There are often at least two copies (not symlinks) of each compiler executable in the
+        # same directory: one with a canonical name, e.g. "gfortran", and another one with the
+        # target prefix, e.g. "x86_64-pc-linux-gnu-gfortran". There also might be a copy of "gcc"
+        # with the version suffix, e.g. "x86_64-pc-linux-gnu-gcc-6.3.0". To ensure the consistency
+        # of values in the "compilers" dictionary (i.e. we prefer all of them to reference copies
+        # with canonical names if possible), we iterate over the executables in the reversed sorted
+        # order:
+        for exe in sorted(exes, reverse=True):
             basename = os.path.basename(exe)
             if "g++" in basename:
                 languages.add("c++")
