@@ -191,6 +191,7 @@ spack:
   - zfp
 
   # GPU
+  - aml +ze
   - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
