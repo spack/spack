@@ -11,13 +11,14 @@ spack:
       root: /home/software/spack
       padded_length: 384
       projections:
-        all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
+        all: "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+
   packages:
     all:
+      compiler: [gcc@11.2.0]
       target: [x86_64_v4]
       variants: +cuda cuda_arch=80
-    cuda:
-      version: [11.7.0]
+
   specs:
     # Horovod
     - py-horovod
@@ -90,7 +91,13 @@ spack:
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     mappings:
-      - match: ['@:']
+      - match:
+          - llvm
+        runner-attributes:
+          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+          tags: ["spack", "public", "huge", "x86_64_v4"]
+      - match:
+          - "@:"
         runner-attributes:
           image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
           tags: ["spack", "public", "large", "x86_64_v4"]
