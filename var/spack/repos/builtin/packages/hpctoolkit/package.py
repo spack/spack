@@ -17,7 +17,7 @@ class Hpctoolkit(AutotoolsPackage):
     and attributes them to the full calling context in which they occur."""
 
     homepage = "http://hpctoolkit.org"
-    git = "https://github.com/HPCToolkit/hpctoolkit.git"
+    git = "https://gitlab.com/hpctoolkit/hpctoolkit.git"
     maintainers = ["mwkrentel"]
 
     tags = ["e4s"]
