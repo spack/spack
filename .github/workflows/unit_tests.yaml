@@ -1,4 +1,4 @@
-name: linux tests
+name: unit tests
 
 on:
   workflow_call:
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   # Run unit tests with different configurations on linux
-  unittests:
+  unit-tests-ubuntu:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -92,7 +92,7 @@ jobs:
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
-  shell:
+  unit-tests-shell:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -133,7 +133,7 @@ jobs:
   # only on PRs modifying core Spack
   rhel8-platform-python:
     runs-on: ubuntu-latest
-    if: ${{  inputs.with_coverage == 'true' }}
+    if: ${{ inputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
     steps:
     - name: Install dependencies
@@ -201,7 +201,7 @@ jobs:
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
-  build:
+  unit-tests-macos:
     runs-on: macos-latest
     strategy:
       matrix:
