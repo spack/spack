@@ -12,6 +12,7 @@ _os_map = {
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
+    "rocky8": "RHEL-8",
     "amzn2": "RHEL-7",
 }
 
@@ -78,7 +79,7 @@ class Arm(Package):
     conflicts("target=x86_64:", msg="Only available on Aarch64")
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
-    depends_on("ncurses abi=5")
+
     executables = [r"armclang", r"armclang\+\+", r"armflang"]
 
     # Licensing - Not required from 22.0.1 on.
