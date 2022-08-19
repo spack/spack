@@ -13,8 +13,8 @@ import macholib.MachO
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.symlink import symlink
 from llnl.util.lang import memoized
+from llnl.util.symlink import symlink
 
 import spack.bootstrap
 import spack.platforms
@@ -75,6 +75,7 @@ class BinaryTextReplaceError(spack.error.SpackError):
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than new path."
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
+
 
 @memoized
 def _patchelf():
