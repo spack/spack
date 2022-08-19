@@ -1,4 +1,4 @@
-name: master control
+name: MC
 
 on:
   push:
