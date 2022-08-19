@@ -416,9 +416,6 @@ class Configuration(object):
                 # be the scope of highest precedence
                 cmd_line_scope = self.pop_scope()
 
-        if scope.name in self.scopes:
-            raise KeyError("A scope with the name", scope.name, "already exists.")
-
         self.scopes[scope.name] = scope
         if cmd_line_scope:
             self.scopes["command_line"] = cmd_line_scope
