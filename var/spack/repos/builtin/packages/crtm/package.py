@@ -38,11 +38,11 @@ class Crtm(CMakePackage):
     # depends_on("ecbuild", when="@2.4.0:", type=("build"))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
-    version("2.4.0", commit="a831626")
+    version("2.4.0", commit="5ddd0d6")
     # Uses the tip of REL-2.3.0_emc branch
     version("2.3.0", commit="99760e6")
     # JEDI applications so far use these versions
     # Branch release/crtm_jedi
     version("v2.3-jedi.4", commit="bfede42")
     # Branch release/crtm_jedi_v2.4.0
-    version("v2.4_jedi", commit="3119d66")
+    version("v2.4_jedi", commit="0ee3593")
