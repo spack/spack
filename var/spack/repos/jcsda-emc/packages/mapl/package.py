@@ -20,7 +20,7 @@ class Mapl(CMakePackage):
     homepage = "https://github.com/GEOS-ESM/MAPL"
     url      = "https://github.com/GEOS-ESM/MAPL/archive/refs/tags/v2.8.1.tar.gz"
 
-    maintainers = ['kgerheiser', 'climbfuji', 'edwardhartnett', 'Hang-Lei-NOAA']
+    maintainers = ['mathomp4', 'kgerheiser', 'climbfuji', 'edwardhartnett', 'Hang-Lei-NOAA']
 
     version('2.22.0', sha256='3356b8d29813431d272c5464e265f3fe3ce1ac7f49ae6d41da34fe4b82aa691a')
     version('2.12.3', sha256='e849eff291939509e74830f393cb2670c2cc96f6160d8060dbeb1742639c7d41')
