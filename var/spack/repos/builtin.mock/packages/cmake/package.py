@@ -40,6 +40,8 @@ class Cmake(Package):
     def setup_dependent_package(self, module, dspec):
         spack_cc  # Ensure spack module-scope variable is avaiable
 
+        module.cmake = Executable(self.spec.prefix.bin.cmake)
+        module.ctest = Executable(self.spec.prefix.bin.ctest)
         self.spec.from_cmake = "from_cmake"
         module.from_cmake = "from_cmake"
 

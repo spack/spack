@@ -100,6 +100,7 @@ spack:
   - amrex
   - arborx
   - argobots
+  - ascent ^vtk-m ~openmp
   - axom
   - bolt
   - bricks
@@ -186,6 +187,7 @@ spack:
 
   # GPU
   - aml +ze
+  - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
   - kokkos +sycl +openmp std=17 +tests +examples %oneapi
@@ -194,7 +196,6 @@ spack:
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2
   #- archer@2.0.0                                     # binutils
-  #- ascent ^vtk-m ~openmp                            # ascent
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
