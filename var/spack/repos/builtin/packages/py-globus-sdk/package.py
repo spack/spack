@@ -17,6 +17,7 @@ class PyGlobusSdk(PythonPackage):
 
     maintainers = ["hategan"]
 
+    version("3.10.1", sha256="c20fec55fc7e099f4d0c8224a36e194604577539445c5985cb465b23779baee8")
     version("3.0.2", sha256="765b577b37edac70c513179607f1c09de7b287baa855165c9dd68de076d67f16")
 
     depends_on("python@3.6:", type=("build", "run"))
