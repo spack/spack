@@ -186,10 +186,11 @@ spack:
   - zfp
 
   # GPU
+  - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
   - kokkos +sycl +openmp std=17 +tests +examples %oneapi
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
 
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2

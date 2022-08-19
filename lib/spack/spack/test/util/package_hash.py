@@ -47,7 +47,7 @@ def compare_hash_sans_name(eq, spec1, spec2):
 
 
 def test_hash(mock_packages, config):
-    ph.package_hash("hash-test1@1.2")
+    ph.package_hash(Spec("hash-test1@1.2"))
 
 
 def test_different_variants(mock_packages, config):
@@ -398,40 +398,6 @@ class Pkg:
 """
 
 
-def test_multimethod_resolution():
-    # all are false but the default
-    filtered = ph.canonical_source("pkg@4.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know first @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@1.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know last @when overrides default and others are false
-    filtered = ph.canonical_source("pkg@3.0", source=many_multimethods)
-    assert "ONE" not in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # we don't know if default or THREE will win, include both
-    filtered = ph.canonical_source("pkg@2.0", source=many_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-
 more_dynamic_multimethods = """\
 class Pkg:
     @when(sys.platform == "darwin")
@@ -460,36 +426,31 @@ class Pkg:
 """
 
 
-def test_more_dynamic_multimethod_resolution():
-    # we know the first one is the only one that can win.
-    filtered = ph.canonical_source("pkg@4.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # now we have to include ONE and TWO because ONE may win dynamically.
-    filtered = ph.canonical_source("pkg@1.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
-
-    # we know FOUR is true and TWO and THREE are false, but ONE may
-    # still win dynamically.
-    filtered = ph.canonical_source("pkg@3.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" not in filtered
-    assert "FOUR" in filtered
-    assert "FIVE" in filtered
-
-    # TWO and FOUR can't be satisfied, but ONE or THREE could win
-    filtered = ph.canonical_source("pkg@2.0", source=more_dynamic_multimethods)
-    assert "ONE" in filtered
-    assert "TWO" not in filtered
-    assert "THREE" in filtered
-    assert "FOUR" not in filtered
-    assert "FIVE" in filtered
+@pytest.mark.parametrize(
+    "spec_str,source,expected,not_expected",
+    [
+        # all are false but the default
+        ("pkg@4.0", many_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # we know first @when overrides default and others are false
+        ("pkg@1.0", many_multimethods, ["TWO", "FIVE"], ["ONE", "THREE", "FOUR"]),
+        # we know last @when overrides default and others are false
+        ("pkg@3.0", many_multimethods, ["FOUR", "FIVE"], ["ONE", "TWO", "THREE"]),
+        # we don't know if default or THREE will win, include both
+        ("pkg@2.0", many_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+        # we know the first one is the only one that can win.
+        ("pkg@4.0", more_dynamic_multimethods, ["ONE", "FIVE"], ["TWO", "THREE", "FOUR"]),
+        # now we have to include ONE and TWO because ONE may win dynamically.
+        ("pkg@1.0", more_dynamic_multimethods, ["ONE", "TWO", "FIVE"], ["THREE", "FOUR"]),
+        # we know FOUR is true and TWO and THREE are false, but ONE may
+        # still win dynamically.
+        ("pkg@3.0", more_dynamic_multimethods, ["ONE", "FOUR", "FIVE"], ["TWO", "THREE"]),
+        # TWO and FOUR can't be satisfied, but ONE or THREE could win
+        ("pkg@2.0", more_dynamic_multimethods, ["ONE", "THREE", "FIVE"], ["TWO", "FOUR"]),
+    ],
+)
+def test_multimethod_resolution(spec_str, source, expected, not_expected):
+    filtered = ph.canonical_source(Spec(spec_str), source=source)
+    for item in expected:
+        assert item in filtered
+    for item in not_expected:
+        assert item not in filtered
