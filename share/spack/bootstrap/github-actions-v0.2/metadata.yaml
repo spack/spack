@@ -3,6 +3,6 @@ description: |
   Buildcache generated from a public workflow using Github Actions.
   The sha256 checksum of binaries is checked before installation.
 info:
-  url: https://mirror.spack.io/bootstrap/github-actions/v0.2
+  url: http://harmenstoppels.nl/spack-bootstrap/
   homepage: https://github.com/spack/spack-bootstrap-mirrors
   releases: https://github.com/spack/spack-bootstrap-mirrors/releases
