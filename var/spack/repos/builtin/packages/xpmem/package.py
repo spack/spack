@@ -88,7 +88,7 @@ class Xpmem(AutotoolsPackage):
         if "~kernel-module" in self.spec:
             # The kernel module is enabled by default. An attempt of explicit
             # enabling with '--enable-kernel-module' disables the module.
-            args.extend("--disable-kernel-module")
+            args.append("--disable-kernel-module")
 
         if self.spec.satisfies("@:2.6.5"):
             fmt = self.spec.format
