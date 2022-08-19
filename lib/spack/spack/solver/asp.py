@@ -367,7 +367,7 @@ class Result(object):
         Modeled after traceback.format_stack.
         """
         error_msg = (
-            "Internal Error: ASP Result.control not populated. Pleasse report to the spack"
+            "Internal Error: ASP Result.control not populated. Please report to the spack"
             " maintainers"
         )
         assert self.control, error_msg
@@ -390,7 +390,7 @@ class Result(object):
         essential facts.
         """
         error_msg = (
-            "Internal Error: ASP Result.control not populated. Pleasse report to the spack"
+            "Internal Error: ASP Result.control not populated. Please report to the spack"
             " maintainers"
         )
         assert self.control, error_msg
@@ -833,7 +833,7 @@ class SpackSolverSetup(object):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
         msg = (
-            "Internal Error: spec with no name occured. Please report to the spack" " maintainers."
+            "Internal Error: spec with no name occured. Please report to the spack maintainers."
         )
         assert spec.name, msg
 
@@ -2088,7 +2088,7 @@ class SpecBuilder(object):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
 
         # TODO: assertion to be removed when cross-compilation is handled correctly
-        msg = "Current solver does not handle multiple dependency edges " "of the same name"
+        msg = "Current solver does not handle multiple dependency edges of the same name"
         assert len(dependencies) < 2, msg
 
         if not dependencies:
