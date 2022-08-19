@@ -17,7 +17,9 @@ class Fortrilinos(CMakePackage):
     """
 
     homepage = "https://trilinos.github.io/ForTrilinos/"
-    url = "https://github.com/trilinos/ForTrilinos/releases/download/v2.1.0/ForTrilinos-2.1.0.tar.gz"
+    url = (
+        "https://github.com/trilinos/ForTrilinos/releases/download/v2.1.0/ForTrilinos-2.1.0.tar.gz"
+    )
     git = "https://github.com/trilinos/ForTrilinos.git"
 
     maintainers = ["sethrj", "aprokop"]
