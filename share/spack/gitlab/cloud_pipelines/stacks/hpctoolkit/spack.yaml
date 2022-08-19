@@ -20,24 +20,22 @@ spack:
     target: [target=aarch64]
   - when: arch.satisfies('target=ppc64le:')
     target: [target=ppc64le]
- 
-  - target_specific_mindeps: ['@:']
+
   - when: arch.satisfies('target=x86_64:')
     target_specific_mindeps: [^intel-xed @12.0.1]
+  - when: not arch.satisfies('target=x86_64:')
+    target_specific_mindeps: ['@:']
 
   - gpus:
     - ~cuda ~rocm ~opencl ~level_zero ~gtpin
-    - +cuda ^cuda@10.2
     - +cuda ^cuda@11
-    - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
     - +level_zero
-  - when: arch.satisfies('target=aarch64:')
+  - when: not arch.satisfies('target=aarch64:')
     gpus:
-    - ~cuda ~rocm ~opencl ~level_zero ~gtpin
     # CUDA on ARM is only supported in CUDA 11 and following
-    - +cuda ^cuda@11
+    - +cuda ^cuda@10.2
     # ROCm fails to build on ARM currently
-    - +level_zero
+    - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
 
   specs:
     - matrix:
