@@ -14,17 +14,12 @@ class Fortrilinos(CMakePackage):
     configuration. For example, MPI is enabled if and only if the linked
     Trilinos version has it, so this package does not provide an indepdent
     variant. Instead, use ``fortrilinos ^trilinos~mpi`` to disable MPI support.
-
-    Since Trilinos enables a bunch of upstream dependencies by default, it
-    might be worthwhile to disable them::
-
-        spack install fortrilinos \
-            ^trilinos@12.18.1+nox+stratimikos \
-            ~boost~exodus~glm~gtest~hdf5~hypre~matio~metis~mumps~netcdf~suite-sparse
     """
 
     homepage = "https://trilinos.github.io/ForTrilinos/"
-    url = "https://github.com/trilinos/ForTrilinos/archive/v2.0.0.tar.gz"
+    url = (
+        "https://github.com/trilinos/ForTrilinos/releases/download/v2.1.0/ForTrilinos-2.1.0.tar.gz"
+    )
     git = "https://github.com/trilinos/ForTrilinos.git"
 
     maintainers = ["sethrj", "aprokop"]
@@ -32,7 +27,10 @@ class Fortrilinos(CMakePackage):
     tags = ["e4s"]
     test_requires_compiler = True
 
-    version("2.0.0", sha256="9af3b3eea9934e44d74654a5fa822de08bd0efa43e06e4a4e35a777781f542d6")
+    version("2.1.0", sha256="2c62bb6106ae86a804497d549080cb6877c5d860b6bf2e72ec5cbcbbe63e3b5b")
+    version("2.0.1", sha256="291a62c885cd4ffd76cbebafa02789649bd4fa73f1005cf8da51fd153acb9e1a")
+    version("2.0.0", sha256="4382a21864e70e9059654c0529cac95548768fe02855c5f3624e454807dff018")
+
     # Note: spack version comparison implies Version('2.0.0') <
     # Version('2.0.0-dev1'), so this is the best workaround I could find.
     version(
@@ -51,7 +49,8 @@ class Fortrilinos(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
 
     # Trilinos version dependencies
-    depends_on("trilinos@13.0.0:", when="@2.0.0:")
+    depends_on("trilinos@13.2.0:13.2", when="@2.1.0:2.1")
+    depends_on("trilinos@13.0.0:13.0", when="@2.0.0:2.0")
     depends_on("trilinos@12.18.1", when="@2.0.dev3")
     depends_on("trilinos@12.18.1", when="@2.0.dev2")
 
