@@ -1,0 +1,27 @@
+From 0aecf225347bea7153b848261da51b2b97cc86b6 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Mon, 8 Aug 2022 21:44:11 +0000
+Subject: [PATCH] Adjust openmp bitcode directory for llvm link as llvm 5.2
+ have a change where the OpenMP clang toolchain looks for bitcode files in
+ llvm/bin/../lib instead of llvm/bin/../libdevice
+
+---
+ clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp b/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
+index 9115fcf61..ce044712d 100644
+--- a/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
++++ b/clang/lib/Driver/ToolChains/AMDGPUOpenMP.cpp
+@@ -179,7 +179,7 @@ const char *AMDGCN::OpenMPLinker::constructLLVMLinkCommand(
+       getProcessorFromTargetID(getToolChain().getTriple(), TargetID);
+ 
+   // If device debugging turned on, add specially built bc files
+-  StringRef libpath = Args.MakeArgString(C.getDriver().Dir + "/../lib");
++  StringRef libpath = Args.MakeArgString(C.getDriver().Dir + "/../lib/libdevice");
+   std::string lib_debug_path = FindDebugInLibraryPath();
+   if (!lib_debug_path.empty())
+     libpath = lib_debug_path;
+-- 
+2.25.1
+

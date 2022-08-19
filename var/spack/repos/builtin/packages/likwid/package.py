@@ -22,6 +22,7 @@ class Likwid(Package):
     git = "https://github.com/RRZE-HPC/likwid.git"
     maintainers = ["TomTheBear"]
 
+    version("5.2.2", sha256="7dda6af722e04a6c40536fc9f89766ce10f595a8569b29e80563767a6a8f940e")
     version("5.2.1", sha256="1b8e668da117f24302a344596336eca2c69d2bc2f49fa228ca41ea0688f6cbc2")
     version("5.2.0", sha256="aa6dccacfca59e52d8f3be187ffcf292b2a2fa1f51a81bf8912b9d48e5a257e0")
     version("5.1.1", sha256="faec7c62987967232f476a6ff0ee85af686fd24b5a360126896b7f435d1f943f")
@@ -54,6 +55,11 @@ class Likwid(Package):
         "https://github.com/RRZE-HPC/likwid/releases/download/v5.1.0/likwid-mpirun-5.1.0.patch?full_index=1",
         when="@5.1.0",
         sha256="62da145da0a09de21020f9726290e1daf7437691bab8a92d7254bc192d5f3061",
+    )
+    patch(
+        "https://github.com/RRZE-HPC/likwid/releases/download/v5.2.0/likwid-icx-mem-group-fix.patch",
+        sha256="af4ce278ef20cd1df26d8749a6b0e2716e4286685dae5a5e1eb4af8c383f7d10",
+        when="@5.2.0:",
     )
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")

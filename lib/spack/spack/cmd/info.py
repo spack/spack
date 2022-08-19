@@ -145,10 +145,8 @@ class VariantFormatter(object):
                 name = textwrap.wrap(
                     "{0} [{1}]".format(k, self.default(v)), width=self.column_widths[0]
                 )
-                if len(w) == 1:
-                    w = w[0]
-                    if w == spack.spec.Spec():
-                        w = "--"
+                if all(spec == spack.spec.Spec() for spec in w):
+                    w = "--"
                 when = textwrap.wrap(str(w), width=self.column_widths[1])
                 allowed = v.allowed_values.replace("True, False", "on, off")
                 allowed = textwrap.wrap(allowed, width=self.column_widths[2])
