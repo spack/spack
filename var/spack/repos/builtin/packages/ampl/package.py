@@ -98,4 +98,3 @@ class Ampl(Package):
             if res.name == 'ampl_lic':
                 res_path = join_path(res.fetcher.stage.source_path, res.name)
                 install(res_path, prefix)
-
