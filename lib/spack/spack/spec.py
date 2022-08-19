@@ -4958,6 +4958,8 @@ class SpecLexer(spack.parse.Lexer):
         )
         super(SpecLexer, self).__init__(
             [
+                (r"[a-z]*flags\s*\=", lambda scanner, val: self.token(FLAGS, val)),
+                (r"[a-z]*libs\s*\=", lambda scanner, val: self.token(LIBS, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),
@@ -4976,8 +4978,6 @@ class SpecLexer(spack.parse.Lexer):
                 # Identifiers match after filenames and hashes.
                 (spec_id_re, lambda scanner, val: self.token(ID, val)),
                 (r"\s+", lambda scanner, val: None),
-                (r"[a-z]*flags*\s\=*\s", lambda scanner, val: self.token(FLAGS, val)),
-                (r"[a-z]*libs*\s\=*\s", lambda scanner, val: self.token(LIBS, val)),
             ],
             [FLAGS, LIBS],
             [

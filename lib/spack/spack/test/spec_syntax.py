@@ -693,7 +693,7 @@ class TestSpecSyntax(object):
     def test_flags(self):
         lex = [Token(sp.ID, "mvapich_foo"),
             Token(sp.FLAGS, "cppflags="),
-            Token(sp.VAL, '"-g"')
+            Token(sp.VAL, '-g')
             ]
 
         self.check_lex(lex, 'mvapich_foo cppflags="-g"')
@@ -701,7 +701,7 @@ class TestSpecSyntax(object):
     def test_libs(self):
         lex = [Token(sp.ID, "mvapich_foo"),
             Token(sp.LIBS, "ldlibs="),
-            Token(sp.VAL, '"-lfoo"')
+            Token(sp.VAL, '-lfoo')
             ]
 
         self.check_lex(lex, 'mvapich_foo ldlibs="-lfoo"')
