@@ -15,6 +15,7 @@ import platform
 import re
 import sys
 import sysconfig
+import uuid
 
 import six
 
@@ -261,12 +262,11 @@ class _BootstrapperBase(object):
 class _BuildcacheBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from a buildcache."""
 
-    config_scope_name = "bootstrap_buildcache"
-
     def __init__(self, conf):
         super(_BuildcacheBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
         self.last_search = None
+        self.config_scope_name = "bootstrap_buildcache-{}".format(uuid.uuid4())
 
     @staticmethod
     def _spec_and_platform(abstract_spec_str):
@@ -379,13 +379,12 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
 class _SourceBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from sources."""
 
-    config_scope_name = "bootstrap_source"
-
     def __init__(self, conf):
         super(_SourceBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
         self.conf = conf
         self.last_search = None
+        self.config_scope_name = "bootstrap_source-{}".format(uuid.uuid4())
 
     def try_import(self, module, abstract_spec_str):
         info = {}
