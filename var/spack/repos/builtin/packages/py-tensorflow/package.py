@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTensorflow(Package, CudaPackage):
+class PyTensorflow(Package, CudaPackage, ROCmPackage):
     """An Open Source Machine Learning Framework for Everyone.
 
     TensorFlow is an end-to-end open source platform for machine learning. It has a
