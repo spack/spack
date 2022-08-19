@@ -8,7 +8,7 @@ from spack.package import *
 
 class Sensei(CMakePackage):
     """SENSEI is a platform for scalable in-situ analysis and visualization.
-    Its design motto is 'Write once, run everywhere', this means that once
+    Its design motto is "Write once, run everywhere", this means that once
     the application is instrumented with SENSEI it can use existing and
     future analysis backends. Existing backends include: Paraview/Catalyst,
     Visit/Libsim, ADIOS, Python scripts, and so on."""
@@ -19,6 +19,7 @@ class Sensei(CMakePackage):
     maintainers = ["sshudler", "kwryankrattiger"]
 
     version("develop", branch="develop")
+    version("4.0.0", sha256="fc1538aa1051789dbdefbe18b7f251bc46e7a6ae1db3a940c123552e0318db8b")
     version("3.2.2", sha256="d554b654880e899d97d572f02de87b0202faadaf899420ef871093b5bce320c0")
     version("3.2.1", sha256="7438fb4b148e4d1eb888c619366d0d8639122ecbbf1767e19549d6ca0c8698ca")
     version("3.2.0", sha256="fd1a69134d9f8151d85a7f84a67d6a648aef5580585b39f74a56367cff433c82")
@@ -36,8 +37,13 @@ class Sensei(CMakePackage):
     variant("libsim", default=False, description="Build with VisIt-Libsim support")
     variant("vtkio", default=False, description="Enable adaptors to write to VTK XML format")
     variant("adios2", default=False, description="Enable ADIOS2 adaptors and endpoints")
-    variant("hdf5", default=False, description="Enables HDF5 adaptors and endpoints")
-    variant("vtkm", default=False, description="Enable VTKm adaptors and endpoints")
+    variant("hdf5", default=False, description="Enables HDF5 adaptors and endpoints", when="@3:")
+    variant(
+        "vtkm",
+        default=False,
+        description="Enable VTKm adaptors and endpoints",
+        when="@4: +catalyst",
+    )
     variant("python", default=False, description="Enable Python bindings")
     variant(
         "miniapps", default=False, description="Enable the parallel 3D and oscillators miniapps"
@@ -46,21 +52,36 @@ class Sensei(CMakePackage):
     # All SENSEI versions up to 2.1.1 support only Python 2, so in this case
     # Paraview 6 cannot be used since it requires Python 3. Starting from
     # version 3, SENSEI supports Python 3.
-    depends_on("paraview@5.5.0:5.5.2+mpi+hdf5", when="@:2.1.1 +catalyst")
-    depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst+python")
-    depends_on("paraview@5.6:5.7+mpi+hdf5", when="@3:3.2.1 +catalyst")
-    depends_on("paraview@5.6:5.7+python3+mpi+hdf5", when="@3:3.2.1 +catalyst+python")
-    depends_on("paraview+mpi+hdf5", when="+catalyst")
-    depends_on("paraview+python3+mpi+hdf5", when="+catalyst+python")
-    depends_on("visit~gui~python", when="+libsim")
-    depends_on("vtk@8.1.0:8.1.2", when="+libsim")
-    depends_on("vtk", when="~libsim ~catalyst")
-    depends_on("vtk+python", when="~libsim ~catalyst+python")
+    depends_on("paraview+mpi", when="+catalyst")
+    depends_on("paraview+hdf5", when="+catalyst+hdf5")
+    depends_on("paraview+python", when="@:2 +catalyst+python")
+    depends_on("paraview+python3", when="@3: +catalyst+python")
+
+    depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
+    depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
+    depends_on("paraview@5.7:5.9", when="@3.2.2 +catalyst")
+    depends_on("paraview@5.7:5.10", when="@4: +catalyst")
+
+    # Visit Dep
+    depends_on("visit", when="+libsim")
+
+    # VTK Dep
+    depends_on("vtk@8:8", when="@:3 ~catalyst")
+    depends_on("vtk+python", when="@:3 ~catalyst+python")
+    depends_on("vtk@9:", when="@4: +vtkio ~catalyst")
+
+    # VTK-m
+    depends_on("paraview use_vtkm=on", when="+vtkm")
+
+    # ADIOS2
     depends_on("adios2", when="+adios2")
+
+    # Ascent
     depends_on("ascent", when="+ascent")
 
-    # VTK needs +hl and currently spack cannot resolve +hl and ~hl
-    depends_on("hdf5+hl", when="+hdf5")
+    # HDF5
+    depends_on("hdf5", when="+hdf5")
+
     # SENSEI 3 supports Python 3, earlier versions upport only Python 2
     depends_on("python@:2.7.16", when="@:2.1.1 +python", type=("build", "run"))
     depends_on("python@3:", when="@3: +python", type=("build", "run"))
@@ -70,15 +91,18 @@ class Sensei(CMakePackage):
     depends_on("swig", when="+python", type="build")
     depends_on("cmake@3.6:", when="@3:", type="build")
     depends_on("pugixml")
+    depends_on("mpi")
 
-    # Since sensei always has a VTK dependency, either directly or indirectly,
-    # VTKm will also always be available via VTK so there's no scenario to
-    # have a directl dependency on VTK,
-
-    # Can have either LibSim or Catalyst, but not both
+    # Can have either LibSim or Catalyst or Ascent, but not a combination
     conflicts("+libsim", when="+catalyst")
-    # hdf5 variant is available only for SENSEI 3
-    conflicts("+hdf5", when="@:2.1.1")
+    conflicts("+ascent", when="+catalyst")
+    conflicts("+ascent", when="+libsim")
+
+    # Patches
+    patch("libsim-add-missing-symbol-visibility-pr67.patch", when="@4.0.0")
+    patch("sensei-find-mpi-component-cxx-pr68.patch", when="@4.0.0")
+    patch("sensei-install-external-pugixml-pr69.patch", when="@4.0.0")
+    patch("sensei-version-detection-pr75.patch", when="@4.0.0")
 
     def cmake_args(self):
         spec = self.spec
@@ -88,6 +112,11 @@ class Sensei(CMakePackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("SENSEI_USE_EXTERNAL_pugixml", True),
             self.define("ENABLE_SENSEI", True),
+            self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
+            self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
+            # Don"t rely on MPI found in cray environment for cray systems.
+            # On non-cray systems this should be a no-op
+            self.define("ENABLE_CRAY_MPICH", False),
             self.define_from_variant("ENABLE_ASCENT", "ascent"),
             self.define_from_variant("ENABLE_VTKM", "vtkm"),
             self.define_from_variant("ENABLE_CATALYST", "catalyst"),
@@ -100,12 +129,16 @@ class Sensei(CMakePackage):
             self.define_from_variant("ENABLE_OSCILLATORS", "miniapps"),
         ]
 
+        if "+adios2" in spec:
+            args.append(self.define("ADIOS2_DIR", spec["adios2"].prefix))
+
+        if "+ascent" in spec:
+            args.append(self.define("ASCENT_DIR", spec["ascent"].prefix))
+
         if "+libsim" in spec:
-            args.append(
-                "-DVISIT_DIR:PATH={0}/current/{1}-{2}".format(
-                    spec["visit"].prefix, spec.platform, spec.target.family
-                )
-            )
+            # This is only for linux
+            # Visit install location may be different on other platforms
+            args.append("-DVISIT_DIR:PATH={0}/current/linux-x86_64".format(spec["visit"].prefix))
 
         if "+python" in spec:
             args.append(self.define("PYTHON_EXECUTABLE", spec["python"].command.path))

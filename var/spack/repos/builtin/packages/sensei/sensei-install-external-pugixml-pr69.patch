@@ -1,0 +1,13 @@
+diff --git a/utils/pugixml/CMakeLists.txt b/utils/pugixml/CMakeLists.txt
+index 09896fb1..cf7b3450 100644
+--- a/utils/pugixml/CMakeLists.txt
++++ b/utils/pugixml/CMakeLists.txt
+@@ -6,7 +6,7 @@ if (SENSEI_USE_EXTERNAL_pugixml)
+     @ONLY)
+ 
+   install(
+-    FILES "${CMAKE_BINARY_DIR}/lib/cmake/pugixml.cmake"
++    FILES "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/pugixml.cmake"
+     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake")
+ else ()
+   add_library(pugixml STATIC src/pugixml.cpp)

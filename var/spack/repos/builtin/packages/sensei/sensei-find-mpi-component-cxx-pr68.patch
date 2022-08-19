@@ -1,0 +1,13 @@
+diff --git a/CMake/mpi.cmake b/CMake/mpi.cmake
+index 853a355e..0f40d7b4 100644
+--- a/CMake/mpi.cmake
++++ b/CMake/mpi.cmake
+@@ -16,7 +16,7 @@ elseif (ENABLE_CORI_GPU OR (NOT DEFINED ENABLE_CORI_GPU AND NOT ("$ENV{OPENMPI_D
+     set(MPIEXEC srun CACHE STRING "Platform MPI run equivalent")
+     set(MPI_C_FOUND CACHE BOOL ON "status of MPI config")
+ else()
+-    find_package(MPI COMPONENTS C)
++    find_package(MPI COMPONENTS C CXX)
+ endif()
+ 
+ if (NOT MPI_C_FOUND)
