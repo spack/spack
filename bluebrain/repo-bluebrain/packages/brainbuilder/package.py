@@ -17,6 +17,7 @@ class Brainbuilder(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
+    depends_on('py-joblib@1.0.1:', type=('build', 'run'))
     depends_on('py-click@7.0:8.999', type=('build', 'run'))
     depends_on('py-h5py@3.1.0:', type=('build', 'run'))
     depends_on('py-jsonschema@3.2.0:', type=('build', 'run'))
