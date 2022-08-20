@@ -377,7 +377,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("+opencl", when="@:0.11")
     conflicts("+computecpp", when="@:0.11")
     conflicts("+computecpp", when="~opencl")
-    conflicts("+rocm", when="@:1.11")
     conflicts("+cuda", when="platform=darwin", msg="There is no GPU support for macOS")
     conflicts(
         "cuda_arch=none",
