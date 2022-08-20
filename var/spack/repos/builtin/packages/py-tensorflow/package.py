@@ -133,7 +133,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     variant("ngraph", default=False, description="Build with Intel nGraph support")
     variant("opencl", default=False, description="Build with OpenCL SYCL support")
     variant("computecpp", default=False, description="Build with ComputeCPP support")
-    variant("rocm", default=False, description="Build with ROCm support")
     variant("tensorrt", default=False, description="Build with TensorRT support")
     variant("cuda", default=sys.platform != "darwin", description="Build with CUDA support")
     variant(
