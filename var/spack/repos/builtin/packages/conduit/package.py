@@ -452,7 +452,7 @@ class Conduit(CMakePackage):
         if "+mpi" in spec:
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
-            mpifc_path = spec["mpi"].mpifc
+            mpifc_path = spec["mpi"].mpifc if "+fortran" in spec else None
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
