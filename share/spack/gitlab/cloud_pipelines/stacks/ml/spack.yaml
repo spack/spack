@@ -90,17 +90,25 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+
     mappings:
       - match:
           - llvm
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64_v4"]
+          tags: [ "spack", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
       - match:
           - "@:"
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64_v4"]
+          tags: [ "spack", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
 
