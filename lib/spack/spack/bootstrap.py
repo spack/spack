@@ -812,9 +812,19 @@ def verify_patchelf(patchelf):
 
 def ensure_patchelf_in_path_or_raise():
     """Ensure patchelf is in the PATH or raise."""
-    return ensure_executables_in_path_or_raise(
-        executables=["patchelf"], abstract_spec=patchelf_root_spec(), cmd_check=verify_patchelf
-    )
+    # The old concretizer is not smart and we're doing its job: if the latest patchelf
+    # does not concretize because the compiler doesn't support C++17, we try to
+    # concretize again with an upperbound @:13.
+    try:
+        return ensure_executables_in_path_or_raise(
+            executables=["patchelf"], abstract_spec=patchelf_root_spec(), cmd_check=verify_patchelf
+        )
+    except RuntimeError:
+        return ensure_executables_in_path_or_raise(
+            executables=["patchelf"],
+            abstract_spec=_root_spec("patchelf@0.13.1:0.13"),
+            cmd_check=verify_patchelf,
+        )
 
 
 ###
