@@ -197,7 +197,7 @@ class VtkH(CMakePackage, CudaPackage):
         if "+mpi" in spec:
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
-            has_mpifc = hasattr(spec["mpi"], 'mpifc')
+            has_mpifc = hasattr(spec["mpi"], "mpifc")
             mpifc_path = spec["mpi"].mpifc if has_mpifc else None
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
