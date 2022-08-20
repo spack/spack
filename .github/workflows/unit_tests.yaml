@@ -14,7 +14,7 @@ on:
         type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: unit_tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
   cancel-in-progress: true
 
 jobs:
