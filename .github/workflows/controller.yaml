@@ -77,7 +77,7 @@ jobs:
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
     if: ${{ github.repository == 'spack/spack' }}
-    needs: [ style-and-validity ]
+    needs: [ style-and-validity, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     with:
       core: ${{ needs.changes.outputs.core }}
