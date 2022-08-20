@@ -436,6 +436,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225
     conflicts("target=aarch64:", when="@:2.2")
+    conflicts("~rocm", when="@2.7.4-rocm-enhanced")
+    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
     # TODO: why is this needed?
     patch("url-zlib.patch", when="@0.10.0")
