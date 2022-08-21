@@ -121,7 +121,6 @@ spack:
   - flux-core
   - fortrilinos
   - gasnet
-  - geopm ^ruby%gcc #https://github.com/spack/spack/issues/31954
   - ginkgo
   - globalarrays
   - gmp
@@ -208,6 +207,7 @@ spack:
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
+  #- geopm@1.1.0                                      # ruby
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit@2022.04.15                            # binutils
   #- openpmd-api@0.14.4                               # adios2
