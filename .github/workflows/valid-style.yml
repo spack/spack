@@ -18,6 +18,7 @@ jobs:
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
+        cache: 'pip'
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
@@ -36,9 +37,10 @@ jobs:
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
       with:
         python-version: '3.10'
+        cache: 'pip'
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools types-six
+        python3 -m pip install --upgrade pip six setuptools types-six click==8.0.2 'black==21.12b0' mypy isort clingo flake8
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
