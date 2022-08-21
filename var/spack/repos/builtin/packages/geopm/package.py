@@ -104,6 +104,5 @@ class Geopm(AutotoolsPackage):
         args.extend(self.enable_or_disable("openmp"))
         args.extend(self.enable_or_disable("ompt"))
         args.extend(self.with_or_without("gnu-ld"))
-        args.extend('CXXFLAGS=-Wno-tautological-constant-compare')
 
         return args
