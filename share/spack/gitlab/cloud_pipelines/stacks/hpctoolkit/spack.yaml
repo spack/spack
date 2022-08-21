@@ -55,7 +55,7 @@ spack:
           ^automake @1.15.1
           ^boost @1.77.0
           ^bzip2 @1.0.8
-          ^dyninst @12.1.0
+          ^dyninst @12.2.0
           ^elfutils @0.186
           ^intel-tbb @2020.3
           ^libiberty @2.37
