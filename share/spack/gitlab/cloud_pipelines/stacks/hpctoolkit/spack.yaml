@@ -35,14 +35,9 @@ spack:
     # CUDA on ARM is only supported in CUDA 11 and following
     - +cuda ^cuda@10.2
     # ROCm fails to build on ARM currently
-    - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^roctracer-dev@5.2 ^rocprofiler-dev@5.2
+    - +rocm ^hip@5.2 ^hsa-rocr-dev@5.2 ^rocprofiler-dev@5.2 ^roctracer-dev@5.2
 
   specs:
-    - matrix:
-      - [libmonitor +hpctoolkit ~dlopen ~commrank]
-      - - '@:'
-        - '@2021.11.08'
-      - [$target]
     # Latest release with latest compatible dependencies
     - matrix:
       - [hpctoolkit +mpi +viewer]
@@ -58,18 +53,18 @@ spack:
       - [$gpus]
       - - ^autoconf @2.69
           ^automake @1.15.1
-          ^libtool @2.4.6
           ^boost @1.77.0
-          ^libiberty @2.37
-          ^elfutils @0.186
-          ^dyninst @12.1.0
-          ^intel-tbb @2020.3
           ^bzip2 @1.0.8
+          ^dyninst @12.1.0
+          ^elfutils @0.186
+          ^intel-tbb @2020.3
+          ^libiberty @2.37
+          ^libtool @2.4.6
+          ^libunwind @1.6.2
+          ^memkind @1.12.0
+          ^xerces-c @3.2.3
           ^xz @5.2.5
           ^zlib @1.2.12
-          ^libunwind @1.6.2
-          ^xerces-c @3.2.3
-          ^memkind @1.12.0
       - [$target_specific_mindeps]
       - [$target]
 
