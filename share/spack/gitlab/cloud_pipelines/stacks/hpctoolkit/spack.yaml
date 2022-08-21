@@ -62,7 +62,7 @@ spack:
           ^libtool @2.4.6
           ^libunwind @1.6.2
           ^memkind @1.12.0
-          ^xerces-c @3.2.3
+          ^xerces-c netaccessor=none @3.2.3
           ^xz @5.2.5
           ^zlib @1.2.12
       - [$target_specific_mindeps]
