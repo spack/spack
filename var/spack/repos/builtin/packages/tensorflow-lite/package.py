@@ -72,9 +72,6 @@ class TensorflowLite(CMakePackage):
         return args
 
     def install(self, spec, prefix):
-        # Currently no install target is defined, but allowing for future
-        super().install(spec, prefix)
-
         # Install library
         mkdirp(self.prefix.lib)
         with working_dir(self.build_directory):
