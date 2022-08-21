@@ -78,18 +78,18 @@ class TensorflowLite(CMakePackage):
         # Install library
         mkdirp(self.prefix.lib)
         with working_dir(self.build_directory):
-            for l in find(".", "libtensorflow-lite.*", recursive=False):
-                install(l, self.prefix.lib)
+            for lib in find(".", "libtensorflow-lite.*", recursive=False):
+                install(lib, self.prefix.lib)
 
         # Install headers for tensorflow itself
         mkdirp(self.prefix.include)
-        for h in find(join_path(self.stage.source_path, "tensorflow/lite"), "*.h", recursive=True):
-            relpath = os.path.relpath(h)
+        for header in find(join_path(self.stage.source_path, "tensorflow/lite"), "*.h", recursive=True):
+            relpath = os.path.relpath(header)
             dirname = os.path.dirname(relpath)
             installdir = join_path(self.prefix.include, dirname)
             mkdirp(installdir)
-            install(h, installdir)
+            install(header, installdir)
 
         # Install headers for vendored dependencies
-        for d in ["flatbuffers"]:
-            install_tree(join_path(self.build_directory, d, "include"), self.prefix.include)
+        for dir in ["flatbuffers"]:
+            install_tree(join_path(self.build_directory, dir, "include"), self.prefix.include)
