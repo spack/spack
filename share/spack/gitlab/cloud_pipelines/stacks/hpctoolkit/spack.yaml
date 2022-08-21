@@ -8,7 +8,7 @@ spack:
   config:
     concretizer: clingo
     install_tree:
-      root: /tmp/foospack
+      root: /home/software/spack
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
