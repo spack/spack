@@ -1,0 +1,45 @@
+#!/bin/bash
+set -euxo pipefail
+mkdir -p "${XDG_RUNTIME_DIR:=/tmp}/spack-tests"
+export TMPDIR="${XDG_RUNTIME_DIR}"
+export TMP_DIR="$(mktemp -d -t spack-test-XXXXX)"
+clean_up() {
+    printf "cleaning up: $TMP_DIR\n"
+    rm -rf "$TMP_DIR"
+}
+trap clean_up EXIT
+trap clean_up ERR
+
+printf "Redirecting TMP_DIR and spack directories to $TMP_DIR\n"
+
+export SPACK_USER_CACHE_PATH="$TMP_DIR/user_cache"
+mkdir -p "$SPACK_USER_CACHE_PATH"
+
+default_bootstrap="$SPACK_USER_CACHE_PATH/bootstrap"
+if (($# > 1)) && [[ $1 == "-b" ]]; then
+    export BOOTSTRAP=$2
+    shift 2
+else
+    export BOOTSTRAP="$default_bootstrap"
+fi
+mkdir -p "$BOOTSTRAP"
+if [[ "$(realpath "$BOOTSTRAP")" != "$(realpath "$default_bootstrap")" ]]; then
+    ln -s "$BOOTSTRAP" "$SPACK_USER_CACHE_PATH/bootstrap"
+fi
+
+export SPACK_SYSTEM_CONFIG_PATH="$TMP_DIR/sys_conf"
+export SPACK_USER_CONFIG_PATH="$TMP_DIR/user_conf"
+mkdir -p "$SPACK_USER_CONFIG_PATH"
+cat >"$SPACK_USER_CONFIG_PATH/config.yaml" <<EOF
+config:
+  install_tree:
+    root: $TMP_DIR/install
+  misc_cache: $$user_cache_path/cache
+  source_cache: $$user_cache_path/source
+EOF
+cat >"$SPACK_USER_CONFIG_PATH/bootstrap.yaml" <<EOF
+bootstrap:
+  root: $BOOTSTRAP
+EOF
+
+"$@"
