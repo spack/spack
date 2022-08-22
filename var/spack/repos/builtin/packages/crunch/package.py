@@ -10,7 +10,10 @@ class Crunch(CMakePackage):
     """Advanced DXTc texture compression and transcoding library."""
 
     homepage = "https://github.com/BinomialLLC/crunch"
-    # Fork with CMake build system
+    # The original repo does not have any build system or installation instructions. This package
+    # was added primarily as a possible dependency of GDAL. The following fork was created by the
+    # maintainer of GDAL and includes several additional commits to add a CMake build system and
+    # fix compilation bugs. If these commits are ever merged into upstream, we can switch to that.
     git = "https://github.com/rouault/crunch.git"
 
     # No stable releases since 2012
