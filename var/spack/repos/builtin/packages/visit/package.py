@@ -79,6 +79,8 @@ class Visit(CMakePackage):
     variant("python", default=True, description="Enable Python support")
     variant("mpi", default=True, description="Enable parallel engine")
     variant("vtkm", default=False, description="Enable VTK-m support")
+    variant("conduit", default=True, description="Enable Conduit support")
+    variant("mfem", default=True, description="Enable MFEM support")
 
     patch("spack-changes-3.1.patch", when="@3.1.0:3.2.2")
     patch("spack-changes-3.0.1.patch", when="@3.0.1")
@@ -138,6 +140,17 @@ class Visit(CMakePackage):
     depends_on("silo~hdf5", when="+silo~hdf5")
     depends_on("silo+mpi", when="+silo+mpi")
     depends_on("silo~mpi", when="+silo~mpi")
+
+    depends_on("conduit@0.8.3:", when="+conduit")
+    depends_on("conduit+python", when="+conduit")
+    depends_on("conduit+hdf5", when="+conduit+hdf5")
+    depends_on("conduit~hdf5", when="+conduit~hdf5")
+    depends_on("conduit+mpi", when="+conduit+mpi")
+    depends_on("conduit~mpi", when="+conduit~mpi")
+
+    depends_on("mfem@4.4:", when="+mfem")
+    depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
+    depends_on("libfms@0.2:", when="+mfem")
 
     depends_on("adios2@2.6:", when="+adios2")
     depends_on("adios2+hdf5", when="+adios2+hdf5")
@@ -267,6 +280,23 @@ class Visit(CMakePackage):
 
         if "+silo" in spec:
             args.append(self.define("VISIT_SILO_DIR", spec["silo"].prefix))
+
+        if "+conduit" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_CONDUIT_DIR", spec["conduit"].prefix),
+                    self.define("CONDUIT_VERSION", spec["conduit"].version),
+                ]
+            )
+
+        if "+mfem" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_MFEM_DIR", spec["mfem"].prefix),
+                    self.define("VISIT_FMS_DIR", spec["libfms"].prefix),
+                    self.define("VISIT_MFEM_INCDEP", "CONDUIT_INCLUDE_DIR;FMS_INCLUDE_DIR"),
+                ]
+            )
 
         if "+mpi" in spec:
             args.extend(
