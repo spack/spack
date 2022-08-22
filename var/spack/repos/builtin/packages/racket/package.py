@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import sys
+
+from spack.package import *
+
 
 class Racket(Package):
     """The Racket programming language."""
