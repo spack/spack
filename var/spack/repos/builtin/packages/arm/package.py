@@ -150,5 +150,3 @@ class Arm(Package):
         env.prepend_path("CPATH", join_path(arm_dir, "include"))
         env.prepend_path("MANPATH", join_path(arm_dir, "share", "man"))
         env.prepend_path("ARM_LICENSE_DIR", join_path(self.prefix, "licences"))
-        if "ncurses" in self.spec:
-            env.prepend_path("LD_LIBRARY_PATH", join_path(self.spec["ncurses"].prefix, "lib"))
