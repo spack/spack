@@ -17,10 +17,7 @@ class Neovim(CMakePackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
-    version(
-        '0.7.0',
-        sha256='792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df'
-    )
+    version("0.7.0", sha256="792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df")
     version(
         "0.6.1",
         sha256="dd882c21a52e5999f656cae3f336b5fc702d52addd4d9b5cd3dc39cfff35e864",
@@ -137,4 +134,4 @@ class Neovim(CMakePackage):
 
     @when("^lua")
     def cmake_args(self):
-        return [self.define('PREFER_LUA', True)]
+        return [self.define("PREFER_LUA", True)]

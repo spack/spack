@@ -39,23 +39,24 @@ class WafPackage(PackageBase):
     All of these functions are empty except for the ``configure_args``
     function, which passes ``--prefix=/path/to/installation/prefix``.
     """
+
     # Default phases
-    phases = ['configure', 'build', 'install']
+    phases = ["configure", "build", "install"]
 
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'WafPackage'
+    build_system_class = "WafPackage"
 
     # Callback names for build-time test
-    build_time_test_callbacks = ['build_test']
+    build_time_test_callbacks = ["build_test"]
 
     # Callback names for install-time test
-    install_time_test_callbacks = ['install_test']
+    install_time_test_callbacks = ["install_test"]
 
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
     # python to run the waf build script.
-    depends_on('python@2.5:', type='build')
+    depends_on("python@2.5:", type="build")
 
     @property
     def build_directory(self):
@@ -71,14 +72,14 @@ class WafPackage(PackageBase):
         jobs = inspect.getmodule(self).make_jobs
 
         with working_dir(self.build_directory):
-            self.python('waf', '-j{0}'.format(jobs), *args, **kwargs)
+            self.python("waf", "-j{0}".format(jobs), *args, **kwargs)
 
     def configure(self, spec, prefix):
         """Configures the project."""
-        args = ['--prefix={0}'.format(self.prefix)]
+        args = ["--prefix={0}".format(self.prefix)]
         args += self.configure_args()
 
-        self.waf('configure', *args)
+        self.waf("configure", *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""
@@ -88,7 +89,7 @@ class WafPackage(PackageBase):
         """Executes the build."""
         args = self.build_args()
 
-        self.waf('build', *args)
+        self.waf("build", *args)
 
     def build_args(self):
         """Arguments to pass to build."""
@@ -98,7 +99,7 @@ class WafPackage(PackageBase):
         """Installs the targets on the system."""
         args = self.install_args()
 
-        self.waf('install', *args)
+        self.waf("install", *args)
 
     def install_args(self):
         """Arguments to pass to install."""
@@ -114,7 +115,7 @@ class WafPackage(PackageBase):
         """
         pass
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
     def install_test(self):
         """Run unit tests after install.
@@ -124,7 +125,7 @@ class WafPackage(PackageBase):
         """
         pass
 
-    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+    run_after("install")(PackageBase._run_default_install_time_test_callbacks)
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

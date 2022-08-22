@@ -10,18 +10,20 @@ from spack.package import *
 
 class TowerAgent(Package):
     """Tower Agent allows Nextflow Tower to launch pipelines
-       on HPC clusters that do not allow direct access through
-       an SSH client.
+    on HPC clusters that do not allow direct access through
+    an SSH client.
     """
 
     homepage = "https://github.com/seqeralabs/tower-agent"
 
-    if platform.machine() == 'x86_64':
-        if platform.system() == 'Linux':
-            version('0.4.3',
-                    sha256='1125e64d4e3342e77fcf7f6827f045e421084654fe8faafd5389e356e0613cc0',
-                    url='https://github.com/seqeralabs/tower-agent/releases/download/v0.4.3/tw-agent-linux-x86_64',
-                    expand=False)
+    if platform.machine() == "x86_64":
+        if platform.system() == "Linux":
+            version(
+                "0.4.3",
+                sha256="1125e64d4e3342e77fcf7f6827f045e421084654fe8faafd5389e356e0613cc0",
+                url="https://github.com/seqeralabs/tower-agent/releases/download/v0.4.3/tw-agent-linux-x86_64",
+                expand=False,
+            )
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

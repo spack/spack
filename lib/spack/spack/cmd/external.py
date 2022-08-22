@@ -26,60 +26,68 @@ level = "short"
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='external_command')
+    sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     scopes = spack.config.scopes()
     scopes_metavar = spack.config.scopes_metavar
 
-    find_parser = sp.add_parser(
-        'find', help='add external packages to packages.yaml'
+    find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
+    find_parser.add_argument(
+        "--not-buildable",
+        action="store_true",
+        default=False,
+        help="packages with detected externals won't be built with Spack",
     )
     find_parser.add_argument(
-        '--not-buildable', action='store_true', default=False,
-        help="packages with detected externals won't be built with Spack")
-    find_parser.add_argument(
-        '-p', '--path', default=None, action='append',
-        help="Alternative search paths for finding externals. May be repeated")
-    find_parser.add_argument(
-        '--scope', choices=scopes, metavar=scopes_metavar,
-        default=spack.config.default_modify_scope('packages'),
-        help="configuration scope to modify")
-    find_parser.add_argument(
-        '--all', action='store_true',
-        help="search for all packages that Spack knows about"
+        "-p",
+        "--path",
+        default=None,
+        action="append",
+        help="Alternative search paths for finding externals. May be repeated",
     )
-    spack.cmd.common.arguments.add_common_arguments(find_parser, ['tags'])
-    find_parser.add_argument('packages', nargs=argparse.REMAINDER)
+    find_parser.add_argument(
+        "--scope",
+        choices=scopes,
+        metavar=scopes_metavar,
+        default=spack.config.default_modify_scope("packages"),
+        help="configuration scope to modify",
+    )
+    find_parser.add_argument(
+        "--all", action="store_true", help="search for all packages that Spack knows about"
+    )
+    spack.cmd.common.arguments.add_common_arguments(find_parser, ["tags"])
+    find_parser.add_argument("packages", nargs=argparse.REMAINDER)
     find_parser.epilog = (
         'The search is by default on packages tagged with the "build-tools" or '
         '"core-packages" tags. Use the --all option to search for every possible '
-        'package Spack knows how to find.'
+        "package Spack knows how to find."
     )
 
-    sp.add_parser(
-        'list', help='list detectable packages, by repository and name'
-    )
+    sp.add_parser("list", help="list detectable packages, by repository and name")
 
     read_cray_manifest = sp.add_parser(
-        'read-cray-manifest', help=(
+        "read-cray-manifest",
+        help=(
             "consume a Spack-compatible description of externally-installed "
             "packages, including dependency relationships"
-        )
+        ),
     )
     read_cray_manifest.add_argument(
-        '--file', default=None,
-        help="specify a location other than the default")
+        "--file", default=None, help="specify a location other than the default"
+    )
     read_cray_manifest.add_argument(
-        '--directory', default=None,
-        help="specify a directory storing a group of manifest files")
+        "--directory", default=None, help="specify a directory storing a group of manifest files"
+    )
     read_cray_manifest.add_argument(
-        '--dry-run', action='store_true', default=False,
-        help="don't modify DB with files that are read")
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="don't modify DB with files that are read",
+    )
     read_cray_manifest.add_argument(
-        '--fail-on-error', action='store_true',
-        help=("if a manifest file cannot be parsed, fail and report the "
-              "full stack trace")
+        "--fail-on-error",
+        action="store_true",
+        help=("if a manifest file cannot be parsed, fail and report the " "full stack trace"),
     )
 
 
@@ -98,21 +106,20 @@ def external_find(args):
             # For most exceptions, just print a warning and continue.
             # Note that KeyboardInterrupt does not subclass Exception
             # (so CTRL-C will terminate the program as expected).
-            skip_msg = ("Skipping manifest and continuing with other external "
-                        "checks")
-            if ((isinstance(e, IOError) or isinstance(e, OSError)) and
-                    e.errno in [errno.EPERM, errno.EACCES]):
+            skip_msg = "Skipping manifest and continuing with other external " "checks"
+            if (isinstance(e, IOError) or isinstance(e, OSError)) and e.errno in [
+                errno.EPERM,
+                errno.EACCES,
+            ]:
                 # The manifest file does not have sufficient permissions enabled:
                 # print a warning and keep going
-                tty.warn("Unable to read manifest due to insufficient "
-                         "permissions.", skip_msg)
+                tty.warn("Unable to read manifest due to insufficient " "permissions.", skip_msg)
             else:
-                tty.warn("Unable to read manifest, unexpected error: {0}"
-                         .format(str(e)), skip_msg)
+                tty.warn("Unable to read manifest, unexpected error: {0}".format(str(e)), skip_msg)
 
     # If the user didn't specify anything, search for build tools by default
     if not args.tags and not args.all and not args.packages:
-        args.tags = ['core-packages', 'build-tools']
+        args.tags = ["core-packages", "build-tools"]
 
     # If the user specified both --all and --tag, then --all has precedence
     if args.all and args.tags:
@@ -123,9 +130,7 @@ def external_find(args):
 
     # Add the packages that have been required explicitly
     if args.packages:
-        pkg_cls_to_check = [
-            spack.repo.path.get_pkg_class(pkg) for pkg in args.packages
-        ]
+        pkg_cls_to_check = [spack.repo.path.get_pkg_class(pkg) for pkg in args.packages]
         if args.tags:
             allowed = set(spack.repo.path.packages_with_tags(*args.tags))
             pkg_cls_to_check = [x for x in pkg_cls_to_check if x.name in allowed]
@@ -146,22 +151,19 @@ def external_find(args):
     if not args.tags and not pkg_cls_to_check:
         pkg_cls_to_check = list(spack.repo.path.all_package_classes())
 
-    detected_packages = spack.detection.by_executable(
-        pkg_cls_to_check, path_hints=args.path)
-    detected_packages.update(spack.detection.by_library(
-        pkg_cls_to_check, path_hints=args.path))
+    detected_packages = spack.detection.by_executable(pkg_cls_to_check, path_hints=args.path)
+    detected_packages.update(spack.detection.by_library(pkg_cls_to_check, path_hints=args.path))
 
     new_entries = spack.detection.update_configuration(
         detected_packages, scope=args.scope, buildable=not args.not_buildable
     )
     if new_entries:
-        path = spack.config.config.get_config_filename(args.scope, 'packages')
-        msg = ('The following specs have been detected on this system '
-               'and added to {0}')
+        path = spack.config.config.get_config_filename(args.scope, "packages")
+        msg = "The following specs have been detected on this system " "and added to {0}"
         tty.msg(msg.format(path))
         spack.cmd.display_specs(new_entries)
     else:
-        tty.msg('No new external packages detected')
+        tty.msg("No new external packages detected")
 
 
 def external_read_cray_manifest(args):
@@ -169,13 +171,13 @@ def external_read_cray_manifest(args):
         manifest_file=args.file,
         manifest_directory=args.directory,
         dry_run=args.dry_run,
-        fail_on_error=args.fail_on_error
+        fail_on_error=args.fail_on_error,
     )
 
 
 def _collect_and_consume_cray_manifest_files(
-        manifest_file=None, manifest_directory=None, dry_run=False,
-        fail_on_error=False):
+    manifest_file=None, manifest_directory=None, dry_run=False, fail_on_error=False
+):
 
     manifest_files = []
     if manifest_file:
@@ -187,24 +189,31 @@ def _collect_and_consume_cray_manifest_files(
 
     if os.path.isdir(cray_manifest.default_path):
         tty.debug(
-            "Cray manifest path {0} exists: collecting all files to read."
-            .format(cray_manifest.default_path))
+            "Cray manifest path {0} exists: collecting all files to read.".format(
+                cray_manifest.default_path
+            )
+        )
         manifest_dirs.append(cray_manifest.default_path)
     else:
-        tty.debug("Default Cray manifest directory {0} does not exist."
-                  .format(cray_manifest.default_path))
+        tty.debug(
+            "Default Cray manifest directory {0} does not exist.".format(
+                cray_manifest.default_path
+            )
+        )
 
     for directory in manifest_dirs:
         for fname in os.listdir(directory):
-            if fname.endswith('.json'):
+            if fname.endswith(".json"):
                 fpath = os.path.join(directory, fname)
                 tty.debug("Adding manifest file: {0}".format(fpath))
                 manifest_files.append(os.path.join(directory, fpath))
 
     if not manifest_files:
         raise NoManifestFileError(
-            "--file/--directory not specified, and no manifest found at {0}"
-            .format(cray_manifest.default_path))
+            "--file/--directory not specified, and no manifest found at {0}".format(
+                cray_manifest.default_path
+            )
+        )
 
     for path in manifest_files:
         tty.debug("Reading manifest file: " + path)
@@ -214,8 +223,7 @@ def _collect_and_consume_cray_manifest_files(
             if fail_on_error:
                 raise
             else:
-                tty.warn("Failure reading manifest file: {0}"
-                         "\n\t{1}".format(path, str(e)))
+                tty.warn("Failure reading manifest file: {0}" "\n\t{1}".format(path, str(e)))
 
 
 def external_list(args):
@@ -229,8 +237,11 @@ def external_list(args):
 
 
 def external(parser, args):
-    action = {'find': external_find, 'list': external_list,
-              'read-cray-manifest': external_read_cray_manifest}
+    action = {
+        "find": external_find,
+        "list": external_list,
+        "read-cray-manifest": external_read_cray_manifest,
+    }
     action[args.external_command](args)
 
 

@@ -71,32 +71,29 @@ if sys.version_info[0] >= 3:
         Optional[Iterable[str]],
         Optional[Iterable[str]],
     ]
-    FLAG_HANDLER_TYPE = Callable[
-        [str, Iterable[str]],
-        FLAG_HANDLER_RETURN_TYPE
-    ]
+    FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 # Filename for the Spack build/install log.
-_spack_build_logfile = 'spack-build-out.txt'
+_spack_build_logfile = "spack-build-out.txt"
 
 # Filename for the Spack build/install environment file.
-_spack_build_envfile = 'spack-build-env.txt'
+_spack_build_envfile = "spack-build-env.txt"
 
 # Filename for the Spack build/install environment modifications file.
-_spack_build_envmodsfile = 'spack-build-env-mods.txt'
+_spack_build_envmodsfile = "spack-build-env-mods.txt"
 
 # Filename for the Spack install phase-time test log.
-_spack_install_test_log = 'install-time-test-log.txt'
+_spack_install_test_log = "install-time-test-log.txt"
 
 # Filename of json with total build and phase times (seconds)
-_spack_times_log = 'install_times.json'
+_spack_times_log = "install_times.json"
 
 # Filename for the Spack configure args file.
-_spack_configure_argsfile = 'spack-configure-args.txt'
+_spack_configure_argsfile = "spack-configure-args.txt"
 
 
 def preferred_version(pkg):
@@ -109,9 +106,7 @@ def preferred_version(pkg):
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
     # version is not develop, then lexicographically
-    key_fn = lambda v: (pkg.versions[v].get('preferred', False),
-                        not v.isdevelop(),
-                        v)
+    key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
     return sorted(pkg.versions, key=key_fn).pop()
 
 
@@ -155,21 +150,24 @@ class InstallPhase(object):
                 callback(instance)
             # Check instance attributes at the end of a phase
             self._on_phase_exit(instance)
+
         return phase_wrapper
 
     def _on_phase_start(self, instance):
         # If a phase has a matching stop_before_phase attribute,
         # stop the installation process raising a StopPhase
-        if getattr(instance, 'stop_before_phase', None) == self.name:
+        if getattr(instance, "stop_before_phase", None) == self.name:
             from spack.build_environment import StopPhase
-            raise StopPhase('Stopping before \'{0}\' phase'.format(self.name))
+
+            raise StopPhase("Stopping before '{0}' phase".format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
         # stop the installation process raising a StopPhase
-        if getattr(instance, 'last_phase', None) == self.name:
+        if getattr(instance, "last_phase", None) == self.name:
             from spack.build_environment import StopPhase
-            raise StopPhase('Stopping at \'{0}\' phase'.format(self.name))
+
+            raise StopPhase("Stopping at '{0}' phase".format(self.name))
 
     def copy(self):
         try:
@@ -192,8 +190,9 @@ class DetectablePackageMeta(object):
     """Check if a package is detectable and add default implementations
     for the detection function.
     """
+
     def __init__(cls, name, bases, attr_dict):
-        if hasattr(cls, 'executables') and hasattr(cls, 'libraries'):
+        if hasattr(cls, "executables") and hasattr(cls, "libraries"):
             msg = "a package can have either an 'executables' or 'libraries' attribute"
             msg += " [package '{0.name}' defines both]"
             raise spack.error.SpackError(msg.format(cls))
@@ -207,19 +206,21 @@ class DetectablePackageMeta(object):
 
         # If a package has the executables or libraries  attribute then it's
         # assumed to be detectable
-        if hasattr(cls, 'executables') or hasattr(cls, 'libraries'):
+        if hasattr(cls, "executables") or hasattr(cls, "libraries"):
+
             @classmethod
             def platform_executables(cls):
                 def to_windows_exe(exe):
-                    if exe.endswith('$'):
-                        exe = exe.replace('$', '%s$' % spack.util.path.win_exe_ext())
+                    if exe.endswith("$"):
+                        exe = exe.replace("$", "%s$" % spack.util.path.win_exe_ext())
                     else:
                         exe += spack.util.path.win_exe_ext()
                     return exe
+
                 plat_exe = []
-                if hasattr(cls, 'executables'):
+                if hasattr(cls, "executables"):
                     for exe in cls.executables:
-                        if sys.platform == 'win32':
+                        if sys.platform == "win32":
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
                 return plat_exe
@@ -240,8 +241,7 @@ class DetectablePackageMeta(object):
                 objs_by_version = collections.defaultdict(list)
                 # The default filter function is the identity function for the
                 # list of executables
-                filter_fn = getattr(cls, 'filter_detected_exes',
-                                    lambda x, exes: exes)
+                filter_fn = getattr(cls, "filter_detected_exes", lambda x, exes: exes)
                 objs_in_prefix = filter_fn(prefix, objs_in_prefix)
                 for obj in objs_in_prefix:
                     try:
@@ -249,8 +249,9 @@ class DetectablePackageMeta(object):
                         if version_str:
                             objs_by_version[version_str].append(obj)
                     except Exception as e:
-                        msg = ('An error occurred when trying to detect '
-                               'the version of "{0}" [{1}]')
+                        msg = (
+                            "An error occurred when trying to detect " 'the version of "{0}" [{1}]'
+                        )
                         tty.debug(msg.format(obj, str(e)))
 
                 specs = []
@@ -264,57 +265,57 @@ class DetectablePackageMeta(object):
                         if isinstance(variant, six.string_types):
                             variant = (variant, {})
                         variant_str, extra_attributes = variant
-                        spec_str = '{0}@{1} {2}'.format(
-                            cls.name, version_str, variant_str
-                        )
+                        spec_str = "{0}@{1} {2}".format(cls.name, version_str, variant_str)
 
                         # Pop a few reserved keys from extra attributes, since
                         # they have a different semantics
-                        external_path = extra_attributes.pop('prefix', None)
-                        external_modules = extra_attributes.pop(
-                            'modules', None
-                        )
+                        external_path = extra_attributes.pop("prefix", None)
+                        external_modules = extra_attributes.pop("modules", None)
                         try:
                             spec = spack.spec.Spec(
                                 spec_str,
                                 external_path=external_path,
-                                external_modules=external_modules
+                                external_modules=external_modules,
                             )
                         except Exception as e:
                             msg = 'Parsing failed [spec_str="{0}", error={1}]'
                             tty.debug(msg.format(spec_str, str(e)))
                         else:
-                            specs.append(spack.spec.Spec.from_detection(
-                                spec, extra_attributes=extra_attributes
-                            ))
+                            specs.append(
+                                spack.spec.Spec.from_detection(
+                                    spec, extra_attributes=extra_attributes
+                                )
+                            )
 
                 return sorted(specs)
 
             @classmethod
             def determine_variants(cls, objs, version_str):
-                return ''
+                return ""
 
             # Register the class as a detectable package
             detectable_packages[cls.namespace].append(cls.name)
 
             # Attach function implementations to the detectable class
             default = False
-            if not hasattr(cls, 'determine_spec_details'):
+            if not hasattr(cls, "determine_spec_details"):
                 default = True
                 cls.determine_spec_details = determine_spec_details
 
-            if default and not hasattr(cls, 'determine_version'):
-                msg = ('the package "{0}" in the "{1}" repo needs to define'
-                       ' the "determine_version" method to be detectable')
+            if default and not hasattr(cls, "determine_version"):
+                msg = (
+                    'the package "{0}" in the "{1}" repo needs to define'
+                    ' the "determine_version" method to be detectable'
+                )
                 NotImplementedError(msg.format(cls.name, cls.namespace))
 
-            if default and not hasattr(cls, 'determine_variants'):
+            if default and not hasattr(cls, "determine_variants"):
                 cls.determine_variants = determine_variants
 
             # This function should not be overridden by subclasses,
             # as it is not designed for bespoke pkg detection but rather
             # on a per-platform basis
-            if 'platform_executables' in cls.__dict__.keys():
+            if "platform_executables" in cls.__dict__.keys():
                 raise PackageError("Packages should not override platform_executables")
             cls.platform_executables = platform_executables
 
@@ -325,12 +326,13 @@ class PackageMeta(
     DetectablePackageMeta,
     spack.directives.DirectiveMeta,
     spack.mixins.PackageMixinsMeta,
-    spack.multimethod.MultiMethodMeta
+    spack.multimethod.MultiMethodMeta,
 ):
     """
     Package metaclass for supporting directives (e.g., depends_on) and phases
     """
-    phase_fmt = '_InstallPhase_{0}'
+
+    phase_fmt = "_InstallPhase_{0}"
 
     # These are accessed only through getattr, by name
     _InstallPhase_run_before = {}  # type: Dict[str, List[Callable]]
@@ -345,13 +347,13 @@ class PackageMeta(
         InstallPhase attributes in the class that will be initialized in
         __init__.
         """
-        if 'phases' in attr_dict:
+        if "phases" in attr_dict:
             # Turn the strings in 'phases' into InstallPhase instances
             # and add them as private attributes
-            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
-            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
+            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict["phases"]]
+            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict["phases"]):
                 attr_dict[phase_name] = InstallPhase(callback_name)
-            attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
+            attr_dict["_InstallPhase_phases"] = _InstallPhase_phases
 
         def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
@@ -377,12 +379,12 @@ class PackageMeta(
                 # Clear the attribute for the next class
                 setattr(cls, check_attr, {})
 
-        _flush_callbacks('run_before')
-        _flush_callbacks('run_after')
+        _flush_callbacks("run_before")
+        _flush_callbacks("run_after")
 
         # Reset names for packages that inherit from another
         # package with a different name
-        attr_dict['_name'] = None
+        attr_dict["_name"] = None
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
 
@@ -396,17 +398,18 @@ class PackageMeta(
                 checks.append(func)
             setattr(PackageMeta, attr_name, check_list)
             return func
+
         return _decorator
 
 
 def run_before(*phases):
     """Registers a method of a package to be run before a given phase"""
-    return PackageMeta.register_callback('run_before', *phases)
+    return PackageMeta.register_callback("run_before", *phases)
 
 
 def run_after(*phases):
     """Registers a method of a package to be run after a given phase"""
-    return PackageMeta.register_callback('run_after', *phases)
+    return PackageMeta.register_callback("run_after", *phases)
 
 
 def on_package_attributes(**attr_dict):
@@ -419,20 +422,19 @@ def on_package_attributes(**attr_dict):
         attr_dict (dict): dictionary mapping attribute names to their
             required values
     """
-    def _execute_under_condition(func):
 
+    def _execute_under_condition(func):
         @functools.wraps(func)
         def _wrapper(instance, *args, **kwargs):
             # If all the attributes have the value we require, then execute
-            has_all_attributes = all(
-                [hasattr(instance, key) for key in attr_dict]
-            )
+            has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
+
         return _wrapper
 
     return _execute_under_condition
@@ -443,6 +445,7 @@ class PackageViewMixin(object):
     package to views. Packages can customize how they are added to views by
     overriding these functions.
     """
+
     def view_source(self):
         """The source root directory that will be added to the view: files are
         added such that their path relative to the view destination matches
@@ -506,8 +509,7 @@ def test_log_pathname(test_stage, spec):
     Returns:
         (str): the pathname of the test log file
     """
-    return os.path.join(test_stage,
-                        'test-{0}-out.txt'.format(TestSuite.test_pkg_id(spec)))
+    return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
 class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
@@ -592,6 +594,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     specific build systems.
 
     """
+
     #
     # These are default values for instance variables.
     #
@@ -664,7 +667,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: String. Contains the symbol used by the license manager to denote
     #: a comment. Defaults to ``#``.
-    license_comment = '#'
+    license_comment = "#"
 
     #: List of strings. These are files that the software searches for when
     #: looking for a license. All file paths must be relative to the
@@ -679,7 +682,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: String. A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
-    license_url = ''
+    license_url = ""
 
     #: Verbosity level, preserved across installs.
     _verbose = None
@@ -737,7 +740,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.installed_from_binary_cache = False
 
         # Ensure that only one of these two attributes are present
-        if getattr(self, 'url', None) and getattr(self, 'urls', None):
+        if getattr(self, "url", None) and getattr(self, "urls", None):
             msg = "a package can have either a 'url' or a 'urls' attribute"
             msg += " [package '{0.name}' defines both]"
             raise ValueError(msg.format(self))
@@ -757,8 +760,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @classmethod
     def possible_dependencies(
-            cls, transitive=True, expand_virtuals=True, deptype='all',
-            visited=None, missing=None, virtuals=None):
+        cls,
+        transitive=True,
+        expand_virtuals=True,
+        deptype="all",
+        visited=None,
+        missing=None,
+        virtuals=None,
+    ):
         """Return dict of possible dependencies of this package.
 
         Args:
@@ -842,8 +851,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     continue
 
                 dep_cls.possible_dependencies(
-                    transitive, expand_virtuals, deptype, visited, missing,
-                    virtuals)
+                    transitive, expand_virtuals, deptype, visited, missing, virtuals
+                )
 
         return visited
 
@@ -869,17 +878,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @classproperty
     def fullname(cls):
         """Name of this package, including the namespace"""
-        return '%s.%s' % (cls.namespace, cls.name)
+        return "%s.%s" % (cls.namespace, cls.name)
 
     @classproperty
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
         for cls in inspect.getmro(cls):
-            namespace = getattr(cls, 'namespace', None)
+            namespace = getattr(cls, "namespace", None)
             if namespace:
-                fullnames.append('%s.%s' % (namespace, cls.name))
-            if namespace == 'builtin':
+                fullnames.append("%s.%s" % (namespace, cls.name))
+            if namespace == "builtin":
                 # builtin packages cannot inherit from other repos
                 break
         return fullnames
@@ -893,29 +902,31 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         if cls._name is None:
             cls._name = cls.module.__name__
-            if '.' in cls._name:
-                cls._name = cls._name[cls._name.rindex('.') + 1:]
+            if "." in cls._name:
+                cls._name = cls._name[cls._name.rindex(".") + 1 :]
         return cls._name
 
     @classproperty
     def global_license_dir(cls):
         """Returns the directory where license files for all packages are stored."""
-        return spack.util.path.canonicalize_path(spack.config.get('config:license_dir'))
+        return spack.util.path.canonicalize_path(spack.config.get("config:license_dir"))
 
     @property
     def global_license_file(self):
         """Returns the path where a global license file for this
-           particular package should be stored."""
+        particular package should be stored."""
         if not self.license_files:
             return
-        return os.path.join(self.global_license_dir, self.name,
-                            os.path.basename(self.license_files[0]))
+        return os.path.join(
+            self.global_license_dir, self.name, os.path.basename(self.license_files[0])
+        )
 
     @property
     def version(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Version requested for a package that"
-                             " does not have a concrete version.")
+            raise ValueError(
+                "Version requested for a package that" " does not have a concrete version."
+            )
         return self.spec.versions[0]
 
     @classmethod
@@ -933,8 +944,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         version_urls = collections.OrderedDict()
         for v, args in sorted(cls.versions.items()):
-            if 'url' in args:
-                version_urls[v] = args['url']
+            if "url" in args:
+                version_urls[v] = args["url"]
         return version_urls
 
     def nearest_url(self, version):
@@ -1012,12 +1023,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             nu = spack.url.substitute_version(u, self.url_version(version))
 
             urls.append(nu)
+
         # If no specific URL, use the default, class-level URL
-        sub_and_add(getattr(self, 'url', None))
-        for u in getattr(self, 'urls', []):
+        sub_and_add(getattr(self, "url", None))
+        for u in getattr(self, "urls", []):
             sub_and_add(u)
 
-        sub_and_add(getattr(self, 'list_url', None))
+        sub_and_add(getattr(self, "list_url", None))
 
         # if no version-bearing URLs can be found, try them raw
         if not urls:
@@ -1030,11 +1042,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # if there are NO URLs to go by, then we can't do anything
                 if not default_url:
                     raise NoURLError(self.__class__)
-            urls.append(
-                spack.url.substitute_version(
-                    default_url, self.url_version(version)
-                )
-            )
+            urls.append(spack.url.substitute_version(default_url, self.url_version(version)))
 
         return urls
 
@@ -1059,14 +1067,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher,
-            os.path.join(self.name, "%s-%s" % (resource.name, self.version)))
-        stage = ResourceStage(resource.fetcher,
-                              root=root_stage,
-                              resource=resource,
-                              name=resource_stage_folder,
-                              mirror_paths=mirror_paths,
-                              path=self.path)
+            fetcher, os.path.join(self.name, "%s-%s" % (resource.name, self.version))
+        )
+        stage = ResourceStage(
+            resource.fetcher,
+            root=root_stage,
+            resource=resource,
+            name=resource_stage_folder,
+            mirror_paths=mirror_paths,
+            path=self.path,
+        )
         return stage
 
     def _download_search(self):
@@ -1076,21 +1086,24 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
         mirror_paths = spack.mirror.mirror_archive_paths(
-            fetcher,
-            os.path.join(self.name, "%s-%s" % (self.name, self.version)),
-            self.spec)
+            fetcher, os.path.join(self.name, "%s-%s" % (self.name, self.version)), self.spec
+        )
         # Construct a path where the stage should build..
         s = self.spec
-        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
-                                             s.dag_hash())
+        stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version, s.dag_hash())
 
-        stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
-                      path=self.path, search_fn=self._download_search)
+        stage = Stage(
+            fetcher,
+            mirror_paths=mirror_paths,
+            name=stage_name,
+            path=self.path,
+            search_fn=self._download_search,
+        )
         return stage
 
     def _make_stage(self):
         # If it's a dev package (not transitively), use a DIY stage object
-        dev_path_var = self.spec.variants.get('dev_path', None)
+        dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
             return spack.stage.DIYStage(dev_path_var.value)
 
@@ -1105,8 +1118,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             else:
                 # Construct resource stage
                 resource = resources[ii - 1]  # ii == 0 is root!
-                stage = self._make_resource_stage(composite_stage[0], fetcher,
-                                                  resource)
+                stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
             # Append the item to the composite
             composite_stage.append(stage)
 
@@ -1121,8 +1133,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         on the filesystem.
         """
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Cannot retrieve stage for package without concrete version.")
+            raise ValueError("Cannot retrieve stage for package without concrete version.")
         if self._stage is None:
             self._stage = self._make_stage()
         return self._stage
@@ -1137,7 +1148,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Return the build environment file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.stage.path, 'spack-build.env')
+        old_filename = os.path.join(self.stage.path, "spack-build.env")
         if os.path.exists(old_filename):
             return old_filename
         else:
@@ -1163,7 +1174,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         # Backward compatibility: Return the name of an existing log path;
         # otherwise, return the current install env path name.
-        old_filename = os.path.join(self.metadata_dir, 'build.env')
+        old_filename = os.path.join(self.metadata_dir, "build.env")
         if os.path.exists(old_filename):
             return old_filename
         else:
@@ -1173,7 +1184,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def log_path(self):
         """Return the build log file path associated with staging."""
         # Backward compatibility: Return the name of an existing log path.
-        for filename in ['spack-build.out', 'spack-build.txt']:
+        for filename in ["spack-build.out", "spack-build.txt"]:
             old_log = os.path.join(self.stage.path, filename)
             if os.path.exists(old_log):
                 return old_log
@@ -1193,7 +1204,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def install_log_path(self):
         """Return the build log file path on successful installation."""
         # Backward compatibility: Return the name of an existing install log.
-        for filename in ['build.out', 'build.txt']:
+        for filename in ["build.out", "build.txt"]:
             old_log = os.path.join(self.metadata_dir, filename)
             if os.path.exists(old_log):
                 return old_log
@@ -1209,7 +1220,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def test_install_log_path(self):
         """Return the install phase-time test log file path, if set."""
-        return getattr(self, 'test_log_file', None)
+        return getattr(self, "test_log_file", None)
 
     @property
     def install_test_install_log_path(self):
@@ -1229,19 +1240,23 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def install_test_root(self):
         """Return the install test root directory."""
-        return os.path.join(self.metadata_dir, 'test')
+        return os.path.join(self.metadata_dir, "test")
 
     @property
     def installed(self):
-        msg = ('the "PackageBase.installed" property is deprecated and will be '
-               'removed in Spack v0.19, use "Spec.installed" instead')
+        msg = (
+            'the "PackageBase.installed" property is deprecated and will be '
+            'removed in Spack v0.19, use "Spec.installed" instead'
+        )
         warnings.warn(msg)
         return self.spec.installed
 
     @property
     def installed_upstream(self):
-        msg = ('the "PackageBase.installed_upstream" property is deprecated and will '
-               'be removed in Spack v0.19, use "Spec.installed_upstream" instead')
+        msg = (
+            'the "PackageBase.installed_upstream" property is deprecated and will '
+            'be removed in Spack v0.19, use "Spec.installed_upstream" instead'
+        )
         warnings.warn(msg)
         return self.spec.installed_upstream
 
@@ -1262,8 +1277,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Cannot retrieve fetcher for"
-                             " package without concrete version.")
+            raise ValueError("Cannot retrieve fetcher for" " package without concrete version.")
         if not self._fetcher:
             self._fetcher = self._make_fetcher()
         return self._fetcher
@@ -1284,9 +1298,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         run dependency in another.
         """
         return dict(
-            (name, conds) for name, conds in cls.dependencies.items()
-            if any(dt in cls.dependencies[name][cond].type
-                   for cond in conds for dt in deptypes))
+            (name, conds)
+            for name, conds in cls.dependencies.items()
+            if any(dt in cls.dependencies[name][cond].type for cond in conds for dt in deptypes)
+        )
 
     @property
     def extendee_spec(self):
@@ -1299,7 +1314,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = []
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse(deptype=('link', 'run')):
+        for dep in self.spec.traverse(deptype=("link", "run")):
             if dep.name in self.extendees:
                 deps.append(dep)
 
@@ -1342,7 +1357,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             return bool(self.extendees)
 
     def extends(self, spec):
-        '''
+        """
         Returns True if this package extends the given spec.
 
         If ``self.spec`` is concrete, this returns whether this package extends
@@ -1350,7 +1365,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         If ``self.spec`` is not concrete, this returns whether this package may
         extend the given spec.
-        '''
+        """
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
@@ -1359,8 +1374,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def is_activated(self, view):
         """Return True if package is activated."""
         if not self.is_extension:
-            raise ValueError(
-                "is_activated called on package that is not an extension.")
+            raise ValueError("is_activated called on package that is not an extension.")
         if self.extendee_spec.installed_upstream:
             # If this extends an upstream package, it cannot be activated for
             # it. This bypasses construction of the extension map, which can
@@ -1376,7 +1390,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return any(
             any(self.spec.satisfies(c) for c in constraints)
-            for s, constraints in self.provided.items() if s.name == vpkg_name
+            for s, constraints in self.provided.items()
+            if s.name == vpkg_name
         )
 
     @property
@@ -1384,8 +1399,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         virtual packages provided by this package with its spec
         """
-        return [vspec for vspec, constraints in self.provided.items()
-                if any(self.spec.satisfies(c) for c in constraints)]
+        return [
+            vspec
+            for vspec, constraints in self.provided.items()
+            if any(self.spec.satisfies(c) for c in constraints)
+        ]
 
     @property
     def prefix(self):
@@ -1403,8 +1421,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
 
-        return spack.compilers.compiler_for_spec(self.spec.compiler,
-                                                 self.spec.architecture)
+        return spack.compilers.compiler_for_spec(self.spec.compiler, self.spec.architecture)
 
     def url_version(self, version):
         """
@@ -1433,10 +1450,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             (str):  default manual download instructions
         """
-        required = ('Manual download is required for {0}. '
-                    .format(self.spec.name) if self.manual_download else '')
-        return ('{0}Refer to {1} for download instructions.'
-                .format(required, self.spec.package.homepage))
+        required = (
+            "Manual download is required for {0}. ".format(self.spec.name)
+            if self.manual_download
+            else ""
+        )
+        return "{0}Refer to {1} for download instructions.".format(
+            required, self.spec.package.homepage
+        )
 
     def do_fetch(self, mirror_only=False):
         """
@@ -1444,55 +1465,61 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Working directory will be set to the stage directory.
         """
         if not self.has_code or self.spec.external:
-            tty.debug('No fetch required for {0}'.format(self.name))
+            tty.debug("No fetch required for {0}".format(self.name))
             return
 
-        checksum = spack.config.get('config:checksum')
+        checksum = spack.config.get("config:checksum")
         fetch = self.stage.managed_by_spack
-        if checksum and fetch and (self.version not in self.versions) \
-                and (not isinstance(self.version, GitVersion)):
-            tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.cformat('{name}{@version}'))
+        if (
+            checksum
+            and fetch
+            and (self.version not in self.versions)
+            and (not isinstance(self.version, GitVersion))
+        ):
+            tty.warn(
+                "There is no checksum on file to fetch %s safely."
+                % self.spec.cformat("{name}{@version}")
+            )
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
             ck_msg = "Add a checksum or use --no-checksum to skip this check."
             ignore_checksum = False
             if sys.stdout.isatty():
-                ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
-                                                    default=False)
+                ignore_checksum = tty.get_yes_or_no("  Fetch anyway?", default=False)
                 if ignore_checksum:
-                    tty.debug('Fetching with no checksum. {0}'
-                              .format(ck_msg))
+                    tty.debug("Fetching with no checksum. {0}".format(ck_msg))
 
             if not ignore_checksum:
-                raise FetchError("Will not fetch %s" %
-                                 self.spec.format('{name}{@version}'), ck_msg)
+                raise FetchError(
+                    "Will not fetch %s" % self.spec.format("{name}{@version}"), ck_msg
+                )
 
-        deprecated = spack.config.get('config:deprecated')
-        if not deprecated and self.versions.get(
-                self.version, {}).get('deprecated', False):
-            tty.warn("{0} is deprecated and may be removed in a future Spack "
-                     "release.".format(
-                         self.spec.format('{name}{@version}')))
+        deprecated = spack.config.get("config:deprecated")
+        if not deprecated and self.versions.get(self.version, {}).get("deprecated", False):
+            tty.warn(
+                "{0} is deprecated and may be removed in a future Spack "
+                "release.".format(self.spec.format("{name}{@version}"))
+            )
 
             # Ask the user whether to install deprecated version if we're
             # interactive, but just fail if non-interactive.
-            dp_msg = ("If you are willing to be a maintainer for this version "
-                      "of the package, submit a PR to remove `deprecated=False"
-                      "`, or use `--deprecated` to skip this check.")
+            dp_msg = (
+                "If you are willing to be a maintainer for this version "
+                "of the package, submit a PR to remove `deprecated=False"
+                "`, or use `--deprecated` to skip this check."
+            )
             ignore_deprecation = False
             if sys.stdout.isatty():
-                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?",
-                                                       default=False)
+                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?", default=False)
 
                 if ignore_deprecation:
-                    tty.debug("Fetching deprecated version. {0}".format(
-                        dp_msg))
+                    tty.debug("Fetching deprecated version. {0}".format(dp_msg))
 
             if not ignore_deprecation:
-                raise FetchError("Will not fetch {0}".format(
-                    self.spec.format('{name}{@version}')), dp_msg)
+                raise FetchError(
+                    "Will not fetch {0}".format(self.spec.format("{name}{@version}")), dp_msg
+                )
 
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
@@ -1536,43 +1563,45 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.do_stage()
 
         # Package can add its own patch function.
-        has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
+        has_patch_fun = hasattr(self, "patch") and callable(self.patch)
 
         # Get the patches from the spec (this is a shortcut for the MV-variant)
         patches = self.spec.patches
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.msg('No patches needed for {0}'.format(self.name))
+            tty.msg("No patches needed for {0}".format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.source_path
-        good_file = os.path.join(archive_dir, '.spack_patched')
-        no_patches_file = os.path.join(archive_dir, '.spack_no_patches')
-        bad_file = os.path.join(archive_dir, '.spack_patch_failed')
+        good_file = os.path.join(archive_dir, ".spack_patched")
+        no_patches_file = os.path.join(archive_dir, ".spack_no_patches")
+        bad_file = os.path.join(archive_dir, ".spack_patch_failed")
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
             if self.stage.managed_by_spack:
-                tty.debug('Patching failed last time. Restaging.')
+                tty.debug("Patching failed last time. Restaging.")
                 self.stage.restage()
             else:
                 # develop specs/ DIYStages may have patch failures but
                 # should never be restaged
-                msg = ('A patch failure was detected in %s.' % self.name +
-                       ' Build errors may occur due to this.')
+                msg = (
+                    "A patch failure was detected in %s." % self.name
+                    + " Build errors may occur due to this."
+                )
                 tty.warn(msg)
                 return
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.msg('Already patched {0}'.format(self.name))
+            tty.msg("Already patched {0}".format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.msg('No patches needed for {0}'.format(self.name))
+            tty.msg("No patches needed for {0}".format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1581,13 +1610,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.msg('Applied patch {0}'.format(patch.path_or_url))
+                tty.msg("Applied patch {0}".format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
 
                 # Touch bad file if anything goes wrong.
-                tty.msg('Patch %s failed.' % patch.path_or_url)
+                tty.msg("Patch %s failed." % patch.path_or_url)
                 fsys.touch(bad_file)
                 raise
 
@@ -1595,7 +1624,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.msg('Ran patch() for {0}'.format(self.name))
+                tty.msg("Ran patch() for {0}".format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1605,12 +1634,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.msg('No patches needed for {0}'.format(self.name))
+                    tty.msg("No patches needed for {0}".format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
                 # Touch bad file if anything goes wrong.
-                tty.msg('patch() function failed for {0}'.format(self.name))
+                tty.msg("patch() function failed for {0}".format(self.name))
                 fsys.touch(bad_file)
                 raise
 
@@ -1681,11 +1710,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 env = spack.environment.active_environment()
                 from_local_sources = env and env.is_develop(self.spec)
                 if self.has_code and not self.spec.external and not from_local_sources:
-                    message = 'Missing a source id for {s.name}@{s.version}'
+                    message = "Missing a source id for {s.name}@{s.version}"
                     tty.warn(message.format(s=self))
-                hash_content.append(''.encode('utf-8'))
+                hash_content.append("".encode("utf-8"))
             else:
-                hash_content.append(source_id.encode('utf-8'))
+                hash_content.append(source_id.encode("utf-8"))
 
         # patch sha256's
         # Only include these if they've been assigned by the concretizer.
@@ -1693,23 +1722,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         # we have to call package_hash *before* marking specs concrete
         if self.spec._patches_assigned():
             hash_content.extend(
-                ':'.join((p.sha256, str(p.level))).encode('utf-8')
-                for p in self.spec.patches
+                ":".join((p.sha256, str(p.level))).encode("utf-8") for p in self.spec.patches
             )
 
         # package.py contents
-        hash_content.append(package_hash(self.spec, source=content).encode('utf-8'))
+        hash_content.append(package_hash(self.spec, source=content).encode("utf-8"))
 
         # put it all together and encode as base32
         b32_hash = base64.b32encode(
-            hashlib.sha256(
-                bytes().join(sorted(hash_content))
-            ).digest()
+            hashlib.sha256(bytes().join(sorted(hash_content))).digest()
         ).lower()
 
         # convert from bytes if running python 3
         if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode('utf-8')
+            b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
 
@@ -1726,14 +1752,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         make = copy.deepcopy(inspect.getmodule(self).make)
 
         # Use English locale for missing target message comparison
-        make.add_default_env('LC_ALL', 'C')
+        make.add_default_env("LC_ALL", "C")
 
         # Check if we have a Makefile
-        for makefile in ['GNUmakefile', 'Makefile', 'makefile']:
+        for makefile in ["GNUmakefile", "Makefile", "makefile"]:
             if os.path.exists(makefile):
                 break
         else:
-            tty.debug('No Makefile found in the build directory')
+            tty.debug("No Makefile found in the build directory")
             return False
 
         # Check if 'target' is a valid target.
@@ -1755,17 +1781,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         ]
 
         kwargs = {
-            'fail_on_error': False,
-            'output': os.devnull,
-            'error': str,
+            "fail_on_error": False,
+            "output": os.devnull,
+            "error": str,
         }
 
-        stderr = make('-n', target, **kwargs)
+        stderr = make("-n", target, **kwargs)
 
         for missing_target_msg in missing_target_msgs:
             if missing_target_msg.format(target) in stderr:
-                tty.debug("Target '{0}' not found in {1}"
-                          .format(target, makefile))
+                tty.debug("Target '{0}' not found in {1}".format(target, makefile))
                 return False
 
         return True
@@ -1792,21 +1817,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         ninja = inspect.getmodule(self).ninja
 
         # Check if we have a Ninja build script
-        if not os.path.exists('build.ninja'):
-            tty.debug('No Ninja build script found in the build directory')
+        if not os.path.exists("build.ninja"):
+            tty.debug("No Ninja build script found in the build directory")
             return False
 
         # Get a list of all targets in the Ninja build script
         # https://ninja-build.org/manual.html#_extra_tools
-        all_targets = ninja('-t', 'targets', 'all', output=str).split('\n')
+        all_targets = ninja("-t", "targets", "all", output=str).split("\n")
 
         # Check if 'target' is a valid target
-        matches = [line for line in all_targets
-                   if line.startswith(target + ':')]
+        matches = [line for line in all_targets if line.startswith(target + ":")]
 
         if not matches:
-            tty.debug("Target '{0}' not found in build.ninja"
-                      .format(target))
+            tty.debug("Target '{0}' not found in build.ninja".format(target))
             return False
 
         return True
@@ -1847,8 +1870,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return resources
 
     def _resource_stage(self, resource):
-        pieces = ['resource', resource.name, self.spec.dag_hash()]
-        resource_stage_folder = '-'.join(pieces)
+        pieces = ["resource", resource.name, self.spec.dag_hash()]
+        resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
 
     @contextlib.contextmanager
@@ -1897,9 +1920,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         # Non-transitive dev specs need to keep the dev stage and be built from
         # source every time. Transitive ones just need to be built from source.
-        dev_path_var = self.spec.variants.get('dev_path', None)
+        dev_path_var = self.spec.variants.get("dev_path", None)
         if dev_path_var:
-            kwargs['keep_stage'] = True
+            kwargs["keep_stage"] = True
 
         builder = PackageInstaller([(self, kwargs)])
         builder.install()
@@ -1937,14 +1960,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
             pkg_id = self.test_suite.test_pkg_id(self.spec)
         else:
-            self.test_log_file = fsys.join_path(
-                self.stage.path, _spack_install_test_log)
-            pkg_id = self.spec.format('{name}-{version}-{hash:7}')
+            self.test_log_file = fsys.join_path(self.stage.path, _spack_install_test_log)
+            pkg_id = self.spec.format("{name}-{version}-{hash:7}")
         fsys.touch(self.test_log_file)  # Otherwise log_parse complains
 
         with tty.log.log_output(self.test_log_file, verbose) as logger:
             with logger.force_echo():
-                tty.msg('Testing package {0}'.format(pkg_id))
+                tty.msg("Testing package {0}".format(pkg_id))
 
             # use debug print levels for log file to record commands
             old_debug = tty.is_debug()
@@ -1959,30 +1981,36 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def do_test(self, dirty=False, externals=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
-                self.spec.compiler, arch_spec=self.spec.architecture)
+                self.spec.compiler, arch_spec=self.spec.architecture
+            )
             if not compilers:
-                tty.error('Skipping tests for package %s\n' %
-                          self.spec.format('{name}-{version}-{hash:7}') +
-                          'Package test requires missing compiler %s' %
-                          self.spec.compiler)
+                tty.error(
+                    "Skipping tests for package %s\n"
+                    % self.spec.format("{name}-{version}-{hash:7}")
+                    + "Package test requires missing compiler %s" % self.spec.compiler
+                )
                 return
 
-        kwargs = {
-            'dirty': dirty, 'fake': False, 'context': 'test',
-            'externals': externals
-        }
+        kwargs = {"dirty": dirty, "fake": False, "context": "test", "externals": externals}
         if tty.is_verbose():
-            kwargs['verbose'] = True
-        spack.build_environment.start_build_process(
-            self, test_process, kwargs)
+            kwargs["verbose"] = True
+        spack.build_environment.start_build_process(self, test_process, kwargs)
 
     def test(self):
         # Defer tests to virtual and concrete packages
         pass
 
-    def run_test(self, exe, options=[], expected=[], status=0,
-                 installed=False, purpose='', skip_missing=False,
-                 work_dir=None):
+    def run_test(
+        self,
+        exe,
+        options=[],
+        expected=[],
+        status=0,
+        installed=False,
+        purpose="",
+        skip_missing=False,
+        work_dir=None,
+    ):
         """Run the test and confirm the expected results are obtained
 
         Log any failures and continue, they will be re-raised later
@@ -2001,24 +2029,22 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
-        wdir = '.' if work_dir is None else work_dir
+        wdir = "." if work_dir is None else work_dir
         with fsys.working_dir(wdir, create=True):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
                     return
-                assert runner is not None, \
-                    "Failed to find executable '{0}'".format(exe)
+                assert runner is not None, "Failed to find executable '{0}'".format(exe)
 
-                self._run_test_helper(
-                    runner, options, expected, status, installed, purpose)
+                self._run_test_helper(runner, options, expected, status, installed, purpose)
                 print("PASSED")
                 return True
             except BaseException as e:
                 # print a summary of the error to the log file
                 # so that cdash and junit reporters know about it
                 exc_type, _, tb = sys.exc_info()
-                print('FAILED: {0}'.format(e))
+                print("FAILED: {0}".format(e))
                 import traceback
 
                 # remove the current call frame to exclude the extract_stack
@@ -2033,7 +2059,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 for i, entry in enumerate(stack):
                     filename, lineno, function, text = entry
                     if spack.repo.is_package_file(filename):
-                        with open(filename, 'r') as f:
+                        with open(filename, "r") as f:
                             lines = f.readlines()
                         new_lineno = lineno - 2
                         text = lines[new_lineno]
@@ -2042,44 +2068,39 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # Format the stack to print and print it
                 out = traceback.format_list(stack)
                 for line in out:
-                    print(line.rstrip('\n'))
+                    print(line.rstrip("\n"))
 
                 if exc_type is spack.util.executable.ProcessError:
                     out = six.StringIO()
                     spack.build_environment.write_log_summary(
-                        out, 'test', self.test_log_file, last=1)
+                        out, "test", self.test_log_file, last=1
+                    )
                     m = out.getvalue()
                 else:
                     # We're below the package context, so get context from
                     # stack instead of from traceback.
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
-                    m = '\n'.join(
-                        spack.build_environment.get_package_context(tb)
-                    )
+                    m = "\n".join(spack.build_environment.get_package_context(tb))
 
                 exc = e  # e is deleted after this block
 
                 # If we fail fast, raise another error
-                if spack.config.get('config:fail_fast', False):
+                if spack.config.get("config:fail_fast", False):
                     raise TestFailure([(exc, m)])
                 else:
                     self.test_failures.append((exc, m))
                 return False
 
-    def _run_test_helper(self, runner, options, expected, status, installed,
-                         purpose):
+    def _run_test_helper(self, runner, options, expected, status, installed, purpose):
         status = [status] if isinstance(status, six.integer_types) else status
-        expected = [expected] if isinstance(expected, six.string_types) else \
-            expected
-        options = [options] if isinstance(options, six.string_types) else \
-            options
+        expected = [expected] if isinstance(expected, six.string_types) else expected
+        options = [options] if isinstance(options, six.string_types) else options
 
         if purpose:
             tty.msg(purpose)
         else:
-            tty.debug('test: {0}: expect command status in {1}'
-                      .format(runner.name, status))
+            tty.debug("test: {0}: expect command status in {1}".format(runner.name, status))
 
         if installed:
             msg = "Executable '{0}' expected in prefix".format(runner.name)
@@ -2089,18 +2110,17 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             output = runner(*options, output=str.split, error=str.split)
 
-            assert 0 in status, \
-                'Expected {0} execution to fail'.format(runner.name)
+            assert 0 in status, "Expected {0} execution to fail".format(runner.name)
         except ProcessError as err:
             output = str(err)
-            match = re.search(r'exited with status ([0-9]+)', output)
+            match = re.search(r"exited with status ([0-9]+)", output)
             if not (match and int(match.group(1)) in status):
                 raise
 
         for check in expected:
-            cmd = ' '.join([runner.name] + options)
+            cmd = " ".join([runner.name] + options)
             msg = "Expected '{0}' to match output of `{1}`".format(check, cmd)
-            msg += '\n\nOutput: {0}'.format(output)
+            msg += "\n\nOutput: {0}".format(output)
             assert re.search(check, output), msg
 
     def unit_test_check(self):
@@ -2131,16 +2151,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 abs_path = os.path.join(self.prefix, path)
                 if not predicate(abs_path):
                     raise InstallError(
-                        "Install failed for %s. No such %s in prefix: %s" %
-                        (self.name, filetype, path))
+                        "Install failed for %s. No such %s in prefix: %s"
+                        % (self.name, filetype, path)
+                    )
 
-        check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
-        check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
+        check_paths(self.sanity_check_is_file, "file", os.path.isfile)
+        check_paths(self.sanity_check_is_dir, "directory", os.path.isdir)
 
         ignore_file = match_predicate(spack.store.layout.hidden_file_regexes)
         if all(map(ignore_file, os.listdir(self.prefix))):
-            raise InstallError(
-                "Install failed for %s.  Nothing was installed!" % self.name)
+            raise InstallError("Install failed for %s.  Nothing was installed!" % self.name)
 
     def apply_macos_rpath_fixups(self):
         """On Darwin, make installed libraries more easily relocatable.
@@ -2153,10 +2173,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         It should be added as a @run_after to packaging systems (or individual
         packages) that do not install relocatable libraries by default.
         """
-        if 'platform=darwin' not in self.spec:
+        if "platform=darwin" not in self.spec:
             return
 
         from spack.relocate import fixup_macos_rpaths
+
         fixup_macos_rpaths(self.spec)
 
     @property
@@ -2337,8 +2358,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     def flags_to_build_system_args(self, flags):
         # Takes flags as a dict name: list of values
         if any(v for v in flags.values()):
-            msg = 'The {0} build system'.format(self.__class__.__name__)
-            msg += ' cannot take command line arguments for compiler flags'
+            msg = "The {0} build system".format(self.__class__.__name__)
+            msg += " cannot take command line arguments for compiler flags"
             raise NotImplementedError(msg)
 
     @staticmethod
@@ -2350,12 +2371,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             if specs:
                 if deprecator:
                     spack.store.db.deprecate(specs[0], deprecator)
-                    tty.debug('Deprecating stale DB entry for {0}'
-                              .format(spec.short_spec))
+                    tty.debug("Deprecating stale DB entry for {0}".format(spec.short_spec))
                 else:
                     spack.store.db.remove(specs[0])
-                    tty.debug('Removed stale DB entry for {0}'
-                              .format(spec.short_spec))
+                    tty.debug("Removed stale DB entry for {0}".format(spec.short_spec))
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -2363,7 +2382,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not force:
             dependents = spack.store.db.installed_relatives(
                 spec,
-                direction='parents',
+                direction="parents",
                 transitive=True,
                 deptype=("link", "run"),
             )
@@ -2387,10 +2406,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                         error_msg = (
                             "One or more pre_uninstall hooks have failed"
                             " for {0}, but Spack is continuing with the"
-                            " uninstall".format(str(spec)))
+                            " uninstall".format(str(spec))
+                        )
                         if isinstance(error, spack.error.SpackError):
-                            error_msg += (
-                                "\n\nError message: {0}".format(str(error)))
+                            error_msg += "\n\nError message: {0}".format(str(error))
                         tty.warn(error_msg)
                         # Note that if the uninstall succeeds then we won't be
                         # seeing this error again and won't have another chance
@@ -2400,7 +2419,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
-                msg = 'Deleting package prefix [{0}]'
+                msg = "Deleting package prefix [{0}]"
                 tty.debug(msg.format(spec.short_spec))
                 # test if spec is already deprecated, not whether we want to
                 # deprecate it now
@@ -2408,11 +2427,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
             if deprecator:
-                msg = 'deprecating DB entry [{0}] in favor of [{1}]'
+                msg = "deprecating DB entry [{0}] in favor of [{1}]"
                 tty.debug(msg.format(spec.short_spec, deprecator.short_spec))
                 spack.store.db.deprecate(spec, deprecator)
             else:
-                msg = 'Deleting DB entry [{0}]'
+                msg = "Deleting DB entry [{0}]"
                 tty.debug(msg.format(spec.short_spec))
                 spack.store.db.remove(spec)
 
@@ -2427,12 +2446,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 error_msg = (
                     "One or more post-uninstallation hooks failed for"
                     " {0}, but the prefix has been removed (if it is not"
-                    " external).".format(str(spec)))
+                    " external).".format(str(spec))
+                )
                 tb_msg = traceback.format_exc()
                 error_msg += "\n\nThe error:\n\n{0}".format(tb_msg)
                 tty.warn(error_msg)
 
-        tty.msg('Successfully uninstalled {0}'.format(spec.short_spec))
+        tty.msg("Successfully uninstalled {0}".format(spec.short_spec))
 
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
@@ -2445,28 +2465,25 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Check whether package to deprecate has active extensions
         if self.extendable:
-            view = spack.filesystem_view.YamlFilesystemView(spec.prefix,
-                                                            spack.store.layout)
+            view = spack.filesystem_view.YamlFilesystemView(spec.prefix, spack.store.layout)
             active_exts = view.extensions_layout.extension_map(spec).values()
             if active_exts:
-                short = spec.format('{name}/{hash:7}')
+                short = spec.format("{name}/{hash:7}")
                 m = "Spec %s has active extensions\n" % short
                 for active in active_exts:
-                    m += '        %s\n' % active.format('{name}/{hash:7}')
+                    m += "        %s\n" % active.format("{name}/{hash:7}")
                     m += "Deactivate extensions before deprecating %s" % short
                 tty.die(m)
 
         # Check whether package to deprecate is an active extension
         if self.is_extension:
             extendee = self.extendee_spec
-            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
-                                                            spack.store.layout)
+            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix, spack.store.layout)
 
             if self.is_activated(view):
-                short = spec.format('{name}/{hash:7}')
-                short_ext = extendee.format('{name}/{hash:7}')
-                msg = "Spec %s is an active extension of %s\n" % (short,
-                                                                  short_ext)
+                short = spec.format("{name}/{hash:7}")
+                short_ext = extendee.format("{name}/{hash:7}")
+                msg = "Spec %s is an active extension of %s\n" % (short, short_ext)
                 msg += "Deactivate %s to be able to deprecate it" % short
                 tty.die(msg)
 
@@ -2477,14 +2494,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         old_deprecator = spack.store.db.deprecator(spec)
         if old_deprecator:
             # Find this specs yaml file from its old deprecation
-            self_yaml = spack.store.layout.deprecated_file_path(spec,
-                                                                old_deprecator)
+            self_yaml = spack.store.layout.deprecated_file_path(spec, old_deprecator)
         else:
             self_yaml = spack.store.layout.spec_file_path(spec)
 
         # copy spec metadata to "deprecated" dir of deprecator
-        depr_yaml = spack.store.layout.deprecated_file_path(spec,
-                                                            deprecator)
+        depr_yaml = spack.store.layout.deprecated_file_path(spec, deprecator)
         fsys.mkdirp(os.path.dirname(depr_yaml))
         shutil.copy2(self_yaml, depr_yaml)
 
@@ -2509,13 +2524,11 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         extendee_package._check_extendable()
 
         if not self.extendee_spec.installed:
-            raise ActivationError(
-                "Can only (de)activate extensions for installed packages.")
+            raise ActivationError("Can only (de)activate extensions for installed packages.")
         if not self.spec.installed:
             raise ActivationError("Extensions must first be installed.")
         if self.extendee_spec.name not in self.extendees:
-            raise ActivationError("%s does not extend %s!" %
-                                  (self.name, self.extendee.name))
+            raise ActivationError("%s does not extend %s!" % (self.name, self.extendee.name))
 
     def do_activate(self, view=None, with_dependencies=True, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
@@ -2524,19 +2537,20 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         activate() directly.
         """
         if verbose:
-            tty.msg('Activating extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg(
+                "Activating extension {0} for {1}".format(
+                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
+                )
+            )
 
         self._sanity_check_extension()
         if not view:
-            view = YamlFilesystemView(
-                self.extendee_spec.prefix, spack.store.layout)
+            view = YamlFilesystemView(self.extendee_spec.prefix, spack.store.layout)
 
         extensions_layout = view.extensions_layout
 
         try:
-            extensions_layout.check_extension_conflict(
-                self.extendee_spec, self.spec)
+            extensions_layout.check_extension_conflict(self.extendee_spec, self.spec)
         except spack.directory_layout.ExtensionAlreadyInstalledError as e:
             # already installed, let caller know
             tty.msg(e.message)
@@ -2547,21 +2561,26 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             for spec in self.dependency_activations():
                 if not spec.package.is_activated(view):
                     spec.package.do_activate(
-                        view, with_dependencies=with_dependencies,
-                        verbose=verbose)
+                        view, with_dependencies=with_dependencies, verbose=verbose
+                    )
 
-        self.extendee_spec.package.activate(
-            self, view, **self.extendee_args)
+        self.extendee_spec.package.activate(self, view, **self.extendee_args)
 
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.debug('Activated extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.debug(
+                "Activated extension {0} for {1}".format(
+                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
+                )
+            )
 
     def dependency_activations(self):
-        return (spec for spec in self.spec.traverse(root=False, deptype='run')
-                if spec.package.extends(self.extendee_spec))
+        return (
+            spec
+            for spec in self.spec.traverse(root=False, deptype="run")
+            if spec.package.extends(self.extendee_spec)
+        )
 
     def activate(self, extension, view, **kwargs):
         """
@@ -2574,7 +2593,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         Spack internals (commands, hooks, etc.) should call
         do_activate() method so that proper checks are always executed.
         """
-        view.merge(extension.spec, ignore=kwargs.get('ignore', None))
+        view.merge(extension.spec, ignore=kwargs.get("ignore", None))
 
     def do_deactivate(self, view=None, **kwargs):
         """Remove this extension package from the specified view. Called
@@ -2584,52 +2603,56 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         package instead of raising an error.
         """
         self._sanity_check_extension()
-        force = kwargs.get('force', False)
-        verbose = kwargs.get('verbose', True)
-        remove_dependents = kwargs.get('remove_dependents', False)
+        force = kwargs.get("force", False)
+        verbose = kwargs.get("verbose", True)
+        remove_dependents = kwargs.get("remove_dependents", False)
 
         if verbose:
-            tty.msg('Deactivating extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.msg(
+                "Deactivating extension {0} for {1}".format(
+                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
+                )
+            )
 
         if not view:
-            view = YamlFilesystemView(
-                self.extendee_spec.prefix, spack.store.layout)
+            view = YamlFilesystemView(self.extendee_spec.prefix, spack.store.layout)
         extensions_layout = view.extensions_layout
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            extensions_layout.check_activated(
-                self.extendee_spec, self.spec)
+            extensions_layout.check_activated(self.extendee_spec, self.spec)
 
-            activated = extensions_layout.extension_map(
-                self.extendee_spec)
+            activated = extensions_layout.extension_map(self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
-                for dep in aspec.traverse(deptype='run'):
+                for dep in aspec.traverse(deptype="run"):
                     if self.spec == dep:
                         if remove_dependents:
                             aspec.package.do_deactivate(**kwargs)
                         else:
-                            msg = ('Cannot deactivate {0} because {1} is '
-                                   'activated and depends on it')
-                            raise ActivationError(msg.format(
-                                self.spec.cshort_spec, aspec.cshort_spec))
+                            msg = (
+                                "Cannot deactivate {0} because {1} is "
+                                "activated and depends on it"
+                            )
+                            raise ActivationError(
+                                msg.format(self.spec.cshort_spec, aspec.cshort_spec)
+                            )
 
-        self.extendee_spec.package.deactivate(
-            self, view, **self.extendee_args)
+        self.extendee_spec.package.deactivate(self, view, **self.extendee_args)
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
         if self.is_activated(view):
-            extensions_layout.remove_extension(
-                self.extendee_spec, self.spec)
+            extensions_layout.remove_extension(self.extendee_spec, self.spec)
 
         if verbose:
-            tty.debug('Deactivated extension {0} for {1}'.format(
-                self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+            tty.debug(
+                "Deactivated extension {0} for {1}".format(
+                    self.spec.cshort_spec, self.extendee_spec.cshort_spec
+                )
+            )
 
     def deactivate(self, extension, view, **kwargs):
         """
@@ -2640,7 +2663,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         should call do_deactivate() method so that proper checks are
         always executed.
         """
-        view.unmerge(extension.spec, ignore=kwargs.get('ignore', None))
+        view.unmerge(extension.spec, ignore=kwargs.get("ignore", None))
 
     def view(self):
         """Create a view with the prefix of this package as the root.
@@ -2663,12 +2686,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @classmethod
     def format_doc(cls, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
-        indent = kwargs.get('indent', 0)
+        indent = kwargs.get("indent", 0)
 
         if not cls.__doc__:
             return ""
 
-        doc = re.sub(r'\s+', ' ', cls.__doc__)
+        doc = re.sub(r"\s+", " ", cls.__doc__)
         lines = textwrap.wrap(doc, 72)
         results = six.StringIO()
         for line in lines:
@@ -2685,16 +2708,16 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             list: a list of URLs
         """
         urls = []
-        if hasattr(self, 'url') and self.url:
+        if hasattr(self, "url") and self.url:
             urls.append(self.url)
 
         # fetch from first entry in urls to save time
-        if hasattr(self, 'urls') and self.urls:
+        if hasattr(self, "urls") and self.urls:
             urls.append(self.urls[0])
 
         for args in self.versions.values():
-            if 'url' in args:
-                urls.append(args['url'])
+            if "url" in args:
+                urls.append(args["url"])
         return urls
 
     def fetch_remote_versions(self, concurrency=128):
@@ -2717,18 +2740,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 reference_package=self,
             )
         except spack.util.web.NoNetworkConnectionError as e:
-            tty.die("Package.fetch_versions couldn't connect to:", e.url,
-                    e.message)
+            tty.die("Package.fetch_versions couldn't connect to:", e.url, e.message)
 
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        deps = self.spec.dependencies(deptype='link')
-        rpaths.extend(d.prefix.lib for d in deps
-                      if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps
-                      if os.path.isdir(d.prefix.lib64))
+        deps = self.spec.dependencies(deptype="link")
+        rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
+        rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
         return rpaths
 
     @property
@@ -2738,31 +2758,28 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    def _run_test_callbacks(self, method_names, callback_type='install'):
+    def _run_test_callbacks(self, method_names, callback_type="install"):
         """Tries to call all of the listed methods, returning immediately
-           if the list is None."""
+        if the list is None."""
         if method_names is None:
             return
 
-        fail_fast = spack.config.get('config:fail_fast', False)
+        fail_fast = spack.config.get("config:fail_fast", False)
 
         with self._setup_test(verbose=False, externals=False) as logger:
             # Report running each of the methods in the build log
-            print_test_message(
-                logger, 'Running {0}-time tests'.format(callback_type), True)
+            print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
 
             for name in method_names:
                 try:
                     fn = getattr(self, name)
 
-                    msg = 'RUN-TESTS: {0}-time tests [{1}]' \
-                        .format(callback_type, name),
+                    msg = ("RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name),)
                     print_test_message(logger, msg, True)
 
                     fn()
                 except AttributeError as e:
-                    msg = 'RUN-TESTS: method not implemented [{0}]' \
-                        .format(name),
+                    msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
                     print_test_message(logger, msg, True)
 
                     self.test_failures.append((e, msg))
@@ -2778,14 +2795,14 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Tries to call all the methods that are listed in the attribute
         ``build_time_test_callbacks`` if ``self.run_tests is True``.
         """
-        self._run_test_callbacks(self.build_time_test_callbacks, 'build')
+        self._run_test_callbacks(self.build_time_test_callbacks, "build")
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
         """Tries to call all the methods that are listed in the attribute
         ``install_time_test_callbacks`` if ``self.run_tests is True``.
         """
-        self._run_test_callbacks(self.install_time_test_callbacks, 'install')
+        self._run_test_callbacks(self.install_time_test_callbacks, "install")
 
 
 def has_test_method(pkg):
@@ -2799,11 +2816,10 @@ def has_test_method(pkg):
             ``False``
     """
     if not inspect.isclass(pkg):
-        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+        tty.die("{0}: is not a class, it is {1}".format(pkg, type(pkg)))
 
-    return (
-        (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or
-        (isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test)
+    return (issubclass(pkg, PackageBase) and pkg.test != PackageBase.test) or (
+        isinstance(pkg, PackageBase) and pkg.test.__func__ != PackageBase.test
     )
 
 
@@ -2816,30 +2832,27 @@ def print_test_message(logger, msg, verbose):
 
 
 def test_process(pkg, kwargs):
-    verbose = kwargs.get('verbose', False)
-    externals = kwargs.get('externals', False)
+    verbose = kwargs.get("verbose", False)
+    externals = kwargs.get("externals", False)
 
     with pkg._setup_test(verbose, externals) as logger:
         if pkg.spec.external and not externals:
-            print_test_message(
-                logger, 'Skipped tests for external package', verbose)
+            print_test_message(logger, "Skipped tests for external package", verbose)
             return
 
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
-        v_names = list(set([vspec.name
-                            for vspec in pkg.virtuals_provided]))
+        v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
 
         # hack for compilers that are not dependencies (yet)
         # TODO: this all eventually goes away
-        c_names = ('gcc', 'intel', 'intel-parallel-studio', 'pgi')
+        c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
         if pkg.name in c_names:
-            v_names.extend(['c', 'cxx', 'fortran'])
-        if pkg.spec.satisfies('llvm+clang'):
-            v_names.extend(['c', 'cxx'])
+            v_names.extend(["c", "cxx", "fortran"])
+        if pkg.spec.satisfies("llvm+clang"):
+            v_names.extend(["c", "cxx"])
 
-        test_specs = [pkg.spec] + [spack.spec.Spec(v_name)
-                                   for v_name in sorted(v_names)]
+        test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
 
         ran_actual_test_function = False
         try:
@@ -2856,15 +2869,13 @@ def test_process(pkg, kwargs):
                     if spec.concrete:
                         cache_source = spec_pkg.install_test_root
                         cache_dir = pkg.test_suite.current_test_cache_dir
-                        if (os.path.isdir(cache_source) and
-                                not os.path.exists(cache_dir)):
+                        if os.path.isdir(cache_source) and not os.path.exists(cache_dir):
                             fsys.install_tree(cache_source, cache_dir)
 
                     # copy test data into test data dir
                     data_source = Prefix(spec_pkg.package_dir).test
                     data_dir = pkg.test_suite.current_test_data_dir
-                    if (os.path.isdir(data_source) and
-                            not os.path.exists(data_dir)):
+                    if os.path.isdir(data_source) and not os.path.exists(data_dir):
                         # We assume data dir is used read-only
                         # maybe enforce this later
                         shutil.copytree(data_source, data_dir)
@@ -2879,8 +2890,8 @@ def test_process(pkg, kwargs):
                     # since they do not contribute to package testing.
                     source = (inspect.getsource(test_fn)).splitlines()[1:]
                     lines = (ln.strip() for ln in source)
-                    statements = [ln for ln in lines if not ln.startswith('#')]
-                    if len(statements) > 0 and statements[0] == 'pass':
+                    statements = [ln for ln in lines if not ln.startswith("#")]
+                    if len(statements) > 0 and statements[0] == "pass":
                         continue
 
                     # Run the tests
@@ -2900,7 +2911,7 @@ def test_process(pkg, kwargs):
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
             else:
-                print_test_message(logger, 'No tests to run', verbose)
+                print_test_message(logger, "No tests to run", verbose)
 
 
 inject_flags = PackageBase.inject_flags
@@ -2910,12 +2921,13 @@ build_system_flags = PackageBase.build_system_flags
 
 class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
+
     #: There are no phases by default but the property is required to support
     #: post-install hooks (e.g., for module generation).
     phases = []  # type: List[str]
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
-    build_system_class = 'BundlePackage'
+    build_system_class = "BundlePackage"
 
     #: Bundle packages do not have associated source or binary code.
     has_code = False
@@ -2925,16 +2937,17 @@ class Package(PackageBase):
     """General purpose class with a single ``install``
     phase that needs to be coded by packagers.
     """
+
     #: The one and only phase
-    phases = ['install']
+    phases = ["install"]
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
-    build_system_class = 'Package'
+    build_system_class = "Package"
     # This will be used as a registration decorator in user
     # packages, if need be
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after('install')(PackageBase.apply_macos_rpath_fixups)
+    run_after("install")(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
@@ -2952,10 +2965,10 @@ def install_dependency_symlinks(pkg, spec, prefix):
 
 def use_cray_compiler_names():
     """Compiler names for builds that rely on cray compiler names."""
-    os.environ['CC'] = 'cc'
-    os.environ['CXX'] = 'CC'
-    os.environ['FC'] = 'ftn'
-    os.environ['F77'] = 'ftn'
+    os.environ["CC"] = "cc"
+    os.environ["CXX"] = "CC"
+    os.environ["FC"] = "ftn"
+    os.environ["F77"] = "ftn"
 
 
 def flatten_dependencies(spec, flat_dir):
@@ -2966,13 +2979,13 @@ def flatten_dependencies(spec, flat_dir):
         dep_path = spack.store.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
-        os.mkdir(flat_dir + '/' + name)
+        os.mkdir(flat_dir + "/" + name)
 
-        conflict = dep_files.find_conflict(flat_dir + '/' + name)
+        conflict = dep_files.find_conflict(flat_dir + "/" + name)
         if conflict:
             raise DependencyConflictError(conflict)
 
-        dep_files.merge(flat_dir + '/' + name)
+        dep_files.merge(flat_dir + "/" + name)
 
 
 def possible_dependencies(*pkg_or_spec, **kwargs):
@@ -2990,10 +3003,7 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
             pos = spack.spec.Spec(pos)
 
         if spack.repo.path.is_virtual(pos.name):
-            packages.extend(
-                p.package_class
-                for p in spack.repo.path.providers_for(pos.name)
-            )
+            packages.extend(p.package_class for p in spack.repo.path.providers_for(pos.name))
             continue
         else:
             packages.append(pos.package_class)
@@ -3014,33 +3024,35 @@ class FetchError(spack.error.SpackError):
 
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
+
     def __init__(self, spec, dependents):
-        super(PackageStillNeededError, self).__init__("Cannot uninstall %s" %
-                                                      spec)
+        super(PackageStillNeededError, self).__init__("Cannot uninstall %s" % spec)
         self.spec = spec
         self.dependents = dependents
 
 
 class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
+
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
 
 
 class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
+
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
-            "Please provide a url for this version in the package.py file.")
+            "Please provide a url for this version in the package.py file.",
+        )
 
 
 class NoURLError(PackageError):
     """Raised when someone tries to build a URL for a package with no URLs."""
 
     def __init__(self, cls):
-        super(NoURLError, self).__init__(
-            "Package %s has no version with a URL." % cls.__name__)
+        super(NoURLError, self).__init__("Package %s has no version with a URL." % cls.__name__)
 
 
 class InvalidPackageOpError(PackageError):
@@ -3053,13 +3065,15 @@ class ExtensionError(PackageError):
 
 class ActivationError(ExtensionError):
     """Raised when there are problems activating an extension."""
+
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 
 
 class DependencyConflictError(spack.error.SpackError):
     """Raised when the dependencies cannot be flattened as asked for."""
+
     def __init__(self, conflict):
         super(DependencyConflictError, self).__init__(
-            "%s conflicts with another file in the flattened directory." % (
-                conflict))
+            "%s conflicts with another file in the flattened directory." % (conflict)
+        )

@@ -15,9 +15,9 @@ class PyIrpf90(PythonPackage):
     homepage = "http://irpf90.ups-tlse.fr"
     pypi = "irpf90/irpf90-1.7.7.tar.gz"
 
-    maintainers = ['scemama']
+    maintainers = ["scemama"]
 
-    version('1.7.7', sha256='c6b2eecb9180f1feaab9644bbed806637a4a30a0fad2c4775a985fcc01a99530')
+    version("1.7.7", sha256="c6b2eecb9180f1feaab9644bbed806637a4a30a0fad2c4775a985fcc01a99530")
 
-    depends_on('python@2.7.0:2.8', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7.0:2.8", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

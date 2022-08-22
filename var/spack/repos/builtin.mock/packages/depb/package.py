@@ -10,11 +10,11 @@ class Depb(AutotoolsPackage):
     """Simple package with one build dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('b')
+    depends_on("b")
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory

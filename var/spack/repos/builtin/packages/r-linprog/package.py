@@ -14,7 +14,7 @@ class RLinprog(RPackage):
 
     cran = "linprog"
 
-    version('0.9-4', sha256='81a6aa2fdc075f12dc912794d0554f87705a8b872b99c89a90a69ee9ada864b4')
+    version("0.9-4", sha256="81a6aa2fdc075f12dc912794d0554f87705a8b872b99c89a90a69ee9ada864b4")
 
-    depends_on('r@2.4.0:', type=('build', 'run'))
-    depends_on('r-lpsolve', type=('build', 'run'))
+    depends_on("r@2.4.0:", type=("build", "run"))
+    depends_on("r-lpsolve", type=("build", "run"))

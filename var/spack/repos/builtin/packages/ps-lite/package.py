@@ -11,12 +11,12 @@ class PsLite(CMakePackage):
     of the parameter server framework."""
 
     homepage = "https://github.com/dmlc/ps-lite"
-    git      = "https://github.com/dmlc/ps-lite.git"
+    git = "https://github.com/dmlc/ps-lite.git"
 
-    version('master', branch='master')
-    version('20170328', commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
+    version("master", branch="master")
+    version("20170328", commit="acdb698fa3bb80929ef83bb37c705f025e119b82")
 
-    depends_on('protobuf@3:')
-    depends_on('libzmq')
+    depends_on("protobuf@3:")
+    depends_on("libzmq")
 
-    patch('cmake.patch')
+    patch("cmake.patch")

@@ -56,7 +56,7 @@ class Fpm(Package):
         """
 
         # Perform `chmod +x ./install.sh`
-        script_path = './install.sh'
+        script_path = "./install.sh"
         st = os.stat(script_path)
         os.chmod(script_path, st.st_mode | stat.S_IXUSR)
 
