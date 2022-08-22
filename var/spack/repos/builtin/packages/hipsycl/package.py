@@ -134,10 +134,7 @@ class Hipsycl(CMakePackage):
         #    the libc++.so and libc++abi.so dyn linked to the sycl
         #    ptx backend
         rpaths = set()
-        so_paths = filesystem.find(
-                        self.spec["llvm"].prefix,
-                        "libc++.{0}".format(dso_suffix)
-                   )
+        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++.{0}".format(dso_suffix))
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
@@ -145,10 +142,7 @@ class Hipsycl(CMakePackage):
                 "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))
-        so_paths = filesystem.find(
-                        self.spec["llvm"].prefix,
-                        "libc++abi.{0}".format(dso_suffix)
-                   )
+        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++abi.{0}".format(dso_suffix))
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
