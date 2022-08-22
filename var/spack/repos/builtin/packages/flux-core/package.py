@@ -104,7 +104,7 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
-    variant("docs", default=False, description="Build flux manpages")
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     depends_on("libarchive", when="@0.38.0:")
@@ -134,7 +134,7 @@ class FluxCore(AutotoolsPackage):
     depends_on("sqlite")
 
     depends_on("asciidoc", type="build", when="+docs")
-    depends_on("py-docutils", type="build", when="@0.32.0:")
+    depends_on("py-docutils", type="build", when="@0.32.0: +docs")
 
     # Need autotools when building on master:
     depends_on("autoconf", type="build", when="@master")

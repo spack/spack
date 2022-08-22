@@ -66,6 +66,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
+
     with when("+rocm @0.12.0:"):
         depends_on("camp+rocm")
         for arch in ROCmPackage.amdgpu_targets:
