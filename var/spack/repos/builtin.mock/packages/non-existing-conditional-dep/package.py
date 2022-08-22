@@ -10,7 +10,7 @@ class NonExistingConditionalDep(Package):
 
     homepage = "http://www.example.com"
 
-    version('2.0')
-    version('1.0')
+    version("2.0")
+    version("1.0")
 
-    depends_on('dep-with-variants@999', when='@2.0')
+    depends_on("dep-with-variants@999", when="@2.0")

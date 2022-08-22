@@ -19,32 +19,34 @@ class OctavePackage(PackageBase):
     1. :py:meth:`~.OctavePackage.install`
 
     """
+
     # Default phases
-    phases = ['install']
+    phases = ["install"]
 
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'OctavePackage'
+    build_system_class = "OctavePackage"
 
-    extends('octave')
+    extends("octave")
 
     def setup_build_environment(self, env):
         # octave does not like those environment variables to be set:
-        env.unset('CC')
-        env.unset('CXX')
-        env.unset('FC')
+        env.unset("CC")
+        env.unset("CXX")
+        env.unset("FC")
 
     def install(self, spec, prefix):
         """Install the package from the archive file"""
         inspect.getmodule(self).octave(
-            '--quiet',
-            '--norc',
-            '--built-in-docstrings-file=/dev/null',
-            '--texi-macros-file=/dev/null',
-            '--eval', 'pkg prefix %s; pkg install %s' %
-            (prefix, self.stage.archive_file))
+            "--quiet",
+            "--norc",
+            "--built-in-docstrings-file=/dev/null",
+            "--texi-macros-file=/dev/null",
+            "--eval",
+            "pkg prefix %s; pkg install %s" % (prefix, self.stage.archive_file),
+        )
 
     # Testing
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

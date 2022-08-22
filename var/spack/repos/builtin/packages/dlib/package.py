@@ -13,9 +13,9 @@ class Dlib(CMakePackage):
     data and to solve computer vision problems."""
 
     homepage = "https://github.com/dorian3d/DLib"
-    git      = "https://github.com/dorian3d/DLib.git"
+    git = "https://github.com/dorian3d/DLib.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('cmake@3.0:', type='build')
-    depends_on('opencv+calib3d+features2d+highgui+imgproc+imgcodecs+flann')
+    depends_on("cmake@3.0:", type="build")
+    depends_on("opencv+calib3d+features2d+highgui+imgproc+imgcodecs+flann")

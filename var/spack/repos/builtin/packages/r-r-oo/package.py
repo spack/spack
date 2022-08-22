@@ -18,11 +18,11 @@ class RROo(RPackage):
 
     cran = "R.oo"
 
-    version('1.24.0', sha256='37a1dab8dd668ceba69a1ba36c0c60e9809e29b74bd56d1e8ed519e19c8e3bb6')
-    version('1.23.0', sha256='f5124ce3dbb0a62e8ef1bfce2de2d1dc2f776e8c48fd8cac358f7f5feb592ea1')
-    version('1.22.0', sha256='c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c')
-    version('1.21.0', sha256='645ceec2f815ed39650ca72db87fb4ece7357857875a4ec73e18bfaf647f431c')
+    version("1.24.0", sha256="37a1dab8dd668ceba69a1ba36c0c60e9809e29b74bd56d1e8ed519e19c8e3bb6")
+    version("1.23.0", sha256="f5124ce3dbb0a62e8ef1bfce2de2d1dc2f776e8c48fd8cac358f7f5feb592ea1")
+    version("1.22.0", sha256="c0862e4608fb2b8f91ec4494d46c2f3ba7bc44999f9aa3d7b9625d3792e7dd4c")
+    version("1.21.0", sha256="645ceec2f815ed39650ca72db87fb4ece7357857875a4ec73e18bfaf647f431c")
 
-    depends_on('r@2.13.0:', type=('build', 'run'))
-    depends_on('r-r-methodss3@1.7.1:', type=('build', 'run'))
-    depends_on('r-r-methodss3@1.8.0:', type=('build', 'run'), when='@1.24.0:')
+    depends_on("r@2.13.0:", type=("build", "run"))
+    depends_on("r-r-methodss3@1.7.1:", type=("build", "run"))
+    depends_on("r-r-methodss3@1.8.0:", type=("build", "run"), when="@1.24.0:")

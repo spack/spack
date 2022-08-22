@@ -19,8 +19,7 @@ RUN mkdir {{ paths.environment }} \
 {{ manifest }} > {{ paths.environment }}/spack.yaml
 
 # Install the software, remove unnecessary deps
-RUN spack install --fail-fast && \
-    spack gc -y
+RUN cd {{ paths.environment }} && spack env activate . && spack install --fail-fast && spack gc -y
 {% if strip %}
 
 # Strip all the binaries

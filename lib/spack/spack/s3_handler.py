@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from io import BufferedReader
+from io import BufferedReader, IOBase
 
 import six
 import six.moves.urllib.error as urllib_error
@@ -23,11 +23,15 @@ import spack.util.url as url_util
 # https://github.com/python/cpython/pull/3249
 class WrapStream(BufferedReader):
     def __init__(self, raw):
-        raw.readable = lambda: True
-        raw.writable = lambda: False
-        raw.seekable = lambda: False
-        raw.closed = False
-        raw.flush = lambda: None
+        # In botocore >=1.23.47, StreamingBody inherits from IOBase, so we
+        # only add missing attributes in older versions.
+        # https://github.com/boto/botocore/commit/a624815eabac50442ed7404f3c4f2664cd0aa784
+        if not isinstance(raw, IOBase):
+            raw.readable = lambda: True
+            raw.writable = lambda: False
+            raw.seekable = lambda: False
+            raw.closed = False
+            raw.flush = lambda: None
         super(WrapStream, self).__init__(raw)
 
     def detach(self):
@@ -42,20 +46,19 @@ class WrapStream(BufferedReader):
 
 def _s3_open(url):
     parsed = url_util.parse(url)
-    s3 = s3_util.create_s3_session(parsed,
-                                   connection=s3_util.get_mirror_connection(parsed))  # noqa: E501
+    s3 = s3_util.create_s3_session(parsed, connection=s3_util.get_mirror_connection(parsed))
 
     bucket = parsed.netloc
     key = parsed.path
 
-    if key.startswith('/'):
+    if key.startswith("/"):
         key = key[1:]
 
     obj = s3.get_object(Bucket=bucket, Key=key)
 
     # NOTE(opadron): Apply workaround here (see above)
-    stream = WrapStream(obj['Body'])
-    headers = obj['ResponseMetadata']['HTTPHeaders']
+    stream = WrapStream(obj["Body"])
+    headers = obj["ResponseMetadata"]["HTTPHeaders"]
 
     return url, headers, stream
 
@@ -64,21 +67,20 @@ class UrllibS3Handler(urllib_request.HTTPSHandler):
     def s3_open(self, req):
         orig_url = req.get_full_url()
         from botocore.exceptions import ClientError  # type: ignore[import]
+
         try:
             url, headers, stream = _s3_open(orig_url)
             return urllib_response.addinfourl(stream, headers, url)
         except ClientError as err:
             # if no such [KEY], but [KEY]/index.html exists,
             # return that, instead.
-            if err.response['Error']['Code'] == 'NoSuchKey':
+            if err.response["Error"]["Code"] == "NoSuchKey":
                 try:
-                    _, headers, stream = _s3_open(
-                        url_util.join(orig_url, 'index.html'))
-                    return urllib_response.addinfourl(
-                        stream, headers, orig_url)
+                    _, headers, stream = _s3_open(url_util.join(orig_url, "index.html"))
+                    return urllib_response.addinfourl(stream, headers, orig_url)
 
                 except ClientError as err2:
-                    if err.response['Error']['Code'] == 'NoSuchKey':
+                    if err.response["Error"]["Code"] == "NoSuchKey":
                         # raise original error
                         raise six.raise_from(urllib_error.URLError(err), err)
 

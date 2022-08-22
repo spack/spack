@@ -22,12 +22,12 @@ class RMagick(RPackage):
 
     cran = "magick"
 
-    version('2.7.3', sha256='83877b2e23ea43fbc1164de9c2422eafbe7858393ac384df5adf3a7eec122441')
-    version('2.6.0', sha256='66585336e3ff18793ae9e2726af67a6672622f270468670ab5fe5e013bc48ecc')
-    version('2.1', sha256='ef4fb8fc1c5a9cfcc36b22485a0e17d622f61e55803b1e7423fd15f0550de7df')
+    version("2.7.3", sha256="83877b2e23ea43fbc1164de9c2422eafbe7858393ac384df5adf3a7eec122441")
+    version("2.6.0", sha256="66585336e3ff18793ae9e2726af67a6672622f270468670ab5fe5e013bc48ecc")
+    version("2.1", sha256="ef4fb8fc1c5a9cfcc36b22485a0e17d622f61e55803b1e7423fd15f0550de7df")
 
-    depends_on('r+X', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.12:', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-curl', type=('build', 'run'))
-    depends_on('imagemagick')
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r-rcpp@0.12.12:", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-curl", type=("build", "run"))
+    depends_on("imagemagick")

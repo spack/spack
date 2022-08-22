@@ -15,10 +15,9 @@ import spack.main
 import spack.package_base
 import spack.stage
 
-clean = spack.main.SpackCommand('clean')
+clean = spack.main.SpackCommand("clean")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 @pytest.fixture()
@@ -34,38 +33,33 @@ def mock_calls_for_clean(monkeypatch):
         def __call__(self, *args, **kwargs):
             counts[self.name] += 1
 
-    monkeypatch.setattr(spack.package_base.PackageBase, 'do_clean',
-                        Counter('package'))
-    monkeypatch.setattr(spack.stage, 'purge', Counter('stages'))
-    monkeypatch.setattr(
-        spack.caches.fetch_cache, 'destroy', Counter('downloads'),
-        raising=False)
-    monkeypatch.setattr(
-        spack.caches.misc_cache, 'destroy', Counter('caches'))
-    monkeypatch.setattr(
-        spack.installer, 'clear_failures', Counter('failures'))
-    monkeypatch.setattr(spack.cmd.clean, 'remove_python_cache',
-                        Counter('python_cache'))
+    monkeypatch.setattr(spack.package_base.PackageBase, "do_clean", Counter("package"))
+    monkeypatch.setattr(spack.stage, "purge", Counter("stages"))
+    monkeypatch.setattr(spack.caches.fetch_cache, "destroy", Counter("downloads"), raising=False)
+    monkeypatch.setattr(spack.caches.misc_cache, "destroy", Counter("caches"))
+    monkeypatch.setattr(spack.installer, "clear_failures", Counter("failures"))
+    monkeypatch.setattr(spack.cmd.clean, "remove_python_cache", Counter("python_cache"))
 
     yield counts
 
 
-all_effects = ['stages', 'downloads', 'caches', 'failures', 'python_cache']
+all_effects = ["stages", "downloads", "caches", "failures", "python_cache"]
 
 
-@pytest.mark.usefixtures(
-    'mock_packages', 'config'
+@pytest.mark.usefixtures("mock_packages", "config")
+@pytest.mark.parametrize(
+    "command_line,effects",
+    [
+        ("mpileaks", ["package"]),
+        ("-s", ["stages"]),
+        ("-sd", ["stages", "downloads"]),
+        ("-m", ["caches"]),
+        ("-f", ["failures"]),
+        ("-p", ["python_cache"]),
+        ("-a", all_effects),
+        ("", []),
+    ],
 )
-@pytest.mark.parametrize('command_line,effects', [
-    ('mpileaks', ['package']),
-    ('-s',       ['stages']),
-    ('-sd',      ['stages', 'downloads']),
-    ('-m',       ['caches']),
-    ('-f',       ['failures']),
-    ('-p',       ['python_cache']),
-    ('-a',       all_effects),
-    ('',         []),
-])
 def test_function_calls(command_line, effects, mock_calls_for_clean):
 
     # Call the command with the supplied command line
@@ -73,17 +67,17 @@ def test_function_calls(command_line, effects, mock_calls_for_clean):
 
     # Assert that we called the expected functions the correct
     # number of times
-    for name in ['package'] + all_effects:
+    for name in ["package"] + all_effects:
         assert mock_calls_for_clean[name] == (1 if name in effects else 0)
 
 
 def test_remove_python_cache(tmpdir, monkeypatch):
-    cache_files = ['file1.pyo', 'file2.pyc']
-    source_file = 'file1.py'
+    cache_files = ["file1.pyo", "file2.pyc"]
+    source_file = "file1.py"
 
     def _setup_files(directory):
         # Create a python cache and source file.
-        cache_dir = fs.join_path(directory, '__pycache__')
+        cache_dir = fs.join_path(directory, "__pycache__")
         fs.mkdirp(cache_dir)
         fs.touch(fs.join_path(directory, source_file))
         fs.touch(fs.join_path(directory, cache_files[0]))
@@ -96,10 +90,10 @@ def test_remove_python_cache(tmpdir, monkeypatch):
         # and the source file is not.
         assert os.path.exists(fs.join_path(directory, source_file))
         assert not os.path.exists(fs.join_path(directory, cache_files[0]))
-        assert not os.path.exists(fs.join_path(directory, '__pycache__'))
+        assert not os.path.exists(fs.join_path(directory, "__pycache__"))
 
-    source_dir = fs.join_path(tmpdir, 'lib', 'spack', 'spack')
-    var_dir = fs.join_path(tmpdir, 'var', 'spack', 'stuff')
+    source_dir = fs.join_path(tmpdir, "lib", "spack", "spack")
+    var_dir = fs.join_path(tmpdir, "var", "spack", "stuff")
 
     for d in [source_dir, var_dir]:
         _setup_files(d)

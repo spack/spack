@@ -15,21 +15,21 @@ import spack.spec
 # however, tests are currently failing because support
 # for Spack on Windows has not been extended to this
 # module yet.
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="does not run on windows")
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 def test_build_request_errors(install_mockery):
-    with pytest.raises(ValueError, match='must be a package'):
-        inst.BuildRequest('abc', {})
+    with pytest.raises(ValueError, match="must be a package"):
+        inst.BuildRequest("abc", {})
 
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='must have a concrete spec'):
-        inst.BuildRequest(pkg, {})
+    spec = spack.spec.Spec("trivial-install-test-package")
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+    with pytest.raises(ValueError, match="must have a concrete spec"):
+        inst.BuildRequest(pkg_cls(spec), {})
 
 
 def test_build_request_basics(install_mockery):
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 
@@ -40,14 +40,14 @@ def test_build_request_basics(install_mockery):
     assert request.spec == spec.package.spec
 
     # Ensure key default install arguments are set
-    assert 'install_package' in request.install_args
-    assert 'install_deps' in request.install_args
+    assert "install_package" in request.install_args
+    assert "install_deps" in request.install_args
 
 
 def test_build_request_strings(install_mockery):
     """Tests of BuildRequest repr and str for coverage purposes."""
     # Using a package with one dependency
-    spec = spack.spec.Spec('dependent-install')
+    spec = spack.spec.Spec("dependent-install")
     spec.concretize()
     assert spec.concrete
 
