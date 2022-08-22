@@ -17,6 +17,7 @@ class Gaudi(CMakePackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("36.7", sha256="8dca43185ba11e1b33f5535d2e384542d84500407b0d1f8cb920be00f05c9716")
     version("36.6", sha256="8fc7be0ce32f99cc6b0be4ebbb246f4bb5008ffbf0c012cb39c0aff813dce6af")
     version("36.5", sha256="593e0316118411a5c5fde5d4d87cbfc3d2bb748a8c72a66f4025498fcbdb0f7e")
     version("36.4", sha256="1a5c27cdc21ec136b47f5805406c92268163393c821107a24dbb47bd88e4b97d")
@@ -72,13 +73,22 @@ class Gaudi(CMakePackage):
     depends_on("python@:2", when="@:32.1", type=("build", "run"))
     depends_on("py-networkx@:2.2", when="^python@:2.7")
     depends_on("py-networkx", when="^python@3.0.0:")
-    depends_on("py-nose", type="test")
     depends_on("py-setuptools@:45", when="^python@:2.7", type="build")
     depends_on("py-six", type=("build", "run"))
     depends_on("py-xenv@1:", when="@:34.9", type=("build", "run"))
     depends_on("range-v3")
     depends_on("root +python +root7 +ssl +tbb +threads")
     depends_on("zlib")
+
+    # Testing dependencies
+    # Note: gaudi only builds examples when testing enabled
+    for pv in (
+        ["py-nose", "@35:"],
+        ["py-pytest", "@36.2:"],
+        ["py-qmtest", "@35:"],
+    ):
+        depends_on(pv[0], when=pv[1], type="test")
+        depends_on(pv[0], when=pv[1] + " +examples")
 
     # Adding these dependencies triggers the build of most optional components
     depends_on("cppgsl", when="+cppunit")
@@ -102,6 +112,7 @@ class Gaudi(CMakePackage):
 
     def cmake_args(self):
         args = [
+            # Note: gaudi only builds examples when testing enabled
             self.define("BUILD_TESTING", self.run_tests or self.spec.satisfies("+examples")),
             self.define_from_variant("GAUDI_USE_AIDA", "aida"),
             self.define_from_variant("GAUDI_USE_CPPUNIT", "cppunit"),

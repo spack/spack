@@ -85,7 +85,7 @@ def override_git_repos_cache_path(tmpdir):
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, override_git_repos_cache_path, scope="function"):
+def mock_git_version_info(tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -704,6 +704,20 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
 
     with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
+
+
+@pytest.fixture(scope="function")
+def concretize_scope(mutable_config, tmpdir):
+    """Adds a scope for concretization preferences"""
+    tmpdir.ensure_dir("concretize")
+    mutable_config.push_scope(
+        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+    )
+
+    yield
+
+    mutable_config.pop_scope()
+    spack.repo.path._provider_index = None
 
 
 @pytest.fixture

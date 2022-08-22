@@ -307,7 +307,10 @@ def check_same_flags(flag_dict_1, flag_dict_2):
     for t in types:
         values1 = set(flag_dict_1.get(t, []))
         values2 = set(flag_dict_2.get(t, []))
-        assert values1 == values2
+        error_msg = "Internal Error: A mismatch in flags has occurred:"
+        error_msg += "\n\tvalues1: {v1}\n\tvalues2: {v2}".format(v1=values1, v2=values2)
+        error_msg += "\n Please report this as an issue to the spack maintainers"
+        assert values1 == values2, error_msg
 
 
 def check_packages_exist(specs):
@@ -363,7 +366,11 @@ class Result(object):
 
         Modeled after traceback.format_stack.
         """
-        assert self.control
+        error_msg = (
+            "Internal Error: ASP Result.control not populated. Please report to the spack"
+            " maintainers"
+        )
+        assert self.control, error_msg
 
         symbols = dict((a.literal, a.symbol) for a in self.control.symbolic_atoms)
 
@@ -382,7 +389,11 @@ class Result(object):
         ensure unsatisfiability. This algorithm reduces the core to only those
         essential facts.
         """
-        assert self.control
+        error_msg = (
+            "Internal Error: ASP Result.control not populated. Please report to the spack"
+            " maintainers"
+        )
+        assert self.control, error_msg
 
         min_core = core[:]
         for fact in core:
@@ -821,7 +832,8 @@ class SpackSolverSetup(object):
     def spec_versions(self, spec):
         """Return list of clauses expressing spec's version constraints."""
         spec = specify(spec)
-        assert spec.name
+        msg = "Internal Error: spec with no name occured. Please report to the spack maintainers."
+        assert spec.name, msg
 
         if spec.concrete:
             return [fn.version(spec.name, spec.version)]
@@ -927,6 +939,30 @@ class SpackSolverSetup(object):
                 fn.node_compiler_preference(pkg.name, cspec.name, cspec.version, -i * 100)
             )
 
+    def package_requirement_rules(self, pkg):
+        pkg_name = pkg.name
+        config = spack.config.get("packages")
+        requirements = config.get(pkg_name, {}).get("require", [])
+        if isinstance(requirements, string_types):
+            rules = [(pkg_name, "one_of", [requirements])]
+        else:
+            rules = []
+            for requirement in requirements:
+                for policy in ("one_of", "any_of"):
+                    if policy in requirement:
+                        rules.append((pkg_name, policy, requirement[policy]))
+
+        for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
+            self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
+            self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
+            for requirement_weight, spec_str in enumerate(requirement_grp):
+                spec = spack.spec.Spec(spec_str)
+                if not spec.name:
+                    spec.name = pkg_name
+                member_id = self.condition(spec, imposed_spec=spec, name=pkg_name)
+                self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
+                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
 
@@ -1016,6 +1052,8 @@ class SpackSolverSetup(object):
             pkg.name,
             lambda v, p, i: self.gen.fact(fn.pkg_provider_preference(pkg.name, v, p, i)),
         )
+
+        self.package_requirement_rules(pkg)
 
     def condition(self, required_spec, imposed_spec=None, name=None, msg=None):
         """Generate facts for a dependency or virtual provider condition.
@@ -1111,7 +1149,11 @@ class SpackSolverSetup(object):
 
     def provider_defaults(self):
         self.gen.h2("Default virtual providers")
-        assert self.possible_virtuals is not None
+        msg = (
+            "Internal Error: possible_virtuals is not populated. Please report to the spack"
+            " maintainers"
+        )
+        assert self.possible_virtuals is not None, msg
         self.virtual_preferences(
             "all",
             lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i)),
@@ -1630,7 +1672,11 @@ class SpackSolverSetup(object):
 
     def virtual_providers(self):
         self.gen.h2("Virtual providers")
-        assert self.possible_virtuals is not None
+        msg = (
+            "Internal Error: possible_virtuals is not populated. Please report to the spack"
+            " maintainers"
+        )
+        assert self.possible_virtuals is not None, msg
 
         # what provides what
         for vspec in sorted(self.possible_virtuals):
@@ -2040,7 +2086,7 @@ class SpecBuilder(object):
         dependencies = self._specs[pkg].edges_to_dependencies(name=dep)
 
         # TODO: assertion to be removed when cross-compilation is handled correctly
-        msg = "Current solver does not handle multiple dependency edges " "of the same name"
+        msg = "Current solver does not handle multiple dependency edges of the same name"
         assert len(dependencies) < 2, msg
 
         if not dependencies:
@@ -2130,7 +2176,11 @@ class SpecBuilder(object):
                 tty.debug(msg)
                 continue
 
-            assert action and callable(action)
+            msg = (
+                "Internal Error: Uncallable action found in asp.py.  Please report to the spack"
+                " maintainers."
+            )
+            assert action and callable(action), msg
 
             # ignore predicates on virtual packages, as they're used for
             # solving but don't construct anything. Do not ignore error
@@ -2200,7 +2250,14 @@ def _develop_specs_from_env(spec, env):
     path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
 
     if "dev_path" in spec.variants:
-        assert spec.variants["dev_path"].value == path
+        error_msg = (
+            "Internal Error: The dev_path for spec {name} is not connected to a valid environment"
+            "path. Please note that develop specs can only be used inside an environment"
+            "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
+        )
+        error_msg.format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
+
+        assert spec.variants["dev_path"].value == path, error_msg
     else:
         spec.variants.setdefault("dev_path", spack.variant.SingleValuedVariant("dev_path", path))
     spec.constrain(dev_info["spec"])

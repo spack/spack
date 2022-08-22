@@ -36,7 +36,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
-    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055')
+    version('15.0.0-rc1', sha256='b026a1b32ba0dc5612da36f14977c7e9fb910d545251a26dcfefca85d94139e4')
+    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055', preferred=True)
     version('14.0.5', sha256='a4a57f029cb81f04618e05853f05fc2d21b64353c760977d8e7799bf7218a23a')
     version('14.0.4', sha256='1333236f9bee38658762076be4236cb5ebf15ae9b7f2bfce6946b96ae962dc73')
     version('14.0.3', sha256='0e1d049b050127ecf6286107e9a4400b0550f841d5d2288b9d31fd32ed0683d5')
@@ -356,7 +357,9 @@ class Llvm(CMakePackage, CudaPackage):
 
     # add -lpthread to build OpenMP libraries with Fujitsu compiler
     patch("llvm12-thread.patch", when="@12 %fj")
-    patch("llvm13-thread.patch", when="@13 %fj")
+
+    # add -lpthread to build OpenMP libraries
+    patch("llvm13-14-thread.patch", when="@13:14")
 
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
@@ -572,7 +575,6 @@ class Llvm(CMakePackage, CudaPackage):
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_EH", True),
-            define("LLVM_ENABLE_TERMINFO", False),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
@@ -637,6 +639,10 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("lldb")
             cmake_args.append(define("LLDB_ENABLE_LIBEDIT", True))
             cmake_args.append(define("LLDB_ENABLE_CURSES", True))
+            if spec["ncurses"].satisfies("+termlib"):
+                cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+            else:
+                cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
             cmake_args.append(define("LLDB_ENABLE_LIBXML2", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))
@@ -644,6 +650,8 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.append(define("LLDB_DISABLE_PYTHON", "~python" in spec))
             if spec.satisfies("@5.0.0: +python"):
                 cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
+        else:
+            cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
 
         if "+gold" in spec:
             cmake_args.append(define("LLVM_BINUTILS_INCDIR", spec["binutils"].prefix.include))

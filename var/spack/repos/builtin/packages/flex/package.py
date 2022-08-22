@@ -58,6 +58,14 @@ class Flex(AutotoolsPackage):
         when="@2.6.4",
     )
 
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == "cflags":
+            if spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str, error=str)
