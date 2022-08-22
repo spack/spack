@@ -49,6 +49,7 @@ class Draco(CMakePackage):
     variant("caliper", default=False, description="Enable caliper timers support")
     variant("cuda", default=False, description="Enable Cuda/GPU support")
     variant("eospac", default=True, description="Enable EOSPAC support")
+    variant("fast_fma", default=False, description="Enable fast FMA operations")
     variant("lapack", default=True, description="Enable LAPACK wrapper")
     variant("libquo", default=True, description="Enable Quo wrapper")
     variant("parmetis", default=True, description="Enable Parmetis support")
@@ -90,8 +91,12 @@ class Draco(CMakePackage):
     patch("d710-python2.patch", when="@7.1.0^python@2.7:2")
     patch("d730.patch", when="@7.3.0:7.3")
     patch("d740.patch", when="@7.4.0:7.4")
+    patch("d750-intel17.patch", when="@7.5.0:7.6.99%intel@17.0.0:18.0.0")
     patch("d760-cray.patch", when="@7.6.0")
     patch("d770-nocuda.patch", when="@7.7.0")
+    patch("d770-query_craype.patch", when="@7.7.0")
+    patch("smpi.patch", when="@:7.6.99")
+    patch("CMAKE-add-option-to-not-use-QT.patch", when="@7.8.0")
 
     def url_for_version(self, version):
         url = "https://github.com/lanl/Draco/archive/draco-{0}.zip"
@@ -107,6 +112,14 @@ class Draco(CMakePackage):
                 "-DUSE_QT={0}".format("ON" if "+qt" in self.spec else "OFF"),
             ]
         )
+        if "+fast_fma" in self.spec:
+            options.extend(
+                [
+                    "-DDRACO_ROUNDOFF_MODE={0}".format(
+                        "FAST" if "build_type=Release" in self.spec else "ACCURATE"
+                    )
+                ]
+            )
         return options
 
     def check(self):
