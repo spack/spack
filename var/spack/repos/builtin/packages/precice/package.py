@@ -21,6 +21,7 @@ class Precice(CMakePackage):
     tags = ["e4s"]
 
     version("develop", branch="develop")
+    version("2.5.0", sha256="76ec6ee0d1a66f6f3d3d2d11f03cfc5aa7ef4d9e5deb9b7a4b4455ec7f796c00")
     version("2.4.0", sha256="762e603fbcaa96c4fb0b378b7cb6789d09da0cf6193325603e5eeb13e4c7601c")
     version("2.3.0", sha256="57bab08e8b986f5faa364689d470940dbd9c138e5cfa7b861793e7db56b89da3")
     version("2.2.1", sha256="bca8cedfb5c86656e4fdfaca5cb982b861f9aba926538fa4411bc0d015e09c1f")
