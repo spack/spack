@@ -1,0 +1,40 @@
+--- a/src/CMake/FindJPEG.cmake	2022-07-22 15:00:18.831409000 -0700
++++ b/src/CMake/FindJPEG.cmake	2022-07-22 15:01:07.682528000 -0700
+@@ -25,5 +25,9 @@
+   else() 
+       SET_UP_THIRD_PARTY(JPEG LIBS jpeg)
+   endif()
++ELSE()
++  if (VISIT_JPEG_DIR)
++      SET_UP_THIRD_PARTY(JPEG LIBS jpeg)
++  endif()
+ ENDIF (WIN32)
+ 
+--- a/src/CMakeLists.txt	2022-08-09 12:01:55.564360000 -0700
++++ b/src/CMakeLists.txt	2022-08-09 12:02:46.100508000 -0700
+@@ -895,10 +895,8 @@
+ VISIT_3RDPARTY_VAR(ICET_DIR   "Path containing the Ice-T library's include and lib")
+ 
+ # Libraries some third-parties are dependent upon
+-IF(WIN32)
+-  VISIT_3RDPARTY_VAR(JPEG_DIR   "Path containing the jpeg library's include and lib")
+-  VISIT_3RDPARTY_VAR(SZIP_DIR   "Path containing the szip library's include and lib")
+-ENDIF(WIN32)
++VISIT_3RDPARTY_VAR(JPEG_DIR   "Path containing the jpeg library's include and lib")
++VISIT_3RDPARTY_VAR(SZIP_DIR   "Path containing the szip library's include and lib")
+ 
+ # Define the options that let us pick I/O library installation locations. When
+ # the library option is defined then we also define the variable name passed as
+@@ -1351,10 +1349,8 @@
+ INCLUDE(${VISIT_SOURCE_DIR}/CMake/FindZlib.cmake)
+ 
+ # szip and jpeg
+-IF(WIN32)
+-    INCLUDE(${VISIT_SOURCE_DIR}/CMake/FindJPEG.cmake)
+-    INCLUDE(${VISIT_SOURCE_DIR}/CMake/FindSzip.cmake)
+-ENDIF(WIN32)
++INCLUDE(${VISIT_SOURCE_DIR}/CMake/FindJPEG.cmake)
++INCLUDE(${VISIT_SOURCE_DIR}/CMake/FindSzip.cmake)
+ 
+ # dl and large file support.
+ IF(CMAKE_HOST_UNIX)
