@@ -15,9 +15,9 @@ class Prophecy4f(MakefilePackage):
 
     maintainers = ["haralmha", "vvolkl"]
 
-    tags = ['hep']
+    tags = ["hep"]
 
-    version('3.0.2', sha256='01e6ad4d7e913082c1dcabd589173f5d962086dd7860c710f14a0528d8d80eb7')
+    version("3.0.2", sha256="01e6ad4d7e913082c1dcabd589173f5d962086dd7860c710f14a0528d8d80eb7")
 
     depends_on("collier")
 
