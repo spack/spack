@@ -1801,7 +1801,7 @@ def reproduce_ci_job(url, work_dir):
     locally.  This entails the following:
 
     First download and extract artifacts.  Then look through those artifacts
-    to glean some information needed for the reproduer (e.g. one of the
+    to glean some information needed for the reproducer (e.g. one of the
     artifacts contains information about the version of spack tested by
     gitlab, another is the generated pipeline yaml containing details
     of the job like the docker image used to run it).  The output of this
