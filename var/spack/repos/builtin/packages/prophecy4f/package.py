@@ -15,6 +15,8 @@ class Prophecy4f(MakefilePackage):
 
     maintainers = ["haralmha", "vvolkl"]
 
+    tags = ["hep"]
+
     version("3.0.2", sha256="01e6ad4d7e913082c1dcabd589173f5d962086dd7860c710f14a0528d8d80eb7")
 
     depends_on("collier")
@@ -29,5 +31,7 @@ class Prophecy4f(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
+        mkdir(prefix.share)
+        mkdir(prefix.share.prophecy4f)
         install("Prophecy4f", prefix.bin)
         install("defaultinput", prefix)
