@@ -18,7 +18,10 @@ class PyShapely(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
-    version("master", branch="master")
+    version("main", branch="main")
+    version("master", branch="main", deprecated=True)
+    version("1.8.4", sha256="a195e51caafa218291f2cbaa3fef69fd3353c93ec4b65b2a4722c4cf40c3198c")
+    version("1.8.3", sha256="1ce9da186d48efc50130af96d62ffb4d2e175235143d804ef395aad156d45bb3")
     version("1.8.2", sha256="572af9d5006fd5e3213e37ee548912b0341fb26724d6dc8a4e3950c10197ebb6")
     version("1.8.1", sha256="0956a3aced40c31a957a52aa1935467334926844a6776b469acb0760a5e6aba8")
     version("1.8.0", sha256="f5307ee14ba4199f8bbcf6532ca33064661c1433960c432c84f0daa73b47ef9c")
@@ -27,13 +30,12 @@ class PyShapely(PythonPackage):
     version("1.6.4", sha256="b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655")
 
     depends_on("python@3.6:", when="@1.8:", type=("build", "link", "run"))
-    depends_on("python@2.7:2.8,3.4:", when="@1.7:", type=("build", "link", "run"))
-    depends_on("python@2.6:", type=("build", "link", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.24:", type="build")
+    depends_on("python@2.7:2.8,3.4:", when="@1.7", type=("build", "link", "run"))
+    depends_on("python@2.6:", when="@:1.6", type=("build", "link", "run"))
+    depends_on("py-setuptools@:63", type="build")
+    depends_on("py-cython@0.29.24:2", type="build")
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("geos")
-    depends_on("geos@3.3:", when="@1.3:1.7")
+    depends_on("geos@3.3:3.10", when="@:1.7")
     depends_on("geos@3.6:3.10", when="@1.8:")
     depends_on("py-pytest", type="test")
     depends_on("py-pytest-cov", type="test")
