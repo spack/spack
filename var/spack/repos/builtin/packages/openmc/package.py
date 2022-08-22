@@ -32,10 +32,7 @@ class Openmc(CMakePackage):
     version("0.11.0", sha256="19a9d8e9c3b581e9060fbd96d30f1098312d217cb5c925eb6372a5786d9175af")
     version("0.10.0", sha256="47650cb45e2c326ae439208d6f137d75ad3e5c657055912d989592c6e216178f")
 
-    variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
-    variant("optimize", default=False, description="Enable optimization flags")
-    variant("debug", default=False, description="Enable debug flags")
 
     depends_on("git", type="build")
     depends_on("hdf5+hl~mpi", when="~mpi")
@@ -45,26 +42,18 @@ class Openmc(CMakePackage):
     def cmake_args(self):
         options = ["-DCMAKE_INSTALL_LIBDIR=lib"]  # forcing bc sometimes goes to lib64
 
-        use_newer_options = self.spec.satisfies('@0.13.1:')
+        use_newer_options = self.spec.satisfies("@0.13.1:")
         if "+mpi" in self.spec:
             options += [
                 "-DCMAKE_C_COMPILER=%s" % self.spec["mpi"].mpicc,
                 "-DCMAKE_CXX_COMPILER=%s" % self.spec["mpi"].mpicxx,
             ]
             if use_newer_options:
-                options += ["-DOPENMC_USE_MPI:BOOL=ON"]
+                options += [self.define("OPENMC_USE_MPI", True)]
 
         if use_newer_options:
             options += [self.define_from_variant("OPENMC_USE_OPENMP", "openmp")]
         else:
             options += [self.define_from_variant("openmp")]
-            options += [self.define_from_variant("optimize")]
-            options += [self.define_from_variant("debug")]
-
-        if "+optimize" in self.spec:
-            self.spec.variants["build_type"].value = "Release"
-
-        if "+debug" in self.spec:
-            self.spec.variants["build_type"].value = "Debug"
 
         return options
