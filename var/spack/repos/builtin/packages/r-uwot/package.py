@@ -22,19 +22,19 @@ class RUwot(RPackage):
 
     cran = "uwot"
 
-    version('0.1.11', sha256='4fcf90f1369a2a1f01db9e05a2365b155b2ada8e51e1f7f3ba5122d86affd41b')
-    version('0.1.10', sha256='6ee1b6027bce679cd5a35f647f516a5b327632234bcf323c7f3d5b5e10807d23')
-    version('0.1.3', sha256='4936e6922444cae8a71735e945b6bb0828a1012232eb94568054f78451c406d7')
+    version("0.1.11", sha256="4fcf90f1369a2a1f01db9e05a2365b155b2ada8e51e1f7f3ba5122d86affd41b")
+    version("0.1.10", sha256="6ee1b6027bce679cd5a35f647f516a5b327632234bcf323c7f3d5b5e10807d23")
+    version("0.1.3", sha256="4936e6922444cae8a71735e945b6bb0828a1012232eb94568054f78451c406d7")
 
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-fnn', type=('build', 'run'))
-    depends_on('r-rspectra', type=('build', 'run'))
-    depends_on('r-rcppannoy@0.0.11:', type=('build', 'run'))
-    depends_on('r-rcppannoy@0.0.17:', type=('build', 'run'), when='@0.1.10:')
-    depends_on('r-irlba', type=('build', 'run'))
-    depends_on('r-rcppprogress', type=('build', 'run'))
-    depends_on('r-dqrng', type=('build', 'run'))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-fnn", type=("build", "run"))
+    depends_on("r-rspectra", type=("build", "run"))
+    depends_on("r-rcppannoy@0.0.11:", type=("build", "run"))
+    depends_on("r-rcppannoy@0.0.17:", type=("build", "run"), when="@0.1.10:")
+    depends_on("r-irlba", type=("build", "run"))
+    depends_on("r-rcppprogress", type=("build", "run"))
+    depends_on("r-dqrng", type=("build", "run"))
 
-    depends_on('r-rcppparallel', type=('build', 'run'), when='@:0.1.3')
-    depends_on('gmake', type='build', when='@:0.1.3')
+    depends_on("r-rcppparallel", type=("build", "run"), when="@:0.1.3")
+    depends_on("gmake", type="build", when="@:0.1.3")

@@ -3,7 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
+from spack.util.executable import which
 
 
 class Mmg(CMakePackage):
@@ -24,37 +27,45 @@ class Mmg(CMakePackage):
     """
 
     homepage = "https://www.mmgtools.org/"
-    url      = "https://github.com/MmgTools/mmg/archive/v5.3.13.tar.gz"
+    url = "https://github.com/MmgTools/mmg/archive/v5.3.13.tar.gz"
 
-    version('5.6.0',  sha256='bbf9163d65bc6e0f81dd3acc5a51e4a8c47a7fdae849abc26277e01154fe2437')
-    version('5.5.2',  sha256='58e3b866101e6f0686758e16bcf9fb5fb06c85184533fc5054ef1c8adfd4be73')
-    version('5.4.0',  sha256='2b5cc505018859856766be901797ff5d4789f89377038a0211176a5571039750')
-    version('5.3.13', sha256='d9a5925b69b0433f942ab2c8e55659d9ccea758743354b43d54fdf88a6c3c191')
+    version("5.6.0", sha256="bbf9163d65bc6e0f81dd3acc5a51e4a8c47a7fdae849abc26277e01154fe2437")
+    version("5.5.2", sha256="58e3b866101e6f0686758e16bcf9fb5fb06c85184533fc5054ef1c8adfd4be73")
+    version("5.4.0", sha256="2b5cc505018859856766be901797ff5d4789f89377038a0211176a5571039750")
+    version("5.3.13", sha256="d9a5925b69b0433f942ab2c8e55659d9ccea758743354b43d54fdf88a6c3c191")
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('scotch', default=True, description='Enable SCOTCH library support')
-    variant('doc', default=False, description='Build documentation')
-    variant('vtk', default=False, when='@5.5.0:', description='Enable VTK I/O support')
+    variant("shared", default=True, description="Enables the build of shared libraries")
+    variant("scotch", default=True, description="Enable SCOTCH library support")
+    variant("doc", default=False, description="Build documentation")
+    variant("vtk", default=False, when="@5.5.0:", description="Enable VTK I/O support")
 
-    depends_on('scotch', when='+scotch')
-    depends_on('doxygen', when='+doc')
-    depends_on('vtk', when='+vtk')
+    depends_on("scotch", when="+scotch")
+    depends_on("doxygen", when="+doc")
+    depends_on("vtk", when="+vtk")
 
     def cmake_args(self):
         args = []
 
-        args.append(self.define_from_variant('USE_SCOTCH', 'scotch'))
-        args.append(self.define_from_variant('USE_VTK', 'vtk'))
+        args.append(self.define_from_variant("USE_SCOTCH", "scotch"))
+        args.append(self.define_from_variant("USE_VTK", "vtk"))
 
-        if '+shared' in self.spec:
-            args.append('-DLIBMMG3D_SHARED=ON')
-            args.append('-DLIBMMG2D_SHARED=ON')
-            args.append('-DLIBMMGS_SHARED=ON')
-            args.append('-DLIBMMG_SHARED=ON')
+        if "+shared" in self.spec:
+            args.append("-DLIBMMG3D_SHARED=ON")
+            args.append("-DLIBMMG2D_SHARED=ON")
+            args.append("-DLIBMMGS_SHARED=ON")
+            args.append("-DLIBMMG_SHARED=ON")
         else:
-            args.append('-DLIBMMG3D_STATIC=ON')
-            args.append('-DLIBMMG2D_STATIC=ON')
-            args.append('-DLIBMMGS_STATIC=ON')
-            args.append('-DLIBMMG_STATIC=ON')
+            args.append("-DLIBMMG3D_STATIC=ON")
+            args.append("-DLIBMMG2D_STATIC=ON")
+            args.append("-DLIBMMGS_STATIC=ON")
+            args.append("-DLIBMMG_STATIC=ON")
 
         return args
+
+    # parmmg requires this for its build
+    @run_after("install")
+    def install_source(self):
+        prefix = self.spec.prefix
+        cp = which("cp")
+        cp("-r", os.path.join(self.stage.source_path, "src"), prefix)
+        cp("-r", os.path.join(self.build_directory, "src"), prefix)

@@ -10,8 +10,8 @@ class Cnmem(CMakePackage):
     """CNMem mempool for CUDA devices"""
 
     homepage = "https://github.com/NVIDIA/cnmem"
-    git      = "https://github.com/NVIDIA/cnmem.git"
+    git = "https://github.com/NVIDIA/cnmem.git"
 
-    version('git', branch='master')
+    version("git", branch="master")
 
-    depends_on('cmake@2.8.8:', type='build')
+    depends_on("cmake@2.8.8:", type="build")
