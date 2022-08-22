@@ -124,7 +124,9 @@ class Esmf(MakefilePackage):
             )
         else:
             # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
-            return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(version.dotted)
+            return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(
+                version.dotted
+            )
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
