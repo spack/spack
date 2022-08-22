@@ -146,6 +146,7 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
+  - nrm
   - omega-h
   - openmpi
   - papi
@@ -160,6 +161,8 @@ spack:
   - pumi
   - py-cinemasci
   - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
   - qthreads scheduler=distrib
   - raja
   - rempi
@@ -207,13 +210,10 @@ spack:
   #- geopm@1.1.0                                      # ruby
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit@2022.04.15                            # binutils
-  #- nrm@0.1.0                                        # py-numpy@1.23.1
   #- openpmd-api@0.14.4                               # adios2
   #- paraview@5.10.1 +qt                              # binutils
   #- phist@1.9.5                                      # phist
   #- pruners-ninja@1.0.1                              # pruners-ninja
-  #- py-libensemble@0.9.1                             # py-numpy@1.23.1
-  #- py-petsc4py@3.17.1                               # py-numpy@1.23.1
   #- py-warpx@22.05 ^warpx dims=2                     # adios2
   #- py-warpx@22.05 ^warpx dims=3                     # adios2
   #- py-warpx@22.05 ^warpx dims=rz                    # adios2
