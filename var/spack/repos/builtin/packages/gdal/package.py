@@ -222,9 +222,9 @@ class Gdal(CMakePackage):
     depends_on("arrow", when="+arrow")
     depends_on("c-blosc", when="+blosc")
     depends_on("brunsli", when="+brunsli")
-    # depends_on('bsb', when='+bdb')
+    # depends_on('bsb', when='+bsb')
     depends_on("cfitsio", when="+cfitsio")
-    # depends_on('crunch', when='+crnlib')
+    depends_on("crunch", when="+crnlib")
     depends_on("curl", when="+curl")
     depends_on("cryptopp", when="+cryptopp")
     depends_on("libdeflate", when="+deflate")
@@ -355,7 +355,6 @@ class Gdal(CMakePackage):
 
     # TODO: add packages for the following dependencies
     conflicts("+bsb")
-    conflicts("+crnlib")
     conflicts("+dods")
     conflicts("+ecw")
     conflicts("+epsilon")
