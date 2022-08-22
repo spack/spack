@@ -30,7 +30,11 @@ class Baurmc(AutotoolsPackage):
         filter_file("FC=g77", "FC=gfortran", str(self.spec.version) + "/configure", string=True)
 
     def configure_args(self):
-        return ["--userfflags=-fno-automatic", "--enable-shared"]
+        return [
+            "--userfflags=-fno-automatic",
+            "--userfflags=-fallow-argument-mismatch",
+            "--enable-shared",
+        ]
 
     def install(self, spec, prefix):
         build_libdir = os.path.join(str(spec.version), "lib")
