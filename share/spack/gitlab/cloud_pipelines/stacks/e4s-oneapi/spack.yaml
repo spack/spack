@@ -67,6 +67,7 @@ spack:
       target: [x86_64]
       variants: +mpi
     binutils:
+      compiler: [gcc]
       variants: +ld +gold +headers +libiberty ~nls
     cuda:
       version: [11.4.2]
@@ -103,6 +104,7 @@ spack:
   - aml
   - amrex
   - arborx
+  - archer
   - argobots
   - ascent ^vtk-m ~openmp
   - axom
@@ -203,7 +205,6 @@ spack:
 
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2
-  #- archer@2.0.0                                     # binutils
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
