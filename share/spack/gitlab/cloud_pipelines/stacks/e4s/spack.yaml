@@ -160,7 +160,6 @@ spack:
   - adios2 +cuda cuda_arch=80
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
-  - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
@@ -215,13 +214,13 @@ spack:
   #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
+  #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym'
   #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
   #- paraview +qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
   #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
-  #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
+  #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym'
   #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
@@ -249,7 +248,7 @@ spack:
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
-    
+
     mappings:
       - match:
           - hipblas
