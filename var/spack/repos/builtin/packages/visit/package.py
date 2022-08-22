@@ -88,6 +88,8 @@ class Visit(CMakePackage):
     patch("parallel-hdf5.patch", when="@3.0.1:3.2.2+hdf5+mpi")
     patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
     patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
+    patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
+    patch("cmake-findjpeg-3.3.patch", when="@3.3.0:")
 
     # Fix pthread and librt link errors
     patch("visit32-missing-link-libs.patch", when="@3.2")
@@ -206,6 +208,7 @@ class Visit(CMakePackage):
             self.define("VTK_MINOR_VERSION", spec["vtk"].version[1]),
             self.define("VISIT_VTK_DIR", spec["vtk"].prefix),
             self.define("VISIT_ZLIB_DIR", spec["zlib"].prefix),
+            self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
             self.define("VISIT_USE_GLEW", False),
             self.define("VISIT_CONFIG_SITE", "NONE"),
             self.define("VISIT_INSTALL_THIRD_PARTY", False),
