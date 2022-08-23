@@ -135,6 +135,11 @@ class Eospac(Package):
             #   but gcc@10 flipped to default fno-common
             if "%gcc@10:" in spec:
                 compilerArgs.append("CFLAGS=-fcommon")
+            if self.run_tests:
+                make(
+                    "check",
+                    *compilerArgs
+                )
             make(
                 "install",
                 "prefix={0}".format(prefix),
