@@ -14,23 +14,24 @@
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
-  # Paths to check when creating modules for all module sets
+  # This maps paths in the package install prefix to environment variables
+  # they should be added to. For example, <prefix>/bin should be in PATH.
   prefix_inspections:
-    bin:
+    ./bin:
       - PATH
-    man:
+    ./man:
       - MANPATH
-    share/man:
+    ./share/man:
       - MANPATH
-    share/aclocal:
+    ./share/aclocal:
       - ACLOCAL_PATH
-    lib/pkgconfig:
+    ./lib/pkgconfig:
       - PKG_CONFIG_PATH
-    lib64/pkgconfig:
+    ./lib64/pkgconfig:
       - PKG_CONFIG_PATH
-    share/pkgconfig:
+    ./share/pkgconfig:
       - PKG_CONFIG_PATH
-    '':
+    ./:
       - CMAKE_PREFIX_PATH
 
   # These are configurations for the module set named "default"
