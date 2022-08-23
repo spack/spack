@@ -1024,7 +1024,13 @@ class Environment(object):
 
         return bool(not existing)
 
-    def change_existing_spec(self, change_spec, list_name=user_speclist_name, match_spec=None, allow_changing_multiple_specs=False):
+    def change_existing_spec(
+        self,
+        change_spec,
+        list_name=user_speclist_name,
+        match_spec=None,
+        allow_changing_multiple_specs=False,
+    ):
         """
         Find the spec identified by `match_spec` and change it to `change_spec`.
 
