@@ -3,45 +3,45 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import base64
-import copy
-import json
-import os
-import re
-import shutil
-import stat
-import subprocess
-import tempfile
-import time
 import zipfile
-
-from six import iteritems
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
-
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-
-import spack
-import spack.binary_distribution as bindist
-import spack.compilers as compilers
-import spack.config as cfg
-import spack.environment as ev
-import spack.main
-import spack.mirror
-import spack.paths
-import spack.repo
-import spack.util.executable as exe
-import spack.util.gpg as gpg_util
-import spack.util.spack_yaml as syaml
+import time
+import tempfile
+import subprocess
+import stat
 import spack.util.web as web_util
-from spack.error import SpackError
+import spack.util.spack_yaml as syaml
+import spack.util.gpg as gpg_util
+import spack.util.executable as exe
+import spack.repo
+import spack.paths
+import spack.mirror
+import spack.main
+import spack.environment as ev
+import spack.config as cfg
+import spack.compilers as compilers
+import spack.binary_distribution as bindist
+import spack
+import shutil
+import re
+import os
+import llnl.util.tty as tty
+import llnl.util.filesystem as fs
+import json
+import copy
+import base64
+from spack.util.pattern import Bunch
+from spack.spec import Spec
 from spack.reporters.cdash import CDash
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.spec import Spec
-from spack.util.pattern import Bunch
+from spack.error import SpackError
+from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.error import HTTPError, URLError
+from six import iteritems
+from llnl.util.lang import memoized
+
+
+
 
 JOB_RETRY_CONDITIONS = [
     "always",
