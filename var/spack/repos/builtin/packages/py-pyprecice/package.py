@@ -14,16 +14,17 @@ class PyPyprecice(PythonPackage):
 
     homepage = "https://precice.org"
     git = "https://github.com/precice/python-bindings.git"
-    url = "https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz"
+    url = "https://github.com/precice/python-bindings/archive/v2.4.0.0.tar.gz"
     maintainers = ["ajaust", "BenjaminRodenberg", "IshaanDesai"]
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
-    version('2.3.0.1', sha256='ed4e48729b662680beaa4ee2a9aff724a79e760534c6c58181be739988da2789')
-    version('2.2.1.1', sha256='139bac5077c3807e1b7b83d8d0da5ca0fc8c17393fd0df4bc5999cd63a351b78')
-    version('2.2.0.2', sha256='2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5')
-    version('2.2.0.1', sha256='229625e2e6df03987ababce5abe2021b0974cbe5a588b936a9cba653f4908d4b')
-    version('2.1.1.2', sha256='363eb3eeccf964fd5ee87012c1032353dd1518662868f2b51f04a6d8a7154045')
+    version("2.4.0.0", sha256="8877da85df97d66966892440c7e777b667d8e6a33747304ed3762f4c33b729ec")
+    version("2.3.0.1", sha256="ed4e48729b662680beaa4ee2a9aff724a79e760534c6c58181be739988da2789")
+    version("2.2.1.1", sha256="139bac5077c3807e1b7b83d8d0da5ca0fc8c17393fd0df4bc5999cd63a351b78")
+    version("2.2.0.2", sha256="2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5")
+    version("2.2.0.1", sha256="229625e2e6df03987ababce5abe2021b0974cbe5a588b936a9cba653f4908d4b")
+    version("2.1.1.2", sha256="363eb3eeccf964fd5ee87012c1032353dd1518662868f2b51f04a6d8a7154045")
     version("2.1.1.1", sha256="972f574549344b6155a8dd415b6d82512e00fa154ca25ae7e36b68d4d2ed2cf4")
     version("2.1.0.1", sha256="ac5cb7412c6b96b08a04fa86ea38e52d91ea739a3bd1c209baa93a8275e4e01a")
     version("2.0.2.1", sha256="c6fca26332316de041f559aecbf23122a85d6348baa5d3252be4ddcd5e94c09a")
@@ -32,6 +33,7 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
     depends_on("precice@develop", when="@develop")
+    depends_on("precice@2.4.0", when="@2.4.0.1:2.4.0")
     depends_on("precice@2.3.0", when="@2.3.0.1:2.3.1")
     depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1")
     depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0")
@@ -46,11 +48,9 @@ class PyPyprecice(PythonPackage):
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type="build")
-    depends_on("py-packaging", when="@:2.1", type="build")
-    depends_on("py-pip", when="@:2.1", type="build")
+    depends_on("py-packaging", type="build")
+    depends_on("py-pip@19.0.0:", type="build")
 
     @when("@:2.1")
     def patch(self):
-        filter_file(
-            "distutils.command.install", "setuptools.command.install", "setup.py"
-        )
+        filter_file("distutils.command.install", "setuptools.command.install", "setup.py")

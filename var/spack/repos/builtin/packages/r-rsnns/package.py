@@ -20,11 +20,11 @@ class RRsnns(RPackage):
 
     cran = "RSNNS"
 
-    version('0.4-14', sha256='7f6262cb2b49b5d5979ccce9ded9cbb2c0b348fd7c9eabc1ea1d31c51a102c20')
-    version('0.4-12', sha256='b18dfeda71573bc92c6888af72da407651bff7571967965fd3008f0d331743b9')
-    version('0.4-11', sha256='87943126e98ae47f366e3025d0f3dc2f5eb0aa2924508fd9ee9a0685d7cb477c')
-    version('0.4-10.1', sha256='38bb3d172390bd01219332ec834744274b87b01f94d23b29a9d818c2bca04071')
-    version('0.4-7', sha256='ec941dddda55e4e29ed281bd8768a93d65e0d86d56ecab0f2013c64c8d1a4994')
+    version("0.4-14", sha256="7f6262cb2b49b5d5979ccce9ded9cbb2c0b348fd7c9eabc1ea1d31c51a102c20")
+    version("0.4-12", sha256="b18dfeda71573bc92c6888af72da407651bff7571967965fd3008f0d331743b9")
+    version("0.4-11", sha256="87943126e98ae47f366e3025d0f3dc2f5eb0aa2924508fd9ee9a0685d7cb477c")
+    version("0.4-10.1", sha256="38bb3d172390bd01219332ec834744274b87b01f94d23b29a9d818c2bca04071")
+    version("0.4-7", sha256="ec941dddda55e4e29ed281bd8768a93d65e0d86d56ecab0f2013c64c8d1a4994")
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.8.5:', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.8.5:", type=("build", "run"))

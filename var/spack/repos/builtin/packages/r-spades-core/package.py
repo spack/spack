@@ -21,23 +21,23 @@ class RSpadesCore(RPackage):
 
     cran = "SpaDES.core"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('1.0.10', sha256='05e20f7d9aeef9ba68e50e993ef3027b8c85afc5e3f83f5ecaee9d1a7873e379')
-    version('1.0.9', sha256='1176a41a1af334388c1b16ff4ed9a6f30007bb5ed1fa14d798c59461042537dd')
-    version('1.0.5', sha256='c8b18cb5f932ea57f3cb3c7f2a302cbe7e06c875da7cd3928300d6003602f0a6')
+    version("1.0.10", sha256="05e20f7d9aeef9ba68e50e993ef3027b8c85afc5e3f83f5ecaee9d1a7873e379")
+    version("1.0.9", sha256="1176a41a1af334388c1b16ff4ed9a6f30007bb5ed1fa14d798c59461042537dd")
+    version("1.0.5", sha256="c8b18cb5f932ea57f3cb3c7f2a302cbe7e06c875da7cd3928300d6003602f0a6")
 
-    depends_on('r@3.6:', type=('build', 'run'))
-    depends_on('r@4.0:', type=('build', 'run'), when='@1.0.10:')
-    depends_on('r-quickplot@0.1.4:', type=('build', 'run'))
-    depends_on('r-reproducible@1.2.1.9007:', type=('build', 'run'))
-    depends_on('r-reproducible@1.2.7:', type=('build', 'run'), when='@1.0.9:')
-    depends_on('r-crayon', type=('build', 'run'))
-    depends_on('r-data-table@1.10.4:', type=('build', 'run'))
-    depends_on('r-data-table@1.11.0:', type=('build', 'run'), when='@1.0.9:')
-    depends_on('r-fastdigest', type=('build', 'run'))
-    depends_on('r-igraph@1.0.1:', type=('build', 'run'))
-    depends_on('r-qs@0.21.1:', type=('build', 'run'))
-    depends_on('r-raster@2.5-8:', type=('build', 'run'))
-    depends_on('r-require@0.0.7:', type=('build', 'run'))
-    depends_on('r-whisker', type=('build', 'run'))
+    depends_on("r@3.6:", type=("build", "run"))
+    depends_on("r@4.0:", type=("build", "run"), when="@1.0.10:")
+    depends_on("r-quickplot@0.1.4:", type=("build", "run"))
+    depends_on("r-reproducible@1.2.1.9007:", type=("build", "run"))
+    depends_on("r-reproducible@1.2.7:", type=("build", "run"), when="@1.0.9:")
+    depends_on("r-crayon", type=("build", "run"))
+    depends_on("r-data-table@1.10.4:", type=("build", "run"))
+    depends_on("r-data-table@1.11.0:", type=("build", "run"), when="@1.0.9:")
+    depends_on("r-fastdigest", type=("build", "run"))
+    depends_on("r-igraph@1.0.1:", type=("build", "run"))
+    depends_on("r-qs@0.21.1:", type=("build", "run"))
+    depends_on("r-raster@2.5-8:", type=("build", "run"))
+    depends_on("r-require@0.0.7:", type=("build", "run"))
+    depends_on("r-whisker", type=("build", "run"))

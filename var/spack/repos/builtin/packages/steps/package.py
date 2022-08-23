@@ -10,7 +10,7 @@ class Steps(CMakePackage):
     """STochastic Engine for Pathway Simulation"""
 
     homepage = "https://groups.oist.jp/cnu/software"
-    git      = "https://github.com/CNS-OIST/STEPS.git"
+    git = "https://github.com/CNS-OIST/STEPS.git"
 
     version("3.3.0", submodules=True)
     version("3.2.0", submodules=True)
@@ -28,7 +28,7 @@ class Steps(CMakePackage):
     depends_on("python")
     depends_on("py-cython")
 
-    patch('for_aarch64.patch', when='target=aarch64:')
+    patch("for_aarch64.patch", when="target=aarch64:")
 
     def cmake_args(self):
         args = []
@@ -54,10 +54,10 @@ class Steps(CMakePackage):
         else:
             args.append("-DUSE_MPI:BOOL=False")
 
-        args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
+        args.append("-DBLAS_LIBRARIES=" + spec["blas"].libs.joined(";"))
         return args
 
     def setup_run_environment(self, env):
         # This recipe exposes a Python package from a C++ CMake project.
         # This hook is required to reproduce what Spack PythonPackage does.
-        env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path("PYTHONPATH", self.prefix)

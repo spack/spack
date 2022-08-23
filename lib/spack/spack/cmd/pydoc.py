@@ -10,7 +10,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('entity', help="run pydoc help on entity")
+    subparser.add_argument("entity", help="run pydoc help on entity")
 
 
 def pydoc(parser, args):

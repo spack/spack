@@ -11,8 +11,8 @@ class StickyVariant(AutotoolsPackage):
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    variant('allow-gcc', description='', default=False, sticky=True)
+    variant("allow-gcc", description="", default=False, sticky=True)
 
-    conflicts('%gcc', when='~allow-gcc')
+    conflicts("%gcc", when="~allow-gcc")

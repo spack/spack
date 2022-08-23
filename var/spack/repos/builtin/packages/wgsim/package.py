@@ -16,14 +16,14 @@ class Wgsim(Package):
     can be partly compensated by simulating INDEL polymorphisms."""
 
     homepage = "https://github.com/lh3/wgsim"
-    git      = "https://github.com/lh3/wgsim.git"
+    git = "https://github.com/lh3/wgsim.git"
 
-    version('2011.10.17', commit='a12da3375ff3b51a5594d4b6fa35591173ecc229')
+    version("2011.10.17", commit="a12da3375ff3b51a5594d4b6fa35591173ecc229")
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         cc = Executable(spack_cc)
-        cc('-g', '-O2', '-Wall', '-o', 'wgsim', 'wgsim.c', '-lz', '-lm')
+        cc("-g", "-O2", "-Wall", "-o", "wgsim", "wgsim.c", "-lz", "-lm")
 
         install_tree(self.stage.source_path, prefix.bin)

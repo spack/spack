@@ -39,8 +39,9 @@ def packages_with_tags(tags, installed, skip_empty):
     spec_names = _get_installed_package_names() if installed else []
     keys = spack.repo.path.tag_index if tags is None else tags
     for tag in keys:
-        packages = [name for name in spack.repo.path.tag_index[tag] if
-                    not installed or name in spec_names]
+        packages = [
+            name for name in spack.repo.path.tag_index[tag] if not installed or name in spec_names
+        ]
         if packages or not skip_empty:
             tag_pkgs[tag] = packages
     return tag_pkgs
@@ -57,7 +58,7 @@ class TagIndex(Mapping):
         return self._tag_dict
 
     def to_json(self, stream):
-        sjson.dump({'tags': self._tag_dict}, stream)
+        sjson.dump({"tags": self._tag_dict}, stream)
 
     @staticmethod
     def from_json(stream):
@@ -66,12 +67,12 @@ class TagIndex(Mapping):
         if not isinstance(d, dict):
             raise TagIndexError("TagIndex data was not a dict.")
 
-        if 'tags' not in d:
+        if "tags" not in d:
             raise TagIndexError("TagIndex data does not start with 'tags'")
 
         r = TagIndex()
 
-        for tag, packages in d['tags'].items():
+        for tag, packages in d["tags"].items():
             r[tag].extend(packages)
 
         return r
@@ -101,7 +102,7 @@ class TagIndex(Mapping):
         Args:
             other (TagIndex): tag index to be merged
         """
-        other = other.copy()   # defensive copy.
+        other = other.copy()  # defensive copy.
 
         for tag in other.tags:
             if tag not in self.tags:
@@ -118,7 +119,7 @@ class TagIndex(Mapping):
             pkg_name (str): name of the package to be removed from the index
 
         """
-        package = spack.repo.path.get(pkg_name)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
 
         # Remove the package from the list of packages, if present
         for pkg_list in self._tag_dict.values():
@@ -126,9 +127,9 @@ class TagIndex(Mapping):
                 pkg_list.remove(pkg_name)
 
         # Add it again under the appropriate tags
-        for tag in getattr(package, 'tags', []):
+        for tag in getattr(pkg_cls, "tags", []):
             tag = tag.lower()
-            self._tag_dict[tag].append(package.name)
+            self._tag_dict[tag].append(pkg_cls.name)
 
 
 class TagIndexError(spack.error.SpackError):

@@ -13,12 +13,12 @@ from spack.package import *
 
 def propagate_cuda_arch(package, spec=None):
     if not spec:
-        spec = ''
+        spec = ""
     for cuda_arch in CudaPackage.cuda_arch_values:
-        depends_on('{0} +cuda cuda_arch={1}'
-                   .format(package, cuda_arch),
-                   when='{0} +cuda cuda_arch={1}'
-                        .format(spec, cuda_arch))
+        depends_on(
+            "{0} +cuda cuda_arch={1}".format(package, cuda_arch),
+            when="{0} +cuda cuda_arch={1}".format(spec, cuda_arch),
+        )
 
 
 def cmake_cache_entry(name, value, vtype=None):
@@ -38,36 +38,36 @@ class Dray(Package, CudaPackage):
     """High-Order Mesh Ray Tracer."""
 
     homepage = "https://github.com/LLNL/devil_ray"
-    git      = "https://github.com/LLNL/devil_ray.git"
-    url      = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
+    git = "https://github.com/LLNL/devil_ray.git"
+    url = "https://github.com/LLNL/devil_ray/releases/download/v0.1.2/dray-v0.1.2.tar.gz"
 
-    maintainers = ['cyrush']
+    maintainers = ["cyrush"]
 
-    version('develop',  branch='develop', submodules='True')
-    version('0.1.8',  sha256='ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30')
-    version('0.1.7',  sha256='11ea794c1a24d7ed0d76bad7209d62bafc033ec40a2ea3a00e68fe598c6aa46d')
-    version('0.1.6',  sha256='43f39039599e3493cbbaeaf5621b611bef301ff504bed6e32c98f30bb2179e92')
-    version('0.1.5',  sha256='aaf0975561a8e7910b9353e2dc30bd78abf9f01c306ec042422b7da223d3a8b8')
-    version('0.1.4',  sha256='e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0')
-    version('0.1.3',  sha256='b2f624a072463189997343b1ed911cc34c9bb1b6c7f0c3e48efeb40c05dd0d92')
-    version('0.1.2',  sha256='46937f20124b28dc78a634e8e063a3e7a3bbfd9f424ce2680b08417010c376da')
-    version('0.1.1',  sha256='e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c')
-    version('0.1.0',  sha256='8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169')
+    version("develop", branch="develop", submodules="True")
+    version("0.1.8", sha256="ae78ca6a5a31f06f6400a4a1ff6fc1d75347c8b41027a80662179f5b877eee30")
+    version("0.1.7", sha256="11ea794c1a24d7ed0d76bad7209d62bafc033ec40a2ea3a00e68fe598c6aa46d")
+    version("0.1.6", sha256="43f39039599e3493cbbaeaf5621b611bef301ff504bed6e32c98f30bb2179e92")
+    version("0.1.5", sha256="aaf0975561a8e7910b9353e2dc30bd78abf9f01c306ec042422b7da223d3a8b8")
+    version("0.1.4", sha256="e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0")
+    version("0.1.3", sha256="b2f624a072463189997343b1ed911cc34c9bb1b6c7f0c3e48efeb40c05dd0d92")
+    version("0.1.2", sha256="46937f20124b28dc78a634e8e063a3e7a3bbfd9f424ce2680b08417010c376da")
+    version("0.1.1", sha256="e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c")
+    version("0.1.0", sha256="8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169")
 
-    variant('openmp', default=True, description='Build OpenMP backend')
+    variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build as shared libs")
-    variant("test", default=True, description='Build unit tests')
-    variant("utils", default=True, description='Build utilities')
-    variant("logging", default=False, description='Enable logging')
-    variant("stats", default=False, description='Enable stats')
-    variant("mpi", default=True, description='Enable MPI compiler')
+    variant("test", default=True, description="Build unit tests")
+    variant("utils", default=True, description="Build utilities")
+    variant("logging", default=False, description="Enable logging")
+    variant("stats", default=False, description="Enable stats")
+    variant("mpi", default=True, description="Enable MPI compiler")
     # set to false for systems that implicitly link mpi
-    variant('blt_find_mpi', default=True, description='Use BLT CMake Find MPI logic')
+    variant("blt_find_mpi", default=True, description="Use BLT CMake Find MPI logic")
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
-    depends_on('cmake@3.9:', type='build')
-    depends_on('cmake@3.14:', when='+cuda', type='build')
+    depends_on("cmake@3.9:", type="build")
+    depends_on("cmake@3.14:", when="+cuda", type="build")
 
     depends_on("conduit~shared", when="~shared")
     depends_on("conduit+shared", when="+shared")
@@ -80,11 +80,11 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp+shared", when="+shared")
 
     depends_on("raja@0.12.0:")
-    depends_on("raja@:0.14", when='@0.1.7:')
+    depends_on("raja@:0.14", when="@0.1.7:")
     depends_on("raja@:0.13", when="@:0.1.6")
     depends_on("raja~cuda", when="~cuda")
     depends_on("raja+cuda", when="+cuda")
-    propagate_cuda_arch('raja')
+    propagate_cuda_arch("raja")
     depends_on("raja~shared", when="~shared")
     depends_on("raja+shared", when="+shared")
     depends_on("raja~openmp", when="~openmp")
@@ -96,7 +96,7 @@ class Dray(Package, CudaPackage):
     depends_on("umpire~cuda", when="~cuda")
     depends_on("umpire+cuda~shared", when="+cuda+shared")
     depends_on("umpire~cuda+shared", when="~cuda+shared")
-    propagate_cuda_arch('umpire')
+    propagate_cuda_arch("umpire")
     depends_on("umpire~shared", when="~shared")
 
     depends_on("mfem+conduit~threadsafe")
@@ -104,15 +104,14 @@ class Dray(Package, CudaPackage):
     depends_on("mfem~shared", when="~shared")
 
     def setup_build_environment(self, env):
-        env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+        env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
     def install(self, spec, prefix):
         """
         Build and install Devil Ray.
         """
-        with working_dir('spack-build', create=True):
-            host_cfg_fname = self.create_host_config(spec,
-                                                     prefix)
+        with working_dir("spack-build", create=True):
+            host_cfg_fname = self.create_host_config(spec, prefix)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -168,17 +167,19 @@ class Dray(Package, CudaPackage):
         ##############################################
 
         if "+cmake" in spec:
-            cmake_exe = spec['cmake'].command.path
+            cmake_exe = spec["cmake"].command.path
         else:
             cmake_exe = which("cmake")
             if cmake_exe is None:
-                msg = 'failed to find CMake (and cmake variant is off)'
+                msg = "failed to find CMake (and cmake variant is off)"
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s-devil_ray.cmake" % (socket.gethostname(),
-                                                       sys_type,
-                                                       spec.compiler)
+        host_cfg_fname = "%s-%s-%s-devil_ray.cmake" % (
+            socket.gethostname(),
+            sys_type,
+            spec.compiler,
+        )
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -203,13 +204,13 @@ class Dray(Package, CudaPackage):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         if "+mpi" in spec:
-            mpicc_path = spec['mpi'].mpicc
-            mpicxx_path = spec['mpi'].mpicxx
+            mpicc_path = spec["mpi"].mpicc
+            mpicxx_path = spec["mpi"].mpicxx
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
-            if spec['mpi'].mpicc == spack_cc:
+            if spec["mpi"].mpicc == spack_cc:
                 mpicc_path = c_compiler
                 mpicxx_path = cpp_compiler
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
@@ -219,32 +220,30 @@ class Dray(Package, CudaPackage):
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "ON"))
             else:
                 cfg.write(cmake_cache_entry("ENABLE_FIND_MPI", "OFF"))
-            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
                 # vs the older versions which expect MPIEXEC
-                if self.spec["cmake"].satisfies('@3.10:'):
-                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
-                                                mpiexe_bin))
+                if self.spec["cmake"].satisfies("@3.10:"):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexe_bin))
                 else:
-                    cfg.write(cmake_cache_entry("MPIEXEC",
-                                                mpiexe_bin))
+                    cfg.write(cmake_cache_entry("MPIEXEC", mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
         # use global spack compiler flags
-        cppflags = ' '.join(spec.compiler_flags['cppflags'])
+        cppflags = " ".join(spec.compiler_flags["cppflags"])
         if cppflags:
             # avoid always ending up with ' ' with no flags defined
-            cppflags += ' '
-        cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
+            cppflags += " "
+        cflags = cppflags + " ".join(spec.compiler_flags["cflags"])
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
-        cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
+        cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
-        fflags = ' '.join(spec.compiler_flags['fflags'])
-        if self.spec.satisfies('%cce'):
+        fflags = " ".join(spec.compiler_flags["fflags"])
+        if self.spec.satisfies("%cce"):
             fflags += " -ef"
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
@@ -257,11 +256,10 @@ class Dray(Package, CudaPackage):
 
         if "+cuda" in spec:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
-            if 'cuda_arch' in spec.variants:
-                cuda_value = spec.variants['cuda_arch'].value
+            if "cuda_arch" in spec.variants:
+                cuda_value = spec.variants["cuda_arch"].value
                 cuda_arch = cuda_value[0]
-                cfg.write(cmake_cache_entry('CUDA_ARCH',
-                                            'sm_{0}'.format(cuda_arch)))
+                cfg.write(cmake_cache_entry("CUDA_ARCH", "sm_{0}".format(cuda_arch)))
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
@@ -317,19 +315,19 @@ class Dray(Package, CudaPackage):
         #######################################################################
 
         cfg.write("# conduit from spack \n")
-        cfg.write(cmake_cache_entry("CONDUIT_DIR", spec['conduit'].prefix))
+        cfg.write(cmake_cache_entry("CONDUIT_DIR", spec["conduit"].prefix))
 
         cfg.write("# mfem from spack \n")
-        cfg.write(cmake_cache_entry("MFEM_DIR", spec['mfem'].prefix))
+        cfg.write(cmake_cache_entry("MFEM_DIR", spec["mfem"].prefix))
 
         cfg.write("# raja from spack \n")
-        cfg.write(cmake_cache_entry("RAJA_DIR", spec['raja'].prefix))
+        cfg.write(cmake_cache_entry("RAJA_DIR", spec["raja"].prefix))
 
         cfg.write("# umpire from spack \n")
-        cfg.write(cmake_cache_entry("UMPIRE_DIR", spec['umpire'].prefix))
+        cfg.write(cmake_cache_entry("UMPIRE_DIR", spec["umpire"].prefix))
 
         cfg.write("# apcompositor from spack \n")
-        cfg.write(cmake_cache_entry("APCOMP_DIR", spec['apcomp'].prefix))
+        cfg.write(cmake_cache_entry("APCOMP_DIR", spec["apcomp"].prefix))
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")

@@ -11,13 +11,13 @@ class Libc(BundlePackage):
 
     homepage = "https://en.wikipedia.org/wiki/C_standard_library"
 
-    version('1.0')  # Dummy
+    version("1.0")  # Dummy
 
-    variant('iconv', default=False, description='Provides interfaces for Localization Functions')
-    variant('rpc', default=False, description='Provides interfaces for RPC')
+    variant("iconv", default=False, description="Provides interfaces for Localization Functions")
+    variant("rpc", default=False, description="Provides interfaces for RPC")
 
-    provides('iconv', when='+iconv')
-    provides('rpc', when='+rpc')
+    provides("iconv", when="+iconv")
+    provides("rpc", when="+rpc")
 
     @property
     def libs(self):

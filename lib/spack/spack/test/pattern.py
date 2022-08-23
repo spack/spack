@@ -12,14 +12,15 @@ import spack.util.pattern as pattern
 @pytest.fixture()
 def interface():
     """Returns the interface class for the composite."""
+
     class Base:
         counter = 0
 
         def add(self):
-            raise NotImplementedError('add not implemented')
+            raise NotImplementedError("add not implemented")
 
         def subtract(self):
-            raise NotImplementedError('subtract not implemented')
+            raise NotImplementedError("subtract not implemented")
 
     return Base
 
@@ -27,6 +28,7 @@ def interface():
 @pytest.fixture()
 def implementation(interface):
     """Returns an implementation of the interface"""
+
     class Implementation(interface):
         def __init__(self, value):
             self.value = value
@@ -40,21 +42,20 @@ def implementation(interface):
     return Implementation
 
 
-@pytest.fixture(params=[
-    'interface',
-    'method_list'
-])
+@pytest.fixture(params=["interface", "method_list"])
 def composite(interface, implementation, request):
     """Returns a composite that contains an instance of `implementation(1)`
     and one of `implementation(2)`.
     """
-    if request.param == 'interface':
+    if request.param == "interface":
+
         @pattern.composite(interface=interface)
         class Composite:
             pass
 
     else:
-        @pattern.composite(method_list=['add', 'subtract'])
+
+        @pattern.composite(method_list=["add", "subtract"])
         class Composite:
             pass
 
@@ -78,6 +79,7 @@ def test_composite_interface_calls(interface, composite):
 def test_composite_wrong_container(interface):
 
     with pytest.raises(TypeError):
+
         @pattern.composite(interface=interface, container=2)
         class CompositeFromInterface:
             pass
@@ -86,6 +88,7 @@ def test_composite_wrong_container(interface):
 def test_composite_no_methods():
 
     with pytest.raises(TypeError):
+
         @pattern.composite()
         class CompositeFromInterface:
             pass

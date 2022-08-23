@@ -13,7 +13,7 @@ import llnl.util.tty as tty
 import spack.config
 import spack.util.path as sup
 
-is_windows = sys.platform == 'win32'
+is_windows = sys.platform == "win32"
 
 
 #: Some lines with lots of placeholders
@@ -35,20 +35,19 @@ fixed_lines = [
 def test_sanitze_file_path(tmpdir):
     """Test filtering illegal characters out of potential file paths"""
     # *nix illegal files characters are '/' and none others
-    illegal_file_path = str(tmpdir) + '//' + 'abcdefghi.txt'
+    illegal_file_path = str(tmpdir) + "//" + "abcdefghi.txt"
     if is_windows:
         # Windows has a larger set of illegal characters
         illegal_file_path = os.path.join(tmpdir, 'a<b>cd?e:f"g|h*i.txt')
     real_path = sup.sanitize_file_path(illegal_file_path)
-    assert real_path == os.path.join(str(tmpdir), 'abcdefghi.txt')
+    assert real_path == os.path.join(str(tmpdir), "abcdefghi.txt")
 
 
 # This class pertains to path string padding manipulation specifically
 # which is used for binary caching. This functionality is not supported
 # on Windows as of yet.
-@pytest.mark.skipif(is_windows,
-                    reason='Padding funtionality unsupported on Windows')
-class TestPathPadding():
+@pytest.mark.skipif(is_windows, reason="Padding funtionality unsupported on Windows")
+class TestPathPadding:
     @pytest.mark.parametrize("padded,fixed", zip(padded_lines, fixed_lines))
     def test_padding_substitution(self, padded, fixed):
         """Ensure that all padded lines are unpadded correctly."""
@@ -56,7 +55,7 @@ class TestPathPadding():
 
     def test_no_substitution(self):
         """Ensure that a line not containing one full path placeholder
-           is not modified."""
+        is not modified."""
         partial = "--prefix=/Users/gamblin2/padding-log-test/opt/__spack_path_pla/darwin-bigsur-skylake/apple-clang-12.0.5/zlib-1.2.11-74mwnxgn6nujehpyyalhwizwojwn5zga'"  # noqa: E501
         assert sup.padding_filter(partial) == partial
 
@@ -74,12 +73,8 @@ class TestPathPadding():
 
     def test_longest_prefix_re(self):
         """Test that longest_prefix_re generates correct regular expressions."""
-        assert "(s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re(
-            "string", capture=True
-        )
-        assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re(
-            "string", capture=False
-        )
+        assert "(s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re("string", capture=True)
+        assert "(?:s(?:t(?:r(?:i(?:ng?)?)?)?)?)" == sup.longest_prefix_re("string", capture=False)
 
     def test_output_filtering(self, capfd, install_mockery, mutable_config):
         """Test filtering padding out of tty messages."""
@@ -87,7 +82,7 @@ class TestPathPadding():
         padding_string = "[padded-to-%d-chars]" % len(long_path)
 
         # test filtering when padding is enabled
-        with spack.config.override('config:install_tree', {"padded_length": 256}):
+        with spack.config.override("config:install_tree", {"padded_length": 256}):
             # tty.msg with filtering on the first argument
             with sup.filter_padding():
                 tty.msg("here is a long path: %s/with/a/suffix" % long_path)
@@ -116,3 +111,21 @@ class TestPathPadding():
         tty.msg("here is a long path: %s/with/a/suffix" % long_path)
         out, err = capfd.readouterr()
         assert padding_string not in out
+
+
+@pytest.mark.parametrize("debug", [1, 2])
+def test_path_debug_padded_filter(debug, monkeypatch):
+    """Ensure padded filter works as expected with different debug levels."""
+    fmt = "{0}{1}{2}{1}{3}"
+    prefix = "[+] {0}home{0}user{0}install".format(os.sep)
+    suffix = "mypackage"
+    string = fmt.format(prefix, os.sep, os.sep.join([sup.SPACK_PATH_PADDING_CHARS] * 2), suffix)
+    expected = (
+        fmt.format(prefix, os.sep, "[padded-to-{0}-chars]".format(72), suffix)
+        if debug <= 1 and not is_windows
+        else string
+    )
+
+    monkeypatch.setattr(tty, "_debug", debug)
+    with spack.config.override("config:install_tree", {"padded_length": 128}):
+        assert expected == sup.debug_padded_filter(string)
