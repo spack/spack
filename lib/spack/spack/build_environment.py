@@ -1033,7 +1033,12 @@ def get_cmake_prefix_path(pkg):
                 externals.insert(0, dspec.prefix)
             else:
                 spack_built.insert(0, dspec.prefix)
-
+    # TODO: for the given arguments, modifications_from_dependencies has no
+    # side effects *other than* setup_dependent_package, which is expected
+    # to be idempotent (e.g. setting attributes on the module twice is not
+    # a problem). Currently the API doesn't strictly prevent that though, so
+    # it should be possible to all modifications_from_dependencies and ensure
+    # that there are *no* side effects.
     # CMAKE_PREFIX_PATH here cannot come from the outside spack under
     # normal circumstances, it has to come from per-package implementations of
     # `setup_build_environment` which modify the shell environment
