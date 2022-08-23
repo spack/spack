@@ -337,11 +337,13 @@ class PatchCache(object):
             if "patches" not in data:
                 raise IndexError("invalid patch index; try `spack clean -m`")
             self.index = data["patches"]
+
+        assert repository is not None, "a 'repository=' argument is required"
         self.repository = repository
 
     @classmethod
-    def from_json(cls, stream):
-        return PatchCache(sjson.load(stream))
+    def from_json(cls, stream, repository):
+        return PatchCache(sjson.load(stream), repository=repository)
 
     def to_json(self, stream):
         sjson.dump({"patches": self.index}, stream)
@@ -379,8 +381,7 @@ class PatchCache(object):
         patch_dict["sha256"] = sha256
         return from_dict(patch_dict, repository=self.repository)
 
-    def update_package(self, pkg_fullname, repository=None):
-        repository = repository or spack.repo.path
+    def update_package(self, pkg_fullname):
         # remove this package from any patch entries that reference it.
         empty = []
         for sha256, package_to_patch in self.index.items():
@@ -400,8 +401,8 @@ class PatchCache(object):
             del self.index[sha256]
 
         # update the index with per-package patch indexes
-        pkg_cls = repository.get_pkg_class(pkg_fullname)
-        partial_index = self._index_patches(pkg_cls, repository)
+        pkg_cls = self.repository.get_pkg_class(pkg_fullname)
+        partial_index = self._index_patches(pkg_cls, self.repository)
         for sha256, package_to_patch in partial_index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)

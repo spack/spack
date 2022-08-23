@@ -582,6 +582,7 @@ class Indexer(object):
 
     def __init__(self, repository):
         self.repository = repository
+        self.index = None
 
     def create(self):
         self.index = self._create()
@@ -672,13 +673,13 @@ class PatchIndexer(Indexer):
         return False
 
     def read(self, stream):
-        self.index = spack.patch.PatchCache.from_json(stream)
+        self.index = spack.patch.PatchCache.from_json(stream, repository=self.repository)
 
     def write(self, stream):
         self.index.to_json(stream)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname, self.repository)
+        self.index.update_package(pkg_fullname)
 
 
 class RepoIndex(object):
