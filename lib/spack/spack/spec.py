@@ -2276,6 +2276,9 @@ class Spec(object):
                 raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
         if change_spec.compiler:
             new_spec.compiler = change_spec.compiler
+        if change_spec.compiler_flags:
+            for flagname, flagvals in change_spec.compiler_flags.items():
+                new_spec.compiler_flags[flagname] = flagvals
         if change_spec.architecture:
             new_spec.architecture = ArchSpec.override(
                 new_spec.architecture, change_spec.architecture
