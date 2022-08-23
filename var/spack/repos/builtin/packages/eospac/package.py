@@ -136,10 +136,7 @@ class Eospac(Package):
             if "%gcc@10:" in spec:
                 compilerArgs.append("CFLAGS=-fcommon")
             if self.run_tests:
-                make(
-                    "check",
-                    *compilerArgs
-                )
+                make("check", *compilerArgs)
             make(
                 "install",
                 "prefix={0}".format(prefix),
