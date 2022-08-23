@@ -58,7 +58,7 @@ class PyScipy(PythonPackage):
     # https://github.com/FFY00/meson-python/pull/122
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.7", when="@1.9:", type="build")
+    depends_on("py-meson-python@0.7:", when="@1.9:", type="build")
     depends_on("py-meson@0.62.2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
@@ -167,11 +167,26 @@ class PyScipy(PythonPackage):
     # https://github.com/FFY00/meson-python/pull/122
     @when("@1.9:")
     def install(self, spec, prefix):
+        blas = spec["blas"].libs.names[0]
+        lapack = spec["lapack"].libs.names[0]
+        if (
+            spec["blas"].name == "intel-mkl"
+            or spec["blas"].name == "intel-parallel-studio"
+            or spec["blas"].name == "intel-oneapi-mkl"
+        ):
+            blas = "mkl_rt"
+        if (
+            spec["lapack"].name == "intel-mkl"
+            or spec["lapack"].name == "intel-parallel-studio"
+            or spec["lapack"].name == "intel-oneapi-mkl"
+        ):
+            lapack = "mkl_rt"
+
         args = [
             "setup",
             "build",
-            "-Dblas=" + spec["blas"].libs.names[0],
-            "-Dlapack=" + spec["lapack"].libs.names[0],
+            "-Dblas=" + blas,
+            "-Dlapack=" + lapack,
             "--prefix=" + join_path(os.getcwd(), "build-install"),
             "-Ddebug=false",
             "-Doptimization=2",
