@@ -8,6 +8,7 @@ from spack.package import *
 class ProcessInProcess(Package):
     """Process-in-Process"""
 
+
     # we cannot install pip-gdb (pip-aware gdb)
     # since the ncureses package cannot be installed by using Spack
     # --> https://github.com/spack/spack/issues/8675
