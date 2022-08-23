@@ -944,7 +944,6 @@ class RepoPath(object):
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
-        namespace = None
         if isinstance(spec, spack.spec.Spec):
             namespace = spec.namespace
             name = spec.name
@@ -957,7 +956,7 @@ class RepoPath(object):
         if namespace:
             fullspace = python_package_for_repo(namespace)
             if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(namespace)
+                raise UnknownNamespaceError(namespace, name=name)
             return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
@@ -1002,20 +1001,34 @@ class RepoPath(object):
         """
         return any(repo.exists(pkg_name) for repo in self.repos)
 
-    def is_virtual(self, pkg_name, use_index=True):
-        """True if the package with this name is virtual, False otherwise.
-
-        Set `use_index` False when calling from a code block that could
-        be run during the computation of the provider index."""
+    def _have_name(self, pkg_name):
         have_name = pkg_name is not None
         if have_name and not isinstance(pkg_name, str):
             raise ValueError("is_virtual(): expected package name, got %s" % type(pkg_name))
-        if use_index:
-            return have_name and pkg_name in self.provider_index
-        else:
-            return have_name and (
-                not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
-            )
+        return have_name
+
+    def is_virtual(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function use the provider index. If calling from a code block that
+        is used to construct the provider index use the ``is_virtual_safe`` function.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        have_name = self._have_name(pkg_name)
+        return have_name and pkg_name in self.provider_index
+
+    def is_virtual_safe(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function doesn't use the provider index.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        have_name = self._have_name(pkg_name)
+        return have_name and (not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual)
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
@@ -1303,8 +1316,25 @@ class Repo(object):
         return self._pkg_checker.last_mtime()
 
     def is_virtual(self, pkg_name):
-        """True if the package with this name is virtual, False otherwise."""
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function use the provider index. If calling from a code block that
+        is used to construct the provider index use the ``is_virtual_safe`` function.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
         return pkg_name in self.provider_index
+
+    def is_virtual_safe(self, pkg_name):
+        """Return True if the package with this name is virtual, False otherwise.
+
+        This function doesn't use the provider index.
+
+        Args:
+            pkg_name (str): name of the package we want to check
+        """
+        return not self.exists(pkg_name) or self.get_pkg_class(pkg_name).virtual
 
     def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
@@ -1525,7 +1555,7 @@ class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
     def __init__(self, name, repo=None):
-        msg = None
+        msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
             if repo:
@@ -1542,8 +1572,6 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = long_msg.format(name)
             else:
                 long_msg = "You may need to run 'spack clean -m'."
-        else:
-            msg = "Attempting to retrieve anonymous package."
 
         super(UnknownPackageError, self).__init__(msg, long_msg)
         self.name = name
@@ -1552,8 +1580,12 @@ class UnknownPackageError(UnknownEntityError):
 class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
-    def __init__(self, namespace):
-        super(UnknownNamespaceError, self).__init__("Unknown namespace: %s" % namespace)
+    def __init__(self, namespace, name=None):
+        msg, long_msg = "Unknown namespace: {}".format(namespace), None
+        if name == "yaml":
+            long_msg = "Did you mean to specify a filename with './{}.{}'?"
+            long_msg = long_msg.format(namespace, name)
+        super(UnknownNamespaceError, self).__init__(msg, long_msg)
 
 
 class FailedConstructorError(RepoError):

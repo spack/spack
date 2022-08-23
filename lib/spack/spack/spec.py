@@ -1548,16 +1548,7 @@ class Spec(object):
 
     @property
     def virtual(self):
-        """Right now, a spec is virtual if no package exists with its name.
-
-        TODO: revisit this -- might need to use a separate namespace and
-        be more explicit about this.
-        Possible idea: just use conventin and make virtual deps all
-        caps, e.g., MPI vs mpi.
-        """
-        # This method can be called while regenerating the provider index
-        # So we turn off using the index to detect virtuals
-        return spack.repo.path.is_virtual(self.name, use_index=False)
+        return spack.repo.path.is_virtual(self.name)
 
     @property
     def concrete(self):
@@ -3153,7 +3144,7 @@ class Spec(object):
         Raise an exception if there is a conflicting virtual
         dependency already in this spec.
         """
-        assert vdep.virtual
+        assert spack.repo.path.is_virtual_safe(vdep.name), vdep
 
         # note that this defensively copies.
         providers = provider_index.providers_for(vdep)
@@ -3218,7 +3209,7 @@ class Spec(object):
 
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
-        if dep.virtual:
+        if spack.repo.path.is_virtual_safe(dep.name):
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
@@ -3229,7 +3220,7 @@ class Spec(object):
             )
             items = list(spec_deps.items())
             for name, vspec in items:
-                if not vspec.virtual:
+                if not spack.repo.path.is_virtual_safe(vspec.name):
                     continue
 
                 if index.providers_for(vspec):

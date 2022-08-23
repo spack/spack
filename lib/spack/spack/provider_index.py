@@ -155,11 +155,7 @@ class ProviderIndex(_IndexBase):
             if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)
 
-            is_virtual = (
-                not self.repository.exists(spec.name)
-                or self.repository.get_pkg_class(spec.name).virtual
-            )
-            if is_virtual:
+            if self.repository.is_virtual_safe(spec.name):
                 continue
 
             self.update(spec)
@@ -177,13 +173,8 @@ class ProviderIndex(_IndexBase):
             # Empty specs do not have a package
             return
 
-        is_virtual = (
-            not self.repository.exists(spec.name)
-            or self.repository.get_pkg_class(spec.name).virtual
-        )
-        assert not is_virtual, "cannot update an index passing the virtual spec '{}'".format(
-            spec.name
-        )
+        msg = "cannot update an index passing the virtual spec '{}'".format(spec.name)
+        assert not self.repository.is_virtual_safe(spec.name), msg
 
         pkg_provided = self.repository.get_pkg_class(spec.name).provided
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
