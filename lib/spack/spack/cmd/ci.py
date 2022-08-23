@@ -6,13 +6,10 @@
 import json
 import os
 import shutil
-import stat
-import subprocess
 import sys
 import tempfile
 
-from six.moves.urllib.parse import urlencode
-
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.binary_distribution as bindist
@@ -34,6 +31,10 @@ CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "-d", "-v"]
 INSTALL_FAIL_CODE = 1
 
 
+def deindent(desc):
+    return desc.replace("    ", "")
+
+
 def get_env_var(variable_name):
     if variable_name in os.environ:
         return os.environ.get(variable_name)
@@ -45,27 +46,35 @@ def setup_parser(subparser):
     subparsers = subparser.add_subparsers(help="CI sub-commands")
 
     # Dynamic generation of the jobs yaml from a spack environment
-    generate = subparsers.add_parser("generate", help=ci_generate.__doc__)
+    generate = subparsers.add_parser(
+        "generate",
+        description=deindent(ci_generate.__doc__),
+        help=spack.cmd.first_line(ci_generate.__doc__),
+    )
     generate.add_argument(
         "--output-file",
         default=None,
-        help="Path to file where generated jobs file should be "
-        + "written.  The default is .gitlab-ci.yml in the root of the "
-        + "repository.",
+        help="""pathname for the generated gitlab ci yaml file
+  Path to the file where generated jobs file should
+be written. Default is .gitlab-ci.yml in the root of
+the repository.""",
     )
     generate.add_argument(
         "--copy-to",
         default=None,
-        help="Absolute path of additional location where generated jobs "
-        + "yaml file should be copied.  Default is not to copy.",
+        help="""path to additional directory for job files
+  This option provides an absolute path to a directory
+where the generated jobs yaml file should be copied.
+Default is not to copy.""",
     )
     generate.add_argument(
         "--optimize",
         action="store_true",
         default=False,
-        help="(Experimental) run the generated document through a series of "
-        "optimization passes designed to reduce the size of the "
-        "generated file.",
+        help="""(Experimental) optimize the gitlab yaml file for size
+  Run the generated document through a series of
+optimization passes designed to reduce the size
+of the generated file.""",
     )
     generate.add_argument(
         "--dependencies",
@@ -86,53 +95,84 @@ def setup_parser(subparser):
         action="store_true",
         dest="prune_dag",
         default=True,
-        help="""Do not generate jobs for specs already up to
-date on the mirror""",
+        help="""skip up-to-date specs
+  Do not generate jobs for specs that are up-to-date
+on the mirror.""",
     )
     prune_group.add_argument(
         "--no-prune-dag",
         action="store_false",
         dest="prune_dag",
         default=True,
-        help="""Generate jobs for specs already up to date
-on the mirror""",
+        help="""process up-to-date specs
+  Generate jobs for specs even when they are up-to-date
+on the mirror.""",
     )
     generate.add_argument(
         "--check-index-only",
         action="store_true",
         dest="index_only",
         default=False,
-        help="""Spack always check specs against configured
-binary mirrors when generating the pipeline, regardless of whether or not
-DAG pruning is enabled.  This flag controls whether it might attempt to
-fetch remote spec files directly (ensuring no spec is rebuilt if it
-is present on the mirror), or whether it should reduce pipeline generation time
-by assuming all remote buildcache indices are up to date and only use those
-to determine whether a given spec is up to date on mirrors.  In the latter
-case, specs might be needlessly rebuilt if remote buildcache indices are out
-of date.""",
+        help="""only check spec state from buildcache indices
+  Spack always checks specs against configured binary
+mirrors, regardless of the DAG pruning option.
+  If enabled, Spack will assume all remote buildcache
+indices are up-to-date when assessing whether the spec
+on the mirror, if present, is up-to-date. This has the
+benefit of reducing pipeline generation time but at the
+potential cost of needlessly rebuilding specs when the
+indices are outdated.
+  If not enabled, Spack will fetch remote spec files
+directly to assess whether the spec on the mirror is
+up-to-date.""",
     )
     generate.add_argument(
         "--artifacts-root",
         default=None,
-        help="""Path to root of artifacts directory.  If provided, concrete
-environment files (spack.yaml, spack.lock) will be generated under this
-path and their location sent to generated child jobs via the custom job
-variable SPACK_CONCRETE_ENVIRONMENT_PATH.""",
+        help="""path to the root of the artifacts directory
+  If provided, concrete environment files (spack.yaml,
+spack.lock) will be generated under this directory.
+Their location will be passed to generated child jobs
+through the SPACK_CONCRETE_ENVIRONMENT_PATH variable.""",
     )
     generate.set_defaults(func=ci_generate)
 
     # Rebuild the buildcache index associated with the mirror in the
     # active, gitlab-enabled environment.
-    index = subparsers.add_parser("rebuild-index", help=ci_reindex.__doc__)
+    index = subparsers.add_parser(
+        "rebuild-index",
+        description=deindent(ci_reindex.__doc__),
+        help=spack.cmd.first_line(ci_reindex.__doc__),
+    )
     index.set_defaults(func=ci_reindex)
 
     # Handle steps of a ci build/rebuild
-    rebuild = subparsers.add_parser("rebuild", help=ci_rebuild.__doc__)
+    rebuild = subparsers.add_parser(
+        "rebuild",
+        description=deindent(ci_rebuild.__doc__),
+        help=spack.cmd.first_line(ci_rebuild.__doc__),
+    )
+    rebuild.add_argument(
+        "-t",
+        "--tests",
+        action="store_true",
+        default=False,
+        help="""run stand-alone tests after the build""",
+    )
+    rebuild.add_argument(
+        "--fail-fast",
+        action="store_true",
+        default=False,
+        help="""stop stand-alone tests after the first failure""",
+    )
     rebuild.set_defaults(func=ci_rebuild)
 
     # Facilitate reproduction of a failed CI build job
-    reproduce = subparsers.add_parser("reproduce-build", help=ci_reproduce.__doc__)
+    reproduce = subparsers.add_parser(
+        "reproduce-build",
+        description=deindent(ci_reproduce.__doc__),
+        help=spack.cmd.first_line(ci_reproduce.__doc__),
+    )
     reproduce.add_argument("job_url", help="Url of job artifacts bundle")
     reproduce.add_argument(
         "--working-dir",
@@ -144,12 +184,12 @@ variable SPACK_CONCRETE_ENVIRONMENT_PATH.""",
 
 
 def ci_generate(args):
-    """Generate jobs file from a spack environment file containing CI info.
-    Before invoking this command, you can set the environment variable
-    SPACK_CDASH_AUTH_TOKEN to contain the CDash authorization token
-    for creating a build group for the generated workload and registering
-    all generated jobs under that build group.  If this environment
-    variable is not set, no build group will be created on CDash."""
+    """Generate jobs file from a CI-aware spack file.
+
+    If you want to report the results on CDash, you will need to set
+    the SPACK_CDASH_AUTH_TOKEN before invoking this command. The
+    value must be the CDash authorization token needed to create a
+    build group and register all generated jobs under it."""
     env = spack.cmd.require_active_env(cmd_name="ci generate")
 
     output_file = args.output_file
@@ -190,8 +230,10 @@ def ci_generate(args):
 
 
 def ci_reindex(args):
-    """Rebuild the buildcache index associated with the mirror in the
-    active, gitlab-enabled environment."""
+    """Rebuild the buildcache index for the remote mirror.
+
+    Use the active, gitlab-enabled environment to rebuild the buildcache
+    index for the associated mirror."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild-index")
     yaml_root = ev.config_dict(env.yaml)
 
@@ -206,17 +248,16 @@ def ci_reindex(args):
 
 
 def ci_rebuild(args):
-    """Check a single spec against the remote mirror, and rebuild it from
+    """Rebuild a spec if it is not on the remote mirror.
+
+    Check a single spec against the remote mirror, and rebuild it from
     source if the mirror does not contain the hash."""
     env = spack.cmd.require_active_env(cmd_name="ci rebuild")
 
     # Make sure the environment is "gitlab-enabled", or else there's nothing
     # to do.
     yaml_root = ev.config_dict(env.yaml)
-    gitlab_ci = None
-    if "gitlab-ci" in yaml_root:
-        gitlab_ci = yaml_root["gitlab-ci"]
-
+    gitlab_ci = yaml_root["gitlab-ci"] if "gitlab-ci" in yaml_root else None
     if not gitlab_ci:
         tty.die("spack ci rebuild requires an env containing gitlab-ci cfg")
 
@@ -231,6 +272,7 @@ def ci_rebuild(args):
     # out as variables, or else provided by GitLab itself.
     pipeline_artifacts_dir = get_env_var("SPACK_ARTIFACTS_ROOT")
     job_log_dir = get_env_var("SPACK_JOB_LOG_DIR")
+    job_test_dir = get_env_var("SPACK_JOB_TEST_DIR")
     repro_dir = get_env_var("SPACK_JOB_REPRO_DIR")
     local_mirror_dir = get_env_var("SPACK_LOCAL_MIRROR_DIR")
     concrete_env_dir = get_env_var("SPACK_CONCRETE_ENV_DIR")
@@ -240,7 +282,6 @@ def ci_rebuild(args):
     root_spec = get_env_var("SPACK_ROOT_SPEC")
     job_spec_pkg_name = get_env_var("SPACK_JOB_SPEC_PKG_NAME")
     compiler_action = get_env_var("SPACK_COMPILER_ACTION")
-    cdash_build_name = get_env_var("SPACK_CDASH_BUILD_NAME")
     spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
@@ -249,6 +290,7 @@ def ci_rebuild(args):
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
     pipeline_artifacts_dir = os.path.join(ci_project_dir, pipeline_artifacts_dir)
     job_log_dir = os.path.join(ci_project_dir, job_log_dir)
+    job_test_dir = os.path.join(ci_project_dir, job_test_dir)
     repro_dir = os.path.join(ci_project_dir, repro_dir)
     local_mirror_dir = os.path.join(ci_project_dir, local_mirror_dir)
     concrete_env_dir = os.path.join(ci_project_dir, concrete_env_dir)
@@ -263,23 +305,15 @@ def ci_rebuild(args):
     # Query the environment manifest to find out whether we're reporting to a
     # CDash instance, and if so, gather some information from the manifest to
     # support that task.
-    enable_cdash = False
-    if "cdash" in yaml_root:
-        enable_cdash = True
-        ci_cdash = yaml_root["cdash"]
-        job_spec_buildgroup = ci_cdash["build-group"]
-        cdash_base_url = ci_cdash["url"]
-        cdash_project = ci_cdash["project"]
-        proj_enc = urlencode({"project": cdash_project})
-        eq_idx = proj_enc.find("=") + 1
-        cdash_project_enc = proj_enc[eq_idx:]
-        cdash_site = ci_cdash["site"]
-        tty.debug("cdash_base_url = {0}".format(cdash_base_url))
-        tty.debug("cdash_project = {0}".format(cdash_project))
-        tty.debug("cdash_project_enc = {0}".format(cdash_project_enc))
-        tty.debug("cdash_build_name = {0}".format(cdash_build_name))
-        tty.debug("cdash_site = {0}".format(cdash_site))
-        tty.debug("job_spec_buildgroup = {0}".format(job_spec_buildgroup))
+    cdash_handler = spack_ci.CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
+    if cdash_handler:
+        tty.debug("cdash url = {0}".format(cdash_handler.url))
+        tty.debug("cdash project = {0}".format(cdash_handler.project))
+        tty.debug("cdash project_enc = {0}".format(cdash_handler.project_enc))
+        tty.debug("cdash build_name = {0}".format(cdash_handler.build_name))
+        tty.debug("cdash build_stamp = {0}".format(cdash_handler.build_stamp))
+        tty.debug("cdash site = {0}".format(cdash_handler.site))
+        tty.debug("cdash build_group = {0}".format(cdash_handler.build_group))
 
     # Is this a pipeline run on a spack PR or a merge to develop?  It might
     # be neither, e.g. a pipeline run on some environment repository.
@@ -344,6 +378,9 @@ def ci_rebuild(args):
     if os.path.exists(job_log_dir):
         shutil.rmtree(job_log_dir)
 
+    if os.path.exists(job_test_dir):
+        shutil.rmtree(job_test_dir)
+
     if os.path.exists(repro_dir):
         shutil.rmtree(repro_dir)
 
@@ -351,6 +388,7 @@ def ci_rebuild(args):
     # need for storing artifacts.  The cdash_report directory will be
     # created internally if needed.
     os.makedirs(job_log_dir)
+    os.makedirs(job_test_dir)
     os.makedirs(repro_dir)
 
     # Copy the concrete environment files to the repro directory so we can
@@ -468,6 +506,7 @@ def ci_rebuild(args):
     install_args.extend(
         [
             "install",
+            "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
         ]
     )
@@ -477,22 +516,9 @@ def ci_rebuild(args):
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
-    if enable_cdash:
+    if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
-        cdash_upload_url = "{0}/submit.php?project={1}".format(cdash_base_url, cdash_project_enc)
-
-        install_args.extend(
-            [
-                "--cdash-upload-url",
-                cdash_upload_url,
-                "--cdash-build",
-                cdash_build_name,
-                "--cdash-site",
-                cdash_site,
-                "--cdash-track",
-                job_spec_buildgroup,
-            ]
-        )
+        install_args.extend(cdash_handler.args())
 
     # A compiler action of 'FIND_ANY' means we are building a bootstrap
     # compiler or one of its deps.
@@ -506,29 +532,7 @@ def ci_rebuild(args):
     install_args.extend(["-f", job_spec_json_path])
 
     tty.debug("Installing {0} from source".format(job_spec.name))
-    tty.debug("spack install arguments: {0}".format(install_args))
-
-    # Write the install command to a shell script
-    with open("install.sh", "w") as fd:
-        fd.write("#!/bin/bash\n\n")
-        fd.write("\n# spack install command\n")
-        fd.write(" ".join(['"{0}"'.format(i) for i in install_args]))
-        fd.write("\n")
-
-    st = os.stat("install.sh")
-    os.chmod("install.sh", st.st_mode | stat.S_IEXEC)
-
-    install_copy_path = os.path.join(repro_dir, "install.sh")
-    shutil.copyfile("install.sh", install_copy_path)
-
-    # Run the generated install.sh shell script
-    try:
-        install_process = subprocess.Popen(["bash", "./install.sh"])
-        install_process.wait()
-        install_exit_code = install_process.returncode
-    except (ValueError, subprocess.CalledProcessError, OSError) as inst:
-        tty.error("Encountered error running install script")
-        tty.error(inst)
+    install_exit_code = spack_ci.process_command("install", install_args, repro_dir)
 
     # Now do the post-install tasks
     tty.debug("spack install exited {0}".format(install_exit_code))
@@ -564,7 +568,7 @@ def ci_rebuild(args):
                     extra_args={"ContentType": "text/plain"},
                 )
             except Exception as err:
-                # If we got some kind of S3 (access denied or other connection
+                # If there is an S3 error (e.g., access denied or connection
                 # error), the first non boto-specific class in the exception
                 # hierarchy is Exception.  Just print a warning and return
                 msg = "Error writing to broken specs list {0}: {1}".format(broken_spec_path, err)
@@ -576,28 +580,79 @@ def ci_rebuild(args):
     # any logs from the staging directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
+    # If the installation succeeded and we're running stand-alone tests for
+    # the package, run them and copy the output. Failures of any kind should
+    # *not* terminate the build process or preclude creating the build cache.
+    broken_tests = (
+        "broken-tests-packages" in gitlab_ci
+        and job_spec.name in gitlab_ci["broken-tests-packages"]
+    )
+    reports_dir = fs.join_path(os.getcwd(), "cdash_report")
+    if args.tests and broken_tests:
+        tty.warn(
+            "Unable to run stand-alone tests since listed in "
+            "gitlab-ci's 'broken-tests-packages'"
+        )
+        if cdash_handler:
+            msg = "Package is listed in gitlab-ci's broken-tests-packages"
+            cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+            cdash_handler.copy_test_results(reports_dir, job_test_dir)
+    elif args.tests:
+        if install_exit_code == 0:
+            try:
+                # First ensure we will use a reasonable test stage directory
+                stage_root = os.path.dirname(str(job_spec.package.stage.path))
+                test_stage = fs.join_path(stage_root, "spack-standalone-tests")
+                tty.debug("Configuring test_stage to {0}".format(test_stage))
+                config_test_path = "config:test_stage:{0}".format(test_stage)
+                cfg.add(config_test_path, scope=cfg.default_modify_scope())
+
+                # Run the tests, resorting to junit results if not using cdash
+                log_file = (
+                    None if cdash_handler else fs.join_path(test_stage, "ci-test-results.xml")
+                )
+                spack_ci.run_standalone_tests(
+                    cdash=cdash_handler,
+                    job_spec=job_spec,
+                    fail_fast=args.fail_fast,
+                    log_file=log_file,
+                    repro_dir=repro_dir,
+                )
+
+            except Exception as err:
+                # If there is any error, just print a warning.
+                msg = "Error processing stand-alone tests: {0}".format(str(err))
+                tty.warn(msg)
+
+            finally:
+                # Copy the test log/results files
+                spack_ci.copy_test_logs_to_artifacts(test_stage, job_test_dir)
+                if cdash_handler:
+                    cdash_handler.copy_test_results(reports_dir, job_test_dir)
+                elif log_file:
+                    spack_ci.copy_files_to_artifacts(log_file, job_test_dir)
+                else:
+                    tty.warn("No recognized test results reporting option")
+
+        else:
+            tty.warn("Unable to run stand-alone tests due to unsuccessful " "installation")
+            if cdash_handler:
+                msg = "Failed to install the package"
+                cdash_handler.report_skipped(job_spec, reports_dir, reason=msg)
+                cdash_handler.copy_test_results(reports_dir, job_test_dir)
+
     # If the install succeeded, create a buildcache entry for this job spec
     # and push it to one or more mirrors.  If the install did not succeed,
     # print out some instructions on how to reproduce this build failure
     # outside of the pipeline environment.
     if install_exit_code == 0:
-        can_sign = spack_ci.can_sign_binaries()
-        sign_binaries = can_sign and spack_is_pr_pipeline is False
-
-        # Create buildcache in either the main remote mirror, or in the
-        # per-PR mirror, if this is a PR pipeline
-        if buildcache_mirror_url:
-            spack_ci.push_mirror_contents(
-                env, job_spec_json_path, buildcache_mirror_url, sign_binaries
-            )
-
-        # Create another copy of that buildcache in the per-pipeline
-        # temporary storage mirror (this is only done if either
-        # artifacts buildcache is enabled or a temporary storage url
-        # prefix is set)
-        if pipeline_mirror_url:
-            spack_ci.push_mirror_contents(
-                env, job_spec_json_path, pipeline_mirror_url, sign_binaries
+        if buildcache_mirror_url or pipeline_mirror_url:
+            spack_ci.create_buildcache(
+                env=env,
+                buildcache_mirror_url=buildcache_mirror_url,
+                pipeline_mirror_url=pipeline_mirror_url,
+                pr_pipeline=spack_is_pr_pipeline,
+                json_path=job_spec_json_path,
             )
 
         # If this is a develop pipeline, check if the spec that we just built is
@@ -611,13 +666,11 @@ def ci_rebuild(args):
                 try:
                     web_util.remove_url(broken_spec_path)
                 except Exception as err:
-                    # If we got some kind of S3 (access denied or other connection
+                    # If there is an S3 error (e.g., access denied or connection
                     # error), the first non boto-specific class in the exception
-                    # hierarchy is Exception.  Just print a warning and return
-                    msg = "Error removing {0} from broken specs list: {1}".format(
-                        broken_spec_path, err
-                    )
-                    tty.warn(msg)
+                    # hierarchy is Exception.  Just print a warning and return.
+                    msg = "Error removing {0} from broken specs list: {1}"
+                    tty.warn(msg.format(broken_spec_path, err))
 
     else:
         tty.debug("spack install exited non-zero, will not create buildcache")
@@ -654,6 +707,10 @@ If this project does not have public pipelines, you will need to first:
 
 
 def ci_reproduce(args):
+    """Generate instructions for reproducing the spec rebuild job.
+
+    Artifacts of the provided gitlab pipeline rebuild job's URL will be
+    used to derive instructions for reproducing the build locally."""
     job_url = args.job_url
     work_dir = args.working_dir
 

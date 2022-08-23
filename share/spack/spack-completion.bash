@@ -612,7 +612,7 @@ _spack_ci_rebuild_index() {
 }
 
 _spack_ci_rebuild() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help -t --tests --fail-fast"
 }
 
 _spack_ci_reproduce_build() {

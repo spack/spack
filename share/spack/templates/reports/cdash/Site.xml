@@ -2,6 +2,9 @@
 <Site BuildName="{{ buildname }}"
       BuildStamp="{{ buildstamp }}"
       Name="{{ site }}"
+      Generator="{{ generator }}"
+      Hostname="{{ hostname }}"
       OSName="{{ osname }}"
+      OSRelease="{{ osrelease }}"
+      VendorString="{{ target }}"
 >
-

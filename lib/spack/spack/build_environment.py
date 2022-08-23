@@ -65,6 +65,7 @@ import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
 from spack.error import NoHeadersError, NoLibrariesError
+from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
     EnvironmentModifications,
@@ -1277,15 +1278,6 @@ def get_package_context(traceback, context=3):
         lines.append(marked)
 
     return lines
-
-
-class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install.
-
-    Any subclass of InstallError will be annotated by Spack with a
-    ``pkg`` attribute on failure, which the caller can use to get the
-    package for which the exception was raised.
-    """
 
 
 class ChildError(InstallError):
