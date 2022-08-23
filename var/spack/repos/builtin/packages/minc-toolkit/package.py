@@ -43,3 +43,6 @@ class MincToolkit(CMakePackage):
             # should be packaged separately with newer ITK
             "-DMT_BUILD_ELASTIX=OFF",
         ]
+
+    def setup_run_environment(self, env):
+        env.set("MINC_TOOLKIT", self.prefix)
