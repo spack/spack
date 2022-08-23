@@ -12,7 +12,7 @@ class CpuFeatures(CMakePackage):
     homepage = "https://github.com/google/cpu_features"
     git = "https://github.com/google/cpu_features.git"
 
-    version("develop", branch="master")
+    version("develop", branch="main")
 
     depends_on("cmake@3.0.0:", type="build")
 
