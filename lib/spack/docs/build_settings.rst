@@ -405,9 +405,11 @@ like this:
      all:
        require: '%clang'
 
-which means every spec will be required to use ``clang`` as a compiler. Note that
-in this case ``all`` represents a *default set of requirements*, so with a configuration
-like this:
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
 
 .. code-block:: yaml
 
@@ -418,8 +420,7 @@ like this:
        require: '%gcc'
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
-to use ``clang``. More in general, if there are specific package requirements, the default
-requirements under ``all`` are disregarded.
+to use ``clang``.
 
 Other notes about ``requires``:
 
