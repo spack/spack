@@ -112,6 +112,13 @@ class PyScipy(PythonPackage):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.set_blas_lapack()
 
+    @run_before("install")
+    def set_fortran_compiler(self):
+        if self.spec.satisfies("%fj"):
+            with open("setup.cfg", "w") as f:
+                f.write("[config_fc]\n")
+                f.write("fcompiler = fujitsu\n")
+
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
         env.set("F90", spack_fc)
@@ -124,12 +131,6 @@ class PyScipy(PythonPackage):
 
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
-
-    def install_options(self, spec, prefix):
-        args = []
-        if spec.satisfies("%fj"):
-            args.extend(["config_fc", "--fcompiler=fujitsu"])
-        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
