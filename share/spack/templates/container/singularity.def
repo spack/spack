@@ -10,8 +10,12 @@ Stage: build
   {% endif %}
   {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
   {{ os_packages_build.clean }}
+{% endif %
 
-{% endif %}
+  {% if extra_instructions.pre_build %}
+  {{ extra_instructions.pre_build }}
+  {% endif %}
+
   # Create the manifest file for the installation in /opt/spack-environment
   mkdir {{ paths.environment }} && cd {{ paths.environment }}
   cat << EOF > spack.yaml
