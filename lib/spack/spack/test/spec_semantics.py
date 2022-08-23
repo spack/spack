@@ -1123,7 +1123,7 @@ class TestSpecSematics(object):
         assert "foo=baz" not in new_spec
         assert "foobar=baz" in new_spec
         assert new_spec.compiler_flags['cflags'] == ['-O2']
-        assert new_spec.compiler_flags['cflags'] == ['-O1']
+        assert new_spec.compiler_flags['cxxflags'] == ['-O1']
 
 
 @pytest.mark.regression("3887")
