@@ -27,7 +27,7 @@ class MincToolkit(CMakePackage):
     depends_on("perl-text-format", type=("build", "run"))
     depends_on("perl-getopt-tabular", type=("build", "run"))
     depends_on("perl-mni-perllib", type=("build", "run"))
-    depends_on("flex", type="build")
+    depends_on("flex", type=("build", "run"))  # e.g minccalc depends on libfl.so
     depends_on("bison", type="build")
     depends_on("zlib", type="link")
     depends_on("freeglut", when="+visualisation")
