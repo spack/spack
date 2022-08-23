@@ -1026,12 +1026,17 @@ class Environment(object):
 
     def change_existing_spec(self, change_spec, list_name=user_speclist_name, match_spec=None):
         """
-        Provide a single spec and assume you want to find another spec with the
-        same name and override it with any conflicting details in change_spec.
+        Find the spec identified by `match_spec` and change it to `change_spec`.
 
-        This is only allowed for environments that do not use matrices (i.e.
-        they have a single, explicitly-enumerated list of specs called
-        'specs').
+        Arguments:
+            change_spec (Spec): defines the spec properties that need to be
+                changed. This will not change attributes of the matched spec
+                unless they conflict with `change_spec`.
+            list_name (str): identifies the spec list in the environment that
+                should be modified
+            match_spec (Spec): if set, this identifies the spec that should
+                be changed. If not set, it is assumed we are looking for a
+                spec with the same name as `change_spec`.
         """
         if not (change_spec.name or (match_spec and match_spec.name)):
             raise ValueError(
