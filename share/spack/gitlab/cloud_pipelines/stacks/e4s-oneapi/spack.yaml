@@ -25,7 +25,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: oneapi@2022.1.0
@@ -38,7 +40,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: gcc@9.4.0
@@ -100,6 +104,7 @@ spack:
   - amrex
   - arborx
   - argobots
+  - ascent ^vtk-m ~openmp
   - axom
   - bolt
   - bricks
@@ -120,6 +125,7 @@ spack:
   - globalarrays
   - gmp
   - gotcha
+  - gptune
   - hdf5 +fortran +hl +shared
   - heffte +fftw
   - hpx networking=mpi
@@ -140,6 +146,7 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
+  - nrm
   - omega-h
   - openmpi
   - papi
@@ -154,6 +161,8 @@ spack:
   - pumi
   - py-cinemasci
   - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
   - qthreads scheduler=distrib
   - raja
   - rempi
@@ -185,29 +194,26 @@ spack:
   - zfp
 
   # GPU
+  - aml +ze
+  - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
   - kokkos +sycl +openmp std=17 +tests +examples %oneapi
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
 
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2
   #- archer@2.0.0                                     # binutils
-  #- ascent ^vtk-m ~openmp                            # ascent
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
   #- geopm@1.1.0                                      # ruby
-  #- gptune@3.0.0                                     # intel-tbb
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit@2022.04.15                            # binutils
-  #- nrm@0.1.0                                        # py-numpy@1.23.1
   #- openpmd-api@0.14.4                               # adios2
   #- paraview@5.10.1 +qt                              # binutils
   #- phist@1.9.5                                      # phist
   #- pruners-ninja@1.0.1                              # pruners-ninja
-  #- py-libensemble@0.9.1                             # py-numpy@1.23.1
-  #- py-petsc4py@3.17.1                               # py-numpy@1.23.1
   #- py-warpx@22.05 ^warpx dims=2                     # adios2
   #- py-warpx@22.05 ^warpx dims=3                     # adios2
   #- py-warpx@22.05 ^warpx dims=rz                    # adios2
