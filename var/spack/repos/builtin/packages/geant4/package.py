@@ -124,6 +124,8 @@ class Geant4(CMakePackage):
     depends_on("motif", when="+motif")
     depends_on("qt@5: +opengl", when="+qt")
 
+    # Fixes bug 2444 on 10.7.2: https://bugzilla-geant4.kek.jp/show_bug.cgi?id=2444
+    patch("geant4-10.7.2_bug2444.patch", when="@10.7.2")
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
     patch("CLHEP-10.03.03.patch", level=1, when="@10.3.3")
