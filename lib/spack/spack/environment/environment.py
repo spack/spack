@@ -1029,14 +1029,14 @@ class Environment(object):
         Find the spec identified by `match_spec` and change it to `change_spec`.
 
         Arguments:
-            change_spec (Spec): defines the spec properties that need to be
-                changed. This will not change attributes of the matched spec
-                unless they conflict with `change_spec`.
+            change_spec (spack.spec.Spec): defines the spec properties that
+                need to be changed. This will not change attributes of the
+                matched spec unless they conflict with `change_spec`.
             list_name (str): identifies the spec list in the environment that
                 should be modified
-            match_spec (Spec): if set, this identifies the spec that should
-                be changed. If not set, it is assumed we are looking for a
-                spec with the same name as `change_spec`.
+            match_spec (spack.spec.Spec): if set, this identifies the spec
+                that should be changed. If not set, it is assumed we are
+                looking for a spec with the same name as `change_spec`.
         """
         if not (change_spec.name or (match_spec and match_spec.name)):
             raise ValueError(
