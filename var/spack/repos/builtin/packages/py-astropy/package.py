@@ -74,16 +74,14 @@ class PyAstropy(PythonPackage):
         # cython-ized files
         os.remove("astropy/cython_version.py")
 
-    def install_options(self, spec, prefix):
-        args = [
+    def install_options(self):
+        return [
             "--use-system-libraries",
             "--use-system-erfa",
             "--use-system-wcslib",
             "--use-system-cfitsio",
             "--use-system-expat",
         ]
-
-        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

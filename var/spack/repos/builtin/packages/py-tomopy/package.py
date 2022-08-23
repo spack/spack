@@ -48,8 +48,10 @@ class PyTomopy(PythonPackage):
     depends_on("py-dxchange", type=("build", "run"))
     depends_on("py-numexpr", when="@1.11:", type=("build", "run"))
 
-    @when("@1.10:")
-    def install_options(self, spec, prefix):
+    def install_options(self):
+        if not self.spec.satisfies("@1.10:"):
+            return []
+
         args = ["--enable-arch"]
         if "avx512" in self.spec.target:
             args.append("--enable-avx512")

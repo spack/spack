@@ -39,14 +39,14 @@ class PyPymol(PythonPackage):
     depends_on("py-numpy", type=("build", "link", "run"))
     depends_on("py-msgpack", type=("build", "run"))
 
-    def install_options(self, spec, prefix):
+    def install_options(self):
         return ["--no-launcher"]
 
     def install(self, spec, prefix):
         # Note: pymol monkeypatches distutils which breaks pip install, use deprecated
         # `python setup.py install` and distutils instead of `pip install` and
         # setuptools. See: https://github.com/schrodinger/pymol-open-source/issues/217
-        python("setup.py", "install", "--prefix=" + prefix, *self.install_options(spec, prefix))
+        python("setup.py", "install", "--prefix=" + prefix, *self.install_options())
 
     @run_after("install")
     def install_launcher(self):
