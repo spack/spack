@@ -21,14 +21,15 @@ class Must(CMakePackage):
 
     version(
         "1.8.0-rc1",
-        sha512="ea30291ff5de2a43b225561ce65c61863a7afc5a127af0cc7b149d77574308981290a0913e1aa5547d88739bf7d56ae35cb29d7d164b175958ca4542f319da5b",
+        sha256="49fd2487fbd1aa41f4252c7e37efebd3f6ff48218c88e82f34b88d59348fe406",
     )
     version(
-        "1.8-preview", sha256="67b4b061db7a893e22a6610e2085072716d11738bc6cc3cb3ffd60d6833e8bad"
+        "1.8-preview",
+        sha256="67b4b061db7a893e22a6610e2085072716d11738bc6cc3cb3ffd60d6833e8bad",
     )
     version(
         "1.7.2",
-        sha256="c6a106a694a29bfb494e6bf5ced55853acf16994abc350e13ee5e0e6f24df601666fe60531e59d784acd82874682385c479271fbe04e56b927d8d1054cc035b2",
+        sha256="616c54b7487923959df126ac4b47ae8c611717d679fe7ec29f57a89bf0e2e0d0",
     )
     variant("test", default=False, description="Enable must internal tests")
     variant("tsan", default=True, description="Enable thread sanitizer")
