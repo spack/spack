@@ -109,7 +109,7 @@ class Libfabric(AutotoolsPackage):
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
 
-    @when("@develop")
+    @when("@main")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./autogen.sh")
