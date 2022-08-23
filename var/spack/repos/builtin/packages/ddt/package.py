@@ -28,7 +28,6 @@ class Ddt(Package):
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
 
     def install(self, spec, prefix):
-
         install_shell = which("sh")
         args = ["./textinstall.sh", "--accept-license", prefix]
         install_shell(*args)
