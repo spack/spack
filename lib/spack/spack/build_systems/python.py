@@ -6,7 +6,7 @@ import inspect
 import os
 import re
 import shutil
-from typing import Optional
+from typing import List, Optional  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -22,9 +22,24 @@ from llnl.util.filesystem import (
 from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.error import NoHeadersError, NoLibrariesError, SpackError, SpecError
 from spack.package_base import PackageBase, run_after
 from spack.version import Version
+
+
+class UnknownFeatureError(SpackError):
+    """Raised if we specify any extra features not known to the package."""
+
+    def __init__(self, name, provided, selected):
+        super(UnknownFeatureError, self).__init__(
+            "selected features {sel} not known ({name} provides {prov})".format(
+                sel=str(selected), name=name, prov=str(provided)
+            )
+        )
+
+        self.name = name
+        self.provided = provided
+        self.selected = selected
 
 
 class PythonPackage(PackageBase):
@@ -44,6 +59,10 @@ class PythonPackage(PackageBase):
 
     #: Callback names for install-time test
     install_time_test_callbacks = ["test"]
+
+    # Optional extra features provided by the Python package: see
+    # optional_extras()
+    provides_extras = []  # type: List[str]
 
     extends("python")
     depends_on("py-pip", type="build")
@@ -195,6 +214,10 @@ class PythonPackage(PackageBase):
         """
         return []
 
+    def optional_extras(self, spec, prefix):
+        """Specify optional extra features to build"""
+        return []
+
     def install(self, spec, prefix):
         """Install everything from build directory."""
 
@@ -218,10 +241,20 @@ class PythonPackage(PackageBase):
         for option in self.global_options(spec, prefix):
             args.append("--global-option=" + option)
 
-        if self.stage.archive_file and self.stage.archive_file.endswith(".whl"):
-            args.append(self.stage.archive_file)
-        else:
-            args.append(".")
+        pip_project = (
+            self.stage.archive_file
+            if (self.stage.archive_file and self.stage.archive_file.endswith(".whl"))
+            else "."
+        )
+
+        extras = self.optional_extras(spec, prefix)
+        if extras:  # Verify and add to project specification
+            unknown_extras = [x for x in extras if x not in self.provides_extras]
+            if unknown_extras:
+                raise UnknownFeatureError(self.name, self.provides_extras, unknown_extras)
+            pip_project += "[{0}]".format(",".join(extras))
+
+        args.append(pip_project)
 
         pip = inspect.getmodule(self).pip
         with working_dir(self.build_directory):
