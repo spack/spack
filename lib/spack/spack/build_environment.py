@@ -126,6 +126,24 @@ def should_set_parallel_jobs(jobserver_support=False):
     return not env_flag(SPACK_NO_PARALLEL_MAKE)
 
 
+class ModuleChangeAccumulator(object):
+    def __init__(self):
+        self.changes = {}
+
+    def __setattr__(self, key, value):
+        if key == 'changes':
+            super(ModuleChangeAccumulator, self).__setattr__(key, value)
+        else:
+            self.changes[key] = value
+
+    def __getattr__(self, key):
+        # Return what's in our dict, else delegate to superclass
+        return self.changes.get(
+            key,
+            super(ModuleChangeAccumulator, self).__getattr__(key)
+        )
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can specify
     parallelism options on a per-invocation basis.  Specifying
@@ -986,8 +1004,26 @@ def modifications_from_dependencies(
             dpkg = dep.package
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
+
             # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(spec.package.module, spec)
+            # Get list of modules that may need updating
+            modules = []
+            for cls in inspect.getmro(type(spec.package)):
+                module = cls.module
+                if module == spack.package_base:
+                    break
+                modules.append(module)
+
+            # Execute changes as if on a single module
+            # copy dict to ensure prior changes are available
+            module_accumulator = ModuleChangeAccumulator()
+            module_accumulator.__dict__ = spec.package.module.__dict__
+            dpkg.setup_dependent_package(module_accumulator, spec)
+
+            for module in modules:
+                for key, value in module_accumulator.changes.items():
+                    module.__dict__[key] = value  # setattr(module, _) python 3.7+
+
             if context == "build":
                 dpkg.setup_dependent_build_environment(env, spec)
             else:
