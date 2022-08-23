@@ -488,6 +488,17 @@ class PerlbuildPackageTemplate(PerlmakePackageTemplate):
     # depends_on("perl-foo", type=("build", "run"))"""
 
 
+class PerlinstallPackageTemplate(PerlmakePackageTemplate):
+    """Provides appropriate overrides for Perl extensions
+    that use Module::Install with Makefile.PL"""
+
+    dependencies = """\
+    depends_on("perl-module-install", type="build")
+
+    # FIXME: Add additional dependencies if required:
+    # depends_on("perl-foo", type=("build", "run"))"""
+
+
 class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
@@ -598,6 +609,7 @@ templates = {
     "racket": RacketPackageTemplate,
     "perlmake": PerlmakePackageTemplate,
     "perlbuild": PerlbuildPackageTemplate,
+    "perlinstall": PerlbuildPackageTemplate,
     "octave": OctavePackageTemplate,
     "ruby": RubyPackageTemplate,
     "makefile": MakefilePackageTemplate,
@@ -702,6 +714,7 @@ class BuildSystemGuesser:
             (r"/setup\.(py|cfg)$", "python"),
             (r"/WORKSPACE$", "bazel"),
             (r"/Build\.PL$", "perlbuild"),
+            (r"/inc/Module/Install\.pm$", "perlinstall"),
             (r"/Makefile\.PL$", "perlmake"),
             (r"/.*\.gemspec$", "ruby"),
             (r"/Rakefile$", "ruby"),
