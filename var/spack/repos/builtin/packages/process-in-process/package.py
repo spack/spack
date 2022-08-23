@@ -5,15 +5,13 @@
 
 from spack.package import *
 
-
 class ProcessInProcess(Package):
     """Process-in-Process"""
 
-    enable_pip_v3 = False
-    enable_pip_gdb = False
     # we cannot install PiP-gdb (PiP-aware GDB)
     # since the ncureses package cannot be installed by using Spack
     # --> https://github.com/spack/spack/issues/8675
+    variant("pipgdb", default=False, sticky=True, description="PiP-gdb")
 
     homepage = "https://github.com/procinproc/procinproc.github.io"
     git = "https://github.com/procinproc/PiP.git"
@@ -24,9 +22,11 @@ class ProcessInProcess(Package):
     conflicts("platform=windows", msg="Windows is not supported.")
 
     # PiP version 1 is obsolete
+    version("1", branch="pip-1", deprecated=True)
+    # PiP version 2 is stable one
     version("2", branch="pip-2", preferred=True)
-    if enable_pip_v3:
-        version("3", branch="pip-3")  # experimental
+    # PiP version 3 is experimental and unstable yet
+    version("3", branch="pip-3", deprecated=True)
 
     conflicts("%gcc@:3", when="os=centos7")
     conflicts("%gcc@5:", when="os=centos7")
@@ -37,13 +37,10 @@ class ProcessInProcess(Package):
     conflicts("%gcc@:7", when="os=rhel8")
     conflicts("%gcc@9:", when="os=rhel8")
 
-    # packages required for building PiP-glibc
-    #    currently none
-
     # packages required for building PiP-gdb
-    if enable_pip_gdb:
-        depends_on("texinfo")
+    with when("+pipgdb"):
         depends_on("ncurses")
+        depends_on("texinfo")
         depends_on("systemtap")
         depends_on("libxml2")
         depends_on("pigz")
@@ -81,7 +78,7 @@ class ProcessInProcess(Package):
         when="@2 os=rhel8",
     )
 
-    if enable_pip_gdb:
+    with when("+pipgdb"):
         #  PiP-gdb resource
         #   for rhel/centos 7
         resource(
@@ -114,7 +111,6 @@ class ProcessInProcess(Package):
             when="@2 os=rhel8",
         )
 
-    if enable_pip_v3:
         # resources for PiP version 3
         #  PiP-glibc resource
         #   for rhel/centos 7
@@ -148,7 +144,7 @@ class ProcessInProcess(Package):
             when="@3 os=rhel8",
         )
 
-        if enable_pip_gdb:
+        with when("+pipgdb"):
             #  PiP-gdb resource
             #   for rhel/centos 7
             resource(
@@ -214,7 +210,7 @@ class ProcessInProcess(Package):
         # installing already-doxygen-ed documents (man pages, html, ...)
         make("doc")
 
-        if ProcessInProcess.enable_pip_gdb:
+        with when("+pipgdb" in spec):
             # installing PiP-gdb
             with working_dir(join_path("PiP-gdb", "PiP-gdb")):
                 # build.sh does build and install
@@ -229,6 +225,3 @@ class ProcessInProcess(Package):
             make()
             # and run the test programs
             make("test10", parallel=False)
-
-
-# all done !!
