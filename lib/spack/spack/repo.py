@@ -624,13 +624,13 @@ class TagIndexer(Indexer):
     """Lifecycle methods for a TagIndex on a Repo."""
 
     def _create(self):
-        return spack.tag.TagIndex()
+        return spack.tag.TagIndex(self.repository)
 
     def read(self, stream):
-        self.index = spack.tag.TagIndex.from_json(stream)
+        self.index = spack.tag.TagIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
-        self.index.update_package(pkg_fullname, self.repository)
+        self.index.update_package(pkg_fullname)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -906,7 +906,7 @@ class RepoPath(object):
     def tag_index(self):
         """Merged TagIndex from all Repos in the RepoPath."""
         if self._tag_index is None:
-            self._tag_index = spack.tag.TagIndex()
+            self._tag_index = spack.tag.TagIndex(repository=self)
             for repo in reversed(self.repos):
                 self._tag_index.merge(repo.tag_index)
 

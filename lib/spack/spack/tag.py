@@ -50,8 +50,9 @@ def packages_with_tags(tags, installed, skip_empty):
 class TagIndex(Mapping):
     """Maps tags to list of packages."""
 
-    def __init__(self):
+    def __init__(self, repository):
         self._tag_dict = collections.defaultdict(list)
+        self.repository = repository
 
     @property
     def tags(self):
@@ -61,7 +62,7 @@ class TagIndex(Mapping):
         sjson.dump({"tags": self._tag_dict}, stream)
 
     @staticmethod
-    def from_json(stream):
+    def from_json(stream, repository):
         d = sjson.load(stream)
 
         if not isinstance(d, dict):
@@ -70,7 +71,7 @@ class TagIndex(Mapping):
         if "tags" not in d:
             raise TagIndexError("TagIndex data does not start with 'tags'")
 
-        r = TagIndex()
+        r = TagIndex(repository=repository)
 
         for tag, packages in d["tags"].items():
             r[tag].extend(packages)
@@ -88,7 +89,7 @@ class TagIndex(Mapping):
 
     def copy(self):
         """Return a deep copy of this index."""
-        clone = TagIndex()
+        clone = TagIndex(repository=self.repository)
         clone._tag_dict = copy.deepcopy(self._tag_dict)
         return clone
 
