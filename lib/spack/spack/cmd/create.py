@@ -660,8 +660,11 @@ def setup_parser(subparser):
         "-b", "--batch", action="store_true", help="don't ask which versions to checksum"
     )
     subparser.add_argument(
-        "--limit", action="store", type=int, default=0,
-        help="maximum number of versions to checksum (implies --batch)"
+        "--limit",
+        action="store",
+        type=int,
+        default=0,
+        help="maximum number of versions to checksum (implies --batch)",
     )
 
 
@@ -870,7 +873,7 @@ def get_versions(args, name):
             first_stage_function=guesser,
             keep_stage=args.keep_stage,
             batch=(args.batch or len(url_dict) == 1 or args.limit > 0),
-            limit=args.limit
+            limit=args.limit,
         )
     else:
         versions = unhashed_versions
