@@ -108,6 +108,12 @@ class Eospac(Package):
     # This patch corrects EOSPAC's selection of compiler flags when
     # compilers are specified using absolute pathnames.
     patch("cpuinfo_comp_flags_key.patch", when="@:6.4.1,6.4.2beta")
+    # This patchset corrects EOSPAC's selection of compiler flags when
+    # intel-classic@2021 is used.
+    patch("650-ic2021.patch", when="@6.5.0%intel")
+    patch("642-ic2021.patch", when="@6.4.2%intel")
+    patch("641-ic2021.patch", when="@6.4.1%intel")
+    patch("640-ic2021.patch", when="@6.4.0%intel")
 
     # GPU offload is only available for version 6.5+
     variant("offload", default=False, description="Build GPU offload library instead of standard")
