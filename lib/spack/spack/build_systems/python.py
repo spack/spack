@@ -200,14 +200,19 @@ class PythonPackage(PackageBase):
 
         args = PythonPackage._std_args(self) + ["--prefix=" + prefix]
 
-        for key, value in self.config_settings(spec, prefix).items():
+        config_settings = self.config_settings(spec, prefix)
+        if config_settings:
             if spec["py-pip"].version < Version("22.1"):
                 raise SpecError(
                     "'{}' package uses 'config_settings' which is only supported by "
                     "pip 22.1+. Add the following line to the package to fix this:\n\n"
                     '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
                 )
-            args.append("--config-settings={}={}".format(key, value))
+            args += [
+                "--config-settings={}={}".format(key, value)
+                for key, value in config_settings.items()
+            ]
+
         for option in self.install_options(spec, prefix):
             args.append("--install-option=" + option)
         for option in self.global_options(spec, prefix):
