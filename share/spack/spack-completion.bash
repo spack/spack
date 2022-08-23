@@ -588,7 +588,7 @@ _spack_cd() {
 _spack_change() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --list-name --match-spec"
+        SPACK_COMPREPLY="-h --help -l --list-name --match-spec -a --all"
     else
         _all_packages
     fi
