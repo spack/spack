@@ -70,6 +70,11 @@ class Wrf(Package):
     url = "https://github.com/wrf-model/WRF/archive/v4.2.tar.gz"
     maintainers = ["MichaelLaufer", "ptooley"]
 
+    version(
+        "4.4",
+        sha256="6b649e5ac5532f74d74ab913950b632777ce349d26ebfb7f0042b80f9f4ee83e",
+        url="https://github.com/wrf-model/WRF/releases/download/v4.4/v4.4.tar.gz",
+    )
     version("4.3.3", sha256="1b98b8673513f95716c7fc54e950dfebdb582516e22758cd94bc442bccfc0b86")
     version("4.3.2", sha256="2c682da0cd0fd13f57d5125eef331f9871ec6a43d860d13b0c94a07fa64348ec")
     version("4.3.1", sha256="6c9a69d05ee17d2c80b3699da173cfe6fdf65487db7587c8cc96bfa9ceafce87")
@@ -141,7 +146,7 @@ class Wrf(Package):
     patch("patches/4.2/arch.configure.defaults.patch", when="@4.2")
     patch("patches/4.2/arch.conf_tokens.patch", when="@4.2:")
     patch("patches/4.2/arch.postamble.patch", when="@4.2")
-    patch("patches/4.2/configure.patch", when="@4.2:")
+    patch("patches/4.2/configure.patch", when="@4.2:4.3.3")
     patch("patches/4.2/external.io_netcdf.makefile.patch", when="@4.2:")
     patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
@@ -151,6 +156,9 @@ class Wrf(Package):
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2: %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2: %aocc")
     patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc")
+
+    patch("patches/4.4/arch.postamble.patch", when="@4.4:")
+    patch("patches/4.4/configure.patch", when="@4.4:")
     # Various syntax fixes found by FPT tool
     patch(
         "https://github.com/wrf-model/WRF/commit/6502d5d9c15f5f9a652dec244cc12434af737c3c.patch?full_index=1",
@@ -160,7 +168,7 @@ class Wrf(Package):
     patch("patches/4.2/configure_fujitsu.patch", when="@4 %fj")
 
     patch("patches/4.3/Makefile.patch", when="@4.3:")
-    patch("patches/4.3/arch.postamble.patch", when="@4.3:")
+    patch("patches/4.3/arch.postamble.patch", when="@4.3:4.3.3")
     patch("patches/4.3/fujitsu.patch", when="@4.3: %fj")
     # Syntax errors in physics routines
     patch(

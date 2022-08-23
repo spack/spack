@@ -1,0 +1,32 @@
+--- a/arch/postamble	2022-04-26 19:33:44.000000000 +0000
++++ b/arch/postamble	2022-08-10 20:09:45.000000000 +0000
+@@ -54,6 +54,7 @@
+                       -I$(WRF_SRC_ROOT_DIR)/wrftladj \
+                       -I$(WRF_SRC_ROOT_DIR)/chem -I$(WRF_SRC_ROOT_DIR)/inc \
+                       -I$(NETCDFPATH)/include \
++                      -I$(NETCDFFPATH)/include \
+                       CONFIGURE_RTTOV_INC CONFIGURE_CTSM_INC
+ REGISTRY        =    Registry
+ CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
+@@ -94,18 +95,18 @@
+ 
+ wrfio_nf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \
+-          make $(J) NETCDFPATH="$(NETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
++          make $(J) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+           CC="$(SCC)" CFLAGS="$(CFLAGS)" \
+           FC="$(SFC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_nfpar : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdfpar ; \
+-          make $(J) NETCDFPARPATH="$(NETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
++          make $(J) NETCDFPARPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
+           FC="$(FC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_pnf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_pnetcdf ; \
+-          make $(J) NETCDFPATH="$(PNETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
++          make $(J) NETCDFPATH="$(PNETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP) $(ARCHFLAGS)" \
+           FC="$(FC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 
+ wrfio_grib_share :
