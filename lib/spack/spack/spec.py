@@ -2627,7 +2627,9 @@ class Spec(object):
            a problem.
         """
         # Make an index of stuff this spec already provides
-        self_index = spack.provider_index.ProviderIndex(self.traverse(), restrict=True)
+        self_index = spack.provider_index.ProviderIndex(
+            self.traverse(), restrict=True, repository=spack.repo.path
+        )
         changed = False
         done = False
 
@@ -3222,7 +3224,9 @@ class Spec(object):
             if provider:
                 dep = provider
         else:
-            index = spack.provider_index.ProviderIndex([dep], restrict=True)
+            index = spack.provider_index.ProviderIndex(
+                [dep], restrict=True, repository=spack.repo.path
+            )
             items = list(spec_deps.items())
             for name, vspec in items:
                 if not vspec.virtual:
@@ -3375,7 +3379,7 @@ class Spec(object):
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = spack.provider_index.ProviderIndex(
-            [s for s in all_spec_deps.values()], restrict=True
+            [s for s in all_spec_deps.values()], restrict=True, repository=spack.repo.path
         )
 
         # traverse the package DAG and fill out dependencies according
@@ -3753,8 +3757,12 @@ class Spec(object):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = spack.provider_index.ProviderIndex(self.traverse(), restrict=True)
-        other_index = spack.provider_index.ProviderIndex(other.traverse(), restrict=True)
+        self_index = spack.provider_index.ProviderIndex(
+            self.traverse(), restrict=True, repository=spack.repo.path
+        )
+        other_index = spack.provider_index.ProviderIndex(
+            other.traverse(), restrict=True, repository=spack.repo.path
+        )
 
         # This handles cases where there are already providers for both vpkgs
         if not self_index.satisfies(other_index):

@@ -642,7 +642,7 @@ class ProviderIndexer(Indexer):
         return spack.provider_index.ProviderIndex(repository=self.repository)
 
     def read(self, stream):
-        self.index = spack.provider_index.ProviderIndex.from_json(stream)
+        self.index = spack.provider_index.ProviderIndex.from_json(stream, self.repository)
 
     def update(self, pkg_fullname):
         name = pkg_fullname.split(".")[-1]
@@ -652,7 +652,7 @@ class ProviderIndexer(Indexer):
         if is_virtual:
             return
         self.index.remove_provider(pkg_fullname)
-        self.index.update(pkg_fullname, self.repository)
+        self.index.update(pkg_fullname)
 
     def write(self, stream):
         self.index.to_json(stream)
@@ -895,7 +895,7 @@ class RepoPath(object):
     def provider_index(self):
         """Merged ProviderIndex from all Repos in the RepoPath."""
         if self._provider_index is None:
-            self._provider_index = spack.provider_index.ProviderIndex()
+            self._provider_index = spack.provider_index.ProviderIndex(repository=self)
             for repo in reversed(self.repos):
                 self._provider_index.merge(repo.provider_index)
 

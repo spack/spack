@@ -146,7 +146,8 @@ class ProviderIndex(_IndexBase):
         if specs is None:
             specs = []
 
-        self.repository = repository or spack.repo.path
+        assert repository is not None, "a 'repository=' argument is required"
+        self.repository = repository
         self.restrict = restrict
         self.providers = {}
 
@@ -154,7 +155,6 @@ class ProviderIndex(_IndexBase):
             if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)
 
-            # FIXME: This is repeated in Provider index
             is_virtual = (
                 not self.repository.exists(spec.name)
                 or self.repository.get_pkg_class(spec.name).virtual
@@ -162,15 +162,14 @@ class ProviderIndex(_IndexBase):
             if is_virtual:
                 continue
 
-            self.update(spec, self.repository)
+            self.update(spec)
 
-    def update(self, spec, repository=None):
+    def update(self, spec):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
         """
-        repository = repository or spack.repo.path
         if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
 
@@ -179,13 +178,14 @@ class ProviderIndex(_IndexBase):
             return
 
         is_virtual = (
-            not repository.exists(spec.name) or repository.get_pkg_class(spec.name).virtual
+            not self.repository.exists(spec.name)
+            or self.repository.get_pkg_class(spec.name).virtual
         )
         assert not is_virtual, "cannot update an index passing the virtual spec '{}'".format(
             spec.name
         )
 
-        pkg_provided = repository.get_pkg_class(spec.name).provided
+        pkg_provided = self.repository.get_pkg_class(spec.name).provided
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
@@ -274,12 +274,12 @@ class ProviderIndex(_IndexBase):
 
     def copy(self):
         """Return a deep copy of this index."""
-        clone = ProviderIndex()
+        clone = ProviderIndex(repository=self.repository)
         clone.providers = self._transform(lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
         return clone
 
     @staticmethod
-    def from_json(stream):
+    def from_json(stream, repository):
         """Construct a provider index from its JSON representation.
 
         Args:
@@ -293,7 +293,7 @@ class ProviderIndex(_IndexBase):
         if "provider_index" not in data:
             raise ProviderIndexError("YAML ProviderIndex does not start with 'provider_index'")
 
-        index = ProviderIndex()
+        index = ProviderIndex(repository=repository)
         providers = data["provider_index"]["providers"]
         index.providers = _transform(
             providers,
