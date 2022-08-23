@@ -21,3 +21,5 @@ class Spark(BuiltinSpark):
         return url.format(version, hadoop_version)
 
     patch("spark-daemon-robustness.patch")
+    patch("start-master-robustness.patch")
+    patch("start-worker-robustness.patch")

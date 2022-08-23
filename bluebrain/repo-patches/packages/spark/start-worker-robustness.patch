@@ -1,0 +1,13 @@
+diff --git a/sbin/start-worker.sh b/sbin/start-worker.sh
+index fd58f01bac..e4a625fd5d 100755
+--- a/sbin/start-worker.sh
++++ b/sbin/start-worker.sh
+@@ -79,7 +79,7 @@ function start_instance {
+   fi
+   WEBUI_PORT=$(( $SPARK_WORKER_WEBUI_PORT + $WORKER_NUM - 1 ))
+ 
+-  "${SPARK_HOME}/sbin"/spark-daemon.sh start $CLASS $WORKER_NUM \
++  exec "${SPARK_HOME}/sbin"/spark-daemon.sh start $CLASS $WORKER_NUM \
+      --webui-port "$WEBUI_PORT" $PORT_FLAG $PORT_NUM $MASTER "$@"
+ }
+ 
