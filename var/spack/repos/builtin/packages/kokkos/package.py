@@ -172,6 +172,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     for dev in devices_variants:
         dflt, desc = devices_variants[dev]
         variant(dev, default=dflt, description=desc)
+    conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
 
     options_values = list(options_variants.keys())
     for opt in options_values:

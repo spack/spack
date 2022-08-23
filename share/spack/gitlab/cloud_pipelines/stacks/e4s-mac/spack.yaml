@@ -22,6 +22,11 @@ spack:
   - easy_specs:
     - berkeley-db
     - ncurses
+    - gcc
+    - py-jupyterlab
+    - py-scipy
+    - py-matplotlib
+    - py-pandas
 
   - arch:
     - '%apple-clang@13.1.6 target=m1'
