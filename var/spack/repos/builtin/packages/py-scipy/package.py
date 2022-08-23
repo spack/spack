@@ -2,6 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import glob
+import os
+
 from spack.package import *
 
 
@@ -18,11 +22,7 @@ class PyScipy(PythonPackage):
 
     version("master", branch="master")
     version("1.9.0", sha256="c0dfd7d2429452e7e94904c6a3af63cbaa3cf51b348bd9d35b42db7e9ad42791")
-    version(
-        "1.8.1",
-        sha256="9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33",
-        preferred=True,
-    )
+    version("1.8.1", sha256="9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33")
     version("1.8.0", sha256="31d4f2d6b724bc9a98e527b5849b8a7e589bf1ea630c33aa563eda912c9ff0bd")
     version("1.7.3", sha256="ab5875facfdef77e0a47d5fd39ea178b58e60e454a4c85aa1e52fcb80db7babf")
     version("1.7.2", sha256="fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711")
@@ -54,6 +54,10 @@ class PyScipy(PythonPackage):
     version("0.15.1", sha256="a212cbc3b79e9a563aa45fc5c517b3499198bd7eb7e7be1e047568a5f48c259a")
     version("0.15.0", sha256="0c74e31e08acc8bf9b6ceb9bced73df2ae0cc76003e0366350bc7b26292bf8b1")
 
+    # TODO: remove once pip build supports BLAS/LAPACK specification
+    # https://github.com/FFY00/meson-python/pull/122
+    depends_on("py-build", when="@1.9:", type="build")
+
     depends_on("py-meson-python@0.7", when="@1.9:", type="build")
     depends_on("py-meson@0.62.2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
@@ -70,7 +74,7 @@ class PyScipy(PythonPackage):
     depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
     depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
     depends_on("py-wheel@:0.37", type="build")
-    depends_on("pkgconfig", type="build")
+    depends_on("pkgconfig", when="@1.9:", type="build")
     depends_on("py-setuptools", when="@:1.8", type="build")
     depends_on("py-setuptools@:59", when="@1.8", type="build")
     depends_on("py-setuptools@:57", when="@1.7", type="build")
@@ -158,6 +162,34 @@ class PyScipy(PythonPackage):
         # Pick up BLAS/LAPACK from numpy
         if self.spec.satisfies("@:1.8"):
             self.spec["py-numpy"].package.setup_build_environment(env)
+
+    # TODO: remove once pip build supports BLAS/LAPACK specification
+    # https://github.com/FFY00/meson-python/pull/122
+    @when("@1.9:")
+    def install(self, spec, prefix):
+        args = [
+            "setup",
+            "build",
+            "-Dblas=" + spec["blas"].libs.names[0],
+            "-Dlapack=" + spec["lapack"].libs.names[0],
+            "--prefix=" + join_path(os.getcwd(), "build-install"),
+            "-Ddebug=false",
+            "-Doptimization=2",
+        ]
+        meson = which("meson")
+        meson(*args)
+        args = [
+            "-m",
+            "build",
+            "--wheel",
+            "-Cbuilddir=build",
+            "--no-isolation",
+            "--skip-dependency-check",
+            ".",
+        ]
+        python(*args)
+        args = std_pip_args + ["--prefix=" + prefix, glob.glob(join_path("dist", "scipy*.whl"))[0]]
+        pip(*args)
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
