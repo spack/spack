@@ -60,7 +60,7 @@ spack:
 
   packages:
     adios2:
-      compiler: [gcc]
+      require: "%gcc"
     all:
       compiler: [oneapi]
       providers:
@@ -69,7 +69,7 @@ spack:
       target: [x86_64]
       variants: +mpi
     binutils:
-      compiler: [gcc]
+      require: "%gcc"
       variants: +ld +gold +headers +libiberty ~nls
     cuda:
       version: [11.4.2]
@@ -82,7 +82,7 @@ spack:
     libunwind:
       variants: +pic +xz
     llvm:
-      compiler: [gcc] # undefined reference to `_intel_fast_memset' becauase of -nodefaultlibs
+      require: "%gcc" # undefined reference to `_intel_fast_memset' becauase of -nodefaultlibs
     mpich:
       variants: ~wrapperrpath
     ncurses:
@@ -92,9 +92,9 @@ spack:
     python:
       version: [3.8.13]
     ruby:
-      compiler: [gcc] # https://github.com/spack/spack/issues/31954
+      require: "%gcc" # https://github.com/spack/spack/issues/31954
     rust:
-      compiler: [gcc] # undefined reference becauase of -nodefaultlibs
+      require: "%gcc" # undefined reference becauase of -nodefaultlibs
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
@@ -138,7 +138,6 @@ spack:
   - gptune
   - hdf5 +fortran +hl +shared
   - heffte +fftw
-  - hpctoolkit
   - hpx networking=mpi
   - hypre
   - kokkos-kernels +openmp
@@ -220,10 +219,11 @@ spack:
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2
   #- charliecloud@0.26                                # charliecloud
-  #- dyninst@12.1.0                                   # intel-tbb
+  #- dyninst@12.1.0                                   # old intel-tbb
   #- exaworks@0.1.0                                   # rust, flux-sched
   #- geopm@1.1.0                                      # geopm
   #- h5bench@1.2                                      # h5bench
+  #- hpctoolkit                                       # dyninst
   #- phist@1.9.5                                      # phist
   #- pruners-ninja@1.0.1                              # pruners-ninja
   #- variorum@0.4.1                                   # variorum
