@@ -1112,8 +1112,8 @@ class TestSpecSematics(object):
             spec.splice(dep, transitive)
 
     def test_spec_override(self):
-        init_spec = Spec("a foo=baz foobar=baz")
-        change_spec = Spec("a foo=fee")
+        init_spec = Spec("a foo=baz foobar=baz cflags=-O3 cxxflags=-O2")
+        change_spec = Spec("a foo=fee cflags=-O2")
         new_spec = Spec.override(init_spec, change_spec)
         new_spec.concretize()
         assert "foo=fee" in new_spec
@@ -1122,6 +1122,8 @@ class TestSpecSematics(object):
         # 'variant=value' (regardless of whether it in fact does).
         assert "foo=baz" not in new_spec
         assert "foobar=baz" in new_spec
+        assert new_spec.compiler_flags['cflags'] == ['-O2']
+        assert new_spec.compiler_flags['cflags'] == ['-O2']
 
 
 @pytest.mark.regression("3887")
