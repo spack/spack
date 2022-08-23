@@ -8,7 +8,7 @@ from spack.package import *
 
 class PerlCpanMetaCheck(PerlPackage):
     """This module verifies if requirements described in a CPAN::Meta object
-    are present.."""
+    are present."""
 
     homepage = "https://metacpan.org/pod/CPAN::Meta::Check"
     url = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/CPAN-Meta-Check-0.014.tar.gz"

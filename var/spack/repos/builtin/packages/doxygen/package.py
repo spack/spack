@@ -13,7 +13,7 @@ class Doxygen(CMakePackage):
     from annotated C++ sources, but it also supports other popular programming
     languages such as C, Objective-C, C#, PHP, Java, Python, IDL (Corba,
     Microsoft, and UNO/OpenOffice flavors), Fortran, VHDL, Tcl, and to some
-    extent D.."""
+    extent D."""
 
     homepage = "https://github.com/doxygen/doxygen/"
     git = "https://github.com/doxygen/doxygen.git"

@@ -8,7 +8,7 @@ from spack.package import *
 class Agile(AutotoolsPackage):
     """AGILe is A Generator Interface Library (& executable), i.e. a uniform
     object oriented C++ interface for a variety of Fortran-based Monte Carlo
-    event generators.."""
+    event generators."""
 
     homepage = "https://agile.hepforge.org/"
     url = "http://www.hepforge.org/archive/agile/AGILe-1.4.1.tar.gz"

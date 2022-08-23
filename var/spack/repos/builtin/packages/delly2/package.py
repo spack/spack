@@ -11,7 +11,7 @@ class Delly2(MakefilePackage):
     """Delly2 is an integrated structural variant prediction method that can
     discover, genotype and visualize deletions, tandem duplications,
     inversions and translocations at single-nucleotide resolution in
-    short-read massively parallel sequencing data.."""
+    short-read massively parallel sequencing data."""
 
     homepage = "https://github.com/dellytools/delly"
     git = "https://github.com/dellytools/delly.git"

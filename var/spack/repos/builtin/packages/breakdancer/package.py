@@ -15,7 +15,7 @@ class Breakdancer(CMakePackage):
     next-generation short paired-end sequencing reads using read pairs that are
     mapped with unexpected separation distances or orientation.
     BreakDancerMini focuses on detecting small indels (usually between 10bp and
-    100bp) using normally mapped read pairs.."""
+    100bp) using normally mapped read pairs."""
 
     homepage = "https://gmt.genome.wustl.edu/packages/breakdancer"
     url = "https://github.com/genome/breakdancer/archive/v1.4.5.tar.gz"

@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class PyArgon2Cffi(PythonPackage):
-    """The secure Argon2 password hashing algorithm.."""
+    """The secure Argon2 password hashing algorithm."""
 
     homepage = "https://argon2-cffi.readthedocs.io/"
     pypi = "argon2-cffi/argon2-cffi-20.1.0.tar.gz"

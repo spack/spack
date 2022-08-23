@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyDeepdiff(PythonPackage):
-    """Deep Difference and Search of any Python object/data.."""
+    """Deep Difference and Search of any Python object/data."""
 
     homepage = "https://github.com/seperman/deepdiff"
     pypi = "deepdiff/deepdiff-5.6.0.tar.gz"

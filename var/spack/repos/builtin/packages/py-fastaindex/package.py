@@ -8,7 +8,7 @@ from spack.package import *
 
 class PyFastaindex(PythonPackage):
     """FastA index (.fai) handler compatible with samtools faidx is extended
-    with 4 columns storing counts for A, C, G & T for each sequence.."""
+    with 4 columns storing counts for A, C, G & T for each sequence."""
 
     homepage = "https://github.com/lpryszcz/FastaIndex"
     pypi = "FastaIndex/FastaIndex-0.11rc7.tar.gz"

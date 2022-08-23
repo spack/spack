@@ -10,7 +10,7 @@ class PyBeancount(PythonPackage):
     """A double-entry bookkeeping computer language that lets you define
     financial transaction records in a text file, read them in memory,
     generate a variety of reports from them, and provides a web
-    interface.."""
+    interface."""
 
     homepage = "http://furius.ca/beancount/"
     pypi = "beancount/beancount-2.3.3.tar.gz"

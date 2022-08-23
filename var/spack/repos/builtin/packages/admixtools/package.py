@@ -9,7 +9,7 @@ from spack.package import *
 class Admixtools(MakefilePackage):
     """The ADMIXTOOLS package implements 5 methods described in
     Patterson et al. (2012) Ancient Admixture in Human History. Details
-    of the methods and algorithm can be found in this paper.."""
+    of the methods and algorithm can be found in this paper."""
 
     homepage = "https://github.com/DReichLab/AdmixTools"
     url = "https://github.com/DReichLab/AdmixTools/archive/v7.0.2.tar.gz"

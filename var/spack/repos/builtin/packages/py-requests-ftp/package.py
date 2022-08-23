@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyRequestsFtp(PythonPackage):
-    """FTP Transport Adapter for Requests.."""
+    """FTP Transport Adapter for Requests."""
 
     homepage = "https://github.com/Lukasa/requests-ftp"
     pypi = "requests-ftp/requests-ftp-0.3.1.tar.gz"
