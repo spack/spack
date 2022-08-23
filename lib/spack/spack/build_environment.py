@@ -1019,8 +1019,8 @@ def get_cmake_prefix_path(pkg):
     The goal of the order here is put everything provided by spack before everything
     that comes from externals provided to spack.
     """
-    build_deps = set(pkg.spec.dependencies(deptype=('build', 'test')))
-    link_deps = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_deps = set(pkg.spec.dependencies(deptype=("build", "test")))
+    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
     build_link_deps = build_deps | link_deps
     spack_built = []
     externals = []
@@ -1045,16 +1045,15 @@ def get_cmake_prefix_path(pkg):
     # Since we are going to explicitly pass the CMAKE_PREFIX_PATH as a command line
     # argument (to make sure we include the spack prefixs), passing these via the
     # environment won't occur because CMake prefers the CLI argument
-    env_mod_list = modifications_from_dependencies(pkg.spec, 'build',
-                                                   custom_mods_only=True,
-                                                   set_package_py_globals=False)
+    env_mod_list = modifications_from_dependencies(
+        pkg.spec, "build", custom_mods_only=True, set_package_py_globals=False
+    )
     env_mod = {}
     env_mod_list.apply_modifications(env_mod)
     extra_prefix_paths = env_mod.get("CMAKE_PREFIX_PATH", "").split(";")
 
     ordered_build_link_deps = spack_built + extra_prefix_paths + externals
-    build_link_prefixes = filter_system_paths(x for x in
-                                              ordered_build_link_deps)
+    build_link_prefixes = filter_system_paths(x for x in ordered_build_link_deps)
     return build_link_prefixes
 
 
