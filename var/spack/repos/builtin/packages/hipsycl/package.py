@@ -117,8 +117,6 @@ class Hipsycl(CMakePackage):
 
     @run_after("install")
     def filter_config_file(self):
-        from spack.build_environment import dso_suffix
-
         config_file_paths = filesystem.find(self.prefix, "syclcc.json")
         if len(config_file_paths) != 1:
             raise InstallError(
@@ -134,7 +132,9 @@ class Hipsycl(CMakePackage):
         #    the libc++.so and libc++abi.so dyn linked to the sycl
         #    ptx backend
         rpaths = set()
-        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++.{0}".format(dso_suffix))
+        so_paths = filesystem.find_libraries(
+            "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
+        )
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
@@ -142,12 +142,14 @@ class Hipsycl(CMakePackage):
                 "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))
-        so_paths = filesystem.find(self.spec["llvm"].prefix, "libc++abi.{0}".format(dso_suffix))
+        so_paths = filesystem.find_libraries(
+            "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
+        )
         if len(so_paths) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
-                "unique directory containing libc++abi.{0}, "
-                "found: {1}".format(dso_suffix, so_paths)
+                "unique directory containing libc++abi, "
+                "found: {0}".format(so_paths)
             )
         rpaths.add(path.dirname(so_paths[0]))
         config["default-cuda-link-line"] += " " + " ".join("-rpath {0}".format(p) for p in rpaths)
