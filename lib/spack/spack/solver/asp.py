@@ -942,7 +942,9 @@ class SpackSolverSetup(object):
     def package_requirement_rules(self, pkg):
         pkg_name = pkg.name
         config = spack.config.get("packages")
-        requirements = config.get(pkg_name, {}).get("require", [])
+        requirements = config.get(pkg_name, {}).get("require", []) or config.get("all", {}).get(
+            "require", []
+        )
         if isinstance(requirements, string_types):
             rules = [(pkg_name, "one_of", [requirements])]
         else:
