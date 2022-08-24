@@ -22,7 +22,7 @@ class Ddt(Package):
     license_files = ["./licences/ddt.lic"]
 
     # Versions before 22.0 have a security vulnerability. Do not install them.
-    version("22.0.2", md5="9a4bf90394da47eedc54d61dd5ec1502")
+    version("22.0.2", sha256="3db0c3993d1db617f850c48d25c9239f06a018c895ea305786a7ad836a44496d")
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
