@@ -62,7 +62,7 @@ spack:
     adios2:
       require: "%gcc"
     all:
-      compiler: [oneapi]
+      require: "%oneapi"
       providers:
         blas: [openblas]
         mpi: [mpich]
@@ -100,6 +100,8 @@ spack:
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    vtk-m:
+      variants: ~openmp
     xz:
       variants: +pic
     mesa:
@@ -114,7 +116,7 @@ spack:
   - arborx
   - archer
   - argobots
-  - ascent ^vtk-m ~openmp
+  - ascent
   - axom
   - bolt
   - bricks
@@ -193,7 +195,7 @@ spack:
   - swig@4.0.2-fortran
   - sz
   - tasmanian
-  - tau +mpi +python %oneapi ^binutils%gcc
+  - tau +mpi +python
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
    +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
