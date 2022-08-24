@@ -46,22 +46,22 @@ skip_old_python = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="function")
-def flake8_package():
+def flake8_package(tmpdir):
     """Style only checks files that have been modified. This fixture makes a small
     change to the ``flake8`` mock package, yields the filename, then undoes the
     change on cleanup.
     """
     repo = spack.repo.Repo(spack.paths.mock_packages_path)
     filename = repo.filename_for_package_name("flake8")
-    tmp = filename + ".tmp"
+    rel_path = os.path.dirname(os.path.relpath(filename, spack.paths.prefix))
+    tmp = tmpdir / rel_path / "flake8-ci-package.py"
+    tmp.ensure()
+    tmp = str(tmp)
 
-    try:
-        shutil.copy(filename, tmp)
-        package = FileFilter(filename)
-        package.filter("state = 'unmodified'", "state = 'modified'", string=True)
-        yield filename
-    finally:
-        shutil.move(tmp, filename)
+    shutil.copy(filename, tmp)
+    package = FileFilter(tmp)
+    package.filter("state = 'unmodified'", "state = 'modified'", string=True)
+    yield tmp
 
 
 @pytest.fixture
@@ -125,7 +125,7 @@ def test_changed_no_base(tmpdir, capfd):
         assert "This repository does not have a 'foobar'" in err
 
 
-def test_changed_files_all_files(flake8_package):
+def test_changed_files_all_files():
     # it's hard to guarantee "all files", so do some sanity checks.
     files = set(
         [
@@ -145,7 +145,9 @@ def test_changed_files_all_files(flake8_package):
     assert os.path.join(spack.paths.module_path, "spec.py") in files
 
     # a mock package
-    assert flake8_package in files
+    repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    filename = repo.filename_for_package_name("flake8")
+    assert filename in files
 
     # this test
     assert __file__ in files
