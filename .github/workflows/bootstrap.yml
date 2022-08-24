@@ -189,7 +189,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
@@ -220,7 +220,7 @@ jobs:
                 not_found=0
                 old_path="$PATH"
                 export PATH="$ver_dir:$PATH"
-                ./bin/spack-tmpconfig ./.github/workflows/bootstrap-test.sh
+                ./bin/spack-tmpconfig -b ./.github/workflows/bootstrap-test.sh
                 export PATH="$old_path"
               fi
             fi
