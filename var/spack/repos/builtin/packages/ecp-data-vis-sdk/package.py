@@ -125,6 +125,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+ascent",
         propagate=["adios2", "cuda"] + cuda_arch_variants,
     )
+    depends_on("ascent+openmp", when="~rocm+ascent")
+    depends_on("ascent~openmp", when="+rocm+ascent")
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
@@ -152,10 +154,12 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("visit+mpi+python+silo", when="+visit", propagate=["hdf5", "adios2"])
 
     dav_sdk_depends_on(
-        "vtk-m@1.7:+shared+mpi+openmp+rendering",
+        "vtk-m@1.7:+shared+mpi+rendering",
         when="+vtkm",
         propagate=["cuda", "rocm"] + cuda_arch_variants + amdgpu_target_variants,
     )
+    depends_on("vtk-m+openmp", when="~rocm+vtkm")
+    depends_on("vtk-m~openmp", when="+rocm+vtkm")
 
     # +python is currently broken in sz
     # dav_sdk_depends_on('sz+shared+fortran+python+random_access',
