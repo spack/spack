@@ -28,7 +28,7 @@ class Wi4mpi(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    depends_on("mpi")
+    depends_on("mpi", when="@:3.5")
 
     def cmake_args(self):
         if "%gcc" in self.spec:
