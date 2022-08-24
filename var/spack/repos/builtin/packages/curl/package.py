@@ -18,6 +18,7 @@ class Curl(AutotoolsPackage):
     url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
     executables = ["^curl$"]
+    tags = ["build-tools"]
 
     version("7.84.0", sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d")
     version("7.83.0", sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96")

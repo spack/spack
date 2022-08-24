@@ -44,8 +44,14 @@ class IntelOneapiCompilersClassic(Package):
 
         and from setting CC/CXX/F77/FC
         """
+
         bin = join_path(
-            self.spec["intel-oneapi-compilers"].prefix, "compile", "linux", "bin", "intel64"
+            self.spec["intel-oneapi-compilers"].prefix,
+            "compiler",
+            self.spec["intel-oneapi-compilers"].version,
+            "linux",
+            "bin",
+            "intel64",
         )
         env.set("CC", join_path(bin, "icc"))
         env.set("CXX", join_path(bin, "icpc"))
