@@ -9,12 +9,12 @@ from spack.package import *
 class RktSchemeLib(RacketPackage):
     """Legacy Scheme Library."""
 
-    git      = "ssh://git@github.com/racket/scheme-lib.git"
+    git = "ssh://git@github.com/racket/scheme-lib.git"
 
-    maintainers = ['elfprince13']
+    maintainers = ["elfprince13"]
 
-    version('8.3', commit='a36e729680818712820ee5269f5208c3c0715a6a')  # tag='v8.3'
-    depends_on('rkt-base@8.3', type=('build', 'run'), when='@8.3')
+    version("8.3", commit="a36e729680818712820ee5269f5208c3c0715a6a")  # tag='v8.3'
+    depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
 
-    name = 'scheme-lib'
+    racket_name = "scheme-lib"
     pkgs = True

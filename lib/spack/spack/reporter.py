@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-__all__ = ['Reporter']
+__all__ = ["Reporter"]
 
 
 class Reporter(object):

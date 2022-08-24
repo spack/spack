@@ -64,7 +64,7 @@ def prevent_cray_detection():
     """Context manager that prevents the detection of the Cray platform"""
     reset()
     try:
-        with spack.util.environment.set_env(MODULEPATH=''):
+        with spack.util.environment.set_env(MODULEPATH=""):
             yield
     finally:
         reset()

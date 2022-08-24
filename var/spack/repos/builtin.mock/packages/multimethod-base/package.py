@@ -14,8 +14,8 @@ class MultimethodBase(Package):
 
     """
 
-    homepage = 'http://www.example.com/'
-    url      = 'http://www.example.com/example-1.0.tar.gz'
+    homepage = "http://www.example.com/"
+    url = "http://www.example.com/example-1.0.tar.gz"
 
     def base_method(self):
         return "base_method"

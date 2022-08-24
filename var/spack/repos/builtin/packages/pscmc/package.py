@@ -14,7 +14,7 @@ class Pscmc(MakefilePackage):
     is designed for multi-platform
     parallel programming."""
 
-    maintainers = ['Bitllion']
+    maintainers = ["Bitllion"]
 
     homepage = "https://github.com/JianyuanXiao/PSCMC"
     git = "https://github.com/JianyuanXiao/PSCMC.git"

@@ -16,15 +16,15 @@ class Vpfft(MakefilePackage):
     """
 
     homepage = "http://www.exmatex.org/vpfft.html"
-    git      = "https://github.com/exmatex/VPFFT.git"
+    git = "https://github.com/exmatex/VPFFT.git"
 
-    tag = ['proxy-app']
+    tag = ["proxy-app"]
 
-    version('develop')
+    version("develop")
 
-    depends_on('eigen')
-    depends_on('fftw')
-    depends_on('mpi')
+    depends_on("eigen")
+    depends_on("fftw")
+    depends_on("mpi")
 
     @property
     def build_targets(self):
@@ -32,18 +32,19 @@ class Vpfft(MakefilePackage):
             "--file=Makefile.make",
             "EIGEN_PATH={0}".format(
                 join_path(
-                    self.spec['eigen'].prefix.include,
-                    'eigen{0}'.format(
-                        self.spec['eigen'].version.up_to(1)))),
-            "FFTW_PATH={0}".format(self.spec['fftw'].prefix),
-            "CC={0}".format(self.spec['mpi'].mpicxx)
+                    self.spec["eigen"].prefix.include,
+                    "eigen{0}".format(self.spec["eigen"].version.up_to(1)),
+                )
+            ),
+            "FFTW_PATH={0}".format(self.spec["fftw"].prefix),
+            "CC={0}".format(self.spec["mpi"].mpicxx),
         ]
         return targets
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('VPFFT++', prefix.bin)
-        install('README.md', prefix)
-        install('README.make', prefix)
-        install('README-license.txt', prefix)
-        install_tree('docs', prefix.docs)
+        install("VPFFT++", prefix.bin)
+        install("README.md", prefix)
+        install("README.make", prefix)
+        install("README-license.txt", prefix)
+        install_tree("docs", prefix.docs)

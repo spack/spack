@@ -16,6 +16,6 @@ class RHere(RPackage):
 
     cran = "here"
 
-    version('1.0.1', sha256='08ed908033420d3d665c87248b3a14d1b6e2b37844bf736be620578c20ca346b')
+    version("1.0.1", sha256="08ed908033420d3d665c87248b3a14d1b6e2b37844bf736be620578c20ca346b")
 
-    depends_on('r-rprojroot@2.0.2:', type=('build', 'run'))
+    depends_on("r-rprojroot@2.0.2:", type=("build", "run"))

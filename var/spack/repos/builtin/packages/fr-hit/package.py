@@ -11,36 +11,31 @@ class FrHit(Package):
     sequences against microbial reference genomes."""
 
     homepage = "http://weizhong-lab.ucsd.edu/frhit"
-    url      = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
+    url = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
-    version('0.7.1-2013-02-20', sha256='44dcfeb73106529fcefb02c017ec7b95b04b6523a2a57683b2bc905c142e62eb')
+    version(
+        "0.7.1-2013-02-20",
+        sha256="44dcfeb73106529fcefb02c017ec7b95b04b6523a2a57683b2bc905c142e62eb",
+    )
 
-    depends_on('perl')
-    depends_on('python@2.7:')
+    depends_on("perl")
+    depends_on("python@2.7:")
 
     # The patch adds the python interpreter to the beginning of the script
     # allowing it to be run directly without passing the entire path to the
     # script to python.
-    patch('binning.patch')
+    patch("binning.patch")
 
     def install(self, spec, prefix):
         make()
 
-        filter_file(
-            r'#!/bin/env perl',
-            '#!/usr/bin/env perl',
-            'frhit2pairend.pl'
-        )
-        filter_file(
-            r'#!/bin/env perl',
-            '#!/usr/bin/env perl',
-            'psl2sam.pl'
-        )
+        filter_file(r"#!/bin/env perl", "#!/usr/bin/env perl", "frhit2pairend.pl")
+        filter_file(r"#!/bin/env perl", "#!/usr/bin/env perl", "psl2sam.pl")
 
         mkdirp(prefix.bin)
-        install('fr-hit', prefix.bin)
-        install('frhit2pairend.pl', prefix.bin)
-        install('psl2sam.pl', prefix.bin)
-        install('binning-1.1.1/bacteria_gitax.pkl', prefix.bin)
-        install('binning-1.1.1/binning.py', prefix.bin)
-        install('binning-1.1.1/tax.pkl', prefix.bin)
+        install("fr-hit", prefix.bin)
+        install("frhit2pairend.pl", prefix.bin)
+        install("psl2sam.pl", prefix.bin)
+        install("binning-1.1.1/bacteria_gitax.pkl", prefix.bin)
+        install("binning-1.1.1/binning.py", prefix.bin)
+        install("binning-1.1.1/tax.pkl", prefix.bin)

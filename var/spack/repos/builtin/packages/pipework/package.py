@@ -13,9 +13,9 @@ class Pipework(Package):
     """
 
     homepage = "https://github.com/jpetazzo/pipework"
-    git      = "https://github.com/jpetazzo/pipework.git"
+    git = "https://github.com/jpetazzo/pipework.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

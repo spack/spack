@@ -17,5 +17,5 @@ class RNor1mix(RPackage):
 
     cran = "nor1mix"
 
-    version('1.3-0', sha256='9ce4ee92f889a4a4041b5ea1ff09396780785a9f12ac46f40647f74a37e327a0')
-    version('1.2-3', sha256='435e6519e832ef5229c51ccb2619640e6b50dfc7470f70f0c938d18a114273af')
+    version("1.3-0", sha256="9ce4ee92f889a4a4041b5ea1ff09396780785a9f12ac46f40647f74a37e327a0")
+    version("1.2-3", sha256="435e6519e832ef5229c51ccb2619640e6b50dfc7470f70f0c938d18a114273af")

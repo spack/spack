@@ -43,17 +43,17 @@ def macos_version():
        installations report the OS
        on which Python was *built* rather than the one on which it is running.
     """
-    env_ver = os.environ.get('MACOSX_DEPLOYMENT_TARGET', None)
+    env_ver = os.environ.get("MACOSX_DEPLOYMENT_TARGET", None)
     if env_ver:
         return Version(env_ver)
 
     try:
-        output = Executable('sw_vers')(output=str, fail_on_error=False)
+        output = Executable("sw_vers")(output=str, fail_on_error=False)
     except Exception:
         # FileNotFoundError, or spack.util.executable.ProcessError
         pass
     else:
-        match = re.search(r'ProductVersion:\s*([0-9.]+)', output)
+        match = re.search(r"ProductVersion:\s*([0-9.]+)", output)
         if match:
             return Version(match.group(1))
 
@@ -69,17 +69,17 @@ def macos_cltools_version():
     The CLT version might only affect the build if it's selected as the macOS
     SDK path.
     """
-    pkgutil = Executable('pkgutil')
-    output = pkgutil('--pkg-info=com.apple.pkg.cltools_executables',
-                     output=str, fail_on_error=False)
-    match = re.search(r'version:\s*([0-9.]+)', output)
+    pkgutil = Executable("pkgutil")
+    output = pkgutil(
+        "--pkg-info=com.apple.pkg.cltools_executables", output=str, fail_on_error=False
+    )
+    match = re.search(r"version:\s*([0-9.]+)", output)
     if match:
         return Version(match.group(1))
 
     # No CLTools installed by package manager: try Xcode
-    output = pkgutil('--pkg-info=com.apple.pkg.Xcode',
-                     output=str, fail_on_error=False)
-    match = re.search(r'version:\s*([0-9.]+)', output)
+    output = pkgutil("--pkg-info=com.apple.pkg.Xcode", output=str, fail_on_error=False)
+    match = re.search(r"version:\s*([0-9.]+)", output)
     if match:
         return Version(match.group(1))
 
@@ -88,10 +88,9 @@ def macos_cltools_version():
 
 @llnl.util.lang.memoized
 def macos_sdk_path():
-    """Return path to the active macOS SDK.
-    """
-    xcrun = Executable('xcrun')
-    return xcrun('--show-sdk-path', output=str).rstrip()
+    """Return path to the active macOS SDK."""
+    xcrun = Executable("xcrun")
+    return xcrun("--show-sdk-path", output=str).rstrip()
 
 
 def macos_sdk_version():
@@ -105,8 +104,8 @@ def macos_sdk_version():
     The macOS deployment target cannot be greater than the SDK version, but
     usually it can be at least a few versions less.
     """
-    xcrun = Executable('xcrun')
-    return Version(xcrun('--show-sdk-version', output=str).rstrip())
+    xcrun = Executable("xcrun")
+    return Version(xcrun("--show-sdk-version", output=str).rstrip())
 
 
 class MacOs(OperatingSystem):
@@ -123,32 +122,33 @@ class MacOs(OperatingSystem):
         will use a generic "macos" version string until Spack is updated.
         """
         mac_releases = {
-            '10.0':  'cheetah',
-            '10.1':  'puma',
-            '10.2':  'jaguar',
-            '10.3':  'panther',
-            '10.4':  'tiger',
-            '10.5':  'leopard',
-            '10.6':  'snowleopard',
-            '10.7':  'lion',
-            '10.8':  'mountainlion',
-            '10.9':  'mavericks',
-            '10.10': 'yosemite',
-            '10.11': 'elcapitan',
-            '10.12': 'sierra',
-            '10.13': 'highsierra',
-            '10.14': 'mojave',
-            '10.15': 'catalina',
-            '10.16': 'bigsur',
-            '11': 'bigsur',
-            '12': 'monterey',
+            "10.0": "cheetah",
+            "10.1": "puma",
+            "10.2": "jaguar",
+            "10.3": "panther",
+            "10.4": "tiger",
+            "10.5": "leopard",
+            "10.6": "snowleopard",
+            "10.7": "lion",
+            "10.8": "mountainlion",
+            "10.9": "mavericks",
+            "10.10": "yosemite",
+            "10.11": "elcapitan",
+            "10.12": "sierra",
+            "10.13": "highsierra",
+            "10.14": "mojave",
+            "10.15": "catalina",
+            "10.16": "bigsur",
+            "11": "bigsur",
+            "12": "monterey",
+            "13": "ventura",
         }
 
         version = macos_version()
 
         # Big Sur versions go 11.0, 11.0.1, 11.1 (vs. prior versions that
         # only used the minor component)
-        part = 1 if version >= Version('11') else 2
+        part = 1 if version >= Version("11") else 2
 
         mac_ver = str(version.up_to(part))
         name = mac_releases.get(mac_ver, "macos")

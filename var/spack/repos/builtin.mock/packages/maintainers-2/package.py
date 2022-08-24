@@ -10,8 +10,8 @@ class Maintainers2(Package):
     """A second package with a maintainers field."""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/maintainers2-1.0.tar.gz"
+    url = "http://www.example.com/maintainers2-1.0.tar.gz"
 
-    maintainers = ['user2', 'user3']
+    maintainers = ["user2", "user3"]
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
