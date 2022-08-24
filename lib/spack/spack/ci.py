@@ -1216,32 +1216,6 @@ def generate_gitlab_ci_yaml(
 
             output_object["sign-pkgs"] = signing_job
 
-        if spack_buildcache_copy:
-            # Generate a job to copy the contents from wherever the builds are getting
-            # pushed to the url specified in the "SPACK_BUILDCACHE_COPY" environment
-            # variable.
-            src_url = remote_mirror_override or remote_mirror_url
-            dest_url = spack_buildcache_copy
-
-            stage_names.append("stage-copy-buildcache")
-            copy_job = {
-                "stage": "stage-copy-buildcache",
-                "tags": ["spack", "public", "medium", "aws", "x86_64"],
-                "image": "ghcr.io/spack/python-aws-bash:0.0.1",
-                "when": "on_success",
-                "interruptible": True,
-                "retry": service_job_retries,
-                "script": [
-                    ". ./share/spack/setup-env.sh",
-                    "spack --version",
-                    "aws s3 sync --exclude *index.json* --exclude *pgp* {0} {1}".format(
-                        src_url, dest_url
-                    ),
-                ],
-            }
-
-            output_object["copy-mirror"] = copy_job
-
         if rebuild_index_enabled:
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
