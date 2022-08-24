@@ -102,7 +102,7 @@ class Whizard(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
-            "TIRPC_CFLAGS=-I%s/include/tirpc" % spec["libtirpc"].prefix,
+            "TIRPC_CFLAGS=-I%s" % spec["libtirpc"].prefix.include.tirpc,
             "TIRPC_LIBS=-ltirpc",
             "--enable-hepmc=%s" % ("no" if "hepmc=off" in spec else "yes"),
             "--enable-fastjet=%s" % ("yes" if "+fastjet" in spec else "no"),
