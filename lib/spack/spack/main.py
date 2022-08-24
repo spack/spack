@@ -634,7 +634,8 @@ class SpackCommand(object):
         self.parser = make_argument_parser()
         self.command = self.parser.add_command(command_name)
         self.command_name = command_name
-        self.subprocess = subprocess
+        # TODO: figure out how to support this on windows
+        self.subprocess = subprocess if sys.platform != "win32" else False
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
