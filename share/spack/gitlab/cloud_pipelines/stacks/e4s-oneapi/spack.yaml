@@ -91,6 +91,8 @@ spack:
       variants: threads=openmp
     python:
       version: [3.8.13]
+    qt:
+      require: "%gcc"
     ruby:
       require: "%gcc" # https://github.com/spack/spack/issues/31954
     rust:
