@@ -101,7 +101,7 @@ spack:
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     vtk-m:
-      variants: ~openmp
+      require: "~openmp"
     xz:
       variants: +pic
     mesa:
@@ -128,6 +128,7 @@ spack:
   - darshan-runtime
   - darshan-util
   - datatransferkit
+  - exaworks
   - faodel
   - flit
   - flux-core
@@ -221,7 +222,6 @@ spack:
   #- adios2@2.8.0                                     # adios2
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # old intel-tbb
-  #- exaworks@0.1.0                                   # rust, flux-sched
   #- geopm@1.1.0                                      # geopm
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit                                       # dyninst
