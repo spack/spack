@@ -20,6 +20,8 @@ class Whizard(AutotoolsPackage):
     maintainers = ["vvolkl"]
 
     version("master", branch="master")
+    version("3.0.3", sha256="20f2269d302fc162a6aed8e781b504ba5112ef0711c078cdb08b293059ed67cf")
+    version("3.0.2", sha256="f1db92cd95a0281f6afbf4ac32ab027670cb97a57ad8f5139c0d1f61593d66ec")
     version("3.0.1", sha256="1463abd6c50ffe72029abc6f5a7d28ec63013852bfe5914cb464b58202c1437c")
     version(
         "3.0.0_alpha", sha256="4636e5a10350bb67ccc98cd105bc891ea04f3393c2420f81be3d21240be20009"
@@ -100,6 +102,8 @@ class Whizard(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
+            "TIRPC_CFLAGS=-I%s" % spec["libtirpc"].prefix.include.tirpc,
+            "TIRPC_LIBS=-ltirpc",
             "--enable-hepmc=%s" % ("no" if "hepmc=off" in spec else "yes"),
             "--enable-fastjet=%s" % ("yes" if "+fastjet" in spec else "no"),
             "--enable-pythia8=%s" % ("yes" if "+pythia8" in spec else "no"),
