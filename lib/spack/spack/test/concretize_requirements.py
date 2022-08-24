@@ -297,3 +297,55 @@ packages:
     s1 = Spec("y").concretized()
     assert s1.satisfies("@2.3")
     assert s1.satisfies("%gcc")
+
+
+@pytest.mark.parametrize("spec_str,requirement_str", [("x", "%gcc"), ("x", "%clang")])
+def test_default_requirements_with_all(spec_str, requirement_str, concretize_scope, test_repo):
+    """Test that default requirements are applied to all packages."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+
+    conf_str = """\
+packages:
+  all:
+    require: "{}"
+""".format(
+        requirement_str
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec(spec_str).concretized()
+    for s in spec.traverse():
+        assert s.satisfies(requirement_str)
+
+
+@pytest.mark.parametrize(
+    "requirements,expectations",
+    [
+        (("%gcc", "%clang"), ("%gcc", "%clang")),
+        (("%gcc ~shared", "@1.0"), ("%gcc ~shared", "@1.0 +shared")),
+    ],
+)
+def test_default_and_package_specific_requirements(
+    concretize_scope, requirements, expectations, test_repo
+):
+    """Test that specific package requirements override default package requirements."""
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    generic_req, specific_req = requirements
+    generic_exp, specific_exp = expectations
+    conf_str = """\
+packages:
+  all:
+    require: "{}"
+  x:
+    require: "{}"
+""".format(
+        generic_req, specific_req
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("x").concretized()
+    assert spec.satisfies(specific_exp)
+    for s in spec.traverse(root=False):
+        assert s.satisfies(generic_exp)
