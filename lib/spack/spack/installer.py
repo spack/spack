@@ -1276,7 +1276,6 @@ class PackageInstaller(object):
         try:
             self._setup_install_dir(pkg)
 
-            import pdb; pdb.set_trace()
             # Create a child process to do the actual installation.
             # Preserve verbosity settings across installs.
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
