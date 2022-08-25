@@ -647,11 +647,9 @@ def generate_gitlab_ci_yaml(
 
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
     if spack_buildcache_copy:
-        buildcache_copies = {
-            "destination_url_prefix": spack_buildcache_copy,
-            "hashes": {},
-        }
+        buildcache_copies = {}
         buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
+        buildcache_copy_dest_prefix = spack_buildcache_copy
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci generate requires an env containing a mirror")
@@ -1030,13 +1028,22 @@ def generate_gitlab_ci_yaml(
                 # Only keep track of these if we are doing the copy thing
                 if spack_buildcache_copy:
                     # TODO: This assumes signed version of the spec
-                    buildcache_copies["hashes"][release_spec_dag_hash] = [
-                        url_util.join(buildcache_copy_src_prefix,
-                                      bindist.build_cache_relative_path(),
-                                      bindist.tarball_name(release_spec, ".spec.json.sig")),
-                        url_util.join(buildcache_copy_src_prefix,
-                                      bindist.build_cache_relative_path(),
-                                      bindist.tarball_path_name(release_spec, ".spack"))
+                    buildcache_copies[release_spec_dag_hash] = [
+                        {
+                            "src": url_util.join(buildcache_copy_src_prefix,
+                                                 bindist.build_cache_relative_path(),
+                                                 bindist.tarball_name(release_spec, ".spec.json.sig")),
+                            "dest": url_util.join(buildcache_copy_dest_prefix,
+                                                  bindist.build_cache_relative_path(),
+                                                  bindist.tarball_name(release_spec, ".spec.json.sig")),
+                        },{
+                            "src": url_util.join(buildcache_copy_src_prefix,
+                                                 bindist.build_cache_relative_path(),
+                                                 bindist.tarball_path_name(release_spec, ".spack")),
+                            "dest": url_util.join(buildcache_copy_src_prefix,
+                                                  bindist.build_cache_relative_path(),
+                                                  bindist.tarball_path_name(release_spec, ".spack")),
+                        }
                     ]
 
                 if artifacts_root:
