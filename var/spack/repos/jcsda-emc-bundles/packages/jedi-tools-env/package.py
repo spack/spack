@@ -21,6 +21,8 @@ class JediToolsEnv(BundlePackage):
             default=False,
             description='Enable building LaTeX documentation with Sphinx')
 
+    depends_on('awscli',                                 type='run')
+    depends_on('aws-parallelcluster',                    type='run')
     depends_on('py-click',                               type='run')
     depends_on('py-openpyxl',                            type='run')
     depends_on('py-pandas',                              type='run')
