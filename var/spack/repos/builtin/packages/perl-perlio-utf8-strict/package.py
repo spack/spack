@@ -15,4 +15,4 @@ class PerlPerlioUtf8Strict(PerlPackage):
     version("0.009", sha256="ba82cf144820655d6d4836d12dde65f8895a3d905aeb4aa0b421249f43284c14")
     version("0.002", sha256="6e3163f8a2f1d276c975f21789d7a07843586d69e3e6156ffb67ef6680ceb75f")
 
-    depends_on("perl-module-build", type="build")
+    depends_on("perl-module-build", type="build", when="@:0.005")
