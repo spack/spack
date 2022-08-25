@@ -396,10 +396,34 @@ choose between a set of options using ``any_of`` or ``one_of``:
   ``mpich`` already includes a conflict, so this is redundant but
   still demonstrates the concept).
 
+You can also set default requirements for all packages under ``all``
+like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+     cmake:
+       require: '%gcc'
+
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
+to use ``clang``.
+
 Other notes about ``requires``:
 
-* You can only specify requirements for specific packages: you cannot
-  add ``requires`` under ``all``.
 * You cannot specify requirements for virtual packages (e.g. you can
   specify requirements for ``openmpi`` but not ``mpi``).
 * For ``any_of`` and ``one_of``, the order of specs indicates a

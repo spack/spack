@@ -12,11 +12,12 @@ class PyRadicalEntk(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.entk.git"
-    pypi = "radical.entk/radical.entk-1.14.0.tar.gz"
+    pypi = "radical.entk/radical.entk-1.16.0.tar.gz"
 
     maintainers = ["andre-merzky"]
 
     version("develop", branch="devel")
+    version("1.16.0", sha256="6611b4634ad554651601d9aed3a6d8b8273073da6218112bb472ce51f771ac8e")
     version("1.14.0", sha256="beb6de5625b52b3aeeace52f7b4ac608e9f1bb761d8e9cdfe85d3e36931ce9f3")
     version("1.13.0", sha256="5489338173409777d69885fd5fdb296552937d5a539a8182321bebe273647e1c")
     version("1.12.0", sha256="1ea4814c8324e28cc2b86e6f44d26aaa09c8257ed58f50d1d2eada99adaa17da")
@@ -30,6 +31,9 @@ class PyRadicalEntk(PythonPackage):
 
     depends_on("py-radical-utils@1.12:", type=("build", "run"), when="@1.12:")
     depends_on("py-radical-pilot@1.12:", type=("build", "run"), when="@1.12:")
+
+    depends_on("py-radical-utils@:1.11", type=("build", "run"), when="@:1.11")
+    depends_on("py-radical-pilot@:1.11", type=("build", "run"), when="@:1.11")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
