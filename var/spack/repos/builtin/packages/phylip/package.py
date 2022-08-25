@@ -23,9 +23,11 @@ class Phylip(Package):
                 filter_file(r"CFLAGS\s*=.*$", "", f)
 
     def flag_handler(self, name, flags):
-        if "%gcc@10:" in self.spec or "%clang@11:" in self.spec and name.lower() == "cflags":
+        if (
+            self.spec.satisfies("%gcc@10:") or self.spec.satisfies("%clang@11:")
+        ) and name.lower() == "cflags":
             flags.append("-fcommon")
-        if "platform=darwin" in self.spec and name.lower() == "cflags":
+        if self.spec.satisfies("platform=darwin") and name.lower() == "cflags":
             flags.append("-DMACOS10")
         return (None, flags, None)
 
