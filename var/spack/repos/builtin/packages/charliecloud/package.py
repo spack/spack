@@ -17,6 +17,8 @@ class Charliecloud(AutotoolsPackage):
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("0.29", sha256="c89562e9dce4c10027434ad52eaca2140e2ba8667aa1ec9eadf789b4d7c1a6db")
+    version("0.28", sha256="1ce43b012f475bddb514bb75993efeda9e58ffa93ddbdbd9b86d647f57254c3b")
     version("0.27", sha256="1142938ce73ec8a5dfe3a19a241b1f1ffbb63b582ac63d459aebec842c3f4b72")
     version("0.26", sha256="5e1e64e869c59905fac0cbbd6ceb82340ee54728415d28ef588fd5de5557038a")
     version("0.25", sha256="62d6fd211e3a573f54578e1b01d5c298f9788b7eaf2db46ac94c2dcef604cc94")
@@ -39,6 +41,7 @@ class Charliecloud(AutotoolsPackage):
     # autogen.sh requires pip and wheel (only needed for git checkouts)
     depends_on("py-pip@21.1.2:", type="build", when="@master")
     depends_on("py-wheel", type="build", when="@master")
+    depends_on("git@2.28.1:", type="run", when="@0.29:")
 
     # Man pages and html docs variant.
     variant("docs", default=False, description="Build man pages and html docs")
@@ -56,7 +59,6 @@ class Charliecloud(AutotoolsPackage):
         which("sh")("autogen.sh")
 
     def configure_args(self):
-
         args = []
         py_path = self.spec["python"].command.path
         args.append("--with-python={0}".format(py_path))
