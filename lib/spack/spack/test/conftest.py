@@ -85,7 +85,7 @@ def override_git_repos_cache_path(tmpdir):
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, override_git_repos_cache_path, scope="function"):
+def mock_git_version_info(tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
