@@ -139,7 +139,10 @@ def test_changed_files_all_files():
 
     # a builtin package
     zlib = spack.repo.path.get_pkg_class("zlib")
-    assert zlib.module.__file__ in files
+    zlib_file = zlib.module.__file__
+    if zlib_file.endswith("pyc"):
+        zlib_file = zlib_file[:-1]
+    assert zlib_file in files
 
     # a core spack file
     assert os.path.join(spack.paths.module_path, "spec.py") in files
