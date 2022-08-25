@@ -25,6 +25,5 @@ class RGlmgampoi(RPackage):
     depends_on("r-hdf5array", type=("build", "run"))
     depends_on("r-summarizedexperiment", type=("build", "run"))
     depends_on("r-biocgenerics", type=("build", "run"))
-    depends_on("r-biocgenerics", type=("build", "run"))
     depends_on("r-rcpparmadillo", type=("build", "run"))
     depends_on("r-beachmat", type=("build", "run"))
