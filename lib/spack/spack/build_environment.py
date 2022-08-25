@@ -141,7 +141,7 @@ class ModuleChangeAccumulator(object):
         if key in self.changes:
             return self.changes[key]
         else:
-            retun super(ModuleChangeAccumulator, self).__getattribute__(key)
+            return super(ModuleChangeAccumulator, self).__getattribute__(key)
 
 
 class MakeExecutable(Executable):
