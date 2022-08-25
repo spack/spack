@@ -47,7 +47,8 @@ class PyShapely(PythonPackage):
 
     # Spack might be using an external, barebone miniconda installation, in which case
     # the hacky logic in py-shapely@1.8.x looks for libgeos_c.so in the miniconda
-    # install tree ... need to comment that out so that spack"s libgeos_c.so is found
+    # install tree ... need to comment that out so that spack"s libgeos_c.so is found.
+    # Also need to add logic to find libgeos_c.so from spack geos modules, if loaded.
     patch("shapely-1.8.0-geos.py.patch", when="@1.8.0:1.8.3")
 
     @when("^python@3.7:")
