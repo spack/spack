@@ -138,7 +138,10 @@ class ModuleChangeAccumulator(object):
 
     def __getattr__(self, key):
         # Return what's in our dict, else delegate to superclass
-        return self.changes.get(key, super(ModuleChangeAccumulator, self).__getattr__(key))
+        if key in self.changes:
+            return self.changes[key]
+        else:
+            retun super(ModuleChangeAccumulator, self).__getattribute__(key)
 
 
 class MakeExecutable(Executable):
