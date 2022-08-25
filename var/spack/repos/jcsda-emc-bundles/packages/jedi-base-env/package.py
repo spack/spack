@@ -38,6 +38,7 @@ class JediBaseEnv(BundlePackage):
     depends_on('hdf',                            type='run')
     depends_on('jedi-cmake',                     type='run')
     depends_on('netcdf-cxx4',                    type='run')
+    depends_on('ncview',                         type='run')
     depends_on('nlohmann-json',                  type='run')
     depends_on('nlohmann-json-schema-validator', type='run')
     depends_on('odc',                            type='run')
