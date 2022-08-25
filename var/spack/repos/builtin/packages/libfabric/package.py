@@ -96,6 +96,7 @@ class Libfabric(AutotoolsPackage):
     depends_on("opa-psm2", when="fabrics=psm2")
     depends_on("psm", when="fabrics=psm")
     depends_on("ucx", when="fabrics=mlx")
+    depends_on("uuid", when="fabrics=opx")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
