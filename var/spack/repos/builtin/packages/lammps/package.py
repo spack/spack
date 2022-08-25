@@ -294,6 +294,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("py-cython", when="+ml-iap+python")
     depends_on("py-numpy", when="+mliap+python")
     depends_on("py-numpy", when="+ml-iap+python")
+    depends_on("py-setuptools", when="@20220217:+python", type="build")
 
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
