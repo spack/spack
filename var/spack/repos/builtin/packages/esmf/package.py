@@ -19,7 +19,7 @@ class Esmf(MakefilePackage):
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    maintainers = ["climbfuji"]
+    maintainers = ["climbfuji", "jedwards4b"]
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
@@ -65,10 +65,22 @@ class Esmf(MakefilePackage):
         when="@8.3:",
     )
     variant(
+        "parallelio",
+        default=False,
+        description="Build with external parallelio library",
+        when="@8.3.b09",
+    )
+    variant(
         "pio",
         default=True,
         description="Enable Internal ParallelIO support",
         when="@:8.2.99",
+    )
+    variant(
+        "pio",
+        default=True,
+        description="Enable Internal ParallelIO support",
+        when="@8.3.0b09",
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
 
@@ -124,7 +136,9 @@ class Esmf(MakefilePackage):
             )
         else:
             # Starting with ESMF 8.2.1 releases are now in the form vx.y.z
-            return "[https://github.com/esmf-org/esmf/archive/v{0}.tar.gz]".format(version)
+            return "https://github.com/esmf-org/esmf/archive/refs/tags/v{0}.tar.gz".format(
+                version.dotted
+            )
 
     def edit(self, spec, prefix):
         # Installation instructions can be found at:
