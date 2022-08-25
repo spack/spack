@@ -27,7 +27,7 @@ class PyBotocore(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-jmespath@0.7.1:0", type=("build", "run"))
-    depends_on("py-docutils@0.10:0.15", type=("build", "run"), when="@:1.17")
+    depends_on("py-docutils@0.10:", type=("build", "run"), when="@:1.17")
     depends_on("py-ordereddict@1.1", type=("build", "run"), when="^python@2.6.0:2.6")
     depends_on("py-simplejson@3.3.0", type=("build", "run"), when="^python@2.6.0:2.6")
     depends_on("py-python-dateutil@2.1:2", type=("build", "run"))
