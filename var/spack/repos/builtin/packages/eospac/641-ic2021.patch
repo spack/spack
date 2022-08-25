@@ -1,0 +1,17 @@
+--- a/Source/config/Makefile.-linux-gnu.hashes	2020-09-01 19:26:51.000000000 -0600
++++ b/Source/config/Makefile.-linux-gnu.hashes	2022-08-22 16:45:19.266087035 -0600
+@@ -233,6 +233,14 @@
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifort-20-haswell,       -qopenmp-simd -fp-speculation=safe -xCORE-AVX2 -no-fma $(INTEL_DIAG_OPTIONS))
+ $(call set,_F90-CPUINFO_COMP_FLAGS,ifort-20-knl,           -qopenmp-simd -fp-speculation=safe -xMIC-AVX512 -no-fma $(INTEL_DIAG_OPTIONS))
+ 
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx,         -qopenmp-simd -fp-speculation=safe -xAVX -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx2,        -qopenmp-simd -fp-speculation=safe -xCORE-AVX2 -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512,      -qopenmp-simd -fp-speculation=safe -xCOMMON-AVX512 -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512f,     -qopenmp-simd -fp-speculation=safe -xCOMMON-AVX512 -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-avx512pf,    -qopenmp-simd -fp-speculation=safe -xMIC-AVX512 -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-haswell,     -qopenmp-simd -fp-speculation=safe -xCORE-AVX2 -no-fma $(INTEL_DIAG_OPTIONS))
++$(call set,_F90-CPUINFO_COMP_FLAGS,ifort-2021-knl,         -qopenmp-simd -fp-speculation=safe -xMIC-AVX512 -no-fma $(INTEL_DIAG_OPTIONS))
++
+ ###  GNU Fortran:
+ GNU_DIAG_OPTIONS = -fopt-info-vec
+ $(call set,_F90-CPUINFO_COMP_FLAGS,gfortran-4-avx,         -ftree-vectorize -mavx -mno-fma -DDISABLE_OMP_SIMD_PRAGMA)

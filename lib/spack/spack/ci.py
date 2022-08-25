@@ -10,7 +10,9 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import tempfile
+import time
 import zipfile
 
 from six import iteritems
@@ -20,6 +22,7 @@ from six.moves.urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
 
 import spack
 import spack.binary_distribution as bindist
@@ -35,7 +38,10 @@ import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack.error import SpackError
+from spack.reporters.cdash import CDash
+from spack.reporters.cdash import build_stamp as cdash_build_stamp
 from spack.spec import Spec
+from spack.util.pattern import Bunch
 
 JOB_RETRY_CONDITIONS = [
     "always",
@@ -58,69 +64,6 @@ class TemporaryDirectory(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         shutil.rmtree(self.temporary_directory)
         return False
-
-
-def _create_buildgroup(opener, headers, url, project, group_name, group_type):
-    data = {"newbuildgroup": group_name, "project": project, "type": group_type}
-
-    enc_data = json.dumps(data).encode("utf-8")
-
-    request = Request(url, data=enc_data, headers=headers)
-
-    response = opener.open(request)
-    response_code = response.getcode()
-
-    if response_code != 200 and response_code != 201:
-        msg = "Creating buildgroup failed (response code = {0}".format(response_code)
-        tty.warn(msg)
-        return None
-
-    response_text = response.read()
-    response_json = json.loads(response_text)
-    build_group_id = response_json["id"]
-
-    return build_group_id
-
-
-def _populate_buildgroup(job_names, group_name, project, site, credentials, cdash_url):
-    url = "{0}/api/v1/buildgroup.php".format(cdash_url)
-
-    headers = {
-        "Authorization": "Bearer {0}".format(credentials),
-        "Content-Type": "application/json",
-    }
-
-    opener = build_opener(HTTPHandler)
-
-    parent_group_id = _create_buildgroup(opener, headers, url, project, group_name, "Daily")
-    group_id = _create_buildgroup(
-        opener, headers, url, project, "Latest {0}".format(group_name), "Latest"
-    )
-
-    if not parent_group_id or not group_id:
-        msg = "Failed to create or retrieve buildgroups for {0}".format(group_name)
-        tty.warn(msg)
-        return
-
-    data = {
-        "project": project,
-        "buildgroupid": group_id,
-        "dynamiclist": [
-            {"match": name, "parentgroupid": parent_group_id, "site": site} for name in job_names
-        ],
-    }
-
-    enc_data = json.dumps(data).encode("utf-8")
-
-    request = Request(url, data=enc_data, headers=headers)
-    request.get_method = lambda: "PUT"
-
-    response = opener.open(request)
-    response_code = response.getcode()
-
-    if response_code != 200:
-        msg = "Error response code ({0}) in _populate_buildgroup".format(response_code)
-        tty.warn(msg)
 
 
 def _is_main_phase(phase_name):
@@ -178,12 +121,6 @@ def get_job_name(phase, strip_compiler, spec, osarch, build_group):
         item_idx += 1
 
     return format_str.format(*format_args)
-
-
-def _get_cdash_build_name(spec, build_group):
-    return "{0}@{1}%{2} arch={3} ({4})".format(
-        spec.name, spec.version, spec.compiler, spec.architecture, build_group
-    )
 
 
 def _remove_reserved_tags(tags):
@@ -672,21 +609,8 @@ def generate_gitlab_ci_yaml(
 
     gitlab_ci = yaml_root["gitlab-ci"]
 
-    build_group = None
-    enable_cdash_reporting = False
-    cdash_auth_token = None
-
-    if "cdash" in yaml_root:
-        enable_cdash_reporting = True
-        ci_cdash = yaml_root["cdash"]
-        build_group = ci_cdash["build-group"]
-        cdash_url = ci_cdash["url"]
-        cdash_project = ci_cdash["project"]
-        cdash_site = ci_cdash["site"]
-
-        if "SPACK_CDASH_AUTH_TOKEN" in os.environ:
-            tty.verbose("Using CDash auth token from environment")
-            cdash_auth_token = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
+    cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
+    build_group = cdash_handler.build_group if cdash_handler else None
 
     prune_untouched_packages = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
     if prune_untouched_packages:
@@ -820,6 +744,7 @@ def generate_gitlab_ci_yaml(
 
     job_log_dir = os.path.join(pipeline_artifacts_dir, "logs")
     job_repro_dir = os.path.join(pipeline_artifacts_dir, "reproduction")
+    job_test_dir = os.path.join(pipeline_artifacts_dir, "tests")
     local_mirror_dir = os.path.join(pipeline_artifacts_dir, "mirror")
     user_artifacts_dir = os.path.join(pipeline_artifacts_dir, "user_data")
 
@@ -833,7 +758,8 @@ def generate_gitlab_ci_yaml(
     rel_concrete_env_dir = os.path.relpath(concrete_env_dir, ci_project_dir)
     rel_job_log_dir = os.path.relpath(job_log_dir, ci_project_dir)
     rel_job_repro_dir = os.path.relpath(job_repro_dir, ci_project_dir)
-    rel_local_mirror_dir = os.path.relpath(local_mirror_dir, ci_project_dir)
+    rel_job_test_dir = os.path.relpath(job_test_dir, ci_project_dir)
+    rel_local_mirror_dir = os.path.join(local_mirror_dir, ci_project_dir)
     rel_user_artifacts_dir = os.path.relpath(user_artifacts_dir, ci_project_dir)
 
     # Speed up staging by first fetching binary indices from all mirrors
@@ -1101,14 +1027,23 @@ def generate_gitlab_ci_yaml(
 
                 job_vars["SPACK_SPEC_NEEDS_REBUILD"] = str(rebuild_spec)
 
-                if enable_cdash_reporting:
-                    cdash_build_name = _get_cdash_build_name(release_spec, build_group)
-                    all_job_names.append(cdash_build_name)
-                    job_vars["SPACK_CDASH_BUILD_NAME"] = cdash_build_name
+                if cdash_handler:
+                    cdash_handler.current_spec = release_spec
+                    build_name = cdash_handler.build_name
+                    all_job_names.append(build_name)
+                    job_vars["SPACK_CDASH_BUILD_NAME"] = build_name
+
+                    build_stamp = cdash_handler.build_stamp
+                    job_vars["SPACK_CDASH_BUILD_STAMP"] = build_stamp
 
                 variables.update(job_vars)
 
-                artifact_paths = [rel_job_log_dir, rel_job_repro_dir, rel_user_artifacts_dir]
+                artifact_paths = [
+                    rel_job_log_dir,
+                    rel_job_repro_dir,
+                    rel_job_test_dir,
+                    rel_user_artifacts_dir,
+                ]
 
                 if enable_artifacts_buildcache:
                     bc_root = os.path.join(local_mirror_dir, "build_cache")
@@ -1176,11 +1111,9 @@ def generate_gitlab_ci_yaml(
         )
 
     # Use "all_job_names" to populate the build group for this set
-    if enable_cdash_reporting and cdash_auth_token:
+    if cdash_handler and cdash_handler.auth_token:
         try:
-            _populate_buildgroup(
-                all_job_names, build_group, cdash_project, cdash_site, cdash_auth_token, cdash_url
-            )
+            cdash_handler.populate_buildgroup(all_job_names)
         except (SpackError, HTTPError, URLError) as err:
             tty.warn("Problem populating buildgroup: {0}".format(err))
     else:
@@ -1341,6 +1274,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_REMOTE_MIRROR_URL": remote_mirror_url,
             "SPACK_JOB_LOG_DIR": rel_job_log_dir,
             "SPACK_JOB_REPRO_DIR": rel_job_repro_dir,
+            "SPACK_JOB_TEST_DIR": rel_job_test_dir,
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
         }
@@ -1609,33 +1543,70 @@ def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
             raise inst
 
 
-def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
-    """Looks for spack-build-out.txt in the stage directory of the given
-        job_spec, and attempts to copy the file into the directory given
-        by job_log_dir.
-
-    Arguments:
-
-        job_spec (spack.spec.Spec): Spec associated with spack install log
-        job_log_dir (str): Path into which build log should be copied
+def copy_files_to_artifacts(src, artifacts_dir):
     """
+    Copy file(s) to the given artifacts directory
+
+    Parameters:
+        src (str): the glob-friendly path expression for the file(s) to copy
+        artifacts_dir (str): the destination directory
+    """
+    try:
+        fs.copy(src, artifacts_dir)
+    except Exception as err:
+        msg = ("Unable to copy files ({0}) to artifacts {1} due to " "exception: {2}").format(
+            src, artifacts_dir, str(err)
+        )
+        tty.error(msg)
+
+
+def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
+    """Copy selected build stage file(s) to the given artifacts directory
+
+    Looks for spack-build-out.txt in the stage directory of the given
+    job_spec, and attempts to copy the file into the directory given
+    by job_log_dir.
+
+    Parameters:
+        job_spec (spack.spec.Spec): spec associated with spack install log
+        job_log_dir (str): path into which build log should be copied
+    """
+    tty.debug("job spec: {0}".format(job_spec))
+    if not job_spec:
+        msg = "Cannot copy stage logs: job spec ({0}) is required"
+        tty.error(msg.format(job_spec))
+        return
+
     try:
         pkg_cls = spack.repo.path.get_pkg_class(job_spec.name)
         job_pkg = pkg_cls(job_spec)
-        tty.debug("job package: {0.fullname}".format(job_pkg))
-        stage_dir = job_pkg.stage.path
-        tty.debug("stage dir: {0}".format(stage_dir))
-        build_out_src = os.path.join(stage_dir, "spack-build-out.txt")
-        build_out_dst = os.path.join(job_log_dir, "spack-build-out.txt")
-        tty.debug(
-            "Copying build log ({0}) to artifacts ({1})".format(build_out_src, build_out_dst)
-        )
-        shutil.copyfile(build_out_src, build_out_dst)
-    except Exception as inst:
-        msg = (
-            "Unable to copy build logs from stage to artifacts " "due to exception: {0}"
-        ).format(inst)
-        tty.error(msg)
+        tty.debug("job package: {0}".format(job_pkg))
+    except AssertionError:
+        msg = "Cannot copy stage logs: job spec ({0}) must be concrete"
+        tty.error(msg.format(job_spec))
+        return
+
+    stage_dir = job_pkg.stage.path
+    tty.debug("stage dir: {0}".format(stage_dir))
+    build_out_src = os.path.join(stage_dir, "spack-build-out.txt")
+    copy_files_to_artifacts(build_out_src, job_log_dir)
+
+
+def copy_test_logs_to_artifacts(test_stage, job_test_dir):
+    """
+    Copy test log file(s) to the given artifacts directory
+
+    Parameters:
+        test_stage (str): test stage path
+        job_test_dir (str): the destination artifacts test directory
+    """
+    tty.debug("test stage: {0}".format(test_stage))
+    if not os.path.exists(test_stage):
+        msg = "Cannot copy test logs: job test stage ({0}) does not exist"
+        tty.error(msg.format(test_stage))
+        return
+
+    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
 
 
 def download_and_extract_artifacts(url, work_dir):
@@ -1985,3 +1956,323 @@ def reproduce_ci_job(url, work_dir):
     )
 
     print("".join(inst_list))
+
+
+def process_command(cmd, cmd_args, repro_dir):
+    """
+    Create a script for and run the command. Copy the script to the
+    reproducibility directory.
+
+    Arguments:
+        cmd (str): name of the command being processed
+        cmd_args (list): string arguments to pass to the command
+        repro_dir (str): Job reproducibility directory
+
+    Returns: the exit code from processing the command
+    """
+    tty.debug("spack {0} arguments: {1}".format(cmd, cmd_args))
+
+    # Write the command to a shell script
+    script = "{0}.sh".format(cmd)
+    with open(script, "w") as fd:
+        fd.write("#!/bin/bash\n\n")
+        fd.write("\n# spack {0} command\n".format(cmd))
+        fd.write(" ".join(['"{0}"'.format(i) for i in cmd_args]))
+        fd.write("\n")
+
+    st = os.stat(script)
+    os.chmod(script, st.st_mode | stat.S_IEXEC)
+
+    copy_path = os.path.join(repro_dir, script)
+    shutil.copyfile(script, copy_path)
+
+    # Run the generated install.sh shell script as if it were being run in
+    # a login shell.
+    try:
+        cmd_process = subprocess.Popen(["bash", "./{0}".format(script)])
+        cmd_process.wait()
+        exit_code = cmd_process.returncode
+    except (ValueError, subprocess.CalledProcessError, OSError) as err:
+        tty.error("Encountered error running {0} script".format(cmd))
+        tty.error(err)
+        exit_code = 1
+
+    tty.debug("spack {0} exited {1}".format(cmd, exit_code))
+    return exit_code
+
+
+def create_buildcache(**kwargs):
+    """Create the buildcache at the provided mirror(s).
+
+    Arguments:
+       kwargs (dict): dictionary of arguments used to create the buildcache
+
+    List of recognized keys:
+
+    * "env" (spack.environment.Environment): the active environment
+    * "buildcache_mirror_url" (str or None): URL for the buildcache mirror
+    * "pipeline_mirror_url" (str or None): URL for the pipeline mirror
+    * "pr_pipeline" (bool): True if the CI job is for a PR
+    * "json_path" (str): path the the spec's JSON file
+    """
+    env = kwargs.get("env")
+    buildcache_mirror_url = kwargs.get("buildcache_mirror_url")
+    pipeline_mirror_url = kwargs.get("pipeline_mirror_url")
+    pr_pipeline = kwargs.get("pr_pipeline")
+    json_path = kwargs.get("json_path")
+
+    sign_binaries = pr_pipeline is False and can_sign_binaries()
+
+    # Create buildcache in either the main remote mirror, or in the
+    # per-PR mirror, if this is a PR pipeline
+    if buildcache_mirror_url:
+        push_mirror_contents(env, json_path, buildcache_mirror_url, sign_binaries)
+
+    # Create another copy of that buildcache in the per-pipeline
+    # temporary storage mirror (this is only done if either
+    # artifacts buildcache is enabled or a temporary storage url
+    # prefix is set)
+    if pipeline_mirror_url:
+        push_mirror_contents(env, json_path, pipeline_mirror_url, sign_binaries)
+
+
+def run_standalone_tests(**kwargs):
+    """Run stand-alone tests on the current spec.
+
+    Arguments:
+       kwargs (dict): dictionary of arguments used to run the tests
+
+    List of recognized keys:
+
+    * "cdash" (CDashHandler): (optional) cdash handler instance
+    * "fail_fast" (bool): (optional) terminate tests after the first failure
+    * "log_file" (str): (optional) test log file name if NOT CDash reporting
+    * "job_spec" (Spec): spec that was built
+    * "repro_dir" (str): reproduction directory
+    """
+    cdash = kwargs.get("cdash")
+    fail_fast = kwargs.get("fail_fast")
+    log_file = kwargs.get("log_file")
+
+    if cdash and log_file:
+        tty.msg("The test log file {0} option is ignored with CDash reporting".format(log_file))
+        log_file = None
+
+    # Error out but do NOT terminate if there are missing required arguments.
+    job_spec = kwargs.get("job_spec")
+    if not job_spec:
+        tty.error("Job spec is required to run stand-alone tests")
+        return
+
+    repro_dir = kwargs.get("repro_dir")
+    if not repro_dir:
+        tty.error("Reproduction directory is required for stand-alone tests")
+        return
+
+    test_args = [
+        "spack",
+        "-d",
+        "-v",
+        "test",
+        "run",
+    ]
+    if fail_fast:
+        test_args.append("--fail-fast")
+
+    if cdash:
+        test_args.extend(cdash.args())
+    else:
+        test_args.extend(["--log-format", "junit"])
+        if log_file:
+            test_args.extend(["--log-file", log_file])
+    test_args.append(job_spec.name)
+
+    tty.debug("Running {0} stand-alone tests".format(job_spec.name))
+    exit_code = process_command("test", test_args, repro_dir)
+
+    tty.debug("spack test exited {0}".format(exit_code))
+
+
+class CDashHandler(object):
+    """
+    Class for managing CDash data and processing.
+    """
+
+    def __init__(self, ci_cdash):
+        # start with the gitlab ci configuration
+        self.url = ci_cdash.get("url")
+        self.build_group = ci_cdash.get("build-group")
+        self.project = ci_cdash.get("project")
+        self.site = ci_cdash.get("site")
+
+        # grab the authorization token when available
+        self.auth_token = os.environ.get("SPACK_CDASH_AUTH_TOKEN")
+        if self.auth_token:
+            tty.verbose("Using CDash auth token from environment")
+
+        # append runner description to the site if available
+        runner = os.environ.get("CI_RUNNER_DESCRIPTION")
+        if runner:
+            self.site += " ({0})".format(runner)
+
+        # track current spec, if any
+        self.current_spec = None
+
+    def args(self):
+        return [
+            "--cdash-upload-url",
+            self.upload_url,
+            "--cdash-build",
+            self.build_name,
+            "--cdash-site",
+            self.site,
+            "--cdash-buildstamp",
+            self.build_stamp,
+        ]
+
+    @property  # type: ignore
+    def build_name(self):
+        """Returns the CDash build name.
+
+        A name will be generated if the `current_spec` property is set;
+        otherwise, the value will be retrieved from the environment
+        through the `SPACK_CDASH_BUILD_NAME` variable.
+
+        Returns: (str) current spec's CDash build name."""
+        spec = self.current_spec
+        if spec:
+            build_name = "{0}@{1}%{2} hash={3} arch={4} ({5})".format(
+                spec.name,
+                spec.version,
+                spec.compiler,
+                spec.dag_hash(),
+                spec.architecture,
+                self.build_group,
+            )
+            tty.verbose(
+                "Generated CDash build name ({0}) from the {1}".format(build_name, spec.name)
+            )
+            return build_name
+
+        build_name = os.environ.get("SPACK_CDASH_BUILD_NAME")
+        tty.verbose("Using CDash build name ({0}) from the environment".format(build_name))
+        return build_name
+
+    @property  # type: ignore
+    def build_stamp(self):
+        """Returns the CDash build stamp.
+
+        The one defined by SPACK_CDASH_BUILD_STAMP environment variable
+        is preferred due to the representation of timestamps; otherwise,
+        one will be built.
+
+        Returns: (str) current CDash build stamp"""
+        build_stamp = os.environ.get("SPACK_CDASH_BUILD_STAMP")
+        if build_stamp:
+            tty.verbose("Using build stamp ({0}) from the environment".format(build_stamp))
+            return build_stamp
+
+        build_stamp = cdash_build_stamp(self.build_group, time.time())
+        tty.verbose("Generated new build stamp ({0})".format(build_stamp))
+        return build_stamp
+
+    @property  # type: ignore
+    @memoized
+    def project_enc(self):
+        tty.debug("Encoding project ({0}): {1})".format(type(self.project), self.project))
+        encode = urlencode({"project": self.project})
+        index = encode.find("=") + 1
+        return encode[index:]
+
+    @property
+    def upload_url(self):
+        url_format = "{0}/submit.php?project={1}"
+        return url_format.format(self.url, self.project_enc)
+
+    def copy_test_results(self, source, dest):
+        """Copy test results to artifacts directory."""
+        reports = fs.join_path(source, "*_Test*.xml")
+        copy_files_to_artifacts(reports, dest)
+
+    def create_buildgroup(self, opener, headers, url, group_name, group_type):
+        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
+
+        enc_data = json.dumps(data).encode("utf-8")
+
+        request = Request(url, data=enc_data, headers=headers)
+
+        response = opener.open(request)
+        response_code = response.getcode()
+
+        if response_code not in [200, 201]:
+            msg = "Creating buildgroup failed (response code = {0})".format(response_code)
+            tty.warn(msg)
+            return None
+
+        response_text = response.read()
+        response_json = json.loads(response_text)
+        build_group_id = response_json["id"]
+
+        return build_group_id
+
+    def populate_buildgroup(self, job_names):
+        url = "{0}/api/v1/buildgroup.php".format(self.url)
+
+        headers = {
+            "Authorization": "Bearer {0}".format(self.auth_token),
+            "Content-Type": "application/json",
+        }
+
+        opener = build_opener(HTTPHandler)
+
+        parent_group_id = self.create_buildgroup(
+            opener,
+            headers,
+            url,
+            self.build_group,
+            "Daily",
+        )
+        group_id = self.create_buildgroup(
+            opener,
+            headers,
+            url,
+            "Latest {0}".format(self.build_group),
+            "Latest",
+        )
+
+        if not parent_group_id or not group_id:
+            msg = "Failed to create or retrieve buildgroups for {0}".format(self.build_group)
+            tty.warn(msg)
+            return
+
+        data = {
+            "dynamiclist": [
+                {
+                    "match": name,
+                    "parentgroupid": parent_group_id,
+                    "site": self.site,
+                }
+                for name in job_names
+            ],
+        }
+
+        enc_data = json.dumps(data).encode("utf-8")
+
+        request = Request(url, data=enc_data, headers=headers)
+        request.get_method = lambda: "PUT"
+
+        response = opener.open(request)
+        response_code = response.getcode()
+
+        if response_code != 200:
+            msg = "Error response code ({0}) in populate_buildgroup".format(response_code)
+            tty.warn(msg)
+
+    def report_skipped(self, spec, directory_name, reason):
+        cli_args = self.args()
+        cli_args.extend(["package", [spec.name]])
+        it = iter(cli_args)
+        kv = {x.replace("--", "").replace("-", "_"): next(it) for x in it}
+
+        reporter = CDash(Bunch(**kv))
+        reporter.test_skipped_report(directory_name, spec, reason)
