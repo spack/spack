@@ -17,5 +17,6 @@ class PerlModuleInstall(PerlPackage):
     depends_on("perl", type=("build", "run"))
     depends_on("perl-file-remove", type=("build"))
     depends_on("perl-module-build", type=("build"))
+    depends_on("perl-module-corelist", type=("build"))
     depends_on("perl-module-scandeps", type=("build"))
     depends_on("perl-yaml-tiny", type=("build"))
