@@ -51,6 +51,7 @@ import spack.config
 import spack.patch
 import spack.repo
 import spack.spec
+import spack.util.crypto
 import spack.util.package_hash as ph
 import spack.variant
 
@@ -460,6 +461,43 @@ def _ensure_docstring_and_no_fixme(pkgs, error_cls):
         if not pkg_cls.__doc__:
             error_msg = "Package '{}' miss a docstring"
             errors.append(error_cls(error_msg.format(pkg_name), []))
+
+    return errors
+
+
+@package_properties
+def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
+    """Ensure no packages use md5 checksums"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        if pkg_cls.manual_download:
+            continue
+
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+
+        def invalid_sha256_digest(fetcher):
+            if getattr(fetcher, "digest", None):
+                h = spack.util.crypto.hash_algo_for_digest(fetcher.digest)
+                if h != "sha256":
+                    return h, True
+            return None, False
+
+        error_msg = "Package '{}' does not use sha256 checksum".format(pkg_name)
+        details = []
+        for v, args in pkg.versions.items():
+            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            digest, is_bad = invalid_sha256_digest(fetcher)
+            if is_bad:
+                details.append("{}@{} uses {}".format(pkg_name, v, digest))
+
+        for _, resources in pkg.resources.items():
+            for resource in resources:
+                digest, is_bad = invalid_sha256_digest(resource.fetcher)
+                if is_bad:
+                    details.append("Resource in '{}' uses {}".format(pkg_name, digest))
+        if details:
+            errors.append(error_cls(error_msg, details))
 
     return errors
 
