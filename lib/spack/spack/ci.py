@@ -645,18 +645,18 @@ def generate_gitlab_ci_yaml(
     # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
 
-    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-    if spack_buildcache_copy:
-        buildcache_copies = {}
-        buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
-        buildcache_copy_dest_prefix = spack_buildcache_copy
-
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci generate requires an env containing a mirror")
 
     ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
+
+    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
+    if spack_buildcache_copy:
+        buildcache_copies = {}
+        buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
+        buildcache_copy_dest_prefix = spack_buildcache_copy
 
     # Check for a list of "known broken" specs that we should not bother
     # trying to build.
@@ -1025,25 +1025,34 @@ def generate_gitlab_ci_yaml(
                         "{0} ({1})".format(release_spec, release_spec_dag_hash)
                     )
 
-                # Only keep track of these if we are doing the copy thing
+                # Only keep track of these if we are copying rebuilt cache entries
                 if spack_buildcache_copy:
                     # TODO: This assumes signed version of the spec
                     buildcache_copies[release_spec_dag_hash] = [
                         {
-                            "src": url_util.join(buildcache_copy_src_prefix,
-                                                 bindist.build_cache_relative_path(),
-                                                 bindist.tarball_name(release_spec, ".spec.json.sig")),
-                            "dest": url_util.join(buildcache_copy_dest_prefix,
-                                                  bindist.build_cache_relative_path(),
-                                                  bindist.tarball_name(release_spec, ".spec.json.sig")),
-                        },{
-                            "src": url_util.join(buildcache_copy_src_prefix,
-                                                 bindist.build_cache_relative_path(),
-                                                 bindist.tarball_path_name(release_spec, ".spack")),
-                            "dest": url_util.join(buildcache_copy_src_prefix,
-                                                  bindist.build_cache_relative_path(),
-                                                  bindist.tarball_path_name(release_spec, ".spack")),
-                        }
+                            "src": url_util.join(
+                                buildcache_copy_src_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_name(release_spec, ".spec.json.sig"),
+                            ),
+                            "dest": url_util.join(
+                                buildcache_copy_dest_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_name(release_spec, ".spec.json.sig"),
+                            ),
+                        },
+                        {
+                            "src": url_util.join(
+                                buildcache_copy_src_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_path_name(release_spec, ".spack"),
+                            ),
+                            "dest": url_util.join(
+                                buildcache_copy_src_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_path_name(release_spec, ".spack"),
+                            ),
+                        },
                     ]
 
                 if artifacts_root:
@@ -1293,10 +1302,12 @@ def generate_gitlab_ci_yaml(
             if not os.path.exists(copy_specs_dir):
                 os.makedirs(copy_specs_dir)
 
-            copy_specs_file = os.path.join(copy_specs_dir, "copy_{}_specs.json".format(
-                spack_stack_name if spack_stack_name else "rebuilt"))
+            copy_specs_file = os.path.join(
+                copy_specs_dir,
+                "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
+            )
 
-            with open(copy_specs_file, 'w') as fd:
+            with open(copy_specs_file, "w") as fd:
                 fd.write(json.dumps(buildcache_copies))
 
         sorted_output = {}

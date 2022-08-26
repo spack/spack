@@ -88,7 +88,7 @@ default:
 
 protected-publish:
   stage: publish
-  extends: [ ".protected" ]
+  extends: [ ".protected-refs" ]
   image: "ghcr.io/scottwittenburg/python-aws-bash:0.0.3"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:
@@ -98,7 +98,7 @@ protected-publish:
     - . "./share/spack/setup-env.sh"
     - spack --version
     - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
-    - jq -s '. | map(.hashes) | add | map(values)[][]' ${COPY_SPECS_DIR}/*.json | xargs -I% aws s3 cp % "${SPACK_COPY_BUILDCACHE}/"
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
     - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
 
 ########################################
