@@ -1186,7 +1186,7 @@ class SpackSolverSetup(object):
                 if virtual:
                     when_spec = spack.spec.Spec(pkg_name)
                 member_id = self.condition(
-                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=True
+                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
                 )
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
