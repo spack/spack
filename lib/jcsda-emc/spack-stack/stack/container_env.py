@@ -34,7 +34,7 @@ class StackContainer():
         elif os.path.exists(os.path.join(template_path, self.template)):
             self.template_path = os.path.join(template_path, self.template)
         else:
-            raise Exception("Invalid app")
+            raise Exception("Invalid application template")
 
         self.name = name if name else '{}'.format(container)
 
@@ -54,7 +54,6 @@ class StackContainer():
             # Spack uses :: to override settings.
             # but it's not understood when used in a spack.yaml
             filedata = f.read()
-            filedata.replace('::', ':')
             filedata = filedata.replace('::', ':')
             template_yaml = syaml.load_config(filedata)
 
