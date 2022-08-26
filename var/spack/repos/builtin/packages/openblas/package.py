@@ -49,8 +49,12 @@ class Openblas(MakefilePackage):
     version("0.2.16", sha256="766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b")
     version("0.2.15", sha256="73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044")
 
-    variant("fortran", default="True", when="@0.3.21:",
-            description="w/o a Fortran compiler, OpenBLAS will build an f2c-converted LAPACK")
+    variant(
+        "fortran",
+        default="True",
+        when="@0.3.21:",
+        description="w/o a Fortran compiler, OpenBLAS will build an f2c-converted LAPACK",
+    )
 
     variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
     variant("pic", default=True, description="Build position independent code")
@@ -317,7 +321,7 @@ class Openblas(MakefilePackage):
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
         make_defs = ["CC={0}".format(spack_cc)]
-        if '~fortran' not in self.spec:
+        if "~fortran" not in self.spec:
             make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
@@ -331,15 +335,13 @@ class Openblas(MakefilePackage):
 
         # Fortran-free compilation
         if "~fortran" in self.spec:
-            make_defs += ['NOFORTRAN=1']
+            make_defs += ["NOFORTRAN=1"]
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.append(
-                    "CFLAGS={0}".format(self.compiler.cc_pic_flag))
-                if '~fortran' not in self.spec:
-                    make_defs.append(
-                        "FFLAGS={0}".format(self.compiler.f77_pic_flag))
+                make_defs.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                if "~fortran" not in self.spec:
+                    make_defs.append("FFLAGS={0}".format(self.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
