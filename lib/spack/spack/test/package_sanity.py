@@ -32,28 +32,6 @@ def check_repo():
         spack.repo.path.get_pkg_class(name)
 
 
-def test_packages_are_pickleable():
-    failed_to_pickle = list()
-    for name in spack.repo.all_package_names():
-        pkg_cls = spack.repo.path.get_pkg_class(name)
-        pkg = pkg_cls(spack.spec.Spec(name))
-        try:
-            pickle.dumps(pkg)
-        except Exception:
-            # If there are any failures, keep track of all packages that aren't
-            # pickle-able and re-run the pickling later on to recreate the
-            # error
-            failed_to_pickle.append(name)
-
-    if failed_to_pickle:
-        tty.msg("The following packages failed to pickle: " + ", ".join(failed_to_pickle))
-
-        for name in failed_to_pickle:
-            pkg_cls = spack.repo.path.get_pkg_class(name)
-            pkg = pkg_cls(spack.spec.Spec(name))
-            pickle.dumps(pkg)
-
-
 def test_packages_are_unparseable():
     """Ensure that all packages can unparse and that unparsed code is valid Python."""
     failed_to_unparse = []

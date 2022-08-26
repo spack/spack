@@ -38,6 +38,7 @@ as input.
 import collections
 import inspect
 import itertools
+import pickle
 import re
 
 from six.moves.urllib.request import urlopen
@@ -261,6 +262,14 @@ package_attributes = AuditClass(
 )
 
 
+package_properties = AuditClass(
+    group="packages",
+    tag="PKG-PROPERTIES",
+    description="Sanity checks on properties a package should maintain",
+    kwargs=("pkgs",),
+)
+
+
 #: Sanity checks on linting
 # This can take some time, so it's run separately from packages
 package_https_directives = AuditClass(
@@ -350,6 +359,22 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
             ]
             errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
 
+    return errors
+
+
+@package_properties
+def _ensure_packages_are_pickeleable(pkgs, error_cls):
+    """Ensure that package objects are pickleable"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            pickle.dumps(pkg)
+        except Exception as e:
+            error_msg = "Package '{}' failed to pickle".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
     return errors
 
 
