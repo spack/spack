@@ -89,7 +89,7 @@ default:
 protected-publish:
   stage: publish
   extends: [ ".protected" ]
-  image: "ghcr.io/scottwittenburg/python-aws-bash:0.0.3"
+  image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
