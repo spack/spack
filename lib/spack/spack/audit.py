@@ -365,6 +365,17 @@ def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
 
 
 @package_properties
+def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
+    """Ensure package names are lowercase and consistent"""
+    badname_regex, errors = re.compile(r"[_A-Z]"), []
+    for pkg_name in pkgs:
+        if badname_regex.search(pkg_name):
+            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            errors.append(error_cls(error_msg, []))
+    return errors
+
+
+@package_properties
 def _ensure_packages_are_pickeleable(pkgs, error_cls):
     """Ensure that package objects are pickleable"""
     errors = []

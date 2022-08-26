@@ -27,16 +27,6 @@ def test_get_all_mock_packages(mock_packages):
         mock_packages.get_pkg_class(name)
 
 
-def test_all_versions_are_lowercase():
-    """Spack package names must be lowercase, and use `-` instead of `_`."""
-    errors = []
-    for name in spack.repo.all_package_names():
-        if re.search(r"[_A-Z]", name):
-            errors.append(name)
-
-    assert len(errors) == 0
-
-
 def test_all_virtual_packages_have_default_providers():
     """All virtual packages must have a default provider explicitly set."""
     defaults = spack.config.get("packages", scope="defaults")
