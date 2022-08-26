@@ -32,12 +32,6 @@ def check_repo():
         spack.repo.path.get_pkg_class(name)
 
 
-@pytest.mark.maybeslow
-def test_get_all_packages():
-    """Get all packages once and make sure that works."""
-    check_repo()
-
-
 def test_packages_are_pickleable():
     failed_to_pickle = list()
     for name in spack.repo.all_package_names():
