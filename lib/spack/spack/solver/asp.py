@@ -946,7 +946,7 @@ class SpackSolverSetup(object):
             "require", []
         )
         rules = self._rules_from_requirements(pkg_name, requirements)
-        self.emit_facts_from_rules(rules, virtual=False)
+        self.emit_facts_from_requirement_rules(rules, virtual=False)
 
     def _rules_from_requirements(self, pkg_name, requirements):
         """Manipulate requirements from packages.yaml, and return a list of tuples
@@ -1171,11 +1171,10 @@ class SpackSolverSetup(object):
         for virtual_str in sorted(self.possible_virtuals):
             requirements = packages_yaml.get(virtual_str, {}).get("require", [])
             rules = self._rules_from_requirements(virtual_str, requirements)
-            self.emit_facts_from_rules(rules, virtual=True)
+            self.emit_facts_from_requirement_rules(rules, virtual=True)
 
-        self.gen.newline()
-
-    def emit_facts_from_rules(self, rules, virtual=False):
+    def emit_facts_from_requirement_rules(self, rules, virtual=False):
+        """Generate facts to enforce requirements from packages.yaml."""
         for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
             self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
             self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
@@ -1183,11 +1182,11 @@ class SpackSolverSetup(object):
                 spec = spack.spec.Spec(spec_str)
                 if not spec.name:
                     spec.name = pkg_name
-                required_spec = spec
+                when_spec = spec
                 if virtual:
-                    required_spec = spack.spec.Spec(pkg_name)
+                    when_spec = spack.spec.Spec(pkg_name)
                 member_id = self.condition(
-                    required_spec, imposed_spec=spec, name=pkg_name, node=True
+                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=True
                 )
                 self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
                 self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))

@@ -458,7 +458,7 @@ instance with a configuration like:
      mvapich2:
        require: '~cuda'
 
-you will use get ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
+you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
 .. _package_permissions:
 
