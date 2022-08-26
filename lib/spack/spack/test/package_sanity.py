@@ -3,20 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This test does sanity checks on Spack's builtin package database."""
-import os.path
-
-import pytest
-
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
-import spack.cmd.style as style
 import spack.fetch_strategy
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.crypto as crypto
-import spack.util.executable as executable
 import spack.variant
 
 
@@ -38,13 +32,6 @@ def test_all_virtual_packages_have_default_providers():
         assert provider in default_providers, (
             "all providers must have a default in %s" % default_providers_filename
         )
-
-
-def test_docstring():
-    """Ensure that every package has a docstring."""
-    for name in spack.repo.all_package_names():
-        pkg_cls = spack.repo.path.get_pkg_class(name)
-        assert pkg_cls.__doc__
 
 
 def test_all_packages_use_sha256_checksums():
@@ -85,57 +72,6 @@ def test_all_packages_use_sha256_checksums():
                     )
 
     assert [] == errors
-
-
-def test_api_for_build_and_run_environment():
-    """Ensure that every package uses the correct API to set build and
-    run environment, and not the old one.
-    """
-    failing = []
-    for pkg_cls in spack.repo.path.all_package_classes():
-        add_to_list = hasattr(pkg_cls, "setup_environment") or hasattr(
-            pkg_cls, "setup_dependent_environment"
-        )
-        if add_to_list:
-            failing.append(pkg_cls)
-
-    msg = (
-        "there are {0} packages using the old API to set build "
-        "and run environment [{1}], for further information see "
-        "https://github.com/spack/spack/pull/11115"
-    )
-    assert not failing, msg.format(len(failing), ",".join(x.name for x in failing))
-
-
-@pytest.mark.skipif(not executable.which("git"), reason="requires git to be installed")
-def test_prs_update_old_api():
-    """Ensures that every package modified in a PR doesn't contain
-    deprecated calls to any method.
-    """
-    ref = os.getenv("GITHUB_BASE_REF")
-    if not ref:
-        pytest.skip("No base ref found")
-
-    changed_package_files = [x for x in style.changed_files(base=ref) if style.is_package(x)]
-    failing = []
-    for file in changed_package_files:
-        if "builtin.mock" not in file:  # don't restrict packages for tests
-            name = os.path.basename(os.path.dirname(file))
-            pkg_cls = spack.repo.path.get_pkg_class(name)
-            pkg = pkg_cls(spack.spec.Spec(name))
-
-            failed = hasattr(pkg, "setup_environment") or hasattr(
-                pkg, "setup_dependent_environment"
-            )
-            if failed:
-                failing.append(name)
-
-    msg = (
-        "there are {0} packages using the old API to set build "
-        "and run environment [{1}], for further information see "
-        "https://github.com/spack/spack/pull/11115"
-    )
-    assert not failing, msg.format(len(failing), ",".join(failing))
 
 
 def test_all_dependencies_exist():
