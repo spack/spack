@@ -414,6 +414,24 @@ def _ensure_packages_are_unparseable(pkgs, error_cls):
     return errors
 
 
+@package_properties
+def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
+    """Ensure all versions in a package can produce a fetcher"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            spack.fetch_strategy.check_pkg_attributes(pkg)
+            for version in pkg.versions:
+                assert spack.fetch_strategy.for_package_version(pkg, version)
+        except Exception as e:
+            error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg.format(pkg_name), details))
+    return errors
+
+
 @package_https_directives
 def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links"""

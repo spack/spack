@@ -41,16 +41,6 @@ def test_all_virtual_packages_have_default_providers():
         )
 
 
-def test_package_version_consistency():
-    """Make sure all versions on builtin packages produce a fetcher."""
-    for name in spack.repo.all_package_names():
-        pkg_cls = spack.repo.path.get_pkg_class(name)
-        pkg = pkg_cls(spack.spec.Spec(name))
-        spack.fetch_strategy.check_pkg_attributes(pkg)
-        for version in pkg.versions:
-            assert spack.fetch_strategy.for_package_version(pkg, version)
-
-
 def test_no_fixme():
     """Packages should not contain any boilerplate such as
     FIXME or example.com."""
