@@ -316,10 +316,9 @@ class Openblas(MakefilePackage):
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = [
-            "CC={0}".format(spack_cc),
-            "FC={0}".format(spack_fc),
-        ]
+        make_defs = ["CC={0}".format(spack_cc)]
+        if '~fortran' not in self.spec:
+            make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version("0.3"):
@@ -336,12 +335,11 @@ class Openblas(MakefilePackage):
 
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.extend(
-                    [
-                        "CFLAGS={0}".format(self.compiler.cc_pic_flag),
-                        "FFLAGS={0}".format(self.compiler.f77_pic_flag),
-                    ]
-                )
+                make_defs.append(
+                    "CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                if '~fortran' not in self.spec:
+                    make_defs.append(
+                        "FFLAGS={0}".format(self.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
