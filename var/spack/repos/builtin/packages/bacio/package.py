@@ -31,8 +31,6 @@ class Bacio(CMakePackage):
     variant("pic", default=True, description="Build with position-independent-code")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")
-        ]
+        args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
 
         return args
