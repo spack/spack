@@ -35,6 +35,7 @@ Calls to each of these functions are triggered by the ``run`` method of
 the decorator object, that will forward the keyword arguments passed
 as input.
 """
+import ast
 import collections
 import inspect
 import itertools
@@ -50,6 +51,7 @@ import spack.config
 import spack.patch
 import spack.repo
 import spack.spec
+import spack.util.package_hash as ph
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -375,6 +377,29 @@ def _ensure_packages_are_pickeleable(pkgs, error_cls):
             error_msg = "Package '{}' failed to pickle".format(pkg_name)
             details = ["{}".format(str(e))]
             errors.append(error_cls(error_msg, details))
+    return errors
+
+
+@package_properties
+def _ensure_packages_are_unparseable(pkgs, error_cls):
+    """Ensure that all packages can unparse and that unparsed code is valid Python"""
+    errors = []
+    for pkg_name in pkgs:
+        try:
+            source = ph.canonical_source(pkg_name, filter_multimethods=False)
+        except Exception as e:
+            error_msg = "Package '{}' failed to unparse".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
+            continue
+
+        try:
+            compile(source, "internal", "exec", ast.PyCF_ONLY_AST)
+        except Exception as e:
+            error_msg = "The unparsed package '{}' failed to compile".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
+
     return errors
 
 
