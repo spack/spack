@@ -14,5 +14,5 @@ class PerlMathBigrat(PerlPackage):
 
     version("0.260805", sha256="9e41be24272e262fadc1921c7f51ff218384c92e5628cb53bf62b3026710fd41")
 
-    depends_on('perl@5.6.0:', type=('build', 'run'))
-    depends_on('perl-module-install', type=('build'))
+    depends_on("perl@5.6.0:", type=("build", "run"))
+    depends_on("perl-module-install", type=("build"))
