@@ -504,9 +504,12 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % Config required semantics
 %-----------------------------------------------------------------------------
 
+activate_requirement_rules(Package) :- node(Package).
+activate_requirement_rules(Package) :- virtual_node(Package).
+
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_policy(Package, X, "one_of"),
   requirement_group(Package, X).
 
@@ -519,7 +522,7 @@ requirement_weight(Package, W) :-
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_policy(Package, X, "any_of"),
   requirement_group(Package, X).
 
@@ -535,7 +538,7 @@ requirement_weight(Package, W) :-
   requirement_group_satisfied(Package, X).
 
 error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
 
