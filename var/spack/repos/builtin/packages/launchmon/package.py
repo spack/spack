@@ -16,7 +16,9 @@ class Launchmon(AutotoolsPackage):
     maintainers = ["lee218llnl"]
 
     version("master", branch="master")
-    version("1.0.2", sha256="1d301ccccfe0873efcd66da87ed5e4d7bafc560b00aee396d8a9365f53b3a33a")
+    version("1.2.0", sha256="edba70b8a283337dd4fda64192ba4fa36b7ada3f150340349b8681bcddcebda4",
+            url="https://github.com/LLNL/LaunchMON/releases/download/v1.2.0/launchmon-v1.2.0.tar.gz")
+    version("1.0.2", sha256="68127f343df1c1e9505dee2e16726e51222c1b2a9dd18a70d8577fe9b47f64c7")
 
     depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@master")
@@ -36,3 +38,12 @@ class Launchmon(AutotoolsPackage):
             # automake for launchmon requires the AM_PATH_LIBGCRYPT macro
             # which is defined in libgcrypt.m4
             env.prepend_path("ACLOCAL_PATH", self.spec["libgcrypt"].prefix.share.aclocal)
+
+    def configure_args(self):
+        spec = self.spec
+        args = [
+            "--with-test-rm=flux",
+            "--with-test-rm-launcher=/usr/bin/flux",
+            "--with-test-installed"
+        ]
+        return args
