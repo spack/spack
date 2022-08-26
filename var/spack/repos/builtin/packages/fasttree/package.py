@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from os import symlink
+
 from spack.package import *
 
 
@@ -21,18 +23,38 @@ class Fasttree(Package):
         url="http://www.microbesonline.org/fasttree/FastTree-2.1.10.c",
     )
 
+    variant("openmp", default=True, description="Add openmp support to Fasttree.")
+
     def install(self, spec, prefix):
         cc = Executable(spack_cc)
-        cc(
-            "-O3",
-            self.compiler.openmp_flag,
-            "-DOPENMP",
-            "-finline-functions",
-            "-funroll-loops",
-            "-Wall",
-            "-oFastTreeMP",
-            "FastTree-" + format(spec.version.dotted) + ".c",
-            "-lm",
-        )
+        if "+openmp" in self.spec:
+            cc(
+                "-O3",
+                self.compiler.openmp_flag,
+                "-DOPENMP",
+                "-finline-functions",
+                "-funroll-loops",
+                "-Wall",
+                "-oFastTree",
+                "FastTree-" + format(spec.version.dotted) + ".c",
+                "-lm",
+            )
+        else:
+            cc(
+                "-O3",
+                "-finline-functions",
+                "-funroll-loops",
+                "-Wall",
+                "-oFastTree",
+                "FastTree-" + format(spec.version.dotted) + ".c",
+                "-lm",
+            )
+
         mkdir(prefix.bin)
-        install("FastTreeMP", prefix.bin)
+        install("FastTree", prefix.bin)
+
+    @run_after("install")
+    def create_fasttree_mp_symlink(self):
+        with working_dir(prefix.bin):
+            if "+openmp" in self.spec:
+                symlink("FastTree", "FastTreeMP")
