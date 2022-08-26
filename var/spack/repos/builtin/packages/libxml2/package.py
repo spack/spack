@@ -62,6 +62,14 @@ class Libxml2(AutotoolsPackage):
     patch("nvhpc-configure.patch", when="%nvhpc")
     patch("nvhpc-elfgcchack.patch", when="%nvhpc")
 
+    # Use NAN/INFINITY if available to avoid SIGFPE
+    # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
+    patch(
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
+        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        when="@2.9.11:2.9.14",
+    )
+
     @property
     def command(self):
         return Executable(self.prefix.bin.join("xml2-config"))
