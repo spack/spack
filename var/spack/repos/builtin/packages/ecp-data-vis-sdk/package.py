@@ -87,6 +87,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("vtkm", default=False, description="Enable VTK-m")
     variant("zfp", default=False, description="Enable ZFP")
 
+    # Language Options
+    variant("fortran", default=True, sticky=True, description="Enable fortran language features.")
+
     ############################################################
     # Dependencies
     ############################################################
@@ -94,9 +97,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     amdgpu_target_variants = ["amdgpu_target={0}".format(x) for x in ROCmPackage.amdgpu_targets]
 
     dav_sdk_depends_on(
-        "adios2+shared+mpi+fortran+python+blosc+sst+ssc+dataman",
+        "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
         when="+adios2",
-        propagate=["hdf5", "sz", "zfp"],
+        propagate=["hdf5", "sz", "zfp", "fortran"],
     )
 
     dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])
@@ -104,9 +107,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
-    dav_sdk_depends_on("hdf5@1.12: +shared+mpi+fortran", when="+hdf5")
+    dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
 
-    dav_sdk_depends_on("parallel-netcdf+shared+fortran", when="+pnetcdf")
+    dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
     dav_sdk_depends_on("unifyfs", when="+unifyfs ")
 
@@ -162,7 +165,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("vtk-m~openmp", when="+rocm+vtkm")
 
     # +python is currently broken in sz
-    # dav_sdk_depends_on('sz+shared+fortran+python+random_access',
-    dav_sdk_depends_on("sz+shared+fortran+random_access", when="+sz", propagate=["hdf5"])
+    # dav_sdk_depends_on('sz+shared+python+random_access',
+    dav_sdk_depends_on("sz+shared+random_access", when="+sz", propagate=["hdf5", "fortran"])
 
     dav_sdk_depends_on("zfp", when="+zfp", propagate=["cuda"] + cuda_arch_variants)

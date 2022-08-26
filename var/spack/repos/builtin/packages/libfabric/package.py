@@ -96,11 +96,12 @@ class Libfabric(AutotoolsPackage):
     depends_on("opa-psm2", when="fabrics=psm2")
     depends_on("psm", when="fabrics=psm")
     depends_on("ucx", when="fabrics=mlx")
+    depends_on("uuid", when="fabrics=opx")
 
-    depends_on("m4", when="@develop", type="build")
-    depends_on("autoconf", when="@develop", type="build")
-    depends_on("automake", when="@develop", type="build")
-    depends_on("libtool", when="@develop", type="build")
+    depends_on("m4", when="@main", type="build")
+    depends_on("autoconf", when="@main", type="build")
+    depends_on("automake", when="@main", type="build")
+    depends_on("libtool", when="@main", type="build")
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
@@ -109,7 +110,7 @@ class Libfabric(AutotoolsPackage):
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
 
-    @when("@develop")
+    @when("@main")
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./autogen.sh")
