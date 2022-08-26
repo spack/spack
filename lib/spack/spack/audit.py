@@ -640,6 +640,36 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
 
 
 @package_directives
+def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
+    """Ensures that variant defaults are present and parsable from cli"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        for variant_name, entry in pkg_cls.variants.items():
+            variant, _ = entry
+            default_is_parsable = (
+                # Permitting a default that is an instance on 'int' permits
+                # to have foo=false or foo=0. Other falsish values are
+                # not allowed, since they can't be parsed from cli ('foo=')
+                isinstance(variant.default, int)
+                or variant.default
+            )
+            if not default_is_parsable:
+                error_msg = "Variant '{}' of package '{}' has a bad default value"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+                continue
+
+            vspec = variant.make_default()
+            try:
+                variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
+            except spack.variant.InvalidVariantValueError:
+                error_msg = "The variant '{}' default value in package '{}' cannot be validated"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+
+    return errors
+
+
+@package_directives
 def _version_constraints_are_satisfiable_by_some_version_in_repo(pkgs, error_cls):
     """Report if version constraints used in directives are not satisfiable"""
     errors = []
