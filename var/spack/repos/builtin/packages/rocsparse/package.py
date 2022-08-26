@@ -18,10 +18,10 @@ class Rocsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocSPARSE"
     git = "https://github.com/ROCmSoftwarePlatform/rocSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.0.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocSPARSE/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocsparse"]
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -34,6 +34,7 @@ class Rocsparse(CMakePackage):
         description="CMake build type",
     )
 
+    version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
     version("5.1.3", sha256="ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2")
     version("5.1.0", sha256="a2f0f8cb02b95993480bd7264fc65e8b11464a90b86f2dcd0dd82a2e6d4bd704")
     version("5.0.2", sha256="c9d9e1b7859e1c5aa5050f5dfdf86245cbd7c1296c0ce60d9ca5f3e22a9b748b")
@@ -110,6 +111,7 @@ class Rocsparse(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         for tgt in itertools.chain(["auto"], amdgpu_targets):
@@ -146,4 +148,6 @@ class Rocsparse(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         return args

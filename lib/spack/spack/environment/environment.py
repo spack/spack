@@ -1694,7 +1694,7 @@ class Environment(object):
         spec for already concretized but not yet installed specs.
         """
         # use a transaction to avoid overhead of repeated calls
-        # to `package.installed`
+        # to `package.spec.installed`
         with spack.store.db.read_transaction():
             concretized = dict(self.concretized_specs())
             for spec in self.user_specs:

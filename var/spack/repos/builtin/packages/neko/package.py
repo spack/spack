@@ -16,6 +16,8 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
     url = "https://github.com/ExtremeFLOW/neko/releases/download/v0.3.2/neko-0.3.2.tar.gz"
     maintainers = ["njansson"]
 
+    version("0.4.3", sha256="ba8fde09cbc052bb4791a03f69c880705615b572982cd3177ee31e4e14931da2")
+    version("0.4.2", sha256="927f926bdbf027c30e8e383e1790e84b60f5a9ed61e48a413092aac2ab24abcc")
     version("0.3.2", sha256="0628910aa9838a414f2f27d09ea9474d1b3d7dcb5a7715556049a2fdf81a71ae")
     version("0.3.0", sha256="e46bef72f694e59945514ab8b1ad7d74f87ec9dca2ba2b230e2148662baefdc8")
     version("develop", branch="develop")
@@ -35,7 +37,10 @@ class Neko(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def configure_args(self):
         args = []
-        args += self.with_or_without("parmetis")
+        args.append("--with-blas={0}".format(self.spec["blas"].libs.joined(";")))
+        args.append("--with-lapack={0}".format(self.spec["lapack"].libs.joined(";")))
+        args += self.with_or_without("parmetis", variant="parmetis", activation_value="prefix")
+        args += self.with_or_without("metis", variant="parmetis", activation_value="prefix")
         args += self.with_or_without("libxsmm", variant="xsmm")
         args += self.with_or_without("cuda", activation_value="prefix")
         rocm_fn = lambda x: spec["hip"].prefix

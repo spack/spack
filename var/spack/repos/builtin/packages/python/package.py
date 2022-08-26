@@ -36,7 +36,7 @@ class Python(Package):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "varioustoxins"]
+    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "varioustoxins", "pradyunsg"]
 
     phases = ["configure", "build", "install"]
 
@@ -44,6 +44,7 @@ class Python(Package):
     install_targets = ["install"]
     build_targets = []  # type: List[str]
 
+    version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
     version("3.10.5", sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
     version("3.10.4", sha256="f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28")
     version("3.10.3", sha256="5a3b029bad70ba2a019ebff08a65060a8b9b542ffc1a83c697f1449ecca9813b")
@@ -192,7 +193,6 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
-    variant("ensurepip", default=True, description="Build ensurepip module", when="@2.7.9:2,3.4:")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -355,15 +355,6 @@ class Python(Package):
                 variants += "+lzma"
             except ProcessError:
                 variants += "~lzma"
-
-        if Version(version_str) in ver("2.7.9:2,3.4:"):
-            # The ensurepip module is always available, but won't work if built with
-            # --without-ensurepip. A more reliable check to see if the package was built
-            # with --with-ensurepip is to check for the presence of a pip executable.
-            if glob.glob(os.path.join(os.path.dirname(exes[0]), "pip*")):
-                variants += "+ensurepip"
-            else:
-                variants += "~ensurepip"
 
         if Version(version_str) >= Version("3"):
             try:
@@ -621,10 +612,7 @@ class Python(Package):
                 raise ValueError("+ucs4 variant not compatible with Python 3.3 and beyond")
 
         if spec.satisfies("@2.7.9:2,3.4:"):
-            if "+ensurepip" in spec:
-                config_args.append("--with-ensurepip=install")
-            else:
-                config_args.append("--without-ensurepip")
+            config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -850,10 +838,6 @@ class Python(Package):
                 else:
                     self.command("-c", "import Tix")
 
-            # Ensure that ensurepip module works
-            if "+ensurepip" in spec:
-                self.command("-c", "import ensurepip")
-
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -1033,7 +1017,7 @@ config.update(get_paths())
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed.
         """
-        return Prefix(self.config_vars["prefix"])
+        return Prefix(self.config_vars["base"])
 
     def find_library(self, library):
         # Spack installs libraries into lib, except on openSUSE where it installs them
@@ -1060,6 +1044,12 @@ config.update(get_paths())
         win_bin_dir = self.config_vars["BINDIR"]
 
         directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+
+        # The Python shipped with Xcode command line tools isn't in any of these locations
+        for subdir in ["lib", "lib64"]:
+            directories.append(os.path.join(self.config_vars["base"], subdir))
+
+        directories = dedupe(directories)
         for directory in directories:
             path = os.path.join(directory, library)
             if os.path.exists(path):
@@ -1067,52 +1057,64 @@ config.update(get_paths())
 
     @property
     def libs(self):
-        # The +shared variant isn't always reliable, as `spack external find`
-        # currently can't detect it. If +shared, prefer the shared libraries, but check
-        # for static if those aren't found. Vice versa for ~shared.
+        py_version = self.version.up_to(2)
 
-        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
-        # libpythonX.Y.a but only libpythonX.Y.so exists.
+        # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
         shared_libs = [
             self.config_vars["LDLIBRARY"],
-            "libpython{}.{}".format(self.version.up_to(2), dso_suffix),
+            "libpython{}.{}".format(py_version, dso_suffix),
         ]
         static_libs = [
             self.config_vars["LIBRARY"],
-            "libpython{}.a".format(self.version.up_to(2)),
+            "libpython{}.a".format(py_version),
         ]
-        if "+shared" in self.spec:
-            libraries = shared_libs + static_libs
-        else:
-            libraries = static_libs + shared_libs
-        libraries = dedupe(libraries)
 
-        for library in libraries:
-            lib = self.find_library(library)
+        # The +shared variant isn't reliable, as `spack external find` currently can't
+        # detect it. If +shared, prefer the shared libraries, but check for static if
+        # those aren't found. Vice versa for ~shared.
+        if "+shared" in self.spec:
+            candidates = shared_libs + static_libs
+        else:
+            candidates = static_libs + shared_libs
+        candidates = dedupe(candidates)
+
+        for candidate in candidates:
+            lib = self.find_library(candidate)
             if lib:
                 return lib
 
-        msg = "Unable to locate {} libraries in {}"
-        libdir = self.config_vars["LIBDIR"]
-        raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
+        raise spack.error.NoLibrariesError(
+            "Unable to find {} libraries with the following names:".format(self.name),
+            "\n".join(candidates),
+        )
 
     @property
     def headers(self):
-        # Location where pyconfig.h is _supposed_ to be
-        config_h = self.config_vars["config_h_filename"]
-        if os.path.exists(config_h):
-            headers = HeaderList(config_h)
+        # Locations where pyconfig.h could be
+        # This varies by system, especially on macOS where the command line tools are
+        # installed in a very different directory from the system python interpreter.
+        py_version = str(self.version.up_to(2))
+        candidates = [
+            os.path.dirname(self.config_vars["config_h_filename"]),
+            self.config_vars["INCLUDEPY"],
+            self.config_vars["CONFINCLUDEPY"],
+            os.path.join(self.config_vars["base"], "include", py_version),
+            os.path.join(self.config_vars["base"], "Headers"),
+        ]
+        candidates = list(dedupe(candidates))
+
+        for directory in candidates:
+            headers = find_headers("pyconfig", directory)
+            if headers:
+                config_h = headers[0]
+                break
         else:
-            # If not, one of these config vars should contain the right directory
-            for var in ["INCLUDEPY", "CONFINCLUDEPY"]:
-                headers = find_headers("pyconfig", self.config_vars[var])
-                if headers:
-                    config_h = headers[0]
-                    break
-            else:
-                msg = "Unable to locate {} headers in {}"
-                raise spack.error.NoHeadersError(msg.format(self.name, directory))
+            raise spack.error.NoHeadersError(
+                "Unable to locate {} headers in any of these locations:".format(self.name),
+                "\n".join(candidates),
+            )
 
         headers.directories = [os.path.dirname(config_h)]
         return headers

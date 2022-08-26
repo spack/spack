@@ -20,18 +20,63 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.15", sha256="6c1520877ba1bce250e35a2a56c0a3da89fae0916c5ed7d5548d658237e067d9")
     version("0.14.3", sha256="2a7a405dedc7f6980a0aad7df87b427a1f43bcf6d923a9bcce1698fd296359f7")
-    version("0.14.1", sha256="361ac3f3ec6f5a4830729ab45f96c19f0f62e9415ff681f7c6cdb4ebdb796f72")
-    version("0.14", sha256="47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb")
-    version("0.13.2", sha256="645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb")
-    version("0.13.1", sha256="2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353")
-    version("0.13", sha256="e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498")
-    version("0.12", sha256="1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a")
-    version("0.11", sha256="4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6")
-    version("0.10", sha256="b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2")
-    version("0.9.2", sha256="8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240")
-    version("0.9", sha256="3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f")
-    version("0.8", sha256="9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327")
+    version(
+        "0.14.1",
+        sha256="361ac3f3ec6f5a4830729ab45f96c19f0f62e9415ff681f7c6cdb4ebdb796f72",
+        deprecated=True,
+    )
+    version(
+        "0.14",
+        sha256="47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb",
+        deprecated=True,
+    )
+    version(
+        "0.13.2",
+        sha256="645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb",
+        deprecated=True,
+    )
+    version(
+        "0.13.1",
+        sha256="2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353",
+        deprecated=True,
+    )
+    version(
+        "0.13",
+        sha256="e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498",
+        deprecated=True,
+    )
+    version(
+        "0.12",
+        sha256="1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a",
+        deprecated=True,
+    )
+    version(
+        "0.11",
+        sha256="4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6",
+        deprecated=True,
+    )
+    version(
+        "0.10",
+        sha256="b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2",
+        deprecated=True,
+    )
+    version(
+        "0.9.2",
+        sha256="8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240",
+        deprecated=True,
+    )
+    version(
+        "0.9",
+        sha256="3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f",
+        deprecated=True,
+    )
+    version(
+        "0.8",
+        sha256="9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327",
+        deprecated=True,
+    )
 
     variant("sio", default=False, description="Build the SIO I/O backend")
 

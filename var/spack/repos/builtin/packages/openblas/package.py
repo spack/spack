@@ -78,6 +78,9 @@ class Openblas(MakefilePackage):
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
 
+    # https://github.com/xianyi/OpenBLAS/pull/3712
+    patch("cce.patch", when="@0.3.20 %cce")
+
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
 
@@ -173,6 +176,14 @@ class Openblas(MakefilePackage):
     )
 
     depends_on("perl", type="build")
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        iflags = []
+        if name == "cflags":
+            if spec.satisfies("@0.3.20 %oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
 
     @classmethod
     def determine_version(cls, lib):

@@ -2729,6 +2729,7 @@ def test_activation_and_deactiviation_ambiguities(method, env, no_env, env_dir, 
 @pytest.mark.regression("26548")
 def test_custom_store_in_environment(mutable_config, tmpdir):
     spack_yaml = tmpdir.join("spack.yaml")
+    install_root = tmpdir.join("store")
     spack_yaml.write(
         """
 spack:
@@ -2736,17 +2737,15 @@ spack:
   - libelf
   config:
     install_tree:
-      root: /tmp/store
-"""
+      root: {0}
+""".format(
+            install_root
+        )
     )
-    if sys.platform == "win32":
-        sep = "\\"
-    else:
-        sep = "/"
     current_store_root = str(spack.store.root)
-    assert str(current_store_root) != sep + os.path.join("tmp", "store")
+    assert str(current_store_root) != install_root
     with spack.environment.Environment(str(tmpdir)):
-        assert str(spack.store.root) == sep + os.path.join("tmp", "store")
+        assert str(spack.store.root) == install_root
     assert str(spack.store.root) == current_store_root
 
 

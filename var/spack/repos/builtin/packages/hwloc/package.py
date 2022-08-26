@@ -34,6 +34,7 @@ class Hwloc(AutotoolsPackage):
     executables = ["^hwloc-bind$"]
 
     version("master", branch="master")
+    version("2.8.0", sha256="20b2bd4df436827d8e50f7afeafb6f967259f2fb374ce7330244f8d0ed2dde6f")
     version("2.7.1", sha256="4cb0a781ed980b03ad8c48beb57407aa67c4b908e45722954b9730379bc7f6d5")
     version("2.7.0", sha256="d9b23e9b0d17247e8b50254810427ca8a9857dc868e2e3a049f958d7c66af374")
     version("2.6.0", sha256="9aa7e768ed4fd429f488466a311ef2191054ea96ea1a68657bc06ffbb745e59f")
@@ -129,7 +130,7 @@ class Hwloc(AutotoolsPackage):
 
     with when("+oneapi-level-zero"):
         depends_on("oneapi-level-zero")
-        # oneapi-level-zero isn't available until version 2.5.0
+        # LevelZero support isn't available until hwloc version 2.5.0
         conflicts("@:2.4.99", msg="hwloc supports Intel OneAPI Level Zero only since 2.5.0")
 
     @classmethod
@@ -178,7 +179,6 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
         args.extend(self.enable_or_disable("shared"))
-        args.extend(self.enable_or_disable("oneapi-level-zero"))
 
         if "+cuda" in self.spec:
             args.append("--with-cuda={0}".format(self.spec["cuda"].prefix))

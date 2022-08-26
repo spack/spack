@@ -23,6 +23,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ["dev-zero"]
 
+    version("2022.1", sha256="2c34f1a7972973c62d471cd35856f444f11ab22f2ff930f6ead20f3454fd228b")
     version("9.1", sha256="fedb4c684a98ad857cd49b69a3ae51a73f85a9c36e9cb63e3b02320c74454ce6")
     version("8.2", sha256="2e24768720efed1a5a4a58e83e2aca502cd8b95544c21695eb0de71ed652f20a")
     version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
@@ -732,10 +733,49 @@ class Cp2k(MakefilePackage, CudaPackage):
         with spack.util.environment.set_env(PWD=self.build_directory):
             super(Cp2k, self).build(spec, prefix)
 
+            with working_dir(self.build_directory):
+                make("libcp2k", *self.build_targets)
+
     def install(self, spec, prefix):
         exe_dir = join_path("exe", self.makefile_architecture)
+        lib_dir = join_path("lib", self.makefile_architecture, self.makefile_version)
+
         install_tree(exe_dir, self.prefix.bin)
         install_tree("data", self.prefix.share.data)
+        install_tree(lib_dir, self.prefix.lib)
+
+        mkdirp(self.prefix.include)
+        install("src/start/libcp2k.h", join_path(self.prefix.include, "libcp2k.h"))
+
+    @run_after("install")
+    def fix_package_config(self):
+        """
+        Default build procedure generates libcp2k.pc with invalid paths,
+        because they are collected from temporary directory.
+
+        Ignoring invalid paths, most library-related switches are correct
+        except for fftw and openblas.
+
+        This procedure is appending two missing switches (tested with GROMACS 2022.2 + CP2K).
+
+        In case such approach causes issues in the future, it might be necessary
+        to generate and override entire libcp2k.pc.
+        """
+        if self.spec.satisfies("@9.1:"):
+            with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
+                content = handle.read().rstrip()
+
+                content += " " + self.spec["blas"].libs.ld_flags
+                content += " " + self.spec["lapack"].libs.ld_flags
+                content += " " + self.spec["fftw-api"].libs.ld_flags
+
+                if "^fftw+openmp" in self.spec:
+                    content += " -lfftw3_omp"
+
+                content += "\n"
+
+                handle.seek(0)
+                handle.write(content)
 
     def check(self):
         data_dir = join_path(self.stage.source_path, "data")

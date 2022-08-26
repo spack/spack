@@ -66,6 +66,8 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
+
     with when("+rocm @0.12.0:"):
         depends_on("camp+rocm")
         for arch in ROCmPackage.amdgpu_targets:
@@ -133,7 +135,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = []
 
-        option_prefix = "RAJA_" if spec.satisfies("@2022.03.0:") else ""
+        option_prefix = "RAJA_" if spec.satisfies("@0.14.0:") else ""
 
         entries.append(cmake_cache_path("BLT_SOURCE_DIR", spec["blt"].prefix))
         if "camp" in self.spec:

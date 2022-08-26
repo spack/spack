@@ -29,6 +29,7 @@ class Keepassxc(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
     )
     variant("autotype", default=False, description="enable auto-type")
+    variant("docs", default=True, description="Build documentation")
 
     # https://github.com/keepassxreboot/keepassxc/wiki/Building-KeePassXC
     # https://github.com/keepassxreboot/keepassxc/wiki/Set-up-Build-Environment-on-Linux
@@ -42,6 +43,7 @@ class Keepassxc(CMakePackage):
     depends_on("qt+dbus~framework@5.2:")
     depends_on("libgcrypt@1.6:", type="link")
     depends_on("zlib", type="link")
+    depends_on("minizip", when="+autotype")
     depends_on("libmicrohttpd", type="link")
     depends_on("libsodium@1.0.12:", type="link")
     depends_on("readline")
@@ -50,12 +52,15 @@ class Keepassxc(CMakePackage):
     # Had to add libqrencode
     depends_on("libqrencode", type=("link", "build"))
     # Has anyone done gem i bundler and gem i asciidoctor ? https://asciidoctor.org/
-    depends_on("ruby-asciidoctor@2.0:", type=("build"))
+    depends_on("ruby-asciidoctor@2.0:", type=("build"), when="+docs")
     # sudo apt install libxi-dev libxtst-dev libqt5x11extras5-dev libyubikey-dev \
     # libykpers-1-dev libquazip5-dev libreadline-dev
     # These are required to build Auto-Type, Yubikey and browser integration support.
     depends_on("libxi", type="link", when="+autotype")
     depends_on("libxtst", type="link", when="+autotype")
+    depends_on("gengetopt", when="+autotype")
+    depends_on("libusb", when="+autotype")
+    depends_on("pcsclite", when="+autotype")
     depends_on("botan@2:", when="@2.7.0:")
 
     def cmake_args(self):
@@ -64,10 +69,8 @@ class Keepassxc(CMakePackage):
             "-DKEEPASSXC_BUILD_TYPE=Release",
             "-DCMAKE_INSTALL_DATADIR=%s" % join_path(spec.prefix, "share"),
         ]
-        if "+autotype" in spec:
-            args.append("-DWITH_XC_ALL=ON")
-        else:
-            args.append("-DWITH_XC_ALL=OFF")
+        args.append(self.define_from_variant("WITH_XC_ALL", "autotype"))
+        args.append(self.define_from_variant("WITH_XC_DOCS", "docs"))
 
         if spec.satisfies("platform=darwin"):
             args.append("-DCMAKE_OSX_ARCHITECTURES=x86_64")

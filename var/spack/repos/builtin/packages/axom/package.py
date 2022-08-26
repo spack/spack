@@ -54,6 +54,9 @@ class Axom(CachedCMakePackage, CudaPackage):
     def submodules(self):
         return True
 
+    # https://github.com/spack/spack/issues/31829
+    patch("examples-oneapi.patch", when="@0.6.1 +examples %oneapi")
+
     patch("scr_examples_gtest.patch", when="@0.6.0:0.6.1")
 
     root_cmakelists_dir = "src"

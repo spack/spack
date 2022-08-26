@@ -2991,7 +2991,7 @@ class Spec(object):
         # Any specs that were concrete before finalization will already have a cached
         # DAG hash.
         for spec in self.traverse():
-            self._cached_hash(ht.dag_hash)
+            spec._cached_hash(ht.dag_hash)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().
@@ -5265,6 +5265,12 @@ class SpecParser(spack.parse.Parser):
         end = None
         if self.accept(ID):
             start = self.token.value
+            if self.accept(EQ):
+                # This is for versions that are associated with a hash
+                # i.e. @[40 char hash]=version
+                start += self.token.value
+                self.expect(VAL)
+                start += self.token.value
 
         if self.accept(COLON):
             if self.accept(ID):

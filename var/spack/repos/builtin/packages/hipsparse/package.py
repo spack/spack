@@ -14,12 +14,13 @@ class Hipsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
     git = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipsparse"]
 
+    version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
     version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
     version("5.1.0", sha256="f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b")
     version("5.0.2", sha256="a266e8b3bbdea04617260f51b3d85cc672af6ca417cae0812d04fd9702429c47")
@@ -104,6 +105,7 @@ class Hipsparse(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -123,6 +125,7 @@ class Hipsparse(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("rocprim@" + ver, when="@" + ver)
 
@@ -143,7 +146,6 @@ class Hipsparse(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake),
             self.define("CMAKE_CXX_STANDARD", "14"),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", "OFF"),
@@ -152,6 +154,10 @@ class Hipsparse(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
+        if self.spec.satisfies("@:5.1"):
+            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         return args
 
     def setup_build_environment(self, env):

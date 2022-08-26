@@ -45,7 +45,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-]+$")
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -178,6 +178,8 @@ def is_git_version(string):
         return True
     elif len(string) == 40 and COMMIT_VERSION.match(string):
         return True
+    elif "=" in string:
+        return True
     return False
 
 
@@ -191,7 +193,43 @@ def Version(string):  # capitalized for backwards compatibility
 
 
 class VersionBase(object):
-    """Class to represent versions"""
+    """Class to represent versions
+
+    Versions are compared by converting to a tuple and comparing
+    lexicographically.
+
+    The most common Versions are alpha-numeric, and are parsed from strings
+    such as ``2.3.0`` or ``1.2-5``. These Versions are represented by
+    the tuples ``(2, 3, 0)`` and ``(1, 2, 5)`` respectively.
+
+    Versions are split on ``.``, ``-``, and
+    ``_`` characters, as well as any point at which they switch from
+    numeric to alphabetical or vice-versa. For example, the version
+    ``0.1.3a`` is represented by the tuple ``(0, 1, 3, 'a') and the
+    version ``a-5b`` is represented by the tuple ``('a', 5, 'b')``.
+
+    Spack versions may also be arbitrary non-numeric strings or git
+    commit SHAs. The following are the full rules for comparing
+    versions.
+
+    1. If the version represents a git reference (i.e. commit, tag, branch), see GitVersions.
+
+    2. The version is split into fields based on the delimiters ``.``,
+    ``-``, and ``_``, as well as alphabetic-numeric boundaries.
+
+    3. The following develop-like strings are greater (newer) than all
+    numbers and are ordered as ``develop > main > master > head >
+    trunk``.
+
+    4. All other non-numeric versions are less than numeric versions,
+    and are sorted alphabetically.
+
+    These rules can be summarized as follows:
+
+    ``develop > main > master > head > trunk > 999 > 0 > 'zzz' > 'a' >
+    ''``
+
+    """
 
     __slots__ = [
         "version",
@@ -211,9 +249,13 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
+        self.separators, self.version = self._generate_seperators_and_components(string)
+
+    def _generate_seperators_and_components(self, string):
         segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
-        self.separators = tuple(m[2] for m in segments)
+        components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
+        separators = tuple(m[2] for m in segments)
+        return separators, components
 
     @property
     def dotted(self):
@@ -457,6 +499,45 @@ class VersionBase(object):
 class GitVersion(VersionBase):
     """Class to represent versions interpreted from git refs.
 
+    There are two distinct categories of git versions:
+
+    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    2) GitVersions requiring commit lookups
+
+    Git ref versions that are not paried with a known version
+    are handled separately from all other version comparisons.
+    When Spack identifies a git ref version, it associates a
+    ``CommitLookup`` object with the version. This object
+    handles caching of information from the git repo. When executing
+    comparisons with a git ref version, Spack queries the
+    ``CommitLookup`` for the most recent version previous to this
+    git ref, as well as the distance between them expressed as a number
+    of commits. If the previous version is ``X.Y.Z`` and the distance
+    is ``D``, the git commit version is represented by the tuple ``(X,
+    Y, Z, '', D)``. The component ``''`` cannot be parsed as part of
+    any valid version, but is a valid component. This allows a git
+    ref version to be less than (older than) every Version newer
+    than its previous version, but still newer than its previous
+    version.
+
+    To find the previous version from a git ref version, Spack
+    queries the git repo for its tags. Any tag that matches a version
+    known to Spack is associated with that version, as is any tag that
+    is a known version prepended with the character ``v`` (i.e., a tag
+    ``v1.0`` is associated with the known version
+    ``1.0``). Additionally, any tag that represents a semver version
+    (X.Y.Z with X, Y, Z all integers) is associated with the version
+    it represents, even if that version is not known to Spack. Each
+    tag is then queried in git to see whether it is an ancestor of the
+    git ref in question, and if so the distance between the two. The
+    previous version is the version that is an ancestor with the least
+    distance from the git ref in question.
+
+    This procedure can be circumvented if the user supplies a known version
+    to associate with the GitVersion (e.g. ``[hash]=develop``).  If the user
+    prescribes the version then there is no need to do a lookup
+    and the standard version comparison operations are sufficient.
+
     Non-git versions may be coerced to GitVersion for comparison, but no Spec will ever
     have a GitVersion that is not actually referencing a version from git."""
 
@@ -464,20 +545,29 @@ class GitVersion(VersionBase):
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
-        git_prefix = string.startswith("git.")
-        self.ref = string[4:] if git_prefix else string
+        # An object that can lookup git refs to compare them to versions
+        self.user_supplied_reference = False
+        self._ref_lookup = None
+        self.ref_version = None
 
-        self.is_commit = len(self.ref) == 40 and COMMIT_VERSION.match(self.ref)
+        git_prefix = string.startswith("git.")
+        pruned_string = string[4:] if git_prefix else string
+
+        if "=" in pruned_string:
+            self.ref, self.ref_version_str = pruned_string.split("=")
+            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            self.user_supplied_reference = True
+        else:
+            self.ref = pruned_string
+
+        self.is_commit = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
-        canonical_string = self.ref if self.is_commit else string
+        # unless we are assigning a version with =
+        canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
         super(GitVersion, self).__init__(canonical_string)
-
-        # An object that can lookup git refs to compare them to versions
-        self._ref_lookup = None
-        self.ref_version = None
 
     def _cmp(self, other_lookups=None):
         # No need to rely on git comparisons for develop-like refs
@@ -602,6 +692,10 @@ class GitVersion(VersionBase):
         # Sanity check we have a commit
         if not self.is_ref:
             tty.die("%s is not a git version." % self)
+
+        # don't need a lookup if we already have a version assigned
+        if self.ref_version:
+            return
 
         # Generate a commit looker-upper
         self._ref_lookup = CommitLookup(pkg_name)

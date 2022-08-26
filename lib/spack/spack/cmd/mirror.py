@@ -5,7 +5,9 @@
 
 import sys
 
+import llnl.util.lang as lang
 import llnl.util.tty as tty
+import llnl.util.tty.colify as colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -14,10 +16,11 @@ import spack.config
 import spack.environment as ev
 import spack.mirror
 import spack.repo
+import spack.spec
+import spack.util.path
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.spec import Spec
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors (source and binary)"
@@ -231,31 +234,113 @@ def mirror_list(args):
     mirrors.display()
 
 
-def _read_specs_from_file(filename):
-    specs = []
-    with open(filename, "r") as stream:
-        for i, string in enumerate(stream):
-            try:
-                s = Spec(string)
-                spack.repo.path.get_pkg_class(s.name)
-                specs.append(s)
-            except SpackError as e:
-                tty.debug(e)
-                tty.die("Parse error in %s, line %d:" % (filename, i + 1), ">>> " + string, str(e))
+def specs_from_text_file(filename, concretize=False):
+    """Return a list of specs read from a text file.
+
+    The file should contain one spec per line.
+
+    Args:
+        filename (str): name of the file containing the abstract specs.
+        concretize (bool): if True concretize the specs before returning
+            the list.
+    """
+    with open(filename, "r") as f:
+        specs_in_file = f.readlines()
+        specs_in_file = [s.strip() for s in specs_in_file]
+    return spack.cmd.parse_specs(" ".join(specs_in_file), concretize=concretize)
+
+
+def concrete_specs_from_user(args):
+    """Return the list of concrete specs that the user wants to mirror. The list
+    is passed either from command line or from a text file.
+    """
+    specs = concrete_specs_from_cli_or_file(args)
+    specs = extend_with_additional_versions(specs, num_versions=versions_per_spec(args))
+    if args.dependencies:
+        specs = extend_with_dependencies(specs)
+    specs = filter_externals(specs)
+    specs = list(set(specs))
+    specs.sort(key=lambda s: (s.name, s.version))
+    specs, _ = lang.stable_partition(specs, predicate_fn=not_excluded_fn(args))
     return specs
 
 
-def _determine_specs_to_mirror(args):
-    if args.specs and args.all:
-        raise SpackError(
-            "Cannot specify specs on command line if you" " chose to mirror all specs with '--all'"
-        )
-    elif args.file and args.all:
-        raise SpackError(
-            "Cannot specify specs with a file ('-f') if you"
-            " chose to mirror all specs with '--all'"
-        )
+def extend_with_additional_versions(specs, num_versions):
+    if num_versions == "all":
+        mirror_specs = spack.mirror.get_all_versions(specs)
+    else:
+        mirror_specs = spack.mirror.get_matching_versions(specs, num_versions=num_versions)
+    mirror_specs = [x.concretized() for x in mirror_specs]
+    return mirror_specs
 
+
+def filter_externals(specs):
+    specs, external_specs = lang.stable_partition(specs, predicate_fn=lambda x: not x.external)
+    for spec in external_specs:
+        msg = "Skipping {0} as it is an external spec."
+        tty.msg(msg.format(spec.cshort_spec))
+    return specs
+
+
+def extend_with_dependencies(specs):
+    """Extend the input list by adding all the dependencies explicitly."""
+    result = set()
+    for spec in specs:
+        for s in spec.traverse():
+            result.add(s)
+    return list(result)
+
+
+def concrete_specs_from_cli_or_file(args):
+    tty.msg("Concretizing input specs")
+    with spack.concretize.disable_compiler_existence_check():
+        if args.specs:
+            specs = spack.cmd.parse_specs(args.specs, concretize=True)
+            if not specs:
+                raise SpackError("unable to parse specs from command line")
+
+        if args.file:
+            specs = specs_from_text_file(args.file, concretize=True)
+            if not specs:
+                raise SpackError("unable to parse specs from file '{}'".format(args.file))
+    return specs
+
+
+def not_excluded_fn(args):
+    """Return a predicate that evaluate to True if a spec was not explicitly
+    excluded by the user.
+    """
+    exclude_specs = []
+    if args.exclude_file:
+        exclude_specs.extend(specs_from_text_file(args.exclude_file, concretize=False))
+    if args.exclude_specs:
+        exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
+
+    def not_excluded(x):
+        return not any(x.satisfies(y, strict=True) for y in exclude_specs)
+
+    return not_excluded
+
+
+def concrete_specs_from_environment(selection_fn):
+    env = ev.active_environment()
+    assert env, "an active environment is required"
+    mirror_specs = env.all_specs()
+    mirror_specs = filter_externals(mirror_specs)
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
+    return mirror_specs
+
+
+def all_specs_with_all_versions(selection_fn):
+    specs = [spack.spec.Spec(n) for n in spack.repo.all_package_names()]
+    mirror_specs = spack.mirror.get_all_versions(specs)
+    mirror_specs.sort(key=lambda s: (s.name, s.version))
+    mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=selection_fn)
+    return mirror_specs
+
+
+def versions_per_spec(args):
+    """Return how many versions should be mirrored per spec."""
     if not args.versions_per_spec:
         num_versions = 1
     elif args.versions_per_spec == "all":
@@ -268,94 +353,21 @@ def _determine_specs_to_mirror(args):
                 "'--versions-per-spec' must be a number or 'all',"
                 " got '{0}'".format(args.versions_per_spec)
             )
-
-    # try to parse specs from the command line first.
-    with spack.concretize.disable_compiler_existence_check():
-        specs = spack.cmd.parse_specs(args.specs, concretize=True)
-
-        # If there is a file, parse each line as a spec and add it to the list.
-        if args.file:
-            if specs:
-                tty.die("Cannot pass specs on the command line with --file.")
-            specs = _read_specs_from_file(args.file)
-
-        env_specs = None
-        if not specs:
-            # If nothing is passed, use environment or all if no active env
-            if not args.all:
-                tty.die(
-                    "No packages were specified.",
-                    "To mirror all packages, use the '--all' option"
-                    " (this will require significant time and space).",
-                )
-
-            env = ev.active_environment()
-            if env:
-                env_specs = env.all_specs()
-            else:
-                specs = [Spec(n) for n in spack.repo.all_package_names()]
-        else:
-            # If the user asked for dependencies, traverse spec DAG get them.
-            if args.dependencies:
-                new_specs = set()
-                for spec in specs:
-                    spec.concretize()
-                    for s in spec.traverse():
-                        new_specs.add(s)
-                specs = list(new_specs)
-
-            # Skip external specs, as they are already installed
-            external_specs = [s for s in specs if s.external]
-            specs = [s for s in specs if not s.external]
-
-            for spec in external_specs:
-                msg = "Skipping {0} as it is an external spec."
-                tty.msg(msg.format(spec.cshort_spec))
-
-        if env_specs:
-            if args.versions_per_spec:
-                tty.warn("Ignoring '--versions-per-spec' for mirroring specs" " in environment.")
-            mirror_specs = env_specs
-        else:
-            if num_versions == "all":
-                mirror_specs = spack.mirror.get_all_versions(specs)
-            else:
-                mirror_specs = spack.mirror.get_matching_versions(specs, num_versions=num_versions)
-            mirror_specs.sort(key=lambda s: (s.name, s.version))
-
-    exclude_specs = []
-    if args.exclude_file:
-        exclude_specs.extend(_read_specs_from_file(args.exclude_file))
-    if args.exclude_specs:
-        exclude_specs.extend(spack.cmd.parse_specs(str(args.exclude_specs).split()))
-    if exclude_specs:
-        mirror_specs = list(
-            x for x in mirror_specs if not any(x.satisfies(y, strict=True) for y in exclude_specs)
-        )
-
-    return mirror_specs
+    return num_versions
 
 
-def mirror_create(args):
-    """Create a directory to be used as a spack mirror, and fill it with
-    package archives."""
-    mirror_specs = _determine_specs_to_mirror(args)
-
-    mirror = spack.mirror.Mirror(args.directory or spack.config.get("config:source_cache"))
-
-    directory = url_util.format(mirror.push_url)
-
-    existed = web_util.url_exists(directory)
-
-    # Actually do the work to create the mirror
+def create_mirror_for_individual_specs(mirror_specs, directory_hint, skip_unstable_versions):
+    local_push_url = local_mirror_url_from_user(directory_hint)
     present, mirrored, error = spack.mirror.create(
-        directory, mirror_specs, args.skip_unstable_versions
+        local_push_url, mirror_specs, skip_unstable_versions
     )
-    p, m, e = len(present), len(mirrored), len(error)
+    tty.msg("Summary for mirror in {}".format(local_push_url))
+    process_mirror_stats(present, mirrored, error)
 
-    verb = "updated" if existed else "created"
+
+def process_mirror_stats(present, mirrored, error):
+    p, m, e = len(present), len(mirrored), len(error)
     tty.msg(
-        "Successfully %s mirror in %s" % (verb, directory),
         "Archive stats:",
         "  %-4d already present" % p,
         "  %-4d added" % m,
@@ -363,8 +375,102 @@ def mirror_create(args):
     )
     if error:
         tty.error("Failed downloads:")
-        tty.colify(s.cformat("{name}{@version}") for s in error)
+        colify.colify(s.cformat("{name}{@version}") for s in error)
         sys.exit(1)
+
+
+def local_mirror_url_from_user(directory_hint):
+    """Return a file:// url pointing to the local mirror to be used.
+
+    Args:
+        directory_hint (str or None): directory where to create the mirror. If None,
+            defaults to "config:source_cache".
+    """
+    mirror_directory = spack.util.path.canonicalize_path(
+        directory_hint or spack.config.get("config:source_cache")
+    )
+    tmp_mirror = spack.mirror.Mirror(mirror_directory)
+    local_url = url_util.format(tmp_mirror.push_url)
+    return local_url
+
+
+def mirror_create(args):
+    """Create a directory to be used as a spack mirror, and fill it with
+    package archives.
+    """
+    if args.specs and args.all:
+        raise SpackError(
+            "cannot specify specs on command line if you chose to mirror all specs with '--all'"
+        )
+
+    if args.file and args.all:
+        raise SpackError(
+            "cannot specify specs with a file if you chose to mirror all specs with '--all'"
+        )
+
+    if args.file and args.specs:
+        raise SpackError("cannot specify specs with a file AND on command line")
+
+    if not args.specs and not args.file and not args.all:
+        raise SpackError(
+            "no packages were specified.",
+            "To mirror all packages, use the '--all' option "
+            "(this will require significant time and space).",
+        )
+
+    if args.versions_per_spec and args.all:
+        raise SpackError(
+            "cannot specify '--versions_per-spec' and '--all' together",
+            "The option '--all' already implies mirroring all versions for each package.",
+        )
+
+    if args.all and not ev.active_environment():
+        create_mirror_for_all_specs(
+            directory_hint=args.directory,
+            skip_unstable_versions=args.skip_unstable_versions,
+            selection_fn=not_excluded_fn(args),
+        )
+        return
+
+    if args.all and ev.active_environment():
+        create_mirror_for_all_specs_inside_environment(
+            directory_hint=args.directory,
+            skip_unstable_versions=args.skip_unstable_versions,
+            selection_fn=not_excluded_fn(args),
+        )
+        return
+
+    mirror_specs = concrete_specs_from_user(args)
+    create_mirror_for_individual_specs(
+        mirror_specs,
+        directory_hint=args.directory,
+        skip_unstable_versions=args.skip_unstable_versions,
+    )
+
+
+def create_mirror_for_all_specs(directory_hint, skip_unstable_versions, selection_fn):
+    mirror_specs = all_specs_with_all_versions(selection_fn=selection_fn)
+    local_push_url = local_mirror_url_from_user(directory_hint=directory_hint)
+    mirror_cache, mirror_stats = spack.mirror.mirror_cache_and_stats(
+        local_push_url, skip_unstable_versions=skip_unstable_versions
+    )
+    for candidate in mirror_specs:
+        pkg_cls = spack.repo.path.get_pkg_class(candidate.name)
+        pkg_obj = pkg_cls(spack.spec.Spec(candidate))
+        mirror_stats.next_spec(pkg_obj.spec)
+        spack.mirror.create_mirror_from_package_object(pkg_obj, mirror_cache, mirror_stats)
+    process_mirror_stats(*mirror_stats.stats())
+
+
+def create_mirror_for_all_specs_inside_environment(
+    directory_hint, skip_unstable_versions, selection_fn
+):
+    mirror_specs = concrete_specs_from_environment(selection_fn=selection_fn)
+    create_mirror_for_individual_specs(
+        mirror_specs,
+        directory_hint=directory_hint,
+        skip_unstable_versions=skip_unstable_versions,
+    )
 
 
 def mirror_destroy(args):
