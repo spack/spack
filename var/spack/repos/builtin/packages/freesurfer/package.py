@@ -16,6 +16,8 @@ class Freesurfer(Package):
     license_required = True
     license_files = ["./license.txt"]
 
+    maintainers = ["robgics"]
+
     def url_for_version(self, version):
         return "http://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/{0}/freesurfer-linux-centos7_x86_64-{1}.tar.gz".format(
             version, version
