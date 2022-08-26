@@ -1,6 +1,6 @@
---- a/shapely/geos.py	2022-08-04 11:15:00.000000000 -0600
-+++ b/shapely/geos.py	2022-08-04 11:16:57.000000000 -0600
-@@ -88,9 +88,12 @@
+--- a/shapely/geos.py	2022-08-24 13:21:33.000000000 -0600
++++ b/shapely/geos.py	2022-08-24 13:23:54.000000000 -0600
+@@ -88,14 +88,21 @@
          if len(geos_pyinstaller_so) >= 1:
              _lgeos = CDLL(geos_pyinstaller_so[0])
              LOG.debug("Found GEOS DLL: %r, using it.", _lgeos)
@@ -14,9 +14,22 @@
 +    #    # conda package.
 +    #    _lgeos = CDLL(os.path.join(sys.prefix, 'lib', 'libgeos_c.so'))
      else:
-         alt_paths = [
-             'libgeos_c.so.1',
-@@ -119,10 +122,12 @@
+-        alt_paths = [
+-            'libgeos_c.so.1',
+-            'libgeos_c.so',
+-        ]
++        # Use geos installation if spack geos module is loaded
++        if 'geos_ROOT' in os.environ:
++            alt_paths = [os.path.join(os.environ['geos_ROOT'], 'lib', 'libgeos_c.dylib')]
++        else:
++            alt_paths = [
++                'libgeos_c.so.1',
++                'libgeos_c.so',
++            ]
+         _lgeos = load_dll('geos_c', fallbacks=alt_paths)
+ 
+     # ctypes.CDLL(None) internally calls dlopen(NULL), and as the dlopen
+@@ -119,10 +126,12 @@
          else:
              _lgeos = CDLL(geos_whl_dylib)
              LOG.debug("Found GEOS DLL: %r, using it.", _lgeos)
@@ -33,3 +46,13 @@
      else:
          if hasattr(sys, 'frozen'):
              try:
+@@ -139,6 +148,9 @@
+                 if hasattr(sys, '_MEIPASS'):
+                     alt_paths.append(
+                         os.path.join(sys._MEIPASS, 'libgeos_c.1.dylib'))
++        # Use geos installation if spack geos module is loaded
++        elif 'geos_ROOT' in os.environ:
++            alt_paths = [os.path.join(os.environ['geos_ROOT'], 'lib', 'libgeos_c.dylib')]
+         else:
+             alt_paths = [
+                 # The Framework build from Kyng Chaos
