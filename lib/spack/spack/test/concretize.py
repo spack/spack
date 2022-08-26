@@ -1826,13 +1826,7 @@ class TestConcretize(object):
             mpi_spec = Spec("mpi").concretized()
             assert mpi_spec.name != "multi-provider-mpi"
 
-        external_conf.update(
-            {
-                "mpich": {"require": "%xl"},
-                "mpich2": {"require": "%xl"},
-                "zmpi": {"require": "%xl"},
-            }
-        )
+        external_conf["mpi"]["require"] = "multi-provider-mpi"
         spack.config.set("packages", external_conf)
 
         with spack.config.override("concretizer:reuse", True):
