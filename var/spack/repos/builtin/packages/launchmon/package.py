@@ -41,4 +41,3 @@ class Launchmon(AutotoolsPackage):
             # automake for launchmon requires the AM_PATH_LIBGCRYPT macro
             # which is defined in libgcrypt.m4
             env.prepend_path("ACLOCAL_PATH", self.spec["libgcrypt"].prefix.share.aclocal)
-
