@@ -5263,7 +5263,11 @@ class SpecParser(spack.parse.Parser):
                 self.previous = self.token
                 if self.accept(EQ):
                     self.expect(ID)
-                    spec._add_flag(self.previous.value, self.token.value)
+                    values = [self.token.value]
+                    while self.accept(COMMA):
+                        self.expect(ID)
+                        values += self.token.value
+                    spec._add_flag(self.previous.value, ','.join(values))
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
