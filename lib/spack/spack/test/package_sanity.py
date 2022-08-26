@@ -21,23 +21,10 @@ import spack.util.executable as executable
 import spack.variant
 
 
-def test_repo_getpkg_names_and_classes():
-    """Ensure that all_packages/names/classes are consistent."""
-    names = spack.repo.path.all_package_names()
-    print(names)
-    classes = spack.repo.path.all_package_classes()
-    print(list(classes))
-
-    for name, cls in zip(names, classes):
-        assert cls.name == name
-
-
-def test_get_all_mock_packages():
+def test_get_all_mock_packages(mock_packages):
     """Get the mock packages once each too."""
-    db = spack.repo.RepoPath(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(db):
-        for name in spack.repo.all_package_names():
-            spack.repo.path.get_pkg_class(name)
+    for name in mock_packages.all_package_names():
+        mock_packages.get_pkg_class(name)
 
 
 def test_all_versions_are_lowercase():
