@@ -88,7 +88,7 @@ default:
 
 protected-publish:
   stage: publish
-  extends: [ ".protected-refs" ]
+  extends: [ ".protected" ]
   image: "ghcr.io/scottwittenburg/python-aws-bash:0.0.3"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:

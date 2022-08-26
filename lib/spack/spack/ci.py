@@ -1048,7 +1048,7 @@ def generate_gitlab_ci_yaml(
                                 bindist.tarball_path_name(release_spec, ".spack"),
                             ),
                             "dest": url_util.join(
-                                buildcache_copy_src_prefix,
+                                buildcache_copy_dest_prefix,
                                 bindist.build_cache_relative_path(),
                                 bindist.tarball_path_name(release_spec, ".spack"),
                             ),
