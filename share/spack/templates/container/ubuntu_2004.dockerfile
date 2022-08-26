@@ -4,7 +4,8 @@
 ENV DEBIAN_FRONTEND=noninteractive   \
     LANGUAGE=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8
+    LC_ALL=en_US.UTF-8 \
+    TZ=Etc/UTC
 {% endblock %}
 {% block install_os_packages %}
 RUN apt-get -yqq update \
