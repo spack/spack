@@ -98,7 +98,7 @@ class CMakePackage(PackageBase):
 
     if sys.platform == "win32":
         generator = "Ninja"
-        depends_on("ninja")
+        depends_on("ninja", type="build")
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant(
