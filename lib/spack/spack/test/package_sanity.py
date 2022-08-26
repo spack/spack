@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
-import re
 
 import pytest
 
@@ -39,28 +38,6 @@ def test_all_virtual_packages_have_default_providers():
         assert provider in default_providers, (
             "all providers must have a default in %s" % default_providers_filename
         )
-
-
-def test_no_fixme():
-    """Packages should not contain any boilerplate such as
-    FIXME or example.com."""
-    errors = []
-    fixme_regexes = [
-        r"remove this boilerplate",
-        r"FIXME: Put",
-        r"FIXME: Add",
-        r"example.com",
-    ]
-    for name in spack.repo.all_package_names():
-        filename = spack.repo.path.filename_for_package_name(name)
-        with open(filename, "r") as package_file:
-            for i, line in enumerate(package_file):
-                pattern = next((r for r in fixme_regexes if re.search(r, line)), None)
-                if pattern:
-                    errors.append(
-                        "%s:%d: boilerplate needs to be removed: %s" % (filename, i, line.strip())
-                    )
-            assert [] == errors
 
 
 def test_docstring():

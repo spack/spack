@@ -432,6 +432,38 @@ def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
     return errors
 
 
+@package_properties
+def _ensure_docstring_and_no_fixme(pkgs, error_cls):
+    """Ensure the package has a docstring and no fixmes"""
+    errors = []
+    fixme_regexes = [
+        re.compile(r"remove this boilerplate"),
+        re.compile(r"FIXME: Put"),
+        re.compile(r"FIXME: Add"),
+        re.compile(r"example.com"),
+    ]
+    for pkg_name in pkgs:
+        details = []
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        with open(filename, "r") as package_file:
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes if r.search(line)), None)
+                if pattern:
+                    details.append(
+                        "%s:%d: boilerplate needs to be removed: %s" % (filename, i, line.strip())
+                    )
+        if details:
+            error_msg = "Package '{}' contains boilerplate that need to be removed"
+            errors.append(error_cls(error_msg.format(pkg_name), details))
+
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        if not pkg_cls.__doc__:
+            error_msg = "Package '{}' miss a docstring"
+            errors.append(error_cls(error_msg.format(pkg_name), []))
+
+    return errors
+
+
 @package_https_directives
 def _linting_package_file(pkgs, error_cls):
     """Check for correctness of links"""
