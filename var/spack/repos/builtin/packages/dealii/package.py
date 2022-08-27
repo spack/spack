@@ -604,7 +604,6 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release)),
                 ]
             )
-        
         if len(cxx_flags) > 0:
             options.extend(
                 [
