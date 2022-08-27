@@ -90,7 +90,6 @@ class Rocthrust(CMakePackage):
     )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
-    depends_on("numactl", when="@3.7.0:")
 
     depends_on("googletest@1.10.0:", type="test")
 
