@@ -187,10 +187,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("sundials@:3~pthread", when="@9.0:9.2+sundials")
     depends_on("sundials@5:5.8", when="@9.3:9.3.3+sundials")
     depends_on("sundials@5:", when="@9.3.4:+sundials")
-    # depends_on('taskflow',         when='@9.3:+taskflow')
-    depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
-    # TODO: next line fixes concretization with trilinos and adol-c
-    depends_on("trilinos~exodus", when="@9.0:+adol-c+trilinos")
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -205,18 +201,23 @@ class Dealii(CMakePackage, CudaPackage):
     #     "symengine@0.4: build_type=Debug",
     #     when="@9.1:+symengine+trilinos^trilinos+debug"
     # )
+    # depends_on('taskflow',         when='@9.3:+taskflow')
+    depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
+    # TODO: next line fixes concretization with trilinos and adol-c
+    depends_on("trilinos~exodus", when="@9.0:+adol-c+trilinos")
     depends_on("symengine@0.4:", when="@9.1:+symengine")
     depends_on("symengine@0.6:", when="@9.2:+symengine")
     depends_on("tbb", when="+threads")
     # do not require +rol to make concretization of xsdk possible
-    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado", when="+trilinos")
-    depends_on("trilinos~hypre", when="+trilinos+int64")
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+sacado", when="+trilinos")
+    depends_on("trilinos+muelu", when="+trilinos~cuda")
     # TODO: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
     depends_on(
-        "trilinos@master+rol~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2",
+        "trilinos@master~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2",
         when="+trilinos+cuda",
     )
+    depends_on("trilinos~hypre", when="+trilinos+int64")
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
