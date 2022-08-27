@@ -4012,6 +4012,7 @@ class Spec(object):
         yield self.compiler
         yield self.compiler_flags
         yield self.architecture
+        yield self._package_hash
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
