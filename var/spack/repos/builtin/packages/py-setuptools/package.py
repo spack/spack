@@ -17,6 +17,16 @@ class PySetuptools(Package):
     maintainers = ["adamjstewart"]
 
     version(
+        "65.0.0",
+        sha256="fe9a97f68b064a6ddd4bacfb0b4b93a4c65a556d97ce906255540439d0c35cef",
+        expand=False,
+    )
+    version(
+        "64.0.0",
+        sha256="63f463b90ff5e0a1422010100268fd688e15c44ae0798659013c8412963e15e4",
+        expand=False,
+    )
+    version(
         "63.0.0",
         sha256="045aec56a3eee5c82373a70e02db8b6da9a10f7faf61ff89a14ab66c738ed370",
         expand=False,
