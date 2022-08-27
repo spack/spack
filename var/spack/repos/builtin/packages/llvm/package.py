@@ -680,11 +680,9 @@ class Llvm(CMakePackage, CudaPackage):
                 projects.append("compiler-rt")
         if "+libcxx" in spec:
             if self.spec.satisfies("@15.0.0:"):
-                runtimes.append("libcxx")
-                runtimes.append("libcxxabi")
+                runtimes.extend(["libcxx", "libcxxabi"])
             else:
-                projects.append("libcxx")
-                projects.append("libcxxabi")
+                projects.extend(["libcxx", "libcxxabi"])
         if "+mlir" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:
