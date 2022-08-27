@@ -4941,7 +4941,7 @@ class LazySpecCache(collections.defaultdict):
 HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, FLAGS, LIBS, TGT = range(15)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
-spec_id_re = r"\w[\w.-]*"
+spec_id_re = r"\w[\w.-]*|\*"
 
 
 class SpecLexer(spack.parse.Lexer):
