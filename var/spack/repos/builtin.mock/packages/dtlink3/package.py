@@ -12,7 +12,7 @@ class Dtlink3(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dtlink3-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('dtbuild2', type='build')
-    depends_on('dtlink4')
+    depends_on("dtbuild2", type="build")
+    depends_on("dtlink4")

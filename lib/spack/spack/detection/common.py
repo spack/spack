@@ -28,20 +28,18 @@ import spack.config
 import spack.spec
 import spack.util.spack_yaml
 
-is_windows = sys.platform == 'win32'
+is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
-DetectedPackage = collections.namedtuple(
-    'DetectedPackage', ['spec', 'prefix']
-)
+DetectedPackage = collections.namedtuple("DetectedPackage", ["spec", "prefix"])
 
 
 def _externals_in_packages_yaml():
     """Return all the specs mentioned as externals in packages.yaml"""
-    packages_yaml = spack.config.get('packages')
+    packages_yaml = spack.config.get("packages")
     already_defined_specs = set()
     for pkg_name, package_configuration in packages_yaml.items():
-        for item in package_configuration.get('externals', []):
-            already_defined_specs.add(spack.spec.Spec(item['spec']))
+        for item in package_configuration.get("externals", []):
+            already_defined_specs.add(spack.spec.Spec(item["spec"]))
     return already_defined_specs
 
 
@@ -62,25 +60,25 @@ def _pkg_config_dict(external_pkg_entries):
        }
     """
     pkg_dict = spack.util.spack_yaml.syaml_dict()
-    pkg_dict['externals'] = []
+    pkg_dict["externals"] = []
     for e in external_pkg_entries:
         if not _spec_is_valid(e.spec):
             continue
 
-        external_items = [('spec', str(e.spec)), ('prefix', e.prefix)]
+        external_items = [("spec", str(e.spec)), ("prefix", e.prefix)]
         if e.spec.external_modules:
-            external_items.append(('modules', e.spec.external_modules))
+            external_items.append(("modules", e.spec.external_modules))
 
         if e.spec.extra_attributes:
             external_items.append(
-                ('extra_attributes',
-                 spack.util.spack_yaml.syaml_dict(e.spec.extra_attributes.items()))
+                (
+                    "extra_attributes",
+                    spack.util.spack_yaml.syaml_dict(e.spec.extra_attributes.items()),
+                )
             )
 
         # external_items.extend(e.spec.extra_attributes.items())
-        pkg_dict['externals'].append(
-            spack.util.spack_yaml.syaml_dict(external_items)
-        )
+        pkg_dict["externals"].append(spack.util.spack_yaml.syaml_dict(external_items))
 
     return pkg_dict
 
@@ -92,7 +90,7 @@ def _spec_is_valid(spec):
         # It is assumed here that we can at least extract the package name from
         # the spec so we can look up the implementation of
         # determine_spec_details
-        msg = 'Constructed spec for {0} does not have a string representation'
+        msg = "Constructed spec for {0} does not have a string representation"
         llnl.util.tty.warn(msg.format(spec.name))
         return False
 
@@ -100,9 +98,8 @@ def _spec_is_valid(spec):
         spack.spec.Spec(str(spec))
     except spack.error.SpackError:
         llnl.util.tty.warn(
-            'Constructed spec has a string representation but the string'
-            ' representation does not evaluate to a valid spec: {0}'
-            .format(str(spec))
+            "Constructed spec has a string representation but the string"
+            " representation does not evaluate to a valid spec: {0}".format(str(spec))
         )
         return False
 
@@ -144,9 +141,9 @@ def executable_prefix(executable_dir):
     assert os.path.isdir(executable_dir)
 
     components = executable_dir.split(os.sep)
-    if 'bin' not in components:
+    if "bin" not in components:
         return executable_dir
-    idx = components.index('bin')
+    idx = components.index("bin")
     return os.sep.join(components[:idx])
 
 
@@ -163,11 +160,11 @@ def library_prefix(library_dir):
     assert os.path.isdir(library_dir)
 
     components = library_dir.split(os.sep)
-    if 'lib64' in components:
-        idx = components.index('lib64')
+    if "lib64" in components:
+        idx = components.index("lib64")
         return os.sep.join(components[:idx])
-    elif 'lib' in components:
-        idx = components.index('lib')
+    elif "lib" in components:
+        idx = components.index("lib")
         return os.sep.join(components[:idx])
     else:
         return library_dir
@@ -184,22 +181,18 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     predefined_external_specs = _externals_in_packages_yaml()
     pkg_to_cfg, all_new_specs = {}, []
     for package_name, entries in detected_packages.items():
-        new_entries = [
-            e for e in entries if (e.spec not in predefined_external_specs)
-        ]
+        new_entries = [e for e in entries if (e.spec not in predefined_external_specs)]
 
         pkg_config = _pkg_config_dict(new_entries)
-        all_new_specs.extend([
-            spack.spec.Spec(x['spec']) for x in pkg_config.get('externals', [])
-        ])
+        all_new_specs.extend([spack.spec.Spec(x["spec"]) for x in pkg_config.get("externals", [])])
         if buildable is False:
-            pkg_config['buildable'] = False
+            pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
-    pkgs_cfg = spack.config.get('packages', scope=scope)
+    pkgs_cfg = spack.config.get("packages", scope=scope)
 
     pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
-    spack.config.set('packages', pkgs_cfg, scope=scope)
+    spack.config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
 
@@ -209,18 +202,13 @@ def find_win32_additional_install_paths():
     Return a list of other potential install locations.
     """
     windows_search_ext = []
-    cuda_re = r'CUDA_PATH[a-zA-Z1-9_]*'
+    cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
     # common Windows install locations as neccesary
-    path_ext_keys = ['I_MPI_ONEAPI_ROOT',
-                     'MSMPI_BIN',
-                     'MLAB_ROOT',
-                     'NUGET_PACKAGES']
+    path_ext_keys = ["I_MPI_ONEAPI_ROOT", "MSMPI_BIN", "MLAB_ROOT", "NUGET_PACKAGES"]
     user = os.environ["USERPROFILE"]
     add_path = lambda key: re.search(cuda_re, key) or key in path_ext_keys
-    windows_search_ext.extend([os.environ[key] for key
-                              in os.environ.keys() if
-                              add_path(key)])
+    windows_search_ext.extend([os.environ[key] for key in os.environ.keys() if add_path(key)])
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
     # Add search path for default Chocolatey (https://github.com/chocolatey/choco)
@@ -231,7 +219,7 @@ def find_win32_additional_install_paths():
     windows_search_ext.extend(
         spack.config.get("config:additional_external_search_paths", default=[])
     )
-    windows_search_ext.extend(spack.util.environment.get_path('PATH'))
+    windows_search_ext.extend(spack.util.environment.get_path("PATH"))
     return windows_search_ext
 
 
@@ -247,8 +235,9 @@ def compute_windows_program_path_for_package(pkg):
         return []
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
-    program_files = 'C:\\Program Files{}\\{}'
+    program_files = "C:\\Program Files{}\\{}"
 
-    return[program_files.format(arch, name) for
-           arch, name in itertools.product(("", " (x86)"),
-           (pkg.name, pkg.name.capitalize()))]
+    return [
+        program_files.format(arch, name)
+        for arch, name in itertools.product(("", " (x86)"), (pkg.name, pkg.name.capitalize()))
+    ]

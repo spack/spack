@@ -339,6 +339,126 @@ concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
 dependency.
 
+.. _package-requirements:
+
+--------------------
+Package Requirements
+--------------------
+
+You can use the configuration to force the concretizer to choose
+specific properties for packages when building them. Like preferences,
+these are only applied when the package is required by some other
+request (e.g. if the package is needed as a dependency of a
+request to ``spack install``).
+
+An example of where this is useful is if you have a package that
+is normally built as a dependency but only under certain circumstances
+(e.g. only when a variant on a dependent is active): you can make
+sure that it always builds the way you want it to; this distinguishes
+package configuration requirements from constraints that you add to
+``spack install`` or to environments (in those cases, the associated
+packages are always built).
+
+The following is an example of how to enforce package properties in
+``packages.yaml``:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require: "@1.13.2"
+     openmpi:
+       require:
+       - any_of: ["~cuda", "gcc"]
+     mpich:
+      require:
+      - one_of: ["+cuda", "+rocm"]
+
+Requirements are expressed using Spec syntax (the same as what is provided
+to ``spack install``). In the simplest case, you can specify attributes
+that you always want the package to have by providing a single spec to
+``require``; in the above example, ``libfabric`` will always build
+with version 1.13.2.
+
+You can provide a more-relaxed constraint and allow the concretizer to
+choose between a set of options using ``any_of`` or ``one_of``:
+
+* ``any_of`` is a list of specs. One of those specs must be satisfied
+  and it is also allowed for the concretized spec to match more than one.
+  In the above example, that means you could build ``openmpi+cuda%gcc``,
+  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
+  note that both specs in the ``any_of`` for ``openmpi`` are
+  satisfied).
+* ``one_of`` is also a list of specs, and the final concretized spec
+  must match exactly one of them.  In the above example, that means
+  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
+  ``mpich+cuda+rocm`` (note the current package definition for
+  ``mpich`` already includes a conflict, so this is redundant but
+  still demonstrates the concept).
+
+.. note::
+
+   For ``any_of`` and ``one_of``, the order of specs indicates a
+   preference: items that appear earlier in the list are preferred
+   (note that these preferences can be ignored in favor of others).
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting default requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also set default requirements for all packages under ``all``
+like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+     cmake:
+       require: '%gcc'
+
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
+to use ``clang``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting requirements on virtual specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A requirement on a virtual spec applies whenever that virtual is present in the DAG. This
+can be useful for fixing which virtual provider you want to use:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+
+With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+
+Requirements on the virtual spec and on the specific provider are both applied, if present. For
+instance with a configuration like:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+     mvapich2:
+       require: '~cuda'
+
+you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
 .. _package_permissions:
 
