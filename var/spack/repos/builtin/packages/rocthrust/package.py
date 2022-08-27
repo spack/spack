@@ -123,7 +123,7 @@ class Rocthrust(CMakePackage):
     def cmake_args(self):
         args = [
             self.define("CMAKE_MODULE_PATH", "{0}/cmake".format(self.spec["hip"].prefix)),
-            self.define('BUILD_TEST', self.run_tests),
+            self.define("BUILD_TEST", self.run_tests),
         ]
 
         if "auto" not in self.spec.variants["amdgpu_target"]:
