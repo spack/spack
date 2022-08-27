@@ -12,6 +12,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import time
 import traceback
 import warnings
 from contextlib import closing
@@ -105,6 +106,9 @@ class BinaryCacheIndex(object):
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
+        # mapping from mirror urls to the time.time() of the last index fetch.
+        self._last_fetch_times = {}
+
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
         # entries indicating mirrors where that concrete spec can be found.
         # Each entry is a dictionary consisting of:
@@ -137,6 +141,7 @@ class BinaryCacheIndex(object):
             self._index_file_cache = None
         self._local_index_cache = None
         self._specs_already_associated = set()
+        self._last_fetch_times = {}
         self._mirrors_for_spec = {}
 
     def _write_local_index_cache(self):
@@ -327,24 +332,36 @@ class BinaryCacheIndex(object):
 
         fetch_errors = []
         all_methods_failed = True
+        ttl = spack.config.get("config:binary_index_ttl", 600)
+        now = time.time()
 
         for cached_mirror_url in self._local_index_cache:
             cache_entry = self._local_index_cache[cached_mirror_url]
             cached_index_hash = cache_entry["index_hash"]
             cached_index_path = cache_entry["index_path"]
             if cached_mirror_url in configured_mirror_urls:
-                # May need to fetch the index and update the local caches
-                try:
-                    needs_regen = self._fetch_and_cache_index(
-                        cached_mirror_url, expect_hash=cached_index_hash
-                    )
+                # Only do a fetch if the last fetch was longer than TTL ago
+                if (
+                    ttl > 0
+                    and cached_mirror_url in self._last_fetch_times
+                    and now - self._last_fetch_times[cached_mirror_url] < ttl
+                ):
+                    # The fetch worked last time, so don't error
                     all_methods_failed = False
-                except FetchCacheError as fetch_error:
-                    needs_regen = False
-                    fetch_errors.extend(fetch_error.errors)
-                # The need to regenerate implies a need to clear as well.
-                spec_cache_clear_needed |= needs_regen
-                spec_cache_regenerate_needed |= needs_regen
+                else:
+                    # May need to fetch the index and update the local caches
+                    try:
+                        needs_regen = self._fetch_and_cache_index(
+                            cached_mirror_url, expect_hash=cached_index_hash
+                        )
+                        self._last_fetch_times[cached_mirror_url] = now
+                        all_methods_failed = False
+                    except FetchCacheError as fetch_error:
+                        needs_regen = False
+                        fetch_errors.extend(fetch_error.errors)
+                    # The need to regenerate implies a need to clear as well.
+                    spec_cache_clear_needed |= needs_regen
+                    spec_cache_regenerate_needed |= needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append(
@@ -353,6 +370,8 @@ class BinaryCacheIndex(object):
                         "cache_key": os.path.join(self._index_cache_root, cached_index_path),
                     }
                 )
+                if cached_mirror_url in self._last_fetch_times:
+                    del self._last_fetch_times[cached_mirror_url]
                 spec_cache_clear_needed = True
                 spec_cache_regenerate_needed = True
 
@@ -371,6 +390,7 @@ class BinaryCacheIndex(object):
                 # Need to fetch the index and update the local caches
                 try:
                     needs_regen = self._fetch_and_cache_index(mirror_url)
+                    self._last_fetch_times[mirror_url] = now
                     all_methods_failed = False
                 except FetchCacheError as fetch_error:
                     fetch_errors.extend(fetch_error.errors)
