@@ -437,7 +437,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
-#defined external_only/1.
+#defined buildable_false/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
 #defined node_version_satisfies/2.
@@ -464,8 +464,8 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
 
-% if a package is not buildable (external_only), only externals are allowed
-external(Package) :- external_only(Package),
+% if a package is not buildable, only externals or hashed specs are allowed
+external(Package) :- buildable_false(Package),
                      node(Package),
                      not hash(Package, _).
 
