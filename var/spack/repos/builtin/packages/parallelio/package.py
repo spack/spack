@@ -13,7 +13,8 @@ class Parallelio(CMakePackage):
 
     homepage = "https://ncar.github.io/ParallelIO/"
     url = "https://github.com/NCAR/ParallelIO/archive/pio2_5_8.tar.gz"
-
+    git = "https://github.com/NCAR/ParallelIO.git"
+    
     maintainers = ["jedwards4b"]
 
     version("2_5_8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
@@ -46,6 +47,8 @@ class Parallelio(CMakePackage):
             define("NetCDF_C_PATH", spec["netcdf-c"].prefix),
             define("USER_CMAKE_MODULE_PATH", join_path(src, "cmake")),
             define("GENF90_PATH", join_path(src, "genf90")),
+            define("BUILD_SHARED_LIBS",True),
+            define("PIO_ENABLE_EXAMPLES",False),
         ]
         if spec.satisfies("+pnetcdf"):
             args.extend(
@@ -68,3 +71,6 @@ class Parallelio(CMakePackage):
             ]
         )
         return args
+
+    def url_for_version(self, version):
+        return "https://github.com/NCAR/ParallelIO/archive/pio{0}.tar.gz".format(version.underscored)
