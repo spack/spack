@@ -52,7 +52,6 @@ import spack.patch
 import spack.repo
 import spack.spec
 import spack.util.crypto
-import spack.util.package_hash as ph
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -395,6 +394,8 @@ def _ensure_packages_are_pickeleable(pkgs, error_cls):
 @package_properties
 def _ensure_packages_are_unparseable(pkgs, error_cls):
     """Ensure that all packages can unparse and that unparsed code is valid Python"""
+    import spack.util.package_hash as ph
+
     errors = []
     for pkg_name in pkgs:
         try:
