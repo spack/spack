@@ -1110,32 +1110,32 @@ set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
 or ``1.7``).  When you supply such a specifier to ``spack install``,
 it constrains the set of versions that Spack will install.
 
-For packages with a ``git`` attribute, ``git`` references 
-may be specified instead of a numerical version i.e. branches, tags 
-and commits. Spack will stage and build based off the ``git`` 
+For packages with a ``git`` attribute, ``git`` references
+may be specified instead of a numerical version i.e. branches, tags
+and commits. Spack will stage and build based off the ``git``
 reference provided.  Acceptable syntaxes for this are:
 
 .. code-block:: sh
-   
+
     # branches and tags
    foo@git.develop # use the develop branch
    foo@git.0.19 # use the 0.19 tag
-   
+
     # commit hashes
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
-   
+
 Spack versions from git reference either have an associated version supplied by the user,
 or infer a relationship to known versions from the structure of the git repository. If an
 associated version is supplied by the user, Spack treats the git version as equivalent to that
 version for all version comparisons in the package logic (e.g. ``depends_on('foo', when='@1.5')``).
 
-The associated version can be assigned with ``[git ref]=[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
+The associated version can be assigned with ``[git ref]=>[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
 
 .. code-block:: sh
 
-   foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
+   foo@git.my_ref=>3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=>develop # use the given commit, but treat it as develop for version comparisons
 
 If an associated version is not supplied then the tags in the git repo are used to determine
 the most recent previous version known to Spack. Details about how versions are compared

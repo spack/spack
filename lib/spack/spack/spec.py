@@ -4938,7 +4938,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE, ARROW = range(13)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -4958,6 +4958,7 @@ class SpecLexer(spack.parse.Lexer):
         )
         super(SpecLexer, self).__init__(
             [
+                (r"\=\>", lambda scanner, val: self.token(ARROW, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),
@@ -5265,11 +5266,11 @@ class SpecParser(spack.parse.Parser):
         end = None
         if self.accept(ID):
             start = self.token.value
-            if self.accept(EQ):
+            if self.accept(ARROW):
                 # This is for versions that are associated with a hash
-                # i.e. @[40 char hash]=version
+                # i.e. @[40 char hash]=>version
                 start += self.token.value
-                self.expect(VAL)
+                self.expect(ID)
                 start += self.token.value
 
         if self.accept(COLON):

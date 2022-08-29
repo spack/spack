@@ -208,10 +208,10 @@ def test_env_aware_spec(mutable_mock_env_path):
 @pytest.mark.parametrize(
     "name, version, error",
     [
-        ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=develop", None),
-        ("develop-branch-version", "git." + "a" * 40 + "=develop", None),
-        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", FetchError),
-        ("develop-branch-version", "git.foo=0.2.15", None),
+        ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=>develop", None),
+        ("develop-branch-version", "git." + "a" * 40 + "=>develop", None),
+        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=>1.0", FetchError),
+        ("develop-branch-version", "git.foo=>0.2.15", None),
     ],
 )
 def test_spec_version_assigned_git_ref_as_version(name, version, error):

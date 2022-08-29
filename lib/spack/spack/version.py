@@ -45,7 +45,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=>A-Za-z0-9_.-]*$")
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -553,8 +553,8 @@ class GitVersion(VersionBase):
         git_prefix = string.startswith("git.")
         pruned_string = string[4:] if git_prefix else string
 
-        if "=" in pruned_string:
-            self.ref, self.ref_version_str = pruned_string.split("=")
+        if "=>" in pruned_string:
+            self.ref, self.ref_version_str = pruned_string.split("=>")
             _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
             self.user_supplied_reference = True
         else:
