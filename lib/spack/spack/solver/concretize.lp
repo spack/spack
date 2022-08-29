@@ -276,7 +276,8 @@ error(0, Msg) :- node(Package),
    conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
-   not external(Package).  % ignore conflicts for externals
+   not external(Package),  % ignore conflicts for externals
+   not hash(Package, _).  % ignore conflicts for installed packages
 
 #defined conflict/4.
 

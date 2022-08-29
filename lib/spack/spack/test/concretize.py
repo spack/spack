@@ -1832,3 +1832,25 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             mpi_spec = Spec("mpi").concretized()
             assert mpi_spec.name == "multi-provider-mpi"
+
+    @pytest.mark.regression("31484")
+    def test_installed_specs_disregard_conflicts(self, mutable_database, monkeypatch):
+        """Test that installed specs do not trigger conflicts. This covers for the rare case
+        where a conflict is added on a package after a spec matching the conflict was installed.
+        """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Add a conflict to "mpich" that match an already installed "mpich~debug"
+        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(spack.spec.Spec(), None)])
+
+        # If we concretize with --fresh the conflict is taken into account
+        with spack.config.override("concretizer:reuse", False):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("+debug")
+
+        # If we concretize with --reuse it is not, since "mpich~debug" was already installed
+        with spack.config.override("concretizer:reuse", True):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("~debug")
