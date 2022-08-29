@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack.build_systems.cmake import CMakeBuilder
 
-
-class Libpng(AutotoolsPackage):
+class Libpng(CMakePackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
@@ -48,7 +48,9 @@ class Libpng(AutotoolsPackage):
         args += self.enable_or_disable("libs")
         return args
 
-    def check(self):
-        # Libpng has both 'check' and 'test' targets that are aliases.
-        # Only need to run the tests once.
-        make("check")
+class CMakeBuilder(CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define("CMAKE_CXX_FLAGS", self.spec["zlib"].headers.include_flags),
+            self.define("ZLIB_ROOT", self.spec["zlib"].prefix),
+        ]
