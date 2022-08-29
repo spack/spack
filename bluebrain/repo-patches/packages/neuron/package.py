@@ -155,8 +155,8 @@ class Neuron(CMakePackage):
             compilation_flags.append('-DR123_USE_INTRIN_H=0')
         # Added in https://github.com/neuronsimulator/nrn/pull/1574, this
         # improves ccache performance in CI builds.
-        if self.spec.satisfies('@8.2:'):
-            compilation_flags.append('-DNRN_AVOID_ABSOLUTE_PATHS=ON')
+        if self.spec.satisfies("@8.2:"):
+            args.append("-DNRN_AVOID_ABSOLUTE_PATHS=ON")
         # Pass Spack's target architecture flags in explicitly so that they're
         # saved to the nrnivmodl Makefile.
         compilation_flags.append(
