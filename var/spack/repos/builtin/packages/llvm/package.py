@@ -361,7 +361,12 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm14-hwloc-ompd.patch", when="@14")
 
     # make libflags a list in openmp subproject when omp=project
-    patch("libomp-libflags-as-list.patch", when="@3.7:14 omp=project")
+    # see https://reviews.llvm.org/D125370
+    patch(
+        "https://github.com/llvm/llvm-project/commit/e27ce281399dca8b08b6ca593172a1bd5dbdd5c1.patch?full_index=1",
+        sha256="6f0cfa55e3ed17ee33346b0a5bca8092adcc1dc75ca712ab83901755fba9767e",
+        when="@3.7:14 omp=project",
+    )
 
     # Add missing include leading to build fail with clang
     patch(
