@@ -1116,15 +1116,15 @@ and commits. Spack will stage and build based off the ``git``
 reference provided.  Acceptable syntaxes for this are:
 
 .. code-block:: sh
-
+   
     # branches and tags
    foo@git.develop # use the develop branch
    foo@git.0.19 # use the 0.19 tag
-
+   
     # commit hashes
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
-
+   
 Spack versions from git reference either have an associated version supplied by the user,
 or infer a relationship to known versions from the structure of the git repository. If an
 associated version is supplied by the user, Spack treats the git version as equivalent to that
