@@ -358,7 +358,12 @@ class Llvm(CMakePackage, CudaPackage):
     patch("llvm13-fujitsu.patch", when="@13 %fj")
 
     # patch for missing hwloc.h include for libompd
-    patch("llvm14-hwloc-ompd.patch", when="@14")
+    # see https://reviews.llvm.org/D123888
+    patch(
+        "https://github.com/llvm/llvm-project/commit/91ccd8248c85385a5654c63c302a37d97f811bab.patch?full_index=1",
+        sha256="b216cff38659c176c5381e9dda3252edbb204e6f6f1f33e843a9ebcc42732e5d",
+        when="@14 omp=runtime",
+    )
 
     # make libflags a list in openmp subproject when omp=project
     # see https://reviews.llvm.org/D125370
