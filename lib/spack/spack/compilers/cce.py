@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
@@ -43,17 +42,17 @@ class Cce(Compiler):
         if self.PrgEnv in self.modules:
             # Old module-based interface to cray compilers
             return {
-                "cc": "cce/cc",
-                "cxx": "cce/case-insensitive/CC",
-                "f77": "cce/ftn",
-                "fc": "cce/ftn",
+                "cc": os.path.join("cce", "cc"),
+                "cxx": os.path.join("case-insensitive", "CC"),
+                "f77": os.path.join("cce", "ftn"),
+                "fc": os.path.join("cce", "ftn"),
             }
 
         return {
-            "cc": "cce/craycc",
-            "cxx": "cce/case-insensitive/crayCC",
-            "f77": "cce/crayftn",
-            "fc": "cce/crayftn",
+            "cc": os.path.join("cce", "craycc"),
+            "cxx": os.path.join("cce", "case-insensitive", "crayCC"),
+            "f77": os.path.join("cce", "crayftn"),
+            "fc": os.path.join("cce", "crayftn"),
         }
 
     @property
