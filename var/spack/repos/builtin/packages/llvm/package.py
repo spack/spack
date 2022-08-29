@@ -316,13 +316,21 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Backport from llvm upstream gcc ppc const expr long double issue
     # see https://bugs.llvm.org/show_bug.cgi?id=39696
-    # This fix was initially commited (3bf63cf3b366) for the 9.0 release
+    # This fix was initially committed (3bf63cf3b366) for the 9.0 release
     # but was then broken (0583d9ea8d5e) prior to the 9.0 release and
     # eventually unbroken (d9a42ec98adc) for the 11.0 release.  The first
     # patch backports the original correct fix to previous releases.  The
     # second patch backports the un-breaking of the original fix.
-    patch("constexpr_longdouble.patch", when="@6:8+libcxx")
-    patch("constexpr_longdouble_9.0.patch", when="@9:10+libcxx")
+    patch(
+        "https://github.com/llvm/llvm-project/commit/3bf63cf3b366d3a57cf5cbad4112a6abf6c0c3b1.patch?full_index=1",
+        sha256="e56489a4bcf3c3636e206adca366bfcda2722ad81a5fa9a0360faed63933191a",
+        when="@6:8+libcxx",
+    )
+    patch(
+        "https://github.com/llvm/llvm-project/commit/d9a42ec98adcb1ebc0c3837715df4e5a50c7ccc0.patch?full_index=1",
+        sha256="50bfc4e82c02bb5b7739990f363d99b1e43d5d11a5104f6aabbc303ebce6fbe3",
+        when="@9:10+libcxx",
+    )
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
