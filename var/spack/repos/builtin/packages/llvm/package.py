@@ -98,7 +98,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant(
         "polly",
         default=True,
-        description="Build the LLVM polyhedral optimization plugin, " "only builds for 3.7.0+",
+        description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+",
     )
     variant(
         "libcxx", default=True, when="+clang", description="Build the LLVM C++ standard library"
