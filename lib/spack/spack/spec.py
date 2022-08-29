@@ -76,7 +76,6 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import pdb
 import collections
 import itertools
 import operator
@@ -5044,7 +5043,6 @@ class SpecParser(spack.parse.Parser):
                         # If it is concrete, see the if statement above
                         # If there is no previous spec, we don't land in
                         # this else case.
-                        pdb.set_trace()
                         self.unexpected_token()
 
                 elif self.accept(ID):
@@ -5068,7 +5066,6 @@ class SpecParser(spack.parse.Parser):
                             # If it is concrete, see the if statement above
                             # If there is no previous spec, we don't land in
                             # this else case.
-                            pdb.set_trace()
                             self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
@@ -5140,11 +5137,9 @@ class SpecParser(spack.parse.Parser):
                             raise RedundantSpecError(specs[-1], "compiler, version, " "or variant")
                         specs.append(self.spec(None))
                     else:
-                        pdb.set_trace()
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:
-            pdb.set_trace()
             raise six.raise_from(SpecParseError(e), e)
 
         # Generate lookups for git-commit-based versions
@@ -5271,7 +5266,7 @@ class SpecParser(spack.parse.Parser):
                     values = self.token.value
                     if self.next and self.next.is_a(COMMA):
                         while self.accept(COMMA):
-                            values +=self.token.value
+                            values += self.token.value
                             self.expect(ID)
                             values += self.token.value
                     spec._add_flag(self.previous.value, values)
