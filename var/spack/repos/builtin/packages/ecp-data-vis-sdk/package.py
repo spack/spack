@@ -9,7 +9,7 @@ from spack.package import *
 # Wrapper around depends_on to propagate dependency variants
 def dav_sdk_depends_on(spec, when=None, propagate=None):
     # Do the basic depends_on
-    depends_on(spec, when=when)
+    depends_on(spec, when=when, explicit=True)
 
     # Strip spec string to just the base spec name
     # ie. A +c ~b -> A

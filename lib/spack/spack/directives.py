@@ -356,7 +356,7 @@ def version(ver, checksum=None, **kwargs):
     return _execute_version
 
 
-def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
+def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None, explicit=None):
     when_spec = make_when_spec(when)
     if not when_spec:
         return
@@ -397,9 +397,11 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # this is where we actually add the dependency to this package
     if when_spec not in conditions:
-        dependency = Dependency(pkg, dep_spec, type=type)
+        dependency = Dependency(pkg, dep_spec, type=type, explicit=explicit)
         conditions[when_spec] = dependency
     else:
+        if explicit:
+            dependency.explicit = True
         dependency = conditions[when_spec]
         dependency.spec.constrain(dep_spec, deps=False)
         dependency.type |= set(type)
@@ -444,7 +446,7 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(("dependencies"))
-def depends_on(spec, when=None, type=default_deptype, patches=None):
+def depends_on(spec, when=None, type=default_deptype, patches=None, explicit=None):
     """Creates a dict of deps with specs defining when they apply.
 
     Args:
@@ -462,7 +464,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
     """
 
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type, patches=patches)
+        _depends_on(pkg, spec, when=when, type=type, patches=patches, explicit=explicit)
 
     return _execute_depends_on
 
