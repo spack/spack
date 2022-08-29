@@ -2267,7 +2267,6 @@ class WindowsSimulatedRuntimePath(object):
         """
         return self._internal_links
 
-
     def add_internal_links(self, *dest):
         """
         Incorporate additional paths into the rpath (sym)linking scheme.
@@ -2280,7 +2279,6 @@ class WindowsSimulatedRuntimePath(object):
         directories.
         """
         self._internal_links = self._internal_links | set(*dest)
-
 
     @property
     def link_targets(self):
