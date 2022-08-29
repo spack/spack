@@ -176,10 +176,11 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build with OpenMP capable thread sanitizer",
     )
     variant(
-        "omp_as_runtime",
-        default=True,
-        when="+clang @12:",
-        description="Build OpenMP runtime via ENABLE_RUNTIME by just-built Clang",
+        "omp",
+        values=("project", conditional("runtime", when="+clang @12:")),
+        default="runtime",
+        description="Build OpenMP either as a runtime (with just-build Clang) "
+        "or as a project (with the compiler in use)",
     )
     variant(
         "code_signing",
@@ -359,8 +360,8 @@ class Llvm(CMakePackage, CudaPackage):
     # patch for missing hwloc.h include for libompd
     patch("llvm14-hwloc-ompd.patch", when="@14")
 
-    # make libflags a list in openmp subproject when ~omp_as_runtime
-    patch("libomp-libflags-as-list.patch", when="@3.7:14")
+    # make libflags a list in openmp subproject when omp=project
+    patch("libomp-libflags-as-list.patch", when="@3.7:14 omp=project")
 
     # Add missing include leading to build fail with clang
     patch(
@@ -618,7 +619,7 @@ class Llvm(CMakePackage, CudaPackage):
                     ),
                 ]
             )
-            if "+omp_as_runtime" in spec:
+            if "omp=runtime" in spec:
                 cmake_args.extend(
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
@@ -663,9 +664,9 @@ class Llvm(CMakePackage, CudaPackage):
         if "+clang" in spec:
             projects.append("clang")
             projects.append("clang-tools-extra")
-            if "+omp_as_runtime" in spec:
+            if "omp=runtime" in spec:
                 runtimes.append("openmp")
-            else:
+            elif "omp=project" in spec:
                 projects.append("openmp")
 
             if "+libomptarget" in spec:
@@ -746,7 +747,7 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
-        if "+cuda ~omp_as_runtime" in self.spec:
+        if "+cuda omp=project" in self.spec:
             ompdir = "build-bootstrapped-omp"
             prefix_paths = spack.build_environment.get_cmake_prefix_path(self)
             prefix_paths.append(str(spec.prefix))
