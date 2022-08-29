@@ -1020,7 +1020,15 @@ def read_config_file(filename, schema=None):
         raise ConfigFileError("Config file is empty or is not a valid YAML dict: %s" % filename)
 
     except MarkedYAMLError as e:
-        raise ConfigFileError("Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
+        msg = "Error parsing yaml"
+        mark = e.context_mark if e.context_mark else e.problem_mark
+        if mark:
+            line, column = mark.line, mark.column
+            msg += ": near %s, %s, %s" % (mark.name, str(line), str(column))
+        else:
+            msg += ": %s" % (filename)
+        msg += ": %s" % (e.problem)
+        raise ConfigFileError(msg)
 
     except IOError as e:
         raise ConfigFileError("Error reading configuration file %s: %s" % (filename, str(e)))
