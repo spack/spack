@@ -113,12 +113,13 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
-        args = [self.define_from_variant(var) for var in VARIANTS]
+        return [
+            self.define_from_variant("jpeg"),
+            self.define_from_variant("zlib"),
+            self.define_from_variant("jbig"),
+            self.define_from_variant("pixarlog")
+        ]
 
-        # Remove empty strings
-        args = [arg for arg in args if arg]
-
-        return args
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
