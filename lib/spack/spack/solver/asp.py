@@ -1463,6 +1463,9 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.depends_on(spec.name, dep.name, dtype))
 
+                            for virtual in dep.package.virtuals_provided:
+                                clauses.append(fn.depends_on(spec.name, virtual.name, dtype))
+
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.deptypes != ("build",):

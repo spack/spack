@@ -1695,6 +1695,28 @@ class TestConcretize(object):
                 counter += 1
         assert counter == occurances, concrete_specs
 
+    def test_coconcretize_reuse_and_virtuals(self):
+        import spack.solver.asp
+
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer cannot reuse")
+
+        reusable_specs = []
+        for s in ["mpileaks ^mpich", "zmpi"]:
+            reusable_specs.extend(spack.spec.Spec(s).concretized().traverse(root=True))
+
+        root_specs = [spack.spec.Spec("mpileaks"), spack.spec.Spec("zmpi")]
+
+        import spack.solver.asp
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
+
+        for spec in result.specs:
+            assert 'zmpi' in spec
+
     @pytest.mark.regression("30864")
     def test_misleading_error_message_on_version(self, mutable_database):
         # For this bug to be triggered we need a reusable dependency
