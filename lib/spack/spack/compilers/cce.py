@@ -11,6 +11,7 @@ from spack.version import ver
 
 class Cce(Compiler):
     """Cray compiler environment compiler."""
+
     def __init__(self, *args, **kwargs):
         super(Cce, self).__init__(*args, **kwargs)
         # For old cray compilers on module based systems we replace
@@ -41,15 +42,19 @@ class Cce(Compiler):
     def link_paths(self):
         if self.PrgEnv in self.modules:
             # Old module-based interface to cray compilers
-            return {"cc": "cce/cc",
-                    "cxx": "cce/case-insensitive/CC",
-                    "f77": "cce/ftn",
-                    "fc": "cce/ftn"}
+            return {
+                "cc": "cce/cc",
+                "cxx": "cce/case-insensitive/CC",
+                "f77": "cce/ftn",
+                "fc": "cce/ftn",
+            }
 
-        return {"cc": "cce/craycc",
-                "cxx": "cce/case-insensitive/crayCC",
-                "f77": "cce/crayftn",
-                "fc": "cce/crayftn"}
+        return {
+            "cc": "cce/craycc",
+            "cxx": "cce/case-insensitive/crayCC",
+            "f77": "cce/crayftn",
+            "fc": "cce/crayftn",
+        }
 
     @property
     def is_clang_based(self):

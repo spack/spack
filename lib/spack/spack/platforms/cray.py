@@ -32,8 +32,8 @@ _craype_name_to_target_name = {
     "abudhabi": "piledriver",
 }
 
-_ex_craype_dir = '/opt/cray/pe/cpe'
-_xc_craype_dir = '/opt/cray/pe/cdt'
+_ex_craype_dir = "/opt/cray/pe/cpe"
+_xc_craype_dir = "/opt/cray/pe/cdt"
 
 
 def _target_name_from_craype_target_name(name):
@@ -117,22 +117,21 @@ class Cray(Platform):
     def craype_type_and_version(cls):
         if os.path.isdir(_ex_craype_dir):
             craype_dir = _ex_craype_dir
-            craype_type = 'EX'
+            craype_type = "EX"
         elif os.path.isdir(_xc_craype_dir):
             craype_dir = _xc_craype_dir
-            craype_type = 'XC'
+            craype_type = "XC"
         else:
             return (None, None)
 
         # Take the default version from known symlink path
-        default_path = os.path.join(craype_dir, 'default')
+        default_path = os.path.join(craype_dir, "default")
         if os.path.islink(default_path):
             version = spack.version.Version(os.readlink(default_path))
             return (craype_type, version)
 
         # If no default version, sort available versions and return latest
-        versions_available = [spack.version.Version(v)
-                              for v in os.listdir(craype_dir)]
+        versions_available = [spack.version.Version(v) for v in os.listdir(craype_dir)]
         versions_available.sort(reverse=True)
         return (craype_type, versions_available[0])
 
