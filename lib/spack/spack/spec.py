@@ -76,6 +76,7 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+import pdb
 import collections
 import itertools
 import operator
@@ -4960,7 +4961,7 @@ class SpecLexer(spack.parse.Lexer):
             [
                 (r"[a-z]*flags\s*\=", lambda scanner, val: self.token(FLAGS, val)),
                 (r"[a-z]*libs\s*\=", lambda scanner, val: self.token(LIBS, val)),
-                (r"target\s*\=", lambda scanner, val: self.token(TGT, val)),
+                (r"[a-z_]*target\s*\=|arch\s*\=", lambda scanner, val: self.token(TGT, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),
@@ -5043,6 +5044,7 @@ class SpecParser(spack.parse.Parser):
                         # If it is concrete, see the if statement above
                         # If there is no previous spec, we don't land in
                         # this else case.
+                        pdb.set_trace()
                         self.unexpected_token()
 
                 elif self.accept(ID):
@@ -5066,6 +5068,7 @@ class SpecParser(spack.parse.Parser):
                             # If it is concrete, see the if statement above
                             # If there is no previous spec, we don't land in
                             # this else case.
+                            pdb.set_trace()
                             self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
@@ -5137,9 +5140,11 @@ class SpecParser(spack.parse.Parser):
                             raise RedundantSpecError(specs[-1], "compiler, version, " "or variant")
                         specs.append(self.spec(None))
                     else:
+                        pdb.set_trace()
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:
+            pdb.set_trace()
             raise six.raise_from(SpecParseError(e), e)
 
         # Generate lookups for git-commit-based versions
@@ -5263,11 +5268,13 @@ class SpecParser(spack.parse.Parser):
                 self.previous = self.token
                 if self.accept(EQ):
                     self.expect(ID)
-                    values = [self.token.value]
-                    while self.accept(COMMA):
-                        self.expect(ID)
-                        values += self.token.value
-                    spec._add_flag(self.previous.value, ",".join(values))
+                    values = self.token.value
+                    if self.next and self.next.is_a(COMMA):
+                        while self.accept(COMMA):
+                            values +=self.token.value
+                            self.expect(ID)
+                            values += self.token.value
+                    spec._add_flag(self.previous.value, values)
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
