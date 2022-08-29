@@ -4960,7 +4960,7 @@ class SpecLexer(spack.parse.Lexer):
         super(SpecLexer, self).__init__(
             [
                 (r"[a-z]*flags\s*\=", lambda scanner, val: self.token(FLAGS, val)),
-                (r"[a-z]*libs\s*\=", lambda scanner, val: self.token(LIBS, val)),
+                (r"([a-z]*libs|languages)\s*\=", lambda scanner, val: self.token(LIBS, val)),
                 (r"[a-z_]*target\s*\=|arch\s*\=", lambda scanner, val: self.token(TGT, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
