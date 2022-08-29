@@ -17,6 +17,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers = ["sethrj"]
 
+    version("0.1.1", sha256="a1d58e29226e89a2330d69c40049d61e7c885cf991824e60ff8c9ccc95fc5ec6")
     version("0.1.0", sha256="46692977b9b31d73662252cc122d7f016f94139475788bca7fdcb97279b93af8")
 
     _cxxstd_values = ("14", "17")
