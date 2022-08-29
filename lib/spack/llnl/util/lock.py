@@ -386,8 +386,14 @@ class Lock(object):
         try:
             os.makedirs(parent)
         except OSError as e:
-            # makedirs can fail when diretory already exists.
-            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or e.errno == errno.EISDIR):
+            if e.errno == errno.EISDIR:
+                # Directory already exists
+                pass
+            elif os.path.isdir(parent):
+                # Directory already exists
+                if e.errno != errno.EEXIST:
+                    tty.warn("Got OSError when trying to create directory at '{!s}' that already exists: {!r}".format(parent, e))
+            else:
                 raise
         return parent
 
