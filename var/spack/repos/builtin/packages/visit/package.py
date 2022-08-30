@@ -81,6 +81,7 @@ class Visit(CMakePackage):
     variant("vtkm", default=False, description="Enable VTK-m support")
     variant("conduit", default=True, description="Enable Conduit support")
     variant("mfem", default=True, description="Enable MFEM support")
+    variant("plugins", default=True, description="Enable plugin development (xml2cmake)")
 
     patch("spack-changes-3.1.patch", when="@3.1.0:3.2.2")
     patch("spack-changes-3.0.1.patch", when="@3.0.1")
@@ -211,8 +212,10 @@ class Visit(CMakePackage):
             self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
             self.define("VISIT_USE_GLEW", False),
             self.define("VISIT_CONFIG_SITE", "NONE"),
-            self.define("VISIT_INSTALL_THIRD_PARTY", False),
         ]
+
+        # Provide the plugin compilation environment so as to extend VisIt
+        args.append(self.define_from_variant("VISIT_INSTALL_THIRD_PARTY", "plugins"))
 
         if "@3.1: platform=darwin" in spec:
             args.append(self.define("FIXUP_OSX", False))
