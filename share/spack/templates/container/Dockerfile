@@ -46,25 +46,22 @@ RUN cd {{ paths.environment }} && \
 # Bare OS image to run the installed executables
 FROM {{ run.image }}
 
-# DH 20220826 - this is NOT ideal. Should come from  Ubuntu docker template as an env_vars_final block
-ENV DEBIAN_FRONTEND=noninteractive   \
-    TZ=Etc/UTC
-
 COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
+{% if extra_instructions.final %}
+{{ extra_instructions.final }}
+{% endif %}
+
 {% if os_packages_final %}
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}
-{% if extra_instructions.final %}
 
-{{ extra_instructions.final }}
-{% endif %}
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
