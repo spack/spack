@@ -1530,8 +1530,6 @@ def for_package_version(pkg, version):
             )
         # Populate the version with comparisons to other commits
         version.generate_git_lookup(pkg.name)
-        ref_version = spack.version.Version(pkg.version.ref_version_str)
-        ref_version_attributes = pkg.versions[ref_version]
 
         # For GitVersion, we have no way to determine whether a ref is a branch or tag
         # Fortunately, we handle branches and tags identically, except tags are
@@ -1545,7 +1543,14 @@ def for_package_version(pkg, version):
             ref_type: version.ref,
             "no_cache": True,
         }
-        kwargs["submodules"] = ref_version_attributes.get("submodules", False)
+        if pkg.version.ref_version:
+            ref_version = spack.version.Version(pkg.version.ref_version[0])
+            ref_version_attributes = pkg.versions[ref_version]
+            kwargs["submodules"] = ref_version_attributes.get("submodules", False)
+        else:
+            # TODO: I'm not sure what to do about this since we don't yet have a ref_version
+            # and don't know if we need submodules
+            kwargs["submodules"] = getattr(pkg, "submodules", False)
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
