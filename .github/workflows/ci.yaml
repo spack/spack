@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  style-and-validity:
+  prechecks:
     uses: ./.github/workflows/valid-style.yml
   # Check which files have been updated by the PR
   changes:
@@ -73,18 +73,18 @@ jobs:
           fi
   bootstrap:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
-    needs: [ style-and-validity, changes ]
+    needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
     if: ${{ github.repository == 'spack/spack' }}
-    needs: [ style-and-validity, changes ]
+    needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     with:
       core: ${{ needs.changes.outputs.core }}
       packages: ${{ needs.changes.outputs.packages }}
       with_coverage: ${{ needs.changes.outputs.with_coverage }}
-  windows-unit-tests:
+  windows:
     if: ${{ github.repository == 'spack/spack' }}
-    needs: [ style-and-validity ]
+    needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
 

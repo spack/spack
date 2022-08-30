@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   # Run unit tests with different configurations on linux
-  unit-tests-ubuntu:
+  ubuntu:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -92,7 +92,7 @@ jobs:
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
-  unit-tests-shell:
+  shell:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -201,7 +201,7 @@ jobs:
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
-  unit-tests-macos:
+  macos:
     runs-on: macos-latest
     strategy:
       matrix:
