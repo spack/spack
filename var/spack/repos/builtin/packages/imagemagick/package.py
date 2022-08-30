@@ -38,6 +38,9 @@ class Imagemagick(AutotoolsPackage):
         spec = self.spec
         if spec.satisfies("+ghostscript"):
             gs_font_dir = join_path(spec["ghostscript-fonts"].prefix.share, "font")
+        if spec.satisfies("+ghostscript"):
+            args.append("--with-gslib")
+            gs_font_dir = join_path(spec["ghostscript-fonts"].prefix.share, "font")
             args.append("--with-gs-font-dir={0}".format(gs_font_dir))
         else:
             args.append("--without-gslib")
