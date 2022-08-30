@@ -79,7 +79,7 @@ class Openmx(MakefilePackage):
         if "%fj" in spec:
             common_option.append("-Dkcomp  -Kfast")
             cc_option.append("-Dnosse -Nclang")
-            fc_option.append(self.compiler.openmp_flag)
+            fc_option.extend([self.compiler.openmp_flag, "-Ccpp"])
         else:
             common_option.append("-O3")
             if "%gcc" in spec:
