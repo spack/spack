@@ -150,7 +150,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # releases 0.8 and ascent can build with conduit@0.8: and vtk-m@1.7:
     conflicts("ascent@develop", when="+ascent")
 
-    depends_on("py-cinemasci", when="+cinema")
+    dav_sdk_depends_on("py-cinemasci", when="+cinema")
 
     # ParaView needs @5.11: in order to use CUDA/ROCM, therefore it is the minimum
     # required version since GPU capability is desired for ECP
