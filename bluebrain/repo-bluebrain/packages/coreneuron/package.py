@@ -21,17 +21,10 @@ class Coreneuron(CMakePackage):
     git      = "git@bbpgitlab.epfl.ch:hpc/coreneuron.git"
 
     version('develop', branch='master')
+    version('8.2.1', tag='8.2.1')
     version('8.2.0', tag='8.2.0')
-    # 1.0.1 > 1.0.0.20210519 > 1.0 as far as Spack is concerned
+    # 1.0.1 > 1.0.0.20220304 > 1.0 as far as Spack is concerned
     version('1.0.0.20220304', commit='2d08705')
-    version('1.0.0.20220218', commit='102ebde')
-    version('1.0.0.20220111', commit='64e56b7')
-    version('1.0.0.20211020', commit='e265f9d')
-    version('1.0.0.20211012', commit='846b3a6')
-    version('1.0.0.20210708', commit='d54a3aa')
-    version('1.0.0.20210610', commit='b4a25b4')
-    version('1.0.0.20210525', commit='711d2b8')
-    version('1.0.0.20210519', commit='c938e4f')
     version('1.0', tag='1.0')
     version('0.22', tag='0.22', submodules=True)
 
@@ -70,13 +63,12 @@ class Coreneuron(CMakePackage):
     depends_on('flex@2.6:', type='build', when='+nmodl')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
-    depends_on('libsonata-report@1.0.0.20210610:', when='@1.0.0.20210610:+report')
-    depends_on('libsonata-report@1.0:1.0.0.20210531', when='@1.0.0.20210519:1.0.0.20210525+report')
-    depends_on('libsonata-report@:0.1', when='@:1.0.0.20210518+report')
+    depends_on('libsonata-report@1.0.0.20210610:', when='@1.0.0.20220304:+report')
+    depends_on('libsonata-report@:0.1', when='@:1.0+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
-    depends_on('caliper+mpi', when='@1.0.0.20210519:+caliper+mpi')
-    depends_on('caliper~mpi', when='@1.0.0.20210519:+caliper~mpi')
+    depends_on('caliper+mpi', when='@1.0.0.20220304:+caliper+mpi')
+    depends_on('caliper~mpi', when='@1.0.0.20220304:+caliper~mpi')
 
     # nmodl specific dependency
     depends_on('nmodl@0.4.0:', when='@8.2:+nmodl')
@@ -104,11 +96,10 @@ class Coreneuron(CMakePackage):
     conflicts('+unified', when='~gpu')
 
     # Older versions do not support GPU execution in shared builds
-    conflicts('+shared', when='@:8.2.0 +gpu')
+    conflicts('+shared', when='@:8 +gpu')
 
-    # Caliper instrumentation is only supported after 1.0.0.20210519
-    # Note: The 20210518 date is needed to specify a version before 20210519!
-    conflicts('+caliper', when='@:1.0.0.20210518')
+    # Caliper instrumentation is only supported after 1.0
+    conflicts('+caliper', when='@:1.0')
 
     # An old comment said "PGI compiler not able to compile nrnreport.cpp when
     # enabled OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU", but
@@ -150,7 +141,7 @@ class Coreneuron(CMakePackage):
         # NVHPC 21.11 and newer detect ABM support and define __ABM__, which
         # breaks Random123 compilation. CoreNEURON inserts a workaround for
         # this in https://github.com/BlueBrain/CoreNeuron/pull/754.
-        if self.spec.satisfies('@:1.0.0.20220111%nvhpc@21.11:'):
+        if self.spec.satisfies('@:1.0%nvhpc@21.11:'):
             flags.append('-DR123_USE_INTRIN_H=0')
         # when pdt is used for instrumentation, the gcc's unint128 extension
         # is activated from random123 which results in compilation error
@@ -184,7 +175,7 @@ class Coreneuron(CMakePackage):
 
         # Versions after this only used C++, but we might still need C
         # flags if mod2c is being built as a submodule.
-        if spec.satisfies('@:1.0.0.20210708') or spec.satisfies('~nmodl'):
+        if spec.satisfies('@:1.0') or spec.satisfies('~nmodl'):
             options.append('-DCMAKE_C_FLAGS=%s' % flags)
 
         if spec.satisfies('+caliper'):
@@ -221,7 +212,7 @@ class Coreneuron(CMakePackage):
 
         if spec.satisfies('+gpu'):
             gcc = which("gcc")
-            if spec.satisfies('@1.0.0.20210709:'):
+            if spec.satisfies('@1.0.0.20220304:'):
                 # After https://github.com/BlueBrain/CoreNeuron/pull/609
                 nvcc = which("nvcc")
                 options.extend(['-DCMAKE_CUDA_COMPILER=%s' % nvcc,
