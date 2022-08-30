@@ -65,6 +65,9 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
+{% if extra_instructions.final %}
+ {{ extra_instructions.final }}
+{% endif %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time
   {% if os_package_update %}
@@ -75,9 +78,6 @@ Stage: final
 {% endif %}
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
-{% if extra_instructions.final %}
-{{ extra_instructions.final }}
-{% endif %}
 {% if runscript %}
 
 %runscript
