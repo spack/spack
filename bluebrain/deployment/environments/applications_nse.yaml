@@ -22,6 +22,7 @@ spack:
         - py-entity-management
         - py-minis-validation
         - py-morphio
+        - py-morph-tool
         - py-morphology-repair-workflow
         - py-region-grower
         - py-sonata-network-reduction
