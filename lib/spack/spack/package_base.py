@@ -100,6 +100,26 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 is_windows = sys.platform == "win32"
 
 
+def deprecated_version(pkg, version):
+    """
+    Returns a list of the deprecated versions of the package.
+
+    Arguments:
+        pkg (Package): The package whose version is to be checked.
+        version (str or spack.version.VersionBase): The version being checked
+
+    Returns: (bool) True if version is deprecated, False otherwise
+    """
+    if not isinstance(version, VersionBase):
+        version = Version(version)
+
+    for k, v in pkg.versions.items():
+        if version == k and v.get("deprecated", False):
+            return True
+
+    return False
+
+
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
