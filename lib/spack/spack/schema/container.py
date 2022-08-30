@@ -72,6 +72,7 @@ container_schema = {
             "properties": {
                 "pre_build": {"type": "string"},
                 "build": {"type": "string"},
+                "pre_final": {"type": "string"},
                 "final": {"type": "string"},
             },
         },

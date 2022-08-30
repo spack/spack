@@ -52,14 +52,18 @@ COPY --from=builder {{ paths.hidden_view }} {{ paths.hidden_view }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
-{% if extra_instructions.final %}
-{{ extra_instructions.final }}
+{% if extra_instructions.pre_final %}
+{{ extra_instructions.pre_final }}
 {% endif %}
 
 {% if os_packages_final %}
 RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
+{% endif %}
+
+{% if extra_instructions.final %}
+{{ extra_instructions.final }}
 {% endif %}
 
 {% for label, value in labels.items() %}
