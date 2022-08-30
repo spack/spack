@@ -6,7 +6,6 @@ import spack.util.spack_yaml as syaml
 from spack.extensions.stack.stack_paths import (
     common_path,
     container_path,
-    stack_path,
     template_path,
 )
 
