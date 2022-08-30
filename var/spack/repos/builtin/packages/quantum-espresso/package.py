@@ -68,10 +68,10 @@ class QuantumEspresso(CMakePackage):
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        conflicts("^fftw~openmp")
-        conflicts("^amdfftw~openmp")
-        conflicts("^openblas threads=none")
-        conflicts("^openblas threads=pthreads")
+        depends_on("fftw+openmp", when="^fftw")
+        depends_on("amdfftw+openmp", when="^amdfftw")
+        depends_on("openblas threads=openmp", when="^openblas")
+        depends_on("amdblis threads=openmp", when="^amdblis")
 
     # Add cuda support
     with when("%nvhpc"):
