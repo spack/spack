@@ -778,7 +778,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         if "languages=d" in spec:
             # Phobos is the standard library for the D Programming Language. The documentation says
-            # that on some targets, 'libphobos' isn’t enabled by default, but compiles and works
+            # that on some targets, 'libphobos' is not enabled by default, but compiles and works
             # if '--enable-libphobos' is used. Specifics are documented for affected targets.
             # See https://gcc.gnu.org/install/prerequisites.html#GDC-prerequisite
             # Unfortunately, it is unclear where exactly the aforementioned specifics are
