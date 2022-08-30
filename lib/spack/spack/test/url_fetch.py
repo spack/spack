@@ -349,8 +349,8 @@ def test_url_fetch_text_without_url(tmpdir):
         web_util.fetch_url_text(None)
 
 
-def test_url_missing_curl(tmpdir, monkeypatch):
-    """Check if URL's curl is missing."""
+def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
+    """Check fetch_url_text if URL's curl is missing."""
     err_fmt = "No such command {0}"
 
     def _which(*args, **kwargs):
@@ -377,8 +377,8 @@ def test_url_check_curl_errors():
         web_util.check_curl_code(60)
 
 
-def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
-    """Check failures if URL's curl is missing."""
+def test_url_missing_curl(tmpdir, monkeypatch):
+    """Check url_exists failures if URL's curl is missing."""
     err_fmt = "No such command {0}"
 
     def _which(*args, **kwargs):
