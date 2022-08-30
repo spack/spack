@@ -246,7 +246,11 @@ class PathContext(tengine.Context):
     def extra_instructions(self):
         Extras = collections.namedtuple("Extra", ["pre_build", "build", "final"])
         extras = self.container_config.get("extra_instructions", {})
-        pre_build, build, final = extras.get("pre_build", None), extras.get("build", None), extras.get("final", None)
+        pre_build, build, final = (
+            extras.get("pre_build", None),
+            extras.get("build", None),
+            extras.get("final", None),
+        )
         return Extras(pre_build=pre_build, build=build, final=final)
 
     @tengine.context_property
