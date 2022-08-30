@@ -54,7 +54,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+openmptarget", when="@:3.5")
 
     # https://github.com/spack/spack/issues/29052
-    conflicts("@:3.5.00 +sycl", when="%dpcpp@2022.0.0")
+    conflicts("@:3.5 +sycl", when="%dpcpp@2022:")
+    conflicts("@:3.5 +sycl", when="%oneapi@2022:")
 
     tpls_variants = {
         "hpx": [False, "Whether to enable the HPX library"],
@@ -171,6 +172,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     for dev in devices_variants:
         dflt, desc = devices_variants[dev]
         variant(dev, default=dflt, description=desc)
+    conflicts("+cuda", when="+rocm", msg="CUDA and ROCm are not compatible in Kokkos.")
 
     options_values = list(options_variants.keys())
     for opt in options_values:
@@ -265,7 +267,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
         options = [
             from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
-            from_variant("Kokkos_CXX_STANDARD", "std"),
+            from_variant("CMAKE_CXX_STANDARD", "std"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 

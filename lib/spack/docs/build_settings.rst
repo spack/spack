@@ -396,15 +396,69 @@ choose between a set of options using ``any_of`` or ``one_of``:
   ``mpich`` already includes a conflict, so this is redundant but
   still demonstrates the concept).
 
-Other notes about ``requires``:
+.. note::
 
-* You can only specify requirements for specific packages: you cannot
-  add ``requires`` under ``all``.
-* You cannot specify requirements for virtual packages (e.g. you can
-  specify requirements for ``openmpi`` but not ``mpi``).
-* For ``any_of`` and ``one_of``, the order of specs indicates a
-  preference: items that appear earlier in the list are preferred
-  (note that these preferences can be ignored in favor of others).
+   For ``any_of`` and ``one_of``, the order of specs indicates a
+   preference: items that appear earlier in the list are preferred
+   (note that these preferences can be ignored in favor of others).
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting default requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also set default requirements for all packages under ``all``
+like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+     cmake:
+       require: '%gcc'
+
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
+to use ``clang``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting requirements on virtual specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A requirement on a virtual spec applies whenever that virtual is present in the DAG. This
+can be useful for fixing which virtual provider you want to use:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+
+With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+
+Requirements on the virtual spec and on the specific provider are both applied, if present. For
+instance with a configuration like:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+     mvapich2:
+       require: '~cuda'
+
+you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
 .. _package_permissions:
 

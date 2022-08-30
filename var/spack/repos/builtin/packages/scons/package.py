@@ -57,3 +57,6 @@ class Scons(PythonPackage):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
+
+    def setup_dependent_package(self, module, dspec):
+        module.scons = Executable(self.spec.prefix.bin.scons)
