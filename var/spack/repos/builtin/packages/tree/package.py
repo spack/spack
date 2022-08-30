@@ -26,7 +26,7 @@ class Tree(Package):
 
     @when("@2:")
     def install(self, spec, prefix):
-        make("install", "PREFIX=%s" % prefix)
+        make("install", "PREFIX=%s" % prefix, "CFLAGS=-std=c99")
 
     @when("@:1")
     def install(self, spec, prefix):
