@@ -1739,7 +1739,7 @@ class TestConcretize(object):
 
     def test_git_hash_assigned_version_is_preferred(self):
         hash = "a" * 40
-        s = Spec("develop-branch-version@%s=>develop" % hash)
+        s = Spec("develop-branch-version@%s=@develop" % hash)
         c = s.concretized()
         assert hash in str(c)
 
@@ -1748,7 +1748,7 @@ class TestConcretize(object):
     def test_git_ref_version_is_equivalent_to_specified_version(self, git_ref):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer cannot account for git hashes")
-        s = Spec("develop-branch-version@git.%s=>develop" % git_ref)
+        s = Spec("develop-branch-version@git.%s=@develop" % git_ref)
         c = s.concretized()
         assert git_ref in str(c)
         print(str(c))
@@ -1761,7 +1761,7 @@ class TestConcretize(object):
         if spack.config.get("config:concretizer") == "original":
             pytest.skip("Original concretizer cannot account for git hashes")
         # main is not defined in the package.py for this file
-        s = Spec("develop-branch-version@git.%s=>main" % git_ref)
+        s = Spec("develop-branch-version@git.%s=@main" % git_ref)
         with pytest.raises(
             UnsatisfiableSpecError,
             match="The reference version 'main' for package 'develop-branch-version'",

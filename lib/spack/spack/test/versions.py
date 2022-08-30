@@ -732,11 +732,11 @@ def test_version_list_with_range_and_concrete_version_is_not_concrete():
 @pytest.mark.parametrize(
     "vstring, eq_vstring, is_commit",
     (
-        ("abc12" * 8 + "=>develop", "develop", True),
-        ("git." + "abc12" * 8 + "=>main", "main", True),
-        ("a" * 40 + "=>develop", "develop", True),
-        ("b" * 40 + "=>3.2", "3.2", True),
-        ("git.foo=>3.2", "3.2", False),
+        ("abc12" * 8 + "=@develop", "develop", True),
+        ("git." + "abc12" * 8 + "=@main", "main", True),
+        ("a" * 40 + "=@develop", "develop", True),
+        ("b" * 40 + "=@3.2", "3.2", True),
+        ("git.foo=@3.2", "3.2", False),
     ),
 )
 def test_git_ref_can_be_assigned_a_version(vstring, eq_vstring, is_commit):

@@ -4958,7 +4958,7 @@ class SpecLexer(spack.parse.Lexer):
         )
         super(SpecLexer, self).__init__(
             [
-                (r"\=\>", lambda scanner, val: self.token(ARROW, val)),
+                (r"\=\@", lambda scanner, val: self.token(ARROW, val)),
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\@", lambda scanner, val: self.token(AT, val)),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),

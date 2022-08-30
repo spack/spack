@@ -1130,13 +1130,13 @@ or infer a relationship to known versions from the structure of the git reposito
 associated version is supplied by the user, Spack treats the git version as equivalent to that
 version for all version comparisons in the package logic (e.g. ``depends_on('foo', when='@1.5')``).
 
-The associated version can be assigned with ``[git ref]=>[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
+The associated version can be assigned with ``[git ref]=@[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
 
 .. code-block:: sh
-
-   foo@git.my_ref=>3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=>develop # use the given commit, but treat it as develop for version comparisons
-
+   
+   foo@git.my_ref=@3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=@develop # use the given commit, but treat it as develop for version comparisons
+   
 If an associated version is not supplied then the tags in the git repo are used to determine
 the most recent previous version known to Spack. Details about how versions are compared
 and how Spack determines if one version is less than another are discussed in the developer guide.
