@@ -16,7 +16,10 @@ concurrency:
 
 jobs:
   prechecks:
+    needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
+    with:
+      with_coverage: ${{ needs.changes.outputs.with_coverage }}
   # Check which files have been updated by the PR
   changes:
     runs-on: ubuntu-latest
