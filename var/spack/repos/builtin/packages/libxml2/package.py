@@ -59,8 +59,7 @@ class Libxml2(AutotoolsPackage):
         sha256="96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7",
     )
 
-    patch("nvhpc-configure.patch", when="%nvhpc")
-    patch("nvhpc-elfgcchack.patch", when="%nvhpc")
+    patch("nvhpc-elfgcchack.patch", when="@:2.9 %nvhpc")
 
     # Use NAN/INFINITY if available to avoid SIGFPE
     # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
