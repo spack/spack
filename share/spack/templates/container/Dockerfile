@@ -61,11 +61,10 @@ RUN {% if os_package_update %}{{ os_packages_final.update }} \
  && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}
-
 {% if extra_instructions.final %}
+
 {{ extra_instructions.final }}
 {% endif %}
-
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}

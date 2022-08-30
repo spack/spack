@@ -10,6 +10,7 @@ Stage: build
   {% endif %}
   {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
   {{ os_packages_build.clean }}
+
 {% endif %
 
   {% if extra_instructions.pre_build %}
@@ -79,7 +80,7 @@ Stage: final
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
 {% if extra_instructions.final %}
- {{ extra_instructions.final }}
+{{ extra_instructions.final }}
 {% endif %}
 {% if runscript %}
 
