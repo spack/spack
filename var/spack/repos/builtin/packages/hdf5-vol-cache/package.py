@@ -9,21 +9,21 @@ class Hdf5VolCache(CMakePackage):
     """Package for HDF5 cache VOL."""
 
     homepage = "https://vol-cache.readthedocs.io"
-    git      = "https://github.com/hpc-io/vol-cache.git"
+    git = "https://github.com/hpc-io/vol-cache.git"
 
     maintainers = ["hyoklee", "lrknox"]
 
     version("default", branch="develop")
     version("v1.0", tag="v1.0")
-    
+
     # Set hdf5-cmake package option.
     o_flt = "~zfp~mafisc~szip~zstd~blosc~bshuf~bitgroom"
     o_vol = "~av~pv~cv"
     o_par = "+mpi+threadsafe"
-    o = o_flt+o_vol+o_par
+    o = o_flt + o_vol + o_par
 
     depends_on("hdf5-vol-async")
-    
+
     def cmake_args(self):
         """Populate cmake arguments for HDF5 VOL."""
         args = [
