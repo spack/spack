@@ -335,6 +335,32 @@ class PyTorch(PythonPackage, CudaPackage):
         msg = "Unable to locate {} headers in {} or {}"
         raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
+    # Fixes errors in third-party repo
+    @when('@1.11.0')
+    def patch(self):
+        filter_file('inline RARegCount& operator=' +
+                    '(const RARegCount& other) noexcept = default;',
+                    '',
+                    'third_party/fbgemm/third_party/asmjit/src/asmjit/core/radefs_p.h',
+                    string=True)
+        filter_file('inline RARegMask& operator=' +
+                    '(const RARegMask& other) noexcept = default;',
+                    '',
+                    'third_party/fbgemm/third_party/asmjit/src/asmjit/core/radefs_p.h',
+                    string=True)
+        filter_file('size_t currentSize = sb.size();',
+                    '',
+                    'third_party/fbgemm/third_party/' +
+                    'asmjit/src/asmjit/core/emitterutils.cpp', string=True)
+        filter_file('currentSize += sb.size() - begin;',
+                    '',
+                    'third_party/fbgemm/third_party/' +
+                    'asmjit/src/asmjit/core/emitterutils.cpp', string=True)
+        filter_file('size_t begin = sb.size();',
+                    '',
+                    'third_party/fbgemm/third_party/' +
+                    'asmjit/src/asmjit/core/emitterutils.cpp', string=True)
+
     @property
     def libs(self):
         """Discover libraries in platlib."""
