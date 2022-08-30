@@ -134,7 +134,7 @@ def test_config_yaml_is_preserved_during_bootstrap(mutable_config):
 
 
 @pytest.mark.regression("26548")
-def test_custom_store_in_environment(mutable_config, tmpdir):
+def test_bootstrap_custom_store_in_environment(mutable_config, tmpdir):
     # Test that the custom store in an environment is taken into account
     # during bootstrapping
     spack_yaml = tmpdir.join("spack.yaml")

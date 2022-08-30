@@ -306,7 +306,14 @@ def add_padding(path, length):
 
 
 def canonicalize_path(path):
-    """Same as substitute_path_variables, but also take absolute path."""
+    """Same as substitute_path_variables, but also take absolute path.
+
+    Arguments:
+        path (str): path being converted as needed
+
+    Returns:
+        (str): An absolute path with path variable substitution
+    """
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     filename = None

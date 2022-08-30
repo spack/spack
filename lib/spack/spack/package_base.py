@@ -63,6 +63,7 @@ from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
+from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
 if sys.version_info[0] >= 3:
@@ -3020,13 +3021,6 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
-
-
-class FetchError(spack.error.SpackError):
-    """Raised when something goes wrong during fetch."""
-
-    def __init__(self, message, long_msg=None):
-        super(FetchError, self).__init__(message, long_msg)
 
 
 class PackageStillNeededError(InstallError):

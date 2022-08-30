@@ -573,7 +573,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual, in
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
 
     expected = pkg.download_instr if manual else "All fetchers failed"
-    with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+    with pytest.raises(spack.util.web.FetchError, match=expected):
         pkg.do_fetch()
 
 

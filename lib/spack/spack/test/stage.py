@@ -22,6 +22,7 @@ import spack.util.executable
 from spack.resource import Resource
 from spack.stage import DIYStage, ResourceStage, Stage, StageComposite
 from spack.util.path import canonicalize_path
+from spack.util.web import FetchError
 
 # The following values are used for common fetch and stage mocking fixtures:
 _archive_base = "test-files"
@@ -525,7 +526,7 @@ class TestStage(object):
         with stage:
             try:
                 stage.fetch(mirror_only=True)
-            except spack.fetch_strategy.FetchError:
+            except FetchError:
                 pass
         check_destroy(stage, self.stage_name)
 
@@ -540,7 +541,7 @@ class TestStage(object):
         stage = Stage(failing_fetch_strategy, name=self.stage_name, search_fn=search_fn)
 
         with stage:
-            with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+            with pytest.raises(FetchError, match=expected):
                 stage.fetch(mirror_only=False, err_msg=err_msg)
 
         check_destroy(stage, self.stage_name)
