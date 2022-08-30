@@ -17,6 +17,7 @@ import spack.fetch_strategy as fs
 import spack.repo
 import spack.util.crypto as crypto
 import spack.util.executable
+import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
@@ -328,9 +329,8 @@ def test_missing_curl(tmpdir, monkeypatch):
         err_msg = err_fmt.format(args[0])
         raise spack.util.executable.CommandNotFoundError(err_msg)
 
-    # Patching the 'which' symbol imported by fetch_strategy works
-    # since it is too late in import processing to patch the defining
-    # (spack.util.executable) module's symbol.
+    # Patching the 'which' symbol imported by fetch_strategy needed due
+    # to 'from spack.util.executable import which' in this module.
     monkeypatch.setattr(fs, "which", _which)
 
     testpath = str(tmpdir)
@@ -342,3 +342,79 @@ def test_missing_curl(tmpdir, monkeypatch):
             with Stage(fetcher, path=testpath) as stage:
                 out = stage.fetch()
             assert err_fmt.format("curl") in out
+
+
+def test_url_fetch_text_without_url(tmpdir):
+    with pytest.raises(web_util.FetchError, match="URL is required"):
+        web_util.fetch_url_text(None)
+
+
+def test_url_fetch_text_curl_failures(tmpdir, monkeypatch):
+    """Check fetch_url_text if URL's curl is missing."""
+    err_fmt = "No such command {0}"
+
+    def _which(*args, **kwargs):
+        err_msg = err_fmt.format(args[0])
+        raise spack.util.executable.CommandNotFoundError(err_msg)
+
+    # Patching the 'which' symbol imported by spack.util.web needed due
+    # to 'from spack.util.executable import which' in this module.
+    monkeypatch.setattr(spack.util.web, "which", _which)
+
+    with spack.config.override("config:url_fetch_method", "curl"):
+        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+            web_util.fetch_url_text("https://github.com/")
+
+
+def test_url_check_curl_errors():
+    """Check that standard curl error returncodes raise expected errors."""
+    # Check returncode 22 (i.e., 404)
+    with pytest.raises(web_util.FetchError, match="not found"):
+        web_util.check_curl_code(22)
+
+    # Check returncode 60 (certificate error)
+    with pytest.raises(web_util.FetchError, match="invalid certificate"):
+        web_util.check_curl_code(60)
+
+
+def test_url_missing_curl(tmpdir, monkeypatch):
+    """Check url_exists failures if URL's curl is missing."""
+    err_fmt = "No such command {0}"
+
+    def _which(*args, **kwargs):
+        err_msg = err_fmt.format(args[0])
+        raise spack.util.executable.CommandNotFoundError(err_msg)
+
+    # Patching the 'which' symbol imported by spack.util.web needed due
+    # to 'from spack.util.executable import which' in this module.
+    monkeypatch.setattr(spack.util.web, "which", _which)
+
+    with spack.config.override("config:url_fetch_method", "curl"):
+        with pytest.raises(web_util.FetchError, match="Missing required curl"):
+            web_util.url_exists("https://github.com/")
+
+
+def test_url_fetch_text_urllib_bad_returncode(tmpdir, monkeypatch):
+    class response(object):
+        def getcode(self):
+            return 404
+
+    def _read_from_url(*args, **kwargs):
+        return None, None, response()
+
+    monkeypatch.setattr(spack.util.web, "read_from_url", _read_from_url)
+
+    with spack.config.override("config:url_fetch_method", "urllib"):
+        with pytest.raises(web_util.FetchError, match="failed with error code"):
+            web_util.fetch_url_text("https://github.com/")
+
+
+def test_url_fetch_text_urllib_web_error(tmpdir, monkeypatch):
+    def _raise_web_error(*args, **kwargs):
+        raise web_util.SpackWebError("bad url")
+
+    monkeypatch.setattr(spack.util.web, "read_from_url", _raise_web_error)
+
+    with spack.config.override("config:url_fetch_method", "urllib"):
+        with pytest.raises(web_util.FetchError, match="fetch failed to verify"):
+            web_util.fetch_url_text("https://github.com/")
