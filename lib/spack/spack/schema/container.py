@@ -72,8 +72,8 @@ container_schema = {
             "properties": {
                 "pre_build": {"type": "string"},
                 "build": {"type": "string"},
-                "final": {"type": "string"}
-            }
+                "final": {"type": "string"},
+            },
         },
         # Reserved for properties that are specific to each format
         "singularity": {
