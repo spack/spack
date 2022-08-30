@@ -101,7 +101,16 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+",
     )
     variant(
-        "libcxx", default=True, when="+clang", description="Build the LLVM C++ standard library"
+        "libcxx",
+        values=(
+            "none",
+            conditional("project", when="@:15"),
+            conditional("runtime", when="+clang @6:"),
+        ),
+        default="runtime",
+        description="Build the LLVM C++ standard library "
+        "either as a runtime (with just-build Clang) "
+        "or as a project (with the compiler in use)",
     )
     variant(
         "libomptarget",
@@ -225,6 +234,12 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
     depends_on("cmake@3.20:", type="build", when="@16:")
+    with when("@:10"):
+        # Versions 10 and older cannot build runtimes with cmake@3.17:
+        # See https://reviews.llvm.org/D77284
+        for runtime in ["libcxx"]:
+            depends_on("cmake@:3.16", type="build", when="{0}=runtime".format(runtime))
+        del runtime
     depends_on("python", when="~python", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -277,9 +292,9 @@ class Llvm(CMakePackage, CudaPackage):
     # GCC    11     - latest stable release per GCC release page
     # Clang: 11, 12 - latest two stable releases per LLVM release page
     # AppleClang 12 - latest stable release per Xcode release page
-    conflicts("%gcc@:10", when="@13:+libcxx")
-    conflicts("%clang@:10", when="@13:+libcxx")
-    conflicts("%apple-clang@:11", when="@13:+libcxx")
+    conflicts("%gcc@:10", when="@13: libcxx=project")
+    conflicts("%clang@:10", when="@13: libcxx=project")
+    conflicts("%apple-clang@:11", when="@13: libcxx=project")
 
     # libomptarget
     conflicts("+cuda", when="@15:")  # +cuda variant is obselete since LLVM 15
@@ -321,16 +336,19 @@ class Llvm(CMakePackage, CudaPackage):
     # eventually unbroken (d9a42ec98adc) for the 11.0 release.  The first
     # patch backports the original correct fix to previous releases.  The
     # second patch backports the un-breaking of the original fix.
-    patch(
-        "https://github.com/llvm/llvm-project/commit/3bf63cf3b366d3a57cf5cbad4112a6abf6c0c3b1.patch?full_index=1",
-        sha256="e56489a4bcf3c3636e206adca366bfcda2722ad81a5fa9a0360faed63933191a",
-        when="@6:8+libcxx",
-    )
-    patch(
-        "https://github.com/llvm/llvm-project/commit/d9a42ec98adcb1ebc0c3837715df4e5a50c7ccc0.patch?full_index=1",
-        sha256="50bfc4e82c02bb5b7739990f363d99b1e43d5d11a5104f6aabbc303ebce6fbe3",
-        when="@9:10+libcxx",
-    )
+    for libcxx_as in ["project", "runtime"]:
+        with when("libcxx={0}".format(libcxx_as)):
+            patch(
+                "https://github.com/llvm/llvm-project/commit/3bf63cf3b366d3a57cf5cbad4112a6abf6c0c3b1.patch?full_index=1",
+                sha256="e56489a4bcf3c3636e206adca366bfcda2722ad81a5fa9a0360faed63933191a",
+                when="@6:8",
+            )
+            patch(
+                "https://github.com/llvm/llvm-project/commit/d9a42ec98adcb1ebc0c3837715df4e5a50c7ccc0.patch?full_index=1",
+                sha256="50bfc4e82c02bb5b7739990f363d99b1e43d5d11a5104f6aabbc303ebce6fbe3",
+                when="@9:10",
+            )
+    del libcxx_as
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
@@ -706,11 +724,10 @@ class Llvm(CMakePackage, CudaPackage):
                 runtimes.append("compiler-rt")
             else:
                 projects.append("compiler-rt")
-        if "+libcxx" in spec:
-            if self.spec.satisfies("@15.0.0:"):
-                runtimes.extend(["libcxx", "libcxxabi"])
-            else:
-                projects.extend(["libcxx", "libcxxabi"])
+        if "libcxx=runtime" in spec:
+            runtimes.extend(["libcxx", "libcxxabi"])
+        elif "libcxx=project" in spec:
+            projects.extend(["libcxx", "libcxxabi"])
         if "+mlir" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:
