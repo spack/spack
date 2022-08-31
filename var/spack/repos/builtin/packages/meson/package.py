@@ -16,7 +16,7 @@ class Meson(PythonPackage):
 
     tags = ["build-tools"]
 
-    maintainers = ["michaelkuhn"]
+    maintainers = ["eli-schwartz", "michaelkuhn"]
 
     version("0.62.2", sha256="97108f4d9bb16bc758c44749bd25ec7d42c6a762961efbed8b7589a2a3551ea6")
     version("0.62.1", sha256="9fb52e66dbc613479a5f70e46cc2e8faf5aa65e09313f2c71fa63b8afd018107")
