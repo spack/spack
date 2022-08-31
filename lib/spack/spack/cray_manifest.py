@@ -6,6 +6,7 @@
 import json
 
 import jsonschema
+import jsonschema.exceptions
 import six
 
 import llnl.util.tty as tty
@@ -161,10 +162,13 @@ def entries_to_specs(entries):
 
 
 def read(path, apply_updates):
-    with open(path, "r") as json_file:
-        json_data = json.load(json_file)
+    try:
+        with open(path, "r") as json_file:
+            json_data = json.load(json_file)
 
-    jsonschema.validate(json_data, manifest_schema)
+        jsonschema.validate(json_data, manifest_schema)
+    except (jsonschema.exceptions.ValidationError, json.decoder.JSONDecodeError) as e:
+        raise ManifestValidationError(e)
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
@@ -179,3 +183,7 @@ def read(path, apply_updates):
     if apply_updates:
         for spec in specs.values():
             spack.store.db.add(spec, directory_layout=None)
+
+
+class ManifestValidationError(spack.error.SpackError):
+    pass
