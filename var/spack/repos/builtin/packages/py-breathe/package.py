@@ -33,6 +33,8 @@ class PyBreathe(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@4.33:")
     depends_on("py-docutils@0.5:", type=("build", "run"), when="@:4.20")
     depends_on("py-docutils@0.12:", type=("build", "run"), when="@4.21:")
+    # Note: Pygments is missing from the setup.py in 4.34.0 but is listed in
+    # the requirements file and used by breathe.filetypes.
     depends_on("py-pygments@1.6:", type=("build", "run"), when="@4.21:")
     depends_on("py-six@1.4:", type=("build", "run"), when="@:4.20")
     depends_on("py-six@1.9:", type=("build", "run"), when="@4.21:4.32")
