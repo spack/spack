@@ -284,17 +284,41 @@ class Llvm(CMakePackage, CudaPackage):
     # Internal compiler error on gcc 8.4 on aarch64 https://bugzilla.redhat.com/show_bug.cgi?id=1958295
     conflicts("%gcc@8.4:8.4.9", when="@12: target=aarch64:")
 
-    # When these versions are concretized, but not explicitly with +libcxx, these
-    # conflicts will enable clingo to set ~libcxx, making the build successful:
-
-    # libc++ of LLVM13, see https://libcxx.llvm.org/#platform-and-compiler-support
-    # @13 does not support %gcc@:10 https://bugs.llvm.org/show_bug.cgi?id=51359#c1
-    # GCC    11     - latest stable release per GCC release page
-    # Clang: 11, 12 - latest two stable releases per LLVM release page
-    # AppleClang 12 - latest stable release per Xcode release page
-    conflicts("%gcc@:10", when="@13: libcxx=project")
-    conflicts("%clang@:10", when="@13: libcxx=project")
-    conflicts("%apple-clang@:11", when="@13: libcxx=project")
+    # libcxx=project imposes compiler conflicts
+    # see https://libcxx.llvm.org/#platform-and-compiler-support for the latest release
+    # and https://github.com/llvm/www-releases for older releases
+    with when("libcxx=project"):
+        for v, compiler_conflicts in {
+            "@7:": {"clang": "@:3.4", "gcc": "@:4.6"},
+            "@9:": {"clang": "@:3.4", "gcc": "@:4"},
+            "@11:": {"clang": "@:3", "gcc": "@:4"},
+            "@13:": {"clang": "@:10", "gcc": "@:10", "apple-clang": "@:11"},
+            "@14:": {
+                "clang": "@:11",
+                "gcc": "@:10",
+                "apple-clang": "@:11",
+                "xlc": "@:17.0",
+                "xlc_r": "@:17.0",
+            },
+            "@15:": {
+                "clang": "@:12",
+                "gcc": "@:11",
+                "apple-clang": "@:12",
+                "xlc": "@:17.0",
+                "xlc_r": "@:17.0",
+            },
+            "@16:": {
+                "clang": "@:13",
+                "gcc": "@:11",
+                "apple-clang": "@:13",
+                "xlc": "@:17.0",
+                "xlc_r": "@:17.0",
+            },
+        }.items():
+            with when(v):
+                for comp in spack.compilers.supported_compilers():
+                    conflicts("%{0}{1}".format(comp, compiler_conflicts.get(comp, "")))
+        del v, compiler_conflicts, comp
 
     # libomptarget
     conflicts("+cuda", when="@15:")  # +cuda variant is obselete since LLVM 15
