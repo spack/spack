@@ -26,7 +26,13 @@ class Tree(Package):
 
     @when("@2:")
     def install(self, spec, prefix):
-        make("install", "PREFIX=%s" % prefix, "CFLAGS=-std=c99")
+        make(
+            "PREFIX=%s" % prefix,
+            "CC=%s" % spack_cc,
+            "CFLAGS=-O3 -pedantic -Wall -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -std=c99",
+            "LDFLAGS=-s",
+            "install",
+        )
 
     @when("@:1")
     def install(self, spec, prefix):
