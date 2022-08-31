@@ -313,8 +313,13 @@ class Llvm(CMakePackage, CudaPackage):
     # Fixed in upstream versions of both
     conflicts("^cmake@3.19.0", when="@6:11.0.0")
 
-    # sys/ustat.h has been removed in favour of statfs from glibc-2.28. Use fixed sizes:
-    patch("llvm5-sanitizer-ustat.patch", when="@4:6.0.0+compiler-rt")
+    # sys/ustat.h has been removed in favour of statfs from glibc-2.28
+    # see https://reviews.llvm.org/D47281
+    patch(
+        "https://github.com/llvm/llvm-project/commit/383fe5c8668f63ef21c646b43f48da9fa41aa100.patch?full_index=1",
+        sha256="66f01ac1769a6815aba09d6f4347ac1744f77f82ec9578a1158b24daca7a89e6",
+        when="@4:6.0.0+compiler-rt",
+    )
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch("llvm5-lld-ELF-Symbols.patch", when="@5+lld%clang@7:")
