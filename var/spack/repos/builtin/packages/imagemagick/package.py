@@ -18,7 +18,7 @@ class Imagemagick(AutotoolsPackage):
     version("7.0.2-7", sha256="f2f18a97f861c1668befdaff0cc3aaafb2111847aab028a88b4c2cb017acfbaa")
     version("7.0.2-6", sha256="7d49ca8030f895c683cae69c52d8edfc4876de651f5b8bfdbea907e222480bd3")
 
-    variant("ghostscript", default=True, description="Compile with Ghostscript support")
+    variant("ghostscript", default=False, description="Compile with Ghostscript support")
 
     depends_on("jpeg")
     depends_on("pango")
