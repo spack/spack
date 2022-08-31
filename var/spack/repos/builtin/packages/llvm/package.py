@@ -388,9 +388,17 @@ class Llvm(CMakePackage, CudaPackage):
     # merged in llvm-11.0.0_rc2, first available in 12.0.0
     patch("lldb_external_ncurses-10.patch", when="@10.0.0:11+lldb")
 
-    # https://github.com/spack/spack/issues/19908
-    # merged in llvm main prior to 12.0.0
-    patch("llvm_python_path.patch", when="@:11")
+    # honor Python2_EXECUTABLE and Python3_EXECUTABLE when they are passed to cmake
+    # see https://reviews.llvm.org/D91536
+    patch(
+        "https://github.com/llvm/llvm-project/commit/16de50895e96adbe261a5ce2498366bda7b3fccd.patch?full_index=1",
+        sha256="0e121ed460aa6e117f9f5f339d597a96c0fe4f97dc2209aba47b43ffc831ea24",
+        # The patch is applicable only starting version 7.0.0 (the older version might require a
+        # different patch addressing https://github.com/spack/spack/issues/19908). It looks like
+        # the patched function is used only if both compiler-rt and libcxx are enabled but we keep
+        # it simple:
+        when="@7:11",
+    )
 
     # Workaround for issue https://github.com/spack/spack/issues/18197
     patch("llvm7_intel.patch", when="@7 %intel@18.0.2,19.0.0:19.1.99")
