@@ -56,7 +56,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on("bats@0.4.0", type="test")
 
     def autoreconf(self, spec, prefix):
-        which("sh")("autogen.sh")
+        which("bash")("autogen.sh")
 
     def configure_args(self):
         args = []
