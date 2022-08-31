@@ -90,7 +90,7 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
-    image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+    image: "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21"
 
     mappings:
       - match:
