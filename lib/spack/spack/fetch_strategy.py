@@ -1552,7 +1552,8 @@ def for_package_version(pkg, version):
             ref_version = spack.version.Version(pkg.version.ref_version[0])
             ref_version_attributes = pkg.versions.get(ref_version)
             if ref_version_attributes:
-                kwargs["submodules"] = ref_version_attributes.get("submodules", kwargs["submodules"])
+                kwargs["submodules"] = ref_version_attributes.get("submodules",
+                                                                  kwargs["submodules"])
 
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
