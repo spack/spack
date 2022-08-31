@@ -1210,10 +1210,11 @@ class SpackSolverSetup(object):
 
             self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
-            # not then "external(<pkg>)" is a fact.
+            # not then "external(<pkg>)" is a fact, unless we can
+            # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
             if not external_buildable:
-                self.gen.fact(fn.external_only(pkg_name))
+                self.gen.fact(fn.buildable_false(pkg_name))
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
