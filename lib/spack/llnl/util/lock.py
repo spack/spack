@@ -393,9 +393,8 @@ class Lock(object):
                 # Directory already exists
                 if e.errno != errno.EEXIST:
                     tty.warn(
-                        "Got OSError when trying to create directory at '{!s}' that already exists: {!r}".format(
-                            parent, e
-                        )
+                        "Got OSError when trying to create directory "
+                        "at '{!s}' that already exists: {!r}".format(parent, e)
                     )
             else:
                 raise
