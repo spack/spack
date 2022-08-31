@@ -327,9 +327,9 @@ class Llvm(CMakePackage, CudaPackage):
     # Fix missing std:size_t in 'llvm@4:5' when built with '%clang@7:'
     patch("xray_buffer_queue-cstddef.patch", when="@4:5+compiler-rt%clang@7:")
 
-    # https://github.com/llvm/llvm-project/commit/947f9692440836dcb8d88b74b69dd379d85974ce
-    patch("sanitizer-ipc_perm_mode.patch", when="@5:7+compiler-rt%clang@11:")
-    patch("sanitizer-ipc_perm_mode.patch", when="@5:9+compiler-rt%gcc@9:")
+    # fix building with glibc 2.31
+    # see https://reviews.llvm.org/D70662
+    patch("sanitizer-ipc_perm_mode.patch", when="@5:9+compiler-rt")
 
     # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
     patch("missing-includes.patch", when="@8")
