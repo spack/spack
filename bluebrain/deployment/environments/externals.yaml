@@ -28,6 +28,7 @@ spack:
         - hpcviewer
         - hpe-mpi
         - intel-mpi
+        - intel-oneapi-mkl
         - ispc
         - julia
         - likwid
@@ -114,6 +115,7 @@ spack:
     # Leads to issues down the line, where it is preferred over hpe-mpi
     # #providers
     # - intel-mpi
+    - intel-oneapi-mkl@2021.4.0
     - ispc
     - julia
     - libxslt
