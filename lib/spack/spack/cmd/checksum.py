@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import re
 
 import llnl.util.tty as tty
 
@@ -119,7 +120,23 @@ def checksum(parser, args):
         limit=args.limit,
         fetch_options=pkg.fetch_options,
     )
+    vstring_url_dict = {str(version_obj): url for (version_obj, url) in url_dict.items()}
 
     print()
-    print(version_lines)
+    d_splitter = re.compile(r"^(\s*version\()(\")([^\"]+)(\"(?:,.*?))\)$")
+    for line in version_lines.splitlines():
+        v_match = d_splitter.match(line)
+        url = vstring_url_dict[v_match.group(3)]
+        if url in pkg.version_urls().values() or url != pkg.url_for_version(ver(v_match.group(3))):
+            print(
+                *v_match.group(1, 2, 3, 4),
+                ",\n",
+                re.sub(r".", " ", v_match.group(1)),
+                'url="{0}"'.format(vstring_url_dict[v_match.group(3)]),
+                ")",
+                sep=""
+            )
+        else:
+            print(line)
+
     print()

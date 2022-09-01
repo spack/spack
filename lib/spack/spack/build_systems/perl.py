@@ -6,12 +6,14 @@
 
 import inspect
 import os
+import re
 
 from llnl.util.filesystem import filter_file
 
 from spack.directives import extends
 from spack.package_base import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+from spack.version import ver
 
 
 class PerlPackage(PackageBase):
@@ -79,6 +81,25 @@ class PerlPackage(PackageBase):
         options += self.configure_args()
 
         inspect.getmodule(self).perl(*options)
+
+    def fetch_remote_versions(self, concurrency=128):
+        """Handle unfortunate versions."""
+        remote_versions = super(PerlPackage, self).fetch_remote_versions(concurrency)
+        if not remote_versions:
+            return remote_versions
+        result = {}
+        for version, url in remote_versions.items():
+            ver_match = re.match(r"^(\d+)\.(\d{3})(\d{3})((?:-TRIAL|_\d+)?)$", version.string)
+            if not ver_match:
+                ver_match = re.match(
+                    r"^(\d+)\.(\d{2})(\d{2,3})((?:-TRIAL|_\d+)?)$", version.string
+                )
+            if ver_match:
+                set_ver = ver(".".join(ver_match.group(1, 2, 3)) + ver_match.group(4))
+            else:
+                set_ver = version
+            result[set_ver] = url
+        return result
 
     # It is possible that the shebang in the Build script that is created from
     # Build.PL may be too long causing the build to fail. Patching the shebang
