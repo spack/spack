@@ -11,7 +11,12 @@ Stage: build
   {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
   {{ os_packages_build.clean }}
 
-{% endif %}
+{% endif %
+
+  {% if extra_instructions.pre_build %}
+  {{ extra_instructions.pre_build }}
+  {% endif %}
+
   # Create the manifest file for the installation in /opt/spack-environment
   mkdir {{ paths.environment }} && cd {{ paths.environment }}
   cat << EOF > spack.yaml
@@ -61,6 +66,9 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
+{% if extra_instructions.pre_final %}
+ {{ extra_instructions.pre_final }}
+{% endif %}
 {% if os_packages_final.list %}
   # Update, install and cleanup of system packages needed at run-time
   {% if os_package_update %}
