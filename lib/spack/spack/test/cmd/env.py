@@ -43,6 +43,7 @@ pytestmark = [
 env = SpackCommand("env")
 install = SpackCommand("install")
 add = SpackCommand("add")
+change = SpackCommand("change")
 remove = SpackCommand("remove")
 concretize = SpackCommand("concretize")
 stage = SpackCommand("stage")
@@ -69,6 +70,35 @@ def test_add():
     e = ev.create("test")
     e.add("mpileaks")
     assert Spec("mpileaks") in e.user_specs
+
+
+def test_change_match_spec():
+    env("create", "test")
+
+    e = ev.read("test")
+    with e:
+        add("mpileaks@2.1")
+        add("mpileaks@2.2")
+
+        change("--match-spec", "mpileaks@2.2", "mpileaks@2.3")
+
+    assert not any(x.satisfies("mpileaks@2.2") for x in e.user_specs)
+    assert any(x.satisfies("mpileaks@2.3") for x in e.user_specs)
+
+
+def test_change_multiple_matches():
+    env("create", "test")
+
+    e = ev.read("test")
+    with e:
+        add("mpileaks@2.1")
+        add("mpileaks@2.2")
+        add("libelf@0.8.12%clang")
+
+        change("--match-spec", "mpileaks", "-a", "mpileaks%gcc")
+
+    assert all(x.satisfies("%gcc") for x in e.user_specs if x.name == "mpileaks")
+    assert any(x.satisfies("%clang") for x in e.user_specs if x.name == "libelf")
 
 
 def test_env_add_virtual():
