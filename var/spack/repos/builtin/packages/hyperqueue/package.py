@@ -8,7 +8,7 @@ from spack.package import *
 
 
 class Hyperqueue(Package):
-    # Scheduler for sub-node tasks for HPC systems with batch scheduling
+    """Scheduler for sub-node tasks for HPC systems with batch scheduling"""
 
     homepage = "https://it4innovations.github.io/hyperqueue"
     url = "https://github.com/It4innovations/hyperqueue/archive/refs/tags/v0.11.0.tar.gz"
