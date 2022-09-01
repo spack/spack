@@ -126,9 +126,15 @@ class Llvm(CMakePackage, CudaPackage):
     )
     variant(
         "compiler-rt",
-        when="+clang",
-        default=True,
-        description="Build LLVM compiler runtime, including sanitizers",
+        values=(
+            "none",
+            conditional("project", when="+clang"),
+            conditional("runtime", when="+clang @6:"),
+        ),
+        default="runtime",
+        description="Build the LLVM compiler runtime, including sanitizers, "
+        "either as a runtime (with just-build Clang) "
+        "or as a project (with the compiler in use)",
     )
     variant(
         "gold",
@@ -237,7 +243,7 @@ class Llvm(CMakePackage, CudaPackage):
     with when("@:10"):
         # Versions 10 and older cannot build runtimes with cmake@3.17:
         # See https://reviews.llvm.org/D77284
-        for runtime in ["libcxx"]:
+        for runtime in ["libcxx", "compiler-rt"]:
             depends_on("cmake@:3.16", type="build", when="{0}=runtime".format(runtime))
         del runtime
     depends_on("python", when="~python", type="build")
@@ -337,24 +343,31 @@ class Llvm(CMakePackage, CudaPackage):
     # Fixed in upstream versions of both
     conflicts("^cmake@3.19.0", when="@6:11.0.0")
 
-    # sys/ustat.h has been removed in favour of statfs from glibc-2.28
-    # see https://reviews.llvm.org/D47281
-    patch(
-        "https://github.com/llvm/llvm-project/commit/383fe5c8668f63ef21c646b43f48da9fa41aa100.patch?full_index=1",
-        sha256="66f01ac1769a6815aba09d6f4347ac1744f77f82ec9578a1158b24daca7a89e6",
-        when="@4:6.0.0+compiler-rt",
-    )
-
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch("llvm5-lld-ELF-Symbols.patch", when="@5+lld%clang@7:")
 
     # fix missing ::size_t in 'llvm@4:5'
     # see comments in the patch file
-    patch("xray_buffer_queue-cstddef.patch", when="@4:5+compiler-rt")
+    patch(
+        "xray_buffer_queue-cstddef.patch",
+        # we do not cover compiler-rt=runtime because it is not supported when @:5
+        when="@4:5 compiler-rt=project",
+    )
 
-    # fix building with glibc 2.31
-    # see https://reviews.llvm.org/D70662
-    patch("sanitizer-ipc_perm_mode.patch", when="@5:9+compiler-rt")
+    # fix building of older versions of llvm with newer versions of glibc
+    for compiler_rt_as in ["project", "runtime"]:
+        with when("compiler-rt={0}".format(compiler_rt_as)):
+            # sys/ustat.h has been removed in favour of statfs from glibc-2.28
+            # see https://reviews.llvm.org/D47281
+            patch(
+                "https://github.com/llvm/llvm-project/commit/383fe5c8668f63ef21c646b43f48da9fa41aa100.patch?full_index=1",
+                sha256="66f01ac1769a6815aba09d6f4347ac1744f77f82ec9578a1158b24daca7a89e6",
+                when="@4:6.0.0",
+            )
+            # fix sanitizer-common build with glibc 2.31
+            # see https://reviews.llvm.org/D70662
+            patch("sanitizer-ipc_perm_mode.patch", when="@5:9")
+    del compiler_rt_as
 
     # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
     patch("missing-includes.patch", when="@8")
@@ -455,6 +468,14 @@ class Llvm(CMakePackage, CudaPackage):
         "https://github.com/llvm/llvm-project/commit/3a362a9f38b95978160377ee408dbc7d14af9aad.patch?full_index=1",
         sha256="25bc503f7855229620e56e76161cf4654945aef0be493a2d8d9e94a088157b7c",
         when="@14:15",
+    )
+
+    # Fix false positive detection of a target when building compiler-rt as a runtime
+    # https://reviews.llvm.org/D127975
+    patch(
+        "https://github.com/llvm/llvm-project/commit/9f1d90bf91570efa124c4a86cd033de374d1049a.patch?full_index=1",
+        sha256="1f4287465b3e499911e039e6cc2f395b8cb00eb8a0a223fa0db3704ba77f9969",
+        when="@13:14 compiler-rt=runtime",
     )
 
     # The functions and attributes below implement external package
@@ -757,11 +778,10 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("flang")
         if "+lld" in spec:
             projects.append("lld")
-        if "+compiler-rt" in spec:
-            if self.spec.satisfies("@15.0.0:"):
-                runtimes.append("compiler-rt")
-            else:
-                projects.append("compiler-rt")
+        if "compiler-rt=runtime" in spec:
+            runtimes.append("compiler-rt")
+        elif "compiler-rt=project" in spec:
+            projects.append("compiler-rt")
         if "libcxx=runtime" in spec:
             runtimes.extend(["libcxx", "libcxxabi"])
         elif "libcxx=project" in spec:
