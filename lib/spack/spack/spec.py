@@ -1241,7 +1241,12 @@ class Spec(object):
         self._build_spec = None
 
         if isinstance(spec_like, six.string_types):
-            spec_list = SpecParser(self).parse(spec_like)
+            try:
+                spec_list = SpecParser(self).parse(spec_like)
+            except spack.parse.LexError as e:
+                # TODO this message is not very helpful but errors in the version now break
+                # the lexer
+                raise SpecParseError(e)
             if len(spec_list) > 1:
                 raise ValueError("More than one spec in string: " + spec_like)
             if len(spec_list) < 1:
