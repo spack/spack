@@ -53,6 +53,13 @@ def setup_parser(subparser):
         default=False,
         help="checksum the preferred version only",
     )
+    sp.add_argument(
+        "--limit",
+        action="store",
+        type=int,
+        default=0,
+        help="maximum number of versions to checksum (implies --batch)",
+    )
     arguments.add_common_arguments(subparser, ["package"])
     subparser.add_argument(
         "versions", nargs=argparse.REMAINDER, help="versions to generate checksums for"
@@ -107,8 +114,9 @@ def checksum(parser, args):
         url_dict,
         pkg.name,
         keep_stage=args.keep_stage,
-        batch=(args.batch or len(args.versions) > 0 or len(url_dict) == 1),
+        batch=(args.batch or len(url_dict) == 1 or args.limit > 0),
         latest=args.latest,
+        limit=args.limit,
         fetch_options=pkg.fetch_options,
     )
 
