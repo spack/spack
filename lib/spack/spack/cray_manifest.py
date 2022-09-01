@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
+import sys
 
 import jsonschema
 import jsonschema.exceptions
 import six
-import sys
 
 import llnl.util.tty as tty
 
