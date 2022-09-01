@@ -393,10 +393,13 @@ class Llvm(CMakePackage, CudaPackage):
             )
     del libcxx_as
 
-    # Backport from llvm master; see
-    # https://bugs.llvm.org/show_bug.cgi?id=38233
-    # for a bug report about this problem in llvm master.
-    patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
+    # Backport from llvm to fix issues related to Python 3.7
+    # see https://bugs.llvm.org/show_bug.cgi?id=38233
+    patch(
+        "https://github.com/llvm/llvm-project/commit/5457b426f5e15a29c0acc8af1a476132f8be2a36.patch?full_index=1",
+        sha256="7a1e4aa80760167807255c3e3121b1281bfcf532396b2d8fb3dce021f3f18758",
+        when="@4:6+python+lldb ^python@3.7:",
+    )
 
     # fix building on SUSE (with panel.h being in /usr/include/ncurses/)
     # see https://reviews.llvm.org/D85219
