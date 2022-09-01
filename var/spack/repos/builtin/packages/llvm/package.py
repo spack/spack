@@ -398,9 +398,14 @@ class Llvm(CMakePackage, CudaPackage):
     # for a bug report about this problem in llvm master.
     patch("llvm_py37.patch", when="@4:6 ^python@3.7:")
 
-    # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2, first available in 12.0.0
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11+lldb")
+    # fix building on SUSE (with panel.h being in /usr/include/ncurses/)
+    # see https://reviews.llvm.org/D85219
+    # see https://github.com/spack/spack/issues/19625
+    patch(
+        "https://github.com/llvm/llvm-project/commit/c952ec15d38843b69e22dfd7b0665304a0459f9f.patch?full_index=1",
+        sha256="66932ba31b5bf8808ea112e42cfd79b2480a4936e711771c06ce851eac429b2c",
+        when="@10:11+lldb",
+    )
 
     # honor Python2_EXECUTABLE and Python3_EXECUTABLE when they are passed to cmake
     # see https://reviews.llvm.org/D91536
