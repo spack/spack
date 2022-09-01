@@ -29,6 +29,7 @@ from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.path import substitute_path_variables
+from spack.util.web import FetchError
 from spack.version import Version
 
 # TODO-27021
@@ -656,7 +657,7 @@ env:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(capfd):
+def test_with_config_bad_include():
     env_name = "test_bad_include"
     test_config = """\
 spack:
@@ -667,15 +668,14 @@ spack:
     _env_create(env_name, StringIO(test_config))
 
     e = ev.read(env_name)
-    with pytest.raises(SystemExit):
+    with pytest.raises(spack.config.ConfigFileError) as exc:
         with e:
             e.concretize()
 
-    out, err = capfd.readouterr()
+    err = str(exc)
+    assert "not retrieve configuration" in err
+    assert os.path.join("no", "such", "directory") in err
 
-    assert "missing include" in err
-    assert "/no/such/directory" in err
-    assert os.path.join("no", "such", "file.yaml") in err
     assert ev.active_environment() is None
 
 
@@ -721,25 +721,44 @@ def test_env_with_include_config_files_same_basename():
     assert environment_specs[1].satisfies("mpileaks@2.2")
 
 
-def test_env_with_included_config_file():
-    test_config = """\
-env:
-  include:
-  - ./included-config.yaml
-  specs:
-  - mpileaks
-"""
-    _env_create("test", StringIO(test_config))
-    e = ev.read("test")
-
-    with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
-        f.write(
-            """\
+@pytest.fixture(scope="function")
+def packages_file(tmpdir):
+    """Return the path to the packages configuration file."""
+    raw_yaml = """
 packages:
   mpileaks:
     version: [2.2]
 """
-        )
+    filename = tmpdir.ensure("testconfig", "packages.yaml")
+    filename.write(raw_yaml)
+    yield filename
+
+
+def mpileaks_env_config(include_path):
+    """Return the contents of an environment that includes the provided
+    path and lists mpileaks as the sole spec."""
+    return """\
+env:
+  include:
+  - {0}
+  specs:
+  - mpileaks
+""".format(
+        include_path
+    )
+
+
+def test_env_with_included_config_file(packages_file):
+    """Test inclusion of a relative packages configuration file added to an
+    existing environment."""
+    include_filename = "included-config.yaml"
+    test_config = mpileaks_env_config(os.path.join(".", include_filename))
+
+    _env_create("test", StringIO(test_config))
+    e = ev.read("test")
+
+    included_path = os.path.join(e.path, include_filename)
+    fs.rename(packages_file.strpath, included_path)
 
     with e:
         e.concretize()
@@ -747,65 +766,81 @@ packages:
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_scope():
+def test_env_with_included_config_file_url(tmpdir, mutable_empty_config, packages_file):
+    """Test configuration inclusion of a file whose path is a URL before
+    the environment is concretized."""
+
+    spack_yaml = tmpdir.join("spack.yaml")
+    with spack_yaml.open("w") as f:
+        f.write("spack:\n  include:\n    - file://{0}\n".format(packages_file))
+
+    env = ev.Environment(tmpdir.strpath)
+    ev.activate(env)
+    scopes = env.included_config_scopes()
+    assert len(scopes) == 1
+
+    cfg = spack.config.get("packages")
+    assert cfg["mpileaks"]["version"] == [2.2]
+
+
+def test_env_with_included_config_missing_file(tmpdir, mutable_empty_config):
+    """Test inclusion of a missing configuration file raises FetchError
+    noting missing file."""
+
+    spack_yaml = tmpdir.join("spack.yaml")
+    missing_file = tmpdir.join("packages.yaml")
+    with spack_yaml.open("w") as f:
+        f.write("spack:\n  include:\n    - {0}\n".format(missing_file.strpath))
+
+    env = ev.Environment(tmpdir.strpath)
+    with pytest.raises(FetchError, match="No such file or directory"):
+        ev.activate(env)
+
+
+def test_env_with_included_config_scope(tmpdir, packages_file):
+    """Test inclusion of a package file from the environment's configuration
+    stage directory. This test is intended to represent a case where a remote
+    file has already been staged."""
     config_scope_path = os.path.join(ev.root("test"), "config")
-    test_config = (
-        """\
-env:
-  include:
-  - %s
-  specs:
-  - mpileaks
-"""
-        % config_scope_path
-    )
 
+    # Configure the environment to include file(s) from the environment's
+    # remote configuration stage directory.
+    test_config = mpileaks_env_config(config_scope_path)
+
+    # Create the environment
     _env_create("test", StringIO(test_config))
 
     e = ev.read("test")
 
+    # Copy the packages.yaml file to the environment configuration
+    # directory so it is picked up during concretization. (Using
+    # copy instead of rename in case the fixture scope changes.)
     fs.mkdirp(config_scope_path)
-    with open(os.path.join(config_scope_path, "packages.yaml"), "w") as f:
-        f.write(
-            """\
-packages:
-  mpileaks:
-    version: [2.2]
-"""
-        )
+    include_filename = os.path.basename(packages_file.strpath)
+    included_path = os.path.join(config_scope_path, include_filename)
+    fs.copy(packages_file.strpath, included_path)
 
+    # Ensure the concretized environment reflects contents of the
+    # packages.yaml file.
     with e:
         e.concretize()
 
     assert any(x.satisfies("mpileaks@2.2") for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path():
+def test_env_with_included_config_var_path(packages_file):
+    """Test inclusion of a package configuration file with path variables
+    "staged" in the environment's configuration stage directory."""
     config_var_path = os.path.join("$tempdir", "included-config.yaml")
-    test_config = (
-        """\
-env:
-  include:
-  - %s
-  specs:
-  - mpileaks
-"""
-        % config_var_path
-    )
+    test_config = mpileaks_env_config(config_var_path)
 
     _env_create("test", StringIO(test_config))
     e = ev.read("test")
 
     config_real_path = substitute_path_variables(config_var_path)
     fs.mkdirp(os.path.dirname(config_real_path))
-    with open(config_real_path, "w") as f:
-        f.write(
-            """\
-packages:
-  mpileaks:
-    version: [2.2]
-"""
-        )
+    fs.rename(packages_file.strpath, config_real_path)
+    assert os.path.exists(config_real_path)
 
     with e:
         e.concretize()
@@ -3030,3 +3065,24 @@ def test_unify_when_possible_works_around_conflicts():
     assert len([x for x in e.all_specs() if x.satisfies("mpileaks+opt")]) == 1
     assert len([x for x in e.all_specs() if x.satisfies("mpileaks~opt")]) == 1
     assert len([x for x in e.all_specs() if x.satisfies("mpich")]) == 1
+
+
+def test_env_include_packages_url(
+    tmpdir, mutable_empty_config, mock_spider_configs, mock_curl_configs
+):
+    """Test inclusion of a (GitHub) URL."""
+    develop_url = "https://github.com/fake/fake/blob/develop/"
+    default_packages = develop_url + "etc/fake/defaults/packages.yaml"
+    spack_yaml = tmpdir.join("spack.yaml")
+    with spack_yaml.open("w") as f:
+        f.write("spack:\n  include:\n    - {0}\n".format(default_packages))
+    assert os.path.isfile(spack_yaml.strpath)
+
+    with spack.config.override("config:url_fetch_method", "curl"):
+        env = ev.Environment(tmpdir.strpath)
+        ev.activate(env)
+        scopes = env.included_config_scopes()
+        assert len(scopes) == 1
+
+        cfg = spack.config.get("packages")
+        assert "openmpi" in cfg["all"]["providers"]["mpi"]

@@ -12,6 +12,9 @@ class PyRequests(PythonPackage):
     homepage = "http://python-requests.org"
     pypi = "requests/requests-2.24.0.tar.gz"
 
+    version("2.28.1", sha256="7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983")
+    version("2.28.0", sha256="d568723a7ebd25875d8d1eaf5dfa068cd2fc8194b2e483d7b1f7c81918dbec6b")
+    version("2.27.1", sha256="68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61")
     version("2.26.0", sha256="b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7")
     version("2.25.1", sha256="27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804")
     version("2.24.0", sha256="b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b")
@@ -27,7 +30,8 @@ class PyRequests(PythonPackage):
     variant("socks", default=False, description="SOCKS and HTTP proxy support")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@2.26.0:")
+    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@2.26.0:2.27")
+    depends_on("python@3.7:", type=("build", "run"), when="@2.28.0:")
     depends_on("py-setuptools", type="build")
 
     depends_on("py-chardet@3.0.2:4", type=("build", "run"), when="@2.26: ^python@2:2")

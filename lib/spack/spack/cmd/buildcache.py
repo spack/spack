@@ -15,7 +15,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
-import spack.fetch_strategy as fs
 import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
@@ -711,7 +710,7 @@ def sync_fn(args):
                 stage.create()
                 stage.fetch()
                 web_util.push_to_url(local_path, dest_url, keep_original=True)
-            except fs.FetchError as e:
+            except web_util.FetchError as e:
                 tty.debug("spack buildcache unable to sync {0}".format(rel_path))
                 tty.debug(e)
             finally:

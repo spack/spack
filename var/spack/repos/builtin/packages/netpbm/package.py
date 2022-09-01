@@ -24,6 +24,7 @@ class Netpbm(MakefilePackage):
 
     maintainers = ["cessenat"]
 
+    version("10.73.40", sha256="8542ae62aa744dfd52c8e425208f895f082955a0629ac1749f80278d6afc0344")
     version("10.73.35", sha256="628dbe8490bc43557813d1fedb2720dfdca0b80dd3f2364cb2a45c6ff04b0f18")
 
     # As a default we wish to commpile absolutely everything at once.

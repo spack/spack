@@ -36,7 +36,8 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('main', branch='main')
-    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055')
+    version('15.0.0-rc3', sha256='e096e5a8728e3bda68f92332bc057f4f26bc6b063c8c87b283ffbbb87736b753')
+    version('14.0.6', sha256='98f15f842700bdb7220a166c8d2739a03a72e775b67031205078f39dd756a055', preferred=True)
     version('14.0.5', sha256='a4a57f029cb81f04618e05853f05fc2d21b64353c760977d8e7799bf7218a23a')
     version('14.0.4', sha256='1333236f9bee38658762076be4236cb5ebf15ae9b7f2bfce6946b96ae962dc73')
     version('14.0.3', sha256='0e1d049b050127ecf6286107e9a4400b0550f841d5d2288b9d31fd32ed0683d5')
@@ -574,7 +575,6 @@ class Llvm(CMakePackage, CudaPackage):
             define("LLVM_REQUIRES_RTTI", True),
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_EH", True),
-            define("LLVM_ENABLE_TERMINFO", False),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
             define("PYTHON_EXECUTABLE", python.command.path),
@@ -639,6 +639,10 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("lldb")
             cmake_args.append(define("LLDB_ENABLE_LIBEDIT", True))
             cmake_args.append(define("LLDB_ENABLE_CURSES", True))
+            if spec["ncurses"].satisfies("+termlib"):
+                cmake_args.append(define("LLVM_ENABLE_TERMINFO", True))
+            else:
+                cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
             cmake_args.append(define("LLDB_ENABLE_LIBXML2", False))
             if spec.version >= Version("10"):
                 cmake_args.append(from_variant("LLDB_ENABLE_PYTHON", "python"))
@@ -646,6 +650,8 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.append(define("LLDB_DISABLE_PYTHON", "~python" in spec))
             if spec.satisfies("@5.0.0: +python"):
                 cmake_args.append(define("LLDB_USE_SYSTEM_SIX", True))
+        else:
+            cmake_args.append(define("LLVM_ENABLE_TERMINFO", False))
 
         if "+gold" in spec:
             cmake_args.append(define("LLVM_BINUTILS_INCDIR", spec["binutils"].prefix.include))
@@ -668,14 +674,22 @@ class Llvm(CMakePackage, CudaPackage):
         if "+lld" in spec:
             projects.append("lld")
         if "+compiler-rt" in spec:
-            projects.append("compiler-rt")
+            if self.spec.satisfies("@15.0.0:"):
+                runtimes.append("compiler-rt")
+            else:
+                projects.append("compiler-rt")
         if "+libcxx" in spec:
-            projects.append("libcxx")
-            projects.append("libcxxabi")
+            if self.spec.satisfies("@15.0.0:"):
+                runtimes.extend(["libcxx", "libcxxabi"])
+            else:
+                projects.extend(["libcxx", "libcxxabi"])
         if "+mlir" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:
-            projects.append("libunwind")
+            if self.spec.satisfies("@15.0.0:"):
+                runtimes.append("libunwind")
+            else:
+                projects.append("libunwind")
         if "+polly" in spec:
             projects.append("polly")
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
@@ -712,6 +726,11 @@ class Llvm(CMakePackage, CudaPackage):
 
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))
+
+        # Enable building with CLT [and not require full Xcode]
+        # https://github.com/llvm/llvm-project/issues/57037
+        if self.spec.satisfies("@15.0.0: platform=darwin"):
+            cmake_args.append(define("BUILTINS_CMAKE_ARGS", "-DCOMPILER_RT_ENABLE_IOS=OFF"))
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(define("LLVM_ENABLE_PROJECTS", projects))
