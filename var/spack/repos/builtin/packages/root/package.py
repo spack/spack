@@ -82,11 +82,12 @@ class Root(CMakePackage):
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch("root7-webgui.patch", level=1, when="@6.16.00")
-    # 6.26.00:6.26.06 fails for recent libc versions when ROOT7 is enabled
+    # 6.26.00:6.26.06 can fail with empty string COMPILE_DEFINITIONS, which this patch
+    # protects against
     patch(
         "https://github.com/root-project/root/pull/11111.patch?full_index=1",
         sha256="3115be912bd948979c9c2a3d89ffe6437fe17bd3b81396958c6cb6f51f64ae62",
-        when="@6.26:6.26.06 +root7",
+        when="@6.26:6.26.06",
     )
     # 6.26.00:6.26.06 fails for recent nlohmann-json single headers versions
     patch(
