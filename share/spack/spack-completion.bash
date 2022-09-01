@@ -569,7 +569,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_sync() {
-    SPACK_COMPREPLY="-h --help --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
 }
 
 _spack_buildcache_update_index() {
