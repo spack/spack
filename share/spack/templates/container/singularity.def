@@ -11,7 +11,7 @@ Stage: build
   {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
   {{ os_packages_build.clean }}
 
-{% endif %
+{% endif %}
 
   {% if extra_instructions.pre_build %}
   {{ extra_instructions.pre_build }}
