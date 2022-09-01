@@ -174,7 +174,7 @@ def read(path, apply_updates):
 
         jsonschema.validate(json_data, manifest_schema)
     except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
-        raise ManifestValidationError(e)
+        raise ManifestValidationError(str(e))
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))

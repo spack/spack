@@ -377,8 +377,9 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, mutable
 {
 """
         )
-    with pytest.raises(cray_manifest.ManifestValidationError):
+    with pytest.raises(cray_manifest.ManifestValidationError) as e:
         cray_manifest.read(invalid_json_path, True)
+    str(e)
 
     # Valid JSON, but does not conform to schema (schema-version is not a string
     # of length > 0)
@@ -396,5 +397,6 @@ def test_convert_validation_error(tmpdir, mutable_config, mock_packages, mutable
 }
 """
         )
-    with pytest.raises(cray_manifest.ManifestValidationError):
+    with pytest.raises(cray_manifest.ManifestValidationError) as e:
         cray_manifest.read(invalid_schema_path, True)
+    str(e)
