@@ -4965,7 +4965,7 @@ class SpecLexer(spack.parse.Lexer):
             [
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (
-                    r"\@\s*[\:\w]([\:\w.,\-]\s*)*(\s*\=\s*\w[\w.\-]*)?",
+                    r"\@\s*[\:\w]([\:\w.,\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?",
                     lambda scanner, val: self.token(VER, val),
                 ),
                 (r"\+", lambda scanner, val: self.token(ON, val)),

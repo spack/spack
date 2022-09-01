@@ -672,16 +672,6 @@ class TestSpecSyntax(object):
     # ========================================================================
     # Lex checks
     # ========================================================================
-    def test_flags(self):
-        lex = [Token(sp.ID, "mvapich_foo"), Token(sp.ID, "cppflags"), Token(sp.EQ, "="), Token(sp.VAL, "-g")]
-
-        self.check_lex(lex, 'mvapich_foo cppflags="-g"')
-
-    def test_libs(self):
-        lex = [Token(sp.ID, "mvapich_foo"), Token(sp.ID, "ldlibs"), Token(sp.EQ, "="), Token(sp.VAL, "-lfoo")]
-
-        self.check_lex(lex, 'mvapich_foo ldlibs="-lfoo"')
-
     def test_ambiguous(self):
         # This first one is ambiguous because - can be in an identifier AND
         # indicate disabling an option.
