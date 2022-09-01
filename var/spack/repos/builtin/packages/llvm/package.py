@@ -348,8 +348,9 @@ class Llvm(CMakePackage, CudaPackage):
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
     patch("llvm5-lld-ELF-Symbols.patch", when="@5+lld%clang@7:")
 
-    # Fix missing std:size_t in 'llvm@4:5' when built with '%clang@7:'
-    patch("xray_buffer_queue-cstddef.patch", when="@4:5+compiler-rt%clang@7:")
+    # fix missing ::size_t in 'llvm@4:5'
+    # see comments in the patch file
+    patch("xray_buffer_queue-cstddef.patch", when="@4:5+compiler-rt")
 
     # fix building with glibc 2.31
     # see https://reviews.llvm.org/D70662
