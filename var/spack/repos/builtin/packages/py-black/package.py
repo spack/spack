@@ -17,6 +17,7 @@ class PyBlack(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("22.8.0", sha256="792f7eb540ba9a17e8656538701d3eb1afcb134e3b45b71f20b25c77a8db7e6e")
     version("22.6.0", sha256="6c6d39e28aed379aec40da1c65434c77d75e65bb59a1e1c283de545fb4e7c6c9")
     version("22.3.0", sha256="35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79")
     version("22.1.0", sha256="a7c0192d35635f6fc1174be575cb7915e92e5dd629ee79fdaf0dcfa41a80afb5")
@@ -35,14 +36,10 @@ class PyBlack(PythonPackage):
 
     # setup.py
     depends_on("python@3.6.2:", type=("build", "run"))
-
     depends_on("py-click@8:", type=("build", "run"))
-    # see: https://github.com/psf/black/issues/2964
-    # note that pip doesn't know this constraint.
-    depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
-
     depends_on("py-platformdirs@2:", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@21.7:", type=("build", "run"))
+    depends_on("py-tomli@1.1:", when="@22.8: ^python@:3.10", type=("build", "run"))
+    depends_on("py-tomli@1.1:", when="@21.7:22.6", type=("build", "run"))
     depends_on("py-typed-ast@1.4.2:", when="^python@:3.7", type=("build", "run"))
     depends_on("py-pathspec@0.9:", type=("build", "run"))
     depends_on("py-dataclasses@0.6:", when="^python@:3.6", type=("build", "run"))
@@ -53,6 +50,10 @@ class PyBlack(PythonPackage):
     depends_on("py-uvloop@0.15.2:", when="+uvloop", type=("build", "run"))
     depends_on("py-ipython@7.8:", when="+jupyter", type=("build", "run"))
     depends_on("py-tokenize-rt@3.2:", when="+jupyter", type=("build", "run"))
+
+    # see: https://github.com/psf/black/issues/2964
+    # note that pip doesn't know this constraint.
+    depends_on("py-click@:8.0", when="@:22.2", type=("build", "run"))
 
     @property
     def import_modules(self):
