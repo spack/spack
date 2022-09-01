@@ -93,7 +93,16 @@ class Llvm(CMakePackage, CudaPackage):
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, when="@10:", description="Build with MLIR support")
     variant(
-        "libunwind", default=True, when="+clang", description="Build the LLVM unwinder library"
+        "libunwind",
+        values=(
+            "none",
+            conditional("project", when="@:15"),
+            conditional("runtime", when="+clang @6:"),
+        ),
+        default="runtime",
+        description="Build the LLVM unwinder library"
+        "either as a runtime (with just-build Clang) "
+        "or as a project (with the compiler in use)",
     )
     variant(
         "polly",
@@ -243,7 +252,7 @@ class Llvm(CMakePackage, CudaPackage):
     with when("@:10"):
         # Versions 10 and older cannot build runtimes with cmake@3.17:
         # See https://reviews.llvm.org/D77284
-        for runtime in ["libcxx", "compiler-rt"]:
+        for runtime in ["libunwind", "libcxx", "compiler-rt"]:
             depends_on("cmake@:3.16", type="build", when="{0}=runtime".format(runtime))
         del runtime
     depends_on("python", when="~python", type="build")
@@ -796,11 +805,10 @@ class Llvm(CMakePackage, CudaPackage):
             projects.extend(["libcxx", "libcxxabi"])
         if "+mlir" in spec:
             projects.append("mlir")
-        if "+libunwind" in spec:
-            if self.spec.satisfies("@15.0.0:"):
-                runtimes.append("libunwind")
-            else:
-                projects.append("libunwind")
+        if "libunwind=runtime" in spec:
+            runtimes.append("libunwind")
+        elif "libunwind=project" in spec:
+            projects.append("libunwind")
         if "+polly" in spec:
             projects.append("polly")
             cmake_args.append(define("LINK_POLLY_INTO_TOOLS", True))
