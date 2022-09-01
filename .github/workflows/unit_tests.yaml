@@ -321,7 +321,7 @@ jobs:
           rm lib/spack/docs/_spack_root
         else
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
-          $(which spack) unit-test -x -m "not maybeslow" -k "package_sanity"
+          $(which spack) unit-test -x -m "not maybeslow" -k "test_all_virtual_packages_have_default_providers"
         fi
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
