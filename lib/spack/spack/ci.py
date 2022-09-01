@@ -36,6 +36,7 @@ import spack.repo
 import spack.util.executable as exe
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
+import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.error import SpackError
 from spack.reporters.cdash import CDash
@@ -644,14 +645,18 @@ def generate_gitlab_ci_yaml(
     # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
 
-    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci generate requires an env containing a mirror")
 
     ci_mirrors = yaml_root["mirrors"]
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
+
+    spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
+    if spack_buildcache_copy:
+        buildcache_copies = {}
+        buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
+        buildcache_copy_dest_prefix = spack_buildcache_copy
 
     # Check for a list of "known broken" specs that we should not bother
     # trying to build.
@@ -1020,6 +1025,36 @@ def generate_gitlab_ci_yaml(
                         "{0} ({1})".format(release_spec, release_spec_dag_hash)
                     )
 
+                # Only keep track of these if we are copying rebuilt cache entries
+                if spack_buildcache_copy:
+                    # TODO: This assumes signed version of the spec
+                    buildcache_copies[release_spec_dag_hash] = [
+                        {
+                            "src": url_util.join(
+                                buildcache_copy_src_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_name(release_spec, ".spec.json.sig"),
+                            ),
+                            "dest": url_util.join(
+                                buildcache_copy_dest_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_name(release_spec, ".spec.json.sig"),
+                            ),
+                        },
+                        {
+                            "src": url_util.join(
+                                buildcache_copy_src_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_path_name(release_spec, ".spack"),
+                            ),
+                            "dest": url_util.join(
+                                buildcache_copy_dest_prefix,
+                                bindist.build_cache_relative_path(),
+                                bindist.tarball_path_name(release_spec, ".spack"),
+                            ),
+                        },
+                    ]
+
                 if artifacts_root:
                     job_dependencies.append(
                         {"job": generate_job_name, "pipeline": "{0}".format(parent_pipeline_id)}
@@ -1197,32 +1232,6 @@ def generate_gitlab_ci_yaml(
 
             output_object["sign-pkgs"] = signing_job
 
-        if spack_buildcache_copy:
-            # Generate a job to copy the contents from wherever the builds are getting
-            # pushed to the url specified in the "SPACK_BUILDCACHE_COPY" environment
-            # variable.
-            src_url = remote_mirror_override or remote_mirror_url
-            dest_url = spack_buildcache_copy
-
-            stage_names.append("stage-copy-buildcache")
-            copy_job = {
-                "stage": "stage-copy-buildcache",
-                "tags": ["spack", "public", "medium", "aws", "x86_64"],
-                "image": "ghcr.io/spack/python-aws-bash:0.0.1",
-                "when": "on_success",
-                "interruptible": True,
-                "retry": service_job_retries,
-                "script": [
-                    ". ./share/spack/setup-env.sh",
-                    "spack --version",
-                    "aws s3 sync --exclude *index.json* --exclude *pgp* {0} {1}".format(
-                        src_url, dest_url
-                    ),
-                ],
-            }
-
-            output_object["copy-mirror"] = copy_job
-
         if rebuild_index_enabled:
             # Add a final job to regenerate the index
             stage_names.append("stage-rebuild-index")
@@ -1285,6 +1294,21 @@ def generate_gitlab_ci_yaml(
         spack_stack_name = os.environ.get("SPACK_CI_STACK_NAME", None)
         if spack_stack_name:
             output_object["variables"]["SPACK_CI_STACK_NAME"] = spack_stack_name
+
+        if spack_buildcache_copy:
+            # Write out the file describing specs that should be copied
+            copy_specs_dir = os.path.join(pipeline_artifacts_dir, "specs_to_copy")
+
+            if not os.path.exists(copy_specs_dir):
+                os.makedirs(copy_specs_dir)
+
+            copy_specs_file = os.path.join(
+                copy_specs_dir,
+                "copy_{}_specs.json".format(spack_stack_name if spack_stack_name else "rebuilt"),
+            )
+
+            with open(copy_specs_file, "w") as fd:
+                fd.write(json.dumps(buildcache_copies))
 
         sorted_output = {}
         for output_key, output_value in sorted(output_object.items()):
