@@ -3,10 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import socket
 
 from spack.package import *
+from spack.pkg.builtin.camp import hip_repair_options
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -123,13 +123,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
-            # there is only one dir like this, but the version component is unknown
-            entries.append(
-                cmake_cache_path(
-                    "HIP_CLANG_INCLUDE_PATH",
-                    glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
-                )
-            )
+            hip_repair_options(entries, spec)
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)

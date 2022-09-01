@@ -8,6 +8,14 @@ import glob
 from spack.package import *
 
 
+def hip_repair_options(options, spec):
+    # there is only one dir like this, but the version component is unknown
+    options.append(
+        "-DHIP_CLANG_INCLUDE_PATH="
+        + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
+    )
+
+
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
@@ -59,12 +67,9 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+rocm" in spec:
             options.extend(["-DENABLE_HIP=ON", "-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix)])
-            # there is only one dir like this, but the version component is unknown
 
-            options.append(
-                "-DHIP_CLANG_INCLUDE_PATH="
-                + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
-            )
+            hip_repair_options(options, spec)
+
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
