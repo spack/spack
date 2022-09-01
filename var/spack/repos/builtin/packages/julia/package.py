@@ -56,8 +56,8 @@ class Julia(MakefilePackage):
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
 
     # Do not use internal unwind.  We need to use a conflict, because
-    # `internal_unwind` is defined only when `+clang`.
-    conflicts("^llvm+internal_unwind")
+    # `libunwind` is defined only when `+clang`.
+    conflicts("^llvm+libunwind")
 
     with when("@1.9.0:1.9"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1

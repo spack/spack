@@ -93,7 +93,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, when="@10:", description="Build with MLIR support")
     variant(
-        "internal_unwind", default=True, when="+clang", description="Build the libcxxabi libunwind"
+        "libunwind", default=True, when="+clang", description="Build the LLVM unwinder library"
     )
     variant(
         "polly",
@@ -796,7 +796,7 @@ class Llvm(CMakePackage, CudaPackage):
             projects.extend(["libcxx", "libcxxabi"])
         if "+mlir" in spec:
             projects.append("mlir")
-        if "+internal_unwind" in spec:
+        if "+libunwind" in spec:
             if self.spec.satisfies("@15.0.0:"):
                 runtimes.append("libunwind")
             else:
