@@ -190,7 +190,7 @@ default_format += "{variants}{arch=architecture}"
 CLEARSIGN_FILE_REGEX = re.compile(
     (
         r"^-----BEGIN PGP SIGNED MESSAGE-----"
-        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNVERURE-----"
+        r"\s+Hash:\s+[^\s]+\s+(.+)-----BEGIN PGP SIGNATURE-----"
     ),
     re.MULTILINE | re.DOTALL,
 )
@@ -671,9 +671,9 @@ class DependencySpec(object):
 
     Dependencies can be one (or more) of several types:
 
-    - build: needs to be in the PVERH at build time.
+    - build: needs to be in the PATH at build time.
     - link: is linked to and added to compiler flags.
-    - run: needs to be in the PVERH for the package to run.
+    - run: needs to be in the PATH for the package to run.
 
     Fields:
     - spec: Spec depended on by parent.
@@ -4290,7 +4290,7 @@ class Spec(object):
             ${COMPILERFLAGS} Compiler flags
             ${OPTIONS}       Options
             ${ARCHITECTURE}  Architecture
-            ${PLVERFORM}      Platform
+            ${PLATFORM}      Platform
             ${OS}            Operating System
             ${TARGET}        Target
             ${SHA1}          Dependencies 8-char sha1 prefix
@@ -4455,11 +4455,11 @@ class Spec(object):
                 elif named_str == "OPTIONS":
                     if self.variants:
                         write(fmt % transform(self, str(self.variants)), "+")
-                elif named_str in ["ARCHITECTURE", "PLVERFORM", "TARGET", "OS"]:
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
                         if named_str == "ARCHITECTURE":
                             write(fmt % transform(self, str(self.architecture)), "=")
-                        elif named_str == "PLVERFORM":
+                        elif named_str == "PLATFORM":
                             platform = str(self.architecture.platform)
                             write(fmt % transform(self, platform), "=")
                         elif named_str == "OS":
@@ -4938,7 +4938,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, VER, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, VER, ON, OFF, PCT, EQ, ID, VAL, FILE = range(10)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -4959,9 +4959,10 @@ class SpecLexer(spack.parse.Lexer):
         super(SpecLexer, self).__init__(
             [
                 (r"\^", lambda scanner, val: self.token(DEP, val)),
-                (r"\@\s*\w[\w.-]*(\s*\=\s*\w[\w.-]*)?", lambda scanner, val: self.token(VER, val)),
-                (r"\:", lambda scanner, val: self.token(COLON, val)),
-                (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                (
+                    r"\@\s*[\:\w]([\:\w.,\-]\s*)*(\s*\=\s*\w[\w.\-]*)?",
+                    lambda scanner, val: self.token(VER, val),
+                ),
                 (r"\+", lambda scanner, val: self.token(ON, val)),
                 (r"\-", lambda scanner, val: self.token(OFF, val)),
                 (r"\~", lambda scanner, val: self.token(OFF, val)),
@@ -5225,14 +5226,8 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ID):
                 self.previous = self.token
                 if self.accept(EQ):
-                    self.expect(ID)
-                    values = self.token.value
-                    if self.next and self.next.is_a(COMMA):
-                        while self.accept(COMMA):
-                            values += self.token.value
-                            self.expect(ID)
-                            values += self.token.value
-                    spec._add_flag(self.previous.value, values)
+                    self.expect(VAL)
+                    spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse
@@ -5265,19 +5260,28 @@ class SpecParser(spack.parse.Parser):
             self.check_identifier()
             return self.token.value
 
-    def version(self):
+    def version(self, vstring):
         start = None
         end = None
-        print(self.token.value)
-        version_spec = self.token.value.lstrip('@').split(':')
-        print(version_spec)
-        if len(version_spec)>2:
-            self.next_token_error("Invalid version specifier")
-        start = version_spec[0]
-        if len(version_spec) > 1:
-           end = version_spec[1]
+        version_spec = vstring.lstrip("@")
+        if ":" in version_spec:
+            version_spec = version_spec.split(":")
         else:
-            return vn.Version(start)
+            # No colon: return the version
+            return vn.Version(version_spec)
+
+        if len(version_spec) > 2:
+            # can only have one range in a version
+            self.next_token_error("Invalid version specifier")
+
+        if self.token.value[1] == ":":
+            # open ended range @:0.1.2
+            end = version_spec[0]
+        else:
+            start = version_spec[0]
+
+        if len(version_spec) > 1:
+            end = version_spec[1]
 
         if start:
             start = vn.Version(start)
@@ -5286,10 +5290,8 @@ class SpecParser(spack.parse.Parser):
         return vn.VersionRange(start, end)
 
     def version_list(self):
-        vlist = []
-        vlist.append(self.version())
-        while self.accept(COMMA):
-            vlist.append(self.version())
+        vstrings = self.token.value.split(",")
+        vlist = [self.version(v) for v in vstrings]
         return vlist
 
     def compiler(self):
