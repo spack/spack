@@ -13,3 +13,6 @@ class PerlExtutilsConfig(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/ExtUtils-Config-0.008.tar.gz"
 
     version("0.008", sha256="ae5104f634650dce8a79b7ed13fb59d67a39c213a6776cfdaa3ee749e62f1a8c")
+    depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker@6.30:", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-data-dumper", type="run")  # AUTO-CPAN2Spack

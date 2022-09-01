@@ -14,6 +14,7 @@ class PyMditPyPlugins(PythonPackage):
     git = "https://github.com/executablebooks/mdit-py-plugins/"
     pypi = "mdit-py-plugins/mdit-py-plugins-0.2.8.tar.gz"
 
+    version("0.3.0", sha256="ecc24f51eeec6ab7eecc2f9724e8272c2fb191c2e93cf98109120c2cace69750")
     version("0.2.8", sha256="5991cef645502e80a5388ec4fc20885d2313d4871e8b8e320ca2de14ac0c015f")
 
     depends_on("py-setuptools", type="build")

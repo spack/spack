@@ -1,0 +1,16 @@
+--- src/kdc/t_ndr.c~	2022-05-25 20:35:20.000000000 -0500
++++ src/kdc/t_ndr.c	2022-09-08 11:09:18.959612167 -0500
+@@ -158,4 +158,5 @@
+     RUN_TEST(s4u_di_double);
+ 
+     printf("Passed NDR tests\n");
++    return 0;
+ }
+--- src/util/profile/t_profile.c~	2022-05-25 20:35:20.000000000 -0500
++++ src/util/profile/t_profile.c	2022-09-08 11:09:28.491535367 -0500
+@@ -386,4 +386,5 @@
+     test_delete_ordering();
+     test_flush_to_file();
+     test_merge_subsections();
++    return 0;
+ }

@@ -11,7 +11,7 @@ class PerlMathMatrixreal(PerlPackage):
     also "vector of real numbers")."""
 
     homepage = "https://metacpan.org/pod/Math::MatrixReal"
-    url = "http://search.cpan.org/CPAN/authors/id/L/LE/LETO/Math-MatrixReal-2.13.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/L/LE/LETO/Math-MatrixReal-2.13.tar.gz"
 
     version("2.13", sha256="4f9fa1a46dd34d2225de461d9a4ed86932cdd821c121fa501a15a6d4302fb4b2")
 

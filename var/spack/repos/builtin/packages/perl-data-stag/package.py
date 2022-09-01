@@ -10,7 +10,7 @@ class PerlDataStag(PerlPackage):
     """Structured Tags datastructures"""
 
     homepage = "https://metacpan.org/pod/Data::Stag"
-    url = "http://search.cpan.org/CPAN/authors/id/C/CM/CMUNGALL/Data-Stag-0.14.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/C/CM/CMUNGALL/Data-Stag-0.14.tar.gz"
 
     version("0.14", sha256="4ab122508d2fb86d171a15f4006e5cf896d5facfa65219c0b243a89906258e59")
 

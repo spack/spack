@@ -18,3 +18,7 @@ class PerlFileFindRule(PerlPackage):
     depends_on("perl-extutils-makemaker", type="build")
     depends_on("perl-number-compare", type=("build", "run"))
     depends_on("perl-text-glob", type=("build", "run"))
+    provides("perl-file-find-rule-test-ateam")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-number-compare", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-text-glob@0.7:", type="run")  # AUTO-CPAN2Spack

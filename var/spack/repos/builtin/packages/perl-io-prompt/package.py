@@ -27,7 +27,16 @@ class PerlIoPrompt(PerlPackage):
     homepage = "https://metacpan.org/pod/IO::Prompt"
     url = "https://cpan.metacpan.org/authors/id/D/DC/DCONWAY/IO-Prompt-0.997004.tar.gz"
 
-    version("0.997004", sha256="f17bb305ee6ac8b5b203e6d826eb940c4f3f6d6f4bfe719c3b3a225f46f58615")
+    version(
+        "0.997.004",
+        sha256="f17bb305ee6ac8b5b203e6d826eb940c4f3f6d6f4bfe719c3b3a225f46f58615",
+        url="https://cpan.metacpan.org/authors/id/D/DC/DCONWAY/IO-Prompt-0.997004.tar.gz",
+    )
+    version(
+        "0.997.003",
+        sha256="9e00844263fedf960dff1938b7b9e5d35a47e52c713a7c790224401a2fe54416",
+        url="https://cpan.metacpan.org/authors/id/D/DC/DCONWAY/IO-Prompt-0.997003.tar.gz",
+    )
 
     depends_on("perl-module-build", type="build")
 

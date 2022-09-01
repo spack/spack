@@ -18,3 +18,6 @@ class PerlTestOutput(PerlPackage):
     version("1.03", sha256="cac7c9664105764f5845cb48bf7e5b2da806009d33360dab6a615c6dcfe7ca19")
     version("1.02_01", sha256="fd762b929555b93ca7de05bbd02195c09019faf60d63e38cfca3bdf87dfadb56")
     version("1.02", sha256="088a25e5802579e6d3e6669da4228b8897d1372a02998a6bf7435f22688d2e56")
+    depends_on("perl@5.8:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker@6.64:", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-capture-tiny@0.17:", type="run")  # AUTO-CPAN2Spack

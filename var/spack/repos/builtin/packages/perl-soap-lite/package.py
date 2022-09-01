@@ -10,7 +10,7 @@ class PerlSoapLite(PerlPackage):
     """Perl's Web Services Toolkit"""
 
     homepage = "https://metacpan.org/pod/SOAP::Lite"
-    url = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
 
     version("1.22", sha256="92f492f8722cb3002cd1dce11238cee5599bb5bd451a062966df45223d33693a")
 

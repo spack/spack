@@ -10,7 +10,7 @@ class PerlXmlParserLite(PerlPackage):
     """Lightweight pure-perl XML Parser (based on regexps)"""
 
     homepage = "https://metacpan.org/pod/XML::Parser::Lite"
-    url = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/XML-Parser-Lite-0.721.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/P/PH/PHRED/XML-Parser-Lite-0.721.tar.gz"
 
     version("0.721", sha256="5862a36ecab9db9aad021839c847e8d2f4ab5a7796c61d0fb069bb69cf7908ba")
 

@@ -13,6 +13,6 @@ class PerlTextSoundex(PerlPackage):
     that they can be matched despite minor differences in spelling"""
 
     homepage = "https://metacpan.org/pod/Text::Soundex"
-    url = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Text-Soundex-3.05.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/R/RJ/RJBS/Text-Soundex-3.05.tar.gz"
 
     version("3.05", sha256="f6dd55b4280b25dea978221839864382560074e1d6933395faee2510c2db60ed")

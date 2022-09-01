@@ -20,4 +20,13 @@ class PerlFileChdir(PerlPackage):
     homepage = "https://metacpan.org/pod/File::chdir"
     url = "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/File-chdir-0.1011.tar.gz"
 
-    version("0.1011", sha256="31ebf912df48d5d681def74b9880d78b1f3aca4351a0ed1fe3570b8e03af6c79")
+    version(
+        "0.10.11",
+        sha256="31ebf912df48d5d681def74b9880d78b1f3aca4351a0ed1fe3570b8e03af6c79",
+        url="https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/File-chdir-0.1011.tar.gz",
+    )
+    version(
+        "0.10.10",
+        sha256="efc121f40bd7a0f62f8ec9b8bc70f7f5409d81cd705e37008596c8efc4452b01",
+        url="https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/File-chdir-0.1010.tar.gz",
+    )

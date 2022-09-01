@@ -10,6 +10,10 @@ class PerlHttpDate(PerlPackage):
     """Date conversion routines"""
 
     homepage = "https://metacpan.org/pod/HTTP::Date"
-    url = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTTP-Date-6.02.tar.gz"
 
     version("6.02", sha256="e8b9941da0f9f0c9c01068401a5e81341f0e3707d1c754f8e11f42a7e629e333")
+    depends_on("perl@5.6.2:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-time-local@1.28:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-time-zone", type="run")  # AUTO-CPAN2Spack

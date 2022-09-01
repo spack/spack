@@ -14,4 +14,6 @@ class PerlExtutilsInstallpaths(PerlPackage):
 
     version("0.012", sha256="84735e3037bab1fdffa3c2508567ad412a785c91599db3c12593a50a1dd434ed")
 
-    depends_on("perl-extutils-config", type=("build", "run"))
+    depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-config@0.2:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack

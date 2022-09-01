@@ -12,6 +12,12 @@ class PyPytest(PythonPackage):
     homepage = "https://pytest.org/"
     pypi = "pytest/pytest-5.2.1.tar.gz"
 
+    version("7.1.3", sha256="4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39")
+    version("7.1.2", sha256="a06a0425453864a270bc45e71f783330a7428defb4230fb5e6a731fde06ecd45")
+    version("7.1.1", sha256="841132caef6b1ad17a9afde46dc4f6cfa59a05f9555aae5151f73bdf2820ca63")
+    version("7.1.0", sha256="f1089d218cfcc63a212c42896f1b7fbf096874d045e1988186861a1a87d27b47")
+    version("7.0.1", sha256="e30905a0c131d3d94b89624a1cc5afec3e0ba2fbdb151867d8e0ebd49850f171")
+    version("7.0.0", sha256="dad48ffda394e5ad9aa3b7d7ddf339ed502e5e365b1350e0af65f4a602344b11")
     version("6.2.5", sha256="131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89")
     version("6.2.4", sha256="50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b")
     version("6.2.1", sha256="66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306")

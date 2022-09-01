@@ -11,11 +11,13 @@ class PerlModuleImplementation(PerlPackage):
     module"""
 
     homepage = "https://metacpan.org/pod/Module::Implementation"
-    url = "http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/Module-Implementation-0.09.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Module-Implementation-0.09.tar.gz"
 
     version("0.09", sha256="c15f1a12f0c2130c9efff3c2e1afe5887b08ccd033bd132186d1e7d5087fd66d")
 
-    depends_on("perl-module-runtime", type=("build", "run"))
-    depends_on("perl-test-fatal", type=("build", "run"))
-    depends_on("perl-test-requires", type=("build", "run"))
-    depends_on("perl-try-tiny", type=("build", "run"))
+    depends_on("perl-test-fatal@0.6:", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl@5.6:", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-test-requires", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-module-runtime@0.12:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-try-tiny", type="run")  # AUTO-CPAN2Spack

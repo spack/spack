@@ -10,7 +10,7 @@ class PerlTestMost(PerlPackage):
     """Most commonly needed test functions and features."""
 
     homepage = "https://metacpan.org/pod/Test::Most"
-    url = "http://search.cpan.org/CPAN/authors/id/O/OV/OVID/Test-Most-0.35.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/O/OV/OVID/Test-Most-0.35.tar.gz"
 
     version("0.35", sha256="9897a6f4d751598d2ed1047e01c1554b01d0f8c96c45e7e845229782bf6f657f")
 

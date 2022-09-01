@@ -16,6 +16,7 @@ class Krb5(AutotoolsPackage):
     list_url = "https://kerberos.org/dist/krb5/"
     list_depth = 1
 
+    version("1.20", sha256="7e022bdd3c851830173f9faaa006a230a0e0fdad4c953e85bff4bf0da036e12f")
     version("1.19.3", sha256="56d04863cfddc9d9eb7af17556e043e3537d41c6e545610778676cf551b9dcd0")
     version("1.19.2", sha256="10453fee4e3a8f8ce6129059e5c050b8a65dab1c257df68b99b3112eaa0cdf6a")
     version("1.18.2", sha256="c6e4c9ec1a98141c3f5d66ddf1a135549050c9fab4e9a4620ee9b22085873ae0")
@@ -29,7 +30,8 @@ class Krb5(AutotoolsPackage):
 
     depends_on("diffutils", type="build")
     depends_on("bison", type="build")
-    depends_on("openssl@:1")
+    depends_on("openssl@:1", when="@:1.19")
+    depends_on("openssl@1:3", when="@1.20:")
     depends_on("gettext")
 
     variant(
@@ -37,6 +39,9 @@ class Krb5(AutotoolsPackage):
     )
     # This patch is applied in newer upstream releases
     patch("mit-krb5-1.17-static-libs.patch", level=0, when="@:1.18.9")
+
+    # Fix missing returns in test main()
+    patch("mit-krb5-test-return-types.patch", level=0)
 
     configure_directory = "src"
     build_directory = "src"

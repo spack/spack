@@ -15,7 +15,7 @@ class PerlCgi(PerlPackage):
     homepage = "https://metacpan.org/pod/CGI"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEEJO/CGI-4.40.tar.gz"
 
-    maintainers = ["cessenat"]
+    maintainers = ["cessenat", "chissg", "gartung", "marcmengel", "vitodb"]
 
     version("4.54", sha256="9608a044ae2e87cefae8e69b113e3828552ddaba0d596a02f9954c6ac17fa294")
     version("4.53", sha256="c67e732f3c96bcb505405fd944f131fe5c57b46e5d02885c00714c452bf14e60")
@@ -25,3 +25,18 @@ class PerlCgi(PerlPackage):
     version("4.37", sha256="7a14eee5df640f7141848f653cf48d99bfc9b5c68e18167338ee01b91cdfb883")
 
     depends_on("perl-html-parser", type=("build", "run"))
+    provides("perl-cgi-carp")  # AUTO-CPAN2Spack
+    provides("perl-cgi-cookie")  # AUTO-CPAN2Spack
+    provides("perl-cgi-file-temp")  # AUTO-CPAN2Spack
+    provides("perl-cgi-html-functions")  # AUTO-CPAN2Spack
+    provides("perl-cgi-multipartbuffer")  # AUTO-CPAN2Spack
+    provides("perl-cgi-pretty")  # AUTO-CPAN2Spack
+    provides("perl-cgi-push")  # AUTO-CPAN2Spack
+    provides("perl-cgi-util")  # AUTO-CPAN2Spack
+    provides("perl-fh")  # AUTO-CPAN2Spack
+    depends_on("perl-test-deep@0.11:", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl@5.8.1:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-test-nowarnings", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-test-warn@0.3:", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-html-entities@3.69:", type="run")  # AUTO-CPAN2Spack

@@ -12,4 +12,7 @@ class PerlClone(PerlPackage):
     homepage = "https://metacpan.org/pod/Clone"
     url = "https://cpan.metacpan.org/authors/id/G/GA/GARU/Clone-0.41.tar.gz"
 
+    version("0.42", sha256="54a930db8f178321cf201da040442d198e8c18a77e7fcabb578e460b6acb07e5")
     version("0.41", sha256="e8c056dcf4bc8889079a09412af70194a54a269689ba72edcd91291a46a51518")
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-b-cow@0.4:", type=("build", "test"))  # AUTO-CPAN2Spack

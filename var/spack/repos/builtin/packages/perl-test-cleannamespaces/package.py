@@ -11,7 +11,7 @@ class PerlTestCleannamespaces(PerlPackage):
     functions you might have forgotten to remove"""
 
     homepage = "https://metacpan.org/pod/Test::CleanNamespaces"
-    url = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Test-CleanNamespaces-0.22.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Test-CleanNamespaces-0.22.tar.gz"
 
     version("0.22", sha256="862a221994dd413b2f350450f22c96f57cac78784b1aca1a8fc763fc5449aaca")
 

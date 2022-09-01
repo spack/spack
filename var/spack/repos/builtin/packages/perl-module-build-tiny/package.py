@@ -18,3 +18,11 @@ class PerlModuleBuildTiny(PerlPackage):
     depends_on("perl-extutils-config", type=("build", "run"))
     depends_on("perl-extutils-helpers", type=("build", "run"))
     depends_on("perl-extutils-installpaths", type=("build", "run"))
+    depends_on("perl-extutils-parsexs", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-tap-harness-env", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-installpaths@0.2:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-helpers@0.20:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-config@0.3:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-dynaloader", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack

@@ -12,6 +12,9 @@ class PerlFileHomedir(PerlPackage):
     homepage = "https://metacpan.org/pod/File::HomeDir"
     url = "https://cpan.metacpan.org/authors/id/R/RE/REHSACK/File-HomeDir-1.004.tar.gz"
 
+    version("1.006", sha256="593737c62df0f6dab5d4122e0b4476417945bb6262c33eedc009665ef1548852")
     version("1.004", sha256="45f67e2bb5e60a7970d080e8f02079732e5a8dfc0c7c3cbdb29abfb3f9f791ad")
 
-    depends_on("perl-file-which", type=("build", "run"))
+    depends_on("perl@5.8.3:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-file-which@0.5:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack

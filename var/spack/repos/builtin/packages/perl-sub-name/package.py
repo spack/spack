@@ -10,6 +10,9 @@ class PerlSubName(PerlPackage):
     """Name or rename a sub"""
 
     homepage = "https://metacpan.org/pod/Sub::Name"
-    url = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Sub-Name-0.21.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Sub-Name-0.21.tar.gz"
 
+    version("0.26", sha256="2d2f2d697d516c89547e7c4307f1e79441641cae2c7395e7319b306d390df105")
     version("0.21", sha256="bd32e9dee07047c10ae474c9f17d458b6e9885a6db69474c7a494ccc34c27117")
+    depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
