@@ -35,6 +35,13 @@ class SpecList(object):
         self._specs = None
 
     @property
+    def is_matrix(self):
+        for item in self.specs_as_yaml_list:
+            if isinstance(item, dict):
+                return True
+        return False
+
+    @property
     def specs_as_yaml_list(self):
         if self._expanded_list is None:
             self._expanded_list = self._expand_references(self.yaml_list)

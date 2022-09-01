@@ -1073,6 +1073,58 @@ class Environment(object):
 
         return bool(not existing)
 
+    def change_existing_spec(
+        self,
+        change_spec,
+        list_name=user_speclist_name,
+        match_spec=None,
+        allow_changing_multiple_specs=False,
+    ):
+        """
+        Find the spec identified by `match_spec` and change it to `change_spec`.
+
+        Arguments:
+            change_spec (spack.spec.Spec): defines the spec properties that
+                need to be changed. This will not change attributes of the
+                matched spec unless they conflict with `change_spec`.
+            list_name (str): identifies the spec list in the environment that
+                should be modified
+            match_spec (spack.spec.Spec): if set, this identifies the spec
+                that should be changed. If not set, it is assumed we are
+                looking for a spec with the same name as `change_spec`.
+        """
+        if not (change_spec.name or (match_spec and match_spec.name)):
+            raise ValueError(
+                "Must specify a spec name to identify a single spec"
+                " in the environment that will be changed"
+            )
+        match_spec = match_spec or Spec(change_spec.name)
+
+        list_to_change = self.spec_lists[list_name]
+        if list_to_change.is_matrix:
+            raise SpackEnvironmentError(
+                "Cannot directly change specs in matrices:"
+                " specify a named list that is not a matrix"
+            )
+
+        matches = list(x for x in list_to_change if x.satisfies(match_spec))
+        if len(matches) == 0:
+            raise ValueError(
+                "There are no specs named {0} in {1}".format(match_spec.name, list_name)
+            )
+        elif len(matches) > 1 and not allow_changing_multiple_specs:
+            raise ValueError("{0} matches multiple specs".format(str(match_spec)))
+
+        new_speclist = SpecList(list_name)
+        for i, spec in enumerate(list_to_change):
+            if spec.satisfies(match_spec):
+                new_speclist.add(Spec.override(spec, change_spec))
+            else:
+                new_speclist.add(spec)
+
+        self.spec_lists[list_name] = new_speclist
+        self.update_stale_references()
+
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
         query_spec = Spec(query_spec)

@@ -284,6 +284,22 @@ class ArchSpec(object):
 
         self.platform, self.os, self.target = platform_tuple
 
+    @staticmethod
+    def override(init_spec, change_spec):
+        if init_spec:
+            new_spec = init_spec.copy()
+        else:
+            new_spec = ArchSpec()
+        if change_spec.platform:
+            new_spec.platform = change_spec.platform
+            # TODO: if the platform is changed to something that is incompatible
+            # with the current os, we should implicitly remove it
+        if change_spec.os:
+            new_spec.os = change_spec.os
+        if change_spec.target:
+            new_spec.target = change_spec.target
+        return new_spec
+
     def _autospec(self, spec_like):
         if isinstance(spec_like, ArchSpec):
             return spec_like
@@ -2241,6 +2257,33 @@ class Spec(object):
             else:
                 raise spack.error.SpecError("Couldn't parse dependency types in spec.")
             yield dep_name, dep_hash, list(deptypes), hash_type
+
+    @staticmethod
+    def override(init_spec, change_spec):
+        # TODO: this doesn't account for the case where the changed spec
+        # (and the user spec) have dependencies
+        new_spec = init_spec.copy()
+        package_cls = spack.repo.path.get_pkg_class(new_spec.name)
+        if change_spec.versions and not change_spec.versions == spack.version.ver(":"):
+            new_spec.versions = change_spec.versions
+        for variant, value in change_spec.variants.items():
+            if variant in package_cls.variants:
+                if variant in new_spec.variants:
+                    new_spec.variants.substitute(value)
+                else:
+                    new_spec.variants[variant] = value
+            else:
+                raise ValueError("{0} is not a variant of {1}".format(variant, new_spec.name))
+        if change_spec.compiler:
+            new_spec.compiler = change_spec.compiler
+        if change_spec.compiler_flags:
+            for flagname, flagvals in change_spec.compiler_flags.items():
+                new_spec.compiler_flags[flagname] = flagvals
+        if change_spec.architecture:
+            new_spec.architecture = ArchSpec.override(
+                new_spec.architecture, change_spec.architecture
+            )
+        return new_spec
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
