@@ -67,6 +67,7 @@ spack:
   - bricks
   - butterflypack
   - cabana
+  - catalyst
   - chai ~benchmarks ~tests
   - conduit
   - darshan-runtime
