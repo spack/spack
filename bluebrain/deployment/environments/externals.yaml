@@ -46,6 +46,7 @@ spack:
         - virtualgl
         - freeimage
         - ilmbase
+        - openblas
         - openexr
   packages:
     all:
@@ -127,7 +128,7 @@ spack:
     - openscenegraph  # doesn't like to be built in a spec with LLVM
     # Leads to issues down the line, where it is preferred over intel-mkl
     # #providers
-    # - openblas
+    - openblas
     - poppler
     - python
     - qhull
