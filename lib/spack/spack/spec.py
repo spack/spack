@@ -5261,27 +5261,28 @@ class SpecParser(spack.parse.Parser):
             return self.token.value
 
     def version(self, vstring):
+
         start = None
         end = None
         version_spec = vstring.lstrip("@")
+
+        def str_translate(value):
+            # return None for empty strings since we are dealing with data from split
+            if not (value and value.strip()):
+                return None
+            else:
+                return value
+
         if ":" in version_spec:
-            version_spec = version_spec.split(":")
+            version_spec = [str_translate(v) for v in version_spec.split(":")]
+            if len(version_spec) != 2:
+                # can only have one range in a version
+                self.next_token_error("Invalid version specifier")
+            start, end = version_spec
         else:
             # No colon: return the version
             return vn.Version(version_spec)
 
-        if len(version_spec) > 2:
-            # can only have one range in a version
-            self.next_token_error("Invalid version specifier")
-
-        if self.token.value[1] == ":":
-            # open ended range @:0.1.2
-            end = version_spec[0]
-        else:
-            start = version_spec[0]
-
-        if len(version_spec) > 1:
-            end = version_spec[1]
 
         if start:
             start = vn.Version(start)
