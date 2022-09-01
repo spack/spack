@@ -5288,7 +5288,6 @@ class SpecParser(spack.parse.Parser):
             # No colon: return the version
             return vn.Version(version_spec)
 
-
         if start:
             start = vn.Version(start)
         if end:
