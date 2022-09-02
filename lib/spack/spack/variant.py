@@ -886,12 +886,12 @@ class Value(object):
         return hash(self.value)
 
     def __eq__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, six.string_types) or isinstance(other, bool):
             return self.value == other
         return self.value == other.value
 
     def __lt__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, six.string_types) or isinstance(other, bool):
             return self.value < other
         return self.value < other.value
 
