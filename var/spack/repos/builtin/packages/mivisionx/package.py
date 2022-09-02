@@ -91,20 +91,12 @@ class Mivisionx(CMakePackage):
         description="CMake build type",
     )
     # Adding 2 variants OPENCL ,HIP which HIP as default. earlier to 5.0.0,OPENCL
-    # was the default but has change dto HIP from 5.0.0 onwards. 
+    # was the default but has change dto HIP from 5.0.0 onwards.
     # when tested with HIP as true for versions before 5.1.0, build errors were encountered
     # this was corrected with 5.2.0. Hence it was made as default starting with 5.2.0 onwards
 
-    variant(
-        "opencl",
-        default=False,
-        description="Use OPENCL as the backend"
-    )
-    variant(
-        "hip",
-        default=True,
-        description="Use HIP as backend"
-    )
+    variant("opencl", default=False, description="Use OPENCL as the backend")
+    variant("hip", default=True, description="Use HIP as backend")
 
     def patch(self):
         if self.spec.satisfies("@4.2.0"):
@@ -140,18 +132,19 @@ class Mivisionx(CMakePackage):
                 string=True,
             )
         if self.spec.satisfies("@5.1.3: + hip"):
-           filter_file("${ROCM_PATH}/include/miopen/config.h",
-                       "{0}/include/miopen/config.h".format(
-                           self.spec["miopen-hip"].prefix),
-                       "amd_openvx_extensions/CMakeLists.txt",
-                        string=True)
+            filter_file(
+                "${ROCM_PATH}/include/miopen/config.h",
+                "{0}/include/miopen/config.h".format(self.spec["miopen-hip"].prefix),
+                "amd_openvx_extensions/CMakeLists.txt",
+                string=True,
+            )
         if self.spec.satisfies("@5.1.3: + opencl"):
-           filter_file("${ROCM_PATH}/include/miopen/config.h",
-                       "{0}/include/miopen/config.h".format(
-                           self.spec["miopen-opencl"].prefix),
-                       "amd_openvx_extensions/CMakeLists.txt",
-                       string=True)
-
+            filter_file(
+                "${ROCM_PATH}/include/miopen/config.h",
+                "{0}/include/miopen/config.h".format(self.spec["miopen-opencl"].prefix),
+                "amd_openvx_extensions/CMakeLists.txt",
+                string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ffmpeg@:4", type="build")
