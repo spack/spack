@@ -20,9 +20,13 @@ class Hyperqueue(Package):
     version(
         "0.12.0-rc1", sha256="0c7b5d567bb6cb8dd4e7bafdf784b0379cef74b3aecb958c7f20248f8fedfbc1"
     )
-    version("0.11.0", sha256="07fa7eda3a8a5278e058a526fee92e1e524370813b362aaa1a5dfc49d1f3fc28")
-    version("0.10.0", sha256="53983b6382123ecd480884b9872a27296739db59e1bb9813b82225841f924790")
-    version("0.9.0", sha256="96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783")
+    version(
+        "0.11.0",
+        preferred=True,
+        sha256="07fa7eda3a8a5278e058a526fee92e1e524370813b362aaa1a5dfc49d1f3fc28",
+    )
+    version("0.10.0", sha256="dc022170bf45479cb03edfe55a2fde066e7bf69542f644a8e78db604e8c6d67f")
+    version("0.9.0", sha256="49be05b3a042382ee31dddea9a5de64d3e3ff747cb2c47fa170b407fa8fdd2e1")
 
     depends_on("rust@1.59:")
 
