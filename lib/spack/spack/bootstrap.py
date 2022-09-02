@@ -788,15 +788,18 @@ def ensure_gpg_in_path_or_raise():
 
 def patchelf_root_spec():
     """Return the root spec used to bootstrap patchelf"""
-    # TODO: patchelf is restricted to v0.13 since earlier versions have
-    # TODO: bugs that we don't to deal with, while v0.14 requires a C++17
-    # TODO: which may not be available on all platforms.
+    # 0.13.1 is the last version not to require C++17.
     return _root_spec("patchelf@0.13.1:")
 
 
 def verify_patchelf(patchelf):
-    """Older patchelf versions can produce broken binaries in many, many
-    different ways, we should guard against that."""
+    """Older patchelf versions can produce broken binaries, so we
+    verify the version here.
+    
+    Arguments:
+
+        patchelf (spack.util.executable.Executable): patchelf executable
+    """
     out = patchelf("--version", output=str, error=os.devnull, fail_on_error=False).strip()
     if patchelf.returncode != 0:
         return False
