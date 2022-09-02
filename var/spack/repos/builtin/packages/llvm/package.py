@@ -82,14 +82,19 @@ class Llvm(CMakePackage, CudaPackage):
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
+
     variant(
         "flang",
         default=False,
-        when="@11: +clang",
         description="Build the LLVM Fortran compiler frontend "
         "(experimental - parser only, needs GCC)",
     )
-    variant("lldb", default=True, when="+clang", description="Build the LLVM debugger")
+    conflicts("+flang", when="@:10")
+    conflicts("+flang", when="~clang")
+
+    variant("lldb", default=True, description="Build the LLVM debugger")
+    conflicts("+lldb", when="~clang")
+
     variant("lld", default=True, description="Build the LLVM linker")
     variant("mlir", default=False, when="@10:", description="Build with MLIR support")
     variant(
@@ -121,18 +126,17 @@ class Llvm(CMakePackage, CudaPackage):
         "either as a runtime (with just-build Clang) "
         "or as a project (with the compiler in use)",
     )
-    variant(
-        "libomptarget",
-        default=True,
-        when="+clang",
-        description="Build the OpenMP offloading library",
-    )
+
+    variant("libomptarget", default=True, description="Build the OpenMP offloading library")
+    conflicts("+libomptarget", when="~clang")
+
     variant(
         "omp_debug",
         default=False,
-        when="+libomptarget",
         description="Include debugging code in OpenMP runtime libraries",
     )
+    conflicts("+omp_debug", when="~libomptarget")
+
     variant(
         "compiler-rt",
         values=(
@@ -220,9 +224,10 @@ class Llvm(CMakePackage, CudaPackage):
         description="Add shared library symbol version",
         when="@13:",
     )
-    variant(
-        "z3", default=False, when="+clang @8:", description="Use Z3 for the clang static analyzer"
-    )
+    variant("z3", default=False, description="Use Z3 for the clang static analyzer")
+    conflicts("+z3", when="@:7")
+    conflicts("+z3", when="~clang")
+
     variant(
         "zstd",
         default=False,
