@@ -5311,7 +5311,7 @@ class SpecParser(spack.parse.Parser):
         end = None
 
         def str_translate(value):
-            # return None for empty strings since we are dealing with data from split
+            # return None for empty strings since we can end up with `'@'.strip('@')`
             if not (value and value.strip()):
                 return None
             else:
