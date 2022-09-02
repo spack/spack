@@ -71,7 +71,16 @@ class PyProtobuf(PythonPackage):
     depends_on("py-six@1.9:", when="@3:", type=("build", "run"))
     depends_on("py-ordereddict", when="@3: ^python@:2", type=("build", "run"))
     depends_on("py-unittest2", when="@3: ^python@:2", type=("build", "run"))
-    depends_on("protobuf", when="+cpp")
+
+    # Setup dependencies for protobuf to use the same minor version as py-protobuf
+    # Handle the 3.x series releases
+    for ver in list(range(1, 20)):
+        depends_on("protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
+                   type=("build", "run"),
+                   when="+cpp @3." + str(ver) + ".0:3." + str(ver) + ".99")
+    # Handle the 2.x series releases
+    depends_on("protobuf@2.0.0:2.99.99", type=("build", "run"),
+               when="+cpp @2.0.0:2.99.99")
 
     @property
     def build_directory(self):
