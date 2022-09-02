@@ -62,15 +62,15 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%gcc@:5.2.9")
 
     # ROCm should work with this custom branch
-    with when(not '@glu_experimental'):
-      conflicts("+rocm", when="@:1.1.1")
+    with when(not "@glu_experimental"):
+        conflicts("+rocm", when="@:1.1.1")
 
     conflicts("+cuda", when="+rocm")
     conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
     # ROCm should work with this custom branch
-    with when(not '@glu_experimental'):
+    with when(not "@glu_experimental"):
         conflicts("^hip@4.1.0:", when="@:1.3.0")
         conflicts("^hipblas@4.1.0:", when="@:1.3.0")
         conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
