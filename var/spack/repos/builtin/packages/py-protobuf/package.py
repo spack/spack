@@ -19,6 +19,7 @@ class PyProtobuf(PythonPackage):
 
     variant("cpp", default=False, description="Enable the cpp implementation")
 
+    version("4.21.5", sha256="eb1106e87e095628e96884a877a51cdb90087106ee693925ec0a300468a9be3a")
     version("3.20.1", sha256="adc31566d027f45efe3f44eeb5b1f329da43891634d61c75a5944e9be6dd42c9")
     version("3.20.0", sha256="71b2c3d1cd26ed1ec7c8196834143258b2ad7f444efff26fdc366c6f5e752702")
     version("3.19.4", sha256="9df0c10adf3e83015ced42a9a7bd64e13d06c4cf45c340d2c63020ea04499d0a")
@@ -73,14 +74,20 @@ class PyProtobuf(PythonPackage):
     depends_on("py-unittest2", when="@3: ^python@:2", type=("build", "run"))
 
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
+    # Handle mapping the 4.x release to the protobuf 3.x releases
+    for ver in list(range(21, 22)):
+        depends_on(
+            "protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
+            type=("build", "run"),
+            when="+cpp @4." + str(ver) + ".0:4." + str(ver) + ".99")
     # Handle the 3.x series releases
-    for ver in list(range(1, 20)):
-        depends_on("protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
-                   type=("build", "run"),
-                   when="+cpp @3." + str(ver) + ".0:3." + str(ver) + ".99")
+    for ver in list(range(1, 21)):
+        depends_on(
+            "protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
+            type=("build", "run"),
+            when="+cpp @3." + str(ver) + ".0:3." + str(ver) + ".99")
     # Handle the 2.x series releases
-    depends_on("protobuf@2.0.0:2.99.99", type=("build", "run"),
-               when="+cpp @2.0.0:2.99.99")
+    depends_on("protobuf@2.0.0:2.99.99", type=("build", "run"), when="+cpp @2.0.0:2.99.99")
 
     @property
     def build_directory(self):
