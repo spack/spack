@@ -779,7 +779,7 @@ class Llvm(CMakePackage, CudaPackage):
         if "+python" in spec and "+clang" in spec:
                 install_tree(
                     "clang/bindings/python/clang",
-                    join_path(site_packages_dir, "clang")
+                    join_path(site_packages_dir, "clang"))
 
         with working_dir(self.build_directory):
             if not os.path.exists(join_path(self.prefix, "libexec", "llvm")):
