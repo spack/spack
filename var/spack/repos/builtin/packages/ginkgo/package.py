@@ -60,15 +60,21 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("intel-oneapi-dpl", when="+oneapi")
 
     conflicts("%gcc@:5.2.9")
-    conflicts("+rocm", when="@:1.1.1")
+
+    # ROCm should work with this custom branch
+    with when(not '@glu_experimental'):
+      conflicts("+rocm", when="@:1.1.1")
+
     conflicts("+cuda", when="+rocm")
     conflicts("+openmp", when="+oneapi")
 
     # ROCm 4.1.0 breaks platform settings which breaks Ginkgo's HIP support.
-    conflicts("^hip@4.1.0:", when="@:1.3.0")
-    conflicts("^hipblas@4.1.0:", when="@:1.3.0")
-    conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
-    conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
+    # ROCm should work with this custom branch
+    with when(not '@glu_experimental'):
+        conflicts("^hip@4.1.0:", when="@:1.3.0")
+        conflicts("^hipblas@4.1.0:", when="@:1.3.0")
+        conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
+        conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
 
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@master")
