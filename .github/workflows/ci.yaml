@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - develop
+      - releases/**
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  cancel-in-progress: true
+
+jobs:
+  prechecks:
+    needs: [ changes ]
+    uses: ./.github/workflows/valid-style.yml
+    with:
+      with_coverage: ${{ needs.changes.outputs.with_coverage }}
+  # Check which files have been updated by the PR
+  changes:
+    runs-on: ubuntu-latest
+      # Set job outputs to values from filter step
+    outputs:
+      bootstrap: ${{ steps.filter.outputs.bootstrap }}
+      core: ${{ steps.filter.outputs.core }}
+      packages: ${{ steps.filter.outputs.packages }}
+      with_coverage: ${{ steps.coverage.outputs.with_coverage }}
+    steps:
+      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+        if: ${{ github.event_name == 'push' }}
+        with:
+          fetch-depth: 0
+            # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721
+        id: filter
+        with:
+          # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
+          # Don't run if we only modified packages in the
+          # built-in repository or documentation
+          filters: |
+            bootstrap:
+            - '!var/spack/repos/builtin/**'
+            - 'var/spack/repos/builtin/packages/clingo-bootstrap/**'
+            - 'var/spack/repos/builtin/packages/clingo/**'
+            - 'var/spack/repos/builtin/packages/python/**'
+            - 'var/spack/repos/builtin/packages/re2c/**'
+            - '!lib/spack/docs/**'
+            - 'lib/spack/**'
+            - 'share/spack/**'
+            - '.github/workflows/bootstrap.yml'
+            core:
+            - './!(var/**)/**'
+            packages:
+            - 'var/**'
+      # Some links for easier reference:
+      #
+      # "github" context: https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
+      # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+      # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      #
+      - id: coverage
+        # Run the subsequent jobs with coverage if core has been modified,
+        # regardless of whether this is a pull request or a push to a branch
+        run: |
+          echo Core changes: ${{ steps.filter.outputs.core }}
+          echo Event name: ${{ github.event_name }}
+          if [ "${{ steps.filter.outputs.core }}" == "true" ]
+          then
+            echo "::set-output name=with_coverage::true"
+          else
+            echo "::set-output name=with_coverage::false"
+          fi
+  bootstrap:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/bootstrap.yml
+  unit-tests:
+    if: ${{ github.repository == 'spack/spack' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/unit_tests.yaml
+    with:
+      core: ${{ needs.changes.outputs.core }}
+      packages: ${{ needs.changes.outputs.packages }}
+      with_coverage: ${{ needs.changes.outputs.with_coverage }}
+  windows:
+    if: ${{ github.repository == 'spack/spack' }}
+    needs: [ prechecks ]
+    uses: ./.github/workflows/windows_python.yml
+

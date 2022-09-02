@@ -788,7 +788,7 @@ def test_env_with_included_config_file(packages_file):
     e = ev.read("test")
 
     included_path = os.path.join(e.path, include_filename)
-    fs.rename(packages_file.strpath, included_path)
+    shutil.move(packages_file.strpath, included_path)
 
     with e:
         e.concretize()
