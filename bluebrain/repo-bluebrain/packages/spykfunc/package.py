@@ -26,9 +26,10 @@ class Spykfunc(PythonPackage):
     version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
 
     depends_on('cmake', type='build', when='@0.15.4:')
+    depends_on('ninja', type='build', when='@0.17.3:')
     depends_on('boost', type=('build', 'link'), when='@0.15.4:0.16.999')
-    depends_on('morpho-kit', type=('build', 'link'), when='@0.15.4:')
-    depends_on('random123', when='@0.17.0:')
+    depends_on('morpho-kit', type=('build', 'link'), when='@0.15.4:0.17.2')
+    depends_on('random123', when='@0.17.0:0.17.2')
 
     depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:0.16.1')
 
