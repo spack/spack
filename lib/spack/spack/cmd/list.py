@@ -16,6 +16,7 @@ import sys
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
 from spack.version import VersionList
@@ -72,6 +73,7 @@ def setup_parser(subparser):
         default=False,
         help="include virtual packages in list",
     )
+    arguments.add_common_arguments(subparser, ["tags"])
 
 
 def filter_by_name(pkgs, args):
@@ -305,6 +307,11 @@ def list(parser, args):
     pkgs = set(spack.repo.all_package_names(args.virtuals))
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
+
+    # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        sorted_packages = [p for p in sorted_packages if p in packages_with_tags]
 
     if args.update:
         # change output stream if user asked for update

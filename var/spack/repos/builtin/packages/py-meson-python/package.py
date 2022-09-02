@@ -12,6 +12,8 @@ class PyMesonPython(PythonPackage):
     homepage = "https://github.com/FFY00/mesonpy"
     pypi = "meson_python/meson_python-0.7.0.tar.gz"
 
+    maintainers = ["eli-schwartz", "adamjstewart"]
+
     version("0.7.0", sha256="9fcfa350f44ca80dd4f5f9c3d251725434acf9a07d9618f382e6cc4629dcbe84")
 
     depends_on("python@3.7:", type=("build", "run"))

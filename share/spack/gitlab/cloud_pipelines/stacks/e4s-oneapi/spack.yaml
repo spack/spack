@@ -25,7 +25,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: oneapi@2022.1.0
@@ -38,7 +40,9 @@ spack:
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
-      environment: {}
+      environment:
+        prepend_path:
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
       spec: gcc@9.4.0
@@ -55,14 +59,17 @@ spack:
       extra_rpaths: []
 
   packages:
+    adios2:
+      require: "%gcc"
     all:
-      compiler: [oneapi]
+      require: "%oneapi"
       providers:
         blas: [openblas]
         mpi: [mpich]
       target: [x86_64]
       variants: +mpi
     binutils:
+      require: "%gcc"
       variants: +ld +gold +headers +libiberty ~nls
     cuda:
       version: [11.4.2]
@@ -74,6 +81,8 @@ spack:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
+    llvm:
+      require: "%gcc" # undefined reference to `_intel_fast_memset' becauase of -nodefaultlibs
     mpich:
       variants: ~wrapperrpath
     ncurses:
@@ -82,11 +91,17 @@ spack:
       variants: threads=openmp
     python:
       version: [3.8.13]
+    ruby:
+      require: "%gcc" # https://github.com/spack/spack/issues/31954
+    rust:
+      require: "%gcc" # undefined reference becauase of -nodefaultlibs
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    vtk-m:
+      require: "~openmp"
     xz:
       variants: +pic
     mesa:
@@ -99,7 +114,9 @@ spack:
   - aml
   - amrex
   - arborx
+  - archer
   - argobots
+  - ascent
   - axom
   - bolt
   - bricks
@@ -111,6 +128,7 @@ spack:
   - darshan-runtime
   - darshan-util
   - datatransferkit
+  - exaworks
   - faodel
   - flit
   - flux-core
@@ -120,6 +138,7 @@ spack:
   - globalarrays
   - gmp
   - gotcha
+  - gptune
   - hdf5 +fortran +hl +shared
   - heffte +fftw
   - hpx networking=mpi
@@ -140,8 +159,10 @@ spack:
   - nccmp
   - nco
   - netlib-scalapack
+  - nrm
   - omega-h
   - openmpi
+  - openpmd-api
   - papi
   - papyrus
   - parallel-netcdf
@@ -154,6 +175,11 @@ spack:
   - pumi
   - py-cinemasci
   - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
+  - py-warpx ^warpx dims=2
+  - py-warpx ^warpx dims=3
+  - py-warpx ^warpx dims=rz
   - qthreads scheduler=distrib
   - raja
   - rempi
@@ -169,7 +195,7 @@ spack:
   - swig@4.0.2-fortran
   - sz
   - tasmanian
-  - tau +mpi +python %oneapi ^binutils%gcc
+  - tau +mpi +python
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
    +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
@@ -185,52 +211,39 @@ spack:
   - zfp
 
   # GPU
+  - aml +ze
+  - amrex +sycl
   - arborx +sycl ^kokkos +sycl +openmp std=17 +tests +examples
   - cabana +sycl ^kokkos+sycl +openmp std=17 +tests +examples
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
   - kokkos +sycl +openmp std=17 +tests +examples %oneapi
+  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp std=17 +tests +examples %oneapi
 
   # CPU BUILD FAILURES
   #- adios2@2.8.0                                     # adios2
-  #- archer@2.0.0                                     # binutils
-  #- ascent ^vtk-m ~openmp                            # ascent
   #- charliecloud@0.26                                # charliecloud
-  #- dyninst@12.1.0                                   # intel-tbb
-  #- exaworks@0.1.0                                   # rust, flux-sched
-  #- geopm@1.1.0                                      # ruby
-  #- gptune@3.0.0                                     # intel-tbb
+  #- dyninst@12.1.0                                   # old intel-tbb
+  #- geopm@1.1.0                                      # geopm
   #- h5bench@1.2                                      # h5bench
-  #- hpctoolkit@2022.04.15                            # binutils
-  #- nrm@0.1.0                                        # py-numpy@1.23.1
-  #- openpmd-api@0.14.4                               # adios2
-  #- paraview@5.10.1 +qt                              # binutils
+  #- hpctoolkit                                       # dyninst
   #- phist@1.9.5                                      # phist
+  #- paraview +qt                                     # qt
   #- pruners-ninja@1.0.1                              # pruners-ninja
-  #- py-libensemble@0.9.1                             # py-numpy@1.23.1
-  #- py-petsc4py@3.17.1                               # py-numpy@1.23.1
-  #- py-warpx@22.05 ^warpx dims=2                     # adios2
-  #- py-warpx@22.05 ^warpx dims=3                     # adios2
-  #- py-warpx@22.05 ^warpx dims=rz                    # adios2
   #- variorum@0.4.1                                   # variorum
 
   # CPU BUILD FAILURES - NOTES
   # adios2: /usr/bin/ld: ../../lib/libadios2_fortran.so.2.8.2: version node not found for symbol adios2_adios_init_mod@adios2_adios_init_serial_smod._; /usr/bin/ld: failed to set dynamic section sizes: bad value
-  # ascent: examples/proxies/cloverleaf3d-ref/clover_main.cpp:24: multiple definition of `main'; /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin/for_main.o:for_main.c:(.text+0x0): first defined here
   # binutils: gold/powerpc.cc:3590: undefined reference to `gold::Sized_symbol<64>::Value_type gold::Symbol_table::compute_final_value<64>(gold::Sized_symbol<64> const*, gold::Symbol_table::Compute_final_value_status*) const'
   # charliecloud: autoreconf phase: RuntimeError: configure script not found in ...
   # flux-sched: include/yaml-cpp/emitter.h:164:9: error: comparison with NaN always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
-  # parallel-netcdf: checking if Fortran "integer*1" is ... configure: error: Could not link conftestf.o and conftest.o
   # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
   # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
-  # py-numpy@1.23.1: numpy/distutils/checks/cpu_avx512_knm.c:22:9: error: implicit declaration of function '_mm512_4fmadd_ps' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
   # ruby: limits.c:415:34: error: invalid suffix 'D' on floating constant
   # rust: /usr/bin/ld: /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/lib/intel64_lin/libimf.a(libm_feature_flag.o): in function `__libm_feature_flag_init': libm_feature_flag.c:(.text+0x25): undefined reference to `__intel_cpu_feature_indicator_x'
-  # scr: scr_globals.h:81:10: fatal error: 'spath_mpi.h' file not found: #include "spath_mpi.h"
   # variorum: ld: Intel/CMakeFiles/variorum_intel.dir/msr_core.c.o:(.bss+0x0): multiple definition of `g_platform'; CMakeFiles/variorum.dir/config_architecture.c.o:(.bss+0x0): first defined here
-  # vtk-m: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
+  # vtk-m +openmp: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
 
   # GPU BUILD FAILURES
   #- ginkgo@1.4.0 +oneapi %dpcpp ^cmake%oneapi                                              # ginkgo

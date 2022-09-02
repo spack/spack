@@ -12,7 +12,8 @@ class CpuFeatures(CMakePackage):
     homepage = "https://github.com/google/cpu_features"
     git = "https://github.com/google/cpu_features.git"
 
-    version("develop", branch="master")
+    version("main", branch="main")
+    version("develop", branch="main", deprecated=True)
 
     depends_on("cmake@3.0.0:", type="build")
 
