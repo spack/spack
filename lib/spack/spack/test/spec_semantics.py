@@ -1111,6 +1111,20 @@ class TestSpecSematics(object):
         with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
             spec.splice(dep, transitive)
 
+    def test_spec_override(self):
+        init_spec = Spec("a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
+        change_spec = Spec("a foo=fee cflags=-O2")
+        new_spec = Spec.override(init_spec, change_spec)
+        new_spec.concretize()
+        assert "foo=fee" in new_spec
+        # This check fails without concretizing: apparently if both specs are
+        # abstract, then the spec will always be considered to satisfy
+        # 'variant=value' (regardless of whether it in fact does).
+        assert "foo=baz" not in new_spec
+        assert "foobar=baz" in new_spec
+        assert new_spec.compiler_flags["cflags"] == ["-O2"]
+        assert new_spec.compiler_flags["cxxflags"] == ["-O1"]
+
 
 @pytest.mark.regression("3887")
 @pytest.mark.parametrize("spec_str", ["git", "hdf5", "py-flake8"])
