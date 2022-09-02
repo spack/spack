@@ -63,6 +63,7 @@ class Mapl(CMakePackage):
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=False, description="Use ExtData2G")
 
+    depends_on("cmake@3.17:")
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("netcdf-c")
