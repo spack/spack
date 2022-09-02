@@ -76,16 +76,10 @@ class PyProtobuf(PythonPackage):
     # Setup dependencies for protobuf to use the same minor version as py-protobuf
     # Handle mapping the 4.x release to the protobuf 3.x releases
     for ver in list(range(21, 22)):
-        depends_on(
-            "protobuf@3." + str(ver),
-            type=("build", "run"),
-            when="+cpp @4." + str(ver))
+        depends_on("protobuf@3." + str(ver), type=("build", "run"), when="+cpp @4." + str(ver))
     # Handle the 3.x series releases
     for ver in list(range(1, 21)):
-        depends_on(
-            "protobuf@3." + str(ver),
-            type=("build", "run"),
-            when="+cpp @3." + str(ver))
+        depends_on("protobuf@3." + str(ver), type=("build", "run"), when="+cpp @3." + str(ver))
     # Handle the 2.x series releases
     depends_on("protobuf@2", type=("build", "run"), when="+cpp @2")
 
