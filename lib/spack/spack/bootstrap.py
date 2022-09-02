@@ -795,7 +795,7 @@ def patchelf_root_spec():
 def verify_patchelf(patchelf):
     """Older patchelf versions can produce broken binaries, so we
     verify the version here.
-    
+
     Arguments:
 
         patchelf (spack.util.executable.Executable): patchelf executable
