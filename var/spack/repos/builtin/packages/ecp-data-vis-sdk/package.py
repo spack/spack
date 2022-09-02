@@ -81,14 +81,14 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     variant("ascent", default=False, description="Enable Ascent")
     variant("cinema", default=False, description="Enable Cinema")
     variant("paraview", default=False, description="Enable ParaView")
+    variant("sensei", default=False, description="Enable Sensei")
     variant("sz", default=False, description="Enable SZ")
     variant("visit", default=False, description="Enable VisIt")
     variant("vtkm", default=False, description="Enable VTK-m")
     variant("zfp", default=False, description="Enable ZFP")
 
-    # Outstanding build issues
-    variant("sensei", default=False, description="Enable Sensei")
-    conflicts("+sensei")
+    # Language Options
+    variant("fortran", default=True, sticky=True, description="Enable fortran language features.")
 
     ############################################################
     # Dependencies
@@ -97,9 +97,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     amdgpu_target_variants = ["amdgpu_target={0}".format(x) for x in ROCmPackage.amdgpu_targets]
 
     dav_sdk_depends_on(
-        "adios2+shared+mpi+fortran+python+blosc+sst+ssc+dataman",
+        "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
         when="+adios2",
-        propagate=["hdf5", "sz", "zfp"],
+        propagate=["hdf5", "sz", "zfp", "fortran"],
     )
 
     dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])
@@ -107,21 +107,18 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
-    dav_sdk_depends_on("hdf5@1.12: +shared+mpi+fortran", when="+hdf5")
+    dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
 
-    dav_sdk_depends_on("parallel-netcdf+shared+fortran", when="+pnetcdf")
+    dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
     dav_sdk_depends_on("unifyfs", when="+unifyfs ")
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
-    # Currenly only develop has necessary patches. Update this after SC21 release
-    propagate_to_sensei = [(v, v) for v in ["adios2", "ascent", "hdf5", "vtkm"]]
+    propagate_to_sensei = [(v, v) for v in ["adios2", "ascent", "hdf5"]]
     propagate_to_sensei.extend([("paraview", "catalyst"), ("visit", "libsim")])
     dav_sdk_depends_on(
-        "sensei@develop +vtkio +python ~miniapps",
-        when="+sensei",
-        propagate=dict(propagate_to_sensei),
+        "sensei@4: ~vtkio +python", when="+sensei", propagate=dict(propagate_to_sensei)
     )
 
     # Fortran support with ascent is problematic on some Cray platforms so the
@@ -131,6 +128,8 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         when="+ascent",
         propagate=["adios2", "cuda"] + cuda_arch_variants,
     )
+    depends_on("ascent+openmp", when="~rocm+ascent")
+    depends_on("ascent~openmp", when="+rocm+ascent")
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
@@ -158,13 +157,15 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("visit+mpi+python+silo", when="+visit", propagate=["hdf5", "adios2"])
 
     dav_sdk_depends_on(
-        "vtk-m@1.7:+shared+mpi+openmp+rendering",
+        "vtk-m@1.7:+shared+mpi+rendering",
         when="+vtkm",
         propagate=["cuda", "rocm"] + cuda_arch_variants + amdgpu_target_variants,
     )
+    depends_on("vtk-m+openmp", when="~rocm+vtkm")
+    depends_on("vtk-m~openmp", when="+rocm+vtkm")
 
     # +python is currently broken in sz
-    # dav_sdk_depends_on('sz+shared+fortran+python+random_access',
-    dav_sdk_depends_on("sz+shared+fortran+random_access", when="+sz", propagate=["hdf5"])
+    # dav_sdk_depends_on('sz+shared+python+random_access',
+    dav_sdk_depends_on("sz+shared+random_access", when="+sz", propagate=["hdf5", "fortran"])
 
     dav_sdk_depends_on("zfp", when="+zfp", propagate=["cuda"] + cuda_arch_variants)

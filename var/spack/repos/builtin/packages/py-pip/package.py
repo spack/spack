@@ -15,7 +15,7 @@ class PyPip(Package):
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
 
-    maintainers = ["adamjstewart"]
+    maintainers = ["adamjstewart", "pradyunsg"]
 
     version(
         "22.1.2",

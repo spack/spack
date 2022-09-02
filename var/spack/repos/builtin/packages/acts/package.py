@@ -39,6 +39,8 @@ class Acts(CMakePackage, CudaPackage):
     # Supported Acts versions
     version("main", branch="main")
     version("master", branch="main", deprecated=True)  # For compatibility
+    version("20.0.0", commit="3740e6cdbfb1f75d8e481686acdfa5b16d3c41a3", submodules=True)
+    version("19.7.0", commit="03cf7a3ae74b632b3f89416dc27cc993c9ae4628", submodules=True)
     version("19.6.0", commit="333082914e6a51b381abc1cf52856829e3eb7890", submodules=True)
     version("19.5.0", commit="bf9f0270eadd8e78d283557b7c9070b80dece4a7", submodules=True)
     version("19.4.0", commit="498af243755219486c26d32fb125b7ebf2557166", submodules=True)
@@ -187,7 +189,12 @@ class Acts(CMakePackage, CudaPackage):
         description="Enable memory profiling using gperftools",
         when="@19.3:",
     )
-    # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
+    variant(
+        "sycl",
+        default=False,
+        description="Build the SyCL plugin",
+        when="@1:",
+    )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -224,9 +231,7 @@ class Acts(CMakePackage, CudaPackage):
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
     # Build dependencies
-    # FIXME: Use spack's vecmem package once there is one
-    # (https://github.com/acts-project/acts/pull/998)
-    depends_on("acts-dd4hep", when="@19.1: +dd4hep")
+    depends_on("acts-dd4hep", when="@19 +dd4hep")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -253,6 +258,8 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("py-pytest", when="+python +unit_tests")
     depends_on("root @6.10: cxxstd=14", when="+tgeo @:0.8.0")
     depends_on("root @6.20: cxxstd=17", when="+tgeo @0.8.1:")
+    depends_on("sycl", when="+sycl")
+    depends_on("vecmem@0.4: +sycl", when="+sycl")
 
     # ACTS has been using C++17 for a while, which precludes use of old GCC
     conflicts("%gcc@:7", when="@0.23:")
@@ -314,6 +321,7 @@ class Acts(CMakePackage, CudaPackage):
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
             cmake_variant(unit_tests_label, "unit_tests"),
         ]
@@ -331,7 +339,7 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if spec.satisfies("@19.1: +dd4hep"):
+        if spec.satisfies("@19 +dd4hep"):
             args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
 
         if spec.satisfies("@:16"):
