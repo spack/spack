@@ -77,17 +77,17 @@ class PyProtobuf(PythonPackage):
     # Handle mapping the 4.x release to the protobuf 3.x releases
     for ver in list(range(21, 22)):
         depends_on(
-            "protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
+            "protobuf@3." + str(ver),
             type=("build", "run"),
-            when="+cpp @4." + str(ver) + ".0:4." + str(ver) + ".99")
+            when="+cpp @4." + str(ver))
     # Handle the 3.x series releases
     for ver in list(range(1, 21)):
         depends_on(
-            "protobuf@3." + str(ver) + ".0:3." + str(ver) + ".99",
+            "protobuf@3." + str(ver),
             type=("build", "run"),
-            when="+cpp @3." + str(ver) + ".0:3." + str(ver) + ".99")
+            when="+cpp @3." + str(ver))
     # Handle the 2.x series releases
-    depends_on("protobuf@2.0.0:2.99.99", type=("build", "run"), when="+cpp @2.0.0:2.99.99")
+    depends_on("protobuf@2", type=("build", "run"), when="+cpp @2")
 
     @property
     def build_directory(self):
