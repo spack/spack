@@ -31,44 +31,96 @@ from spack.spec import (
 )
 from spack.variant import DuplicateVariantError
 
-# Sample output for a complex lexing.
-complex_lex = [
+# Building blocks for complex lexing.
+complex_root = [
     Token(sp.ID, "mvapich_foo"),
-    Token(sp.DEP),
-    Token(sp.ID, "_openmpi"),
-    Token(sp.VER, "@1.2:1.4,1.6"),
+]
+
+kv_root = [
+    Token(sp.ID, "mvapich_foo"),
+    Token(sp.ID, "debug"),
+    Token(sp.EQ),
+    Token(sp.VAL, "4"),
+]
+
+complex_compiler = [
     Token(sp.PCT),
     Token(sp.ID, "intel"),
-    Token(sp.VER, "@12.1:12.6"),
+]
+
+complex_compiler_v = [
+    Token(sp.VER, "@12.1"),
+    Token(sp.COLON),
+    Token(sp.ID, "12.6"),
+]
+
+complex_compiler_v_space = [
+    Token(sp.VER, "@"),
+    Token(sp.ID, "12.1"),
+    Token(sp.COLON),
+    Token(sp.ID, "12.6"),
+]
+
+complex_dep1 = [
+    Token(sp.DEP),
+    Token(sp.ID, "_openmpi"),
+    Token(sp.VER, "@1.2"),
+    Token(sp.COLON),
+    Token(sp.ID, "1.4"),
+    Token(sp.COMMA),
+    Token(sp.ID, "1.6"),
+]
+
+complex_dep1_space = [
+    Token(sp.DEP),
+    Token(sp.ID, "_openmpi"),
+    Token(sp.VER, "@"),
+    Token(sp.ID, "1.2"),
+    Token(sp.COLON),
+    Token(sp.ID, "1.4"),
+    Token(sp.COMMA),
+    Token(sp.ID, "1.6"),
+]
+
+complex_dep1_var = [
     Token(sp.ON),
     Token(sp.ID, "debug"),
     Token(sp.OFF),
     Token(sp.ID, "qt_4"),
+]
+
+complex_dep2 = [
     Token(sp.DEP),
     Token(sp.ID, "stackwalker"),
     Token(sp.VER, "@8.1_1e"),
 ]
 
-# Another sample lexer output with a kv pair.
-kv_lex = [
-    Token(sp.ID, "mvapich_foo"),
-    Token(sp.ID, "debug"),
-    Token(sp.EQ),
-    Token(sp.ID, "4"),
-    Token(sp.DEP),
-    Token(sp.ID, "_openmpi"),
-    Token(sp.ID, "@1.2:1.4,1.6"),
-    Token(sp.PCT),
-    Token(sp.ID, "intel"),
-    Token(sp.VER, "@12.1:12.6"),
-    Token(sp.ON),
-    Token(sp.ID, "debug"),
-    Token(sp.OFF),
-    Token(sp.ID, "qt_4"),
+complex_dep2_space = [
     Token(sp.DEP),
     Token(sp.ID, "stackwalker"),
-    Token(sp.VER, "@8.1_1e"),
+    Token(sp.VER, "@"),
+    Token(sp.ID, "8.1_1e"),
 ]
+
+# Sample output from complex lexing
+complex_lex = (
+    complex_root
+    + complex_dep1
+    + complex_compiler
+    + complex_compiler_v
+    + complex_dep1_var
+    + complex_dep2
+)
+
+# Another sample lexer output with a kv pair.
+kv_lex = (
+    kv_root
+    + complex_dep1
+    + complex_compiler
+    + complex_compiler_v_space
+    + complex_dep1_var
+    + complex_dep2_space
+)
 
 
 class TestSpecSyntax(object):
@@ -102,7 +154,7 @@ class TestSpecSyntax(object):
         lex_output = sp.SpecLexer().lex(spec)
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == sp.ID or tok.type == sp.VAL:
+            if tok.type in (sp.ID, sp.VAL, sp.VER):
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -698,14 +750,22 @@ class TestSpecSyntax(object):
         )
 
     def test_spaces_between_dependences(self):
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
             "^stackwalker @ 8.1_1e",
         )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
             "^stackwalker @ 8.1_1e",
@@ -720,14 +780,30 @@ class TestSpecSyntax(object):
         )
 
     def test_way_too_many_spaces(self):
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v_space
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e",
         )
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v_space
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
             "^ stackwalker @ 8.1_1e",

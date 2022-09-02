@@ -4943,7 +4943,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, VER, ON, OFF, PCT, EQ, ID, VAL, FILE = range(10)
+HASH, DEP, VER, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -4963,11 +4963,13 @@ class SpecLexer(spack.parse.Lexer):
         )
         super(SpecLexer, self).__init__(
             [
-                (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (
-                    r"\@\s*[\:\w]([\:\w.,\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?",
+                    r"\@([\w.\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?",
                     lambda scanner, val: self.token(VER, val),
                 ),
+                (r"\:", lambda scanner, val: self.token(COLON, val)),
+                (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\+", lambda scanner, val: self.token(ON, val)),
                 (r"\-", lambda scanner, val: self.token(OFF, val)),
                 (r"\~", lambda scanner, val: self.token(OFF, val)),
@@ -5265,11 +5267,10 @@ class SpecParser(spack.parse.Parser):
             self.check_identifier()
             return self.token.value
 
-    def version(self, vstring):
+    def version(self):
 
         start = None
         end = None
-        version_spec = vstring.lstrip("@")
 
         def str_translate(value):
             # return None for empty strings since we are dealing with data from split
@@ -5278,15 +5279,31 @@ class SpecParser(spack.parse.Parser):
             else:
                 return value
 
-        if ":" in version_spec:
-            version_spec = [str_translate(v) for v in version_spec.split(":")]
-            if len(version_spec) != 2:
-                # can only have one range in a version
-                self.next_token_error("Invalid version specifier")
-            start, end = version_spec
+        if self.token.type is COMMA:
+            # need to increment commas, could be ID or COLON
+            self.accept(ID)
+
+        if self.token.type in (VER, ID):
+            version_spec = self.token.value.lstrip("@")
+            start = str_translate(version_spec)
+            if not start and self.accept(ID):
+                # if there is a space (@ 12.6.2) then a VER token could be lexed as two tokens `@`
+                # and `12.6.2` so we need an extra check
+                start = self.token.value
+
+        if self.accept(COLON):
+            if self.accept(ID):
+                if self.next and self.next.type is EQ:
+                    # This is a start: range followed by a key=value pair
+                    self.push_tokens([self.token])
+                else:
+                    end = self.token.value
+        elif start:
+            # No colon, but there was a version
+            return vn.Version(start)
         else:
-            # No colon: return the version
-            return vn.Version(version_spec)
+            # No colon and no id: invalid version
+            self.next_token_error("Invalid version specifier")
 
         if start:
             start = vn.Version(start)
@@ -5295,8 +5312,10 @@ class SpecParser(spack.parse.Parser):
         return vn.VersionRange(start, end)
 
     def version_list(self):
-        vstrings = self.token.value.split(",")
-        vlist = [self.version(v) for v in vstrings]
+        vlist = []
+        vlist.append(self.version())
+        while self.accept(COMMA):
+            vlist.append(self.version())
         return vlist
 
     def compiler(self):
