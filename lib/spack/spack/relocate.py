@@ -13,6 +13,7 @@ import macholib.MachO
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
 
 import spack.bootstrap
@@ -76,15 +77,14 @@ class BinaryTextReplaceError(spack.error.SpackError):
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
 
+@memoized
 def _patchelf():
     """Return the full path to the patchelf binary, if available, else None."""
     if is_macos:
         return None
 
-    patchelf = executable.which("patchelf")
-    if patchelf is None:
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
     return patchelf.path
 
