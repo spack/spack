@@ -53,6 +53,7 @@ jobs:
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
             core:
+            - '!lib/spack/docs/**'
             - './!(var/**)/**'
             packages:
             - 'var/**'
@@ -79,7 +80,7 @@ jobs:
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
-    if: ${{ github.repository == 'spack/spack' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
     with:
@@ -87,7 +88,7 @@ jobs:
       packages: ${{ needs.changes.outputs.packages }}
       with_coverage: ${{ needs.changes.outputs.with_coverage }}
   windows:
-    if: ${{ github.repository == 'spack/spack' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
 
