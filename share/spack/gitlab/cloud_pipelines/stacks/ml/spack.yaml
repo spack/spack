@@ -44,6 +44,8 @@ spack:
     - py-timm
     - py-torch
     - py-torch-cluster
+    - py-torch-geometric
+    - py-torch-nvidia-apex
     - py-torch-scatter
     - py-torch-sparse
     - py-torch-spline-conv
@@ -69,11 +71,15 @@ spack:
 
     # TensorFlow
     - py-tensorflow
+    - py-tensorflow-datasets
+    - py-tensorflow-estimator
     - py-tensorflow-hub
+    - py-tensorflow-metadata
     - py-tensorflow-probability
 
     # XGBoost
     - py-xgboost
+    - r-xgboost
     - xgboost
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml" }
