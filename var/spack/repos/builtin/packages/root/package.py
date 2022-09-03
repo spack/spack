@@ -257,6 +257,9 @@ class Root(CMakePackage):
         when="@:6.22",
         msg="Please use an older intel-tbb/intel-oneapi-tbb version",
     )
+    # Compile definitions lead to rogue `-D` on command line:
+    # see https://github.com/root-project/root/issues/11312
+    conflicts("^nlohmann-json@3.11", when="@6.26:6.26.06")
     # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on("unuran", when="+unuran")
     depends_on("vc", when="+vc")
