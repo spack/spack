@@ -837,3 +837,17 @@ class TestSpecSyntax(object):
         for a, b in itertools.product(specs, repeat=2):
             # Check that we can compare without raising an error
             assert a <= b or b < a
+
+    def test_git_ref_spec_equivalences(self, mock_packages, mock_stage):
+        s1 = sp.Spec('develop-branch-version@git.{hash}=develop'.format(hash='a'*40))
+        s2 = sp.Spec('develop-branch-version@git.{hash}=develop'.format(hash='b'*40))
+        s3 = sp.Spec('develop-branch-version@git.0.2.15=develop')
+        s_no_git = sp.Spec('develop-branch-version@develop')
+
+        assert not isinstance(s_no_git, GitVersion)
+
+        assert s1.satisfies(s_no_git) == True
+        assert s2.satisfies(s_no_git) == True
+        assert s_no_git.satisfies(s1) == False
+        assert s2.satisfies(s1) == False
+        assert s3.satisifies(s1) == False

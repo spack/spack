@@ -26,6 +26,7 @@ be called on any of the types::
 """
 import numbers
 import os
+import pdb
 import re
 from bisect import bisect_left
 from functools import wraps
@@ -45,7 +46,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][\=\@A-Za-z0-9_.-]*$")
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
 
 # regex for a commit version
 COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
@@ -553,8 +554,8 @@ class GitVersion(VersionBase):
         git_prefix = string.startswith("git.")
         pruned_string = string[4:] if git_prefix else string
 
-        if "=@" in pruned_string:
-            self.ref, self.ref_version_str = pruned_string.split("=@")
+        if "=" in pruned_string:
+            self.ref, self.ref_version_str = pruned_string.split("=")
             _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
             self.user_supplied_reference = True
         else:
@@ -565,7 +566,7 @@ class GitVersion(VersionBase):
         self.is_ref |= bool(self.is_commit)
 
         # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
-        # unless we are assigning a version with =@
+        # unless we are assigning a version with =
         canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
         super(GitVersion, self).__init__(canonical_string)
 
@@ -599,15 +600,22 @@ class GitVersion(VersionBase):
         """A Version 'satisfies' another if it is at least as specific and has
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler.
+        a suitable compiler. In the case of two GitVersions we require the ref_versions
+        to satisify one another and the versions to be an exact match.
         """
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
+        if isinstance(other, GitVersion):
+            pdb.set_trace()
+            version_match = self.version == other.version
+        else:
+            version_match = True
+
         # Do the final comparison
         nself = len(self_cmp)
         nother = len(other_cmp)
-        return nother <= nself and self_cmp[:nother] == other_cmp
+        return nother <= nself and self_cmp[:nother] == other_cmp and version_match
 
     def __repr__(self):
         return "GitVersion(" + repr(self.string) + ")"
