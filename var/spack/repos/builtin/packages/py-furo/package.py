@@ -23,7 +23,6 @@ class PyFuro(PythonPackage):
     depends_on("py-tomli", type="build")
     depends_on("py-nodeenv", type="build")
 
-
     def global_options(self, spec, prefix):
         options = []
         return options
