@@ -1767,3 +1767,90 @@ class TestConcretize(object):
             match="The reference version 'main' for package 'develop-branch-version'",
         ):
             s.concretized()
+
+    @pytest.mark.regression("31484")
+    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
+        """Test that external specs that are in the DB can be reused."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {
+            "changing": {
+                "buildable": False,
+                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        # Install the external spec
+        external1 = Spec("changing@1.0").concretized()
+        external1.package.do_install(fake=True, explicit=True)
+        assert external1.external
+
+        # Modify the package.py file
+        repo_with_changing_recipe.change({"delete_variant": True})
+
+        # Try to concretize the external without reuse and confirm the hash changed
+        with spack.config.override("concretizer:reuse", False):
+            external2 = Spec("changing@1.0").concretized()
+        assert external2.dag_hash() != external1.dag_hash()
+
+        # ... while with reuse we have the same hash
+        with spack.config.override("concretizer:reuse", True):
+            external3 = Spec("changing@1.0").concretized()
+        assert external3.dag_hash() == external1.dag_hash()
+
+    @pytest.mark.regression("31484")
+    def test_user_can_select_externals_with_require(self, mutable_database):
+        """Test that users have means to select an external even in presence of reusable specs."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {
+            "mpi": {"buildable": False},
+            "multi-provider-mpi": {
+                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": "/usr"}]
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        # mpich and others are installed, so check that
+        # fresh use the external, reuse does not
+        with spack.config.override("concretizer:reuse", False):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name == "multi-provider-mpi"
+
+        with spack.config.override("concretizer:reuse", True):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name != "multi-provider-mpi"
+
+        external_conf["mpi"]["require"] = "multi-provider-mpi"
+        spack.config.set("packages", external_conf)
+
+        with spack.config.override("concretizer:reuse", True):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name == "multi-provider-mpi"
+
+    @pytest.mark.regression("31484")
+    def test_installed_specs_disregard_conflicts(self, mutable_database, monkeypatch):
+        """Test that installed specs do not trigger conflicts. This covers for the rare case
+        where a conflict is added on a package after a spec matching the conflict was installed.
+        """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Add a conflict to "mpich" that match an already installed "mpich~debug"
+        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(spack.spec.Spec(), None)])
+
+        # If we concretize with --fresh the conflict is taken into account
+        with spack.config.override("concretizer:reuse", False):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("+debug")
+
+        # If we concretize with --reuse it is not, since "mpich~debug" was already installed
+        with spack.config.override("concretizer:reuse", True):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("~debug")
