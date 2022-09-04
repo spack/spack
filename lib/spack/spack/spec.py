@@ -77,6 +77,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import collections
+import hashlib
 import itertools
 import operator
 import os
@@ -521,15 +522,18 @@ class ArchSpec(object):
         """True if the target is not a range or list."""
         return ":" not in str(self.target) and "," not in str(self.target)
 
-    def to_dict(self):
-        d = syaml.syaml_dict(
-            [
+    def to_dict(self, dict_type=syaml.syaml_dict):
+        d = dict_type(
+            (
                 ("platform", self.platform),
                 ("platform_os", self.os),
-                ("target", self.target.to_dict_or_value()),
-            ]
+                (
+                    "target",
+                    self.target.to_dict_or_value(dict_type=dict_type) if self.target else None,
+                ),
+            )
         )
-        return syaml.syaml_dict([("arch", d)])
+        return dict_type([("arch", d)])
 
     @staticmethod
     def from_dict(d):
@@ -643,11 +647,11 @@ class CompilerSpec(object):
         yield self.name
         yield self.versions
 
-    def to_dict(self):
-        d = syaml.syaml_dict([("name", self.name)])
+    def to_dict(self, dict_type=syaml.syaml_dict):
+        d = dict_type([("name", self.name)])
         d.update(self.versions.to_dict())
 
-        return syaml.syaml_dict([("compiler", d)])
+        return dict_type([("compiler", d)])
 
     @staticmethod
     def from_dict(d):
@@ -1853,7 +1857,13 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return spack.util.hash.base32_prefix_bits(self.process_hash(), bits)
 
-    def to_node_dict(self, hash=ht.dag_hash):
+    def dict_tuple(self, hash=ht.dag_hash):
+        #        return lang.dict_list_to_tuple(self.to_node_dict())
+
+        dlist = self.to_node_dict(hash=hash, dict_type=lang.dict_list)
+        return lang.dict_list_to_tuple(dlist)
+
+    def to_node_dict(self, hash=ht.dag_hash, dict_type=syaml.syaml_dict):
         """Create a dictionary representing the state of this Spec.
 
         ``to_node_dict`` creates the content that is eventually hashed by
@@ -1905,30 +1915,30 @@ class Spec(object):
         Arguments:
             hash (spack.hash_types.SpecHashDescriptor) type of hash to generate.
         """
-        d = syaml.syaml_dict()
+        d = dict_type()
 
         d["name"] = self.name
 
         if self.versions:
-            d.update(self.versions.to_dict())
+            d.update(self.versions.to_dict(dict_type=dict_type))
 
         if self.architecture:
-            d.update(self.architecture.to_dict())
+            d.update(self.architecture.to_dict(dict_type=dict_type))
 
         if self.compiler:
-            d.update(self.compiler.to_dict())
+            d.update(self.compiler.to_dict(dict_type=dict_type))
 
         if self.namespace:
             d["namespace"] = self.namespace
 
-        params = syaml.syaml_dict(sorted(v.yaml_entry() for _, v in self.variants.items()))
+        params = dict_type(sorted(v.yaml_entry() for _, v in self.variants.items()))
 
         params.update(sorted(self.compiler_flags.items()))
         if params:
             d["parameters"] = params
 
         if self.external:
-            d["external"] = syaml.syaml_dict(
+            d["external"] = dict_type(
                 [
                     ("path", self.external_path),
                     ("module", self.external_modules),
@@ -1968,12 +1978,12 @@ class Spec(object):
                 for dspec in edges_for_name:
                     hash_tuple = (hash.name, dspec.spec._cached_hash(hash))
                     type_tuple = ("type", sorted(str(s) for s in dspec.deptypes))
-                    deps_list.append(syaml.syaml_dict([name_tuple, hash_tuple, type_tuple]))
+                    deps_list.append(dict_type([name_tuple, hash_tuple, type_tuple]))
             d["dependencies"] = deps_list
 
         # Name is included in case this is replacing a virtual.
         if self._build_spec:
-            d["build_spec"] = syaml.syaml_dict(
+            d["build_spec"] = dict_type(
                 [("name", self.build_spec.name), (hash.name, self.build_spec._cached_hash(hash))]
             )
         return d
@@ -4784,6 +4794,15 @@ class Spec(object):
         self._dunder_hash = None
 
     def __hash__(self):
+        return hash(self.dict_tuple())
+
+        #        node_dict = self.to_node_dict(hash=ht.dag_hash)
+        #        json_text = sjson.dump(node_dict)
+        #        sha = hashlib.sha1(json_text.encode("utf-8"))
+        #        h = int.from_bytes(sha.digest()[:8], byteorder=sys.byteorder)
+        #        print(h)
+        #        return h
+
         # If the spec is concrete, we leverage the process hash and just use
         # a 64-bit prefix of it. The process hash has the advantage that it's
         # computed once per concrete spec, and it's saved -- so if we read

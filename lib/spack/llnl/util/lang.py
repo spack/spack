@@ -1111,3 +1111,32 @@ class classproperty(object):
 
     def __get__(self, instance, owner):
         return self.callback(owner)
+
+
+def dict_list_to_tuple(dlist):
+    if isinstance(dlist, (list, tuple)):
+        return tuple(dict_list_to_tuple(elt) for elt in dlist)
+    elif isinstance(dlist, dict):
+        return tuple((key, dict_list_to_tuple(val)) for key, val in dlist.items())
+    else:
+        return dlist
+
+
+class dict_list(list):
+    """A list with an interface like an ordereddict that can be turned into a tuple."""
+
+    def __setitem__(self, key, value):
+        self.append((key, value))
+
+    def update(self, dict_like):
+        if isinstance(dict_like, (list, tuple)):
+            iterable = dict_like
+        else:
+            iterable = dict_like.items()
+
+        for i in iterable:
+            self.append(i)
+
+    def items(self):
+        for i in self:
+            yield i

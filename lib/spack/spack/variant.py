@@ -277,7 +277,7 @@ class AbstractVariant(object):
         Returns:
             tuple: (name, value_representation)
         """
-        return self.name, list(self.value)
+        return (self.name, tuple(self.value))
 
     @property
     def value(self):

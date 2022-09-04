@@ -91,7 +91,7 @@ class Target(object):
         target_info = dict_or_value
         return Target(target_info["name"])
 
-    def to_dict_or_value(self):
+    def to_dict_or_value(self, dict_type=syaml.syaml_dict):
         """Returns a dict or a value representing the current target.
 
         String values are used to keep backward compatibility with generic
@@ -104,7 +104,7 @@ class Target(object):
         if self.microarchitecture.vendor == "generic":
             return str(self)
 
-        return syaml.syaml_dict(self.microarchitecture.to_dict(return_list_of_items=True))
+        return dict_type(self.microarchitecture.to_dict(return_list_of_items=True))
 
     def __repr__(self):
         cls_name = self.__class__.__name__

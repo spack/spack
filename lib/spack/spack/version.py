@@ -1011,12 +1011,12 @@ class VersionList(object):
                 o += 1
         return False
 
-    def to_dict(self):
+    def to_dict(self, dict_type=syaml_dict):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return syaml_dict([("version", str(self[0]))])
+            return dict_type([("version", str(self[0]))])
         else:
-            return syaml_dict([("versions", [str(v) for v in self])])
+            return dict_type([("versions", [str(v) for v in self])])
 
     @staticmethod
     def from_dict(dictionary):
