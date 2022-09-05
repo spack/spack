@@ -198,9 +198,11 @@ class Llvm(CMakePackage, CudaPackage):
         multi=True,
     )
     variant(
-        "omp_tsan",
+        "libomp_tsan",
         default=False,
-        when="@6:",
+        # Added in https://reviews.llvm.org/D13072
+        # Removed in https://reviews.llvm.org/D103767
+        when="@4:12",
         description="Build with OpenMP capable thread sanitizer",
     )
     variant(
@@ -860,7 +862,7 @@ class Llvm(CMakePackage, CudaPackage):
 
         cmake_args.append(define("LLVM_TARGETS_TO_BUILD", get_llvm_targets_to_build(spec)))
 
-        cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
+        cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "libomp_tsan"))
 
         if self.compiler.name == "gcc":
             cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
