@@ -107,43 +107,43 @@ class Boost(Package):
     # Boost.Container can be both header-only and compiled. '+container'
     # indicates the compiled version which requires Extended Allocator
     # support. The header-only library is installed when no variant is given.
-    all_libs = [
-        "atomic",
-        "chrono",
-        "container",
-        "context",
-        "contract",
-        "coroutine",
-        "date_time",
-        "exception",
-        "fiber",
-        "filesystem",
-        "graph",
-        "graph_parallel",
-        "iostreams",
-        "json",
-        "locale",
-        "log",
-        "math",
-        "mpi",
-        "nowide",
-        "program_options",
-        "python",
-        "random",
-        "regex",
-        "serialization",
-        "signals",
-        "stacktrace",
-        "system",
-        "test",
-        "thread",
-        "timer",
-        "type_erasure",
-        "wave",
-    ]
+    all_libs = {
+        "atomic": "@1.53:",
+        "chrono": "@1.47:",
+        "container": "@1.48:",
+        "context": "@1.51:",
+        "contract": "@1.67:",
+        "coroutine": "@1.53:",
+        "date_time": "@1.29:",
+        "exception": "@1.36:",
+        "fiber": "@1.62:",
+        "filesystem": "@1.30:",
+        "graph": "@1.18:",
+        "graph_parallel": "@1.40:",
+        "iostreams": "@1.33:",
+        "json": "@1.75:",
+        "locale": "@1.48:",
+        "log": "@1.54:",
+        "math": "@1.23:",
+        "mpi": "@1.35:",
+        "nowide": "@1.73:",
+        "program_options": "@1.32:",
+        "python": "@1.19:",
+        "random": "@1.15:",
+        "regex": "@1.18:",
+        "serialization": "@1.32:",
+        "signals": "@1.39:",
+        "stacktrace": "@1.65:",
+        "system": "@1.35:",
+        "test": "@1.21:",
+        "thread": "@1.25:",
+        "timer": "@1.9:",
+        "type_erasure": "@1.54:",
+        "wave": "@1.33:",
+    }
 
-    for lib in all_libs:
-        variant(lib, default=False, description="Compile with {0} library".format(lib))
+    for lib, when in all_libs.items():
+        variant(lib, default=False, description="Compile with {0} library".format(lib), when=when)
 
     @property
     def libs(self):
