@@ -26,7 +26,6 @@ be called on any of the types::
 """
 import numbers
 import os
-import pdb
 import re
 from bisect import bisect_left
 from functools import wraps
@@ -606,11 +605,14 @@ class GitVersion(VersionBase):
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
-        if isinstance(other, GitVersion):
-            pdb.set_trace()
+        if other.is_ref:
+            # the version for a ref is the git ref, and it should be an exact match
+            # git hashes, and tags need to be exact matches
             version_match = self.version == other.version
         else:
-            version_match = True
+            # other is not a ref then it is a version base and we need to compare
+            # this.ref
+            version_match = self.ref_version[0] == other.version
 
         # Do the final comparison
         nself = len(self_cmp)

@@ -6,6 +6,7 @@ import itertools
 import os
 import shlex
 
+import pdb
 import pytest
 
 import llnl.util.filesystem as fs
@@ -14,6 +15,7 @@ import spack.hash_types as ht
 import spack.repo
 import spack.spec as sp
 import spack.store
+import spack.version as sv
 from spack.parse import Token
 from spack.spec import (
     AmbiguousHashError,
@@ -844,10 +846,8 @@ class TestSpecSyntax(object):
         s3 = sp.Spec('develop-branch-version@git.0.2.15=develop')
         s_no_git = sp.Spec('develop-branch-version@develop')
 
-        assert not isinstance(s_no_git, GitVersion)
-
         assert s1.satisfies(s_no_git) == True
         assert s2.satisfies(s_no_git) == True
         assert s_no_git.satisfies(s1) == False
         assert s2.satisfies(s1) == False
-        assert s3.satisifies(s1) == False
+        assert s3.satisfies(s1) == False
