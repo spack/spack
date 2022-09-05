@@ -385,8 +385,14 @@ class Llvm(CMakePackage, CudaPackage):
         when="@8:9.0.0",
     )
     #
+    # committed upstream without a review
+    # see https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1
     # see https://github.com/spack/spack/pull/28547
-    patch("llvm-gcc11.patch", when="@8:11")
+    patch(
+        "https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch?full_index=1",
+        sha256="514926d661635de47972c7d403c9c4669235aa51e22e56d44676d2a2709179b6",
+        when="@8:11",
+    )
 
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
