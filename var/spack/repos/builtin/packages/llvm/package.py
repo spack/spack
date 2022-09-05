@@ -358,7 +358,11 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("^cmake@3.19.0", when="@6:11.0.0")
 
     # Fix lld templates: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=230463
-    patch("llvm5-lld-ELF-Symbols.patch", when="@5+lld%clang@7:")
+    patch(
+        "https://raw.githubusercontent.com/freebsd/freebsd-ports/f8f9333d8e1e5a7a6b28c5ef0ca73785db06136e/devel/llvm50/files/lld/patch-tools_lld_ELF_Symbols.cpp",
+        sha256="c81a50c1b6b78d359c0ce3b88914477f4f2a85b8dbfa7ac745b9e7eb4e53931b",
+        when="@5+lld%clang@7:",
+    )
 
     # fix missing ::size_t in 'llvm@4:5'
     # see comments in the patch file
