@@ -602,6 +602,7 @@ class GitVersion(VersionBase):
         a suitable compiler. In the case of two GitVersions we require the ref_versions
         to satisify one another and the versions to be an exact match.
         """
+        import pdb
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
@@ -612,7 +613,8 @@ class GitVersion(VersionBase):
         else:
             # other is not a ref then it is a version base and we need to compare
             # this.ref
-            version_match = self.ref_version[0] == other.version
+            # pdb.set_trace()
+            version_match = self.ref_version == other.version
 
         # Do the final comparison
         nself = len(self_cmp)

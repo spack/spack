@@ -6,7 +6,6 @@ import itertools
 import os
 import shlex
 
-import pdb
 import pytest
 
 import llnl.util.filesystem as fs
