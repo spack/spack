@@ -364,6 +364,11 @@ class Llvm(CMakePackage, CudaPackage):
         when="@5+lld%clang@7:",
     )
 
+    # Add missing include directives for the standard headers (the real need for the following
+    # patches depends on the implementation of the standard C++ library, the headers, however, must
+    # be included according to the standard, therefore, we apply the patches regardless of the
+    # compiler and compiler version).
+    #
     # fix missing ::size_t in 'llvm@4:5'
     # see comments in the patch file
     patch(
@@ -371,6 +376,17 @@ class Llvm(CMakePackage, CudaPackage):
         # we do not cover compiler-rt=runtime because it is not supported when @:5
         when="@4:5 compiler-rt=project",
     )
+    #
+    # see https://reviews.llvm.org/D64937
+    # see https://github.com/spack/spack/issues/24270
+    patch(
+        "https://github.com/llvm/llvm-project/commit/b288d90b39f4b905c02092a9bfcfd6d78f99b191.patch?full_index=1",
+        sha256="2028d52e1a39326bb48fb7463132bbfe7fb4fa18f1adfeea9c3ed0320ed49564",
+        when="@8:9.0.0",
+    )
+    #
+    # see https://github.com/spack/spack/pull/28547
+    patch("llvm-gcc11.patch", when="@8:11")
 
     # fix building of older versions of llvm with newer versions of glibc
     for compiler_rt_as in ["project", "runtime"]:
@@ -386,16 +402,6 @@ class Llvm(CMakePackage, CudaPackage):
             # see https://reviews.llvm.org/D70662
             patch("sanitizer-ipc_perm_mode.patch", when="@5:9")
     del compiler_rt_as
-
-    # add missing include directives (MicrosoftDemangle for %gcc@10: and %clang@13)
-    # see https://reviews.llvm.org/D64937
-    # see https://github.com/spack/spack/issues/24270
-    with when("@8"):
-        patch(
-            "https://github.com/llvm/llvm-project/commit/b288d90b39f4b905c02092a9bfcfd6d78f99b191.patch?full_index=1",
-            sha256="2028d52e1a39326bb48fb7463132bbfe7fb4fa18f1adfeea9c3ed0320ed49564",
-        )
-        patch("llvm-gcc11.patch")
 
     # Backport from llvm upstream gcc ppc const expr long double issue
     # see https://bugs.llvm.org/show_bug.cgi?id=39696
@@ -454,8 +460,6 @@ class Llvm(CMakePackage, CudaPackage):
     # https://reviews.llvm.org/D102059
     patch("no_cyclades.patch", when="@10:12.0.0")
     patch("no_cyclades9.patch", when="@6:9")
-
-    patch("llvm-gcc11.patch", when="@9:11%gcc@11:")
 
     # add -lpthread to build OpenMP libraries with Fujitsu compiler
     patch("llvm12-thread.patch", when="@12 %fj")
