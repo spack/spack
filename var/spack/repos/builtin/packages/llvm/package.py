@@ -469,7 +469,9 @@ class Llvm(CMakePackage, CudaPackage):
         sha256="742501723642675075e617f3c38339961b2c7b6fd8290dbffc52239ab0783317",
         when="@10:12.0.0",
     )
-    patch("no_cyclades9.patch", when="@6:9")
+    # The patch above is not applicable when "@:9" due to the file renaming and reformatting. The
+    # following patch is applicable starting at least version 5.0.0, the oldest we try to support.
+    patch("no_cyclades9.patch", when="@5:9")
 
     # add -lpthread to build OpenMP libraries with Fujitsu compiler
     patch("llvm12-thread.patch", when="@12 %fj")
