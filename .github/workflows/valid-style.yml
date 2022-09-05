@@ -8,7 +8,7 @@ on:
         type: string
 
 concurrency:
-  group: style-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: style-${{github.ref}}-${{github.run_number}}
   cancel-in-progress: true
 
 

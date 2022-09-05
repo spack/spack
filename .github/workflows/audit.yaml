@@ -11,7 +11,7 @@ on:
         type: string
 
 concurrency:
-  group: audit-${{inputs.python_version}}-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: audit-${{inputs.python_version}}-${{github.ref}}-${{github.run_number}}
   cancel-in-progress: true
 
 jobs:
