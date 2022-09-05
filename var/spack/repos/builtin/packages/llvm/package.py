@@ -387,8 +387,15 @@ class Llvm(CMakePackage, CudaPackage):
             patch("sanitizer-ipc_perm_mode.patch", when="@5:9")
     del compiler_rt_as
 
-    # github.com/spack/spack/issues/24270: MicrosoftDemangle for %gcc@10: and %clang@13:
-    patch("missing-includes.patch", when="@8")
+    # add missing include directives (MicrosoftDemangle for %gcc@10: and %clang@13)
+    # see https://reviews.llvm.org/D64937
+    # see https://github.com/spack/spack/issues/24270
+    with when("@8"):
+        patch(
+            "https://github.com/llvm/llvm-project/commit/b288d90b39f4b905c02092a9bfcfd6d78f99b191.patch?full_index=1",
+            sha256="2028d52e1a39326bb48fb7463132bbfe7fb4fa18f1adfeea9c3ed0320ed49564",
+        )
+        patch("llvm-gcc11.patch")
 
     # Backport from llvm upstream gcc ppc const expr long double issue
     # see https://bugs.llvm.org/show_bug.cgi?id=39696
