@@ -71,20 +71,17 @@ def flake8_package_with_errors(scope="function"):
     filename = repo.filename_for_package_name("flake8")
     tmp = filename + ".tmp"
 
-    try:
-        shutil.copy(filename, tmp)
-        package = FileFilter(filename)
+    shutil.copy(filename, tmp)
+    package = FileFilter(tmp)
 
-        # this is a black error (quote style and spacing before/after operator)
-        package.filter('state = "unmodified"', "state    =    'modified'", string=True)
+    # this is a black error (quote style and spacing before/after operator)
+    package.filter('state = "unmodified"', "state    =    'modified'", string=True)
 
-        # this is an isort error (orderign) and a flake8 error (unused import)
-        package.filter(
-            "from spack.package import *", "from spack.package import *\nimport os", string=True
-        )
-        yield filename
-    finally:
-        shutil.move(tmp, filename)
+    # this is an isort error (orderign) and a flake8 error (unused import)
+    package.filter(
+        "from spack.package import *", "from spack.package import *\nimport os", string=True
+    )
+    yield tmp
 
 
 def test_changed_files_from_git_rev_base(tmpdir, capfd):
