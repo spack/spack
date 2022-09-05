@@ -3,8 +3,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
 import os
+
+from spack import *
 
 
 class Reportinglib(CMakePackage):
@@ -13,7 +14,7 @@ class Reportinglib(CMakePackage):
        by Blue Brain Project, EPFL"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/reportinglib"
-    git      = "git@bbpgitlab.epfl.ch:hpc/reportinglib.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/reportinglib.git"
 
     version('develop', branch='master')
     version('2.5.6', tag='2.5.6')

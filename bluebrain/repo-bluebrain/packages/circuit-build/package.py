@@ -10,7 +10,7 @@ class CircuitBuild(PythonPackage):
     """Command Line API for building circuits"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/circuit-build"
-    git      = "git@bbpgitlab.epfl.ch:nse/circuit-build.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/circuit-build.git"
 
     version('develop', branch='main')
     version('4.0.1', tag='circuit-build-v4.0.1')

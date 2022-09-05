@@ -9,8 +9,8 @@ class SpatialIndex(PythonPackage):
     """Spatial indexer for geometries and morphologies"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/SpatialIndex"
-    git      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
-    url      = "git@bbpgitlab.epfl.ch:hpc/SpatialIndex.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
+    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
 
     version('develop', branch='main', submodules=True)
     version('0.6.0', tag="0.6.0", submodules=True)

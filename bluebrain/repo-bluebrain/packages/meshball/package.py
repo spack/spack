@@ -10,7 +10,7 @@ class Meshball(CMakePackage):
     """Tool for generating meshes from morphology file"""
 
     homepage = "https://bbpgitlab.epfl.ch/viz/opendeck/MeshBall"
-    git = "git@bbpgitlab.epfl.ch:viz/opendeck/MeshBall.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/viz/opendeck/MeshBall.git"
 
     generator = 'Ninja'
 

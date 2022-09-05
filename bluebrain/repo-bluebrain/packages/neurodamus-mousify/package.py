@@ -16,7 +16,7 @@ class NeurodamusMousify(NeurodamusModel):
     """Neurodamus with built-in Mousify model
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/mousify"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/mousify.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/mousify.git"
 
     mech_name = "mousify"
 

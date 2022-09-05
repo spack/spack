@@ -10,7 +10,7 @@ class PyAibsCircuitConverter(PythonPackage):
     """Pythonic API for conversion between Allen Institute and BBP"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/aibs-circuit-converter"
-    git      = "git@bbpgitlab.epfl.ch:nse/aibs-circuit-converter.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/aibs-circuit-converter.git"
 
     version('develop', branch='master')
     version('0.0.3', tag='aibs-circuit-converter-v0.0.3')

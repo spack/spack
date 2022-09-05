@@ -12,7 +12,7 @@ class PyBbaWebexporter(PythonPackage):
     to be consumed by the Atlas web app.
     """
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_web_exporter"
-    git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_atlas_web_exporter.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_web_exporter.git"
 
     version('0.1.5', tag='v0.1.5')
     version('0.1.4', tag='v0.1.4')

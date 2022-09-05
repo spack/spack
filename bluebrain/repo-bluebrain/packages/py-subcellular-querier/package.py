@@ -10,7 +10,7 @@ class PySubcellularQuerier(PythonPackage):
     """Query and transform data for subcellular phase in circuit building."""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/archive/subcellular-querier.git"
-    git = "git@bbpgitlab.epfl.ch:nse/archive/subcellular-querier.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/archive/subcellular-querier.git"
 
     version('0.0.3', tag='subcellular-querier-v0.0.3')
 

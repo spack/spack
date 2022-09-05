@@ -10,7 +10,7 @@ class PyBluepy(PythonPackage):
     """Pythonic Blue Brain data access API"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/bluepy"
-    git      = "git@bbpgitlab.epfl.ch:nse/bluepy.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/bluepy.git"
 
     version('develop', branch='main')
     version('2.4.5', tag='bluepy-v2.4.5')

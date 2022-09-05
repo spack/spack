@@ -10,8 +10,8 @@ class ParquetConverters(CMakePackage):
     """Parquet conversion tools developed by Blue Brain Project, EPFL
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters"
-    url      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/parquet-converters.git"
-    git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/parquet-converters.git"
+    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
 
     version('develop', submodules=True)
     version('0.8.0', tag='v0.8.0', submodules=True)

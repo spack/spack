@@ -16,7 +16,7 @@ class PyRandomaccessbuffer(PythonPackage):
     even from within a web browser in JS.
     """
     homepage = "https://bbpgitlab.epfl.ch/dke/randomaccessbufferpy"
-    git      = "git@bbpgitlab.epfl.ch:dke/randomaccessbufferpy.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/dke/randomaccessbufferpy.git"
 
     version('0.1.7', tag='v0.1.7')
 

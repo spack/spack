@@ -10,7 +10,7 @@ class PspValidation(PythonPackage):
     """PSP analysis tools"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/psp-validation/"
-    git      = "git@bbpgitlab.epfl.ch:nse/psp-validation.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/psp-validation.git"
 
     version('develop', branch='main')
     version('0.5.0', tag='psp-validation-v0.5.0')

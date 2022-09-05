@@ -14,7 +14,7 @@ class ModelNeocortex(SimModel):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
 
     version('develop', branch='master', submodules=True, clean=False)
     version('1.1', tag='1.1', submodules=True, clean=False)

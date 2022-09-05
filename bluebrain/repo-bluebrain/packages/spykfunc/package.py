@@ -12,8 +12,8 @@ class Spykfunc(PythonPackage):
     """Spykfunc - Spark functionalizer developed by Blue Brain Project, EPFL
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc"
-    url      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/spykfunc.git"
-    git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/spykfunc.git"
+    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
 
     version('develop', submodules=True, get_full_repo=True)
     version('0.17.2', tag='v0.17.2', submodules=True, get_full_repo=True)

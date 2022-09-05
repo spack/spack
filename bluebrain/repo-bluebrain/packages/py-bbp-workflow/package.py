@@ -10,7 +10,7 @@ class PyBbpWorkflow(PythonPackage):
     '''Blue Brain Workflow.'''
 
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
-    git      = 'git@bbpgitlab.epfl.ch:nse/bbp-workflow.git'
+    git      = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git'
 
     version('3.0.33', tag='bbp-workflow-v3.0.33')
 

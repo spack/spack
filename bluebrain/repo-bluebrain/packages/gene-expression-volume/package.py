@@ -12,7 +12,7 @@ class GeneExpressionVolume(PythonPackage):
     Used by the atlas building pipeline.
     """
     homepage = "https://bbpgitlab.epfl.ch/nse/gene-expression-volume"
-    git      = "git@bbpgitlab.epfl.ch:nse/gene-expression-volume.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/gene-expression-volume.git"
 
     version('0.1.0', tag='gene-expression-volume-v0.1.0')
 

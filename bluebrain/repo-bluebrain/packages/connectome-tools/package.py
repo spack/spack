@@ -10,7 +10,7 @@ class ConnectomeTools(PythonPackage):
     """Connectome statistics; S2F recipe generation"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/connectome-tools"
-    git = "git@bbpgitlab.epfl.ch:nse/connectome-tools.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/connectome-tools.git"
 
     version('develop', branch='main')
     version('0.6.2', tag='connectome-tools-v0.6.2')

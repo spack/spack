@@ -11,7 +11,7 @@ class BraynsTopologyviewer(CMakePackage):
        the topology of neuron simulation data"""
 
     homepage = "https://bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-TopologyViewer"
-    git = "git@bbpgitlab.epfl.ch:viz/archive/Gerrit/Brayns-UC-TopologyViewer.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-TopologyViewer.git"
 
     generator = 'Ninja'
 

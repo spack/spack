@@ -11,7 +11,7 @@ class PyNeuroc(PythonPackage):
     """Python library neuron morphology analysis"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/neuroc"
-    git = "git@bbpgitlab.epfl.ch:nse/neuroc.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/neuroc.git"
 
     version('develop', branch='main')
     version('0.2.8', tag='neuroc-v0.2.8')

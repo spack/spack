@@ -10,7 +10,7 @@ class PyMinisValidation(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/minis-validation/"
-    git      = "git@bbpgitlab.epfl.ch:nse/minis-validation.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/minis-validation.git"
 
     version('develop', branch='master')
     version('0.0.5', tag='minis-validation-v0.0.5')

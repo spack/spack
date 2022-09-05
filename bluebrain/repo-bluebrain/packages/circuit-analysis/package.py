@@ -10,7 +10,7 @@ class CircuitAnalysis(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/circuit-analysis"
-    git      = "git@bbpgitlab.epfl.ch:nse/circuit-analysis.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/circuit-analysis.git"
 
     version('develop', branch='master')
     version('0.0.5', tag='circuit-analysis-v0.0.5')

@@ -16,7 +16,7 @@ class NeurodamusHippocampus(NeurodamusModel):
     """Neurodamus with built-in Hippocampus model.
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/hippocampus"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/hippocampus.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/hippocampus.git"
 
     mech_name = "hippocampus"
 

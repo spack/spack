@@ -10,7 +10,7 @@ class PyRegionGrower(PythonPackage):
     """Python library for space-aware neuron synthesis"""
 
     homepage = "https://bbpgitlab.epfl.ch/neuromath/region-grower"
-    git      = "git@bbpgitlab.epfl.ch:neuromath/region-grower.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/neuromath/region-grower.git"
 
     version('develop', branch='main')
     version('0.3.0', tag='region-grower-v0.3.0')

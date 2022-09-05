@@ -10,7 +10,7 @@ class PyPytouchreader(PythonPackage):
     """Python interface to interact with touch files."""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/touchreader"
-    git      = "git@bbpgitlab.epfl.ch:hpc/touchreader.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/touchreader.git"
 
     version('develop', get_full_repo=True)
     version('1.4.7', tag='v1.4.7', get_full_repo=True)

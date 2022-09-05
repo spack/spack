@@ -10,7 +10,7 @@ class PyBluepyemodel(PythonPackage):
     """Python library to optimize and evaluate electrical models."""
 
     homepage = "https://bbpgitlab.epfl.ch/cells/bluepyemodel"
-    git      = "git@bbpgitlab.epfl.ch:cells/bluepyemodel.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/cells/bluepyemodel.git"
 
     version('0.0.8.2021-12-22', tag='BluePyEModel-v0.0.8')
     version('0.0.8', tag='BluePyEModel-v0.0.8')

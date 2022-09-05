@@ -9,7 +9,7 @@ from spack import *
 class BraynsBrainatlas(CMakePackage):
     """Brayns plugin"""
     homepage = "https://bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-BrainAtlas"
-    git = "git@bbpgitlab.epfl.ch:viz/archive/Gerrit/Brayns-UC-BrainAtlas.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-BrainAtlas.git"
 
     generator = 'Ninja'
 

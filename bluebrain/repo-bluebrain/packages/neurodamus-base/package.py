@@ -13,7 +13,7 @@ class NeurodamusBase(Package):
     """Library of channels developed by Blue Brain Project, EPFL"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/archive/neurodamus-bbp"
-    url      = "git@bbpgitlab.epfl.ch:hpc/archive/neurodamus-bbp.git"
+    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/archive/neurodamus-bbp.git"
 
     version('master',      git=url, branch='master')
     version('mousify',     git=url, branch='sandbox/leite/mousify')

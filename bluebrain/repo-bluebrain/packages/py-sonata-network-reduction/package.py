@@ -10,7 +10,7 @@ class PySonataNetworkReduction(PythonPackage):
     """Pythonic Sonata circuit reduction API"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/sonata-network-reduction/"
-    git      = "git@bbpgitlab.epfl.ch:nse/sonata-network-reduction.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/sonata-network-reduction.git"
 
     version('develop', branch='master')
     version('0.1.8', tag='sonata-network-reduction-v0.1.8')

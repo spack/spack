@@ -10,7 +10,7 @@ class MorphoKit(CMakePackage):
     """Higher-level library for reading / writing morphology files"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/morpho-kit"
-    git      = "git@bbpgitlab.epfl.ch:hpc/morpho-kit.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/morpho-kit.git"
 
     version('develop', branch='main', submodules=True, get_full_repo=True)
     version('0.3.4', tag='v0.3.4', submodules=True, get_full_repo=True)

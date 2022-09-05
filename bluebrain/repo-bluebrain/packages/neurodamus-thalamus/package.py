@@ -16,7 +16,7 @@ class NeurodamusThalamus(NeurodamusModel):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/thalamus"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/thalamus.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/thalamus.git"
 
     mech_name = "thalamus"
 
@@ -28,7 +28,7 @@ class NeurodamusThalamus(NeurodamusModel):
 
     resource(
         name="neocortex",
-        git="git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git",
+        git="ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git",
         tag="1.7",
         when="@1.6:",
     )

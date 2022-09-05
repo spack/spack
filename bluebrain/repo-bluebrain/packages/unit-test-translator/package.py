@@ -11,7 +11,7 @@ class UnitTestTranslator(PythonPackage):
     """
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/unit-test-translator"
-    git      = "git@bbpgitlab.epfl.ch:hpc/unit-test-translator.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/unit-test-translator.git"
 
     version('develop', branch='main')
     version('0.0.2', tag='v0.0.2')

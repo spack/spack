@@ -10,7 +10,7 @@ class Functionalizer(CMakePackage):
     """Apply several steps of filtering on touches
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/archive/functionalizer"
-    git      = "git@bbpgitlab.epfl.ch:hpc/archive/functionalizer.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/archive/functionalizer.git"
 
     version('develop', branch='master', submodules=True)
     version('3.12.2', tag='v3.12.2', submodules=True)

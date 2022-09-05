@@ -11,7 +11,7 @@ class PyAtlinter(PythonPackage):
     """Interpolation of section images."""
 
     homepage = "https://atlas-interpolation.rtfd.io"
-    git = "git@bbpgitlab.epfl.ch:project/proj101/atlas_interpolation.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/project/proj101/atlas_interpolation.git"
 
     maintainers = ["EmilieDel", "Stannislav"]
 

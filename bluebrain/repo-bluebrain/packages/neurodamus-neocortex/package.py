@@ -18,7 +18,7 @@ class NeurodamusNeocortex(NeurodamusModel):
     """Neurodamus with built-in neocortex model
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/models/neocortex"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/models/neocortex.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/neocortex.git"
 
     variant('v5', default=True, description='Enable support for previous v5 circuits')
     variant('plasticity', default=False, description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS")

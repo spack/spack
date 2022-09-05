@@ -11,7 +11,7 @@ class PyMorphologyRepairWorkflow(PythonPackage):
     """Python library neuron morphology analysis"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/morphology-repair-workflow"
-    git      = "git@bbpgitlab.epfl.ch:nse/morphology-repair-workflow.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/morphology-repair-workflow.git"
 
     version('develop', branch='master')
     version('2.0.3', tag='morphology-repair-workflow-v2.0.3')

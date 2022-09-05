@@ -13,7 +13,7 @@ class Asciitoh5(Package):
     """Neurodamus Library necessary to convert from ASCII to H5"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/asciitoh5"
-    git      = "git@bbpgitlab.epfl.ch:hpc/asciitoh5.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/asciitoh5.git"
 
     version('develop', git=git, branch='master')
     version('1.0', git=git, tag='1.0')

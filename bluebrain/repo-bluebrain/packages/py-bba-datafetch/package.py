@@ -13,7 +13,7 @@ class PyBbaDatafetch(PythonPackage):
     linked to resources.
     """
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_data_fetch"
-    git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_atlas_data_fetch.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_data_fetch.git"
 
     version('0.1.0', tag='v0.1.0')
 

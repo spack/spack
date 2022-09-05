@@ -11,7 +11,7 @@ class PyDataIntegrityCheck(PythonPackage):
     atlas pipeline files integrity.
     """
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_data_integrity_check.git"
-    git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_atlas_data_integrity_check.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_atlas_data_integrity_check.git"
 
     version('0.1.0', tag='v0.1.0')
 

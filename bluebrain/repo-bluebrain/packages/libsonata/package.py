@@ -43,6 +43,8 @@ class Libsonata(CMakePackage):
             '-DEXTLIB_FROM_SUBMODULES=OFF',
             '-DSONATA_TESTS=OFF',
         ]
+        if not self.spec.satisfies('@develop'):
+            result.append('-DSONATA_CXX_WARNINGS:BOOL=OFF')
         if self.spec.satisfies('+mpi'):
             result.extend([
                 '-DCMAKE_C_COMPILER:STRING={0}'.format(

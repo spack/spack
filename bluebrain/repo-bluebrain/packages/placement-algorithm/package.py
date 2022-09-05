@@ -10,7 +10,7 @@ class PlacementAlgorithm(PythonPackage):
     """Morphology placement algorithm"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/placement-algorithm/"
-    git      = "git@bbpgitlab.epfl.ch:nse/placement-algorithm.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/placement-algorithm.git"
 
     version('develop', branch='main')
     version('2.3.0', tag='placement-algorithm-v2.3.0')

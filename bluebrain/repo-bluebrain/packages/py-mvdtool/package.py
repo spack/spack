@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyMvdtool(PythonPackage):
@@ -42,10 +42,3 @@ class PyMvdtool(PythonPackage):
     depends_on('libsonata+mpi', type=('build', 'run'), when='+mpi@2.1:')
     depends_on('highfive~mpi', type='build', when='~mpi')
     depends_on('highfive+mpi', type='build', when='+mpi')
-
-    @run_before('build')
-    def configure(self):
-        # we cant use @when('+mpi'), raises NoSuchMethodError
-        if self.spec.satisfies('+mpi'):
-            env['CC'] = self.spec['mpi'].mpicc
-            env['CXX'] = self.spec['mpi'].mpicxx

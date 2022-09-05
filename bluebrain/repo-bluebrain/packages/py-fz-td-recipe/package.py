@@ -11,7 +11,7 @@ class PyFzTdRecipe(PythonPackage):
     building."""
 
     homepage = "https://bbpteam.epfl.ch/documentation/projects/fz-td-recipe"
-    git      = "git@bbpgitlab.epfl.ch:hpc/circuit-building/fz-td-recipe.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/fz-td-recipe.git"
 
     version('develop', branch='master')
     version('0.1.0.dev0', tag='fz-td-recipe-v0.1.0.dev0')

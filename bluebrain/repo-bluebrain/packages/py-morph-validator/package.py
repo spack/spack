@@ -11,7 +11,7 @@ class PyMorphValidator(PythonPackage):
     """Python library neuron morphology analysis"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/morph-validator"
-    git      = "git@bbpgitlab.epfl.ch:nse/morph-validator.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/morph-validator.git"
     version('develop', branch='main')
     version('0.3.1', tag='morph-validator-v0.3.1')
 

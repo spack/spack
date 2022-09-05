@@ -20,7 +20,7 @@ class NeurodamusCore(SimModel):
     """Library of channels developed by Blue Brain Project, EPFL"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/sim/neurodamus-core"
-    git      = "git@bbpgitlab.epfl.ch:hpc/sim/neurodamus-core.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/sim/neurodamus-core.git"
 
     version('develop', branch='main', get_full_repo=False)
     version('3.4.0',  tag='3.4.0', get_full_repo=False)
@@ -78,7 +78,7 @@ class NeurodamusCore(SimModel):
     depends_on('zlib')  # for hdf5
 
     resource(name='common',
-             git='git@bbpgitlab.epfl.ch:hpc/sim/models/common.git',
+             git='ssh://git@bbpgitlab.epfl.ch/hpc/sim/models/common.git',
              when='+common',
              destination='resources')
 

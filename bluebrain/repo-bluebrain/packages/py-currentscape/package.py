@@ -10,7 +10,7 @@ class PyCurrentscape(PythonPackage):
     """Module to easily plot currentscape."""
 
     homepage = "https://bbpgitlab.epfl.ch/cells/currentscape"
-    git = "git@bbpgitlab.epfl.ch:cells/currentscape.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/cells/currentscape.git"
 
     version("develop", branch="master")
     version("0.0.10", tag="currentscape-v0.0.10")

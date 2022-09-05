@@ -11,7 +11,7 @@ class BraynsMolecularsystems(CMakePackage):
      molecular systems"""
 
     homepage = "https://bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-MolecularSystems"
-    git = "git@bbpgitlab.epfl.ch:viz/archive/Gerrit/Brayns-UC-MolecularSystems.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/viz/archive/Gerrit/Brayns-UC-MolecularSystems.git"
 
     generator = 'Ninja'
 

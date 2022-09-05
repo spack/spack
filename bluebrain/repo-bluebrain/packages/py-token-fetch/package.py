@@ -11,7 +11,7 @@ class PyTokenFetch(PythonPackage):
     the Nexus token using Keycloak.
     """
     homepage = "https://bbpgitlab.epfl.ch/dke/apps/blue_brain_nexus_token_fetch"
-    git      = "git@bbpgitlab.epfl.ch:dke/apps/blue_brain_nexus_token_fetch.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/dke/apps/blue_brain_nexus_token_fetch.git"
 
     version('0.1.0', tag='v0.1.0')
 

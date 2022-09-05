@@ -21,7 +21,7 @@ class PyAtlannot(PythonPackage):
     version(
         "0.1.1",
         tag="v0.1.1",
-        git="git@bbpgitlab.epfl.ch:project/proj101/atlas_annotation.git",
+        git="ssh://git@bbpgitlab.epfl.ch/project/proj101/atlas_annotation.git",
     )
 
     # Setup requirements

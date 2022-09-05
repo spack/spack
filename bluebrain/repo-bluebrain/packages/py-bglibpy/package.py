@@ -9,7 +9,7 @@ from spack import *
 class PyBglibpy(PythonPackage):
     """Pythonic Blue Brain simulator access"""
     homepage = "https://bbpgitlab.epfl.ch/cells/bglibpy"
-    git = "git@bbpgitlab.epfl.ch:cells/bglibpy.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/cells/bglibpy.git"
 
     version('develop', branch='main')
 

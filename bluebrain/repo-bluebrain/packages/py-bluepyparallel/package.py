@@ -10,7 +10,7 @@ class PyBluepyparallel(PythonPackage):
     """Python library to run embarassingly parallel computations."""
 
     homepage = "https://bbpgitlab.epfl.ch/neuromath/bluepyparallel"
-    git      = "git@bbpgitlab.epfl.ch:neuromath/bluepyparallel.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/neuromath/bluepyparallel.git"
 
     version('0.0.5', tag='BluePyParallel-v0.0.5')
 

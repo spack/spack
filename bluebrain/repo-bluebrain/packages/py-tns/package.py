@@ -10,7 +10,7 @@ class PyTns(PythonPackage):
     """Python library for neuron synthesis"""
 
     homepage = "https://bbpgitlab.epfl.ch/neuromath/neurots"
-    git      = "git@bbpgitlab.epfl.ch:neuromath/neurots.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/neuromath/neurots.git"
 
     version('develop', branch='main')
     version('2.5.0', tag='NeuroTS-v2.5.0')

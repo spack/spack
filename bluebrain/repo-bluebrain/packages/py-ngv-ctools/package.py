@@ -10,7 +10,7 @@ class PyNgvCtools(PythonPackage):
     """C++ extensions tools for ngv building"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/ngv-ctools"
-    git      = "git@bbpgitlab.epfl.ch:nse/ngv-ctools.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/ngv-ctools.git"
 
     version("develop", branch="main")
     version('1.0.1', tag="ngv-ctools-v1.0.1")

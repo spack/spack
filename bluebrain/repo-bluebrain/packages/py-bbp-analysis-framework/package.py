@@ -10,7 +10,7 @@ class PyBbpAnalysisFramework(PythonPackage):
     """Bbp analysis framework."""
 
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-analysis-framework'
-    git      = 'git@bbpgitlab.epfl.ch:nse/bbp-analysis-framework.git'
+    git      = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-analysis-framework.git'
 
     version('1.6.42', commit='5783358e8a8c63055ce5c76d43f55875471cefe8')
     version('1.6.41', commit='75a29902164a855a5ab7921a96aeb1f054284108')

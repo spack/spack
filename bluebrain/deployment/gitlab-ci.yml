@@ -48,6 +48,8 @@ default:
     - |
       cat <<EOF > "${XDG_CONFIG_HOME}/git/config"
       [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/"]
+        insteadOf = ssh://git@bbpgitlab.epfl.ch/
+      [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/"]
         insteadOf = git@bbpgitlab.epfl.ch:
       [url "https://gitlab-ci-token:${CI_JOB_TOKEN}@bbpgitlab.epfl.ch/hpc/sim/"]
         insteadOf = ssh://bbpcode.epfl.ch/sim/
@@ -87,7 +89,7 @@ setup_spack:
           git reset --hard FETCH_HEAD
           git status
       else
-      git clone --single-branch git@bbpgitlab.epfl.ch:hpc/spack-licenses.git "$LICENSE_ROOT"
+      git clone --single-branch ssh://git@bbpgitlab.epfl.ch/hpc/spack-licenses.git "$LICENSE_ROOT"
           cd "$LICENSE_ROOT"
       fi
       git log --oneline -n5

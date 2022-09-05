@@ -11,7 +11,7 @@ class Synapsetool(CMakePackage):
        connectivity informations. Synapsetool is designed to support large
        connectivity data with billions of connections."""
     homepage = "https://bbpgitlab.epfl.ch/hpc/synapse-tool"
-    git      = "git@bbpgitlab.epfl.ch:hpc/synapse-tool.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/synapse-tool.git"
     generator = "Ninja"
 
     version('develop', submodules=True)

@@ -10,7 +10,7 @@ class PyArchngv(PythonPackage):
     """Building workflow and circuit API for Neuro-Glia-Vascular circuits."""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/ArchNGV"
-    git      = "git@bbpgitlab.epfl.ch:nse/ArchNGV.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/ArchNGV.git"
 
     version("develop", branch="main")
     version("2.0.2", tag="ArchNGV-v2.0.2")

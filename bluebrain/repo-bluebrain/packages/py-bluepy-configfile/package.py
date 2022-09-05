@@ -10,7 +10,7 @@ class PyBluepyConfigfile(PythonPackage):
     """Python library for accessing BlueConfig`s"""
 
     homepage = "https://bbpgitlab.epfl.ch/nse/bluepy-configfile"
-    git      = "git@bbpgitlab.epfl.ch:nse/bluepy-configfile.git"
+    git      = "ssh://git@bbpgitlab.epfl.ch/nse/bluepy-configfile.git"
 
     version('develop', branch='main')
     version('0.1.18', tag='bluepy-configfile-v0.1.18')
