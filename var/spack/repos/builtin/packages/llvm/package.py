@@ -204,7 +204,7 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build with OpenMP capable thread sanitizer",
     )
     variant(
-        "omp",
+        "openmp",
         values=("project", conditional("runtime", when="+clang @12:")),
         default="runtime",
         description="Build OpenMP either as a runtime (with just-build Clang) "
@@ -488,15 +488,15 @@ class Llvm(CMakePackage, CudaPackage):
     patch(
         "https://github.com/llvm/llvm-project/commit/91ccd8248c85385a5654c63c302a37d97f811bab.patch?full_index=1",
         sha256="b216cff38659c176c5381e9dda3252edbb204e6f6f1f33e843a9ebcc42732e5d",
-        when="@14 omp=runtime",
+        when="@14 openmp=runtime",
     )
 
-    # make libflags a list in openmp subproject when omp=project
+    # make libflags a list in openmp subproject when openmp=project
     # see https://reviews.llvm.org/D125370
     patch(
         "https://github.com/llvm/llvm-project/commit/e27ce281399dca8b08b6ca593172a1bd5dbdd5c1.patch?full_index=1",
         sha256="6f0cfa55e3ed17ee33346b0a5bca8092adcc1dc75ca712ab83901755fba9767e",
-        when="@3.7:14 omp=project",
+        when="@3.7:14 openmp=project",
     )
 
     # Add missing include leading to build fail with clang
@@ -763,7 +763,7 @@ class Llvm(CMakePackage, CudaPackage):
                     ),
                 ]
             )
-            if "omp=runtime" in spec:
+            if "openmp=runtime" in spec:
                 cmake_args.extend(
                     [
                         define("LIBOMPTARGET_NVPTX_ENABLE_BCLIB", True),
@@ -808,9 +808,9 @@ class Llvm(CMakePackage, CudaPackage):
         if "+clang" in spec:
             projects.append("clang")
             projects.append("clang-tools-extra")
-            if "omp=runtime" in spec:
+            if "openmp=runtime" in spec:
                 runtimes.append("openmp")
-            elif "omp=project" in spec:
+            elif "openmp=project" in spec:
                 projects.append("openmp")
 
             if "+libomptarget" in spec:
@@ -888,7 +888,7 @@ class Llvm(CMakePackage, CudaPackage):
         define = self.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
-        if "+cuda omp=project" in self.spec:
+        if "+cuda openmp=project" in self.spec:
             ompdir = "build-bootstrapped-omp"
             prefix_paths = spack.build_environment.get_cmake_prefix_path(self)
             prefix_paths.append(str(spec.prefix))
