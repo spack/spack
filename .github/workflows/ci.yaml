@@ -74,6 +74,10 @@ jobs:
           else
             echo "::set-output name=with_coverage::false"
           fi
+      - run: |
+          echo ${{ github.workflow }}
+          echo ${{ github.event.pull_request.number || github.run_number }}
+
   bootstrap:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
     needs: [ prechecks, changes ]
