@@ -14,7 +14,9 @@ class PySphinxInlineTabs(PythonPackage):
 
     maintainers = ["JBlaschke"]
 
-    version("2022.1.2b11", sha256="afb9142772ec05ccb07f05d8181b518188fc55631b26ee803c694e812b3fdd73")
+    version(
+        "2022.1.2b11", sha256="afb9142772ec05ccb07f05d8181b518188fc55631b26ee803c694e812b3fdd73"
+    )
 
     depends_on("py-setuptools", type="build")
     depends_on("py-flit-core", type="build")
