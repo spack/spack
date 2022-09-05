@@ -1,6 +1,7 @@
 name: unit tests
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       core:
@@ -25,11 +26,26 @@ jobs:
       matrix:
         python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
         concretizer: ['clingo']
+        on_develop:
+        - ${{ github.ref == 'refs/heads/develop' }}
         include:
         - python-version: 2.7
           concretizer: original
+          on_develop: false
         - python-version: '3.10'
           concretizer: original
+          on_develop: false
+        exclude:
+        - python-version: '3.7'
+          concretizer: 'clingo'
+          on_develop: false
+        - python-version: '3.8'
+          concretizer: 'clingo'
+          on_develop: false
+        - python-version: '3.9'
+          concretizer: 'clingo'
+          on_develop: false
+
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
       with:
