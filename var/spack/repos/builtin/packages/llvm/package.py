@@ -131,11 +131,11 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("+libomptarget", when="~clang")
 
     variant(
-        "omp_debug",
+        "libomptarget_debug",
         default=False,
-        description="Include debugging code in OpenMP runtime libraries",
+        description="Allow debug output with the environment variable LIBOMPTARGET_DEBUG=1",
     )
-    conflicts("+omp_debug", when="~libomptarget")
+    conflicts("+libomptarget_debug", when="~libomptarget")
 
     variant(
         "compiler-rt",
@@ -784,7 +784,7 @@ class Llvm(CMakePackage, CudaPackage):
                 ]
             )
 
-        cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "omp_debug"))
+        cmake_args.append(from_variant("LIBOMPTARGET_ENABLE_DEBUG", "libomptarget_debug"))
 
         if "+lldb" in spec:
             projects.append("lldb")
