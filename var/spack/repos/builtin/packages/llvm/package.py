@@ -464,7 +464,11 @@ class Llvm(CMakePackage, CudaPackage):
 
     # Remove cyclades support to build against newer kernel headers
     # https://reviews.llvm.org/D102059
-    patch("no_cyclades.patch", when="@10:12.0.0")
+    patch(
+        "https://github.com/llvm/llvm-project/commit/68d5235cb58f988c71b403334cd9482d663841ab.patch?full_index=1",
+        sha256="742501723642675075e617f3c38339961b2c7b6fd8290dbffc52239ab0783317",
+        when="@10:12.0.0",
+    )
     patch("no_cyclades9.patch", when="@6:9")
 
     # add -lpthread to build OpenMP libraries with Fujitsu compiler
