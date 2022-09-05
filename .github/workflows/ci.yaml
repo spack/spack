@@ -104,7 +104,7 @@ jobs:
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
   all:
-    needs: [ windows, unit-tests, bootstrap ]
+    needs: [ windows, unit-tests, bootstrap, audit-ancient-python ]
     runs-on: ubuntu-latest
     steps:
     - name: Success
