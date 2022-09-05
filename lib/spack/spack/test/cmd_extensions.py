@@ -9,8 +9,6 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import working_dir
-
 import spack.cmd
 import spack.config
 import spack.extensions
@@ -237,7 +235,7 @@ def test_extension_naming(tmpdir, extension_path, expected_exception, config):
     """
     # NOTE: if the directory is a valid extension directory name the "vacuous" test will
     # fail because it resolves to current working directory
-    with working_dir(str(tmpdir)):
+    with tmpdir.as_cwd():
         with spack.config.override("config:extensions", [extension_path]):
             with pytest.raises(expected_exception):
                 spack.cmd.get_module("no-such-command")
