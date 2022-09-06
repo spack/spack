@@ -386,8 +386,12 @@ class Lock(object):
         try:
             os.makedirs(parent)
         except OSError as e:
-            # makedirs can fail when diretory already exists.
-            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or e.errno == errno.EISDIR):
+            # os.makedirs can fail in a number of ways when the directory already exists.
+            # With EISDIR, we know it exists, and others like EEXIST, EACCES, and EROFS
+            # are fine if we ensure that the directory exists.
+            # Python 3 allows an exist_ok parameter and ignores any OSError as long as
+            # the directory exists.
+            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
                 raise
         return parent
 
