@@ -17,13 +17,19 @@ class Lammps(CMakePackage, CudaPackage):
     discussion.
     """
 
-    homepage = "https://lammps.sandia.gov/"
+    homepage = "https://www.lammps.org/"
     url = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
     git = "https://github.com/lammps/lammps.git"
 
     tags = ["ecp", "ecp-apps"]
 
+    maintainers = ["rbberger"]
+
     version("develop", branch="develop")
+    version("20220803", sha256="f37cb0b35c1682ffceae5826aadce47278aa7003099a1655fcea43acd7d37926")
+    version(
+        "20220623.1", sha256="1d4fb06a4621b271e8b54f31fef241d0569717a69c1b7646a2b76fe5ce47c966"
+    )
     version("20220623", sha256="21533ce6f174c80815a48c99e5f3dd109e69d55c4cad47312d88a7190a35927f")
     version("20220602", sha256="3e8f54453e53b3b387a68317277f832b8cf64a981e64b21e98bb37ea36ac4a60")
     version("20220504", sha256="fe05bae8090fd0177b3c1b987cd32a9cb7cd05d790828ba954c764eb52e10b52")
@@ -55,32 +61,136 @@ class Lammps(CMakePackage, CudaPackage):
     version("20200630", sha256="413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc")
     version("20200505", sha256="c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73")
     version("20200303", sha256="9aa56dfb8673a06e6c88588505ec1dfc01dd94f9d60e719ed0c605e48cc06c58")
-    version("20200227", sha256="1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e")
-    version("20200218", sha256="73bcf146660804ced954f6a0a8dce937482677778d46018ca5a688127bf97211")
-    version("20200204", sha256="3bf3de546ede34ffcd89f1fca5fd66aa78c662e7c8a76e30ce593e44a00d23ce")
-    version("20200124", sha256="443829560d760690e1ae21ad54922f56f34f640a81e817f5cc65d2a4af3a6a5d")
-    version("20200109", sha256="f2fd24f6c10837801f490913d73f672ec7c6becda08465d7e834a2bfbe3d7cd6")
-    version("20191120", sha256="fd146bf517a6c2fb8a69ecb3749dc352eef94414739cd7855c668c690af85d27")
-    version("20191030", sha256="5279567f731386ffdb87800b448903a63de2591064e13b4d5216acae25b7e541")
-    version("20190919", sha256="0f693203afe86bc70c084c55f29330bdeea3e3ad6791f81c727f7a34a7f6caf3")
-    version("20190807", sha256="895d71914057e070fdf0ae5ccf9d6552b932355056690bdb8e86d96549218cc0")
-    version("20190605", sha256="c7b35090aef7b114d2b47a7298c1e8237dd811da87995c997bf7639cca743152")
-    version("20181212", sha256="ccc5d2c21c4b62ce4afe7b3a0fe2f37b83e5a5e43819b7c2e2e255cce2ce0f24")
-    version("20181207", sha256="d92104d008a7f1d0b6071011decc5c6dc8b936a3418b20bd34b055371302557f")
-    version("20181127", sha256="c076b633eda5506f895de4c73103df8b995d9fec01be82c67c7608efcc345179")
-    version("20181115", sha256="3bc9c166e465cac625c4a8e4060e597003f4619dadd57d3bc8d25bcd930f286e")
-    version("20181109", sha256="dd30fe492fa147fb6f39bfcc79d8c786b9689f7fbe86d56de58cace53b6198c9")
-    version("20181024", sha256="a171dff5aff7aaa2c9606ab2abc9260f2b685a5c7f6d650e7f2b59cf4aa149d6")
-    version("20181010", sha256="bda762ee2d2dcefe0b4e36fb689c6b9f7ede49324444ccde6c59cba727b4b02d")
-    version("20180918", sha256="02f143d518d8647b77137adc527faa9725c7afbc538d670253169e2a9b3fa0e6")
-    version("20180905", sha256="ee0df649e33a9bf4fe62e062452978731548a56b7487e8e1ce9403676217958d")
-    version("20180831", sha256="6c604b3ebd0cef1a5b18730d2c2eb1e659b2db65c5b1ae6240b8a0b150e4dff3")
-    version("20180822", sha256="9f8942ca3f8e81377ae88ccfd075da4e27d0dd677526085e1a807777c8324074")
-    version("20180629", sha256="1acf7d9b37b99f17563cd4c8bb00ec57bb2e29eb77c0603fd6871898de74763b")
-    version("20180316", sha256="a81f88c93e417ecb87cd5f5464c9a2570384a48ff13764051c5e846c3d1258c1")
-    version("20180222", sha256="374254d5131b7118b9ab0f0e27d20c3d13d96b03ed2b5224057f0c1065828694")
-    version("20170922", sha256="f0bf6eb530d528f4d261d0a261e5616cbb6e990156808b721e73234e463849d3")
-    version("20170901", sha256="5d88d4e92f4e0bb57c8ab30e0d20de556830af820223778b9967bec2184efd46")
+    version(
+        "20200227",
+        sha256="1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e",
+        deprecated=True,
+    )
+    version(
+        "20200218",
+        sha256="73bcf146660804ced954f6a0a8dce937482677778d46018ca5a688127bf97211",
+        deprecated=True,
+    )
+    version(
+        "20200204",
+        sha256="3bf3de546ede34ffcd89f1fca5fd66aa78c662e7c8a76e30ce593e44a00d23ce",
+        deprecated=True,
+    )
+    version(
+        "20200124",
+        sha256="443829560d760690e1ae21ad54922f56f34f640a81e817f5cc65d2a4af3a6a5d",
+        deprecated=True,
+    )
+    version(
+        "20200109",
+        sha256="f2fd24f6c10837801f490913d73f672ec7c6becda08465d7e834a2bfbe3d7cd6",
+        deprecated=True,
+    )
+    version(
+        "20191120",
+        sha256="fd146bf517a6c2fb8a69ecb3749dc352eef94414739cd7855c668c690af85d27",
+        deprecated=True,
+    )
+    version(
+        "20191030",
+        sha256="5279567f731386ffdb87800b448903a63de2591064e13b4d5216acae25b7e541",
+        deprecated=True,
+    )
+    version(
+        "20190919",
+        sha256="0f693203afe86bc70c084c55f29330bdeea3e3ad6791f81c727f7a34a7f6caf3",
+        deprecated=True,
+    )
+    version(
+        "20190807",
+        sha256="895d71914057e070fdf0ae5ccf9d6552b932355056690bdb8e86d96549218cc0",
+        deprecated=True,
+    )
+    version(
+        "20190605",
+        sha256="c7b35090aef7b114d2b47a7298c1e8237dd811da87995c997bf7639cca743152",
+        deprecated=True,
+    )
+    version(
+        "20181212",
+        sha256="ccc5d2c21c4b62ce4afe7b3a0fe2f37b83e5a5e43819b7c2e2e255cce2ce0f24",
+        deprecated=True,
+    )
+    version(
+        "20181207",
+        sha256="d92104d008a7f1d0b6071011decc5c6dc8b936a3418b20bd34b055371302557f",
+        deprecated=True,
+    )
+    version(
+        "20181127",
+        sha256="c076b633eda5506f895de4c73103df8b995d9fec01be82c67c7608efcc345179",
+        deprecated=True,
+    )
+    version(
+        "20181115",
+        sha256="3bc9c166e465cac625c4a8e4060e597003f4619dadd57d3bc8d25bcd930f286e",
+        deprecated=True,
+    )
+    version(
+        "20181109",
+        sha256="dd30fe492fa147fb6f39bfcc79d8c786b9689f7fbe86d56de58cace53b6198c9",
+        deprecated=True,
+    )
+    version(
+        "20181024",
+        sha256="a171dff5aff7aaa2c9606ab2abc9260f2b685a5c7f6d650e7f2b59cf4aa149d6",
+        deprecated=True,
+    )
+    version(
+        "20181010",
+        sha256="bda762ee2d2dcefe0b4e36fb689c6b9f7ede49324444ccde6c59cba727b4b02d",
+        deprecated=True,
+    )
+    version(
+        "20180918",
+        sha256="02f143d518d8647b77137adc527faa9725c7afbc538d670253169e2a9b3fa0e6",
+        deprecated=True,
+    )
+    version(
+        "20180905",
+        sha256="ee0df649e33a9bf4fe62e062452978731548a56b7487e8e1ce9403676217958d",
+        deprecated=True,
+    )
+    version(
+        "20180831",
+        sha256="6c604b3ebd0cef1a5b18730d2c2eb1e659b2db65c5b1ae6240b8a0b150e4dff3",
+        deprecated=True,
+    )
+    version(
+        "20180822",
+        sha256="9f8942ca3f8e81377ae88ccfd075da4e27d0dd677526085e1a807777c8324074",
+        deprecated=True,
+    )
+    version(
+        "20180629",
+        sha256="1acf7d9b37b99f17563cd4c8bb00ec57bb2e29eb77c0603fd6871898de74763b",
+        deprecated=True,
+    )
+    version(
+        "20180316",
+        sha256="a81f88c93e417ecb87cd5f5464c9a2570384a48ff13764051c5e846c3d1258c1",
+        deprecated=True,
+    )
+    version(
+        "20180222",
+        sha256="374254d5131b7118b9ab0f0e27d20c3d13d96b03ed2b5224057f0c1065828694",
+        deprecated=True,
+    )
+    version(
+        "20170922",
+        sha256="f0bf6eb530d528f4d261d0a261e5616cbb6e990156808b721e73234e463849d3",
+        deprecated=True,
+    )
+    version(
+        "20170901",
+        sha256="5d88d4e92f4e0bb57c8ab30e0d20de556830af820223778b9967bec2184efd46",
+        deprecated=True,
+    )
 
     def url_for_version(self, version):
         split_ver = str(version).split(".")
