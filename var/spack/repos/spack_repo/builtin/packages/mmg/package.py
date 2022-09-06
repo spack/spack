@@ -32,7 +32,7 @@ class Mmg(CMakePackage):
 
     maintainers("jcortial-safran")
 
-    license("LGPL-3.0-or-later")
+    license("LGPL-3.0-or-later", checked_by="jcortial-safran")
 
     version("5.8.0", sha256="686eaab84de79c072f3aedf26cd11ced44c84b435d51ce34e016ad203172922f")
     version("5.7.3", sha256="b0a9c5ad6789df369a68f94295df5b324b6348020b73bcc395d32fdd44abe706")
@@ -48,6 +48,7 @@ class Mmg(CMakePackage):
     variant("doc", default=False, description="Build documentation")
     variant("vtk", default=False, when="@5.5.0:", description="Enable VTK I/O support")
     variant("private_headers", default=False, description="Enable private headers", when="@5.7.0:")
+    variant("elas", default=False, description="Required to enable Lagrangian motion")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -56,6 +57,7 @@ class Mmg(CMakePackage):
     depends_on("scotch", when="+scotch")
     depends_on("doxygen", when="+doc")
     depends_on("vtk", when="+vtk")
+    depends_on("iscdtoolbox_elasticity", when="+elas")
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
@@ -65,6 +67,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("USE_SCOTCH", "scotch"),
             self.define_from_variant("USE_VTK", "vtk"),
             self.define_from_variant("MMG_INSTALL_PRIVATE_HEADERS", "private_headers"),
+            self.define_from_variant("USE_ELAS", "elas"),
             self.define("BUILD_SHARED_LIBS", shared_active),
             self.define("LIBMMG3D_SHARED", shared_active),
             self.define("LIBMMG2D_SHARED", shared_active),
