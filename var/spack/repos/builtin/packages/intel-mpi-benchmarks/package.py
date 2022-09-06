@@ -22,6 +22,9 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     maintainers = ["carsonwoods"]
 
+    version("2021.3", sha256="9b58a4a7eef7c0c877513152340948402fd87cb06270d2d81308dc2ef740f4c7")
+    version("2021.2", sha256="ade3bfe18b4313a31fc09f0bf038e0a6c169c4145089bfc6f1f827687b81be6a")
+    version("2021.1", sha256="9089bb81e3091af3481e03b898b339fb2d9fb6574d4ef059adb1f5410112b23a")
     version("2019.6", sha256="1cd0bab9e947228fced4666d907f77c51336291533919896a923cff5fcad62e9")
     version("2019.5", sha256="61f8e872a3c3076af53007a68e4da3a8d66be2ba7a051dc21e626a4e2d26e651")
     version("2019.4", sha256="aeb336be10275c1a2f579b491b6631122876b461ac7148b1d0764f13b7552690")
