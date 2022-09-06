@@ -9,8 +9,10 @@
 
 from spack.package import *
 
+
 class MgcfdOp2(MakefilePackage):
-    """Package for the OP2 port of MGCFD: A 3D unstructured multigrid, finite-volume computational fluid dynamics (CFD) mini-app for inviscid-flow."""
+    """Package for the OP2 port of MGCFD: A 3D unstructured multigrid,
+    finite-volume computational fluid dynamics (CFD) mini-app for inviscid-flow."""
 
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
@@ -22,7 +24,8 @@ class MgcfdOp2(MakefilePackage):
     variant('mpi', default=False, description="Enable MPI support")
 
     depends_on('gmake@4.3')
-    # KaHIP is a new MGCFD-OP2 dependency and NVHPC builds require the latest develop branch at time of writing (Sept 22)
+    # KaHIP is a new MGCFD-OP2 dependency and
+    # NVHPC builds require the latest develop branch at time of writing (Sept 22)
     depends_on('kahip@develop+metis', when='+mpi')
     depends_on('op2-dsl+mpi', when='+mpi')
     depends_on('op2-dsl~mpi', when='~mpi')
@@ -51,12 +54,11 @@ class MgcfdOp2(MakefilePackage):
 
         # This overrides a flag issue in downstream OP2.
         if self.spec.compiler.name == 'nvhpc':
-           env['CFLAGS'] = "-O3 -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPIPP_H"
+            env['CFLAGS'] = "-O3 -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPIPP_H"
 
         # OP2 doesn't support flang/armflang fortran compiling.
         if self.spec.compiler.name == 'arm':
             env['OP2_F_COMPILER'] = 'gnu'
-
 
     def get_builds(self):
         if '+mpi' in self.spec:
