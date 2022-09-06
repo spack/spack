@@ -3,16 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# NOTE: This package is new and has been tested on a limited set of use cases:
-# Arm archs: Graviton 2, Graviton 3
-# Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3
-
 from spack.package import *
 
 
 class MgcfdOp2(MakefilePackage):
     """Package for the OP2 port of MGCFD: A 3D unstructured multigrid,
     finite-volume computational fluid dynamics (CFD) mini-app for inviscid-flow."""
+
+    # NOTE: This package is new and has been tested on a limited set of use cases:
+    # Arm archs: Graviton 2, Graviton 3
+    # Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3
 
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
