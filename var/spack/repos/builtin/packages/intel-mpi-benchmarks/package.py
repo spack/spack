@@ -33,22 +33,22 @@ class IntelMpiBenchmarks(MakefilePackage):
     version(
         "2019.1",
         sha256="fe0d065b9936b6943ea83cb3d00aede43b17565285c6b1791fee8e340853ef79",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.1.tar.gz"
+        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.1.tar.gz",
     )
     version(
         "2019.0",
         sha256="1c7d44aa7fd86ca84ac7cae1a69a8426243048d6294582337f1de7b4ffe68d37",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.0.tar.gz"
+        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.0.tar.gz",
     )
     version(
         "2018.1",
         sha256="718a4eb155f18cf15a736f6496332407b5837cf1f19831723d4cfe5266c43507",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.1.tar.gz"
+        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.1.tar.gz",
     )
     version(
         "2018.0",
         sha256="2e60a9894a686a95791be2227bc569bf81ca3875421b5307df7d83f885b1de88",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.0.tar.gz"
+        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.0.tar.gz",
     )
 
     depends_on("mpi")
