@@ -113,7 +113,7 @@ class Gdal(CMakePackage):
     variant("iconv", default=False, description="Required for text encoding conversion")
     variant("idb", default=False, description="Required for IDB driver")
     variant("ingres", default=False, when="@:3.4", description="Required for Ingres driver")
-    variant("jasper", default=False, when="@:3.4", description="Optional JPEG-200 library")
+    variant("jasper", default=False, when="@:3.4", description="Optional JPEG-2000 library")
     variant("jpeg", default=True, description="Required for JPEG driver")
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
