@@ -18,17 +18,56 @@ class Charliecloud(AutotoolsPackage):
 
     version("master", branch="master")
     version("0.29", sha256="c89562e9dce4c10027434ad52eaca2140e2ba8667aa1ec9eadf789b4d7c1a6db")
-    version("0.28", deprecated=True, sha256="1ce43b012f475bddb514bb75993efeda9e58ffa93ddbdbd9b86d647f57254c3b")
-    version("0.27", deprecated=True, sha256="1142938ce73ec8a5dfe3a19a241b1f1ffbb63b582ac63d459aebec842c3f4b72")
-    version("0.26", deprecated=True, sha256="5e1e64e869c59905fac0cbbd6ceb82340ee54728415d28ef588fd5de5557038a")
-    version("0.25", deprecated=True, sha256="62d6fd211e3a573f54578e1b01d5c298f9788b7eaf2db46ac94c2dcef604cc94")
-    version("0.24", deprecated=True, sha256="63379bcbad7b90b33457251696d6720416e4acefcf2b49cd6cb495a567e511c2")
-    version("0.23", deprecated=True, sha256="5e458b943ad0e27d1264bb089e48d4a676219179b0e96a7d761387a36c45b4d9")
-    version("0.22", deprecated=True, sha256="f65e4111ce87e449c656032da69f3b1cfc70a5a416a5e410329c1b0b2e953907")
-    version("0.21", deprecated=True, sha256="024884074d283c4a0387d899161610fa4ae739ac1efcc9e53d7d626ddc20359f")
-    version("0.19", deprecated=True, sha256="99619fd86860cda18f7f7a7cf7391f702ec9ebd3193791320dea647769996447")
-    version("0.18", deprecated=True, sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5")
-
+    version(
+        "0.28",
+        deprecated=True,
+        sha256="1ce43b012f475bddb514bb75993efeda9e58ffa93ddbdbd9b86d647f57254c3b",
+    )
+    version(
+        "0.27",
+        deprecated=True,
+        sha256="1142938ce73ec8a5dfe3a19a241b1f1ffbb63b582ac63d459aebec842c3f4b72",
+    )
+    version(
+        "0.26",
+        deprecated=True,
+        sha256="5e1e64e869c59905fac0cbbd6ceb82340ee54728415d28ef588fd5de5557038a",
+    )
+    version(
+        "0.25",
+        deprecated=True,
+        sha256="62d6fd211e3a573f54578e1b01d5c298f9788b7eaf2db46ac94c2dcef604cc94",
+    )
+    version(
+        "0.24",
+        deprecated=True,
+        sha256="63379bcbad7b90b33457251696d6720416e4acefcf2b49cd6cb495a567e511c2",
+    )
+    version(
+        "0.23",
+        deprecated=True,
+        sha256="5e458b943ad0e27d1264bb089e48d4a676219179b0e96a7d761387a36c45b4d9",
+    )
+    version(
+        "0.22",
+        deprecated=True,
+        sha256="f65e4111ce87e449c656032da69f3b1cfc70a5a416a5e410329c1b0b2e953907",
+    )
+    version(
+        "0.21",
+        deprecated=True,
+        sha256="024884074d283c4a0387d899161610fa4ae739ac1efcc9e53d7d626ddc20359f",
+    )
+    version(
+        "0.19",
+        deprecated=True,
+        sha256="99619fd86860cda18f7f7a7cf7391f702ec9ebd3193791320dea647769996447",
+    )
+    version(
+        "0.18",
+        deprecated=True,
+        sha256="15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5",
+    )
     variant("docs", default=False, description="Build man pages and html docs")
 
     # Autoconf.
