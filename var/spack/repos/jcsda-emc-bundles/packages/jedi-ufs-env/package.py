@@ -22,7 +22,6 @@ class JediUfsEnv(BundlePackage):
     depends_on('fms@release-jcsda', type='run')
 
     depends_on('bacio',             type='run')
-    depends_on('crtm@v2.4_jedi',    type='run')
     depends_on('g2',                type='run')
     depends_on('g2tmpl',            type='run')
     depends_on('ip',                type='run')
