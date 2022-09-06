@@ -59,7 +59,7 @@ class Charliecloud(AutotoolsPackage):
     conflicts("platform=darwin", msg="This package does not build on macOS")
 
     def autoreconf(self, spec, prefix):
-        which("sh")("autogen.sh")
+        which("bash")("autogen.sh")
 
     def configure_args(self):
         args = []

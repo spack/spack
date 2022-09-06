@@ -130,6 +130,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+cuda", when="cuda_arch=none", msg="vtk-m +cuda requires that cuda_arch be set")
 
+    # Patch
+    patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
+
     def cmake_args(self):
         spec = self.spec
         options = []
