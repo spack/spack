@@ -5,7 +5,7 @@
 
 # NOTE: This package is new and has been tested on a limited set of use cases:
 # Arm archs: Graviton 2, Graviton 3
-# Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3 
+# Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3
 
 from spack.package import *
 
@@ -15,7 +15,7 @@ class MgcfdOp2(MakefilePackage):
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
 
-    maintainers = ['rob64j', 'tomdeakin']
+    maintainers = ['rob64j', 'tomdeakin', 'gihanmudalige']
 
     version('v1.0.0-rc1')
 
@@ -26,7 +26,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on('kahip@develop+metis', when='+mpi')
     depends_on('op2-dsl+mpi', when='+mpi')
     depends_on('op2-dsl~mpi', when='~mpi')
-    
+
     def edit(self, spec, prefix):
         compiler_map = {
             'gcc': 'gnu',
@@ -34,13 +34,13 @@ class MgcfdOp2(MakefilePackage):
             'cce': 'cray',
             'nvhpc': 'pgi',
         }
-        
+
         if self.spec.compiler.name in compiler_map:
             env['COMPILER'] = compiler_map[self.spec.compiler.name]
         else:
             env['COMPILER'] = self.spec.compiler.name
 
-        # Makefile tweaks to ensure the correct compiler commands are called. 
+        # Makefile tweaks to ensure the correct compiler commands are called.
         makefile = FileFilter('Makefile')
         if self.spec.compiler.name == 'arm':
             makefile.filter(r'CPP := clang', r'CPP := armclang')
@@ -49,7 +49,7 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == 'nvhpc':
             makefile.filter('pgc', 'nvc')
 
-        # This overrides a flag issue in downstream OP2. 
+        # This overrides a flag issue in downstream OP2.
         if self.spec.compiler.name == 'nvhpc':
            env['CFLAGS'] = "-O3 -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPIPP_H"
 
@@ -77,4 +77,3 @@ class MgcfdOp2(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install_tree('bin', prefix.bin)
-
