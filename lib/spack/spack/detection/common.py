@@ -14,6 +14,7 @@ The module also contains other functions that might be useful across different
 detection mechanisms.
 """
 import collections
+import glob
 import itertools
 import os
 import os.path
@@ -25,6 +26,8 @@ import llnl.util.tty
 import spack.config
 import spack.spec
 import spack.util.spack_yaml
+import spack.operating_systems.windows_os as winOs
+
 
 is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
@@ -194,11 +197,33 @@ def update_configuration(detected_packages, scope=None, buildable=True):
 
     return all_new_specs
 
+def find_windows_compiler_paths():
+
+    msvc_paths = list(winOs.WindowsOs.vs_install_paths)
+    msvc_cmake_paths = [
+        os.path.join(
+            path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
+        )
+        for path in msvc_paths
+    ]
+    msvc_ninja_paths = [
+        os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
+        for path in msvc_paths
+    ]
+
+def find_windows_cmake_paths():
+
+    pass
+
+
+def find_windows_ninja_paths():
+    pass
 
 def find_win32_additional_install_paths():
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
     """
+    drive_letter = os.environ['HOMEDRIVE']
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
@@ -211,7 +236,7 @@ def find_win32_additional_install_paths():
     # to interact with Windows
     # Add search path for default Chocolatey (https://github.com/chocolatey/choco)
     # install directory
-    windows_search_ext.append("C:\\ProgramData\\chocolatey\\bin")
+    windows_search_ext.append("%s\\ProgramData\\chocolatey\\bin" % drive_letter)
     # Add search path for NuGet package manager default install location
     windows_search_ext.append(os.path.join(user, ".nuget", "packages"))
     windows_search_ext.extend(
@@ -233,9 +258,37 @@ def compute_windows_program_path_for_package(pkg):
         return []
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
-    program_files = "C:\\Program Files{}\\{}"
+    program_files = "{}:\\Program Files{}\\{}"
+    drive_letter = os.environ['WINDIR'][0]
 
-    return [
-        program_files.format(arch, name)
-        for arch, name in itertools.product(("", " (x86)"), (pkg.name, pkg.name.capitalize()))
-    ]
+    return[program_files.format(drive_letter, arch, name) for
+           arch, name in itertools.product(("", " (x86)"),
+           (pkg.name, pkg.name.capitalize()))]
+
+
+def find_windows_kit_paths():
+    """Provides a list of all installation paths
+    for the WDK by version and architecture
+    """
+    if not is_windows:
+        return []
+
+    # WDK is installed by default into
+    # C:\\Program Files [(x86)]\\Windows Kits\\[10|11]\\bin
+    # however non standard installations can be denoted by $Env:WDKContentRoot
+
+    # Derive default installation glob
+    program_files = os.environ['HOMEDRIVE'] + '\\' + 'Program Files*'
+    plat_ver = str(winOs.windows_version())
+    wdk_base = os.path.join(program_files, 'Windows Kits', plat_ver)
+    # Check for WDKContentRoot definition
+    wdk_content_root = os.getenv('WDKContentRoot')
+    # Select valid WDK root
+    wdk_base = wdk_base if not wdk_content_root else wdk_content_root
+
+    wdk_bin = os.path.join(wdk_base, 'bin')
+    # Glob over versions and architectures
+    wdk_version_candidates = glob.glob(os.path.join(wdk_bin, '*', '*'))
+    wdk_versions = [pth for pth in wdk_version_candidates if \
+        re.search(r'[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]', pth)]
+    return wdk_versions
