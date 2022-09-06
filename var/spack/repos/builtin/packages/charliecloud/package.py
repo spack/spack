@@ -32,20 +32,20 @@ class Charliecloud(AutotoolsPackage):
     variant("docs", default=False, description="Build man pages and html docs")
 
     # Autoconf.
-    depends_on("m4",       type="build")
+    depends_on("m4", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
-    depends_on("libtool",  type="build")
+    depends_on("libtool", type="build")
 
     # Image manipulation.
     depends_on("python@3.6:", type="run")
     depends_on("py-requests", type="run")
     depends_on("git@2.28.1:", type="run", when="@0.29:") # build cache
-    depends_on("py-lark",     type="run", when="@:0.24") # 0.25+ bundles lark
+    depends_on("py-lark", type="run", when="@:0.24") # 0.25+ bundles lark
 
     # Man page and html docs.
-    depends_on("rsync",               type="build", when="+docs")
-    depends_on("py-sphinx",           type="build", when="+docs")
+    depends_on("rsync", type="build", when="+docs")
+    depends_on("py-sphinx", type="build", when="+docs")
     depends_on("py-sphinx-rtd-theme", type="build", when="+docs")
 
     # Bash automated testing harness (bats).
@@ -53,7 +53,7 @@ class Charliecloud(AutotoolsPackage):
 
     # Require pip and wheel for git checkout builds (master).
     depends_on("py-pip@21.1.2:", type="build", when="@master")
-    depends_on("py-wheel",       type="build", when="@master")
+    depends_on("py-wheel", type="build", when="@master")
 
     # See https://github.com/spack/spack/pull/16049.
     conflicts("platform=darwin", msg="This package does not build on macOS")
