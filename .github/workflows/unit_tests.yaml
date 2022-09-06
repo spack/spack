@@ -15,7 +15,7 @@ on:
         type: string
 
 concurrency:
-  group: unit_tests-${{github.ref}}-${{github.run_number}}
+  group: unit_tests-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
