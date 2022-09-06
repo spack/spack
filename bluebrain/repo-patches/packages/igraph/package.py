@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.igraph import Igraph as BuiltinIgraph
 
 

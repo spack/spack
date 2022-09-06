@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.random123 import Random123 as BuiltinRandom123
 
 

@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.glog import Glog as BuiltinGlog
 
 

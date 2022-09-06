@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.bzip2 import Bzip2 as BuiltinBzip2
 
 

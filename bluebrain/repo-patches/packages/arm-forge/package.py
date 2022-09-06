@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.arm_forge import ArmForge as BuiltinArmForge
 
 

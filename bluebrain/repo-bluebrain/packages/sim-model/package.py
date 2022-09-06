@@ -7,7 +7,7 @@ import os
 import shutil
 from contextlib import contextmanager
 
-from spack import *
+from spack.package import *
 
 
 class SimModel(Package):

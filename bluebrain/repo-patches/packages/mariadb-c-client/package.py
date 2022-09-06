@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.mariadb_c_client import MariadbCClient as BuiltinMariadbCClient
 
 

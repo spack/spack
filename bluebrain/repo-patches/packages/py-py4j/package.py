@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.py_py4j import PyPy4j as BuiltinPyPy4j
 
 

@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.py_python_daemon import PyPythonDaemon as BuiltinPyPythonDaemon
 
 

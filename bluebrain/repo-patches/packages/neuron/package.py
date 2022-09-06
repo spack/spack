@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-from spack import *
+from spack.package import *
 
 
 class Neuron(CMakePackage):

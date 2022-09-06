@@ -10,7 +10,7 @@ from tempfile import TemporaryFile
 
 from llnl.util.filesystem import find
 
-from spack import *
+from spack.package import *
 
 
 class HpeMpi(Package):

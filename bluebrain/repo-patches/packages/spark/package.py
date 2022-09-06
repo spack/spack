@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.spark import Spark as BuiltinSpark
 
 

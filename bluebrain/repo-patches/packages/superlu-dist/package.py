@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.superlu_dist import SuperluDist as BuiltinSuperluDist
 
 

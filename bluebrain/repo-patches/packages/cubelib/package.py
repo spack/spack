@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.cubelib import Cubelib as BuiltinCubelib
 
 

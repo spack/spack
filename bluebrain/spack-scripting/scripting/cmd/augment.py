@@ -59,7 +59,7 @@ def augment(parser, args):
 
 
 PACKAGE_TEMPLATE = """\
-from spack import *
+from spack.package import *
 from spack.pkg.{module} import {cls} as {namespace}{cls}
 
 

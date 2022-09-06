@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.hadoop import Hadoop as BuiltinHadoop
 
 

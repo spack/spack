@@ -1,6 +1,6 @@
 import os
 
-from spack import *
+from spack.package import *
 from spack.pkg.builtin.totalview import Totalview as BuiltinTotalview
 
 

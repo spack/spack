@@ -8,7 +8,7 @@ import shutil
 
 import llnl.util.tty as tty
 
-from spack import *
+from spack.package import *
 
 from .py_neurodamus import PyNeurodamus
 from .sim_model import SimModel, copy_all, make_link
