@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# NOTE: This package is new and has been tested on a limited set of use cases:
+# Arm archs: Graviton 2, Graviton 3
+# Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3 
+
 from spack.package import *
 
 class MgcfdOp2(MakefilePackage):
-    """This is a test package for MGCFD-OP2."""
+    """Package for the OP2 port of MGCFD: A 3D unstructured multigrid, finite-volume computational fluid dynamics (CFD) mini-app for inviscid-flow."""
 
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
@@ -49,7 +53,7 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == 'nvhpc':
            env['CFLAGS'] = "-O3 -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPIPP_H"
 
-        # OP2 doesn't support flang/armflang fortran compiling. Also A 
+        # OP2 doesn't support flang/armflang fortran compiling.
         if self.spec.compiler.name == 'arm':
             env['OP2_F_COMPILER'] = 'gnu'
 
