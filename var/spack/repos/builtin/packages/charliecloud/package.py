@@ -40,8 +40,8 @@ class Charliecloud(AutotoolsPackage):
     # Image manipulation.
     depends_on("python@3.6:", type="run")
     depends_on("py-requests", type="run")
-    depends_on("git@2.28.1:", type="run", when="@0.29:") # build cache
-    depends_on("py-lark", type="run", when="@:0.24") # 0.25+ bundles lark
+    depends_on("git@2.28.1:", type="run", when="@0.29:")  # build cache
+    depends_on("py-lark", type="run", when="@:0.24")  # 0.25+ bundles lark
 
     # Man page and html docs.
     depends_on("rsync", type="build", when="+docs")
