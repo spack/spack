@@ -1769,6 +1769,9 @@ class TestConcretize(object):
             s.concretized()
 
     @pytest.mark.regression("31484")
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
         """Test that external specs that are in the DB can be reused."""
         if spack.config.get("config:concretizer") == "original":
