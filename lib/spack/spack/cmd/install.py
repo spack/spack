@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import re
 import shutil
 import sys
 import textwrap
@@ -31,10 +32,64 @@ section = "build"
 level = "short"
 
 
+def parse_use_buildcache(args):
+    bc_parsed = {}
+    bc_keys = ["package", "dependencies", ""]
+    bc_values = ["only", "never", "auto"]
+    kv_list = re.findall("([a-z]+)?:?([a-z]+)", args.use_buildcache)
+
+    # Verify keys and values
+    bc_map = {k: v for k, v in kv_list if k in bc_keys and v in bc_values}
+    if not len(kv_list) == len(bc_map):
+        unrecognized_args = [(k, v) for k, v in kv_list if k not in bc_keys or v not in bc_values]
+        tty.error("Unrecognized arguments passed to use-buildcache: %s" % unrecognized_args)
+        tty.error(
+            "Expected: --use-buildcache "
+            ":{[auto|only|never],[[package:[auto|only|never]],[dependencies:[auto|only|never]]]"
+        )
+        exit(1)
+        return None
+
+    package_use_buildcache = "auto"
+    dependencies_use_buildcache = "auto"
+    if "" in bc_map:
+        package_use_buildcache = bc_map[""]
+        dependencies_use_buildcache = bc_map[""]
+    if "package" in bc_map:
+        package_use_buildcache = bc_map["package"]
+    if "dependencies" in bc_map:
+        dependencies_use_buildcache = bc_map["dependencies"]
+
+    if package_use_buildcache == "auto":
+        bc_parsed["package_use_cache"] = args.use_cache
+        bc_parsed["package_cache_only"] = args.cache_only
+    elif package_use_buildcache == "only":
+        bc_parsed["package_use_cache"] = True
+        bc_parsed["package_cache_only"] = True
+    elif package_use_buildcache == "never":
+        bc_parsed["package_use_cache"] = False
+        bc_parsed["package_cache_only"] = False
+
+    if dependencies_use_buildcache == "auto":
+        bc_parsed["dependencies_use_cache"] = args.use_cache
+        bc_parsed["dependencies_cache_only"] = args.cache_only
+    elif dependencies_use_buildcache == "only":
+        bc_parsed["dependencies_use_cache"] = True
+        bc_parsed["dependencies_cache_only"] = True
+    elif dependencies_use_buildcache == "never":
+        bc_parsed["dependencies_use_cache"] = False
+        bc_parsed["dependencies_cache_only"] = False
+
+    return bc_parsed
+
+
 def install_kwargs_from_args(args):
     """Translate command line arguments into a dictionary that will be passed
     to the package installer.
     """
+
+    cache_ops = parse_use_buildcache(args)
+
     return {
         "fail_fast": args.fail_fast,
         "keep_prefix": args.keep_prefix,
@@ -44,8 +99,10 @@ def install_kwargs_from_args(args):
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "use_cache": args.use_cache,
-        "cache_only": args.cache_only,
+        "package_use_cache": cache_ops["package_use_cache"],
+        "package_cache_only": cache_ops["package_cache_only"],
+        "dependencies_use_cache": cache_ops["dependencies_use_cache"],
+        "dependencies_cache_only": cache_ops["dependencies_cache_only"],
         "include_build_deps": args.include_build_deps,
         "explicit": True,  # Use true as a default for install command
         "stop_at": args.until,
@@ -122,6 +179,12 @@ the dependencies""",
         dest="cache_only",
         default=False,
         help="only install package from binary mirrors",
+    )
+    cache_group.add_argument(
+        "--use-buildcache",
+        dest="use_buildcache",
+        default="package:auto,dependencies:auto",
+        help="finer grain control over which packages to check mirrors for",
     )
 
     subparser.add_argument(

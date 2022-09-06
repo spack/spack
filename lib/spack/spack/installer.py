@@ -1182,12 +1182,16 @@ class PackageInstaller(object):
         Args:
             task (BuildTask): the installation build task for a package"""
 
-        install_args = task.request.install_args
-        cache_only = install_args.get("cache_only")
         explicit = task.explicit
+        install_args = task.request.install_args
+        if task.dependency:
+            cache_only = install_args.get("dependencies_cache_only")
+            use_cache = install_args.get("dependencies_use_cache")
+        else:
+            cache_only = install_args.get("package_cache_only")
+            use_cache = install_args.get("package_use_cache")
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
-        use_cache = install_args.get("use_cache")
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
@@ -2223,6 +2227,11 @@ class BuildTask(object):
         return self.pkg == self.request.pkg and self.request.install_args.get("explicit", True)
 
     @property
+    def dependency(self):
+        """The package is a dependency requested by another package."""
+        return not self.explicit
+
+    @property
     def key(self):
         """The key is the tuple (# uninstalled dependencies, sequence)."""
         return (self.priority, self.sequence)
@@ -2302,21 +2311,23 @@ class BuildRequest(object):
     def _add_default_args(self):
         """Ensure standard install options are set to at least the default."""
         for arg, default in [
-            ("cache_only", False),
             ("context", "build"),  # installs *always* build
+            ("dependencies_cache_only", False),
+            ("dependencies_use_cache", True),
             ("dirty", False),
             ("fail_fast", False),
             ("fake", False),
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
+            ("packages_cache_only", False),
+            ("packages_use_cache", True),
             ("keep_prefix", False),
             ("keep_stage", False),
             ("restage", False),
             ("skip_patch", False),
             ("tests", False),
             ("unsigned", False),
-            ("use_cache", True),
             ("verbose", False),
         ]:
             _ = self.install_args.setdefault(arg, default)
