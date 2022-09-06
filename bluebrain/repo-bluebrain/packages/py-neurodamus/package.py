@@ -55,6 +55,8 @@ class PyNeurodamus(PythonPackage):
 
     @run_after('install')
     def install_files(self):
+        from llnl.util.filesystem import copy
+
         mkdirp(self.prefix.share)
         for script in ('init.py', '_debug.py'):
             copy(script, self.prefix.share)
