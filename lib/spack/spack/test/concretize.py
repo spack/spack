@@ -1837,3 +1837,19 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
             assert s.satisfies("~debug")
+
+    @pytest.mark.regression("32471")
+    def test_require_targets_are_allowed(self, mutable_database):
+        """Test that users can set target constraints under the require attribute."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {"all": {"require": "target=x86_64"}}
+        spack.config.set("packages", external_conf)
+
+        with spack.config.override("concretizer:reuse", False):
+            spec = Spec("mpich").concretized()
+
+        for s in spec.traverse():
+            assert s.satisfies("target=x86_64")
