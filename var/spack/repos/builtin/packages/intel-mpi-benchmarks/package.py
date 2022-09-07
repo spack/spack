@@ -59,7 +59,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     )
 
     def url_for_version(self, version):
-        if if version <= Version("2019.1"):
+        if version <= Version("2019.1"):
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/v{0}.tar.gz"
         else:
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/IMB-v{0}.tar.gz"
