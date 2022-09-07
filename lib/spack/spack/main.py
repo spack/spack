@@ -629,7 +629,7 @@ class SpackCommand(object):
 
         Args:
             command_name (str): name of the command to invoke
-            subprocess (bool): whether to fork a subprocess or not. Currently not supported on 
+            subprocess (bool): whether to fork a subprocess or not. Currently not supported on
                 Windows, where it is always False.
         """
         self.parser = make_argument_parser()
