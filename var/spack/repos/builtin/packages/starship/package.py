@@ -47,7 +47,6 @@ class Starship(Package):
 
     version("1.10.2", sha256="253a62e48c1b15d5465c876560b71e1d3485697e22ab7adea85e37cbe1a70a54")
 
-
     def install(self, spec, prefix):
         make()
         make("install")
