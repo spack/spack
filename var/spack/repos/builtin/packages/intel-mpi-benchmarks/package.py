@@ -18,8 +18,6 @@ class IntelMpiBenchmarks(MakefilePackage):
     """
 
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
-    url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/IMB-v2021.3.tar.gz"
-
     maintainers = ["carsonwoods"]
 
     version("2021.3", sha256="9b58a4a7eef7c0c877513152340948402fd87cb06270d2d81308dc2ef740f4c7")
@@ -30,33 +28,17 @@ class IntelMpiBenchmarks(MakefilePackage):
     version("2019.4", sha256="aeb336be10275c1a2f579b491b6631122876b461ac7148b1d0764f13b7552690")
     version("2019.3", sha256="4f256d11bfed9ca6166548486d61a062e67be61f13dd9f30690232720e185f31")
     version("2019.2", sha256="0bc2224a913073aaa5958f6ae08341e5fcd39cedc6722a09bfd4a3d7591a340b")
-    version(
-        "2019.1",
-        sha256="fe0d065b9936b6943ea83cb3d00aede43b17565285c6b1791fee8e340853ef79",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.1.tar.gz",
-    )
-    version(
-        "2019.0",
-        sha256="1c7d44aa7fd86ca84ac7cae1a69a8426243048d6294582337f1de7b4ffe68d37",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2019.0.tar.gz",
-    )
-    version(
-        "2018.1",
-        sha256="718a4eb155f18cf15a736f6496332407b5837cf1f19831723d4cfe5266c43507",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.1.tar.gz",
-    )
-    version(
-        "2018.0",
-        sha256="2e60a9894a686a95791be2227bc569bf81ca3875421b5307df7d83f885b1de88",
-        url="https://github.com/intel/mpi-benchmarks/archive/refs/tags/v2018.0.tar.gz",
-    )
+    version("2019.1", sha256="fe0d065b9936b6943ea83cb3d00aede43b17565285c6b1791fee8e340853ef79")
+    version("2019.0", sha256="1c7d44aa7fd86ca84ac7cae1a69a8426243048d6294582337f1de7b4ffe68d37")
+    version("2018.1", sha256="718a4eb155f18cf15a736f6496332407b5837cf1f19831723d4cfe5266c43507")
+    version("2018.0", sha256="2e60a9894a686a95791be2227bc569bf81ca3875421b5307df7d83f885b1de88")
 
     depends_on("mpi")
 
     # https://github.com/intel/mpi-benchmarks/pull/19
-    patch("add_const.patch", when="@:2019.6")
+    patch("add_const.patch", when="@2019.2:2019.6")
     # https://github.com/intel/mpi-benchmarks/pull/20
-    patch("reorder_benchmark_macros.patch", when="@:2019.6")
+    patch("reorder_benchmark_macros.patch", when="@2019.2:2019.6")
 
     variant(
         "benchmark",
@@ -65,6 +47,13 @@ class IntelMpiBenchmarks(MakefilePackage):
         multi=False,
         description="Specify which benchmark to build",
     )
+
+    def url_for_version(self, version):
+        if version[0] <= 2019 and version[1] <= 1:
+            url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/v{0}.tar.gz"
+        else:
+            url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/IMB-v{0}.tar.gz"
+        return url.format(version)
 
     def build(self, spec, prefix):
         env["CC"] = spec["mpi"].mpicc
