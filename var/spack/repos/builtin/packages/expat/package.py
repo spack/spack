@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class Expat(AutotoolsPackage):
+class Expat(CMakePackage):
     """Expat is an XML parser library written in C."""
 
     homepage = "https://libexpat.github.io/"
@@ -102,7 +102,7 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant(
         "libbsd",
-        default=sys.platform != "darwin",
+        default=sys.platform != "darwin" and sys.platform != "win32",
         description="Use libbsd (for high quality randomness)",
     )
 
@@ -112,12 +112,19 @@ class Expat(AutotoolsPackage):
         url = "https://github.com/libexpat/libexpat/releases/download/R_{0}/expat-{1}.tar.bz2"
         return url.format(version.underscored, version.dotted)
 
-    def configure_args(self):
-        spec = self.spec
+    # def configure_args(self):
+    #     spec = self.spec
+    #     args = [
+    #         "--without-docbook",
+    #         "--enable-static",
+    #     ]
+    #     if "+libbsd" in spec and "@2.2.1:" in spec:
+    #         args.append("--with-libbsd")
+    #     return args
+
+    def cmake_args(self):
         args = [
-            "--without-docbook",
-            "--enable-static",
+            self.define("EXPAT_BUILD_DOCS", False),
+            self.define_from_variant("EXPAT__WITH_LIBBSD", "libbsd"),
         ]
-        if "+libbsd" in spec and "@2.2.1:" in spec:
-            args.append("--with-libbsd")
         return args
