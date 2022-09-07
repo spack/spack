@@ -606,15 +606,20 @@ class GitVersion(VersionBase):
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
-        if self.is_ref and other.is_ref:
-            # the version for a ref is the git ref, and it should be an exact match
-            # git hashes, and tags need to be exact matches
+        if other.is_ref:
+            # if other is a ref then satisfaction requires an exact version match
+            # i.e. the GitRef must match this.version for satisfaction
+            # this creates an asymmetric comparison:
+            #  - 'foo@main'.satisfies('foo@git.hash=main') == False
+            #  - 'foo@git.hash=main'.satisfies('foo@main') == True
             version_match = self.version == other.version
         elif self.is_ref:
             # other is not a ref then it is a version base and we need to compare
             # this.ref
             version_match = self.ref_version == other.version
         else:
+            # neither is a git ref.  We shouldn't ever be here, but if we are this variable
+            # is not meaningful and defaults to true
             version_match = True
 
         # Do the final comparison
