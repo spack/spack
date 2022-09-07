@@ -1042,7 +1042,6 @@ def get_cmake_prefix_path(pkg):
     return filter_system_paths(cmake_prefix_path_entries)
 
 
-
 def _setup_pkg_and_run(
     serialized_pkg, function, kwargs, child_pipe, input_multiprocess_fd, jsfd1, jsfd2
 ):
