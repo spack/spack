@@ -869,7 +869,7 @@ def test_env_with_included_config_var_path(packages_file):
 
     config_real_path = substitute_path_variables(config_var_path)
     fs.mkdirp(os.path.dirname(config_real_path))
-    fs.rename(packages_file.strpath, config_real_path)
+    shutil.move(packages_file.strpath, config_real_path)
     assert os.path.exists(config_real_path)
 
     with e:
