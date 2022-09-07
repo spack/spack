@@ -158,18 +158,22 @@ spack:
 
   # CUDA
   - adios2 +cuda cuda_arch=80
+  - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
+  - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - dealii +cuda cuda_arch=80
+  - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
   - heffte +cuda cuda_arch=80
   - hpctoolkit +cuda
   - hpx +cuda cuda_arch=80
   - hypre +cuda cuda_arch=80
-  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
   - kokkos +wrapper +cuda cuda_arch=80
+  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
   - magma +cuda cuda_arch=80
   - mfem +cuda cuda_arch=80
   - papi +cuda
@@ -190,6 +194,7 @@ spack:
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
+  - caliper +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
@@ -197,6 +202,7 @@ spack:
   - hpx +rocm amdgpu_target=gfx90a
   - kokkos +rocm amdgpu_target=gfx90a
   - magma ~cuda +rocm amdgpu_target=gfx90a
+  - papi +rocm amdgpu_target=gfx90a
   - petsc +rocm amdgpu_target=gfx90a
   - slate +rocm amdgpu_target=gfx90a
   - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
@@ -242,10 +248,13 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - spack -d ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
     
+    broken-tests-packages:
+      - gptune
+
     mappings:
       - match:
           - hipblas

@@ -640,3 +640,8 @@ def find_environment(args):
         return ev.Environment(env)
 
     raise ev.SpackEnvironmentError("no environment in %s" % env)
+
+
+def first_line(docstring):
+    """Return the first line of the docstring."""
+    return docstring.split("\n")[0]

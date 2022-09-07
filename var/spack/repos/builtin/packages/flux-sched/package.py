@@ -138,6 +138,8 @@ class FluxSched(AutotoolsPackage):
             args.append("CXXFLAGS=-Wno-uninitialized")
         if self.spec.satisfies("%clang@12:"):
             args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
+        if self.spec.satisfies("%oneapi"):
+            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
         args.append("--with-boost={0}".format(self.spec["boost"].prefix))

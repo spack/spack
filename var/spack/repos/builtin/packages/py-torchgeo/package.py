@@ -80,7 +80,7 @@ class PyTorchgeo(PythonPackage):
         depends_on("py-pandas@0.23.2:1", when="@0.3:", type="run")
         depends_on("py-pandas@0.19.1:1", when="@0.2", type="run")
         depends_on("py-pycocotools@2", type="run")
-        depends_on("py-radiant-mlhub@0.2.1:0.5", type="run")
+        depends_on("py-radiant-mlhub@0.2.1:0.4", type="run")
         depends_on("py-rarfile@3:4", type="run")
         depends_on("py-scipy@1.2:1", when="@0.3:", type="run")
         depends_on("py-scipy@0.9:1", when="@:0.2", type="run")

@@ -90,6 +90,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@10.1.0:", when="+cuda_native")
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     # VTK-m uses the default Kokkos backend
     depends_on("kokkos", when="+kokkos")
@@ -128,6 +129,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda~cuda_native", when="@:1.5", msg="Cannot have +cuda without a cuda device")
 
     conflicts("+cuda", when="cuda_arch=none", msg="vtk-m +cuda requires that cuda_arch be set")
+
+    # Patch
+    patch("diy-include-cstddef.patch", when="@1.5.3:1.8.0")
 
     def cmake_args(self):
         spec = self.spec

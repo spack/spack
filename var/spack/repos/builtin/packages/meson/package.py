@@ -16,8 +16,9 @@ class Meson(PythonPackage):
 
     tags = ["build-tools"]
 
-    maintainers = ["michaelkuhn"]
+    maintainers = ["eli-schwartz", "michaelkuhn"]
 
+    version("0.63.1", sha256="f355829f0e8c714423f03a06604c04c216d4cbe3586f3154cb2181076b19207a")
     version("0.62.2", sha256="97108f4d9bb16bc758c44749bd25ec7d42c6a762961efbed8b7589a2a3551ea6")
     version("0.62.1", sha256="9fb52e66dbc613479a5f70e46cc2e8faf5aa65e09313f2c71fa63b8afd018107")
     version("0.62.0", sha256="72ac3bab701dfd597604de29cc74baaa1cc0ad8ca26ae23d5288de26abfe1c80")
@@ -81,3 +82,6 @@ class Meson(PythonPackage):
         # https://github.com/pybind/pybind11/issues/595
         if self.spec.satisfies("platform=darwin"):
             env.set("STRIP", "strip -x")
+
+    def setup_dependent_package(self, module, dspec):
+        module.meson = Executable(self.spec.prefix.bin.meson)
