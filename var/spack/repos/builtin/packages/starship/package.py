@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Starship(Package):
-    """FIXME: Put a proper description of your package here."""
+    """Starship is the minimal, blazing-fast, and infinitely customizable prompt for any shell"""
 
     homepage = "https://starship.rs"
     url = "https://github.com/starship/starship/releases/download/v1.10.2/starship-x86_64-unknown-linux-gnu.tar.gz"
