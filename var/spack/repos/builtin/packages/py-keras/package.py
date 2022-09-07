@@ -94,12 +94,12 @@ class PyKeras(PythonPackage):
         depends_on(
             "py-tensorflow@2.{}".format(minor_ver),
             type=("build", "run"),
-            when="@2.{}".format(minor_ver)
+            when="@2.{}".format(minor_ver),
         )
         depends_on(
             "py-tensorboard@2.{}".format(minor_ver),
             type=("build", "run"),
-            when="@2.{}".format(minor_ver)
+            when="@2.{}".format(minor_ver),
         )
     depends_on("py-theano", type=("build", "run"), when="@:2.0.7")
 
