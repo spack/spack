@@ -4,16 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+
 class MlperfOpencatalyst(PythonPackage, CudaPackage):
     """Reference implementation for the MLPerf HPC OpenCatalyst DimeNet++ benchmark"""
 
     homepage = "https://opencatalystproject.org/"
     git = "https://github.com/mlcommons/hpc.git"
-    
+
     version("main", branch="main")
-    
+
     tags = ["proxy-app"]
-    
+
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-ase@3.21:3.21.9999", type=("build", "run"))
     depends_on("py-matplotlib@3.3:3.3.9999", type=("build", "run"))
@@ -25,7 +26,7 @@ class MlperfOpencatalyst(PythonPackage, CudaPackage):
     depends_on("py-tqdm@4.58:4.58.9999", type=("build", "run"))
     depends_on("py-sphinx", type=("build", "run"))
     depends_on("py-nbsphinx", type=("build", "run"))
-    # TODO: Does pandoc work or do we need to make a py-pandoc?
+    depends_on("pandoc", type=("build", "run"))
     depends_on("py-black", type=("build", "run"))
     depends_on("py-torch+cuda", when="+cuda", type=("build", "run"))
     depends_on("py-torch~cuda", when="~cuda", type=("build", "run"))
@@ -34,8 +35,6 @@ class MlperfOpencatalyst(PythonPackage, CudaPackage):
     depends_on("py-torch-spline-conv+cuda", when="+cuda", type=("build", "run"))
     depends_on("py-torch-spline-conv~cuda", when="~cuda", type=("build", "run"))
 
-
     @property
     def build_directory(self):
         return "open_catalyst"
-
