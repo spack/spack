@@ -606,14 +606,16 @@ class GitVersion(VersionBase):
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
-        if other.is_ref:
+        if self.is_ref and other.is_ref:
             # the version for a ref is the git ref, and it should be an exact match
             # git hashes, and tags need to be exact matches
             version_match = self.version == other.version
-        else:
+        elif self.is_ref:
             # other is not a ref then it is a version base and we need to compare
             # this.ref
             version_match = self.ref_version == other.version
+        else:
+            version_match = True
 
         # Do the final comparison
         nself = len(self_cmp)
