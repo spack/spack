@@ -43,7 +43,16 @@ class IntelMpiBenchmarks(MakefilePackage):
     variant(
         "benchmark",
         default="all",
-        values=("mpi1", "ext", "io", "nbc", "p2p", "rma", "mt", "all"),
+        values=(
+            "mpi1",
+            "ext",
+            "io",
+            "nbc",
+            "rma",
+            "mt",
+            "all",
+            conditional("p2p", when="@2019.2:"),
+        ),
         multi=False,
         description="Specify which benchmark to build",
     )
@@ -99,5 +108,6 @@ class IntelMpiBenchmarks(MakefilePackage):
             install("IMB-MPI1", prefix.bin)
             install("IMB-MT", prefix.bin)
             install("IMB-NBC", prefix.bin)
-            install("IMB-P2P", prefix.bin)
+            if spec.satisfies("@2019.2:"):
+                install("IMB-P2P", prefix.bin)
             install("IMB-RMA", prefix.bin)
