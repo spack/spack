@@ -25,34 +25,34 @@ spack:
     mpi:
       require: "mpich"
     binutils:
-      variants: +ld +gold +headers +libiberty ~nls
+      require: "+ld +gold +headers +libiberty ~nls"
     cuda:
-      version: [11.7.0]
+      require: "@11.7.0"
     elfutils:
-      variants: +bzip2 ~nls +xz
+      require: "+bzip2 ~nls +xz"
     hdf5:
-      variants: +fortran +hl +shared
+      require: "+fortran +hl +shared"
     libfabric:
-      variants: fabrics=sockets,tcp,udp,rxm
+      require: "fabrics=sockets,tcp,udp,rxm"
     libunwind:
-      variants: +pic +xz
+      require: "+pic +xz"
     mpich:
-      variants: ~wrapperrpath
+      require: "~wrapperrpath"
     ncurses:
-      variants: +termlib
+      require: "+termlib"
     openblas:
-      variants: threads=openmp
+      require: "threads=openmp"
     python:
-      version: [3.8.13]
+      require: "@3.8.13"
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+      require: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
-      variants: +pic
+      require: "+pic"
     mesa:
-      version: [21.3.8]
+      require: "21.3.8"
 
   specs:
   # CPU
