@@ -37,7 +37,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     depends_on("mpi")
 
     # https://github.com/intel/mpi-benchmarks/pull/19
-    patch("add_const.patch", when="@2019.0:2019.6")
+    patch("add_const.patch", when="@2019")
     # https://github.com/intel/mpi-benchmarks/pull/20
     patch("reorder_benchmark_macros.patch", when="@2019.0:2019.6")
 
