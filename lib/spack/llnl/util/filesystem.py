@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import errno
+from gettext import dpgettext
 import glob
 import hashlib
 import itertools
 import numbers
 import os
 import re
+from reprlib import recursive_repr
 import shutil
 import stat
 import sys
@@ -1903,7 +1905,12 @@ class LibraryList(FileList):
                 name = x[3:]
 
             # Valid extensions include: ['.dylib', '.so', '.a']
-            for ext in [".dylib", ".so", ".a"]:
+            # on non Windows platform
+            # Windows valid library extensions are:
+            # ['.dll', '.lib']
+            valid_exts = ['.dll', '.lib'] if is_windows\
+                else ['.dylib', '.so', '.a']
+            for ext in valid_exts:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -2046,15 +2053,32 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
+    if is_windows:
+        static = 'lib'
+        shared = 'dll'
+    else:
+        # Used on both Linux and macOS
+        static = 'a'
+        shared = 'so'
+
     # Construct the right suffix for the library
     if shared:
+<<<<<<< HEAD
         # Used on both Linux and macOS
         suffixes = ["so"]
         if sys.platform == "darwin":
+=======
+        suffixes = [ shared ]
+        if sys.platform == 'darwin':
+>>>>>>> 0ad56f6253 (First pass)
             # Only used on macOS
             suffixes.append("dylib")
     else:
+<<<<<<< HEAD
         suffixes = ["a"]
+=======
+        suffixes = [ static ]
+>>>>>>> 0ad56f6253 (First pass)
 
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
@@ -2067,7 +2091,15 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
+<<<<<<< HEAD
     for subdir in ("lib", "lib64"):
+=======
+    common_lib_dirs = ['lib', 'lib64']
+    if is_windows:
+        common_lib_dirs.extend(['bin', 'Lib'])
+
+    for subdir in common_lib_dirs:
+>>>>>>> 0ad56f6253 (First pass)
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
             continue
@@ -2078,6 +2110,133 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
+
+
+def find_all_shared_libraries(root, recursive=False):
+    """Convenience function that returns the list of all shared libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+    return find_libraries('*', root=root, recursive=recursive)
+
+
+def find_all_static_libraries(root, recursive=False):
+    """Convenience function that returns the list of all static libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+    return find_libraries('*', root=root, shared=False, recursive=recursive)
+
+
+def find_all_libraries(root, recursive=False):
+    """Convenience function that returns the list of all libraries found
+    in the directory passed as argument.
+
+    Args:
+        root (str): directory where to look recursively for library files
+        recursive (bool):
+    Returns:
+        List of all libraries found in ``root`` and subdirectories.
+    """
+
+    return find_all_shared_libraries(root, recursive=recursive) +\
+        find_all_static_libraries(root, recursive=recursive)
+
+
+class WindowsRuntimeLink:
+    """ Class representing Windows filesystem rpath analog
+
+    rpath is established for each library/executable that requires
+    dynamic linking for a package
+
+    Also in the scenario where we get a package depending on itself... how do we verify that?
+
+    """
+    def __init__(self, package, link_install_prefix=True):
+        """
+        Args:
+            package (spack.package_base.PackageBase): Package requiring links
+            link_install_prefix (bool): Link against package's own install or stage root.
+                Packages that run their own executables during build and require rpaths to
+                the build directory during build time require this option. Default: install
+                root
+        """
+        self.pkg = package
+        self._addl_rpaths = []
+        self.link_install_prefix = link_install_prefix
+
+    @property
+    def link_root(self):
+        """
+        root of linking location
+        """
+        if self.install:
+            return self.pkg.prefix
+        else:
+            return self.pkg.stage.source_path
+
+    @property
+    def link_dest(self):
+        """
+        Set of Location within the package context where symlinks need to be placed
+        to mimic runtime link paths.
+        """
+        return set(self.pkg.libs.directories)
+
+    @property
+    def link_targets(self):
+        """
+        Set of libraries this package needs to link against during runtime
+        These packages will each be symlinked into the packages lib and binary dir
+        """
+        deps = self.pkg.spec.dependencies(deptype='link')
+        dependent_libs = []
+        for extra_path in self._addl_rpaths:
+            dependent_libs.extend(find_all_shared_libraries(extra_path))
+        for dep in deps:
+            dependent_libs.extend(dep.libs)
+        return set(dependent_libs)
+
+    def include_additional_runtime_paths(self, *paths):
+        """
+        Add libraries found at the root of provided paths to runtime linking
+
+        Args:
+            *paths (str): arbitrary number of paths to be added to runtime linking
+        """
+        for pth in paths:
+            self._addl_rpaths.append(pth)
+
+    def establish_runtime_link(self):
+        """
+        (sym)link packages to runtime dependencies based on RPath configuration for
+        Windows heuristics
+        """
+        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
+        # install a symlink to each dependent library
+        for link in itertools.product(self.link_dest, self.link_targets):
+            symlink(link[0], link[1])
+        # from build_environment.py:463
+            # The top-level package is always RPATHed. It hasn't been installed yet
+            # so the RPATHs are added unconditionally
+        # this naively symlinks from lib to bin and bin to lib etc
+        # in the future could be more nuanced and internal links handled
+        # by package attributes
+        for link in itertools.product(self.link_dest, repeat=2):
+            if link[0] != link[1]:
+                self_link_targets = find_all_shared_libraries(link[1])
+                for target in self_link_targets:
+                    symlink(link[0], target)
 
 
 @system_path_filter

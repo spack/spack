@@ -2743,6 +2743,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url, e.message)
 
+
+
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
