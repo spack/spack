@@ -21,7 +21,7 @@ class NceplibsEnv(BundlePackage):
 
     depends_on('bacio')
     depends_on('bufr')
-    depends_on('crtm')
+    depends_on('crtm@2.4.0')
     depends_on('g2')
     depends_on('g2c')
     depends_on('g2tmpl')
