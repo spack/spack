@@ -1529,8 +1529,8 @@ class TestConcretize(object):
 
     @pytest.mark.regression("29201")
     @pytest.mark.skipif(
-         sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
-     )
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     def test_installed_version_is_selected_only_for_reuse(
         self, mutable_database, repo_with_changing_recipe
     ):
