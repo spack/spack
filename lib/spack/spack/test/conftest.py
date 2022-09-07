@@ -845,7 +845,6 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     # the store and making the database read-only
     store_path.remove(rec=1)
     copy_tree(str(store_cache), str(store_path))
-    # store_cache.copy(store_path, mode=True, stat=True)
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
 
 
