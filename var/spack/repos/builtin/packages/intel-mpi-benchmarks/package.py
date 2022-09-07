@@ -18,6 +18,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     """
 
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
+    url = "https://github.com/intel/mpi-benchmarks/archive/IMB-v2021.3.tar.gz"
     maintainers = ["carsonwoods"]
 
     version("2021.3", sha256="9b58a4a7eef7c0c877513152340948402fd87cb06270d2d81308dc2ef740f4c7")
@@ -36,9 +37,9 @@ class IntelMpiBenchmarks(MakefilePackage):
     depends_on("mpi")
 
     # https://github.com/intel/mpi-benchmarks/pull/19
-    patch("add_const.patch", when="@2019.1:2019.6")
+    patch("add_const.patch", when="@2019.0:2019.6")
     # https://github.com/intel/mpi-benchmarks/pull/20
-    patch("reorder_benchmark_macros.patch", when="@2019.1:2019.6")
+    patch("reorder_benchmark_macros.patch", when="@2019.0:2019.6")
 
     variant(
         "benchmark",
@@ -58,7 +59,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     )
 
     def url_for_version(self, version):
-        if version[0] <= 2019 and version[1] <= 1:
+        if if version <= Version("2019.1"):
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/v{0}.tar.gz"
         else:
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/IMB-v{0}.tar.gz"
