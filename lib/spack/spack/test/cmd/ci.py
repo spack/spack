@@ -2192,10 +2192,8 @@ spack:
 )
 def test_ci_help(subcmd, capsys):
     """Make sure `spack ci` --help describes the (sub)command help."""
-    with pytest.raises(SystemExit):
-        ci_cmd(subcmd, "--help")
+    out = spack.main.SpackCommand("ci", subprocess=True)(subcmd, "--help")
 
-    out = str(capsys.readouterr())
     usage = "usage: spack ci {0}{1}[".format(subcmd, " " if subcmd else "")
     assert usage in out
 

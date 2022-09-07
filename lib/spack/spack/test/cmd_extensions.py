@@ -228,14 +228,17 @@ def test_missing_command():
     ],
     ids=["no_stem", "vacuous", "leading_hyphen", "basic_good", "trailing_slash", "hyphenated"],
 )
-def test_extension_naming(extension_path, expected_exception, config):
+def test_extension_naming(tmpdir, extension_path, expected_exception, config):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
-    with spack.config.override("config:extensions", [extension_path]):
-        with pytest.raises(expected_exception):
-            spack.cmd.get_module("no-such-command")
+    # NOTE: if the directory is a valid extension directory name the "vacuous" test will
+    # fail because it resolves to current working directory
+    with tmpdir.as_cwd():
+        with spack.config.override("config:extensions", [extension_path]):
+            with pytest.raises(expected_exception):
+                spack.cmd.get_module("no-such-command")
 
 
 def test_missing_command_function(extension_creator, capsys):

@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, working_dir
 
 import spack
 from spack.util.executable import which
@@ -40,28 +40,29 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="function")
-def git_tmp_worktree(tmpdir):
+def git_tmp_worktree(tmpdir, mock_git_version_info):
     """Create new worktree in a temporary folder and monkeypatch
     spack.paths.prefix to point to it.
     """
-    # TODO: This is fragile and should be high priority for
-    # follow up fixes. 27021
-    # Path length is occasionally too long on Windows
-    # the following reduces the path length to acceptable levels
-    if sys.platform == "win32":
-        long_pth = str(tmpdir).split(os.path.sep)
-        tmp_worktree = os.path.sep.join(long_pth[:-1])
-    else:
-        tmp_worktree = str(tmpdir)
-    worktree_root = os.path.sep.join([tmp_worktree, "wrktree"])
+    with working_dir(mock_git_version_info[0]):
+        # TODO: This is fragile and should be high priority for
+        # follow up fixes. 27021
+        # Path length is occasionally too long on Windows
+        # the following reduces the path length to acceptable levels
+        if sys.platform == "win32":
+            long_pth = str(tmpdir).split(os.path.sep)
+            tmp_worktree = os.path.sep.join(long_pth[:-1])
+        else:
+            tmp_worktree = str(tmpdir)
+        worktree_root = os.path.sep.join([tmp_worktree, "wrktree"])
 
-    mkdirp(worktree_root)
+        mkdirp(worktree_root)
 
-    git("worktree", "add", "--detach", worktree_root, "HEAD")
+        git("worktree", "add", "--detach", worktree_root, "HEAD")
 
-    yield worktree_root
+        yield worktree_root
 
-    git("worktree", "remove", "--force", worktree_root)
+        git("worktree", "remove", "--force", worktree_root)
 
 
 def test_is_git_repo_in_worktree(git_tmp_worktree):
