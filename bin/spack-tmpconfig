@@ -7,7 +7,6 @@ export TMPDIR="${XDG_RUNTIME_DIR}"
 export TMP_DIR="$(mktemp -d -t spack-test-XXXXX)"
 clean_up() {
     [[ -n "$TMPCONFIG_DEBUG" ]] && printf "cleaning up: $TMP_DIR\n"
-    [[ -n "$TMPCONFIG_DEBUG" ]] && tree "$TMP_DIR"
     rm -rf "$TMP_DIR"
 }
 trap clean_up EXIT
