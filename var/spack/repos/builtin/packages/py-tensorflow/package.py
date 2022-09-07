@@ -310,7 +310,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
     for minor_ver in range(5, 11):
-        depends_on("py-tensorboard@2.{}".format(minor_ver), type=("build", "run"), when="@2.{}".format(minor_ver))
+        depends_on(
+            "py-tensorboard@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
     # TODO: is this still true? We now install tensorboard from wheel for all versions
     # depends_on('py-tensorboard', when='@:2.4')  # circular dep
     # depends_on('py-tensorflow-estimator')  # circular dep

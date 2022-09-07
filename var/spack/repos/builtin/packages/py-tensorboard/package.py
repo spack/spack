@@ -20,7 +20,7 @@ class PyTensorboard(PythonPackage):
     version(
         "2.10.0",
         sha256="76c91a5e8959cd2208cc32cb17a0cb002badabb66a06ac2af02a7810f49a59e3",
-        expand=False
+        expand=False,
     )
     version(
         "2.9.1",
