@@ -16,13 +16,14 @@ spack:
   packages:
     all:
       compiler: [gcc@11.2.0]
-      providers:
-        blas: [openblas]
-        mpi: [mpich]
       target: [x86_64]
       variants: +mpi
     tbb:
       require: "intel-tbb"
+    blas:
+      require: "openblas"
+    mpi:
+      require: "mpich"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
     cuda:
