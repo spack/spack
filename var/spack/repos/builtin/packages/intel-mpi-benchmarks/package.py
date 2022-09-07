@@ -36,6 +36,13 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     depends_on("mpi")
 
+    conflicts(
+        "^openmpi",
+        when="@:2019.0",
+        msg="intel-mpi-benchmarks <= v2019.0 cannot be built with OpenMPI, "
+        "please specify a different MPI implementation",
+    )
+
     # https://github.com/intel/mpi-benchmarks/pull/19
     patch("add_const.patch", when="@2019")
     # https://github.com/intel/mpi-benchmarks/pull/20
