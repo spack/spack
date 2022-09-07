@@ -85,7 +85,8 @@ class PyProtobuf(PythonPackage):
     for ver in list(range(1, 21)):
         depends_on("protobuf@3." + str(ver), type=("build", "run"), when="+cpp @3." + str(ver))
     # Handle the 2.x series releases
-    depends_on("protobuf@2.", type=("build", "run"), when="+cpp @2.")
+    for ver in list(range(3, 7)):
+        depends_on("protobuf@2." + str(ver), type=("build", "run"), when="+cpp @2." + str(ver))
 
     @property
     def build_directory(self):
