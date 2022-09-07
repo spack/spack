@@ -262,16 +262,6 @@ def test_git_url_top_level_conflicts(version_str):
         spack.fetch_strategy.for_package_version(s.package, version_str)
 
 
-def test_rpath_args(mutable_database):
-    """Test a package's rpath_args property."""
-
-    rec = mutable_database.get_record("mpich")
-
-    rpath_args = rec.spec.package.rpath_args
-    assert "-rpath" in rpath_args
-    assert "mpich" in rpath_args
-
-
 def test_bundle_version_checksum(mock_directive_bundle, clear_directive_functions):
     """Test raising exception on a version checksum with a bundle package."""
     with pytest.raises(VersionChecksumError, match="Checksums not allowed"):

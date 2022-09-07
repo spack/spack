@@ -566,6 +566,8 @@ class Paraview(CMakePackage, CudaPackage):
         # Encourage Paraview to use the correct Python libs
         if spec.satisfies("+python") or spec.satisfies("+python3"):
             pylibdirs = spec["python"].libs.directories
+            # TODO: the usage of self.rpath is deprecated.
+            #  See comments in the implementation of the property for more details.
             cmake_args.append("-DCMAKE_INSTALL_RPATH={0}".format(":".join(self.rpath + pylibdirs)))
 
         if "+advanced_debug" in spec:

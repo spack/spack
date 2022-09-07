@@ -88,6 +88,8 @@ class PyGpaw(PythonPackage):
 
         lib_dirs = list(libs.directories)
         libs = list(libs.names)
+        # TODO: the usage of self.rpath is deprecated.
+        #  See comments in the implementation of the property for more details.
         rpath_str = ":".join(self.rpath)
 
         if spec.satisfies("@:19.8.1"):

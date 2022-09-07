@@ -18,6 +18,7 @@ import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
+from spack.util.environment import is_system_path
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -714,7 +715,22 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             )
 
         # enable appropriate bootstrapping flags
-        stage1_ldflags = str(self.rpath_args)
+        compiler = spack.compilers.gcc.Gcc(
+            "gcc@{0}".format(self.spec.version),
+            self.spec.os,
+            str(self.spec.target.family),
+            [None] * 2,
+        )
+
+        stage1_ldflags = " ".join(
+            "{0}{1}".format(compiler.cxx_rpath_arg, d)
+            for d in itertools.chain.from_iterable(
+                self.spec[dep.name].libs.directories
+                for dep in self.spec.dependencies(deptype="link")
+                if not is_system_path(dep.prefix)
+            )
+        )
+
         boot_ldflags = stage1_ldflags + " -static-libstdc++ -static-libgcc"
         options.append("--with-stage1-ldflags=" + stage1_ldflags)
         options.append("--with-boot-ldflags=" + boot_ldflags)

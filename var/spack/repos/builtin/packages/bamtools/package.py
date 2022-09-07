@@ -27,6 +27,8 @@ class Bamtools(CMakePackage):
 
     def cmake_args(self):
         args = []
+        # TODO: the usage of self.rpath is deprecated.
+        #  See comments in the implementation of the property for more details.
         rpath = self.rpath
         rpath.append(os.path.join(self.prefix.lib, "bamtools"))
         args.append("-DCMAKE_INSTALL_RPATH=%s" % ":".join(rpath))
