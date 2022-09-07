@@ -136,6 +136,18 @@ def test_concretizer_arguments(mutable_config, mock_packages):
 
     assert spack.config.get("concretizer:reuse", None) is False
 
+    spec("--use-installed=when_possible", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) is True
+
+    spec("--use-installed=never", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) is False
+
+    spec("--use-installed=always", "zlib")
+
+    assert spack.config.get("concretizer:reuse", None) == "always"
+
 
 def test_use_buildcache_type():
     assert arguments.use_buildcache("only") == ("only", "only")

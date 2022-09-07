@@ -57,6 +57,9 @@ def test_spec_concretizer_args(mutable_config, mutable_database):
     output = spec("--reuse", "-l", "mpileaks")
     assert h in output
 
+    output = spec("--use-installed=always", "-l", "mpileaks")
+    assert h in output
+
 
 def test_spec_parse_dependency_variant_value():
     """Verify that we can provide multiple key=value variants to multiple separate

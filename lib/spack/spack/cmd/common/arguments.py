@@ -364,10 +364,23 @@ class ConfigSetAction(argparse.Action):
     """
 
     def __init__(
-        self, option_strings, dest, const, default=None, required=False, help=None, metavar=None
+        self,
+        option_strings,
+        dest,
+        const=None,
+        default=None,
+        required=False,
+        help=None,
+        metavar=None,
+        choices=None,
+        value_map=None,
     ):
+        if const is None and choices is None:
+            raise ValueError("must provide const or choices")
+
         # save the config option we're supposed to set
         self.config_path = dest
+        self.value_map = value_map
 
         # destination is translated to a legal python identifier by
         # substituting '_' for ':'.
@@ -376,11 +389,12 @@ class ConfigSetAction(argparse.Action):
         super(ConfigSetAction, self).__init__(
             option_strings=option_strings,
             dest=dest,
-            nargs=0,
+            nargs=0 if const is not None else 1,
             const=const,
             default=default,
             required=required,
             help=help,
+            choices=choices,
         )
 
     def __call__(self, parser, namespace, values, option_string):
@@ -388,7 +402,14 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.set(self.config_path, self.const, scope="command_line")
+        if self.const is not None:
+            value = self.const
+        else:
+            value = values[0]
+            if self.value_map:
+                value = self.value_map.get(value, value)
+
+        spack.config.set(self.config_path, value, scope="command_line")
 
 
 def add_concretizer_args(subparser):
@@ -411,7 +432,8 @@ def add_concretizer_args(subparser):
         dest="concretizer:reuse",
         const=False,
         default=None,
-        help="do not reuse installed deps; build newest configuration",
+        help="do not reuse installed deps; build newest configuration "
+        "(deprecated: use --use-installed=never)",
     )
     subgroup.add_argument(
         "--reuse",
@@ -419,7 +441,18 @@ def add_concretizer_args(subparser):
         dest="concretizer:reuse",
         const=True,
         default=None,
-        help="reuse installed dependencies/buildcaches when possible",
+        help="reuse installed dependencies/buildcaches when possible "
+        "(deprecated: use --use-installed=when_possible)",
+    )
+    subgroup.add_argument(
+        "--use-installed",
+        action=ConfigSetAction,
+        dest="concretizer:reuse",
+        choices=["never", "when_possible", "always"],
+        # for backwards compatibility, we remap these values:
+        value_map={"never": False, "when_possible": True},
+        help="when to reuse installed dependencies/buildcaches",
+        default="when_possible",
     )
 
 

@@ -14,7 +14,7 @@ properties = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
-            "reuse": {"type": "boolean"},
+            "reuse": {"oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["always"]}]},
             "enable_node_namespace": {"type": "boolean"},
             "targets": {
                 "type": "object",

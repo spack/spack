@@ -595,18 +595,28 @@ class PyclingoDriver(object):
         if choice:
             self.assumptions.append(atom)
 
-    def solve(self, setup, specs, reuse=None, namespace=False, output=None, control=None):
+    def solve(
+        self,
+        setup,
+        specs,
+        namespace=False,
+        reusable_specs=None,
+        output=None,
+        control=None,
+        reuse=False,
+    ):
         """Set up the input and solve for dependencies of ``specs``.
 
         Arguments:
             setup (SpackSolverSetup): An object to set up the ASP problem.
             specs (list): List of ``Spec`` objects to solve for.
-            reuse (None or list): list of concrete specs that can be reused
             namespace (bool): enable node namespacing
+            reusable_specs (None or list): list of concrete specs that can be reused
             output (None or OutputConfiguration): configuration object to set
                 the output of this solve.
             control (clingo.Control): configuration for the solver. If None,
                 default values will be used
+            reuse (bool or "always"): when to reuse reusable packages
 
         Return:
             A tuple of the solve result, the timer for the different phases of the
@@ -625,7 +635,9 @@ class PyclingoDriver(object):
         self.assumptions = []
         with self.control.backend() as backend:
             self.backend = backend
-            setup.setup(self, specs, reuse=reuse, namespace=namespace)
+            setup.setup(
+                self, specs, namespace=namespace, reusable_specs=reusable_specs, reuse=reuse
+            )
         timer.phase("setup")
 
         # read in the main ASP program and display logic -- these are
@@ -1509,9 +1521,6 @@ class SpackSolverSetup(object):
 
     def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
-        self.declared_versions = collections.defaultdict(list)
-        self.possible_versions = collections.defaultdict(set)
-        self.deprecated_versions = collections.defaultdict(set)
 
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
@@ -1556,6 +1565,10 @@ class SpackSolverSetup(object):
                     continue
 
                 known_versions = self.possible_versions[dep.name]
+                if dep.version in known_versions:
+                    continue
+
+                # FIXME: only do this for specs passed on the cli?
                 if not isinstance(dep.version, spack.version.GitVersion) and any(
                     v.satisfies(dep.version) for v in known_versions
                 ):
@@ -1927,7 +1940,7 @@ class SpackSolverSetup(object):
                 if spec.concrete:
                     self._facts_from_concrete_spec(spec, possible)
 
-    def setup(self, driver, specs, reuse=None, namespace=False):
+    def setup(self, driver, specs, namespace=False, reusable_specs=None, reuse=False):
         """Generate an ASP program with relevant constraints for specs.
 
         This calls methods on the solve driver to set up the problem with
@@ -1937,8 +1950,9 @@ class SpackSolverSetup(object):
         Arguments:
             driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
-            reuse (None or list): list of concrete specs that can be reused
             namespace (bool): enable namespace matching in the solve
+            reusable_specs (None or list): list of concrete specs that can be reused
+            reuse (bool or "always"): when to reuse reusable packages
         """
         self._condition_id_counter = itertools.count()
 
@@ -1947,8 +1961,17 @@ class SpackSolverSetup(object):
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
-        possible = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+
+        # reset
+        self.declared_versions = collections.defaultdict(list)
+        self.possible_versions = collections.defaultdict(set)
+        self.deprecated_versions = collections.defaultdict(set)
+
+        # note: we only care about the names of the packages, not the mapping to their deps
+        possible = set(
+            spack.package_base.possible_dependencies(
+                *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+            )
         )
 
         # Fail if we already know an unreachable node is requested
@@ -1959,7 +1982,7 @@ class SpackSolverSetup(object):
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        self.pkgs = set(possible)
+        self.pkgs = possible
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -1980,13 +2003,26 @@ class SpackSolverSetup(object):
             )
         specs = tuple(specs)  # ensure compatible types to add
 
+        if reuse == "always":
+            if reusable_specs is None:
+                raise ValueError("reusable_specs cannot be None when reuse is 'always'")
+            # NOTE: if reusable_specs is the complete list of installed packages (as it appears to
+            #  be), then we don't need to traverse deps. so we don't need to call
+            #  build_version_dict_from_specs.
+            # add versions from reusable (i.e installed) packages only
+            for spec in reusable_specs:
+                self.declared_versions[spec.name].append(
+                    DeclaredVersion(version=spec.version, idx=0, origin=version_provenance.spec)
+                )
+                self.possible_versions[spec.name].add(spec.version)
+        else:
+            # traverse all specs and packages to build dict of possible versions
+            self.build_version_dict(possible)
+            self.add_concrete_versions_from_specs(specs, version_provenance.spec)
+            self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
+
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
-
-        # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible)
-        self.add_concrete_versions_from_specs(specs, version_provenance.spec)
-        self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -1996,9 +2032,13 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.enable_node_namespace())
 
         if reuse:
+            if reusable_specs is None:
+                raise ValueError("reusable_specs cannot be None when reuse is True")
+            # reuse is True means "when possible".  we don't need to optimize for reuse when
+            # reuse is "always".
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
-            for reusable_spec in reuse:
+            for reusable_spec in reusable_specs:
                 self._facts_from_concrete_spec(reusable_spec, possible)
 
         self.gen.h1("General Constraints")
@@ -2450,7 +2490,12 @@ class Solver(object):
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
         result, _, _ = self.driver.solve(
-            setup, specs, reuse=reusable_specs, namespace=self.namespace, output=output
+            setup,
+            specs,
+            namespace=self.namespace,
+            reusable_specs=reusable_specs,
+            output=output,
+            reuse=self.reuse,
         )
         return result
 
@@ -2488,7 +2533,12 @@ class Solver(object):
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=False)
         while True:
             result, _, _ = self.driver.solve(
-                setup, input_specs, reuse=reusable_specs, namespace=self.namespace, output=output
+                setup,
+                input_specs,
+                namespace=self.namespace,
+                reusable_specs=reusable_specs,
+                output=output,
+                reuse=self.reuse,
             )
             yield result
 
