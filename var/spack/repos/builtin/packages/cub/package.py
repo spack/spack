@@ -42,9 +42,3 @@ class Cub(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install_tree("cub", join_path(prefix.include, "cub"))
-
-    @property
-    def cmake_search_paths(self):
-        if self.spec.satisfies("target=x86_64:"):
-            cub_path = self.prefix.targets + "/x86_64-linux/lib/cmake"
-            return [cub_path]
