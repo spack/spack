@@ -35,7 +35,7 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
     depends_on("precice@develop", when="@develop")
-    depends_on("precice@2.5.0", when="@2.5.0.1:2.5.0")
+    depends_on("precice@2.5.0", when="@2.5.0")
     depends_on("precice@2.4.0", when="@2.4.0.1:2.4.0")
     depends_on("precice@2.3.0", when="@2.3.0.1:2.3.1")
     depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1")
@@ -53,7 +53,7 @@ class PyPyprecice(PythonPackage):
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-pip@19.0.0:", type="build")
-    depends_on("py-pkgconfig", type="build")
+    depends_on("py-pkgconfig", type="build", when="@2.5:")
 
     @when("@:2.1")
     def patch(self):
