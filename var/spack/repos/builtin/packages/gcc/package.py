@@ -980,14 +980,34 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             [self.__class__], path_hints=([compiler_dir] if os.path.isdir(compiler_dir) else None)
         )
 
-        # We consider only packages that satisfy the compiler spec with an additional constraint:
-        required_spec = Spec("languages=c,c++,d").constrained(repr(self.compiler.spec))
+        # We consider only packages that satisfy the following constraint:
+        required_spec = Spec("languages=c,c++,d")
         candidate_specs = [
             p.spec
             for p in filter(
                 lambda p: p.spec.satisfies(required_spec), detected_packages.get(self.name, ())
             )
         ]
+
+        if candidate_specs:
+            # We now need to filter specs that match the compiler version:
+            compiler_spec = Spec(repr(self.compiler.spec))
+
+            # First, try to filter specs that satisfy the compiler spec:
+            new_candidate_specs = list(
+                filter(lambda s: s.satisfies(compiler_spec), candidate_specs)
+            )
+
+            # The compiler version might be more specific than what we can detect. For example, the
+            # user might have "gcc@10.2.1-sys" as the compiler spec in compilers.yaml. In that
+            # case, we end up with an empty list of candidates. To circumvent the problem, we try
+            # to filter specs that are satisfied by the compiler spec:
+            if not new_candidate_specs:
+                new_candidate_specs = list(
+                    filter(lambda s: compiler_spec.satisfies(s), candidate_specs)
+                )
+
+            candidate_specs = new_candidate_specs
 
         error_nl = "\n    "  # see SpackError.__str__()
 
