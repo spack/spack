@@ -123,6 +123,8 @@ class PyScipy(PythonPackage):
         when="@1.2:1.5.3",
     )
 
+    # https://github.com/scipy/scipy/pull/16969
+    patch("16969.patch", when="@1.9.1:")
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
     @run_before("install")
