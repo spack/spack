@@ -133,6 +133,14 @@ def test_url_for_version_with_no_urls(mock_packages, config):
         pkg_cls(spec).url_for_version("1.1")
 
 
+def test_custom_cmake_prefix_path(mock_packages, config):
+    spec = Spec("depends-on-define-cmake-prefix-paths").concretized()
+
+    assert spack.build_environment.get_cmake_prefix_path(spec.package) == [
+        spec["define-cmake-prefix-paths"].prefix.test
+    ]
+
+
 def test_url_for_version_with_only_overrides(mock_packages, config):
     s = Spec("url-only-override").concretized()
 
