@@ -140,6 +140,7 @@ def test_custom_cmake_prefix_path(mock_packages, config):
         spec["define-cmake-prefix-paths"].prefix.test
     ]
 
+
 def test_url_for_version_with_only_overrides(mock_packages, config):
     s = Spec("url-only-override").concretized()
 
