@@ -2,15 +2,15 @@ name: unit tests
 
 on:
   workflow_dispatch:
+    inputs:
+      core:
+        description: "If false the test is skipped"
+        required: true
+        type: string
+        default: "true"
   workflow_call:
     inputs:
       core:
-        required: true
-        type: string
-      packages:
-        required: true
-        type: string
-      with_coverage:
         required: true
         type: string
 
@@ -21,7 +21,7 @@ concurrency:
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
-    if: ${{ inputs.with_coverage == 'false' }}
+    if: ${{ inputs.core == 'false' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -121,18 +121,13 @@ jobs:
           # Need this for the git tests to succeed.
           git --version
           . .github/workflows/setup_git.sh
-    - name: Run shell tests (without coverage)
-      if: ${{ inputs.with_coverage == 'false' }}
-      run: |
-          share/spack/qa/run-shell-tests
-    - name: Run shell tests (with coverage)
-      if: ${{ inputs.with_coverage == 'true' }}
+    - name: Run shell tests
       env:
-          COVERAGE: true
+          COVERAGE: ${{ inputs.core }}
       run: |
           share/spack/qa/run-shell-tests
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
+      if: ${{ inputs.core == 'true' }}
       with:
         flags: shelltests,linux
 
@@ -140,7 +135,7 @@ jobs:
   # only on PRs modifying core Spack
   rhel8-platform-python:
     runs-on: ubuntu-latest
-    if: ${{ inputs.with_coverage == 'false' }}
+    if: ${{ inputs.core == 'false' }}
     container: registry.access.redhat.com/ubi8/ubi
     steps:
     - name: Install dependencies
@@ -164,7 +159,7 @@ jobs:
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
   # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
-    if: ${{ inputs.with_coverage == 'false' }}
+    if: ${{ inputs.core == 'false' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
@@ -201,7 +196,7 @@ jobs:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
   macos:
-    if: ${{ inputs.with_coverage == 'false' }}
+    if: ${{ inputs.core == 'false' }}
     runs-on: macos-latest
     strategy:
       matrix:

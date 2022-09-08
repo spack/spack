@@ -96,8 +96,6 @@ jobs:
     uses: ./.github/workflows/unit_tests.yaml
     with:
       core: ${{ needs.changes.outputs.core }}
-      packages: ${{ needs.changes.outputs.packages }}
-      with_coverage: ${{ needs.changes.outputs.with_coverage }}
   windows:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks ]
