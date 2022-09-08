@@ -74,7 +74,7 @@ jobs:
       # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
       #
   bootstrap:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'false' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
