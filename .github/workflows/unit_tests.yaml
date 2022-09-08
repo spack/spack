@@ -21,6 +21,7 @@ concurrency:
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
+    if: ${{ inputs.with_coverage == 'false' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
