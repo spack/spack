@@ -21,7 +21,7 @@ class JediToolsEnv(BundlePackage):
 
     depends_on("awscli", type="run")
     # Only old versions - new versions have terrible dependencies
-    #depends_on("aws-parallelcluster", type="run")
+    # depends_on("aws-parallelcluster", type="run")
     # npm is needed for aws-parallelcluster, even when installed via pip in venv
     depends_on("npm", type="run")
     depends_on("py-click", type="run")
