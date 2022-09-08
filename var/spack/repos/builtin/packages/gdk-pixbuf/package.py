@@ -91,6 +91,9 @@ class GdkPixbuf(Package):
     def install(self, spec, prefix):
         with working_dir("spack-build", create=True):
             meson_args = std_meson_args + ["-Dman={0}".format("+man" in spec)]
+            # Only build tests when requested
+            if self.version >= Version("2.42.9"):
+                meson_args += ["-Dtests={0}".format(self.run_tests)]
             # Based on suggestion by luigi-calori and the fixup shown by lee218llnl:
             # https://github.com/spack/spack/pull/27254#issuecomment-974464174
             if "+x11" in spec:
