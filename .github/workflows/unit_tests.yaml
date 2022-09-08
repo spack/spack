@@ -3,16 +3,6 @@ name: unit tests
 on:
   workflow_dispatch:
   workflow_call:
-    inputs:
-      core:
-        required: true
-        type: string
-      packages:
-        required: true
-        type: string
-      with_coverage:
-        required: true
-        type: string
 
 concurrency:
   group: unit_tests-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -31,10 +21,10 @@ jobs:
         include:
         - python-version: 2.7
           concretizer: original
-          on_develop: false
+          on_develop: ${{ github.ref == 'refs/heads/develop' }}
         - python-version: '3.10'
           concretizer: original
-          on_develop: false
+          on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
         - python-version: '3.7'
           concretizer: 'clingo'
@@ -86,7 +76,6 @@ jobs:
           spack bootstrap untrust spack-install
           spack -v solve zlib
     - name: Run unit tests (full suite with coverage)
-      if: ${{ inputs.with_coverage == 'true' }}
       env:
           SPACK_PYTHON: python
           COVERAGE: true
@@ -95,16 +84,7 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine
           coverage xml
-    - name: Run unit tests (reduced suite without coverage)
-      if: ${{ inputs.with_coverage == 'false' }}
-      env:
-          SPACK_PYTHON: python
-          ONLY_PACKAGES: true
-          SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
-      run: |
-          share/spack/qa/run-unit-tests
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
@@ -130,18 +110,12 @@ jobs:
           # Need this for the git tests to succeed.
           git --version
           . .github/workflows/setup_git.sh
-    - name: Run shell tests (without coverage)
-      if: ${{ inputs.with_coverage == 'false' }}
-      run: |
-          share/spack/qa/run-shell-tests
-    - name: Run shell tests (with coverage)
-      if: ${{ inputs.with_coverage == 'true' }}
+    - name: Run shell tests
       env:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: shelltests,linux
 
@@ -149,7 +123,6 @@ jobs:
   # only on PRs modifying core Spack
   rhel8-platform-python:
     runs-on: ubuntu-latest
-    if: ${{ inputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
     steps:
     - name: Install dependencies
@@ -197,7 +170,6 @@ jobs:
           git --version
           . .github/workflows/setup_git.sh
     - name: Run unit tests (full suite with coverage)
-      if: ${{ inputs.with_coverage == 'true' }}
       env:
           COVERAGE: true
           SPACK_TEST_SOLVER: clingo
@@ -205,15 +177,7 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine
           coverage xml
-    - name: Run unit tests (reduced suite without coverage)
-      if: ${{ inputs.with_coverage == 'false' }}
-      env:
-          ONLY_PACKAGES: true
-          SPACK_TEST_SOLVER: clingo
-      run: |
-          share/spack/qa/run-unit-tests
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -246,21 +210,13 @@ jobs:
         $(which spack) bootstrap untrust spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        if [ "${{ inputs.with_coverage }}" == "true" ]
-        then
-          coverage run $(which spack) unit-test "${common_args[@]}"
-          coverage combine
-          coverage xml
-          # Delete the symlink going from ./lib/spack/docs/_spack_root back to
-          # the initial directory, since it causes ELOOP errors with codecov/actions@2
-          rm lib/spack/docs/_spack_root
-        else
-          echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
-          $(which spack) unit-test "${common_args[@]}" -m "not maybeslow" -k "test_all_virtual_packages_have_default_providers"
-        fi
+        coverage run $(which spack) unit-test "${common_args[@]}"
+        coverage combine
+        coverage xml
+        # Delete the symlink going from ./lib/spack/docs/_spack_root back to
+        # the initial directory, since it causes ELOOP errors with codecov/actions@2
+        rm lib/spack/docs/_spack_root
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
-      if: ${{ inputs.with_coverage == 'true' }}
       with:
         files: ./coverage.xml
         flags: unittests,macos
-
