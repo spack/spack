@@ -124,7 +124,8 @@ class Rocsparse(CMakePackage):
     patch("0002-fix-gentest-shebang.patch", when="@4.5.0:")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
     # Backport of https://github.com/ROCmSoftwarePlatform/rocSPARSE/commit/f9446b8f4c3cb3a3c6d38734f9980712a82b9db9
-    patch("0003-fix-navi-1x.patch", when="@4.5.0:")
+    patch("0003-fix-navi-1x-rocm-4.5.patch", when="@4.5.0:5.1")
+    patch("0003-fix-navi-1x-rocm-5.2.patch", when="@5.2.0:")
 
     depends_on("googletest@1.11.0:", when="@5.1.0: +test")
     depends_on("googletest@1.10.0:", when="+test")
