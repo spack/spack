@@ -195,8 +195,7 @@ class Hdf5(CMakePackage):
         multi=False,
     )
 
-    if sys.platform != "win32":
-        depends_on("mpi", when="+mpi")
+    depends_on("mpi" when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     # numactl does not currently build on darwin
     if sys.platform != "darwin" and sys.platform != "win32":
@@ -218,6 +217,7 @@ class Hdf5(CMakePackage):
     conflicts("+fortran", when="+shared@:1.8.15")
     # See https://github.com/spack/spack/issues/31085
     conflicts("+fortran+mpi", when="@1.8.22")
+    conflicts("+mpi", when="platform=windows")
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
