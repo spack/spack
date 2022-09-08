@@ -2,6 +2,10 @@ name: windows
 
 on:
   workflow_call:
+    inputs:
+      core:
+        type: string
+        required: true
 
 concurrency:
   group: windows-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
@@ -13,6 +17,7 @@ defaults:
      powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
 jobs:
   unit-tests:
+    if: ${{ inputs.core == 'false' }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -32,6 +37,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack unit-test --verbose --ignore=lib/spack/spack/test/cmd
   unit-tests-cmd:
+    if: ${{ inputs.core == 'false' }}
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -70,6 +76,7 @@ jobs:
         spack external find ninja
         spack install abseil-cpp
   make-installer:
+    if: ${{ inputs.core == 'false' }}
     runs-on: windows-latest
     steps:
     - name: Disable Windows Symlinks
@@ -105,6 +112,7 @@ jobs:
         name: Windows Spack Installer
         path: ${{ env.installer_root}}\pkg\Spack.msi
   execute-installer:
+    if: ${{ inputs.core == 'false' }}
     needs: make-installer
     runs-on: windows-latest
     defaults:
