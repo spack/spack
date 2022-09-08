@@ -1,13 +1,6 @@
 name: unit tests
 
 on:
-  workflow_dispatch:
-    inputs:
-      core:
-        description: "If false the test is skipped"
-        required: true
-        type: string
-        default: "true"
   workflow_call:
     inputs:
       core:
