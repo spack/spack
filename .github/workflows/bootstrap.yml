@@ -9,7 +9,7 @@ on:
     - cron: '16 2 * * *'
 
 concurrency:
-  group: bootstrap-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: bootstrap-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
