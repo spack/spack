@@ -33,7 +33,6 @@ class Rocsparse(CMakePackage):
         description="CMake build type",
     )
     variant("test", default=False, description="Build rocsparse-test client")
-    variant("bench", default=False, description="Build rocsparse-bench client")
 
     version("5.2.0", sha256="7ed929af16d2502135024a6463997d9a95f03899b8a33aa95db7029575c89572")
     version("5.1.3", sha256="ef9641045b36c9aacc87e4fe7717b41b1e29d97e21432678dce7aca633a8edc2")
@@ -119,11 +118,10 @@ class Rocsparse(CMakePackage):
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     # Add option so Spack can manage downloaded test matricies as resources.
-    patch("0001-set-mtx-directory.patch", when="@4.5.0:")
+    patch("0001-set-mtx-directory.patch", when="@4.5.0: +test")
     # Enable use of Spack-provided Python.
-    patch("0002-fix-gentest-shebang.patch", when="@4.5.0:")
+    patch("0002-fix-gentest-shebang.patch", when="@4.5.0: +test")
     # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
-    # Backport of https://github.com/ROCmSoftwarePlatform/rocSPARSE/commit/f9446b8f4c3cb3a3c6d38734f9980712a82b9db9
     patch("0003-fix-navi-1x-rocm-4.5.patch", when="@4.5.0:5.1")
     patch("0003-fix-navi-1x-rocm-5.2.patch", when="@5.2.0:")
 
@@ -302,7 +300,7 @@ class Rocsparse(CMakePackage):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define_from_variant("BUILD_CLIENTS_TESTS", "test"),
-            self.define_from_variant("BUILD_CLIENTS_BENCHMARKS", "bench"),
+            self.define("BUILD_CLIENTS_BENCHMARKS", "OFF"),
             self.define("ROCSPARSE_MTX_DIR", join_path(self.stage.source_path, "mtx"))
         ]
 
