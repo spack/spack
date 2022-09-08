@@ -1032,11 +1032,7 @@ def get_cmake_prefix_path(pkg):
     ordered_build_link_deps = spack_built + externals
     cmake_prefix_path_entries = []
     for spec in ordered_build_link_deps:
-        cmake_prefix_path_entries.append(spec.prefix)
-        try:
-            cmake_prefix_path_entries.extend(spec.package.cmake_search_paths)
-        except AttributeError:
-            pass
+        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
 
     return filter_system_paths(cmake_prefix_path_entries)
 

@@ -466,11 +466,12 @@ class Cuda(Package):
         env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
 
     @property
-    def cmake_search_paths(self):
+    def cmake_prefix_paths(self):
+        cmake_prefix_paths = [self.prefix]
         if self.spec.satisfies("target=x86_64:"):
             cub_path = self.prefix.targets + "/x86_64-linux/lib/cmake"
-            return [cub_path]
-        return []
+            cmake_prefix_paths.append(cub_path)
+        return cmake_prefix_paths
 
     def setup_run_environment(self, env):
         env.set("CUDA_HOME", self.prefix)
