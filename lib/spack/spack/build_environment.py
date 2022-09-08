@@ -109,7 +109,8 @@ SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
 
 # Platform-specific library suffix.
-dso_suffix = "dylib" if sys.platform == "darwin" else "so"
+dso_suffix = "dylib" if sys.platform == "darwin" else "dll" if sys.platform == "win32" else "so"
+stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
 def should_set_parallel_jobs(jobserver_support=False):

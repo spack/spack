@@ -107,7 +107,7 @@ class AutotoolsPackage(PackageBase):
     depends_on("gnuconfig", type="build", when="target=ppc64le:")
     depends_on("gnuconfig", type="build", when="target=aarch64:")
     depends_on("gnuconfig", type="build", when="target=riscv64:")
-    conflicts('platform=windows')
+    conflicts("platform=windows")
 
     @property
     def _removed_la_files_log(self):

@@ -46,7 +46,7 @@ import spack.version
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
 
-is_windows = sys.platform == 'win32'
+is_windows = sys.platform == "win32"
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -658,7 +658,7 @@ def _add_externals_if_missing():
         spack.repo.path.get_pkg_class("gawk"),
     ]
     if is_windows:
-        search_list.extend(spack.repo.path.get('winbison'))
+        search_list.extend(spack.repo.path.get_pkg_class("winbison"))
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 

@@ -7,7 +7,7 @@ import sys
 
 from spack.package import *
 
-is_windows = sys.platform == 'win32'
+is_windows = sys.platform == "win32"
 
 
 class Re2c(Package):
@@ -26,7 +26,7 @@ class Re2c(Package):
     version("1.3", sha256="f37f25ff760e90088e7d03d1232002c2c2672646d5844fdf8e0d51a5cd75a503")
     version("1.2.1", sha256="1a4cd706b5b966aeffd78e3cf8b24239470ded30551e813610f9cd1a4e01b817")
 
-    phases = ['configure', 'build', 'install']
+    phases = ["configure", "build", "install"]
 
     @property
     def make(self):
@@ -50,10 +50,10 @@ class Re2c(Package):
         with working_dir(self.stage.source_path, create=True):
             configure("--prefix=" + prefix, *self.configure_args())
 
-    @when('platform=windows')
+    @when("platform=windows")
     def configure(self, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
-            args = ['-G', 'Ninja', '-DCMAKE_INSTALL_PREFIX=%s' % prefix]
+            args = ["-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=%s" % prefix]
             cmake(*args)
 
     def build(self, spec, prefix):
@@ -62,4 +62,4 @@ class Re2c(Package):
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            self.make('install')
+            self.make("install")
