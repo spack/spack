@@ -20,7 +20,10 @@ class JediToolsEnv(BundlePackage):
     variant("latex", default=False, description="Enable building LaTeX documentation with Sphinx")
 
     depends_on("awscli", type="run")
-    depends_on("aws-parallelcluster", type="run")
+    # Only old versions - new versions have terrible dependencies
+    # depends_on("aws-parallelcluster", type="run")
+    # npm is needed for aws-parallelcluster, even when installed via pip in venv
+    depends_on("npm", type="run")
     depends_on("py-click", type="run")
     depends_on("py-openpyxl", type="run")
     depends_on("py-pandas", type="run")
