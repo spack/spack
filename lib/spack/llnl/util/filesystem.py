@@ -22,7 +22,7 @@ import six
 from llnl.util import tty
 from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
@@ -2225,7 +2225,7 @@ class WindowsSimulatedRPath(object):
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
         for library, lib_dir in itertools.product(self.link_targets, self.link_dest):
-            if path_contains_subdirectory(library, lib_dir):
+            if not path_contains_subdirectory(library, lib_dir):
                 file_name = os.path.basename(library)
                 dest_file = os.path.join(lib_dir, file_name)
                 if os.path.exists(lib_dir):
@@ -2237,7 +2237,13 @@ class WindowsSimulatedRPath(object):
                         if e.winerror == 183:
                             # We have either already symlinked or we are encoutering a naming clash
                             # either way, we don't want to overwrite existing libraries
-                            # move on TODO: Improve reporting in this scenario
+                            already_linked = islink(dest_file)
+                            tty.debug(
+                                "Linking library %s to %s failed, " % (library, dest_file)
+                                + "already linked."
+                                if already_linked
+                                else "library with name %s already exists." % file_name
+                            )
                             pass
                         else:
                             raise e
