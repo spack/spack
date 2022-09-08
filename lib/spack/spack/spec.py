@@ -5324,10 +5324,6 @@ class SpecParser(spack.parse.Parser):
         if self.token.type in (VER, ID):
             version_spec = self.token.value.lstrip("@")
             start = str_translate(version_spec)
-            if not start and self.accept(ID):
-                # if there is a space (@ 12.6.2) then a VER token could be lexed as two tokens `@`
-                # and `12.6.2` so we need an extra check
-                start = self.token.value
 
         if self.accept(COLON):
             if self.accept(ID):
