@@ -91,17 +91,13 @@ jobs:
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'false' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
-    with:
-      core: ${{ needs.changes.outputs.core }}
   windows:
-    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'false' }}
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
-    with:
-      core: ${{ needs.changes.outputs.core }}
   all:
     needs: [ windows, unit-tests, bootstrap, audit-ancient-python ]
     runs-on: ubuntu-latest
