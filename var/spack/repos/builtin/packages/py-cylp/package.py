@@ -19,7 +19,7 @@ class PyCylp(PythonPackage):
     version("0.91.5", sha256="d68ab1dde125be60abf45c8fd9edd24ab880c8144ad881718ddfa01ff6674c77")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@:2.9", type="build")
+    depends_on("py-cython@:2", type="build")
 
     depends_on("py-numpy@1.5:", type=("build", "run"))
     depends_on("py-scipy@0.10.0:", type=("build", "run"))
