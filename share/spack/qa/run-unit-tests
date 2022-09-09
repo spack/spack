@@ -65,7 +65,7 @@ fi
 # https://github.com/pytest-dev/pytest-cov/issues/237
 # where it seems that otherwise the configuration file might not be located by subprocesses
 # in some, not better specified, cases.
-$(which spack) --cov --cov-config=pyproject.toml unit-test -x --verbose
+$(which spack) --cov --cov-config=pyproject.toml unit-test -x
 
 bash "$QA_DIR/test-env-cfg.sh"
 

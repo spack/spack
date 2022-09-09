@@ -80,6 +80,7 @@ jobs:
           SPACK_PYTHON: python
           COVERAGE: true
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
+          SPACK_TEST_PARALLEL: 3
       run: |
           share/spack/qa/run-unit-tests
           coverage combine -a
@@ -203,6 +204,7 @@ jobs:
     - name: Run unit tests
       env:
         SPACK_TEST_SOLVER: clingo
+        SPACK_TEST_PARALLEL: 4
       run: |
         git --version
         . .github/workflows/setup_git.sh
