@@ -69,7 +69,7 @@ fi
 # https://github.com/pytest-dev/pytest-cov/issues/237
 # where it seems that otherwise the configuration file might not be located by subprocesses
 # in some, not better specified, cases.
-$(which spack) unit-test -x
+$(which spack) unit-test -x --verbose
 
 bash "$QA_DIR/test-env-cfg.sh"
 
