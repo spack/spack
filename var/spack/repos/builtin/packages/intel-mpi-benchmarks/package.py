@@ -68,6 +68,13 @@ class IntelMpiBenchmarks(MakefilePackage):
         description="Specify which benchmark to build",
     )
 
+    @property
+    def build_directory(self):
+        if self.spec.satisfies("@2018"):
+            return "src"
+        else:
+            return "."
+
     def url_for_version(self, version):
         if version <= Version("2019.1"):
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/v{0}.tar.gz"
