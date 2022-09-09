@@ -91,6 +91,9 @@ class IntelMpiBenchmarks(MakefilePackage):
         elif "+mt" in spec:
             targets.append("MT")
 
+        if self.spec.satisfies("@2019:"):
+            targets = ["TARGET=" + target for target in targets]
+
         return targets
 
     def edit(self, spec, prefix):
