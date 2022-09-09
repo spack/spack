@@ -11,13 +11,15 @@ class MgcfdOp2(MakefilePackage):
     finite-volume computational fluid dynamics (CFD) mini-app for inviscid-flow."""
 
     # NOTE: This package is new and has been tested on a limited set of use cases:
-    # Arm archs: Graviton 2, Graviton 3
-    # Compilers: Gcc 12.1.0, Arm 22.0.1, NVHPC 22.3
+    # Graviton 2, Graviton 3:
+    #       Compilers: GCC 12.1.0, Arm 22.0.1, NVHPC 22.3
+    # ThunderX2 (Cray):
+    #       Compilers: GCC 10.3.0, CCE 11.0.4
 
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
 
-    maintainers = ["rob64j", "tomdeakin", "gihanmudalige"]
+    maintainers = ["robj0nes", "tomdeakin", "gihanmudalige"]
 
     version("v1.0.0-rc1")
 
@@ -29,7 +31,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on("kahip@develop+metis", when="+mpi")
     depends_on("op2-dsl+mpi", when="+mpi")
     depends_on("op2-dsl~mpi", when="~mpi")
-
+    
     def edit(self, spec, prefix):
         compiler_map = {
             "gcc": "gnu",
@@ -48,6 +50,11 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == "arm":
             makefile.filter(r"CPP := clang", r"CPP := armclang")
             makefile.filter(r"-cxx=clang.*", "")
+        
+        # Cray systems require use of 'cc' and 'CC' to call correct mpi wrappers
+        if self.spec.platform == "cray":
+            makefile.filter("mpicc", "cc")
+            makefile.filter("mpicxx", "CC")
 
         if self.spec.compiler.name == "nvhpc":
             makefile.filter("pgc", "nvc")
@@ -56,7 +63,7 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == "nvhpc":
             env["CFLAGS"] = "-O3 -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPIPP_H"
 
-        # OP2 doesn"t support flang/armflang fortran compiling.
+        # Set Fortran compiler to GCC if using Arm.
         if self.spec.compiler.name == "arm":
             env["OP2_F_COMPILER"] = "gnu"
 
@@ -76,6 +83,6 @@ class MgcfdOp2(MakefilePackage):
             make("clean_" + b)
             make(b)
 
-    def install(self, spec, prefix):
+    def install(self, spec, prefix):  
         mkdir(prefix.bin)
         install_tree("bin", prefix.bin)
