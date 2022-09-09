@@ -34,7 +34,19 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
-    for ver in ["develop", "2.5.0", "2.4.0", "2.3.0", "2.2.1", "2.2.0", "2.1.1", "2.1.0", "2.0.2", "2.0.1", "2.0.0"]:
+    for ver in [
+        "develop",
+        "2.5.0",
+        "2.4.0",
+        "2.3.0",
+        "2.2.1",
+        "2.2.0",
+        "2.1.1",
+        "2.1.0",
+        "2.0.2",
+        "2.0.1",
+        "2.0.0"
+    ]:
         depends_on("precice@" + ver, when="@" + ver)
 
     depends_on("python@3:", type=("build", "link", "run"))
