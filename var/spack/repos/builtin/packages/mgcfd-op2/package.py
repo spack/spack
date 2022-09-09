@@ -31,7 +31,7 @@ class MgcfdOp2(MakefilePackage):
     depends_on("kahip@develop+metis", when="+mpi")
     depends_on("op2-dsl+mpi", when="+mpi")
     depends_on("op2-dsl~mpi", when="~mpi")
-    
+
     def edit(self, spec, prefix):
         compiler_map = {
             "gcc": "gnu",
@@ -50,7 +50,7 @@ class MgcfdOp2(MakefilePackage):
         if self.spec.compiler.name == "arm":
             makefile.filter(r"CPP := clang", r"CPP := armclang")
             makefile.filter(r"-cxx=clang.*", "")
-        
+
         # Cray systems require use of 'cc' and 'CC' to call correct mpi wrappers
         if self.spec.platform == "cray":
             makefile.filter("mpicc", "cc")
@@ -83,6 +83,6 @@ class MgcfdOp2(MakefilePackage):
             make("clean_" + b)
             make(b)
 
-    def install(self, spec, prefix):  
+    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install_tree("bin", prefix.bin)
