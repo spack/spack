@@ -93,10 +93,30 @@ class IntelMpiBenchmarks(MakefilePackage):
 
         return targets
 
-    @property
-    def install_targets(self):
-        return self.build_targets
-
     def edit(self, spec, prefix):
         env["CC"] = spec["mpi"].mpicc
         env["CXX"] = spec["mpi"].mpicxx
+
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+
+        if self.spec.satisfies("@2018"):
+            build_directory = "src"
+        else:
+            build_directory = "."
+
+        with working_dir(build_directory):
+            if "+mpi1" in spec:
+                install("IMB-MPI1", prefix.bin)
+            elif "+ext" in spec:
+                install("IMB-EXT", prefix.bin)
+            elif "+io" in spec:
+                install("IMB-IO", prefix.bin)
+            elif "+nbc" in spec:
+                install("IMB-NBC", prefix.bin)
+            elif "+p2p" in spec:
+                install("IMB-P2P", prefix.bin)
+            elif "+rma" in spec:
+                install("IMB-RMA", prefix.bin)
+            elif "+mt" in spec:
+                install("IMB-MT", prefix.bin)
