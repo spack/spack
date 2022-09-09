@@ -36,7 +36,7 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     depends_on("mpi", when="@2019:")
     depends_on("intel-mpi", when="@2018")
-    depends_on("gmake", when="@2018")
+    depends_on("gmake", type="build", when="@2018")
 
     conflicts(
         "^openmpi",
@@ -50,27 +50,13 @@ class IntelMpiBenchmarks(MakefilePackage):
     # https://github.com/intel/mpi-benchmarks/pull/20
     patch("reorder_benchmark_macros.patch", when="@2019.1:2019.6")
 
-    variant(
-        "benchmark",
-        default="all",
-        values=(
-            "mpi1",
-            "ext",
-            "io",
-            "nbc",
-            "rma",
-            "mt",
-            "all",
-            conditional("p2p", when="@2019.2:"),
-        ),
-        multi=False,
-        description="Specify which benchmark to build",
-    )
-
-    @run_before("build")
-    def set_build_dir(self):
-        if self.spec.satisfies("@2018"):
-            self.build_directory = "src"
+    variant("mpi1", default=True, description="Build MPI1 benchmark")
+    variant("ext", default=True, description="Build MPI1 benchmark")
+    variant("io", default=True, description="Build MPI1 benchmark")
+    variant("nbc", default=True, description="Build MPI1 benchmark")
+    variant("p2p", default=True, description="Build MPI1 benchmark", when="@2018")
+    variant("rma", default=True, description="Build MPI1 benchmark")
+    variant("mt", default=True, description="Build MPI1 benchmark")
 
     def url_for_version(self, version):
         if version <= Version("2019.1"):
@@ -79,50 +65,34 @@ class IntelMpiBenchmarks(MakefilePackage):
             url = "https://github.com/intel/mpi-benchmarks/archive/refs/tags/IMB-v{0}.tar.gz"
         return url.format(version)
 
-    def build(self, spec, prefix):
+    @property
+    def build_directory(self):
+        if self.spec.satisfies("@2018"):
+            return "src"
+        else:
+            return "."
+
+    @property
+    def build_targets(self):
+        spec = self.spec
+        targets = []
+        if "+mpi1" in spec:
+            targets.append("IMB-MPI1")
+        elif "+ext" in spec:
+            targets.append("IMB-EXT")
+        elif "+io" in spec:
+            targets.append("IMB-IO")
+        elif "+nbc" in spec:
+            targets.append("IMB-NBC")
+        elif "+p2p" in spec:
+            targets.append("IMB-P2P")
+        elif "+rma" in spec:
+            targets.append("IMB-RMA")
+        elif "+mt" in spec:
+            targets.append("IMB-MT")
+
+        return targets
+
+    def edit(self, spec, prefix):
         env["CC"] = spec["mpi"].mpicc
         env["CXX"] = spec["mpi"].mpicxx
-
-        if "benchmark=mpi1" in spec:
-            make("IMB-MPI1")
-        elif "benchmark=ext" in spec:
-            make("IMB-EXT")
-        elif "benchmark=io" in spec:
-            make("IMB-IO")
-        elif "benchmark=nbc" in spec:
-            make("IMB-NBC")
-        elif "benchmark=p2p" in spec:
-            make("IMB-P2P")
-        elif "benchmark=rma" in spec:
-            make("IMB-RMA")
-        elif "benchmark=mt" in spec:
-            make("IMB-MT")
-        else:
-            make("all")
-
-    def install(self, spec, prefix):
-        mkdir(prefix.bin)
-
-        if "benchmark=mpi1" in spec:
-            install("IMB-MPI1", prefix.bin)
-        elif "benchmark=ext" in spec:
-            install("IMB-EXT", prefix.bin)
-        elif "benchmark=io" in spec:
-            install("IMB-IO", prefix.bin)
-        elif "benchmark=nbc" in spec:
-            install("IMB-NBC", prefix.bin)
-        elif "benchmark=p2p" in spec:
-            install("IMB-P2P", prefix.bin)
-        elif "benchmark=rma" in spec:
-            install("IMB-RMA", prefix.bin)
-        elif "benchmark=mt" in spec:
-            install("IMB-MT", prefix.bin)
-        else:
-            install("IMB-EXT", prefix.bin)
-            install("IMB-IO", prefix.bin)
-            install("IMB-MPI1", prefix.bin)
-            install("IMB-MT", prefix.bin)
-            install("IMB-NBC", prefix.bin)
-            if spec.satisfies("@2019.2:"):
-                install("IMB-P2P", prefix.bin)
-            install("IMB-RMA", prefix.bin)
