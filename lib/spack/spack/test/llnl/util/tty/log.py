@@ -341,6 +341,7 @@ def no_termios():
         (mock_shell_tstp_tstp_cont_cont, no_termios),
     ],
 )
+@pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     """Functional tests for foregrounding and backgrounding a logged process.
 
