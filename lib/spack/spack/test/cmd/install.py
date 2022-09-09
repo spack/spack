@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import time
+import itertools
 
 import pytest
 from six.moves import builtins
@@ -1090,3 +1091,76 @@ def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
     assert output.count("TestFailure: 1 tests failed") == 1
+
+def test_install_use_buildcache(
+    capsys,
+    mock_packages,
+    mock_fetch,
+    mock_archive,
+    mutable_config,
+    mock_binary_index,
+    tmpdir,
+    install_mockery
+):
+    """
+    Make sure installing with use-buildcache behaves correctly.
+    """
+
+    package_name = "dependent-install"
+    dependency_name = "dependency-install"
+
+    def install_use_buildcache(package="auto", dependencies="auto"):
+        def validate(mode, out, pkg):
+            def assert_auto(pkg, out):
+                assert "==> Extracting {0}".format(pkg) in out
+
+            def assert_only(pkg, out):
+                assert "==> Extracting {0}".format(pkg) in out
+
+            def assert_never(pkg, out):
+                assert "==> {0}: Executing phase: 'install'".format(pkg) in out
+
+            if mode == "auto":
+                assert_auto(pkg, out)
+            elif mode == "only":
+                assert_only(pkg, out)
+            else:
+                assert_never(pkg, out)
+
+        dep_out = install("--no-check-signature", "--only", "dependencies", "--use-buildcache", "package:{0},dependencies:{1}".format(
+                    package,
+                    dependencies),
+                  package_name,
+                  fail_on_error=True
+        )
+        validate(dependencies, dep_out, dependency_name)
+
+        pkg_out = install("--no-check-signature", "--only", "package", "--use-buildcache", "package:{0},dependencies:{1}".format(
+                    package,
+                    dependencies),
+                  package_name,
+                  fail_on_error=True
+        )
+        validate(package, pkg_out, package_name)
+
+        # Clean up installed packages
+        uninstall("-y", "-a")
+
+    # Setup the mirror
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join("mirror_dir")
+    mirror_url = "file://{0}".format(mirror_dir.strpath)
+
+    # Populate the buildcache
+    install(package_name)
+    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+
+    # Uninstall the all of the packages for clean slate
+    uninstall("-y", "-a")
+
+    # Configure the mirror where we put that buildcache w/ the compiler
+    mirror("add", "test-mirror", mirror_url)
+
+    # Install using the matrix of possible combinations with --use-buildcache
+    for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
+        install_use_buildcache(package=pkg, dependencies=deps)
