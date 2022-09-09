@@ -12,7 +12,7 @@ default:
   - /^pr[\d]+_.*$/
   - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
 
@@ -59,17 +59,27 @@ default:
   extends: [ ".generate" ]
   tags: ["spack", "aws", "public", "medium", "aarch64"]
 
+.generate-ppc64le:
+  extends: [ ".generate" ]
+  tags: ["spack", "uo", "public", "medium", "ppc64le"]
+
 .pr-generate:
   extends: [ ".pr", ".generate" ]
 
 .pr-generate-aarch64:
   extends: [ ".pr", ".generate-aarch64" ]
 
+.pr-generate-ppc64le:
+  extends: [ ".pr", ".generate-ppc64le" ]
+
 .protected-generate:
   extends: [ ".protected", ".generate" ]
 
 .protected-generate-aarch64:
   extends: [ ".protected", ".generate-aarch64" ]
+
+.protected-generate-ppc64le:
+  extends: [ ".protected", ".generate-ppc64le" ]
 
 .build:
   stage: build
@@ -88,7 +98,7 @@ default:
 
 protected-publish:
   stage: publish
-  extends: [ ".protected-refs" ]
+  extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:
@@ -97,7 +107,9 @@ protected-publish:
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
-    - spack buildcache update-index --mirror-url "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
+    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -333,41 +345,39 @@ e4s-oneapi-protected-build:
 ########################################
 # E4S on Power
 ########################################
-# .power-e4s-generate-tags-and-image:
-#   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
-#   tags: ["spack", "public", "medium", "ppc64le"]
+.e4s-power:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-power
 
-# .e4s-on-power:
-#   variables:
-#     SPACK_CI_STACK_NAME: e4s-on-power
+e4s-power-pr-generate:
+  extends: [ ".e4s-power", ".pr-generate-ppc64le"]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-08-01
 
-# e4s-on-power-pr-generate:
-#   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+e4s-power-protected-generate:
+  extends: [ ".e4s-power", ".protected-generate-ppc64le"]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-08-01
 
-# e4s-on-power-protected-generate:
-#   extends: [ ".e4s-on-power", ".protected-generate", ".power-e4s-generate-tags-and-image"]
+e4s-power-pr-build:
+  extends: [ ".e4s-power", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-pr-generate
 
-# e4s-on-power-pr-build:
-#   extends: [ ".e4s-on-power", ".pr-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-pr-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-on-power-pr-generate
-
-# e4s-on-power-protected-build:
-#   extends: [ ".e4s-on-power", ".protected-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-protected-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-on-power-protected-generate
+e4s-power-protected-build:
+  extends: [ ".e4s-power", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-protected-generate
 
 #########################################
 # Build tests for different build-systems

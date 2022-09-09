@@ -2,6 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
+import json
 import os
 import shutil
 import sys
@@ -271,7 +273,12 @@ def setup_parser(subparser):
 
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    source = sync.add_mutually_exclusive_group(required=True)
+    sync.add_argument(
+        "--manifest-glob",
+        default=None,
+        help="A quoted glob pattern identifying copy manifest files",
+    )
+    source = sync.add_mutually_exclusive_group(required=False)
     source.add_argument(
         "--src-directory", metavar="DIRECTORY", type=str, help="Source mirror as a local file path"
     )
@@ -281,7 +288,7 @@ def setup_parser(subparser):
     source.add_argument(
         "--src-mirror-url", metavar="MIRROR_URL", type=str, help="URL of the source mirror"
     )
-    dest = sync.add_mutually_exclusive_group(required=True)
+    dest = sync.add_mutually_exclusive_group(required=False)
     dest.add_argument(
         "--dest-directory",
         metavar="DIRECTORY",
@@ -614,6 +621,31 @@ def copy_fn(args):
     shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
 
 
+def copy_buildcache_file(src_url, dest_url, local_path=None):
+    """Copy from source url to destination url"""
+    tmpdir = None
+
+    if not local_path:
+        tmpdir = tempfile.mkdtemp()
+        local_path = os.path.join(tmpdir, os.path.basename(src_url))
+
+    try:
+        temp_stage = Stage(src_url, path=os.path.dirname(local_path))
+        try:
+            temp_stage.create()
+            temp_stage.fetch()
+            web_util.push_to_url(local_path, dest_url, keep_original=True)
+        except web_util.FetchError as e:
+            # Expected, since we have to try all the possible extensions
+            tty.debug("no such file: {0}".format(src_url))
+            tty.debug(e)
+        finally:
+            temp_stage.destroy()
+    finally:
+        if tmpdir and os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
+
+
 def sync_fn(args):
     """Syncs binaries (and associated metadata) from one mirror to another.
     Requires an active environment in order to know which specs to sync.
@@ -622,6 +654,10 @@ def sync_fn(args):
         src (str): Source mirror URL
         dest (str): Destination mirror URL
     """
+    if args.manifest_glob:
+        manifest_copy(glob.glob(args.manifest_glob))
+        return 0
+
     # Figure out the source mirror
     source_location = None
     if args.src_directory:
@@ -687,8 +723,9 @@ def sync_fn(args):
         buildcache_rel_paths.extend(
             [
                 os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
                 os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
             ]
         )
 
@@ -701,22 +738,29 @@ def sync_fn(args):
             dest_url = url_util.join(dest_mirror_url, rel_path)
 
             tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))
-
-            stage = Stage(
-                src_url, name="temporary_file", path=os.path.dirname(local_path), keep=True
-            )
-
-            try:
-                stage.create()
-                stage.fetch()
-                web_util.push_to_url(local_path, dest_url, keep_original=True)
-            except web_util.FetchError as e:
-                tty.debug("spack buildcache unable to sync {0}".format(rel_path))
-                tty.debug(e)
-            finally:
-                stage.destroy()
+            copy_buildcache_file(src_url, dest_url, local_path=local_path)
     finally:
         shutil.rmtree(tmpdir)
+
+
+def manifest_copy(manifest_file_list):
+    """Read manifest files containing information about specific specs to copy
+    from source to destination, remove duplicates since any binary packge for
+    a given hash should be the same as any other, and copy all files specified
+    in the manifest files."""
+    deduped_manifest = {}
+
+    for manifest_path in manifest_file_list:
+        with open(manifest_path) as fd:
+            manifest = json.loads(fd.read())
+            for spec_hash, copy_list in manifest.items():
+                # Last duplicate hash wins
+                deduped_manifest[spec_hash] = copy_list
+
+    for spec_hash, copy_list in deduped_manifest.items():
+        for copy_file in copy_list:
+            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
+            copy_buildcache_file(copy_file["src"], copy_file["dest"])
 
 
 def update_index(mirror_url, update_keys=False):
