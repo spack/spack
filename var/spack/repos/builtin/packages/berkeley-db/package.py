@@ -39,6 +39,7 @@ class BerkeleyDb(AutotoolsPackage):
     build_directory = "build_unix"
 
     patch("drop-docs.patch", when="~docs")
+    patch("tls.patch")
 
     conflicts("%clang@7:", when="@5.3.28")
     conflicts("%gcc@8:", when="@5.3.28")
