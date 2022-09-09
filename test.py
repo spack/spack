@@ -96,6 +96,29 @@ class ScopeStack(object):
         del scope[name]
 
 
+def target_names(node, names=None):
+    """Get names of values targeted by assignment.
+
+    This does a naive thing and digs any and all names out of the assignment.
+    TODO: We may need to be smarter about this analysis.
+
+    """
+    if names is None:
+        names = set()
+
+    if isinstance(node, ast.Name):
+        names.add(node.id)
+
+    elif isinstance(node, (ast.List, ast.Tuple)):
+        for elt in node.elts:
+            names += target_names(elt)
+
+    elif isinstance(node, (ast.Attribute, ast.Subscript, ast.Starred)):
+        names += target_names(node.value)
+        # TODO: handle the attr in an Attribute to figure out if it's a variable in a
+        # TODO: scope somewhere
+
+
 def constexpr(node):
     if isinstance(node, ast.Constant):
         return True
@@ -160,6 +183,8 @@ class ConstTracker(ast.NodeVisitor):
         self.visit_ClassDef(node)
 
     def visit_FunctionDef(self, node):
+        self.scopes.define(node.name, const=False)
+
         with self.scopes.scope("func:%s" % node.name):
             self.generic_visit(node)
 
@@ -167,29 +192,38 @@ class ConstTracker(ast.NodeVisitor):
         self.visit_FunctionDef(node)
 
     def visit_GeneratorExp(self, node, leak=False):
+        """Visitor used for generator expressions and comprehensions.
+
+        Arguments:
+            node (ast.Node): AST node to visit
+            leak (bool): whether generator's targets leak into an outer scope
+
+        In Python 2, Generator expressions do not leak but comprehensions do.
+        In Python 3, none of these leak.
+        """
         for comp in node.generators:
             if not leak:
                 self.scopes.push("<generatorexp>")
 
             self.generic_visit(comp.iter)
 
+            # We currently only test if the entire iter expression is const.
+            #
             # TODO: if we need this to handle different targets separately , e.g. x and y in:
             #
-            #    [for x,y in [(a, 1), (b, 2), (c, 3)]
+            #    [(x, y) for x, y in [(a, 1), (b, 2), (c, 3)]]
             #
             # Then this needs to understand unpacking. Currently it's either all const or not,
             # So both x and y would be non-const here.
-
             const = constexpr(comp.iter)
-            if isinstance(comp.target, (ast.List, ast.Tuple)):
-                for name in comp.target.elts:
-                    self.scopes.top.define(name.id, const=const)
+
+            for name in target_names(comp.target):
+                self.scopes.
+                self.scopes.define(name.id, const=const)
 
         # visit element expressions once the generator clauses are done
         self.generic_visit(node.elt)
 
-        # in Python 2, Generator expressions do not leak but comprehensions do.
-        # in Python 3, none of these leak.
         if not leak:
             for comp in node.generators:
                 self.scopes.pop("<generatorexp>")
