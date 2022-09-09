@@ -1494,7 +1494,7 @@ def relocate_package(spec, allow_root):
     # If we are not installing back to the same install tree do the relocation
     if old_prefix != new_prefix:
         files_to_relocate = [
-            os.path.join(workdir, filename) for filename in buildinfo.get("relocate_binaries")
+            os.path.join(workdir, filename) for filename in buildinfo["relocate_binaries"]
         ]
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
@@ -1509,37 +1509,12 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-        if "elf" in platform.binary_formats:
-            relocate.relocate_elf_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
-            # Relocate links to the new install prefix
-            links = [link for link in buildinfo.get("relocate_links", [])]
-            relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
-
-        # For all buildcaches
+        # Relocate links to the new install prefix
+        relocate.relocate_links(
+            buildinfo.get("relocate_links", []), old_layout_root, old_prefix, new_prefix
+        )
         # relocate the install prefixes in text files including dependencies
         relocate.relocate_text(text_names, prefix_to_prefix_text)
-
-        paths_to_relocate = [old_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(
-            filter(
-                lambda pathname: not relocate.file_is_relocatable(
-                    pathname, paths_to_relocate=paths_to_relocate
-                ),
-                map(
-                    lambda filename: os.path.join(workdir, filename),
-                    buildinfo["relocate_binaries"],
-                ),
-            )
-        )
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
