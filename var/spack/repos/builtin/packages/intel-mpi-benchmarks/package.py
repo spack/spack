@@ -67,12 +67,10 @@ class IntelMpiBenchmarks(MakefilePackage):
         description="Specify which benchmark to build",
     )
 
-    @property
-    def build_directory(self):
+    @run_before("build")
+    def set_build_dir(self):
         if self.spec.satisfies("@2018"):
-            return "src"
-        else:
-            return "."
+            self.build_directory = "src"
 
     def url_for_version(self, version):
         if version <= Version("2019.1"):
