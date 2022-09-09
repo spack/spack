@@ -93,6 +93,10 @@ class IntelMpiBenchmarks(MakefilePackage):
 
         return targets
 
+    @property
+    def install_targets(self):
+        return self.build_targets
+
     def edit(self, spec, prefix):
         env["CC"] = spec["mpi"].mpicc
         env["CXX"] = spec["mpi"].mpicxx
