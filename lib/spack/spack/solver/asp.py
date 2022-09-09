@@ -1516,8 +1516,10 @@ class SpackSolverSetup(object):
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
+                # v can be a string so force it into an actual version for comparisons
+                ver = spack.version.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
         for spec in specs:
