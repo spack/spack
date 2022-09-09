@@ -3,24 +3,22 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 class Gpcnet(MakefilePackage):
     """Global Performance and Congestion Network Test - GPCNeT."""
 
     homepage = "https://github.com/netbench/GPCNET"
     git = "https://github.com/netbench/GPCNET.git"
-    version('master')
+    version("master")
 
-    depends_on("mpi", type=('build', 'run'))
+    depends_on("mpi", type=("build", "run"))
 
     @property
     def build_targets(self):
         spec = self.spec
-        return [
-            'all',
-            'CC={}'.format(spec['mpi'].mpicc)
-        ]
+        return ["all", "CC={}".format(spec["mpi"].mpicc)]
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('network_load_test', prefix.bin)
-        install('network_test', prefix.bin)
+        install("network_load_test", prefix.bin)
+        install("network_test", prefix.bin)
