@@ -19,4 +19,3 @@ class PerlStringRewriteprefix(PerlPackage):
 
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-sub-exporter@0.972:", type="run")  # AUTO-CPAN2Spack
-

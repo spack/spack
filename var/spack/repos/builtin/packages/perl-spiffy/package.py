@@ -20,4 +20,3 @@ class PerlSpiffy(PerlPackage):
     provides("perl-spiffy-mixin")  # AUTO-CPAN2Spack
     depends_on("perl@5.8.1:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.30:", type="build")  # AUTO-CPAN2Spack
-

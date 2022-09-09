@@ -22,4 +22,3 @@ class PerlTestPerlCriticProgressive(PerlPackage):
     depends_on("perl-perl-critic-utils@1.82:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.82:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type="run")  # AUTO-CPAN2Spack
-

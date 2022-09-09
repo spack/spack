@@ -31,4 +31,3 @@ class PerlPodParser(PerlPackage):
     provides("perl-pod-plaintext@2.07")  # AUTO-CPAN2Spack
     provides("perl-pod-select")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

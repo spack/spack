@@ -21,4 +21,3 @@ class PerlModuleUtil(PerlPackage):
 
     depends_on("perl@5.5.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-build@0.40:", type="build")  # AUTO-CPAN2Spack
-

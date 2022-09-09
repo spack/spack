@@ -26,4 +26,3 @@ class PerlAppPmuninstall(PerlPackage):
     depends_on("perl-module-build-tiny@0.35:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-module-corelist", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-http-tiny@0.12:", type="run")  # AUTO-CPAN2Spack
-

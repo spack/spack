@@ -18,4 +18,3 @@ class PerlCpanDistnameinfo(PerlPackage):
     version("0.11", sha256="8796af6350a8113451a6f6459d2cd31fdb859f9f3784a5bb568e628c8b5e92ea")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

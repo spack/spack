@@ -18,4 +18,3 @@ class PerlIpcSharelite(PerlPackage):
     version("0.16", sha256="9acc120d954dfa7d02a90d319130791d93a62abbdbf1727f366d0714396f291f")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

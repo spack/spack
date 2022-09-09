@@ -28,4 +28,3 @@ class PerlRoleTiny(PerlPackage):
     provides("perl-role-tiny-with")  # AUTO-CPAN2Spack
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-class-method-modifiers@1.5:", type="run")  # AUTO-CPAN2Spack
-

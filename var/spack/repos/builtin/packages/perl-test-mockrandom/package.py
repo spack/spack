@@ -21,4 +21,3 @@ class PerlTestMockrandom(PerlPackage):
     depends_on("perl-extutils-makemaker@6.17:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="test")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type=("build", "test"))  # AUTO-CPAN2Spack
-

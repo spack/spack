@@ -42,4 +42,3 @@ class PerlHtmlTree(PerlPackage):
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-html-parser@3.46:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-html-entities", type="run")  # AUTO-CPAN2Spack
-

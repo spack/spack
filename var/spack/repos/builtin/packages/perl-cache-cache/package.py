@@ -40,4 +40,3 @@ class PerlCacheCache(PerlPackage):
     depends_on("perl-ipc-sharelite@0.9:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-digest-sha1@2.2:", type="run")  # AUTO-CPAN2Spack
-

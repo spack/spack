@@ -29,4 +29,3 @@ class PerlSerealDecoder(PerlPackage):
     depends_on("perl-test-warn", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack
-

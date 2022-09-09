@@ -20,4 +20,3 @@ class PerlDigestJhash(PerlPackage):
     depends_on("perl@5.8:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-dynaloader", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

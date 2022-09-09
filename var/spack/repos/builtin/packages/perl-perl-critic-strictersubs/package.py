@@ -19,10 +19,18 @@ class PerlPerlCriticStrictersubs(PerlPackage):
     depends_on("perl-module-build", type="build")
 
     provides("perl-perl-critic-policy-modules-requireexplicitinclusion")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-subroutines-prohibitcallstoundeclaredsubs")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-subroutines-prohibitcallstounexportedsubs")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-subroutines-prohibitexportingundeclaredsubs")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-subroutines-prohibitqualifiedsubdeclarations")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-subroutines-prohibitcallstoundeclaredsubs"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-subroutines-prohibitcallstounexportedsubs"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-subroutines-prohibitexportingundeclaredsubs"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-subroutines-prohibitqualifiedsubdeclarations"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-strictersubs-utils")  # AUTO-CPAN2Spack
     depends_on("perl-file-pathlist", type="run")  # AUTO-CPAN2Spack
     depends_on("perl@5.6.1:", type="run")  # AUTO-CPAN2Spack
@@ -32,4 +40,3 @@ class PerlPerlCriticStrictersubs(PerlPackage):
     depends_on("perl-perl-critic-testutils@1.82:", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-ppi-document", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-moreutils", type="run")  # AUTO-CPAN2Spack
-

@@ -18,4 +18,3 @@ class PerlAttributeHandlers(PerlPackage):
     version("0.98", sha256="7d53613496faf6f25c41dfb870b3aca197ed7208252b6b4fd7a39a57511d401a")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

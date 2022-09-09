@@ -27,4 +27,3 @@ class PerlExtutilsParsexs(PerlPackage):
     provides("perl-extutils-typemaps-type")  # AUTO-CPAN2Spack
     depends_on("perl-dynaloader", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.46:", type=("build", "run"))  # AUTO-CPAN2Spack
-

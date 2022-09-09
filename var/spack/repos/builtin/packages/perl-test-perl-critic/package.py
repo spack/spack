@@ -23,4 +23,3 @@ class PerlTestPerlCritic(PerlPackage):
     depends_on("perl-mce@1.827:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-violation@1.105:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.105:", type="run")  # AUTO-CPAN2Spack
-

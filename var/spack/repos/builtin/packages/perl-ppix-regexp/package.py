@@ -90,4 +90,3 @@ class PerlPpixRegexp(PerlPackage):
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-task-weaken", type="run")  # AUTO-CPAN2Spack
-

@@ -18,4 +18,3 @@ class PerlDevelPpport(PerlPackage):
     version("3.67", sha256="77954772eab2a0de4a49a77b334f73ef0b8f5251bdc0ddd70d2a4d8110f66227")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

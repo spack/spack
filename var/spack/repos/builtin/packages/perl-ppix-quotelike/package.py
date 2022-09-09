@@ -36,4 +36,3 @@ class PerlPpixQuotelike(PerlPackage):
     depends_on("perl-ppi-document@1.238:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
-

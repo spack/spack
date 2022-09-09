@@ -18,4 +18,3 @@ class PerlTestLongstring(PerlPackage):
     version("0.16", sha256="2140532559280f0e0f19b4af1b9e5c1834835521fa39bc79e4e409b84daa49aa")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

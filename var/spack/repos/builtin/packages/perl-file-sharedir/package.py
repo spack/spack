@@ -22,4 +22,3 @@ class PerlFileSharedir(PerlPackage):
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-list-moreutils@0.428:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-file-sharedir-install@0.13:", type="build")  # AUTO-CPAN2Spack
-

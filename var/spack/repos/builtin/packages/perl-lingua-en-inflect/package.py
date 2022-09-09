@@ -18,4 +18,3 @@ class PerlLinguaEnInflect(PerlPackage):
     version("1.904", sha256="54d344884ba9b585680975bbd4049ddbf27bf654446fb00c7e1fc538e08c3173")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

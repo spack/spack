@@ -22,4 +22,3 @@ class PerlPerlCriticItch(PerlPackage):
     depends_on("perl-perl-critic-testutils@1.52:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-violation@1.52:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.52:", type="run")  # AUTO-CPAN2Spack
-

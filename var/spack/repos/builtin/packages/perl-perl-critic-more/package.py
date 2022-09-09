@@ -24,10 +24,11 @@ class PerlPerlCriticMore(PerlPackage):
     provides("perl-perl-critic-policy-errorhandling-requireuseofexceptions")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-modules-perlminimumversion")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-modules-requireperlversion")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requireconstantonleftsideofequality")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requireconstantonleftsideofequality"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-restrictlongstrings")  # AUTO-CPAN2Spack
     depends_on("perl-readonly@1.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-build@0.4:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-perl-minimumversion@0.14:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.98:", type="run")  # AUTO-CPAN2Spack
-

@@ -19,4 +19,3 @@ class PerlTextAbbrev(PerlPackage):
 
     depends_on("perl@5.5:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.30:", type="build")  # AUTO-CPAN2Spack
-

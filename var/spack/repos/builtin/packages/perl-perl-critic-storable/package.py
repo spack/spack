@@ -18,4 +18,3 @@ class PerlPerlCriticStorable(PerlPackage):
 
     provides("perl-perl-critic-policy-storable-prohibitstoreorfreeze")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic", type="run")  # AUTO-CPAN2Spack
-

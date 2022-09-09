@@ -14,7 +14,6 @@ class PerlTextDiff(PerlPackage):
 
     version("1.45", sha256="e8baa07b1b3f53e00af3636898bbf73aec9a0ff38f94536ede1dbe96ef086f04")
 
-
     provides("perl-text-diff-base")  # AUTO-CPAN2Spack
     provides("perl-text-diff-config@1.44")  # AUTO-CPAN2Spack
     provides("perl-text-diff-table@1.44")  # AUTO-CPAN2Spack

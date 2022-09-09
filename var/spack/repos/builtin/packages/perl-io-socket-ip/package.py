@@ -20,4 +20,3 @@ class PerlIoSocketIp(PerlPackage):
     depends_on("perl-module-build", type="build")
 
     depends_on("perl-module-build@0.40.4:", type="build")  # AUTO-CPAN2Spack
-

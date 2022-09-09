@@ -30,11 +30,19 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-exception-configuration-nonexistentpolicy")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-configuration-option")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-configuration-option-global")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-exception-configuration-option-global-extraparameter")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-exception-configuration-option-global-parametervalue")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-exception-configuration-option-global-extraparameter"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-exception-configuration-option-global-parametervalue"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-configuration-option-policy")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-exception-configuration-option-policy-extraparameter")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-exception-configuration-option-policy-parametervalue")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-exception-configuration-option-policy-extraparameter"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-exception-configuration-option-policy-parametervalue"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-fatal")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-fatal-generic")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-exception-fatal-internal")  # AUTO-CPAN2Spack
@@ -46,7 +54,9 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-builtinfunctions-prohibitbooleangrep")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-builtinfunctions-prohibitcomplexmappings")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-builtinfunctions-prohibitlvaluesubstr")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-builtinfunctions-prohibitreversesortblock")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-builtinfunctions-prohibitreversesortblock"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-builtinfunctions-prohibitshiftref")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-builtinfunctions-prohibitsleepviaselect")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-builtinfunctions-prohibitstringyeval")  # AUTO-CPAN2Spack
@@ -71,22 +81,39 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-codelayout-requiretidycode")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-codelayout-requiretrailingcommas")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-controlstructures-prohibitcstyleforloops")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitcascadingifelse")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-prohibitcascadingifelse"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-controlstructures-prohibitdeepnests")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitlabelswithspecialblocknames")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitmutatinglistfunctions")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitnegativeexpressionsinunlessanduntilconditions")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitpostfixcontrols")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-prohibitlabelswithspecialblocknames"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-prohibitmutatinglistfunctions"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-"
+        "prohibitnegativeexpressionsinunlessanduntilconditions"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-prohibitpostfixcontrols"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-controlstructures-prohibitunlessblocks")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-controlstructures-prohibitunreachablecode")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-controlstructures-prohibitunreachablecode"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-controlstructures-prohibituntilblocks")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-controlstructures-prohibityadaoperator")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-podspelling")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-documentation-requirepackagematchespodname")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-documentation-requirepackagematchespodname"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-requirepodatend")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-requirepodsections")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-errorhandling-requirecarping")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-errorhandling-requirecheckingreturnvalueofeval")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-errorhandling-requirecheckingreturnvalueofeval"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-prohibitbacktickoperators")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-prohibitbarewordfilehandles")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-prohibitexplicitstdin")  # AUTO-CPAN2Spack
@@ -95,7 +122,9 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-inputoutput-prohibitoneargselect")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-prohibitreadlineinforloop")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-prohibittwoargopen")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-inputoutput-requirebracedfilehandlewithprint")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-inputoutput-requirebracedfilehandlewithprint"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-requirebriefopen")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-requirecheckedclose")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-inputoutput-requirecheckedopen")  # AUTO-CPAN2Spack
@@ -120,19 +149,41 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-namingconventions-prohibitambiguousnames")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-objects-prohibitindirectsyntax")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-references-prohibitdoublesigils")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitcapturewithouttest")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitcomplexregexes")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitenumeratedclasses")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitescapedmetacharacters")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitfixedstringmatches")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitsinglecharalternation")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitcapturewithouttest"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitcomplexregexes"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitenumeratedclasses"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitescapedmetacharacters"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitfixedstringmatches"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitsinglecharalternation"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-regularexpressions-prohibitunusedcapture")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-prohibitunusualdelimiters")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-prohibitunusualdelimiters"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-regularexpressions-prohibituselesstopic")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-requirebracesformultiline")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-requiredotmatchanything")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-requireextendedformatting")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-regularexpressions-requirelineboundarymatching")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-requirebracesformultiline"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-requiredotmatchanything"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-requireextendedformatting"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-regularexpressions-requirelineboundarymatching"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-prohibitampersandsigils")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-prohibitbuiltinhomonyms")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-prohibitexcesscomplexity")  # AUTO-CPAN2Spack
@@ -141,39 +192,85 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-subroutines-prohibitnestedsubs")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-prohibitreturnsort")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-prohibitsubroutineprototypes")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-subroutines-prohibitunusedprivatesubroutines")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-subroutines-prohibitunusedprivatesubroutines"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-protectprivatesubs")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-requireargunpacking")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-subroutines-requirefinalreturn")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-testinganddebugging-prohibitnostrict")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-testinganddebugging-prohibitnowarnings")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-testinganddebugging-prohibitprolongedstrictureoverride")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-testinganddebugging-prohibitprolongedstrictureoverride"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-testinganddebugging-requiretestlabels")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-testinganddebugging-requireusestrict")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-testinganddebugging-requireusewarnings")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitcommaseparatedstatements")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitcomplexversion")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitconstantpragma")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitcommaseparatedstatements"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitcomplexversion"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitconstantpragma"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-prohibitemptyquotes")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitescapedcharacters")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitimplicitnewlines")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitinterpolationofliterals")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitleadingzeros")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitlongchainsofmethodcalls")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitmagicnumbers")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitmismatchedoperators")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitmixedbooleanoperators")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitescapedcharacters"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitimplicitnewlines"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitinterpolationofliterals"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitleadingzeros"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitlongchainsofmethodcalls"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitmagicnumbers"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitmismatchedoperators"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitmixedbooleanoperators"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-prohibitnoisyquotes")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitquotesasquotelikeoperatordelimiters")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitspecialliteralheredocterminator")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitversionstrings")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requireconstantversion")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requireinterpolationofmetachars")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requirenumberseparators")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requirequotedheredocterminator")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requireuppercaseheredocterminator")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-variables-prohibitaugmentedassignmentindeclaration")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-variables-prohibitconditionaldeclarations")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitquotesasquotelikeoperatordelimiters"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitspecialliteralheredocterminator"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitversionstrings"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requireconstantversion"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requireinterpolationofmetachars"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requirenumberseparators"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requirequotedheredocterminator"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requireuppercaseheredocterminator"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-variables-prohibitaugmentedassignmentindeclaration"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-variables-prohibitconditionaldeclarations"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-prohibitevilvariables")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-prohibitlocalvars")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-prohibitmatchvars")  # AUTO-CPAN2Spack
@@ -183,9 +280,13 @@ class PerlPerlCritic(PerlPackage):
     provides("perl-perl-critic-policy-variables-prohibitreusednames")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-prohibitunusedvariables")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-protectprivatevars")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-variables-requireinitializationforlocalvars")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-variables-requireinitializationforlocalvars"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-requirelexicalloopiterators")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-variables-requirelocalizedpunctuationvars")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-variables-requirelocalizedpunctuationvars"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-variables-requirenegativeindices")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policyconfig")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policyfactory")  # AUTO-CPAN2Spack

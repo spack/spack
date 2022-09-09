@@ -25,4 +25,3 @@ class PerlModuleMask(PerlPackage):
     depends_on("perl-scalar-util@1.1:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-test-pod@1.14:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-util@1.0:", type="run")  # AUTO-CPAN2Spack
-

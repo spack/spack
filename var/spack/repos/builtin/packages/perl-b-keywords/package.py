@@ -18,4 +18,3 @@ class PerlBKeywords(PerlPackage):
     version("1.23", sha256="13689a4c4273c0b9b4aa855764b34b7ad8bf7da1451b7468a5cef82f677b3aaa")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

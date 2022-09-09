@@ -19,4 +19,3 @@ class PerlReadonlyXs(PerlPackage):
     version("1.04", sha256="3dce369ffcdaccd37e7ae65ce5a1dcda33dc99d91f8b8629265cf300898c41a4")
 
     depends_on("perl-readonly@1.2:", type="run")  # AUTO-CPAN2Spack
-

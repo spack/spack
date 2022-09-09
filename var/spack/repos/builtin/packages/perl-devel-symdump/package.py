@@ -24,8 +24,11 @@ class PerlDevelSymdump(PerlPackage):
     version("2.08_51", sha256="5f496f952548402c9c90aa69d2ce79b6593f6f6b2544a253af53c924cca90376")
     version("2.08", sha256="a50353a31259b6e61d83cfbdca3ab999b5db74e1009ec3259ad7fbc03f32f263")
     version("2.07", sha256="f96f3137c36af1ea6b55f698a4850c0c9793ea4d4ab85bd04aa850153a5750e9")
-    version("2.06.04", sha256="1f9eaa557733f775ccaa852e846566274c017e6fee380aeb8d08e425cfa86d3e",
-            url="https://cpan.metacpan.org/authors/id/A/AN/ANDK/Devel-Symdump-2.0604.tar.gz")
+    version(
+        "2.06.04",
+        sha256="1f9eaa557733f775ccaa852e846566274c017e6fee380aeb8d08e425cfa86d3e",
+        url="https://cpan.metacpan.org/authors/id/A/AN/ANDK/Devel-Symdump-2.0604.tar.gz",
+    )
     provides("perl-devel-symdump-export")  # AUTO-CPAN2Spack
     depends_on("perl@5.4:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack

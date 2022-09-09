@@ -26,4 +26,3 @@ class PerlTypeTie(PerlPackage):
     depends_on("perl-exporter-tiny@0.26:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.17:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-hash-fieldhash", type="run")  # AUTO-CPAN2Spack
-

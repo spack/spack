@@ -23,4 +23,3 @@ class PerlMooxTypesMooselike(PerlPackage):
     depends_on("perl-module-runtime@0.14:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-moo@1.4.2:", type=("build", "test"))  # AUTO-CPAN2Spack
-

@@ -19,4 +19,3 @@ class PerlDevelLexalias(PerlPackage):
 
     depends_on("perl-devel-caller@0.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

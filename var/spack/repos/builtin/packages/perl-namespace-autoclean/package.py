@@ -29,4 +29,3 @@ class PerlNamespaceAutoclean(PerlPackage):
     depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
-

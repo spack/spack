@@ -23,4 +23,3 @@ class PerlModulePluggable(PerlPackage):
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-module-runtime@0.12:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack
-

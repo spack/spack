@@ -29,4 +29,3 @@ class PerlFontAfm(PerlPackage):
     provides("perl-font-metrics-timesbolditalic")  # AUTO-CPAN2Spack
     provides("perl-font-metrics-timesitalic")  # AUTO-CPAN2Spack
     provides("perl-font-metrics-timesroman")  # AUTO-CPAN2Spack
-

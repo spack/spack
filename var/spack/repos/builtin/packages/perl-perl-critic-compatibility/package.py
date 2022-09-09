@@ -11,7 +11,9 @@ class PerlPerlCriticCompatibility(PerlPackage):
     various versions of Perl."""  # AUTO-CPAN2Spack
 
     homepage = "http://perlcritic.com"  # AUTO-CPAN2Spack
-    url = "https://cpan.metacpan.org/authors/id/E/EL/ELLIOTJS/Perl-Critic-Compatibility-1.001.tar.gz"
+    url = (
+        "https://cpan.metacpan.org/authors/id/E/EL/ELLIOTJS/Perl-Critic-Compatibility-1.001.tar.gz"
+    )
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
@@ -22,4 +24,3 @@ class PerlPerlCriticCompatibility(PerlPackage):
 
     provides("perl-perl-critic-policy-compatibility-prohibitthreeargumentopen")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.83_001:", type="run")  # AUTO-CPAN2Spack
-

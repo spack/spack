@@ -20,4 +20,3 @@ class PerlConfigAutoconf(PerlPackage):
     depends_on("perl-file-slurper", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.18:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-capture-tiny", type="run")  # AUTO-CPAN2Spack
-

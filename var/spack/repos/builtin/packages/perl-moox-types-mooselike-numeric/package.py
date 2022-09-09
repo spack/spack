@@ -10,7 +10,9 @@ class PerlMooxTypesMooselikeNumeric(PerlPackage):
     """Moo types for numbers."""  # AUTO-CPAN2Spack
 
     homepage = "https://cpan.metacpan.org/authors/id/M/MA/MATEU"  # AUTO-CPAN2Spack
-    url = "https://cpan.metacpan.org/authors/id/M/MA/MATEU/MooX-Types-MooseLike-Numeric-1.03.tar.gz"
+    url = (
+        "https://cpan.metacpan.org/authors/id/M/MA/MATEU/MooX-Types-MooseLike-Numeric-1.03.tar.gz"
+    )
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
@@ -22,4 +24,3 @@ class PerlMooxTypesMooselikeNumeric(PerlPackage):
     depends_on("perl-test-fatal@0.3:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-moo@1.4.2:", type="build")  # AUTO-CPAN2Spack
-

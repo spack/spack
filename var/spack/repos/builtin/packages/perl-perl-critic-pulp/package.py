@@ -29,7 +29,9 @@ class PerlPerlCriticPulp(PerlPackage):
     provides("perl-perl-critic-policy-compatibility-podminimumversion")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-compatibility-prohibitunixdevnull")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-prohibitadjacentlinks")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-documentation-prohibitadjacentlinks-parser")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-documentation-prohibitadjacentlinks-parser"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-prohibitbadaproposmarkup")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-prohibitduplicateheadings")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-documentation-prohibitduplicateseealso")  # AUTO-CPAN2Spack
@@ -49,15 +51,29 @@ class PerlPerlCriticPulp(PerlPackage):
     provides("perl-perl-critic-policy-modules-prohibitusequotedversion")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-constantbeforelt")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-notwithcompare")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitarrayassignaref")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitbareworddoublecolon")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitduplicatehashkeys")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitarrayassignaref"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitbareworddoublecolon"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitduplicatehashkeys"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-prohibitemptycommas")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-policy-valuesandexpressions-prohibitfiletest-f")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitnullstatements")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-prohibitunknownbackslash")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-requirenumericversion")  # AUTO-CPAN2Spack
-    provides("perl-perl-critic-policy-valuesandexpressions-unexpandedspecialliteral")  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitnullstatements"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-prohibitunknownbackslash"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-requirenumericversion"
+    )  # AUTO-CPAN2Spack
+    provides(
+        "perl-perl-critic-policy-valuesandexpressions-unexpandedspecialliteral"
+    )  # AUTO-CPAN2Spack
     provides("perl-perl-critic-pulp-podminimumversionviolation")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-pulp-podparser")  # AUTO-CPAN2Spack
     provides("perl-perl-critic-pulp-podparser-prohibitbadaproposmarkup")  # AUTO-CPAN2Spack
@@ -87,4 +103,3 @@ class PerlPerlCriticPulp(PerlPackage):
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-utils-ppi", type="run")  # AUTO-CPAN2Spack
-

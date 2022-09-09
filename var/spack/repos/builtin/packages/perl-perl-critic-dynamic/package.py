@@ -26,4 +26,3 @@ class PerlPerlCriticDynamic(PerlPackage):
     depends_on("perl-module-build@0.36:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-utils@1.108:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-devel-symdump@2.7:", type="run")  # AUTO-CPAN2Spack
-

@@ -19,4 +19,3 @@ class PerlTestSubcalls(PerlPackage):
     depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-hook-lexwrap@0.20:", type="run")  # AUTO-CPAN2Spack
-

@@ -18,4 +18,3 @@ class PerlCanaryStability(PerlPackage):
     version("2012", sha256="fd240b111d834dbae9630c59b42fae2145ca35addc1965ea311edf0d07817107")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

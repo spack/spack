@@ -19,4 +19,3 @@ class PerlStringFormat(PerlPackage):
     version("1.17_50", sha256="2dcd0ec5f0c7f67c6dd9d6de2c8c887ada3437f240ac4840d4d2196e01d47ac0")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

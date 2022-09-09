@@ -20,4 +20,3 @@ class PerlIncLatest(PerlPackage):
     depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.17:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("run", "test"))  # AUTO-CPAN2Spack
-

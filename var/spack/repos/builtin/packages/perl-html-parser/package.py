@@ -15,8 +15,11 @@ class PerlHtmlParser(PerlPackage):
     version("3.78", sha256="22564002f206af94c1dd8535f02b0d9735125d9ebe89dd0ff9cd6c000e29c29d")
     version("3.77", sha256="792a6e314f8eb0e87be7f5fdcf1b0c170a26a0e53da48d9a315db76f876949f3")
     version("3.76", sha256="64d9e2eb2b420f1492da01ec0e6976363245b4be9290f03f10b7d2cb63fa2f61")
-    version("3.72", sha256="ec28c7e1d9e67c45eca197077f7cdc41ead1bb4c538c7f02a3296a4bb92f608b",
-        url="https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTML-Parser-3.72.tar.gz")
+    version(
+        "3.72",
+        sha256="ec28c7e1d9e67c45eca197077f7cdc41ead1bb4c538c7f02a3296a4bb92f608b",
+        url="https://cpan.metacpan.org/authors/id/G/GA/GAAS/HTML-Parser-3.72.tar.gz",
+    )
 
     provides("perl-html-entities")  # AUTO-CPAN2Spack
     provides("perl-html-filter")  # AUTO-CPAN2Spack

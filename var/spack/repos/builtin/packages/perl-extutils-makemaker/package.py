@@ -16,7 +16,11 @@ class PerlExtutilsMakemaker(PerlPackage):
     url = "https://cpan.metacpan.org/authors/id/B/BI/BINGOS/ExtUtils-MakeMaker-7.24.tar.gz"
 
     version("7.65_02", sha256="a933a21ec1fe340dad272334e6a0623d3140cb649568ec0d2aa1f0c00a423986")
-    version("7.64", sha256="4a6ac575815c0413b1f58967043cc9f2e166446b73c687f9bc62b5eaed9464a0", preferred=True)
+    version(
+        "7.64",
+        sha256="4a6ac575815c0413b1f58967043cc9f2e166446b73c687f9bc62b5eaed9464a0",
+        preferred=True,
+    )
     version("7.24", sha256="416abc97c3bb2cc72bef28852522f2859de53e37bf3d0ae8b292067d78755e69")
 
     provides("perl-dynaloader")  # AUTO-CPAN2Spack

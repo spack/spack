@@ -19,4 +19,3 @@ class PerlTestLeaktrace(PerlPackage):
 
     provides("perl-test-leaktrace-script")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

@@ -37,4 +37,3 @@ class PerlTaskPerlCritic(PerlPackage):
     depends_on("perl-perl-critic-moose", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-bangs@1.0:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-more@1.0:", type="run")  # AUTO-CPAN2Spack
-

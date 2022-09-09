@@ -26,4 +26,3 @@ class PerlHttpCookiejar(PerlPackage):
     depends_on("perl-test-requires", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-http-date", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-mozilla-publicsuffix", type="run")  # AUTO-CPAN2Spack
-

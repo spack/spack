@@ -18,4 +18,3 @@ class PerlCarpAssert(PerlPackage):
 
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

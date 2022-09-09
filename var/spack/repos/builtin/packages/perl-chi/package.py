@@ -57,4 +57,3 @@ class PerlChi(PerlPackage):
     depends_on("perl-test-exception", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-digest-jhash", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-try-tiny@0.5:", type="run")  # AUTO-CPAN2Spack
-

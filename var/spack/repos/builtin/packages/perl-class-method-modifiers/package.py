@@ -21,4 +21,3 @@ class PerlClassMethodModifiers(PerlPackage):
     depends_on("perl-test-fatal", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-test-needs", type=("build", "test"))  # AUTO-CPAN2Spack
-

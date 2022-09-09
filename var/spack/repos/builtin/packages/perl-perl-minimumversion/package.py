@@ -15,7 +15,9 @@ class PerlPerlMinimumversion(PerlPackage):
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
     version("1.40", sha256="7589a578cb60d70ca4755c395b3592b440a0cd6a1b074e4eceac93b031a1be90")
-    version("1.39-TRIAL", sha256="df936dbacd2dcf2850fae49a3cb766fa3364f8138a05eba0c7da43b63744d5e7")
+    version(
+        "1.39-TRIAL", sha256="df936dbacd2dcf2850fae49a3cb766fa3364f8138a05eba0c7da43b63744d5e7"
+    )
 
     provides("perl-perl-minimumversion-reason")  # AUTO-CPAN2Spack
     depends_on("perl-params-util@0.25:", type="run")  # AUTO-CPAN2Spack
@@ -28,4 +30,3 @@ class PerlPerlMinimumversion(PerlPackage):
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-ppix-utils", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util@1.20:", type="run")  # AUTO-CPAN2Spack
-

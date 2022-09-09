@@ -21,6 +21,5 @@ class PerlFilePathlist(PerlPackage):
     depends_on("perl-module-install", type="build")
     depends_on("perl-params-util@0.24:", type="run")  # AUTO-CPAN2Spack
 
-
     def setup_build_environment(self, env):
         env.prepend_path("PERL5LIB", self.stage.source_path)

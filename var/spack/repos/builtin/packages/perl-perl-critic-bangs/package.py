@@ -39,4 +39,3 @@ class PerlPerlCriticBangs(PerlPackage):
     depends_on("perl-perl-critic-testutils", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-ppi-document", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-userprofile", type="run")  # AUTO-CPAN2Spack
-

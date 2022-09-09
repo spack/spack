@@ -30,4 +30,3 @@ class PerlTimeLocal(PerlPackage):
     version("1.27", sha256="926b6b270209d508226b4f0e24d0e13c12cb94b81479e100d796beb45f9bcc1e")
 
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
-

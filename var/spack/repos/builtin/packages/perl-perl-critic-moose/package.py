@@ -31,4 +31,3 @@ class PerlPerlCriticMoose(PerlPackage):
     depends_on("perl-perl-critic-utils", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-test-perl-critic-policy", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-utils-ppi", type="run")  # AUTO-CPAN2Spack
-

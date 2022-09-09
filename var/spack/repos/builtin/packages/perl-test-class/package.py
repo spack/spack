@@ -25,4 +25,3 @@ class PerlTestClass(PerlPackage):
     depends_on("perl-module-runtime", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-test-exception@0.25:", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-try-tiny", type="run")  # AUTO-CPAN2Spack
-

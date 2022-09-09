@@ -32,4 +32,3 @@ class PerlHtmlForm(PerlPackage):
     depends_on("perl-http-request-common@6.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-http-request@6:", type="run")  # AUTO-CPAN2Spack
-

@@ -27,4 +27,3 @@ class PerlPpixUtils(PerlPackage):
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack
-

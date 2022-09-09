@@ -34,4 +34,3 @@ class PerlLogAny(PerlPackage):
     provides("perl-log-any-proxy-test")  # AUTO-CPAN2Spack
     provides("perl-log-any-test")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
-

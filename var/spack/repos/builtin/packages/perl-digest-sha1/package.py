@@ -19,4 +19,3 @@ class PerlDigestSha1(PerlPackage):
 
     depends_on("perl@5.4:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

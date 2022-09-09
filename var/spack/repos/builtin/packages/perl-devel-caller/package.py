@@ -19,4 +19,3 @@ class PerlDevelCaller(PerlPackage):
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-padwalker@0.8:", type="run")  # AUTO-CPAN2Spack
-

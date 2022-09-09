@@ -18,4 +18,3 @@ class PerlFileNext(PerlPackage):
     version("1.17_01", sha256="8b4b31369f3cc38ceceb87eb91e82c2d5b7923163a9f2bd005e621940a444a11")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

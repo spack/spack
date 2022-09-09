@@ -22,4 +22,3 @@ class PerlTestFailwarnings(PerlPackage):
     depends_on("perl-extutils-makemaker", type="test")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-capture-tiny@0.12:", type=("build", "test"))  # AUTO-CPAN2Spack
-

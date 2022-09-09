@@ -37,7 +37,6 @@ class PerlMozillaPublicsuffix(PerlPackage):
     depends_on("perl-uri", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-build@0.28:", type="build")  # AUTO-CPAN2Spack
 
-
     def configure(self, spec, prefix):
         perl_safe = inspect.getmodule(self).perl
         inspect.getmodule(self).perl = _WrappedExecutable(perl_safe)

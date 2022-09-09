@@ -25,4 +25,3 @@ class PerlPerlCriticTics(PerlPackage):
     depends_on("perl-extutils-makemaker@6.30:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-testutils", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-violation", type="run")  # AUTO-CPAN2Spack
-

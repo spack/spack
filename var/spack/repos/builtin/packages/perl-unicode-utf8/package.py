@@ -20,4 +20,3 @@ class PerlUnicodeUtf8(PerlPackage):
     depends_on("perl-test-fatal@0.6:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl@5.8.1:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.59:", type="build")  # AUTO-CPAN2Spack
-

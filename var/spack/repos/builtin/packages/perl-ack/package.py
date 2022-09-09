@@ -42,4 +42,3 @@ class PerlAck(PerlPackage):
     depends_on("perl-file-next@1.18:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
-

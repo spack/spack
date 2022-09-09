@@ -14,10 +14,16 @@ class PerlMetacpanClient(PerlPackage):
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
-    version("2.030.000", sha256="d9b765c5237754f17262696382a7385d90b2d01986979817862b1664b06dd3af",
-            url="https://cpan.metacpan.org/authors/id/M/MI/MICKEY/MetaCPAN-Client-2.030000.tar.gz")
-    version("2.029.000", sha256="c5d883903b379a5a6adb02e016ec5b52288af05652d564c895316593f3c7e57c",
-            url="https://cpan.metacpan.org/authors/id/M/MI/MICKEY/MetaCPAN-Client-2.029000.tar.gz")
+    version(
+        "2.030.000",
+        sha256="d9b765c5237754f17262696382a7385d90b2d01986979817862b1664b06dd3af",
+        url="https://cpan.metacpan.org/authors/id/M/MI/MICKEY/MetaCPAN-Client-2.030000.tar.gz",
+    )
+    version(
+        "2.029.000",
+        sha256="c5d883903b379a5a6adb02e016ec5b52288af05652d564c895316593f3c7e57c",
+        url="https://cpan.metacpan.org/authors/id/M/MI/MICKEY/MetaCPAN-Client-2.029000.tar.gz",
+    )
 
     provides("perl-metacpan-client-author")  # AUTO-CPAN2Spack
     provides("perl-metacpan-client-cover")  # AUTO-CPAN2Spack

@@ -26,4 +26,3 @@ class PerlHttpTiny(PerlPackage):
     depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-io-socket-ssl@1.42:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack
-

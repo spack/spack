@@ -24,6 +24,5 @@ class PerlHashFieldhash(PerlPackage):
     depends_on("perl-test-leaktrace@0.7:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.59:", type="build")  # AUTO-CPAN2Spack
 
-
     def setup_build_environment(self, env):
         env.prepend_path("PERL5LIB", self.stage.source_path)

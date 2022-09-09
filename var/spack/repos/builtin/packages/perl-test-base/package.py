@@ -28,4 +28,3 @@ class PerlTestBase(PerlPackage):
     depends_on("perl-scalar-util@1.7:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-filter-util-call", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-spiffy@0.40:", type="run")  # AUTO-CPAN2Spack
-

@@ -21,4 +21,3 @@ class PerlTextBalanced(PerlPackage):
     provides("perl-text-balanced-extractor")  # AUTO-CPAN2Spack
     depends_on("perl@5.8.1:", type=("build", "run"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.64:", type="build")  # AUTO-CPAN2Spack
-

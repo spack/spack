@@ -41,4 +41,3 @@ class PerlHtmlFormatter(PerlPackage):
     depends_on("perl-font-metrics-helveticaboldoblique", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-html-treebuilder", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type="run")  # AUTO-CPAN2Spack
-

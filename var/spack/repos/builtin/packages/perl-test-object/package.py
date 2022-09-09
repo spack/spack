@@ -20,4 +20,3 @@ class PerlTestObject(PerlPackage):
     depends_on("perl@5.6:", type=("build", "run", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.16:", type="run")  # AUTO-CPAN2Spack
-

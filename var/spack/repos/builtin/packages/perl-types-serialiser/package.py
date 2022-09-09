@@ -22,4 +22,3 @@ class PerlTypesSerialiser(PerlPackage):
     provides("perl-types-serialiser-error")  # AUTO-CPAN2Spack
     depends_on("perl-common-sense", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

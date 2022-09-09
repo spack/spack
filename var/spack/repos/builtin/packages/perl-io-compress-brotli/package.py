@@ -26,4 +26,3 @@ class PerlIoCompressBrotli(PerlPackage):
     depends_on("perl-time-hires", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-file-slurper", type="run")  # AUTO-CPAN2Spack
-

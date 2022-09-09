@@ -79,4 +79,3 @@ class PerlTypeTiny(PerlPackage):
     depends_on("perl-exporter-tiny@1.0.0:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-regexp-util@0.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-type-tie", type="run")  # AUTO-CPAN2Spack
-

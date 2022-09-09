@@ -19,4 +19,3 @@ class PerlTestYaml(PerlPackage):
     provides("perl-test-yaml-filter")  # AUTO-CPAN2Spack
     depends_on("perl-test-base@0.89:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

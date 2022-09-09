@@ -27,4 +27,3 @@ class PerlFilter(PerlPackage):
     provides("perl-filter-tee")  # AUTO-CPAN2Spack
     depends_on("perl-filter-simple@0.88:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

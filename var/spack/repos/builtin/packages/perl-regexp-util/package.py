@@ -20,4 +20,3 @@ class PerlRegexpUtil(PerlPackage):
     depends_on("perl@5.10:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-exporter-tiny", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker@6.17:", type="build")  # AUTO-CPAN2Spack
-

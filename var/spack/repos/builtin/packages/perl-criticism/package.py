@@ -21,4 +21,3 @@ class PerlCriticism(PerlPackage):
 
     depends_on("perl-io-string", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic@1.89:", type="run")  # AUTO-CPAN2Spack
-

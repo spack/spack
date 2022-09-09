@@ -28,4 +28,3 @@ class PerlTextTestbase(PerlPackage):
     depends_on("perl-module-build@0.38:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-digest-md5", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-class-accessor-lite@0.5:", type="run")  # AUTO-CPAN2Spack
-

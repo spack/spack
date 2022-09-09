@@ -48,4 +48,3 @@ class PerlMoo(PerlPackage):
     depends_on("perl-role-tiny@2.2.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.0:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-sub-defer@2.6.6:", type="run")  # AUTO-CPAN2Spack
-

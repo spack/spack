@@ -34,4 +34,3 @@ class PerlSubQuote(PerlPackage):
     depends_on("perl-sub-name@0.8:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
-

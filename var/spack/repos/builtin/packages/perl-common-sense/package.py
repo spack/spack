@@ -18,4 +18,3 @@ class PerlCommonSense(PerlPackage):
     version("3.74", sha256="771f7d02abd1ded94d9e37d3f66e795c8d2026d04defbeb5b679ca058116bbf3")
 
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

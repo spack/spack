@@ -23,4 +23,3 @@ class PerlCpanelJsonXs(PerlPackage):
     depends_on("perl-time-piece", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-data-dumper", type=("build", "test"))  # AUTO-CPAN2Spack
-

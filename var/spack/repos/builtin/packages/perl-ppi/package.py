@@ -119,4 +119,3 @@ class PerlPpi(PerlPackage):
     depends_on("perl-digest-md5@2.35:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-list-util@1.33:", type="run")  # AUTO-CPAN2Spack
-

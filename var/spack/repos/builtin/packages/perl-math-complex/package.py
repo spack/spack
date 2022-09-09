@@ -20,4 +20,3 @@ class PerlMathComplex(PerlPackage):
     provides("perl-math-trig@1.23")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "run"))  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.11:", type="run")  # AUTO-CPAN2Spack
-

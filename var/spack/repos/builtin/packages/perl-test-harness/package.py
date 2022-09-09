@@ -65,4 +65,3 @@ class PerlTestHarness(PerlPackage):
     provides("perl-tap-parser-yamlish-reader")  # AUTO-CPAN2Spack
     provides("perl-tap-parser-yamlish-writer")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-

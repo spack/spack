@@ -27,4 +27,3 @@ class PerlPodSpell(PerlPackage):
     depends_on("perl-test-deep", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl@5.8:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-pod-parser", type="run")  # AUTO-CPAN2Spack
-

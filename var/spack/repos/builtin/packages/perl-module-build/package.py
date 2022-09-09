@@ -18,11 +18,17 @@ class PerlModuleBuild(PerlPackage):
     homepage = "https://metacpan.org/pod/Module::Build"
     url = "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4224.tar.gz"
 
-    version("0.42.31", sha256="7e0f4c692c1740c1ac84ea14d7ea3d8bc798b2fb26c09877229e04f430b2b717",
-            url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4231.tar.gz")
+    version(
+        "0.42.31",
+        sha256="7e0f4c692c1740c1ac84ea14d7ea3d8bc798b2fb26c09877229e04f430b2b717",
+        url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4231.tar.gz",
+    )
     version("0.42_30", sha256="77a185663ffcd17d7b3fc3c9b6a334f6806978b518e57b1753f35ec5e63e232c")
-    version("0.42.29", sha256="1fe491a6cda914b01bc8e592faa2b5404e9f35915ca15322f8f2a8d8f9008c18",
-            url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4229.tar.gz")
+    version(
+        "0.42.29",
+        sha256="1fe491a6cda914b01bc8e592faa2b5404e9f35915ca15322f8f2a8d8f9008c18",
+        url="https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4229.tar.gz",
+    )
 
     provides("perl-module-build-base")  # AUTO-CPAN2Spack
     provides("perl-module-build-compat")  # AUTO-CPAN2Spack

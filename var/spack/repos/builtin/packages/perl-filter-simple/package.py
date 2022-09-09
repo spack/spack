@@ -31,4 +31,3 @@ class PerlFilterSimple(PerlPackage):
     provides("perl-dotsforarrows")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-text-balanced@1.97:", type="run")  # AUTO-CPAN2Spack
-

@@ -12,10 +12,16 @@ class PerlMathBigint(PerlPackage):
     homepage = "https://metacpan.org/pod/Math::BigInt"
     url = "https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz"
 
-    version("1.999.837", sha256="038f9aad6318f20a84a7b1afe3087a1b02406c9988ce5919311a797f85a32962",
-            url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz")
-    version("1.999.836", sha256="9f0ffeed664d5576e2b5df6d2e2255643e9c4b5108f9be053c9ea137c020bbfe",
-            url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999836.tar.gz")
+    version(
+        "1.999.837",
+        sha256="038f9aad6318f20a84a7b1afe3087a1b02406c9988ce5919311a797f85a32962",
+        url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999837.tar.gz",
+    )
+    version(
+        "1.999.836",
+        sha256="9f0ffeed664d5576e2b5df6d2e2255643e9c4b5108f9be053c9ea137c020bbfe",
+        url="https://cpan.metacpan.org/authors/id/P/PJ/PJACKLAM/Math-BigInt-1.999836.tar.gz",
+    )
 
     provides("perl-math-bigfloat")  # AUTO-CPAN2Spack
     provides("perl-math-bigint-calc")  # AUTO-CPAN2Spack

@@ -27,4 +27,3 @@ class PerlPerlCriticSwift(PerlPackage):
     depends_on("perl-test-perl-critic@1.1:", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-list-moreutils@0.21:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-perl-critic-testutils@1.82:", type="build")  # AUTO-CPAN2Spack
-

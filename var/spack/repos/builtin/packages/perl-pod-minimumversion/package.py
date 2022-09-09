@@ -24,4 +24,3 @@ class PerlPodMinimumversion(PerlPackage):
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-list-util", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-pod-parser", type="run")  # AUTO-CPAN2Spack
-
