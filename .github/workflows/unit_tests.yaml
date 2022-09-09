@@ -79,7 +79,7 @@ jobs:
       env:
           SPACK_PYTHON: python
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
-          SPACK_TEST_PARALLEL: 3
+          SPACK_TEST_PARALLEL: 2
           COVERAGE: true
           UNIT_TEST_COVERAGE: ${{ (matrix.concretizer == 'original' && matrix.python-version == '2.7') || (matrix.python-version == '3.10') }}
       run: |
