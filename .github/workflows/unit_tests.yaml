@@ -80,6 +80,8 @@ jobs:
           SPACK_PYTHON: python
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 3
+          COVERAGE: true
+          UNIT_TEST_COVERAGE: ${{ (matrix.concretizer == 'original') || (matrix.python-version == '3.10') }}
       run: |
           share/spack/qa/run-unit-tests
           coverage combine -a

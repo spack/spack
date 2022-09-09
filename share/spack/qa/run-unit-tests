@@ -51,7 +51,7 @@ if [[ "$SPACK_TEST_SOLVER" == "original" ]]; then
   export PYTEST_ADDOPTS='-m "not maybeslow"'
 fi
 
-if [[ "$COVERAGE" == "true" ]]; then
+if [[ "$UNIT_TEST_COVERAGE" == "true" ]]; then
   export PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-config=pyproject.toml"
 fi
 
