@@ -634,6 +634,11 @@ def generate_gitlab_ci_yaml(
                 for s in affected_specs:
                     tty.debug("  {0}".format(s.name))
 
+    # Allow overriding --prune-dag cli opt with environment variable
+    prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
+    if prune_dag_override is not None:
+        prune_dag = True if prune_dag_override.lower() == "true" else False
+
     # Downstream jobs will "need" (depend on, for both scheduling and
     # artifacts, which include spack.lock file) this pipeline generation
     # job by both name and pipeline id.  If those environment variables
@@ -1286,6 +1291,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
         }
 
         if remote_mirror_override:
