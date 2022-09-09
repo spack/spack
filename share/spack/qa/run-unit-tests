@@ -51,6 +51,10 @@ if [[ "$SPACK_TEST_SOLVER" == "original" ]]; then
   export PYTEST_ADDOPTS='-m "not maybeslow"'
 fi
 
+if [[ "$COVERAGE" == "true" ]]; then
+  export PYTEST_ADDOPTS="$PYTEST_ADDOPTS --cov --cov-config=pyproject.toml"
+fi
+
 # Check if xdist is available
 if python -m pytest --trace-config 2>&1 | grep xdist; then
   export PYTEST_ADDOPTS="$PYTEST_ADDOPTS --dist loadfile --tx '${SPACK_TEST_PARALLEL:=3}*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python'"
@@ -65,7 +69,7 @@ fi
 # https://github.com/pytest-dev/pytest-cov/issues/237
 # where it seems that otherwise the configuration file might not be located by subprocesses
 # in some, not better specified, cases.
-$(which spack) --cov --cov-config=pyproject.toml unit-test -x
+$(which spack) unit-test -x
 
 bash "$QA_DIR/test-env-cfg.sh"
 

@@ -75,10 +75,9 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap untrust spack-install
           spack -v solve zlib
-    - name: Run unit tests (full suite with coverage)
+    - name: Run unit tests
       env:
           SPACK_PYTHON: python
-          COVERAGE: true
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 3
       run: |
@@ -213,12 +212,11 @@ jobs:
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
         $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
-        coverage combine
+        coverage combine -a
         coverage xml
         # Delete the symlink going from ./lib/spack/docs/_spack_root back to
         # the initial directory, since it causes ELOOP errors with codecov/actions@2
         rm lib/spack/docs/_spack_root
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
       with:
-        files: ./coverage.xml
         flags: unittests,macos
