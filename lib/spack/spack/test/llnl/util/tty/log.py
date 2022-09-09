@@ -461,6 +461,7 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
         (mock_shell_v_v_no_termios, no_termios),
     ],
 )
+@pytest.mark.xfail(reason="Fails almost consistently when run with coverage and xdist")
 def test_foreground_background_output(test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
     if sys.version_info >= (3, 8) and sys.platform == "darwin" and termios_on_or_off == no_termios:
