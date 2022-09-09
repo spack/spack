@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlFfiChecklib(PerlPackage):
@@ -15,6 +15,6 @@ class PerlFfiChecklib(PerlPackage):
     FFI system."""
 
     homepage = "https://metacpan.org/pod/FFI::CheckLib"
-    url      = "https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/FFI-CheckLib-0.25.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/FFI-CheckLib-0.25.tar.gz"
 
-    version('0.25', sha256='eb36b9a7cff1764a65b1b77e01e92c26207c558a3f986d0d17d2b110fa366ba4')
+    version("0.25", sha256="eb36b9a7cff1764a65b1b77e01e92c26207c558a3f986d0d17d2b110fa366ba4")

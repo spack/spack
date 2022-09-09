@@ -1,0 +1,9 @@
+diff -ru a/opencv_contrib/modules/cvv/CMakeLists.txt b/opencv_contrib/modules/cvv/CMakeLists.txt
+--- a/opencv_contrib/modules/cvv/CMakeLists.txt	2021-11-21 21:42:44.000000000 -0600
++++ b/opencv_contrib/modules/cvv/CMakeLists.txt	2021-11-22 12:57:40.359680713 -0600
+@@ -1,4 +1,4 @@
+-if(NOT HAVE_QT5 OR NOT HAVE_CXX11)
++if(NOT HAVE_QT OR NOT HAVE_CXX11)
+   ocv_module_disable(cvv)
+   return()
+ endif()

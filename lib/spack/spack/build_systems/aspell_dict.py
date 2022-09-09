@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,10 @@
 # Why doesn't this work for me?
 # from spack import *
 from llnl.util.filesystem import filter_file
+
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.directives import extends
-from spack.package import ExtensionError
+from spack.package_base import ExtensionError
 from spack.util.executable import which
 
 
@@ -22,29 +23,32 @@ from spack.util.executable import which
 class AspellDictPackage(AutotoolsPackage):
     """Specialized class for building aspell dictionairies."""
 
-    extends('aspell')
+    extends("aspell")
 
     def view_destination(self, view):
-        aspell_spec = self.spec['aspell']
+        aspell_spec = self.spec["aspell"]
         if view.get_projection_for_spec(aspell_spec) != aspell_spec.prefix:
-            raise ExtensionError(
-                'aspell does not support non-global extensions')
+            raise ExtensionError("aspell does not support non-global extensions")
         aspell = aspell_spec.command
-        return aspell('dump', 'config', 'dict-dir', output=str).strip()
+        return aspell("dump", "config", "dict-dir", output=str).strip()
 
     def view_source(self):
         return self.prefix.lib
 
     def patch(self):
-        filter_file(r'^dictdir=.*$', 'dictdir=/lib', 'configure')
-        filter_file(r'^datadir=.*$', 'datadir=/lib', 'configure')
+        filter_file(r"^dictdir=.*$", "dictdir=/lib", "configure")
+        filter_file(r"^datadir=.*$", "datadir=/lib", "configure")
 
     def configure(self, spec, prefix):
-        aspell = spec['aspell'].prefix.bin.aspell
-        prezip = spec['aspell'].prefix.bin.prezip
+        aspell = spec["aspell"].prefix.bin.aspell
+        prezip = spec["aspell"].prefix.bin.prezip
         destdir = prefix
 
-        sh = which('sh')
-        sh('./configure', '--vars', "ASPELL={0}".format(aspell),
-           "PREZIP={0}".format(prezip),
-           "DESTDIR={0}".format(destdir))
+        sh = which("sh")
+        sh(
+            "./configure",
+            "--vars",
+            "ASPELL={0}".format(aspell),
+            "PREZIP={0}".format(prezip),
+            "DESTDIR={0}".format(destdir),
+        )

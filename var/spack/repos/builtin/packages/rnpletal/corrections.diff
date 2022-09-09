@@ -1,0 +1,863 @@
+diff -ru rnpletal.orig/aclocal.m4 rnpletal/aclocal.m4
+--- rnpletal.orig/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/cliser/aclocal.m4 rnpletal/cliser/aclocal.m4
+--- rnpletal.orig/cliser/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/cliser/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/cvtestsdf/aclocal.m4 rnpletal/cvtestsdf/aclocal.m4
+--- rnpletal.orig/cvtestsdf/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/cvtestsdf/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/netlib_fftpack/aclocal.m4 rnpletal/netlib_fftpack/aclocal.m4
+--- rnpletal.orig/netlib_fftpack/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/netlib_fftpack/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/netlib_lapack3.0/aclocal.m4 rnpletal/netlib_lapack3.0/aclocal.m4
+--- rnpletal.orig/netlib_lapack3.0/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/netlib_lapack3.0/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/netlib_linpack/aclocal.m4 rnpletal/netlib_linpack/aclocal.m4
+--- rnpletal.orig/netlib_linpack/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/netlib_linpack/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/netlib_odepack/aclocal.m4 rnpletal/netlib_odepack/aclocal.m4
+--- rnpletal.orig/netlib_odepack/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/netlib_odepack/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+Only in rnpletal.orig/rnpl: .#configure.1.8
+diff -ru rnpletal.orig/rnpl/aclocal.m4 rnpletal/rnpl/aclocal.m4
+--- rnpletal.orig/rnpl/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/rnpl/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/rnpl/configure rnpletal/rnpl/configure
+--- rnpletal.orig/rnpl/configure	2021-06-03 19:30:51.000000000 -0400
++++ rnpletal/rnpl/configure	2021-07-29 14:55:34.000000000 -0400
+@@ -3353,7 +3353,7 @@
+                     CXXFLAGS="$CXXFLAGS -DLINUX -DPORT_GROUP -DWant_c_files"
+                     if test "X$CCF77LIBS" = "X"; then
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -3484,11 +3484,11 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+@@ -4988,7 +4988,7 @@
+                     CXXFLAGS="$CXXFLAGS -DLINUX -DPORT_GROUP -DWant_c_files"
+                     if test "X$CCF77LIBS" = "X"; then
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -5119,11 +5119,11 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+@@ -5887,7 +5887,7 @@
+                     CXXFLAGS="$CXXFLAGS -DLINUX -DPORT_GROUP -DWant_c_files"
+                     if test "X$CCF77LIBS" = "X"; then
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -6018,11 +6018,11 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+@@ -6902,7 +6902,7 @@
+                     CXXFLAGS="$CXXFLAGS -DLINUX -DPORT_GROUP -DWant_c_files"
+                     if test "X$CCF77LIBS" = "X"; then
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -7033,11 +7033,11 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+@@ -7867,7 +7867,7 @@
+                     CXXFLAGS="$CXXFLAGS -DLINUX -DPORT_GROUP -DWant_c_files"
+                     if test "X$CCF77LIBS" = "X"; then
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -7998,11 +7998,11 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/rnpl/etc/sdfdump.c rnpletal/rnpl/etc/sdfdump.c
+--- rnpletal.orig/rnpl/etc/sdfdump.c	2019-05-04 15:12:04.000000000 -0400
++++ rnpletal/rnpl/etc/sdfdump.c	2021-07-29 14:29:12.000000000 -0400
+@@ -5,6 +5,7 @@
+    Copyright 2003- Matthew W. Choptuik, (main/1d) Frank Loeffler (2d)
+ */
+ 
++#include <math.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+diff -ru rnpletal.orig/rnpl/etc/sdffilter.c rnpletal/rnpl/etc/sdffilter.c
+--- rnpletal.orig/rnpl/etc/sdffilter.c	2013-07-09 00:30:15.000000000 -0400
++++ rnpletal/rnpl/etc/sdffilter.c	2021-07-29 14:28:40.000000000 -0400
+@@ -7,6 +7,7 @@
+ #include <sdf_priv.h>
+ #include <sdf.h>
+ #include "sdffilter.h"  
++#include "../src/bbhutil_f.h"  
+ 
+ #define    ON       1
+ #define    OFF      0
+diff -ru rnpletal.orig/rnpl/etc/sdfinfo.c rnpletal/rnpl/etc/sdfinfo.c
+--- rnpletal.orig/rnpl/etc/sdfinfo.c	2013-07-09 00:30:15.000000000 -0400
++++ rnpletal/rnpl/etc/sdfinfo.c	2021-07-29 14:53:58.000000000 -0400
+@@ -28,7 +28,7 @@
+   return dm;
+ }
+ 
+-main(int argc, char **argv)
++int main(int argc, char **argv)
+ {
+   int rank,csize,dsize,version,*shape=NULL;
+   int i;
+diff -ru rnpletal.orig/rnpl/etc/sdfslice_util.c rnpletal/rnpl/etc/sdfslice_util.c
+--- rnpletal.orig/rnpl/etc/sdfslice_util.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/etc/sdfslice_util.c	2021-07-29 14:31:10.000000000 -0400
+@@ -1,5 +1,9 @@
+ #include "sdfslice_util.h"
+ 
++void d3dump_(double*a,int*d1,int*d2,int*d3,char*label,int*unit,long);
++void d3slice_(double*ain,double*aout,int*d1in,int*d2in,int*d3in,int*d1out,int*d2out,int*d3out,
++              int*d1sl,int*d2sl,int*d3sl);
++
+ /*----------------------------------------------------------------------
+  * Slices data in 'in' according to ivec and/or fvec specificiations 
+  * and returns pointer to sliced data.
+diff -ru rnpletal.orig/rnpl/etc/sdftosv.c rnpletal/rnpl/etc/sdftosv.c
+--- rnpletal.orig/rnpl/etc/sdftosv.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/etc/sdftosv.c	2021-07-29 14:20:34.000000000 -0400
+@@ -6,12 +6,16 @@
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
++#include <string.h>
++#include <unistd.h>
+ #include <bbhutil.h>
+ #include <sdf_priv.h>
+ 
+ #define VERSION "1.0"
+ #define CHUNK_SIZE (32 * (1024*1024))
+ 
++int dump_mser(char *nm,int nlvls,double *tv,double *x,double *y,int *nx);
++
+ int rjava_ser(char *nm, double time, double *cds, double *data, int size)
+ {
+ #ifdef HAVE_LIBSV
+@@ -98,7 +102,7 @@
+   return s;
+ }
+ 
+-main(int argc, char **argv)
++int main(int argc, char **argv)
+ {
+   int rank,*shape,nlvls,ntlevs,res,n,unam=0,single=0;
+   double time,*data,*coords;
+diff -ru rnpletal.orig/rnpl/etc/sdftranspose.c rnpletal/rnpl/etc/sdftranspose.c
+--- rnpletal.orig/rnpl/etc/sdftranspose.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/etc/sdftranspose.c	2021-07-29 14:21:50.000000000 -0400
+@@ -7,6 +7,7 @@
+ #include <sdf_priv.h>
+ #include <sdf.h>
+ #include "sdftranspose.h"
++#include "../src/bbhutil.h"
+ 
+ int main(int argc, char **argv) {
+    static char P[] = "sdftranspose";
+diff -ru rnpletal.orig/rnpl/examples/get_param/t_get_param.c rnpletal/rnpl/examples/get_param/t_get_param.c
+--- rnpletal.orig/rnpl/examples/get_param/t_get_param.c	2014-10-18 00:06:17.000000000 -0400
++++ rnpletal/rnpl/examples/get_param/t_get_param.c	2021-07-29 15:16:26.000000000 -0400
+@@ -1,5 +1,6 @@
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include <bbhutil.h>
+ 
+ /* 
+diff -ru rnpletal.orig/rnpl/examples/get_param/t_get_param_v.c rnpletal/rnpl/examples/get_param/t_get_param_v.c
+--- rnpletal.orig/rnpl/examples/get_param/t_get_param_v.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/examples/get_param/t_get_param_v.c	2021-07-29 15:16:41.000000000 -0400
+@@ -1,6 +1,5 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+-#include <malloc.h>
+ #include <bbhutil.h>
+ 
+ /* ----------------------------------------------------
+diff -ru rnpletal.orig/rnpl/examples/get_param/t_get_str_param.c rnpletal/rnpl/examples/get_param/t_get_str_param.c
+--- rnpletal.orig/rnpl/examples/get_param/t_get_str_param.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/examples/get_param/t_get_str_param.c	2021-07-29 15:17:01.000000000 -0400
+@@ -1,4 +1,5 @@
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <bbhutil.h>
+ 
+ int main(int argc, char **argv) {
+diff -ru rnpletal.orig/rnpl/examples/get_param/t_is_param_assigned.c rnpletal/rnpl/examples/get_param/t_is_param_assigned.c
+--- rnpletal.orig/rnpl/examples/get_param/t_is_param_assigned.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/examples/get_param/t_is_param_assigned.c	2021-07-29 15:38:39.000000000 -0400
+@@ -1,4 +1,5 @@
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <bbhutil.h>
+ 
+ /* 
+diff -ru rnpletal.orig/rnpl/examples/get_param/t_regex.c rnpletal/rnpl/examples/get_param/t_regex.c
+--- rnpletal.orig/rnpl/examples/get_param/t_regex.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/examples/get_param/t_regex.c	2021-07-29 15:38:39.000000000 -0400
+@@ -1,4 +1,5 @@
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <sys/types.h>
+ #include <regex.h>
+ 
+diff -ru rnpletal.orig/rnpl/src/bbhutil.c rnpletal/rnpl/src/bbhutil.c
+--- rnpletal.orig/rnpl/src/bbhutil.c	2014-06-12 14:13:01.000000000 -0400
++++ rnpletal/rnpl/src/bbhutil.c	2021-07-29 14:16:59.000000000 -0400
+@@ -16,6 +16,8 @@
+ /* to minimize amount of file open/closes, particularly in context */
+ /* of massively parallel execution.                                */
+ 
++#include <ctype.h>
++#include <math.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+diff -ru rnpletal.orig/rnpl/src/bbhutil.h rnpletal/rnpl/src/bbhutil.h
+--- rnpletal.orig/rnpl/src/bbhutil.h	2019-10-13 19:53:48.000000000 -0400
++++ rnpletal/rnpl/src/bbhutil.h	2021-07-28 23:04:33.000000000 -0400
+@@ -6,7 +6,6 @@
+ 
+ #include <sdf.h>
+ #include <sys/types.h>
+-#include <sys/sysmacros.h>
+ 
+ #define MAXRANK 5
+ 
+diff -ru rnpletal.orig/rnpl/src/genf77extern.c rnpletal/rnpl/src/genf77extern.c
+--- rnpletal.orig/rnpl/src/genf77extern.c	2014-10-18 00:06:36.000000000 -0400
++++ rnpletal/rnpl/src/genf77extern.c	2021-07-29 14:53:30.000000000 -0400
+@@ -1,3 +1,4 @@
++#include <ctype.h>
+ #include <string.h>
+ 
+ void fort_call(char *s)
+diff -ru rnpletal.orig/rnpl/src/librnplf77.f rnpletal/rnpl/src/librnplf77.f
+--- rnpletal.orig/rnpl/src/librnplf77.f	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/src/librnplf77.f	2021-07-29 15:16:01.000000000 -0400
+@@ -289,7 +289,7 @@
+          integer         ixspan, makind
+ c
+          character*(*)   prstr
+-         integer         iv(1)
++         integer         iv(*)
+          integer         liv, mxliv, prunit, sup
+ c
+          integer         rdunit
+@@ -479,7 +479,7 @@
+       subroutine psexpr(s,curs,st,fin,inc,ngroup,sucess)
+ c
+          character*(*)   s
+-         integer         inc(1), fin(1), st(1), curs, ngroup
++         integer         inc(*), fin(*), st(*), curs, ngroup
+          logical         sucess
+ c
+          character*80    tok
+@@ -525,7 +525,7 @@
+ c
+          integer         makind
+ c
+-         integer         iv(1)
++         integer         iv(*)
+          integer         inf, liv, mxliv, rdunit, sup
+ c
+          character*80    cline
+@@ -571,7 +571,7 @@
+ c
+          integer         makind
+ c
+-         integer         iv(1)
++         integer         iv(*)
+          integer         inf, liv, mxliv, rdunit, sup
+ c
+          character*80    cline
+@@ -617,7 +617,7 @@
+ c
+          integer         makind
+ c
+-         integer         iv(1)
++         integer         iv(*)
+          integer         inf, liv, mxliv, sup
+ c
+          character*(*)   cline
+@@ -661,7 +661,7 @@
+ c
+          integer         makind
+ c
+-         integer         iv(1)
++         integer         iv(*)
+          integer         inf, liv, mxliv, sup
+ c
+          character*(*)   cline
+@@ -833,7 +833,7 @@
+ c
+       subroutine livrmp(v,v0,vinc,n)
+ c
+-         integer     v(1)
++         integer     v(*)
+          integer     v0, vinc
+          integer     i, n
+ c
+@@ -856,7 +856,7 @@
+ c
+       subroutine locivramp(v,v0,vinc,n)
+ c
+-         integer     v(1)
++         integer     v(*)
+          integer     v0, vinc
+          integer     i, n
+ c
+@@ -913,7 +913,7 @@
+       subroutine l_ivls(v1,s1,n)
+ 			implicit    none
+ 
+-         integer     v1(1)
++         integer     v1(*)
+          integer     s1
+          integer     i, n
+ 
+diff -ru rnpletal.orig/rnpl/src/rnpl.y rnpletal/rnpl/src/rnpl.y
+--- rnpletal.orig/rnpl/src/rnpl.y	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/src/rnpl.y	2021-07-29 14:52:48.000000000 -0400
+@@ -6,6 +6,7 @@
+ #define VERSION "0.995"
+ 
+ #include <stdlib.h>
++#include <unistd.h>
+ #include "rnpl.h"
+ 
+ param_dec *pd;
+@@ -1360,7 +1361,7 @@
+   
+ %%
+ 
+-main(int argc, char **argv)
++int main(int argc, char **argv)
+ {
+   int fn,rn,gn,i,err;
+   char *fnm,ch,line[1024],oname[100],iname[50],ifile[100],*ev;
+diff -ru rnpletal.orig/rnpl/src/rnpl_sup.c rnpletal/rnpl/src/rnpl_sup.c
+--- rnpletal.orig/rnpl/src/rnpl_sup.c	2013-07-08 20:38:27.000000000 -0400
++++ rnpletal/rnpl/src/rnpl_sup.c	2021-07-29 15:13:44.000000000 -0400
+@@ -12,7 +12,9 @@
+ 
+ #define _SUPPORT_
+ #define _SUPPORT_
++#include <math.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include "rnpl.h"
+ #include "rnpl.tab.h"
+ #ifdef __POWERPC__
+@@ -30,6 +32,8 @@
+ static int f77_coord_flag=0;
+ static int f77_gfunc_flag=0;
+ 
++int coordsys_to_index(const coord_table *cd);
++
+ int fort_out_const(char *s, const double d)
+ {
+   int i;
+diff -ru rnpletal.orig/rnpl/src/sdf.c rnpletal/rnpl/src/sdf.c
+--- rnpletal.orig/rnpl/src/sdf.c	2014-07-14 19:01:47.000000000 -0400
++++ rnpletal/rnpl/src/sdf.c	2021-07-29 14:52:18.000000000 -0400
+@@ -8,6 +8,7 @@
+ /* 2012-04-02: Modified by MWC gft_make_sdf_name() so that '+' is a valid character in name. */
+ /* 2012-04-19: Added utility function 'gft_is_sdf_file' */
+ 
++#include <ctype.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+diff -ru rnpletal.orig/rvs/aclocal.m4 rnpletal/rvs/aclocal.m4
+--- rnpletal.orig/rvs/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/rvs/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/rvs/src/v1.c rnpletal/rvs/src/v1.c
+--- rnpletal.orig/rvs/src/v1.c	2001-05-15 20:18:51.000000000 -0400
++++ rnpletal/rvs/src/v1.c	2021-07-28 22:51:25.000000000 -0400
+@@ -1,6 +1,7 @@
+ /* Remote version of v1 ... */
+ 
+ #include      <stdio.h>
++#include      <stdlib.h>
+ #include      <string.h>
+ #include      <libgen.h>
+ #include      "rvs_cli.h"
+diff -ru rnpletal.orig/rvs/src/vn.c rnpletal/rvs/src/vn.c
+--- rnpletal.orig/rvs/src/vn.c	2001-05-15 20:19:53.000000000 -0400
++++ rnpletal/rvs/src/vn.c	2021-07-28 22:51:36.000000000 -0400
+@@ -4,6 +4,7 @@
+ /* Queries vs for window tag by name, optional time argument ... */
+ 
+ #include      <stdio.h>
++#include      <stdlib.h>
+ #include      <string.h>
+ #include      <libgen.h>
+ #include      "rvs_cli.h"
+diff -ru rnpletal.orig/svs/aclocal.m4 rnpletal/svs/aclocal.m4
+--- rnpletal.orig/svs/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/svs/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/utilio/aclocal.m4 rnpletal/utilio/aclocal.m4
+--- rnpletal.orig/utilio/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/utilio/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/utilmath/aclocal.m4 rnpletal/utilmath/aclocal.m4
+--- rnpletal.orig/utilmath/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/utilmath/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/visutil/aclocal.m4 rnpletal/visutil/aclocal.m4
+--- rnpletal.orig/visutil/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/visutil/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"
+diff -ru rnpletal.orig/vutil/aclocal.m4 rnpletal/vutil/aclocal.m4
+--- rnpletal.orig/vutil/aclocal.m4	2021-06-03 19:30:17.000000000 -0400
++++ rnpletal/vutil/aclocal.m4	2021-07-29 14:55:40.000000000 -0400
+@@ -632,7 +632,7 @@
+ dnl----------------------------------------------------------------------
+                     if test "X$CCF77LIBS" = "X"; then 
+                         if $F77 --version | grep g77 > /dev/null 2>&1; then
+-                           CCF77LIBS='-lg2c -lm';
++                           CCF77LIBS='-lgfortran -lm';
+                         else
+                            CCF77LIBS='-lgfortran -lm'
+                         fi
+@@ -689,7 +689,7 @@
+                  if test "X$CCF77LIBS" = "X"; then
+                      case $F77 in
+                      gfortran*|g77*) CCF77LIBS='-lgfortran -lm';;
+-                     *) CCF77LIBS='-lg2c -lm';;
++                     *) CCF77LIBS='-lgfortran -lm';;
+                      esac
+                  fi
+                  RPCGEN_CPPFLAGS="-U__STDC__"
+@@ -697,7 +697,7 @@
+ dnl              Various locations that Darwin software gets installed
+ dnl              by various and sundry packages.
+ dnl ----------------------------------------------------------------------
+-                 LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -L/sw/lib -L/usr/local/gfortran/lib -L/opt/local/lib"
++                 LDFLAGS="$LDFLAGS"
+                  if test "X$LIBGL" = "X"; then
+                     LIBGL="-lXpm -lGLU -lGL -lXext -lX11 -lm"
+                     LIBGLUT="-lXpm -lglut -lGLU -lGL -lXmu -lXi -lXext -lX11 -lm"

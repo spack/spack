@@ -1,28 +1,30 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Cqrlib(MakefilePackage):
     """CQRlib -- ANSI C API for Quaternion Rotations"""
 
     homepage = "http://cqrlib.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/cqrlib/cqrlib/CQRlib-1.1.2/CQRlib-1.1.2.tar.gz"
+    url = (
+        "https://downloads.sourceforge.net/project/cqrlib/cqrlib/CQRlib-1.1.2/CQRlib-1.1.2.tar.gz"
+    )
 
-    version('1.1.2', sha256='af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd')
+    version("1.1.2", sha256="af3cf2402974579f3c6efc6a6174a5da52786db4bfee9d38d504d93bc42410fd")
 
-    depends_on('libtool',  type='build')
+    depends_on("libtool", type="build")
 
-    patch('cqr.patch')
+    patch("cqr.patch")
 
     def edit(self, spec, prefix):
-        mf = FileFilter('Makefile')
-        mf.filter(r'^CC.+', "CC = {0}".format(spack_cc))
-        mf.filter(r'^CXX.+', "CXX = {0}".format(spack_cxx))
-        mf.filter(r'^INSTALLDIR .+', "INSTALLDIR = {0}".format(prefix))
+        mf = FileFilter("Makefile")
+        mf.filter(r"^CC.+", "CC = {0}".format(spack_cc))
+        mf.filter(r"^CXX.+", "CXX = {0}".format(spack_cxx))
+        mf.filter(r"^INSTALLDIR .+", "INSTALLDIR = {0}".format(prefix))
 
     def build(self, spec, prefix):
         pass

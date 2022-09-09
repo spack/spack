@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Audacity(CMakePackage):
@@ -14,10 +14,10 @@ class Audacity(CMakePackage):
     and the audio I/O supports PulseAudio, OSS and ALSA under Linux."""
 
     homepage = "http://audacity.sourceforge.net"
-    url      = "https://github.com/audacity/audacity/archive/Audacity-2.4.2.tar.gz"
+    url = "https://github.com/audacity/audacity/archive/Audacity-2.4.2.tar.gz"
 
-    version('2.4.2', sha256='cdb4800c8e9d1d4ca19964caf8d24000f80286ebd8a4db566c2622449744c099')
-    version('2.4.1', sha256='50240f07471373a7e5c2df65cc26eeeaaced9a0850ad1f95cb795f171ea3009f')
-    version('2.4.0', sha256='5d1c096d7b04ff8d5dbca3dca5b9d9f8e62093b5ea6e57ae5f821ae3132dc88f')
+    version("2.4.2", sha256="cdb4800c8e9d1d4ca19964caf8d24000f80286ebd8a4db566c2622449744c099")
+    version("2.4.1", sha256="50240f07471373a7e5c2df65cc26eeeaaced9a0850ad1f95cb795f171ea3009f")
+    version("2.4.0", sha256="5d1c096d7b04ff8d5dbca3dca5b9d9f8e62093b5ea6e57ae5f821ae3132dc88f")
 
-    depends_on('wxwidgets')
+    depends_on("wxwidgets")

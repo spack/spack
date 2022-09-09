@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,34 +6,31 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'upstreams': {
-        'type': 'object',
-        'default': {},
-        'patternProperties': {
-            r'\w[\w-]*': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'properties': {
-                    'install_tree': {'type': 'string'},
-                    'modules': {
-                        'type': 'object',
-                        'properties': {
-                            'tcl': {'type': 'string'},
-                            'lmod': {'type': 'string'}
-                        }
-                    }
-                }
+    "upstreams": {
+        "type": "object",
+        "default": {},
+        "patternProperties": {
+            r"\w[\w-]*": {
+                "type": "object",
+                "default": {},
+                "additionalProperties": False,
+                "properties": {
+                    "install_tree": {"type": "string"},
+                    "modules": {
+                        "type": "object",
+                        "properties": {"tcl": {"type": "string"}, "lmod": {"type": "string"}},
+                    },
+                },
             }
-        }
+        },
     }
 }
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack core configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack core configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

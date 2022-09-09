@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Miniasm(MakefilePackage):
@@ -11,11 +11,11 @@ class Miniasm(MakefilePackage):
     reads."""
 
     homepage = "http://www.example.co://github.com/lh3/miniasm"
-    git      = "https://github.com/lh3/miniasm.git"
+    git = "https://github.com/lh3/miniasm.git"
 
-    version('2018-3-30', commit='55cf0189e2f7d5bda5868396cebe066eec0a9547')
+    version("2018-3-30", commit="55cf0189e2f7d5bda5868396cebe066eec0a9547")
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin)
+        install_tree(".", prefix.bin)

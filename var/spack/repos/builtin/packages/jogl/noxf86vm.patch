@@ -1,0 +1,53 @@
+diff --git a/make/build-nativewindow.xml b/make/build-nativewindow.xml
+index 6c9405cfd..140416bba 100644
+--- a/make/build-nativewindow.xml
++++ b/make/build-nativewindow.xml
+@@ -446,19 +446,16 @@
+ 
+       <linker id="linker.cfg.linux.nativewindow.x11" extends="linker.cfg.linux">
+         <syslibset libs="X11"/>
+-        <syslibset libs="Xxf86vm" />
+         <syslibset libs="Xrender"/>
+       </linker>
+ 
+       <linker id="linker.cfg.linux.x86.nativewindow.x11" extends="linker.cfg.linux.x86">
+         <syslibset libs="X11"/>
+-        <syslibset libs="Xxf86vm" />
+         <syslibset libs="Xrender"/>
+       </linker>
+ 
+       <linker id="linker.cfg.linux.amd64.nativewindow.x11" extends="linker.cfg.linux.amd64">
+         <syslibset libs="X11"/>
+-        <syslibset libs="Xxf86vm" />
+         <syslibset libs="Xrender"/>
+       </linker>
+ 
+@@ -470,7 +467,6 @@
+ 
+       <linker id="linker.cfg.linux.aarch64.nativewindow.x11" extends="linker.cfg.linux.aarch64">
+         <syslibset dir="${env.TARGET_PLATFORM_ROOT}/usr/lib" libs="X11" />
+-        <syslibset dir="${env.TARGET_PLATFORM_ROOT}/usr/lib" libs="Xxf86vm" />
+         <syslibset dir="${env.TARGET_PLATFORM_ROOT}/usr/lib" libs="Xrender" />
+       </linker>
+ 
+diff --git a/src/nativewindow/native/x11/Xmisc.h b/src/nativewindow/native/x11/Xmisc.h
+index d8868f802..fb7f5f758 100644
+--- a/src/nativewindow/native/x11/Xmisc.h
++++ b/src/nativewindow/native/x11/Xmisc.h
+@@ -39,9 +39,6 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
+-#if !defined(__sun_obsolete) && !defined(_HPUX)
+-#include <X11/extensions/xf86vmode.h>
+-#else
+ Bool XF86VidModeGetGammaRampSize(
+     Display*                    /* dpy */,
+     int                         /* screen */,
+@@ -63,6 +60,5 @@ Bool XF86VidModeSetGammaRamp(
+     unsigned short*             /* green array */,
+     unsigned short*             /* blue array */
+ );
+-#endif /* defined(__sun_obsolete) || defined(_HPUX) */
+ 
+ #endif /* Xmisc_h */

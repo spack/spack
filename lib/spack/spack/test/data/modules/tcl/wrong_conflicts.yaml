@@ -4,5 +4,6 @@ tcl:
   projections:
     all: '{name}/{version}-{compiler.name}'
   all:
+    autoload: none
     conflict:
       - '{name}/{compiler.name}'

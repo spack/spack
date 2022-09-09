@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyChai(PythonPackage):
@@ -12,6 +12,6 @@ class PyChai(PythonPackage):
     homepage = "https://github.com/agoragames/chai"
     pypi = "chai/chai-1.1.2.tar.gz"
 
-    version('1.1.2', sha256='ff8d2b6855f660cd23cd5ec79bd10264d39f24f6235773331b48e7fcd637d6cc')
+    version("1.1.2", sha256="ff8d2b6855f660cd23cd5ec79bd10264d39f24f6235773331b48e7fcd637d6cc")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

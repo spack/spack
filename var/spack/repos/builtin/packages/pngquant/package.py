@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pngquant(AutotoolsPackage):
@@ -13,8 +13,8 @@ class Pngquant(AutotoolsPackage):
     """
 
     homepage = "https://pngquant.org/"
-    url      = "http://pngquant.org/pngquant-2.12.5-src.tar.gz"
+    url = "https://pngquant.org/pngquant-2.12.5-src.tar.gz"
 
-    version('2.12.5', sha256='3638936cf6270eeeaabcee42e10768d78e4dc07cac9310307835c1f58b140808')
+    version("2.12.5", sha256="3638936cf6270eeeaabcee42e10768d78e4dc07cac9310307835c1f58b140808")
 
-    depends_on('libpng')
+    depends_on("libpng")

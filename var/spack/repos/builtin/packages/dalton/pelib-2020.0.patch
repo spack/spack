@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -101,7 +101,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
+         set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} --coverage")
+     endif()
+     set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -Ofast -mtune=native")
+-    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Og -pedantic -fcheck=all -fbacktrace -Wall -Wextra -Warray-temporaries -Wcharacter-truncation -Wconversion-extra -Wsurprising -Wimplicit-interface -Wimplicit-procedure -Wrealloc-lhs -Wrealloc-lhs-all")
++    set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -Og -fcheck=all -fbacktrace -Wall -Wextra -Warray-temporaries -Wcharacter-truncation -Wconversion-extra -Wsurprising -Wimplicit-interface -Wimplicit-procedure -Wrealloc-lhs -Wrealloc-lhs-all")
+     if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS "8.2.0")
+         set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -std=f2008ts")
+     else()

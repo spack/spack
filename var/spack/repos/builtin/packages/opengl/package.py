@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,43 +6,32 @@
 import re
 import sys
 
+from spack.package import *
 
-class Opengl(Package):
+
+class Opengl(BundlePackage):
     """Placeholder for external OpenGL libraries from hardware vendors"""
-
-    has_code = False
 
     homepage = "https://www.opengl.org/"
 
-    provides('gl')
-    provides('gl@:4.5', when='@4.5:')
-    provides('gl@:4.4', when='@4.4:')
-    provides('gl@:4.3', when='@4.3:')
-    provides('gl@:4.2', when='@4.2:')
-    provides('gl@:4.1', when='@4.1:')
-    provides('gl@:3.3', when='@3.3:')
-    provides('gl@:3.2', when='@3.2:')
-    provides('gl@:3.1', when='@3.1:')
-    provides('gl@:3.0', when='@3.0:')
-    provides('gl@:2.1', when='@2.1:')
-    provides('gl@:2.0', when='@2.0:')
-    provides('gl@:1.5', when='@1.5:')
-    provides('gl@:1.4', when='@1.4:')
-    provides('gl@:1.3', when='@1.3:')
-    provides('gl@:1.2', when='@1.2:')
-    provides('gl@:1.1', when='@1.1:')
-    provides('gl@:1.0', when='@1.0:')
+    version("4.5")
 
-    if sys.platform != 'darwin':
-        provides('glx@1.4')
-
-    executables = ['^glxinfo$']
+    # This should really be when='platform=linux' but can't because of a
+    # current bug in when and how ArchSpecs are constructed
+    if sys.platform.startswith("linux"):
+        provides("libglx")
+        executables = ["^glxinfo$"]
+    else:  # windows and mac
+        provides("gl@4.5")
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)(output=str, error=str)
-        match = re.search(r'OpenGL version string: (\S+)', output)
-        return match.group(1) if match else None
+        if exe:
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r"OpenGL version string: (\S+)", output)
+            return match.group(1) if match else None
+        else:
+            return None
 
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
@@ -89,7 +78,29 @@ class Opengl(Package):
         of OpenGL your Mac uses."""
         raise InstallError(msg)
 
+    @fetcher.setter  # Since fetcher is read-write, must override both
+    def fetcher(self):
+        _ = self.fetcher
+
     @property
     def libs(self):
-        return find_libraries(
-            'libGL', self.prefix, shared=True, recursive=True)
+        return self.gl_libs
+
+    @property
+    def gl_headers(self):
+        if "platform=darwin":
+            header_name = "OpenGL/gl.h"
+        else:
+            header_name = "GL/gl.h"
+        return find_headers(header_name, root=self.prefix, recursive=True)
+
+    @property
+    def gl_libs(self):
+        spec = self.spec
+        if "platform=windows" in spec:
+            lib_name = "opengl32"
+        elif "platform=darwin" in spec:
+            lib_name = "libOpenGL"
+        else:  # linux and cray
+            lib_name = "libGL"
+        return find_libraries(lib_name, root=self.prefix, recursive=True)

@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyHdbscan(PythonPackage):
@@ -18,14 +21,14 @@ class PyHdbscan(PythonPackage):
     you can trust to return meaningful clusters (if there are any)."""
 
     homepage = "https://github.com/scikit-learn-contrib/hdbscan"
-    url      = "https://github.com/scikit-learn-contrib/hdbscan/archive/0.8.26.tar.gz"
+    url = "https://github.com/scikit-learn-contrib/hdbscan/archive/0.8.26.tar.gz"
 
-    version('0.8.26', sha256='2fd10906603b6565ee138656b6d59df3494c03c5e8099aede400d50b13af912b')
+    version("0.8.26", sha256="2fd10906603b6565ee138656b6d59df3494c03c5e8099aede400d50b13af912b")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.27:', type='build')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'))
-    depends_on('py-scipy@0.9:', type=('build', 'run'))
-    depends_on('py-scikit-learn@0.17:', type=('build', 'run'))
-    depends_on('py-joblib', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython@0.27:", type="build")
+    depends_on("py-numpy@1.16.0:", type=("build", "run"))
+    depends_on("py-scipy@0.9:", type=("build", "run"))
+    depends_on("py-scikit-learn@0.17:", type=("build", "run"))
+    depends_on("py-joblib", type=("build", "run"))
+    depends_on("py-six", type=("build", "run"))

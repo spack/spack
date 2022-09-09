@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class AppleLibuuid(BundlePackage):
@@ -11,13 +11,13 @@ class AppleLibuuid(BundlePackage):
 
     homepage = "https://opensource.apple.com/tarballs/Libsystem/"
 
-    version('1353.100.2')
+    version("1353.100.2")
 
-    provides('uuid')
+    provides("uuid")
 
     # Only supported on 'platform=darwin'
-    conflicts('platform=linux')
-    conflicts('platform=cray')
+    conflicts("platform=linux")
+    conflicts("platform=cray")
 
     @property
     def libs(self):
@@ -37,9 +37,9 @@ class AppleLibuuid(BundlePackage):
         confirms that it will link dynamically to
         `/usr/lib/system/libsystem_c.dylib`."""
 
-        return LibraryList('/usr/lib/libSystem.dylib')
+        return LibraryList("/usr/lib/libSystem.dylib")
 
     @property
     def headers(self):
         """Export the Apple libuuid header."""
-        return HeaderList(self.prefix.include.uuid.join('uuid.h'))
+        return HeaderList(self.prefix.include.uuid.join("uuid.h"))

@@ -1,0 +1,354 @@
+--- a/arch/configure.defaults	2022-03-11 20:25:56.745017753 +0000
++++ b/arch/configure.defaults	2022-03-11 20:24:12.548778719 +0000
+@@ -11,8 +11,8 @@
+ CC                  = mpicc
+ SCC                 = xlc_r
+ LD                  = $(FC)
+-FFLAGS              = -qfree=f90 -qufmt=be
+-F77FLAGS            = -qfixed -qufmt=be
++FFLAGS              = $(FCFLAGS) -qfree=f90 -qufmt=be
++F77FLAGS            = $(FCFLAGS) -qfixed -qufmt=be
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+ CFLAGS              =
+@@ -32,8 +32,8 @@
+ CC                  = mpicc
+ SCC                 = pgcc
+ LD                  = $(FC)
+-FFLAGS              = -Mfree -byteswapio
+-F77FLAGS            = -Mfixed -byteswapio
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+ CFLAGS              =
+@@ -56,8 +56,8 @@
+ SFC                 = blrts_xlf90
+ CC                  = blrts_xlc
+ LD                  = $(FC)
+-FFLAGS              = -qfree=f90 $(MPI_INC)
+-F77FLAGS            = -qfixed $(MPI_INC)
++FFLAGS              = $(FCFLAGS) -qfree=f90 $(MPI_INC)
++F77FLAGS            = $(FCFLAGS) -qfixed $(MPI_INC)
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+ SCC                 = cc
+@@ -85,8 +85,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -Mfree -byteswapio -O
+-F77FLAGS            = -Mfixed -byteswapio -O
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio -O
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio -O
+ FCSUFFIX            =
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+@@ -109,8 +109,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC 
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            =
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+@@ -133,8 +133,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC 
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -O -fendian=big
+-F77FLAGS            = -ffixed-form -O -fendian=big
++FFLAGS              = $(FCFLAGS) -ffree-form -O -fendian=big
++F77FLAGS            = $(FCFLAGS) -ffixed-form -O -fendian=big
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -157,8 +157,8 @@
+ FC                  = CONFIGURE_FC 
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -O -fconvert=big-endian -frecord-marker=4
+-F77FLAGS            = -ffixed-form -O -fconvert=big-endian -frecord-marker=4
++FFLAGS              = $(FCFLAGS) -ffree-form -O -fconvert=big-endian -frecord-marker=4
++F77FLAGS            = $(FCFLAGS) -ffixed-form -O -fconvert=big-endian -frecord-marker=4
+ FCCOMPAT            = CONFIGURE_COMPAT_FLAGS
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+@@ -181,8 +181,8 @@
+ FC                  = CONFIGURE_FC 
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -O -fconvert=big-endian -frecord-marker=4
+-F77FLAGS            = -ffixed-form -O -fconvert=big-endian -frecord-marker=4
++FFLAGS              = $(FCFLAGS) -ffree-form -O -fconvert=big-endian -frecord-marker=4
++F77FLAGS            = $(FCFLAGS) -ffixed-form -O -fconvert=big-endian -frecord-marker=4
+ FCCOMPAT            = CONFIGURE_COMPAT_FLAGS
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+@@ -207,8 +207,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC) 
+-FFLAGS              = -Mfree -byteswapio -O
+-F77FLAGS            = -Mfixed -byteswapio -O
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio -O
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio -O
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -233,8 +233,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC) 
+-FFLAGS              = -Mfree -byteswapio -O
+-F77FLAGS            = -Mfixed -byteswapio -O
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio -O
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio -O
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -L$(MPI_ROOT)/lib -lmpi
+@@ -257,8 +257,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -freeform -fno-second-underscore -byteswapio -O
+-F77FLAGS            = -byteswapio -fno-second-underscore -O
++FFLAGS              = $(FCFLAGS) -freeform -fno-second-underscore -byteswapio -O
++F77FLAGS            = $(FCFLAGS) -byteswapio -fno-second-underscore -O
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -281,8 +281,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -305,8 +305,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -L$(MPI_ROOT)/lib -lmpi
+@@ -329,8 +329,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -353,8 +353,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -Mfree -byteswapio -O2
+-F77FLAGS            = -Mfixed -byteswapio -O2
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio -O2
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio -O2
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -378,8 +378,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -Mfree -byteswapio -O2
+-F77FLAGS            = -Mfixed -byteswapio -O2
++FFLAGS              = $(FCFLAGS) -Mfree -byteswapio -O2
++F77FLAGS            = $(FCFLAGS) -Mfixed -byteswapio -O2
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -403,8 +403,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -427,8 +427,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -g -fendian=big
+-F77FLAGS            = -ffixed-form -g -fendian=big
++FFLAGS              = $(FCFLAGS) -ffree-form -g -fendian=big
++F77FLAGS            = $(FCFLAGS) -ffixed-form -g -fendian=big
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -452,8 +452,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -O -fconvert=big-endian -frecord-marker=4
+-F77FLAGS            = -ffixed-form -O -fconvert=big-endian -frecord-marker=4
++FFLAGS              = $(FCFLAGS) -ffree-form -O -fconvert=big-endian -frecord-marker=4
++F77FLAGS            = $(FCFLAGS) -ffixed-form -O -fconvert=big-endian -frecord-marker=4
+ FCCOMPAT            = CONFIGURE_COMPAT_FLAGS
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+@@ -478,8 +478,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -O -fconvert=big-endian -frecord-marker=4
+-F77FLAGS            = -ffixed-form -O -fconvert=big-endian -frecord-marker=4
++FFLAGS              = $(FCFLAGS) -ffree-form -O -fconvert=big-endian -frecord-marker=4
++F77FLAGS            = $(FCFLAGS) -ffixed-form -O -fconvert=big-endian -frecord-marker=4
+ FCCOMPAT            = CONFIGURE_COMPAT_FLAGS
+ FCSUFFIX            =
+ FNGFLAGS            = $(FFLAGS)
+@@ -509,8 +509,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -qfree
+-F77FLAGS            = -qfixed
++FFLAGS              = $(FCFLAGS) -qfree
++F77FLAGS            = $(FCFLAGS) -qfixed
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS) -qextname
+ LDFLAGS             = -Wl,-stack_size,10000000,-stack_addr,0xc000000
+@@ -535,8 +535,8 @@
+ SCC                 = gcc-3.3
+ DM_FC               = mpif90 -f90=$(SFC)
+ DM_CC               = mpicc -cc=$(SCC)
+-FFLAGS              = -qfree
+-F77FLAGS            = -qfixed
++FFLAGS              = $(FCFLAGS) -qfree
++F77FLAGS            = $(FCFLAGS) -qfixed
+ FNGFLAGS            = $(FFLAGS) -qextname
+ LDFLAGS             = -Wl,-stack_size,10000000,-stack_addr,0xc0000000 -L/usr/lib -lSystemStubs
+ FC                  = CONFIGURE_FC
+@@ -559,8 +559,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -g -fno-second-underscore
+-F77FLAGS            = -ffixed-form -g -fno-second-underscore
++FFLAGS              = $(FCFLAGS) -ffree-form -g -fno-second-underscore
++F77FLAGS            = $(FCFLAGS) -ffixed-form -g -fno-second-underscore
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -588,8 +588,8 @@
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+ AR                  = ar
+-FFLAGS              = -qfree=f90
+-F77FLAGS            = -qfixed
++FFLAGS              = $(FCFLAGS) -qfree=f90
++F77FLAGS            = $(FCFLAGS) -qfixed
+ FCSUFFIX            = -qsuffix=f=f90
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+@@ -611,8 +611,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_FC
+ LD                  = $(FC)
+-FFLAGS              = -free -convert big_endian
+-F77FLAGS            = -convert big_endian
++FFLAGS              = $(FCFLAGS) -free -convert big_endian
++F77FLAGS            = $(FCFLAGS) -convert big_endian
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =    
+ CFLAGS              =    
+@@ -633,8 +633,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -ffree-form -g -fno-second-underscore
+-F77FLAGS            = -ffixed-form -g -fno-second-underscore
++FFLAGS              = $(FCFLAGS) -ffree-form -g -fno-second-underscore
++F77FLAGS            = $(FCFLAGS) -ffixed-form -g -fno-second-underscore
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -663,8 +663,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -Mfree -g
+-F77FLAGS            = -Mfixed -g
++FFLAGS              = $(FCFLAGS) -Mfree -g
++F77FLAGS            = $(FCFLAGS) -Mfixed -g
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -g
+@@ -686,8 +686,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -freeform -64
+-F77FLAGS            = -64
++FFLAGS              = $(FCFLAGS) -freeform -64
++F77FLAGS            = $(FCFLAGS) -64
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = -64
+@@ -716,8 +716,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            = 
+ FNGFLAGS            = 
+ LDFLAGS             = 
+@@ -740,8 +740,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -free
+-F77FLAGS            = 
++FFLAGS              = $(FCFLAGS) -free
++F77FLAGS            = $(FCFLAGS) 
+ FCSUFFIX            = 
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             = 
+@@ -763,8 +763,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -N255 -f free -h byteswapio
+-F77FLAGS            = -N255 -f fixed -h byteswapio
++FFLAGS              = $(FCFLAGS) -N255 -f free -h byteswapio
++F77FLAGS            = $(FCFLAGS) -N255 -f fixed -h byteswapio
+ FCSUFFIX            =
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =
+@@ -787,8 +787,8 @@
+ FC                  = CONFIGURE_FC
+ CC                  = CONFIGURE_CC
+ LD                  = $(FC)
+-FFLAGS              = -FR -convert big_endian
+-F77FLAGS            = -FI -convert big_endian
++FFLAGS              = $(FCFLAGS) -FR -convert big_endian
++F77FLAGS            = $(FCFLAGS) -FI -convert big_endian
+ FCSUFFIX            =
+ FNGFLAGS            = $(FFLAGS)
+ LDFLAGS             =

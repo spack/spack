@@ -1,23 +1,28 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import unicode_literals
 
-import fcntl
+import contextlib
 import os
 import struct
 import sys
-import termios
 import textwrap
 import traceback
-import six
 from datetime import datetime
+from sys import platform as _platform
+
+import six
 from six import StringIO
 from six.moves import input
 
-from llnl.util.tty.color import cprint, cwrite, cescape, clen
+if _platform != "win32":
+    import fcntl
+    import termios
+
+from llnl.util.tty.color import cescape, clen, cprint, cwrite
 
 # Globals
 _debug = 0
@@ -27,6 +32,7 @@ _timestamp = False
 _msg_enabled = True
 _warn_enabled = True
 _error_enabled = True
+_output_filter = lambda s: s
 indent = "  "
 
 
@@ -48,7 +54,7 @@ def is_stacktrace():
 
 def set_debug(level=0):
     global _debug
-    assert level >= 0, 'Debug level must be a positive value'
+    assert level >= 0, "Debug level must be a positive value"
     _debug = level
 
 
@@ -89,13 +95,22 @@ def error_enabled():
     return _error_enabled
 
 
+@contextlib.contextmanager
+def output_filter(filter_fn):
+    """Context manager that applies a filter to all output."""
+    global _output_filter
+    saved_filter = _output_filter
+    try:
+        _output_filter = filter_fn
+        yield
+    finally:
+        _output_filter = saved_filter
+
+
 class SuppressOutput:
     """Class for disabling output in a scope using 'with' keyword"""
 
-    def __init__(self,
-                 msg_enabled=True,
-                 warn_enabled=True,
-                 error_enabled=True):
+    def __init__(self, msg_enabled=True, warn_enabled=True, error_enabled=True):
 
         self._msg_enabled_initial = _msg_enabled
         self._warn_enabled_initial = _warn_enabled
@@ -128,7 +143,7 @@ def process_stacktrace(countback):
     file_list = []
     for frame in st:
         # Check that the file is a spack file
-        if frame[0].find("/spack") >= 0:
+        if frame[0].find(os.path.sep + "spack") >= 0:
             file_list.append(frame[0])
     # We use commonprefix to find what the spack 'root' directory is.
     root_dir = os.path.commonprefix(file_list)
@@ -146,11 +161,10 @@ def get_timestamp(force=False):
     """Get a string timestamp"""
     if _debug or _timestamp or force:
         # Note inclusion of the PID is useful for parallel builds.
-        pid = ', {0}'.format(os.getpid()) if show_pid() else ''
-        return '[{0}{1}] '.format(
-            datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), pid)
+        pid = ", {0}".format(os.getpid()) if show_pid() else ""
+        return "[{0}{1}] ".format(datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), pid)
     else:
-        return ''
+        return ""
 
 
 def msg(message, *args, **kwargs):
@@ -160,58 +174,61 @@ def msg(message, *args, **kwargs):
     if isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
-    newline = kwargs.get('newline', True)
+    newline = kwargs.get("newline", True)
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(2)
     if newline:
-        cprint("@*b{%s==>} %s%s" % (
-            st_text, get_timestamp(), cescape(message)))
+        cprint("@*b{%s==>} %s%s" % (st_text, get_timestamp(), cescape(_output_filter(message))))
     else:
-        cwrite("@*b{%s==>} %s%s" % (
-            st_text, get_timestamp(), cescape(message)))
+        cwrite("@*b{%s==>} %s%s" % (st_text, get_timestamp(), cescape(_output_filter(message))))
     for arg in args:
-        print(indent + six.text_type(arg))
+        print(indent + _output_filter(six.text_type(arg)))
 
 
 def info(message, *args, **kwargs):
     if isinstance(message, Exception):
         message = "%s: %s" % (message.__class__.__name__, str(message))
 
-    format = kwargs.get('format', '*b')
-    stream = kwargs.get('stream', sys.stdout)
-    wrap = kwargs.get('wrap', False)
-    break_long_words = kwargs.get('break_long_words', False)
-    st_countback = kwargs.get('countback', 3)
+    format = kwargs.get("format", "*b")
+    stream = kwargs.get("stream", sys.stdout)
+    wrap = kwargs.get("wrap", False)
+    break_long_words = kwargs.get("break_long_words", False)
+    st_countback = kwargs.get("countback", 3)
 
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s%s" % (
-        format, st_text, get_timestamp(), cescape(six.text_type(message))
-    ), stream=stream)
+    cprint(
+        "@%s{%s==>} %s%s"
+        % (format, st_text, get_timestamp(), cescape(_output_filter(six.text_type(message)))),
+        stream=stream,
+    )
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                six.text_type(arg), initial_indent=indent,
-                subsequent_indent=indent, break_long_words=break_long_words)
+                _output_filter(six.text_type(arg)),
+                initial_indent=indent,
+                subsequent_indent=indent,
+                break_long_words=break_long_words,
+            )
             for line in lines:
-                stream.write(line + '\n')
+                stream.write(line + "\n")
         else:
-            stream.write(indent + six.text_type(arg) + '\n')
+            stream.write(indent + _output_filter(six.text_type(arg)) + "\n")
 
 
 def verbose(message, *args, **kwargs):
     if _verbose:
-        kwargs.setdefault('format', 'c')
+        kwargs.setdefault("format", "c")
         info(message, *args, **kwargs)
 
 
 def debug(message, *args, **kwargs):
-    level = kwargs.get('level', 1)
+    level = kwargs.get("level", 1)
     if is_debug(level):
-        kwargs.setdefault('format', 'g')
-        kwargs.setdefault('stream', sys.stderr)
+        kwargs.setdefault("format", "g")
+        kwargs.setdefault("stream", sys.stderr)
         info(message, *args, **kwargs)
 
 
@@ -219,8 +236,8 @@ def error(message, *args, **kwargs):
     if not error_enabled():
         return
 
-    kwargs.setdefault('format', '*r')
-    kwargs.setdefault('stream', sys.stderr)
+    kwargs.setdefault("format", "*r")
+    kwargs.setdefault("stream", sys.stderr)
     info("Error: " + six.text_type(message), *args, **kwargs)
 
 
@@ -228,27 +245,27 @@ def warn(message, *args, **kwargs):
     if not warn_enabled():
         return
 
-    kwargs.setdefault('format', '*Y')
-    kwargs.setdefault('stream', sys.stderr)
+    kwargs.setdefault("format", "*Y")
+    kwargs.setdefault("stream", sys.stderr)
     info("Warning: " + six.text_type(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
-    kwargs.setdefault('countback', 4)
+    kwargs.setdefault("countback", 4)
     error(message, *args, **kwargs)
     sys.exit(1)
 
 
 def get_number(prompt, **kwargs):
-    default = kwargs.get('default', None)
-    abort = kwargs.get('abort', None)
+    default = kwargs.get("default", None)
+    abort = kwargs.get("abort", None)
 
     if default is not None and abort is not None:
-        prompt += ' (default is %s, %s to abort) ' % (default, abort)
+        prompt += " (default is %s, %s to abort) " % (default, abort)
     elif default is not None:
-        prompt += ' (default is %s) ' % default
+        prompt += " (default is %s) " % default
     elif abort is not None:
-        prompt += ' (%s to abort) ' % abort
+        prompt += " (%s to abort) " % abort
 
     number = None
     while number is None:
@@ -271,17 +288,16 @@ def get_number(prompt, **kwargs):
 
 
 def get_yes_or_no(prompt, **kwargs):
-    default_value = kwargs.get('default', None)
+    default_value = kwargs.get("default", None)
 
     if default_value is None:
-        prompt += ' [y/n] '
+        prompt += " [y/n] "
     elif default_value is True:
-        prompt += ' [Y/n] '
+        prompt += " [Y/n] "
     elif default_value is False:
-        prompt += ' [y/N] '
+        prompt += " [y/N] "
     else:
-        raise ValueError(
-            "default for get_yes_no() must be True, False, or None.")
+        raise ValueError("default for get_yes_no() must be True, False, or None.")
 
     result = None
     while result is None:
@@ -292,9 +308,9 @@ def get_yes_or_no(prompt, **kwargs):
             if result is None:
                 print("Please enter yes or no.")
         else:
-            if ans == 'y' or ans == 'yes':
+            if ans == "y" or ans == "yes":
                 result = True
-            elif ans == 'n' or ans == 'no':
+            elif ans == "n" or ans == "no":
                 result = False
     return result
 
@@ -306,12 +322,12 @@ def hline(label=None, **kwargs):
         char (str): Char to draw the line with.  Default '-'
         max_width (int): Maximum width of the line.  Default is 64 chars.
     """
-    char = kwargs.pop('char', '-')
-    max_width = kwargs.pop('max_width', 64)
+    char = kwargs.pop("char", "-")
+    max_width = kwargs.pop("max_width", 64)
     if kwargs:
         raise TypeError(
-            "'%s' is an invalid keyword argument for this function."
-            % next(kwargs.iterkeys()))
+            "'%s' is an invalid keyword argument for this function." % next(kwargs.iterkeys())
+        )
 
     rows, cols = terminal_size()
     if not cols:
@@ -334,22 +350,32 @@ def hline(label=None, **kwargs):
 
 def terminal_size():
     """Gets the dimensions of the console: (rows, cols)."""
-    def ioctl_gwinsz(fd):
-        try:
-            rc = struct.unpack('hh', fcntl.ioctl(
-                fd, termios.TIOCGWINSZ, '1234'))
-        except BaseException:
-            return
-        return rc
-    rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-    if not rc:
-        try:
-            fd = os.open(os.ctermid(), os.O_RDONLY)
-            rc = ioctl_gwinsz(fd)
-            os.close(fd)
-        except BaseException:
-            pass
-    if not rc:
-        rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+    if _platform != "win32":
 
-    return int(rc[0]), int(rc[1])
+        def ioctl_gwinsz(fd):
+            try:
+                rc = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
+            except BaseException:
+                return
+            return rc
+
+        rc = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+        if not rc:
+            try:
+                fd = os.open(os.ctermid(), os.O_RDONLY)
+                rc = ioctl_gwinsz(fd)
+                os.close(fd)
+            except BaseException:
+                pass
+        if not rc:
+            rc = (os.environ.get("LINES", 25), os.environ.get("COLUMNS", 80))
+
+        return int(rc[0]), int(rc[1])
+    else:
+        if sys.version_info[0] < 3:
+            raise RuntimeError(
+                "Terminal size not obtainable on Windows with a\
+Python version older than 3"
+            )
+        rc = (os.environ.get("LINES", 25), os.environ.get("COLUMNS", 80))
+        return int(rc[0]), int(rc[1])

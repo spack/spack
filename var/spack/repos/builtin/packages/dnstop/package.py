@@ -1,24 +1,26 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dnstop(AutotoolsPackage):
     """Stay on top of your DNS traffic."""
 
     homepage = "https://github.com/measurement-factory/dnstop"
-    git      = "https://github.com/measurement-factory/dnstop.git"
+    git = "https://github.com/measurement-factory/dnstop.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('libpcap')
+    depends_on("libpcap")
+    depends_on("ncurses")
+
+    def configure_args(self):
+        return ["LIBS=-ltinfo"]
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.share.man.man8)
-        make('BINPATH={0}'.format(prefix.bin),
-             'MANPATH={0}/'.format(prefix),
-             'install')
+        make("BINPATH={0}".format(prefix.bin), "MANPATH={0}/".format(prefix), "install")

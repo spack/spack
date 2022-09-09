@@ -1,0 +1,11 @@
+--- a/setup.py	2021-09-23 23:57:06.000000000 -0500
++++ b/setup.py	2021-11-18 14:29:50.000000000 -0600
+@@ -212,7 +212,7 @@
+         idx for idx, line in enumerate(template_lines)
+         if "#backend:" in line]
+     template_lines[backend_line_idx] = (
+-        "#backend: {}".format(setupext.options["backend"])
++        "#backend: {}\n".format(setupext.options["backend"])
+         if setupext.options["backend"]
+         else "##backend: Agg")
+     path.write_text("".join(template_lines))

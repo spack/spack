@@ -1,0 +1,27 @@
+--- a/tools/build/src/engine/build.sh
++++ b/tools/build/src/engine/build.sh
+@@ -232,7 +232,7 @@
+     # AIX VA C++ (vacpp)
+     if test_toolset vacpp && test_uname AIX && test_compiler xlC_r ; then B2_TOOLSET=vacpp ; return ${TRUE} ; fi
+     # PGI (pgi)
+-    if test_toolset pgi && test_compiler pgc++ -std=c++11 ; then B2_TOOLSET=pgi ; return ${TRUE} ; fi
++    if test_toolset pgi && test_compiler nvc++ -std=c++11 ; then B2_TOOLSET=pgi ; return ${TRUE} ; fi
+     # Pathscale C++ (pathscale)
+     if test_toolset pathscale && test_compiler pathCC ; then B2_TOOLSET=pathscale ; return ${TRUE} ; fi
+     # Como (como)
+--- a/tools/build/src/tools/pgi.jam	2020-08-25 08:45:01.015487600 -0700
++++ b/tools/build/src/tools/pgi.jam	2020-08-25 08:45:16.462554871 -0700
+@@ -26,11 +26,11 @@
+ {
+   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
+ 
+-  local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
++  local l_command = [ common.get-invocation-command pgi : nvc++ : $(command) ] ;
+ 
+   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
+     
+-  command_c = $(command_c[1--2]) $(l_command[-1]:B=pgcc) ;
++  command_c = $(command_c[1--2]) $(l_command[-1]:B=nvc) ;
+ 
+   toolset.flags pgi CONFIG_C_COMMAND $(condition) : $(command_c) ;
+ 

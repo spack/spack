@@ -1,23 +1,39 @@
-From 61ccc18cdd478c6281466f1f77de416559234dd8 Mon Sep 17 00:00:00 2001
+From 89c2219f0c5054e6f02df58f7a871110b5b5433c Mon Sep 17 00:00:00 2001
 From: Axel Huebl <axel.huebl@plasma.ninja>
-Date: Tue, 17 Mar 2020 10:51:20 -0700
-Subject: [PATCH] HDF5: H5Oget_info Compatibility
+Date: Tue, 15 Jun 2021 10:35:16 -0700
+Subject: [PATCH] HDF5 1.12.0 fallback APIs: No Wrapper
 
-Update to work with HDF5 1.12.0 signature.
-Macro for older releases.
+HDF5 can be built with "old" API support, e.g. building the
+v1.10 or v1.8 APIs at compile-time.
+
+In that case, the HDF5 1.12.0 macro for `H5Oget_info` will resolve
+to `H5Oget_info1` which only took two arguments.
+
+In order to avoid breaking in such builds, we will now map explicitly
+to the 1.12.0 API `H5Oget_info3` function and avoid the compat.
+macros.
+
+Ref.: https://github.com/HDFGroup/hdf5/issues/754
 ---
- src/IO/HDF5/HDF5IOHandler.cpp | 4 ++++
- 1 file changed, 4 insertions(+)
+ src/IO/HDF5/HDF5IOHandler.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/src/IO/HDF5/HDF5IOHandler.cpp b/src/IO/HDF5/HDF5IOHandler.cpp
-index 7043861b..c125e1f4 100644
+index 4ef7c0838..fad45d7a5 100644
 --- a/src/IO/HDF5/HDF5IOHandler.cpp
 +++ b/src/IO/HDF5/HDF5IOHandler.cpp
-@@ -1535,3 +1535,7 @@ void HDF5IOHandlerImpl::listAttributes(Writable* writable,
-     H5O_info_t object_info;
+@@ -1773,11 +1773,12 @@ void HDF5IOHandlerImpl::listAttributes(Writable* writable,
+                       H5P_DEFAULT);
+     VERIFY(node_id >= 0, "[HDF5] Internal error: Failed to open HDF5 group during attribute listing");
+ 
+-    H5O_info_t object_info;
      herr_t status;
-+#if H5_VERSION_GE(1,12,0)
-+    status = H5Oget_info(node_id, &object_info, H5O_INFO_NUM_ATTRS);
-+#else
+ #if H5_VERSION_GE(1,12,0)
+-    status = H5Oget_info(node_id, &object_info, H5O_INFO_NUM_ATTRS);
++    H5O_info2_t object_info;
++    status = H5Oget_info3(node_id, &object_info, H5O_INFO_NUM_ATTRS);
+ #else
++    H5O_info_t object_info;
      status = H5Oget_info(node_id, &object_info);
-+#endif
+ #endif
+     VERIFY(status == 0, "[HDF5] Internal error: Failed to get HDF5 object info for " + concrete_h5_file_position(writable) + " during attribute listing");

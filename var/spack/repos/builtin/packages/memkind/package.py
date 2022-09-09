@@ -1,10 +1,11 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
+
+from spack.package import *
 
 
 class Memkind(AutotoolsPackage):
@@ -21,33 +22,39 @@ class Memkind(AutotoolsPackage):
     enabled features."""
 
     homepage = "https://github.com/memkind/memkind"
-    url      = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
+    url = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
 
-    version('1.10.1', sha256='c203615d964a0bb151756ad8a5c9565391ee77d79c1f8b59d2ea8ff87989b294')
-    version('1.10.0', sha256='0399a1d6a179d065cdbc59bb687fcd00d09dfbb1789334acfdf7431a48707d26')
-    version('1.9.0', sha256='491f21c8d09904ad23700c755b9134fbed08bf227506c2fde135429688158b84')
-    version('1.8.0', sha256='8b57c5afa8afa6793e4662322e37620bbb11f119cd8d29654ec00945bbe13a17')
-    version('1.7.0', sha256='5048eaaa1bc484203c685a019f3f428ab6c9b1cf94ef6d264e299bc0127ec572')
+    version("1.13.0", sha256="3f0d919b61fdd4d2ebce14e0b7dbb856e2144138778940107c13549523f3bdc0")
+    version("1.12.0", sha256="b0781d493dec0da0089884fd54bcfdde03311019c56f90505ed0b884100bfbad")
+    version("1.10.1", sha256="c203615d964a0bb151756ad8a5c9565391ee77d79c1f8b59d2ea8ff87989b294")
+    version("1.10.0", sha256="0399a1d6a179d065cdbc59bb687fcd00d09dfbb1789334acfdf7431a48707d26")
+    version("1.9.0", sha256="491f21c8d09904ad23700c755b9134fbed08bf227506c2fde135429688158b84")
+    version("1.8.0", sha256="8b57c5afa8afa6793e4662322e37620bbb11f119cd8d29654ec00945bbe13a17")
+    version("1.7.0", sha256="5048eaaa1bc484203c685a019f3f428ab6c9b1cf94ef6d264e299bc0127ec572")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('numactl')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("numactl")
 
-    phases = ['build_jemalloc', 'autoreconf', 'configure', 'build',
-              'install']
+    # memkind includes a copy of jemalloc; see
+    # <https://github.com/memkind/memkind#jemalloc>.
+    conflicts("jemalloc")
 
     def patch(self):
-        with open('VERSION', 'w') as version_file:
-            version_file.write('{0}\n'.format(self.version))
+        with open("VERSION", "w") as version_file:
+            version_file.write("{0}\n".format(self.version))
+        # Remove `-Werror`
+        filter_file(r" -Werror ", " ", "Makefile.am", "configure.ac")
 
-    def build_jemalloc(self, spec, prefix):
-        if os.path.exists('build_jemalloc.sh'):
-            bash = which('bash')
-            bash('./build_jemalloc.sh')
+    @run_before("autoreconf")
+    def build_jemalloc(self):
+        if os.path.exists("build_jemalloc.sh"):
+            bash = which("bash")
+            bash("./build_jemalloc.sh")
 
     def autoreconf(self, spec, prefix):
-        if os.path.exists('autogen.sh'):
-            bash = which('bash')
-            bash('./autogen.sh')
+        if os.path.exists("autogen.sh"):
+            bash = which("bash")
+            bash("./autogen.sh")

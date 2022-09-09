@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlSysSigaction(PerlPackage):
@@ -23,6 +23,6 @@ class PerlSysSigaction(PerlPackage):
     perl 5.8.0 implementation was modified further in version 5.8.2"""
 
     homepage = "https://metacpan.org/pod/Sys::SigAction"
-    url      = "https://cpan.metacpan.org/authors/id/L/LB/LBAXTER/Sys-SigAction-0.23.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/L/LB/LBAXTER/Sys-SigAction-0.23.tar.gz"
 
-    version('0.23', sha256='c4ef6c9345534031fcbbe2adc347fc7194d47afc945e7a44fac7e9563095d353')
+    version("0.23", sha256="c4ef6c9345534031fcbbe2adc347fc7194d47afc945e7a44fac7e9563095d353")

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,15 +12,15 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'cdash': {
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['build-group', 'url', 'project', 'site'],
-        'patternProperties': {
-            r'build-group': {'type': 'string'},
-            r'url': {'type': 'string'},
-            r'project': {'type': 'string'},
-            r'site': {'type': 'string'},
+    "cdash": {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["build-group", "url", "project", "site"],
+        "patternProperties": {
+            r"build-group": {"type": "string"},
+            r"url": {"type": "string"},
+            r"project": {"type": "string"},
+            r"site": {"type": "string"},
         },
     },
 }
@@ -28,9 +28,9 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack cdash configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack cdash configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

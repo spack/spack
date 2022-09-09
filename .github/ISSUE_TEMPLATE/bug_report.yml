@@ -1,0 +1,58 @@
+name: "\U0001F41E Bug report"
+description: Report a bug in the core of Spack (command not working as expected, etc.)
+labels: [bug, triage]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Explain, in a clear and concise way, the command you ran and the result you were trying to achieve.
+        Example: "I ran `spack find` to list all the installed packages and ..."
+      placeholder: |
+        ```console
+        $ spack <command1> <spec>
+        $ spack <command2> <spec>
+        ...
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: |
+        If Spack reported an error, provide the error message. If it did not report an error but the output appears incorrect, provide the incorrect output. If there was no error message and no output but the result is incorrect, describe how it does not match what you expect.
+      placeholder: |
+        ```console
+        $ spack --debug --stacktrace <command>
+        ```
+  - type: textarea
+    id: information
+    attributes:
+      label: Information on your system
+      description: Please include the output of `spack debug report`
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        If you have any relevant configuration detail (custom `packages.yaml` or `modules.yaml`, etc.) you can add that here as well.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: General information
+      options:
+        - label: I have run `spack debug report` and reported the version of Spack/Python/Platform
+          required: true
+        - label: I have searched the issues of this repo and believe this is not a duplicate
+          required: true
+        - label: I have run the failing commands in debug mode and reported the output
+          required: true
+  - type: markdown
+    attributes:
+      value: |
+        We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
+        If you want to ask a question about the tool (how to use it, what it can currently do, etc.), try the `#general` channel on [our Slack](https://slack.spack.io/) first. We have a welcoming community and chances are you'll get your reply faster and without opening an issue.
+        
+        Other than that, thanks for taking the time to contribute to Spack!

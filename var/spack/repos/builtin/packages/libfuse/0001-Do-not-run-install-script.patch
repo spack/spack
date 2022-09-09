@@ -1,0 +1,27 @@
+From daf0c12d13791978bd7eab2ef44c432802fbcc95 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Wed, 24 Mar 2021 17:29:10 +0100
+Subject: [PATCH] Do not run install script by default
+
+---
+ util/meson.build | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/util/meson.build b/util/meson.build
+index 577668f..ef0bc81 100644
+--- a/util/meson.build
++++ b/util/meson.build
+@@ -20,10 +20,4 @@ if udevrulesdir == ''
+   udevrulesdir = join_paths(udev.get_pkgconfig_variable('udevdir'), 'rules.d')
+ endif
+ 
+-meson.add_install_script('install_helper.sh',
+-                         join_paths(get_option('prefix'), get_option('sysconfdir')),
+-                         join_paths(get_option('prefix'), get_option('bindir')),
+-                         udevrulesdir,
+-                         '@0@'.format(get_option('useroot')))
+-
+ 
+-- 
+2.25.1
+

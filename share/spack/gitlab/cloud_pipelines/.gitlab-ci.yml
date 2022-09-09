@@ -1,0 +1,759 @@
+stages: [ "generate", "build", "publish" ]
+
+default:
+  image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
+
+########################################
+# Job templates
+########################################
+
+.pr:
+  only:
+  - /^pr[\d]+_.*$/
+  - /^github\/pr[\d]+_.*$/
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_PIPELINE_TYPE: "spack_pull_request"
+    SPACK_PRUNE_UNTOUCHED: "True"
+
+.protected-refs:
+  only:
+  - /^develop$/
+  - /^releases\/v.*/
+  - /^v.*/
+  - /^github\/develop$/
+
+.protected:
+  extends: [ ".protected-refs" ]
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+    SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    SPACK_PIPELINE_TYPE: "spack_protected_branch"
+
+.generate:
+  stage: generate
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags: ["spack", "aws", "public", "medium", "x86_64"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 8G
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+.generate-aarch64:
+  extends: [ ".generate" ]
+  tags: ["spack", "aws", "public", "medium", "aarch64"]
+
+.generate-ppc64le:
+  extends: [ ".generate" ]
+  tags: ["spack", "uo", "public", "medium", "ppc64le"]
+
+.pr-generate:
+  extends: [ ".pr", ".generate" ]
+
+.pr-generate-aarch64:
+  extends: [ ".pr", ".generate-aarch64" ]
+
+.pr-generate-ppc64le:
+  extends: [ ".pr", ".generate-ppc64le" ]
+
+.protected-generate:
+  extends: [ ".protected", ".generate" ]
+
+.protected-generate-aarch64:
+  extends: [ ".protected", ".generate-aarch64" ]
+
+.protected-generate-ppc64le:
+  extends: [ ".protected", ".generate-ppc64le" ]
+
+.build:
+  stage: build
+
+.pr-build:
+  extends: [ ".pr", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+.protected-build:
+  extends: [ ".protected", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+protected-publish:
+  stage: publish
+  extends: [ ".protected" ]
+  image: "ghcr.io/spack/python-aws-bash:0.0.1"
+  tags: ["spack", "public", "medium", "aws", "x86_64"]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  script:
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
+    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
+
+########################################
+# TEMPLATE FOR ADDING ANOTHER PIPELINE
+########################################
+#
+# First add a new spack.yml defining the pipeline to run in
+# share/spack/gitlab/cloud_pipelines/stacks/my-super-cool-stack/spack.yaml
+#
+# Then add the following entries at the bottom of this file:
+#
+########################################
+# My Super Cool Pipeline
+########################################
+# .my-super-cool-stack:
+#   variables:
+#     SPACK_CI_STACK_NAME: my-super-cool-stack
+#
+# my-super-cool-stack-pr-generate:
+#   extends: [ ".my-super-cool-stack", ".pr-generate"]
+#
+# my-super-cool-stack-protected-generate:
+#   extends: [ ".my-super-cool-stack", ".protected-generate"]
+#
+# my-super-cool-stack-pr-build:
+#   extends: [ ".my-super-cool-stack", ".pr-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: my-super-cool-stack-pr-generate
+#     strategy: depend
+#
+# my-super-cool-stack-protected-build:
+#   extends: [ ".my-super-cool-stack", ".protected-build" ]
+#   trigger:
+#     include:
+#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+#         job: my-super-cool-stack-protected-generate
+#     strategy: depend
+
+########################################
+#          E4S Mac Stack
+#
+# With no near-future plans to have
+# protected aws runners running mac
+# builds, it seems best to decouple
+# them from the rest of the stacks for
+# the time being.  This way they can
+# still run on UO runners and be signed
+# using the previous approach.
+########################################
+.e4s-mac:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-mac
+  allow_failure: True
+
+.mac-pr:
+  only:
+  - /^pr[\d]+_.*$/
+  - /^github\/pr[\d]+_.*$/
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_PRUNE_UNTOUCHED: "True"
+
+.mac-protected:
+  only:
+  - /^develop$/
+  - /^releases\/v.*/
+  - /^v.*/
+  - /^github\/develop$/
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
+
+.mac-pr-build:
+  extends: [ ".mac-pr", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+.mac-protected-build:
+  extends: [ ".mac-protected", ".build" ]
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
+
+e4s-mac-pr-generate:
+  extends: [".e4s-mac", ".mac-pr"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags:
+  - lambda
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 60 minutes
+
+e4s-mac-protected-generate:
+  extends: [".e4s-mac", ".mac-protected"]
+  stage: generate
+  script:
+    - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
+    - . "./share/spack/setup-env.sh"
+    - spack --version
+    - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
+    - spack env activate --without-view .
+    - spack ci generate --check-index-only
+      --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
+      --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
+  artifacts:
+    paths:
+      - "${CI_PROJECT_DIR}/jobs_scratch_dir"
+  tags:
+  - omicron
+  interruptible: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 60 minutes
+
+e4s-mac-pr-build:
+  extends: [ ".e4s-mac", ".mac-pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-pr-generate
+
+e4s-mac-protected-build:
+  extends: [ ".e4s-mac", ".mac-protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-mac-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-mac-protected-generate
+
+########################################
+# E4S pipeline
+########################################
+.e4s:
+  variables:
+    SPACK_CI_STACK_NAME: e4s
+
+e4s-pr-generate:
+  extends: [ ".e4s", ".pr-generate"]
+  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+
+e4s-protected-generate:
+  extends: [ ".e4s", ".protected-generate"]
+  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+
+e4s-pr-build:
+  extends: [ ".e4s", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-pr-generate
+
+e4s-protected-build:
+  extends: [ ".e4s", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-protected-generate
+
+########################################
+# E4S OneAPI Pipeline
+########################################
+.e4s-oneapi:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-oneapi
+
+e4s-oneapi-pr-generate:
+  extends: [ ".e4s-oneapi", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-protected-generate:
+  extends: [ ".e4s-oneapi", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-pr-build:
+  extends: [ ".e4s-oneapi", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-pr-generate
+
+e4s-oneapi-protected-build:
+  extends: [ ".e4s-oneapi", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-protected-generate
+
+########################################
+# E4S on Power
+########################################
+.e4s-power:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-power
+
+e4s-power-pr-generate:
+  extends: [ ".e4s-power", ".pr-generate-ppc64le"]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-08-01
+
+e4s-power-protected-generate:
+  extends: [ ".e4s-power", ".protected-generate-ppc64le"]
+  image: ecpe4s/ubuntu20.04-runner-ppc64le:2022-08-01
+
+e4s-power-pr-build:
+  extends: [ ".e4s-power", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-pr-generate
+
+e4s-power-protected-build:
+  extends: [ ".e4s-power", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-protected-generate
+
+#########################################
+# Build tests for different build-systems
+#########################################
+.build_systems:
+  variables:
+    SPACK_CI_STACK_NAME: build_systems
+
+build_systems-pr-generate:
+  extends: [ ".build_systems", ".pr-generate"]
+
+build_systems-protected-generate:
+  extends: [ ".build_systems", ".protected-generate"]
+
+build_systems-pr-build:
+  extends: [ ".build_systems", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: build_systems-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-pr-generate
+
+build_systems-protected-build:
+  extends: [ ".build_systems", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: build_systems-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: build_systems-protected-generate
+
+#########################################
+# RADIUSS
+#########################################
+.radiuss:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss
+
+# ---------  PRs ---------
+radiuss-pr-generate:
+  extends: [ ".radiuss", ".pr-generate" ]
+
+radiuss-pr-build:
+  extends: [ ".radiuss", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-pr-generate
+
+# --------- Protected ---------
+radiuss-protected-generate:
+  extends: [ ".radiuss", ".protected-generate" ]
+
+radiuss-protected-build:
+  extends: [ ".radiuss", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-protected-generate
+
+########################################
+# RADIUSS for AWS
+########################################
+
+# Call this AFTER .*-generate
+.radiuss-aws-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.radiuss-aws:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss-aws
+
+radiuss-aws-pr-generate:
+  extends: [ ".radiuss-aws", ".pr-generate", ".radiuss-aws-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+radiuss-aws-protected-generate:
+  extends: [ ".radiuss-aws", ".protected-generate", ".radiuss-aws-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+radiuss-aws-pr-build:
+  extends: [ ".radiuss-aws", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-pr-generate
+
+radiuss-aws-protected-build:
+  extends: [ ".radiuss-aws", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+.radiuss-aws-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: radiuss-aws-aarch64
+
+radiuss-aws-aarch64-pr-generate:
+  extends: [ ".radiuss-aws-aarch64", ".pr-generate-aarch64", ".radiuss-aws-overrides" ]
+
+radiuss-aws-aarch64-protected-generate:
+  extends: [ ".radiuss-aws-aarch64", ".protected-generate-aarch64", ".radiuss-aws-overrides" ]
+
+radiuss-aws-aarch64-pr-build:
+  extends: [ ".radiuss-aws-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-aarch64-pr-generate
+
+radiuss-aws-aarch64-protected-build:
+  extends: [ ".radiuss-aws-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: radiuss-aws-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: radiuss-aws-aarch64-protected-generate
+
+########################################
+# ECP Data & Vis SDK
+########################################
+.data-vis-sdk:
+  variables:
+    SPACK_CI_STACK_NAME: data-vis-sdk
+
+data-vis-sdk-pr-generate:
+  extends: [ ".data-vis-sdk", ".pr-generate"]
+
+data-vis-sdk-protected-generate:
+  extends: [ ".data-vis-sdk", ".protected-generate"]
+
+data-vis-sdk-pr-build:
+  extends: [ ".data-vis-sdk", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: data-vis-sdk-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-pr-generate
+
+data-vis-sdk-protected-build:
+  extends: [ ".data-vis-sdk", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: data-vis-sdk-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: data-vis-sdk-protected-generate
+
+########################################
+# AWS AHUG Applications (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-ahug-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.aws-ahug:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug
+
+aws-ahug-pr-generate:
+  extends: [ ".aws-ahug", ".pr-generate", ".aws-ahug-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-ahug-protected-generate:
+  extends: [ ".aws-ahug", ".protected-generate", ".aws-ahug-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-ahug-pr-build:
+  extends: [ ".aws-ahug", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-pr-generate
+
+aws-ahug-protected-build:
+  extends: [ ".aws-ahug", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+.aws-ahug-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-ahug-aarch64
+
+aws-ahug-aarch64-pr-generate:
+  extends: [ ".aws-ahug-aarch64", ".pr-generate-aarch64", ".aws-ahug-overrides" ]
+
+aws-ahug-aarch64-protected-generate:
+  extends: [ ".aws-ahug-aarch64", ".protected-generate-aarch64", ".aws-ahug-overrides" ]
+
+aws-ahug-aarch64-pr-build:
+  extends: [ ".aws-ahug-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-aarch64-pr-generate
+
+aws-ahug-aarch64-protected-build:
+  extends: [ ".aws-ahug-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-ahug-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-ahug-aarch64-protected-generate
+
+########################################
+# AWS ISC Applications (x86_64)
+########################################
+
+# Call this AFTER .*-generate
+.aws-isc-overrides:
+  # This controls image for generate step; build step is controlled by spack.yaml
+  # Note that generator emits OS info for build so these should be the same.
+  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+
+.aws-isc:
+  variables:
+    SPACK_CI_STACK_NAME: aws-isc
+
+aws-isc-pr-generate:
+  extends: [ ".aws-isc", ".pr-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-isc-protected-generate:
+  extends: [ ".aws-isc", ".protected-generate", ".aws-isc-overrides" ]
+  tags: ["spack", "public", "medium", "x86_64_v4"]
+
+aws-isc-pr-build:
+  extends: [ ".aws-isc", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-pr-generate
+
+aws-isc-protected-build:
+  extends: [ ".aws-isc", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-protected-generate
+
+
+# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
+
+.aws-isc-aarch64:
+  variables:
+    SPACK_CI_STACK_NAME: aws-isc-aarch64
+
+aws-isc-aarch64-pr-generate:
+  extends: [ ".aws-isc-aarch64", ".pr-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-protected-generate:
+  extends: [ ".aws-isc-aarch64", ".protected-generate-aarch64", ".aws-isc-overrides" ]
+
+aws-isc-aarch64-pr-build:
+  extends: [ ".aws-isc-aarch64", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-pr-generate
+
+aws-isc-aarch64-protected-build:
+  extends: [ ".aws-isc-aarch64", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: aws-isc-aarch64-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: aws-isc-aarch64-protected-generate
+
+
+########################################
+# Spack Tutorial
+########################################
+.tutorial:
+  variables:
+    SPACK_CI_STACK_NAME: tutorial
+
+tutorial-pr-generate:
+  extends: [ ".tutorial", ".pr-generate"]
+
+tutorial-protected-generate:
+  extends: [ ".tutorial", ".protected-generate"]
+
+tutorial-pr-build:
+  extends: [ ".tutorial", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-pr-generate
+
+tutorial-protected-build:
+  extends: [ ".tutorial", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: tutorial-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: tutorial-protected-generate

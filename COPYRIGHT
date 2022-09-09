@@ -34,9 +34,21 @@ includes the sbang tool directly in bin/sbang. These packages are covered
 by various permissive licenses. A summary listing follows. See the
 license included with each package for full details.
 
+PackageName: altgraph
+PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT
+
 PackageName: argparse
 PackageHomePage: https://pypi.python.org/pypi/argparse
 PackageLicenseDeclared: Python-2.0
+
+PackageName: astunparse
+PackageHomePage: https://github.com/simonpercivall/astunparse
+PackageLicenseDeclared: Python-2.0
+
+PackageName: attrs
+PackageHomePage: https://github.com/python-attrs/attrs
+PackageLicenseDeclared: MIT
 
 PackageName: ctest_log_parser
 PackageHomePage: https://github.com/Kitware/CMake
@@ -46,8 +58,8 @@ PackageName: distro
 PackageHomePage: https://pypi.python.org/pypi/distro
 PackageLicenseDeclared: Apache-2.0
 
-PackageName: functools
-PackageHomePage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
+PackageName: functools32
+PackageHomePage: https://github.com/MiCHiLU/python-functools32
 PackageLicenseDeclared: Python-2.0
 
 PackageName: jinja2
@@ -56,6 +68,10 @@ PackageLicenseDeclared: BSD-3-Clause
 
 PackageName: jsonschema
 PackageHomePage: https://pypi.python.org/pypi/jsonschema
+PackageLicenseDeclared: MIT
+
+PackageName: macholib
+PackageHomePage: https://macholib.readthedocs.io/en/latest/index.html
 PackageLicenseDeclared: MIT
 
 PackageName: markupsafe
@@ -68,6 +84,10 @@ PackageLicenseDeclared: MIT
 
 PackageName: py
 PackageHomePage: https://pypi.python.org/pypi/py
+PackageLicenseDeclared: MIT
+
+PackageName: pyrsistent
+PackageHomePage: http://github.com/tobgu/pyrsistent
 PackageLicenseDeclared: MIT
 
 PackageName: pytest
@@ -84,12 +104,4 @@ PackageLicenseDeclared: Apache-2.0 OR MIT
 
 PackageName: six
 PackageHomePage: https://pypi.python.org/pypi/six
-PackageLicenseDeclared: MIT
-
-PackageName: macholib
-PackageHomePage: https://macholib.readthedocs.io/en/latest/index.html
-PackageLicenseDeclared: MIT
-
-PackageName: altgraph
-PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
 PackageLicenseDeclared: MIT

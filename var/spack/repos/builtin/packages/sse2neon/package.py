@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class Sse2neon(Package):
@@ -9,10 +12,10 @@ class Sse2neon(Package):
     NEON intrinsics."""
 
     homepage = "https://github.com/DLTcollab/sse2neon"
-    git      = "https://github.com/DLTcollab/sse2neon.git"
+    git = "https://github.com/DLTcollab/sse2neon.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install('*.h', prefix.include)
+        install("*.h", prefix.include)

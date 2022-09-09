@@ -1,0 +1,30 @@
+From 4ec1970178606127fd8bbffa763f135ca0f12ee3 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Tue, 24 May 2022 14:03:48 +0200
+Subject: [PATCH] llvm: add NDEBUG when assertion mode is off
+
+`llvm-config --cxxflags` unfortunately does not set `-DNDEBUG`, which
+Julia needs to set correctly when including LLVM header files.
+---
+ src/Makefile | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/Makefile b/src/Makefile
+index 1a9af2fa7c..766fd2945f 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -98,6 +98,11 @@ PUBLIC_HEADER_TARGETS := $(addprefix $(build_includedir)/julia/,$(notdir $(PUBLI
+ LLVM_LDFLAGS := $(shell $(LLVM_CONFIG_HOST) --ldflags)
+ LLVM_CXXFLAGS := $(shell $(LLVM_CONFIG_HOST) --cxxflags)
+ 
++# llvm-config --cxxflags does not return -DNDEBUG
++ifeq ($(shell $(LLVM_CONFIG_HOST) --assertion-mode),OFF)
++LLVM_CXXFLAGS += -DNDEBUG
++endif
++
+ ifeq ($(JULIACODEGEN),LLVM)
+ ifneq ($(USE_SYSTEM_LLVM),0)
+ LLVMLINK += $(LLVM_LDFLAGS) $(shell $(LLVM_CONFIG_HOST) --libs --system-libs)
+-- 
+2.25.1
+

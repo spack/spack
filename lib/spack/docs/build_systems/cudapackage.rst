@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ CudaPackage
 -----------
 
 Different from other packages, ``CudaPackage`` does not represent a build system.
-Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a ` mixin-class <https://en.wikipedia.org/wiki/Mixin>`__.
+Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_.
 
 You can find source for the package at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/cuda.py>`__.

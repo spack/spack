@@ -1,0 +1,74 @@
+name: "\U0001F4A5 Build error"
+description: Some package in Spack didn't build correctly
+title: "Installation issue: "
+labels: [build-error]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this build failure. To proceed with the report please:
+        1. Title the issue `Installation issue: <name-of-the-package>`.
+        2. Provide the information required below.
+        
+        We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce the issue
+      description: |
+        Fill in the console output from the exact spec you are trying to build.
+      value: |
+        ```console
+        $ spack spec -I <spec>
+        ...
+        ```
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: |
+        Please post the error message from spack inside the `<details>` tag below:
+      value: |
+        <details><summary>Error message</summary><pre>
+        ...
+        </pre></details>
+    validations:
+      required: true
+  - type: textarea
+    id: information
+    attributes:
+      label: Information on your system
+      description: Please include the output of `spack debug report`.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        If you have any relevant configuration detail (custom `packages.yaml` or `modules.yaml`, etc.) you can add that here as well.
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional information
+      description: |
+        Please upload the following files:
+        * **`spack-build-out.txt`**
+        * **`spack-build-env.txt`**
+        
+        They should be present in the stage directory of the failing build. Also upload any `config.log` or similar file if one exists.
+  - type: markdown
+    attributes:
+      value: |
+        Some packages have maintainers who have volunteered to debug build failures. Run `spack maintainers <name-of-the-package>` and **@mention** them here if they exist.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: General information
+      options:
+        - label: I have run `spack debug report` and reported the version of Spack/Python/Platform
+          required: true
+        - label: I have run `spack maintainers <name-of-the-package>` and **@mentioned** any maintainers
+          required: true
+        - label: I have uploaded the build log and environment files
+          required: true
+        - label: I have searched the issues of this repo and believe this is not a duplicate
+          required: true

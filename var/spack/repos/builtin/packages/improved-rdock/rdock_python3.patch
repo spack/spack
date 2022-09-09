@@ -1,0 +1,276 @@
+diff -u -r -N a/bin/sdrmsd b/bin/sdrmsd
+--- a/bin/sdrmsd	2020-10-15 13:34:27.000000000 +0900
++++ b/bin/sdrmsd	2020-10-19 09:21:43.000000000 +0900
+@@ -11,7 +11,7 @@
+ # Date: 08-11-2013
+ 
+ import math
+-import pybel
++from openbabel import pybel
+ import numpy as npy
+ import optparse
+ 
+@@ -103,24 +103,24 @@
+     return mappingpose[0]
+ 
+ def parseArguments():
+-	optparse.OptionParser.format_epilog = lambda self, formatter: self.epilog
+-	epilog = """Args:
+-	reference.sdf		SDF file with the reference molecule.
+-	input.sdf		SDF file with the molecules to be compared to reference.\n"""
+-	parser = optparse.OptionParser("usage: %prog [options] reference.sdf input.sdf", epilog=epilog)
+-	parser.add_option("-f", "--fit",dest="fit", action="store_true", default=False,
++        optparse.OptionParser.format_epilog = lambda self, formatter: self.epilog
++        epilog = """Args:
++        reference.sdf                SDF file with the reference molecule.
++        input.sdf                SDF file with the molecules to be compared to reference.\n"""
++        parser = optparse.OptionParser("usage: %prog [options] reference.sdf input.sdf", epilog=epilog)
++        parser.add_option("-f", "--fit",dest="fit", action="store_true", default=False,
+                   help="Superpose molecules before RMSD calculation")
+-	parser.add_option("--threshold","-t",dest="threshold", action="store", nargs=1, 
++        parser.add_option("--threshold","-t",dest="threshold", action="store", nargs=1, 
+                   help="Discard poses with RMSD < THRESHOLD with respect previous poses which where not rejected based on same principle. A Population SDField will be added to output SD with the population number.", type=float)
+-	parser.add_option("-o","--out", dest="outfilename", metavar="FILE", default=False,
++        parser.add_option("-o","--out", dest="outfilename", metavar="FILE", default=False,
+                   help="If declared, write an output SDF file with the input molecules with a new sdfield <RMSD>. If molecule was fitted, the fitted molecule coordinates will be saved.")
+-	(options, args) =  parser.parse_args()
+-	
+-	#Check we have two arguments
+-	if len(args) < 2:
+-		parser.error("Incorrect number of arguments. Use -h or --help options to print help.")
++        (options, args) =  parser.parse_args()
++        
++        #Check we have two arguments
++        if len(args) < 2:
++                parser.error("Incorrect number of arguments. Use -h or --help options to print help.")
+ 
+-	return options, args
++        return options, args
+ 
+ def updateCoords(obmol, newcoords):
+     "Update OBMol coordinates. newcoords is a numpy array"
+@@ -133,8 +133,8 @@
+     for correct RMSD comparison. Only the lowest RMSD will be returned.
+     
+     Returns:
+-      If fit=False: 	bestRMSD	(float)					RMSD of the best matching mapping.
+-      If fit=True:	(bestRMSD, molecCoordinates)	(float, npy.array)	RMSD of best match and its molecule fitted coordinates.	
++      If fit=False:         bestRMSD        (float)                                        RMSD of the best matching mapping.
++      If fit=True:        (bestRMSD, molecCoordinates)        (float, npy.array)        RMSD of best match and its molecule fitted coordinates.        
+     """
+     mappings = pybel.ob.vvpairUIntUInt()
+     bitvec = pybel.ob.OBBitVec()
+@@ -148,18 +148,18 @@
+     posecoords = npy.array([atom.coords for atom in molec])[mappose]
+     resultrmsd = 999999999999
+     for mapping in mappings:
+-	automorph_coords = [None] * len(targetcoords)
+-	for x, y in mapping:
+-	    automorph_coords[lookup.index(x)] = targetcoords[lookup.index(y)]
+-	mapping_rmsd = rmsd(posecoords, automorph_coords)
+-	if mapping_rmsd < resultrmsd:
+-	    resultrmsd = mapping_rmsd
+-	    fitted_result = False
+-	if fit: 
+-	    fitted_pose, fitted_rmsd = superpose3D(npy.array(automorph_coords), npy.array(posecoords))
+-	    if fitted_rmsd < resultrmsd:
+-		resultrmsd = fitted_rmsd
+-		fitted_result = fitted_pose
++        automorph_coords = [None] * len(targetcoords)
++        for x, y in mapping:
++            automorph_coords[lookup.index(x)] = targetcoords[lookup.index(y)]
++        mapping_rmsd = rmsd(posecoords, automorph_coords)
++        if mapping_rmsd < resultrmsd:
++            resultrmsd = mapping_rmsd
++            fitted_result = False
++        if fit: 
++            fitted_pose, fitted_rmsd = superpose3D(npy.array(automorph_coords), npy.array(posecoords))
++            if fitted_rmsd < resultrmsd:
++                resultrmsd = fitted_rmsd
++                fitted_result = fitted_pose
+     
+     if fit:
+       return (resultrmsd, fitted_pose)
+@@ -167,16 +167,16 @@
+       return resultrmsd
+ 
+ def saveMolecWithRMSD(outsdf, molec, rmsd, population=False):
+-    newData = pybel.ob.OBPairData()	
++    newData = pybel.ob.OBPairData()        
+     newData.SetAttribute("RMSD")
+     newData.SetValue('%.3f'%rmsd)
+     
+     if population:
+-	popData = pybel.ob.OBPairData()
+-	popData.SetAttribute("Population")
+-	popData.SetValue('%i'%population)
+-	molec.OBMol.CloneData(popData)
+-	
++        popData = pybel.ob.OBPairData()
++        popData.SetAttribute("Population")
++        popData.SetValue('%i'%population)
++        molec.OBMol.CloneData(popData)
++        
+     molec.OBMol.CloneData(newData)           # Add new data
+     outsdf.write(molec)
+     
+@@ -184,13 +184,13 @@
+     import sys, os
+    
+     (opts, args) = parseArguments() 
+-	
++        
+     xtal = args[0]
+     poses = args[1]
+ 
+     if not os.path.exists(xtal) or not os.path.exists(poses):
+-	sys.exit("Input files not found. Please check the path given is correct.")
+-	
++        sys.exit("Input files not found. Please check the path given is correct.")
++        
+     fit = opts.fit
+     outfname = opts.outfilename
+     threshold = opts.threshold
+@@ -202,71 +202,71 @@
+ 
+     #If outfname is defined, prepare an output SDF sink to write molecules
+     if outfname:
+-	outsdf = pybel.Outputfile('sdf', outfname, overwrite=True)
++        outsdf = pybel.Outputfile('sdf', outfname, overwrite=True)
+ 
+     # Find the RMSD between the crystal pose and each docked pose
+     dockedposes = pybel.readfile("sdf", poses)
+-    if fit: print "POSE\tRMSD_FIT"
+-    else: print "POSE\tRMSD_NOFIT"
++    if fit: print ("POSE\tRMSD_FIT")
++    else: print ("POSE\tRMSD_NOFIT")
+     skipped = []
+-    moleclist = {}	# Save all poses with their dockid
+-    population = {}	# Poses to be written
++    moleclist = {}        # Save all poses with their dockid
++    population = {}        # Poses to be written
+     outlist = {}
+     for docki, dockedpose in enumerate(dockedposes):
+         dockedpose.removeh()
+-	natoms = len(dockedpose.atoms)
+-	if natoms != crystalnumatoms: 
+-		skipped.append(docki+1)
+-		continue
+-	if fit: 
+-	    resultrmsd, fitted_result = getAutomorphRMSD(crystal, dockedpose, fit=True)
+-	    updateCoords(dockedpose, fitted_result)
+-	else:
+-	    resultrmsd = getAutomorphRMSD(crystal, dockedpose, fit=False)
+-	
+-	if threshold:
+-	    # Calculate RMSD between all previous poses
+-	    # Discard if rmsd < FILTER threshold
+-	    if moleclist:
+-		match = None
+-		bestmatchrmsd = 999999
+-		for did,prevmol in moleclist.iteritems():
+-		    tmprmsd = getAutomorphRMSD(prevmol, dockedpose)
+-		    if tmprmsd < threshold:
+-			if tmprmsd < bestmatchrmsd:
+-			    bestmatchrmsd = tmprmsd
+-			    match = did
+-			
+-		if match != None:
+-		    # Do not write this one
+-		    # sum one up to the matching previous molecule id
+-		    print >> sys.stderr, "Pose %i matches pose %i with %.3f RMSD"%(docki+1, match+1, bestmatchrmsd)
+-		    population[match] += 1
+-		else:
+-		    # There's no match. Print info for this one and write to outsdf if needed
+-		    # Save this one!
+-		    if outfname: outlist[docki] = (dockedpose, resultrmsd)
+-		    print "%d\t%.2f"%((docki+1),resultrmsd)
+-		    moleclist[docki] = dockedpose
+-		    population[docki] = 1
+-	    else:
+-		# First molecule in list. Append for sure
+-		moleclist[docki] = dockedpose
+-		population[docki] = 1
+-		if outfname: outlist[docki] = (dockedpose, resultrmsd)
+-	else:
+-	    # Just write best rmsd found and the molecule to outsdf if demanded
+-	    if outfname: saveMolecWithRMSD(outsdf, dockedpose, resultrmsd)
+-	    print "%d\t%.2f"%((docki+1),resultrmsd)
++        natoms = len(dockedpose.atoms)
++        if natoms != crystalnumatoms: 
++                skipped.append(docki+1)
++                continue
++        if fit: 
++            resultrmsd, fitted_result = getAutomorphRMSD(crystal, dockedpose, fit=True)
++            updateCoords(dockedpose, fitted_result)
++        else:
++            resultrmsd = getAutomorphRMSD(crystal, dockedpose, fit=False)
++        
++        if threshold:
++            # Calculate RMSD between all previous poses
++            # Discard if rmsd < FILTER threshold
++            if moleclist:
++                match = None
++                bestmatchrmsd = 999999
++                for did,prevmol in moleclist.iteritems():
++                    tmprmsd = getAutomorphRMSD(prevmol, dockedpose)
++                    if tmprmsd < threshold:
++                        if tmprmsd < bestmatchrmsd:
++                            bestmatchrmsd = tmprmsd
++                            match = did
++                        
++                if match != None:
++                    # Do not write this one
++                    # sum one up to the matching previous molecule id
++                    print >> sys.stderr, "Pose %i matches pose %i with %.3f RMSD"%(docki+1, match+1, bestmatchrmsd)
++                    population[match] += 1
++                else:
++                    # There's no match. Print info for this one and write to outsdf if needed
++                    # Save this one!
++                    if outfname: outlist[docki] = (dockedpose, resultrmsd)
++                    print ("%d\t%.2f"%((docki+1),resultrmsd))
++                    moleclist[docki] = dockedpose
++                    population[docki] = 1
++            else:
++                # First molecule in list. Append for sure
++                moleclist[docki] = dockedpose
++                population[docki] = 1
++                if outfname: outlist[docki] = (dockedpose, resultrmsd)
++        else:
++            # Just write best rmsd found and the molecule to outsdf if demanded
++            if outfname: saveMolecWithRMSD(outsdf, dockedpose, resultrmsd)
++            print ("%d\t%.2f"%((docki+1),resultrmsd))
+ 
+     if outlist:
+-	# Threshold applied and outlist need to be written
+-	for docki in sorted(outlist.iterkeys()):
+-	    molrmsd = outlist[docki]
+-	    # Get number of matchs in thresholding operation
+-	    pop = population.get(docki)
+-	    if not pop: pop = 1
+-	    # Save molecule
+-	    saveMolecWithRMSD(outsdf, molrmsd[0], molrmsd[1], pop)
+-	    
+-    if skipped: print >> sys.stderr, "SKIPPED input molecules due to number of atom missmatch: %s"%skipped
++        # Threshold applied and outlist need to be written
++        for docki in sorted(outlist.iterkeys()):
++            molrmsd = outlist[docki]
++            # Get number of matchs in thresholding operation
++            pop = population.get(docki)
++            if not pop: pop = 1
++            # Save molecule
++            saveMolecWithRMSD(outsdf, molrmsd[0], molrmsd[1], pop)
++            
++    if skipped: print("SKIPPED input molecules due to number of atom missmatch: %s"%skipped, file=sys.stderr)
+diff -u -r -N a/build/test/RBT_HOME/check_test.py b/build/test/RBT_HOME/check_test.py
+--- a/build/test/RBT_HOME/check_test.py	2020-10-14 11:48:36.000000000 +0900
++++ b/build/test/RBT_HOME/check_test.py	2020-10-19 09:23:31.000000000 +0900
+@@ -21,6 +21,6 @@
+ 	error = 1
+ 
+ if error == 1:
+-	print "The test failed, please check the compilation is OK and no errors were raised."
++	print ("The test failed, please check the compilation is OK and no errors were raised.")
+ else:
+-	print "The test succeeded! The results agree with the reference ones.\nHave fun using rDock!!"
++	print ("The test succeeded! The results agree with the reference ones.\nHave fun using rDock!!")

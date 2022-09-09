@@ -1,0 +1,12 @@
+diff -u ./Rendering/OpenGL2/CMakeLists.txt.orig ./Rendering/OpenGL2/CMakeLists.txt
+--- ./Rendering/OpenGL2/CMakeLists.txt.orig	2021-11-03 14:33:11.582334000 -0700
++++ ./Rendering/OpenGL2/CMakeLists.txt	2021-11-03 14:36:50.263234000 -0700
+@@ -194,7 +194,7 @@
+   if(NOT X11_Xt_FOUND)
+     message(FATAL_ERROR "X11_Xt_LIB could not be found. Required for VTK X lib.")
+   endif()
+-  include_directories(${X11_INCLUDE_DIR} ${X11_Xt_INCLUDE_PATH})
++  include_directories(${X11_INCLUDE_DIR} ${X11_SM_INCLUDE_PATH} ${X11_ICE_INCLUDE_PATH} ${X11_Xt_INCLUDE_PATH})
+ endif()
+ 
+ # setup factory overrides

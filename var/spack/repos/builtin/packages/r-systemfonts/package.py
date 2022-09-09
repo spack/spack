@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RSystemfonts(RPackage):
-    """System Native Font Finding
+    """System Native Font Finding.
 
     Provides system native access to the font catalogue. As font handling
     varies between systems it is difficult to correctly locate installed fonts
@@ -17,12 +17,13 @@ class RSystemfonts(RPackage):
     use is intended to be from compiled code but 'systemfonts' also provides
     access from R."""
 
-    homepage = "https://github.com/r-lib/systemfonts"
-    cran     = "systemfonts"
+    cran = "systemfonts"
 
-    version('1.0.1', sha256='401db4d9e78e3a5e00b7a0b4fbad7fbb1c584734469b65fe5b7ebe1851c7a797')
+    version("1.0.4", sha256="ef766c75b942f147d382664a00d6a4930f1bfe0cce9d88943f571682a85a84c0")
+    version("1.0.3", sha256="647c99d5ea6f90a49768ea7b10b39816af6be85168475273369fd973a20dbbba")
+    version("1.0.1", sha256="401db4d9e78e3a5e00b7a0b4fbad7fbb1c584734469b65fe5b7ebe1851c7a797")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-cpp11@0.2.1:', type=('build', 'run'))
-    depends_on('fontconfig')
-    depends_on('freetype')
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-cpp11@0.2.1:", type=("build", "run"))
+    depends_on("fontconfig")
+    depends_on("freetype")

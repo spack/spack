@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPyeda(PythonPackage):
@@ -12,7 +12,7 @@ class PyPyeda(PythonPackage):
     homepage = "https://github.com/cjdrake/pyeda"
     pypi = "pyeda/pyeda-0.28.0.tar.gz"
 
-    version('0.28.0', sha256='07185f458d5d0b2ba5058da8b95dad6ab7684ceaf41237a25bcd3f005490f59d')
+    version("0.28.0", sha256="07185f458d5d0b2ba5058da8b95dad6ab7684ceaf41237a25bcd3f005490f59d")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@3.3:', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("python@3.3:", type=("build", "run"))

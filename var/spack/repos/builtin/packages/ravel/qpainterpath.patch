@@ -1,0 +1,9 @@
+--- a/src/stepvis.cpp
++++ b/src/stepvis.cpp
+@@ -41,6 +41,7 @@
+ #include <QLocale>
+ #include <QMouseEvent>
+ #include <QWheelEvent>
++#include <QPainterPath> 
+ 
+ #include "function.h"

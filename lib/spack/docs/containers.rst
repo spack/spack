@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,8 @@ other techniques to minimize the size of the final image:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -108,9 +109,10 @@ Spack Images on Docker Hub
 --------------------------
 
 Docker images with Spack preinstalled and ready to be used are
-built on `Docker Hub <https://hub.docker.com/u/spack>`_
-at every push to ``develop`` or to a release branch. The OS that
-are currently supported are summarized in the table below:
+built when a release is tagged, or nightly on ``develop``. The images
+are then pushed both to `Docker Hub <https://hub.docker.com/u/spack>`_
+and to `GitHub Container Registry <https://github.com/orgs/spack/packages?repo_name=spack>`_.
+The OS that are currently supported are summarized in the table below:
 
 .. _containers-supported-os:
 
@@ -120,22 +122,31 @@ are currently supported are summarized in the table below:
    * - Operating System
      - Base Image
      - Spack Image
-   * - Ubuntu 16.04
-     - ``ubuntu:16.04``
-     - ``spack/ubuntu-xenial``
    * - Ubuntu 18.04
      - ``ubuntu:18.04``
      - ``spack/ubuntu-bionic``
-   * - CentOS 6
-     - ``centos:6``
-     - ``spack/centos6``
+   * - Ubuntu 20.04
+     - ``ubuntu:20.04``
+     - ``spack/ubuntu-focal``
+   * - Ubuntu 22.04
+     - ``ubuntu:22.04``
+     - ``spack/ubuntu-jammy``
    * - CentOS 7
      - ``centos:7``
      - ``spack/centos7``
+   * - CentOS Stream
+     - ``quay.io/centos/centos:stream``
+     - ``spack/centos-stream``
+   * - openSUSE Leap
+     - ``opensuse/leap``
+     - ``spack/leap15``
+   * - Amazon Linux 2
+     - ``amazonlinux:2``
+     - ``spack/amazon-linux``
 
 All the images are tagged with the corresponding release of Spack:
 
-.. image:: dockerhub_spack.png
+.. image:: images/ghcr_spack.png
 
 with the exception of the ``latest`` tag that points to the HEAD
 of the ``develop`` branch. These images are available for anyone
@@ -200,7 +211,7 @@ Setting Base Images
 
 The ``images`` subsection is used to select both the image where
 Spack builds the software and the image where the built software
-is installed. This attribute can be set in two different ways and
+is installed. This attribute can be set in different ways and
 which one to use depends on the use case at hand.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,7 +256,8 @@ software is respectively built and installed:
    &&   echo "  specs:" \
    &&   echo "  - gromacs+mpi" \
    &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -260,10 +272,54 @@ software is respectively built and installed:
 
    ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
 
-This method of selecting base images is the simplest of the two, and we advise
+This is the simplest available method of selecting base images, and we advise
 to use it whenever possible. There are cases though where using Spack official
-images is not enough to fit production needs. In these situations users can manually
-select which base image to start from in the recipe, as we'll see next.
+images is not enough to fit production needs. In these situations users can
+extend the recipe to start with the bootstrapping of Spack at a certain pinned
+version or manually select which base image to start from in the recipe,
+as we'll see next.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Use a Bootstrap Stage for Spack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some cases users may want to pin the commit sha that is used for Spack, to ensure later
+reproducibility, or start from a fork of the official Spack repository to try a bugfix or
+a feature in the early stage of development. This is possible by being just a little more
+verbose when specifying information about Spack in the ``spack.yaml`` file:
+
+.. code-block:: yaml
+
+   images:
+     os: amazonlinux:2
+     spack:
+       # URL of the Spack repository to be used in the container image
+       url: <to-use-a-fork>
+       # Either a commit sha, a branch name or a tag
+       ref: <sha/tag/branch>
+       # If true turn a branch name or a tag into the corresponding commit
+       # sha at the time of recipe generation
+       resolve_sha: <true/false>
+
+``url`` specifies the URL from which to clone Spack and defaults to https://github.com/spack/spack.
+The ``ref`` attribute can be either a commit sha, a branch name or a tag. The default value in
+this case is to use the ``develop`` branch, but it may change in the future to point to the latest stable
+release. Finally ``resolve_sha`` transform branch names or tags into the corresponding commit
+shas at the time of recipe generation, to allow for a greater reproducibility of the results
+at a later time.
+
+The list of operating systems that can be used to bootstrap Spack can be
+obtained with:
+
+.. command-output:: spack containerize --list-os
+
+.. note::
+
+   The ``resolve_sha`` option uses ``git rev-parse`` under the hood and thus it requires
+   to checkout the corresponding Spack repository in a temporary folder before generating
+   the recipe. Recipe generation may take longer when this option is set to true because
+   of this additional step.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Use Custom Images Provided by Users
@@ -322,7 +378,8 @@ produces, for instance, the following ``Dockerfile``:
    &&   echo "      externals:" \
    &&   echo "      - spec: cuda%gcc" \
    &&   echo "        prefix: /usr/local/cuda" \
-   &&   echo "  concretization: together" \
+   &&   echo "  concretizer:" \
+   &&   echo "    unify: true" \
    &&   echo "  config:" \
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
@@ -415,6 +472,18 @@ to customize the generation of container recipes:
      - Version of Spack use in the ``build`` stage
      - Valid tags for ``base:image``
      - Yes, if using constrained selection of base images
+   * - ``images:spack:url``
+     - Repository from which Spack is cloned
+     - Any fork of Spack
+     - No
+   * - ``images:spack:ref``
+     - Reference for the checkout of Spack
+     - Either a commit sha, a branch name or a tag
+     - No
+   * - ``images:spack:resolve_sha``
+     - Resolve branches and tags in ``spack.yaml`` to commits in the generated recipe
+     - True or False (default: False)
+     - No
    * - ``images:build``
      - Image to be used in the ``build`` stage
      - Any valid container image

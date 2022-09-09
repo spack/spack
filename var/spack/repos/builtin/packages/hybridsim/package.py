@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Hybridsim(MakefilePackage):
@@ -17,9 +17,9 @@ class Hybridsim(MakefilePackage):
     git = "https://github.com/jimstevens2001/HybridSim"
     url = "https://github.com/jimstevens2001/HybridSim/archive/v2.0.1.tar.gz"
 
-    maintainers = ['jjwilke']
+    maintainers = ["jjwilke"]
 
-    version('2.0.1', sha256="57b82ac929acd36de84525e4d61358f1ab6532f5b635ca3f560e563479921937")
+    version("2.0.1", sha256="57b82ac929acd36de84525e4d61358f1ab6532f5b635ca3f560e563479921937")
 
     depends_on("dramsim2")
     depends_on("nvdimmsim")

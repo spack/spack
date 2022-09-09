@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class MofemMinimalSurfaceEquation(CMakePackage):
@@ -13,17 +13,20 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     homepage = "http://mofem.eng.gla.ac.uk"
     git = "https://bitbucket.org/likask/mofem_um_minimal_surface_equation.git"
 
-    maintainers = ['likask']
+    maintainers = ["likask"]
 
-    version('develop', branch='develop')
-    version('0.3.10', tag='v0.3.10')
-    version('0.3.9', tag='v0.3.9')
+    version("develop", branch="develop")
+    version("0.3.10", tag="v0.3.10")
+    version("0.3.9", tag="v0.3.9")
 
-    variant('copy_user_modules', default=True,
-            description='Copy user modules directory instead linking')
+    variant(
+        "copy_user_modules",
+        default=True,
+        description="Copy user modules directory instead linking",
+    )
 
-    extends('mofem-cephas')
-    depends_on("mofem-users-modules", type=('build', 'link', 'run'))
+    extends("mofem-cephas")
+    depends_on("mofem-users-modules", type=("build", "link", "run"))
 
     # The CMakeLists.txt installed with mofem - cephas package set cmake
     # environment to install extension from extension repository.It searches
@@ -41,26 +44,28 @@ class MofemMinimalSurfaceEquation(CMakePackage):
         :return: directory containing CMakeLists.txt
         """
         spec = self.spec
-        return spec['mofem-users-modules'].prefix.users_modules
+        return spec["mofem-users-modules"].prefix.users_modules
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
         source = self.stage.source_path
 
         options = []
 
         # obligatory options
-        options.extend([
-            '-DWITH_SPACK=YES',
-            '-DEXTERNAL_MODULES_BUILD=YES',
-            '-DUM_INSTALL_BREFIX=%s' % spec['mofem-users-modules'].prefix,
-            '-DEXTERNAL_MODULE_SOURCE_DIRS=%s' % source,
-            '-DSTAND_ALLONE_USERS_MODULES=%s' %
-            ('YES' if '+copy_user_modules' in spec else 'NO')])
+        options.extend(
+            [
+                "-DWITH_SPACK=YES",
+                "-DEXTERNAL_MODULES_BUILD=YES",
+                "-DUM_INSTALL_BREFIX=%s" % spec["mofem-users-modules"].prefix,
+                "-DEXTERNAL_MODULE_SOURCE_DIRS=%s" % source,
+                from_variant("STAND_ALLONE_USERS_MODULES", "copy_user_modules"),
+            ]
+        )
 
         # build tests
-        options.append('-DMOFEM_UM_BUILD_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
+        options.append(self.define("MOFEM_UM_BUILD_TESTS", self.run_tests))
 
         return options
 
@@ -69,7 +74,7 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     # code to play, change and make it. Having source code at hand one can
     # compile in own build directory it in package view when the extension is
     # activated.
-    @run_after('install')
+    @run_after("install")
     def copy_source_code(self):
         source = self.stage.source_path
         prefix = self.prefix

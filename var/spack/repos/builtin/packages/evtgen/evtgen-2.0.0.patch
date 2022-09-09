@@ -1,0 +1,39 @@
+--- a/src/EvtGenExternal/EvtPythiaEngine.cpp.orig	2020-04-24 18:27:48.000000000 +0200
++++ b/src/EvtGenExternal/EvtPythiaEngine.cpp	2021-04-14 09:17:55.660743600 +0200
+@@ -36,7 +36,13 @@
+ 
+ #include <cmath>
+ #include <iostream>
+-#include <sstream>
++#include <sstream>  
++
++#if PYTHIA_VERSION_INTEGER < 8304
++typedef Pythia8::ParticleDataEntry* ParticleDataEntryPtr;
++#else
++typedef Pythia8::ParticleDataEntryPtr ParticleDataEntryPtr;
++#endif
+ 
+ using std::endl;
+ 
+@@ -430,9 +436,9 @@
+         // or assignment will give it a different memory address and it will no longer refer to
+         // the original particleData information from the generator pointer.
+ 
+-        Pythia8::ParticleDataEntry* entry_generic =
++        ParticleDataEntryPtr entry_generic =
+             _genericPythiaGen->particleData.particleDataEntryPtr( PDGCode );
+-        Pythia8::ParticleDataEntry* entry_alias =
++        ParticleDataEntryPtr entry_alias =
+             _aliasPythiaGen->particleData.particleDataEntryPtr( PDGCode );
+ 
+         // Check that the PDG code is not zero/null and exclude other
+--- a/EvtGenBase/EvtMatrix.hh.orig	2021-04-13 23:20:29.588804900 +0200
++++ b/EvtGenBase/EvtMatrix.hh	2021-04-13 23:20:36.663547400 +0200
+@@ -23,6 +23,7 @@
+ 
+ #include <sstream>
+ #include <vector>
++#include <cmath>
+ 
+ template <class T>
+ class EvtMatrix {

@@ -1,10 +1,16 @@
 import os
-
-from macholib.MachOGraph import MachOGraph, MissingMachO
-from macholib.util import iter_platform_files, in_system_path, mergecopy, \
-    mergetree, flipwritable, has_filename_filter
-from macholib.dyld import framework_info
 from collections import deque
+
+from macholib.dyld import framework_info
+from macholib.MachOGraph import MachOGraph, MissingMachO
+from macholib.util import (
+    flipwritable,
+    has_filename_filter,
+    in_system_path,
+    iter_platform_files,
+    mergecopy,
+    mergetree,
+)
 
 
 class ExcludedMachO(MissingMachO):
@@ -23,22 +29,20 @@ class FilteredMachOGraph(MachOGraph):
 
     def locate(self, filename, loader=None):
         newname = super(FilteredMachOGraph, self).locate(filename, loader)
-        print("locate", filename, loader, "->", newname)
         if newname is None:
             return None
         return self.delegate.locate(newname, loader=loader)
 
 
 class MachOStandalone(object):
-    def __init__(
-            self, base, dest=None, graph=None, env=None,
-            executable_path=None):
-        self.base = os.path.join(os.path.abspath(base), '')
+    def __init__(self, base, dest=None, graph=None, env=None, executable_path=None):
+        self.base = os.path.join(os.path.abspath(base), "")
         if dest is None:
-            dest = os.path.join(self.base, 'Contents', 'Frameworks')
+            dest = os.path.join(self.base, "Contents", "Frameworks")
         self.dest = dest
         self.mm = FilteredMachOGraph(
-            self, graph=graph, env=env, executable_path=executable_path)
+            self, graph=graph, env=env, executable_path=executable_path
+        )
         self.changemap = {}
         self.excludes = []
         self.pending = deque()
@@ -80,8 +84,7 @@ class MachOStandalone(object):
         # when two libraries link to the same dylib but using different
         # symlinks.
         if os.path.islink(filename):
-            dest = os.path.join(
-                self.dest, os.path.basename(os.path.realpath(filename)))
+            dest = os.path.join(self.dest, os.path.basename(os.path.realpath(filename)))
         else:
             dest = os.path.join(self.dest, os.path.basename(filename))
 
@@ -96,9 +99,9 @@ class MachOStandalone(object):
         return mergetree(src, dest)
 
     def copy_framework(self, info):
-        dest = os.path.join(self.dest, info['shortname'] + '.framework')
-        destfn = os.path.join(self.dest, info['name'])
-        src = os.path.join(info['location'], info['shortname'] + '.framework')
+        dest = os.path.join(self.dest, info["shortname"] + ".framework")
+        destfn = os.path.join(self.dest, info["name"])
+        src = os.path.join(info["location"], info["shortname"] + ".framework")
         if not os.path.exists(dest):
             self.mergetree(src, dest)
             self.pending.append((destfn, iter_platform_files(dest)))
@@ -107,7 +110,7 @@ class MachOStandalone(object):
     def run(self, platfiles=None, contents=None):
         mm = self.mm
         if contents is None:
-            contents = '@executable_path/..'
+            contents = "@executable_path/.."
         if platfiles is None:
             platfiles = iter_platform_files(self.base)
 
@@ -121,18 +124,20 @@ class MachOStandalone(object):
                 mm.run_file(fn, caller=ref)
 
         changemap = {}
-        skipcontents = os.path.join(os.path.dirname(self.dest), '')
+        skipcontents = os.path.join(os.path.dirname(self.dest), "")
         machfiles = []
 
         for node in mm.flatten(has_filename_filter):
             machfiles.append(node)
             dest = os.path.join(
-                contents, os.path.normpath(node.filename[len(skipcontents):]))
+                contents,
+                os.path.normpath(node.filename[len(skipcontents) :]),  # noqa: E203
+            )
             changemap[node.filename] = dest
 
         def changefunc(path):
-            if path.startswith('@loader_path/'):
-                # XXX: This is a quick hack for py2app: In that
+            if path.startswith("@loader_path/"):
+                # This is a quick hack for py2app: In that
                 # usecase paths like this are found in the load
                 # commands of relocatable wheels. Those don't
                 # need rewriting.
@@ -140,9 +145,8 @@ class MachOStandalone(object):
 
             res = mm.locate(path)
             rv = changemap.get(res)
-            if rv is None and path.startswith('@loader_path/'):
-                rv = changemap.get(mm.locate(mm.trans_table.get(
-                        (node.filename, path))))
+            if rv is None and path.startswith("@loader_path/"):
+                rv = changemap.get(mm.locate(mm.trans_table.get((node.filename, path))))
             return rv
 
         for node in machfiles:
@@ -150,14 +154,14 @@ class MachOStandalone(object):
             if fn is None:
                 continue
             rewroteAny = False
-            for header in node.headers:
+            for _header in node.headers:
                 if node.rewriteLoadCommands(changefunc):
                     rewroteAny = True
             if rewroteAny:
                 old_mode = flipwritable(fn)
                 try:
-                    with open(fn, 'rb+') as f:
-                        for header in node.headers:
+                    with open(fn, "rb+") as f:
+                        for _header in node.headers:
                             f.seek(0)
                             node.write(f)
                         f.seek(0, 2)

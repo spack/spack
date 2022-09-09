@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyAstropyHealpix(PythonPackage):
@@ -11,12 +14,12 @@ class PyAstropyHealpix(PythonPackage):
     algorithm can apply to any field that has to deal with
     representing data on a sphere."""
 
-    homepage = 'https://astropy-healpix.readthedocs.io/en/latest/'
-    pypi = 'astropy-healpix/astropy-healpix-0.5.tar.gz'
+    homepage = "https://astropy-healpix.readthedocs.io/en/latest/"
+    pypi = "astropy-healpix/astropy-healpix-0.5.tar.gz"
 
-    version('0.5', sha256='5ae15da796a840f221fb83e25de791e827b6921bc21a365d99bc1a59c7c0cdad')
+    version("0.5", sha256="5ae15da796a840f221fb83e25de791e827b6921bc21a365d99bc1a59c7c0cdad")
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-astropy@2.0:', type=('build', 'run'))
-    depends_on('py-numpy@1.11:', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-astropy@2.0:", type=("build", "run"))
+    depends_on("py-numpy@1.11:", type=("build", "run"))

@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Openslp(AutotoolsPackage):
@@ -14,15 +14,15 @@ class Openslp(AutotoolsPackage):
     (RFC 2614)"""
 
     homepage = "http://www.openslp.org/"
-    url      = "https://github.com/openslp-org/openslp/archive/openslp-2.0.0.tar.gz"
+    url = "https://github.com/openslp-org/openslp/archive/openslp-2.0.0.tar.gz"
 
-    version('2.0.0', sha256='9dda45ff52cf8561ca1414ac8b4947ed2d9b43e66aec03478fa0ed37121a5ea2')
+    version("2.0.0", sha256="9dda45ff52cf8561ca1414ac8b4947ed2d9b43e66aec03478fa0ed37121a5ea2")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-    depends_on('flex',     type='build')
-    depends_on('byacc',    type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
+    depends_on("flex", type="build")
+    depends_on("byacc", type="build")
 
-    configure_directory = 'openslp'
+    configure_directory = "openslp"

@@ -1,0 +1,9 @@
+# This patch is applicable starting version 2.0.1
+--- a/src/serialbox-fortran/utils_ppser.f90
++++ b/src/serialbox-fortran/utils_ppser.f90
+@@ -33 +33 @@ MODULE utils_ppser
+-USE iso_fortran_env
++USE f90_unix_proc; USE iso_fortran_env
+@@ -66 +66 @@ SUBROUTINE ppser_initialize(directory, prefix, mode, prefix_ref, mpi_rank, rprec
+-  REAL(KIND=8), OPTIONAL, INTENT(IN)     :: rprecision, rperturb
++  REAL(KIND=SELECTED_REAL_KIND(15)), OPTIONAL, INTENT(IN)     :: rprecision, rperturb

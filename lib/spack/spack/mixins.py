@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import collections
 import os
 import sys
 from typing import Callable, DefaultDict, Dict, List  # novm
+
 if sys.version_info >= (3, 5):
     CallbackDict = DefaultDict[str, List[Callable]]
 else:
@@ -18,7 +19,8 @@ else:
 import llnl.util.filesystem
 
 __all__ = [
-    'filter_compiler_wrappers'
+    "filter_compiler_wrappers",
+    "PackageMixinsMeta",
 ]
 
 
@@ -65,16 +67,12 @@ class PackageMixinsMeta(type):
             attr_dict.update(PackageMixinsMeta._methods_to_be_added)
             PackageMixinsMeta._methods_to_be_added.clear()
 
-        attr_fmt = '_InstallPhase_{0}'
+        attr_fmt = "_InstallPhase_{0}"
 
         # Copy the phases that needs it to the most derived classes
         # in order not to interfere with other packages in the hierarchy
-        phases_to_be_copied = list(
-            PackageMixinsMeta._add_method_before.keys()
-        )
-        phases_to_be_copied += list(
-            PackageMixinsMeta._add_method_after.keys()
-        )
+        phases_to_be_copied = list(PackageMixinsMeta._add_method_before.keys())
+        phases_to_be_copied += list(PackageMixinsMeta._add_method_after.keys())
 
         for phase in phases_to_be_copied:
 
@@ -156,24 +154,20 @@ def filter_compiler_wrappers(*files, **kwargs):
                 ``find`` (see its documentation for more information on the
                 behavior)
     """
-    after = kwargs.get('after', 'install')
-    relative_root = kwargs.get('relative_root', None)
+    after = kwargs.get("after", "install")
+    relative_root = kwargs.get("relative_root", None)
 
     filter_kwargs = {
-        'ignore_absent': kwargs.get('ignore_absent', True),
-        'backup': kwargs.get('backup', False),
-        'string': True
+        "ignore_absent": kwargs.get("ignore_absent", True),
+        "backup": kwargs.get("backup", False),
+        "string": True,
     }
 
-    find_kwargs = {
-        'recursive': kwargs.get('recursive', False)
-    }
+    find_kwargs = {"recursive": kwargs.get("recursive", False)}
 
     def _filter_compiler_wrappers_impl(self):
         # Compute the absolute path of the search root
-        root = os.path.join(
-            self.prefix, relative_root
-        ) if relative_root else self.prefix
+        root = os.path.join(self.prefix, relative_root) if relative_root else self.prefix
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
@@ -182,25 +176,44 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
-        replacements = [
-            ('CC', self.compiler.cc),
-            ('CXX', self.compiler.cxx),
-            ('F77', self.compiler.f77),
-            ('FC', self.compiler.fc)
+        compiler_vars = [
+            ("CC", self.compiler.cc),
+            ("CXX", self.compiler.cxx),
+            ("F77", self.compiler.f77),
+            ("FC", self.compiler.fc),
         ]
-        for env_var, compiler_path in replacements:
+
+        # Some paths to the compiler wrappers might be substrings of the others.
+        # For example:
+        #   CC=/path/to/spack/lib/spack/env/cc (realpath to the wrapper)
+        #   FC=/path/to/spack/lib/spack/env/cce/ftn
+        # Therefore, we perform the filtering in the reversed sorted order of
+        # the substituted strings. If, however, the strings are identical (e.g.
+        # both CC and FC are set using realpath), the filtering is done
+        # according to the order in compiler_vars. To achieve that, we populate
+        # the following array with tuples of three elements: path to the
+        # wrapper, negated index of the variable in compiler_vars, path to the
+        # real compiler. This way, the reversed sorted order of the resulting
+        # array is the order of replacements that we need.
+        replacements = []
+
+        for idx, (env_var, compiler_path) in enumerate(compiler_vars):
             if env_var in os.environ:
-                x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
+                # filter spack wrapper and links to spack wrapper in case
+                # build system runs realpath
+                wrapper = os.environ[env_var]
+                for wrapper_path in (wrapper, os.path.realpath(wrapper)):
+                    replacements.append((wrapper_path, -idx, compiler_path))
+
+        for wrapper_path, _, compiler_path in sorted(replacements, reverse=True):
+            x.filter(wrapper_path, compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter('{0}--enable-new-dtags'.format(self.compiler.linker_arg), '',
-                 **filter_kwargs)
+        x.filter("{0}--enable-new-dtags".format(self.compiler.linker_arg), "", **filter_kwargs)
 
         # NAG compiler is usually mixed with GCC, which has a different
         # prefix for linker arguments.
-        if self.compiler.name == 'nag':
-            x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)
+        if self.compiler.name == "nag":
+            x.filter("-Wl,--enable-new-dtags", "", **filter_kwargs)
 
-    PackageMixinsMeta.register_method_after(
-        _filter_compiler_wrappers_impl, after
-    )
+    PackageMixinsMeta.register_method_after(_filter_compiler_wrappers_impl, after)

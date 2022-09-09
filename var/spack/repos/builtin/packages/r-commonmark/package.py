@@ -1,16 +1,22 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RCommonmark(RPackage):
-    """commonmark: CommonMark and Github Markdown Rendering in R"""
+    """High Performance CommonMark and Github Markdown Rendering in R.
 
-    homepage = "https://cloud.r-project.org/package=commonmark"
-    url      = "https://cloud.r-project.org/src/contrib/commonmark_1.7.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/commonmark/"
+    The CommonMark specification defines a rationalized version of markdown
+    syntax. This package uses the 'cmark' reference implementation for
+    converting markdown text into various formats including html, latex and
+    groff man. In addition it exposes the markdown parse tree in xml format.
+    Also includes opt-in support for GFM extensions including tables,
+    autolinks, and strikethrough text."""
 
-    version('1.7', sha256='d14a767a3ea9778d6165f44f980dd257423ca6043926e3cd8f664f7171f89108')
+    cran = "commonmark"
+
+    version("1.8.0", sha256="7d07e72937b1cf158e69f183722bf79dbb91b8967a9dd29f4fa145500c2be668")
+    version("1.7", sha256="d14a767a3ea9778d6165f44f980dd257423ca6043926e3cd8f664f7171f89108")

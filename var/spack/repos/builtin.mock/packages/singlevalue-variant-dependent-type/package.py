@@ -1,16 +1,19 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class SinglevalueVariantDependentType(Package):
     """Simple package with one dependency that has a single-valued
-       variant with values=str"""
+    variant with values=str"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/archive-1.0.tar.gz"
+    url = "http://www.example.com/archive-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('singlevalue-variant fum=nope')
+    depends_on("singlevalue-variant fum=nope")

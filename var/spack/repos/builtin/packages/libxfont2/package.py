@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libxfont2(AutotoolsPackage, XorgPackage):
@@ -14,16 +14,16 @@ class Libxfont2(AutotoolsPackage, XorgPackage):
     but should not be used by normal X11 clients.  X11 clients access fonts
     via either the new API's in libXft, or the legacy API's in libX11."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXfont"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libXfont"
     xorg_mirror_path = "lib/libXfont2-2.0.1.tar.gz"
 
-    version('2.0.1', sha256='381b6b385a69343df48a082523c856aed9042fbbc8ee0a6342fb502e4321230a')
+    version("2.0.1", sha256="381b6b385a69343df48a082523c856aed9042fbbc8ee0a6342fb502e4321230a")
 
-    depends_on('libfontenc')
-    depends_on('freetype')
+    depends_on("libfontenc")
+    depends_on("freetype")
 
-    depends_on('xtrans')
-    depends_on('xproto')
-    depends_on('fontsproto@2.1.3:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xtrans")
+    depends_on("xproto")
+    depends_on("fontsproto@2.1.3:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

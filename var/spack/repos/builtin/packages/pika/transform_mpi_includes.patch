@@ -1,0 +1,15 @@
+--- a/libs/pika/async_mpi/include/pika/async_mpi/transform_mpi.hpp
++++ b/libs/pika/async_mpi/include/pika/async_mpi/transform_mpi.hpp
+@@ -14,11 +14,13 @@
+ #include <pika/async_mpi/mpi_future.hpp>
+ #include <pika/concepts/concepts.hpp>
+ #include <pika/datastructures/tuple.hpp>
++#include <pika/datastructures/variant.hpp>
+ #include <pika/execution/algorithms/detail/partial_algorithm.hpp>
+ #include <pika/execution_base/receiver.hpp>
+ #include <pika/execution_base/sender.hpp>
+ #include <pika/functional/detail/tag_fallback_invoke.hpp>
+ #include <pika/functional/invoke.hpp>
++#include <pika/functional/invoke_fused.hpp>
+ #include <pika/functional/traits/is_invocable.hpp>
+ #include <pika/mpi_base/mpi.hpp>

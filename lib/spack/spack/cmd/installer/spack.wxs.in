@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Fragment>
+  <Icon Id="icon.ico" SourceFile="@CPACK_WIX_PRODUCT_ICON@"/>
+  <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+</Fragment>
+<Fragment>
+  <DirectoryRef Id="TARGETDIR">
+    <Directory Id="DesktopFolder" Name="Desktop" >
+      <Component Id="SpackDesktopShortCut" Guid="@CPACK_WIX_UPGRADE_GUID@">
+        <Shortcut Id="SpackDesktopShortCut"
+          Name="Spack Package Manager"
+          Description="Spack package manager"
+          Target="[INSTALL_ROOT]/@SPACK_DIR@/bin/@SPACK_SHORTCUT@"
+          Icon="icon1.ico">
+          <Icon Id="icon1.ico" SourceFile="@CPACK_WIX_PRODUCT_ICON@" />
+        </Shortcut>
+        <RegistryValue Root="HKCU" Key="Software\LLNL\Spack"
+          Type="integer" Value="1" Name="SpackDesktopShortCut" KeyPath="yes" />
+      </Component>
+    </Directory>
+    <Directory Id="ProgramMenuFolder" Name="Programs">
+      <Directory Id="ApplicationProgramsFolder" Name="Spack">
+        <Component Id="SpackStartShortCut" Guid="@SHORTCUT_GUID@">
+          <Shortcut Id="SpackStartMenuShortCut"
+            Name="Spack Package Manager"
+            Description="Spack package manager"
+            Target="[INSTALL_ROOT]/@SPACK_DIR@/bin/@SPACK_SHORTCUT@"
+            Icon="icon2.ico">
+            <Icon Id="icon2.ico" SourceFile="@CPACK_WIX_PRODUCT_ICON@" />
+          </Shortcut>
+          <RegistryValue Root="HKCU" Key="Software/LLNL/Spack"
+            Type="integer" Value="1" Name="SpackStartMenuShortCut" KeyPath="yes" />
+        </Component>
+        <Component Id="ProgramMenuDir" Guid="*">
+          <RemoveFolder Id="ProgramMenuDir" On="uninstall"/>
+          <RegistryValue Root="HKMU" Key="Software\LLNL\Spack"
+                  Type="integer" Value="1" Name="installed" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </Directory>
+  </DirectoryRef>
+</Fragment>
+<Fragment>
+  <ComponentGroup Id="ProductComponents">
+    <ComponentRef Id="SpackStartShortCut"/>
+    <ComponentRef Id="SpackDesktopShortCut"/>
+  </ComponentGroup>
+</Fragment>
+</Wix>

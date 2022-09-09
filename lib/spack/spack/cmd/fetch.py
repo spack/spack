@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
+    arguments.add_common_arguments(subparser, ["no_checksum", "deprecated"])
     subparser.add_argument(
         "-m",
         "--missing",
@@ -47,7 +47,7 @@ def fetch(parser, args):
         # fetch all uninstalled specs from it otherwise fetch all.
         # If we are also not in an environment, complain to the
         # user that we don't know what to do.
-        env = ev.get_env(args, "fetch")
+        env = ev.active_environment()
         if env:
             if args.missing:
                 specs = env.uninstalled_specs()
@@ -55,8 +55,7 @@ def fetch(parser, args):
                 specs = env.all_specs()
             if specs == []:
                 tty.die(
-                    "No uninstalled specs in environment. Did you "
-                    "run `spack concretize` yet?"
+                    "No uninstalled specs in environment. Did you " "run `spack concretize` yet?"
                 )
         else:
             tty.die("fetch requires at least one spec argument")
@@ -65,22 +64,14 @@ def fetch(parser, args):
         spack.config.set("config:checksum", False, scope="command_line")
 
     if args.deprecated:
-        spack.config.set('config:deprecated', True, scope='command_line')
+        spack.config.set("config:deprecated", True, scope="command_line")
 
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse():
-                package = spack.repo.get(s)
-
+            for s in spec.traverse(root=False):
                 # Skip already-installed packages with --missing
-                if args.missing and package.installed:
+                if args.missing and s.installed:
                     continue
 
-                # Do not attempt to fetch externals (they're local)
-                if package.spec.external:
-                    continue
-
-                package.do_fetch()
-
-        package = spack.repo.get(spec)
-        package.do_fetch()
+                s.package.do_fetch()
+        spec.package.do_fetch()

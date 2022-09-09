@@ -1,6 +1,16 @@
---- a/setup.py	2020-07-16 14:01:48.601449013 -0500
-+++ b/setup.py	2020-07-16 14:02:31.547441668 -0500
-@@ -33,7 +33,7 @@
+--- a/setup.py	2021-05-20 16:22:44.832444514 -0500
++++ b/setup.py	2021-05-20 16:23:43.127629214 -0500
+@@ -23,7 +23,8 @@
+ 	'accessory/readPsl.py',
+ 	'accessory/subCount.py',
+ 	'accessory/subCount2.py',
+-	'accessory/rediportal2recoding.py'
++	'accessory/rediportal2recoding.py',
++	'accessory/get_DE_events.py'
+ 	],
+ 	license='LICENSE.txt',
+ 	classifiers=[
+@@ -33,7 +34,7 @@
            'Operating System :: POSIX',
            'Programming Language :: Python',
            ],

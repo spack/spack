@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libfs(AutotoolsPackage, XorgPackage):
@@ -12,13 +12,13 @@ class Libfs(AutotoolsPackage, XorgPackage):
     This library is used by clients of X Font Servers (xfs), such as
     xfsinfo, fslsfonts, and the X servers themselves."""
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libFS"
+    homepage = "https://cgit.freedesktop.org/xorg/lib/libFS"
     xorg_mirror_path = "lib/libFS-1.0.7.tar.gz"
 
-    version('1.0.7', sha256='91bf1c5ce4115b7dbf4e314fdbee54052708e8f7b6a2ec6e82c309bcbe40ef3d')
+    version("1.0.7", sha256="91bf1c5ce4115b7dbf4e314fdbee54052708e8f7b6a2ec6e82c309bcbe40ef3d")
 
-    depends_on('xproto@7.0.17:')
-    depends_on('fontsproto')
-    depends_on('xtrans')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.17:")
+    depends_on("fontsproto")
+    depends_on("xtrans")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

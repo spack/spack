@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RRspectra(RPackage):
-    """Solvers for Large-Scale Eigenvalue and SVD Problems
+    """Solvers for Large-Scale Eigenvalue and SVD Problems.
 
     R interface to the 'Spectra' library <https://spectralib.org/> for
     large-scale eigenvalue and SVD problems. It is typically used to compute a
@@ -20,14 +20,13 @@ class RRspectra(RPackage):
     on can be dense, sparse, or in the form of an operator defined by the
     user."""
 
-    homepage = "https://github.com/yixuan/RSpectra"
-    url      = "https://cloud.r-project.org/src/contrib/RSpectra_0.15-0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/RSpectra"
+    cran = "RSpectra"
 
-    version('0.16-0', sha256='aaf1cfc9ffe3a4c6684247899924e1c18306971dfef4bae1dc596a2fb42a64a9')
-    version('0.15-0', sha256='1ad5698201007044a0420cb10b7c48e94312a8a1d22b9d946d5de1c6743969a9')
+    version("0.16-1", sha256="cba5d3403d6a7d0e27abf6279fbfea6e0d0fe36b28c688bbadb8eafb3841329a")
+    version("0.16-0", sha256="aaf1cfc9ffe3a4c6684247899924e1c18306971dfef4bae1dc596a2fb42a64a9")
+    version("0.15-0", sha256="1ad5698201007044a0420cb10b7c48e94312a8a1d22b9d946d5de1c6743969a9")
 
-    depends_on('r@3.0.2:', type=('build', 'run'))
-    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
-    depends_on('r-rcppeigen@0.3.3.3.0:', type=('build', 'run'))
+    depends_on("r@3.0.2:", type=("build", "run"))
+    depends_on("r-matrix@1.1-0:", type=("build", "run"))
+    depends_on("r-rcpp@0.11.5:", type=("build", "run"))
+    depends_on("r-rcppeigen@0.3.3.3.0:", type=("build", "run"))

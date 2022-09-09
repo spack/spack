@@ -1,0 +1,15 @@
+--- spack-src/libcxx/include/__config.org	2022-02-03 14:36:11.000000000 +0900
++++ spack-src/libcxx/include/__config	2022-02-04 08:39:59.000000000 +0900
+@@ -52,7 +52,11 @@
+ #  elif __cplusplus <= 201703L
+ #    define _LIBCPP_STD_VER 17
+ #  elif __cplusplus <= 202002L
+-#    define _LIBCPP_STD_VER 20
++#    if defined(__FUJITSU) || defined(__CLANG_FUJITSU)
++#      define _LIBCPP_STD_VER 17
++#    else
++#      define _LIBCPP_STD_VER 20
++#    endif
+ #  else
+ #    define _LIBCPP_STD_VER 21  // current year, or date of c++2b ratification
+ #  endif

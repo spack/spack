@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Damageproto(AutotoolsPackage, XorgPackage):
@@ -15,7 +15,7 @@ class Damageproto(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/damageproto"
     xorg_mirror_path = "proto/damageproto-1.2.1.tar.gz"
 
-    version('1.2.1', sha256='f65ccbf1de9750a527ea6e85694085b179f2d06495cbdb742b3edb2149fef303')
+    version("1.2.1", sha256="f65ccbf1de9750a527ea6e85694085b179f2d06495cbdb742b3edb2149fef303")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

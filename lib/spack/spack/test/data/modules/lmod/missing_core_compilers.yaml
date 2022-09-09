@@ -1,5 +1,7 @@
 enable:
   - lmod
 lmod:
+  all:
+    autoload: none
   hierarchy:
     - mpi

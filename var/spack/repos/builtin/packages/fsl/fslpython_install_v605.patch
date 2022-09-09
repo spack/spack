@@ -1,0 +1,42 @@
+diff -ru a/etc/fslconf/fslpython_install.sh b/etc/fslconf/fslpython_install.sh
+--- a/etc/fslconf/fslpython_install.sh	2021-07-15 10:05:03.000000000 +0000
++++ b/etc/fslconf/fslpython_install.sh	2021-11-01 01:01:03.088119423 +0000
+@@ -204,19 +204,19 @@
+ #  - https://github.com/conda/conda/issues/8804
+ 
+ # Try to make downloads more resilient
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_read_timeout_secs    240
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_connect_timeout_secs 20
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_max_retries          10
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_backoff_factor       5
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set safety_checks               warn
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_read_timeout_secs    240
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_connect_timeout_secs 20
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_max_retries          10
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set remote_backoff_factor       5
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set safety_checks               warn
+ 
+ # Channel priority:
+ #  - conda-forge (highest priority)
+ #  - defaults (gets automatically added on the first call)
+ #  - fsl (lowest priority)
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set    channel_priority strict
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --add    channels         conda-forge
+-"${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --append channels         https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/channel
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --set    channel_priority strict
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --add    channels         conda-forge
++"${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda"  config --file "${miniconda_root_dir}"/.condarc --append channels         https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/channel
+ 
+ 
+ ##############################
+@@ -235,7 +235,7 @@
+ # different on linux. Also is likely to need
+ # updating whenever the fslpython environment
+ # specification is changed.
+-FSLDIR=$fsl_dir "${miniconda_bin_dir}/conda" env create \
++FSLDIR=$fsl_dir "${miniconda_bin_dir}/python" "${miniconda_bin_dir}/conda" env create \
+     -f "${script_dir}/fslpython_environment.yml" \
+     2>> "${miniconda_install_log}" | \
+     ${script_dir}/progress.sh 400 ${quiet} 1>> "${miniconda_install_log}"
+Only in b/etc/fslconf: fslpython_install.sh.orig
+Only in b/etc/fslconf: fslpython_install.sh.rej

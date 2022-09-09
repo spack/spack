@@ -1,6 +1,8 @@
 enable:
   - lmod
 lmod:
+  all:
+    autoload: none
   projections:
     all: '{name}/v{version}'
     mpileaks: '{name}-mpiprojection'
