@@ -278,8 +278,7 @@ class Rocsparse(CMakePackage):
 
     def check(self):
         if self.spec.satisfies("+test"):
-            exe = join_path(self.build_directory,
-                            "clients", "staging", "rocsparse-test")
+            exe = join_path(self.build_directory, "clients", "staging", "rocsparse-test")
             self.run_test(exe, options=["--gtest_filter=*quick*:*pre_checkin*-*known_bug*"])
 
     def setup_build_environment(self, env):
@@ -301,7 +300,7 @@ class Rocsparse(CMakePackage):
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define_from_variant("BUILD_CLIENTS_TESTS", "test"),
             self.define("BUILD_CLIENTS_BENCHMARKS", "OFF"),
-            self.define("ROCSPARSE_MTX_DIR", join_path(self.stage.source_path, "mtx"))
+            self.define("ROCSPARSE_MTX_DIR", join_path(self.stage.source_path, "mtx")),
         ]
 
         if "auto" not in self.spec.variants["amdgpu_target"]:
