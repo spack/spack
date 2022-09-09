@@ -35,6 +35,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     version("2018.0", sha256="2e60a9894a686a95791be2227bc569bf81ca3875421b5307df7d83f885b1de88")
 
     depends_on("mpi")
+    depends_on("gmake", when="@2018")
 
     conflicts(
         "^openmpi",
@@ -42,6 +43,7 @@ class IntelMpiBenchmarks(MakefilePackage):
         msg="intel-mpi-benchmarks <= v2019.0 cannot be built with OpenMPI, "
         "please specify a different MPI implementation",
     )
+    conflicts("benchmark=p2p", when="@2018", msg="p2p benchmark available on <= v2019.0 only")
 
     # https://github.com/intel/mpi-benchmarks/pull/19
     patch("add_const.patch", when="@2019")
