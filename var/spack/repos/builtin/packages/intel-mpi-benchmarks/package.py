@@ -77,19 +77,19 @@ class IntelMpiBenchmarks(MakefilePackage):
         spec = self.spec
         targets = []
         if "+mpi1" in spec:
-            targets.append("IMB-MPI1")
+            targets.append("MPI1")
         elif "+ext" in spec:
-            targets.append("IMB-EXT")
+            targets.append("EXT")
         elif "+io" in spec:
-            targets.append("IMB-IO")
+            targets.append("IO")
         elif "+nbc" in spec:
-            targets.append("IMB-NBC")
+            targets.append("NBC")
         elif "+p2p" in spec:
-            targets.append("IMB-P2P")
+            targets.append("P2P")
         elif "+rma" in spec:
-            targets.append("IMB-RMA")
+            targets.append("RMA")
         elif "+mt" in spec:
-            targets.append("IMB-MT")
+            targets.append("MT")
 
         return targets
 
