@@ -60,6 +60,8 @@ class PyArmPyart(PythonPackage):
     depends_on("rsl", type=("build", "run"), when="+rsl")
     depends_on("py-wradlib", type="run", when="+wradlib")
 
+    patch("StringIO.patch")
+
     def setup_build_environment(self, env):
         if "+rsl" in self.spec:
             env.set("RSL_PATH", self.spec["rsl"].prefix)
