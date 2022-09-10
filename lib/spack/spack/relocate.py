@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import math
 import multiprocessing.pool
 import os
 import re
@@ -444,16 +445,17 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == "text"
 
 
-def _replace_prefix_text(filename, compiled_prefixes):
+def _replace_prefix_text(x):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in text files that are utf-8 encoded.
 
-    Args:
+    Args (as a single tuple):
         filename (str): target text file (utf-8 encoded)
         compiled_prefixes (OrderedDict): OrderedDictionary where the keys are
         precompiled regex of the old prefixes and the values are the new
         prefixes (uft-8 encoded)
     """
+    filename, compiled_prefixes = x
     with open(filename, "rb+") as f:
         data = f.read()
         f.seek(0)
@@ -463,19 +465,20 @@ def _replace_prefix_text(filename, compiled_prefixes):
         f.truncate()
 
 
-def _replace_prefix_bin(filename, byte_prefixes):
+def _replace_prefix_bin(x):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in binary files.
 
     The new install prefix is prefixed with ``os.sep`` until the
     lengths of the prefixes are the same.
 
-    Args:
+    Args (as a single tuple):
         filename (str): target binary file
         byte_prefixes (OrderedDict): OrderedDictionary where the keys are
         precompiled regex of the old prefixes and the values are the new
         prefixes (uft-8 encoded)
     """
+    filename, byte_prefixes = x
 
     with open(filename, "rb+") as f:
         data = f.read()
@@ -778,9 +781,10 @@ def relocate_text(files, prefixes, concurrency=32):
     for filename in files:
         args.append((filename, compiled_prefixes))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
+    tp = multiprocessing.pool.Pool(processes=concurrency)
+    chunksize = max(math.floor(len(files) / concurrency / 5), 1)
     try:
-        tp.map(llnl.util.lang.star(_replace_prefix_text), args)
+        tp.map(_replace_prefix_text, args, chunksize)
     finally:
         tp.terminate()
         tp.join()
@@ -820,10 +824,10 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     for binary in binaries:
         args.append((binary, byte_prefixes))
 
-    tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-
+    tp = multiprocessing.pool.Pool(processes=concurrency)
+    chunksize = max(math.floor(len(binaries) / concurrency / 5), 1)
     try:
-        tp.map(llnl.util.lang.star(_replace_prefix_bin), args)
+        tp.map(_replace_prefix_bin, args, chunksize)
     finally:
         tp.terminate()
         tp.join()
