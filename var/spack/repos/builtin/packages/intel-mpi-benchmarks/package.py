@@ -103,12 +103,7 @@ class IntelMpiBenchmarks(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
 
-        if self.spec.satisfies("@2018"):
-            build_directory = "src"
-        else:
-            build_directory = "."
-
-        with working_dir(build_directory):
+        with working_dir(self.build_directory):
             if "+mpi1" in spec:
                 install("IMB-MPI1", prefix.bin)
             elif "+ext" in spec:
