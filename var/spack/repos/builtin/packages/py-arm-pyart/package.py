@@ -46,7 +46,7 @@ class PyArmPyart(PythonPackage):
     depends_on("py-cftime", type=("build", "run"))
     depends_on("py-fsspec", type=("build", "run"))
     depends_on("py-s3fs", type=("build", "run"))
-    depends_on("py-xarray@0.21.1:", type="run")
+    depends_on("py-xarray@0.21.1:", type=("build", "run"))
 
     # These are not listed but needed due to being imported in a python file
     depends_on("py-pandas", type="run")
