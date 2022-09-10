@@ -28,20 +28,16 @@ class PyArmPyart(PythonPackage):
     variant("hdf5", description="Support for HDF5 files", default=False)
     variant("rsl", description="Use RSL library", default=False)
     variant("wradlib", description="Calculate texture of differential phase field", default=False)
-    variant("xarray", description="Work with grid dataset", default=False)
 
     conflicts("~hdf5", when="+wradlib")
     conflicts("~gdal", when="+wradlib")
-    conflicts("~xarray", when="+wradlib")
 
     depends_on("python@3.6:3.10", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-setuptools-scm@6.2:", type="build")
+
     depends_on("py-cython", type="build")
-
-    depends_on("py-pytest", type="test")
-
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-netcdf4", type=("build", "run"))
@@ -50,14 +46,19 @@ class PyArmPyart(PythonPackage):
     depends_on("py-cftime", type=("build", "run"))
     depends_on("py-fsspec", type=("build", "run"))
     depends_on("py-s3fs", type=("build", "run"))
+    depends_on("py-xarray@0.21.1:", type="run")
 
+    # These are not listed but needed due to being imported in a python file
+    depends_on("py-pandas", type="run")
+    depends_on("py-pylab-sdk", type="run")
+
+    # Dependencies for variants
     depends_on("py-cartopy", type="run", when="+cartopy")
     depends_on("py-cylp", type="run", when="+cylp")
     depends_on("gdal+python", type="run", when="+gdal")
     depends_on("py-h5py", type="run", when="+hdf5")
     depends_on("rsl", type=("build", "run"), when="+rsl")
     depends_on("py-wradlib", type="run", when="+wradlib")
-    depends_on("py-xarray@0.21.1:", type="run", when="+xarray")
 
     def setup_build_environment(self, env):
         if "+rsl" in self.spec:
