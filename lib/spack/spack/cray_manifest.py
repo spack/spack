@@ -174,7 +174,10 @@ def read(path, apply_updates):
 
         jsonschema.validate(json_data, manifest_schema)
     except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
-        raise ManifestValidationError(str(e))
+        raise six.raise_from(
+            ManifestValidationError("error parsing manifest JSON:", str(e)),
+            e,
+        )
 
     specs = entries_to_specs(json_data["specs"])
     tty.debug("{0}: {1} specs read from manifest".format(path, str(len(specs))))
@@ -192,4 +195,5 @@ def read(path, apply_updates):
 
 
 class ManifestValidationError(spack.error.SpackError):
-    pass
+    def __init__(self, msg, long_msg=None):
+        super(ManifestValidationError, self).__init__(msg, long_msg)
