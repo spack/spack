@@ -27,7 +27,9 @@ def test_create_db_tarball(tmpdir, database):
 
         # get the first non-dotfile to avoid coverage files in the directory
         files = os.listdir(os.getcwd())
-        tarball_name = next(f for f in files if not f.startswith("."))
+        tarball_name = next(
+            f for f in files if not f.startswith(".") and not f.startswith("tests")
+        )
 
         # debug command made an archive
         assert os.path.exists(tarball_name)
