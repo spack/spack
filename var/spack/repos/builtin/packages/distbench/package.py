@@ -10,12 +10,9 @@ class Distbench(MakefilePackage):
     """Distbench is a tool for synthesizing a variety of network traffic patterns used in
     distributed systems, and evaluating their performance across multiple networking stacks."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/google/distbench"
     url = "https://github.com/google/distbench/archive/refs/tags/v1.0rc4.tar.gz"
 
     version("1.0rc4", sha256="adc8da85890219800207d0d4cd7ffd63193d2c4007dba7c44cf545cc13675ff7")
 
     depends_on("bazel", type="build")
-
-
