@@ -758,6 +758,8 @@ def relocate_text(files, prefixes, concurrency=32):
         prefixes (OrderedDict): String prefixes which need to be changed
         concurrency (int): Preferred degree of parallelism
     """
+    if len(files) == 0:
+        return
 
     # This now needs to be handled by the caller in all cases
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
@@ -781,7 +783,7 @@ def relocate_text(files, prefixes, concurrency=32):
     for filename in files:
         args.append((filename, compiled_prefixes))
 
-    tp = multiprocessing.pool.Pool(processes=concurrency)
+    tp = multiprocessing.pool.Pool(processes=min(concurrency, len(files)))
     chunksize = max(math.floor(len(files) / concurrency / 5), 1)
     try:
         tp.map(_replace_prefix_text, args, chunksize)
@@ -803,6 +805,9 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     Raises:
       BinaryTextReplaceError: when the new path is longer than the old path
     """
+    if len(binaries) == 0:
+        return
+
     byte_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
@@ -824,7 +829,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     for binary in binaries:
         args.append((binary, byte_prefixes))
 
-    tp = multiprocessing.pool.Pool(processes=concurrency)
+    tp = multiprocessing.pool.Pool(processes=min(concurrency, len(binaries)))
     chunksize = max(math.floor(len(binaries) / concurrency / 5), 1)
     try:
         tp.map(_replace_prefix_bin, args, chunksize)
