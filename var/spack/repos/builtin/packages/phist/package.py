@@ -187,8 +187,8 @@ class Phist(CMakePackage):
 
     # in 1.10 we removed some use of deprecated Trilinos interfaces
     # (some functions in tpetra were renamed)
-    conflicts("^trilinos@13.4:", when="@:1.9")
-    conflicts("^trilinos@:13.4", when="@1.10:")
+    conflicts("^trilinos@13.4:", when="@:1.9 kernel_lib=tpetra")
+    conflicts("^trilinos@:13.2", when="@1.10: kernel_lib=tpetra")
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
