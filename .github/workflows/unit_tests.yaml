@@ -52,7 +52,7 @@ jobs:
               patchelf cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov "coverage[toml]<=6.2" pytest-xdist
+          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-cov pytest-xdist
           # ensure style checks are not skipped in unit tests for python >= 3.6
           # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
@@ -75,16 +75,18 @@ jobs:
           . share/spack/setup-env.sh
           spack bootstrap untrust spack-install
           spack -v solve zlib
-    - name: Run unit tests (full suite with coverage)
+    - name: Run unit tests
       env:
           SPACK_PYTHON: python
-          COVERAGE: true
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
+          SPACK_TEST_PARALLEL: 2
+          COVERAGE: true
+          UNIT_TEST_COVERAGE: ${{ (matrix.concretizer == 'original' && matrix.python-version == '2.7') || (matrix.python-version == '3.10') }}
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine
+          coverage combine -a
           coverage xml
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
@@ -115,7 +117,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
       with:
         flags: shelltests,linux
 
@@ -163,7 +165,7 @@ jobs:
               patchelf kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2 clingo pytest-xdist
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-cov clingo pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -175,7 +177,7 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine
+          coverage combine -a
           coverage xml
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
       with:
@@ -196,13 +198,14 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade pytest codecov coverage[toml]==6.2 pytest-xdist
+          pip install --upgrade pytest codecov coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
       env:
         SPACK_TEST_SOLVER: clingo
+        SPACK_TEST_PARALLEL: 4
       run: |
         git --version
         . .github/workflows/setup_git.sh
@@ -210,13 +213,12 @@ jobs:
         $(which spack) bootstrap untrust spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        coverage run $(which spack) unit-test "${common_args[@]}"
-        coverage combine
+        $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
+        coverage combine -a
         coverage xml
         # Delete the symlink going from ./lib/spack/docs/_spack_root back to
         # the initial directory, since it causes ELOOP errors with codecov/actions@2
         rm lib/spack/docs/_spack_root
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
+    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
       with:
-        files: ./coverage.xml
         flags: unittests,macos
