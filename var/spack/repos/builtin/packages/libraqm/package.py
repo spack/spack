@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Libraqm(MesonPackage):
-    """Raqm is a small library that encapsulates the logic for complex text layout and provides a convenient API."""
+    """Raqm provides a convenient API for the logic of complex text layout."""
 
     homepage = "https://github.com/HOST-Oman/libraqm"
     url = "https://github.com/HOST-Oman/libraqm/releases/download/v0.9.0/raqm-0.9.0.tar.xz"
