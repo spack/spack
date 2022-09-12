@@ -15,7 +15,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['specs'])
+    arguments.add_common_arguments(subparser, ["specs"])
 
 
 def restage(parser, args):

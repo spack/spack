@@ -19,13 +19,13 @@ class RViridis(RPackage):
 
     cran = "viridis"
 
-    version('0.6.2', sha256='69b58cd1d992710a08b0b227fd0a9590430eea3ed4858099412f910617e41311')
-    version('0.5.1', sha256='ddf267515838c6eb092938133035cee62ab6a78760413bfc28b8256165701918')
-    version('0.5.0', sha256='fea477172c1e11be40554545260b36d6ddff3fe6bc3bbed87813ffb77c5546cd')
-    version('0.4.0', sha256='93d2ded68ed7cec5633c260dbc47051416147aae074f29ebe135cc329250b00e')
+    version("0.6.2", sha256="69b58cd1d992710a08b0b227fd0a9590430eea3ed4858099412f910617e41311")
+    version("0.5.1", sha256="ddf267515838c6eb092938133035cee62ab6a78760413bfc28b8256165701918")
+    version("0.5.0", sha256="fea477172c1e11be40554545260b36d6ddff3fe6bc3bbed87813ffb77c5546cd")
+    version("0.4.0", sha256="93d2ded68ed7cec5633c260dbc47051416147aae074f29ebe135cc329250b00e")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-viridislite@0.3.0:', type=('build', 'run'))
-    depends_on('r-viridislite@0.4.0:', type=('build', 'run'), when='@0.6.2:')
-    depends_on('r-ggplot2@1.0.1:', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-viridislite@0.3.0:", type=("build", "run"))
+    depends_on("r-viridislite@0.4.0:", type=("build", "run"), when="@0.6.2:")
+    depends_on("r-ggplot2@1.0.1:", type=("build", "run"))
+    depends_on("r-gridextra", type=("build", "run"))

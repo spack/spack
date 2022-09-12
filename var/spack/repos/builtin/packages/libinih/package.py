@@ -12,7 +12,7 @@ class Libinih(MesonPackage):
     """
 
     homepage = "https://github.com/benhoyt/inih"
-    url      = "https://github.com/benhoyt/inih/archive/refs/tags/r53.tar.gz"
-    git      = "https://github.com/benhoyt/inih.git"
+    url = "https://github.com/benhoyt/inih/archive/refs/tags/r53.tar.gz"
+    git = "https://github.com/benhoyt/inih.git"
 
-    version('master', branch="master")
+    version("master", branch="master")

@@ -20,6 +20,6 @@ class RRapiserialize(RPackage):
 
     cran = "RApiSerialize"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('0.1.0', sha256='324d42c655c27b4647d194bfcd7c675da95c67ea3a74ce99853502022792a23e')
+    version("0.1.0", sha256="324d42c655c27b4647d194bfcd7c675da95c67ea3a74ce99853502022792a23e")

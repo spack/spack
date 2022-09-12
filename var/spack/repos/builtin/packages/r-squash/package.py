@@ -17,6 +17,6 @@ class RSquash(RPackage):
 
     cran = "squash"
 
-    version('1.0.9', sha256='ff381c85071e3407574e3db28d789657f64e7d3f9d74ac123539de22ab8ac6f4')
-    version('1.0.8', sha256='e6932c0a461d5c85f7180a31d18a3eb4f28afd6769efe251075a4de12de039f4')
-    version('1.0.7', sha256='d2d7182a72dfd93b8b65e775bea11e891c38598fa49a3ed4f92ec1159ffab6f1')
+    version("1.0.9", sha256="ff381c85071e3407574e3db28d789657f64e7d3f9d74ac123539de22ab8ac6f4")
+    version("1.0.8", sha256="e6932c0a461d5c85f7180a31d18a3eb4f28afd6769efe251075a4de12de039f4")
+    version("1.0.7", sha256="d2d7182a72dfd93b8b65e775bea11e891c38598fa49a3ed4f92ec1159ffab6f1")
