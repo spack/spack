@@ -52,7 +52,7 @@ class Pgplot(MakefilePackage):
 
         libs = ""
         if "+X" in spec:
-            libs += " " + self.spec["X11"].libs.ld_flags
+            libs += " " + self.spec["libx11"].libs.ld_flags
         if "+png" in spec:
             libs += " " + self.spec["libpng"].libs.ld_flags
 
@@ -120,7 +120,7 @@ class Pgplot(MakefilePackage):
 
     def setup_build_environment(self, env):
         if "+X" in self.spec:
-            env.append_flags("LIBS", self.spec["X11"].libs.ld_flags)
+            env.append_flags("LIBS", self.spec["libx11"].libs.ld_flags)
         if "+png" in self.spec:
             env.append_flags("LIBS", self.spec["libpng"].libs.ld_flags)
 
