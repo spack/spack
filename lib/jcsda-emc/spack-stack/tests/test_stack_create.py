@@ -5,7 +5,7 @@ import pytest
 import spack
 import spack.main
 
-stack_create = spack.main.SpackCommand('stack')
+stack_create = spack.main.SpackCommand("stack")
 
 
 # Find spack-stack directory assuming this Spack instance
@@ -13,17 +13,17 @@ stack_create = spack.main.SpackCommand('stack')
 def stack_path(*paths):
     stack_dir = os.path.dirname(spack.paths.spack_root)
 
-    if not os.path.exists(os.path.join(stack_dir, '.spackstack')):
+    if not os.path.exists(os.path.join(stack_dir, ".spackstack")):
         return None
 
     return os.path.join(stack_dir, *paths)
 
 
-test_dir = stack_path('envs', 'unit-tests', 'stack-create')
+test_dir = stack_path("envs", "unit-tests", "stack-create")
 
 
 def all_templates():
-    template_path = stack_path('configs', 'templates')
+    template_path = stack_path("configs", "templates")
     if template_path:
         _, templates, _ = next(os.walk(template_path))
         return list(templates)
@@ -32,7 +32,7 @@ def all_templates():
 
 
 def all_sites():
-    site_path = stack_path('configs', 'sites')
+    site_path = stack_path("configs", "sites")
     if site_path:
         _, sites, _ = next(os.walk(site_path))
         return list(sites)
@@ -41,7 +41,7 @@ def all_sites():
 
 
 def all_containers():
-    container_path = stack_path('configs', 'containers')
+    container_path = stack_path("configs", "containers")
     if container_path:
         _, _, containers = next(os.walk(container_path))
         # Exclude files like "README.md"
@@ -51,32 +51,29 @@ def all_containers():
         return None
 
 
-@pytest.mark.extension('stack')
-@pytest.mark.parametrize('template', all_templates())
-@pytest.mark.filterwarnings('ignore::UserWarning')
+@pytest.mark.extension("stack")
+@pytest.mark.parametrize("template", all_templates())
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_apps(template):
     if not template:
         return
-    stack_create('create', 'env', '--template', template,
-                 '--dir', test_dir, '--overwrite')
+    stack_create("create", "env", "--template", template, "--dir", test_dir, "--overwrite")
 
 
-@pytest.mark.extension('stack')
-@pytest.mark.parametrize('site', all_sites())
-@pytest.mark.filterwarnings('ignore::UserWarning')
+@pytest.mark.extension("stack")
+@pytest.mark.parametrize("site", all_sites())
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_sites(site):
     if not site:
         return
-    stack_create('create', 'env', '--site', site,
-                 '--dir', test_dir, '--overwrite')
+    stack_create("create", "env", "--site", site, "--dir", test_dir, "--overwrite")
 
 
-@pytest.mark.extension('stack')
-@pytest.mark.parametrize('container', all_containers())
-@pytest.mark.filterwarnings('ignore::UserWarning')
+@pytest.mark.extension("stack")
+@pytest.mark.parametrize("container", all_containers())
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_containers(container):
     if not container:
         return
     container_wo_ext = os.path.splitext(container)[0]
-    stack_create('create', 'ctr', container_wo_ext,
-                 '--dir', test_dir, '--overwrite')
+    stack_create("create", "ctr", container_wo_ext, "--dir", test_dir, "--overwrite")
