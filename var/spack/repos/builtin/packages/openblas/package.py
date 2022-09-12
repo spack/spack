@@ -153,6 +153,10 @@ class Openblas(MakefilePackage):
     # Use /usr/bin/env perl in build scripts
     patch("0001-use-usr-bin-env-perl.patch", when="@:0.3.13")
 
+    # Declare external functions in linktest
+    # See <https://github.com/xianyi/OpenBLAS/issues/3760>
+    patch("linktest.patch", when="@0.3.20")
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
 
