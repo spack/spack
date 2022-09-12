@@ -349,3 +349,66 @@ packages:
     assert spec.satisfies(specific_exp)
     for s in spec.traverse(root=False):
         assert s.satisfies(generic_exp)
+
+
+@pytest.mark.parametrize("mpi_requirement", ["mpich", "mpich2", "zmpi"])
+def test_requirements_on_virtual(mpi_requirement, concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+packages:
+  mpi:
+    require: "{}"
+""".format(
+        mpi_requirement
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath").concretized()
+    assert "mpi" in spec
+    assert mpi_requirement in spec
+
+
+@pytest.mark.parametrize(
+    "mpi_requirement,specific_requirement",
+    [
+        ("mpich", "@3.0.3"),
+        ("mpich2", "%clang"),
+        ("zmpi", "%gcc"),
+    ],
+)
+def test_requirements_on_virtual_and_on_package(
+    mpi_requirement, specific_requirement, concretize_scope, mock_packages
+):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+packages:
+  mpi:
+    require: "{0}"
+  {0}:
+    require: "{1}"
+""".format(
+        mpi_requirement, specific_requirement
+    )
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath").concretized()
+    assert "mpi" in spec
+    assert mpi_requirement in spec
+    assert spec["mpi"].satisfies(specific_requirement)
+
+
+def test_incompatible_virtual_requirements_raise(concretize_scope, mock_packages):
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Original concretizer does not support configuration" " requirements")
+    conf_str = """\
+    packages:
+      mpi:
+        require: "mpich"
+    """
+    update_packages_config(conf_str)
+
+    spec = Spec("callpath ^zmpi")
+    with pytest.raises(UnsatisfiableSpecError):
+        spec.concretize()

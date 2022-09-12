@@ -484,6 +484,7 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     assert affected_pkg_names == expected_affected_pkg_names
 
 
+@pytest.mark.maybeslow
 @pytest.mark.regression("29947")
 def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
     e = ev.create("first_concretization")

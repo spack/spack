@@ -12,7 +12,8 @@ import tempfile
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import getuid, mkdirp, touch
+import llnl.util.tty as tty
+from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
 
 import spack.config
 import spack.environment as ev
@@ -828,9 +829,9 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get("foobar")
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
+@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
-def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
+def test_bad_command_line_scopes(tmpdir, config):
     cfg = spack.config.Configuration()
 
     with tmpdir.as_cwd():
@@ -1265,3 +1266,168 @@ def test_user_cache_path_is_overridable(working_env):
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
     assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+
+
+github_url = "https://github.com/fake/fake/{0}/develop"
+gitlab_url = "https://gitlab.fake.io/user/repo/-/blob/config/defaults"
+
+
+@pytest.mark.parametrize(
+    "url,isfile",
+    [
+        (github_url.format("tree"), False),
+        ("{0}/README.md".format(github_url.format("blob")), True),
+        ("{0}/etc/fake/defaults/packages.yaml".format(github_url.format("blob")), True),
+        (gitlab_url, False),
+        (None, False),
+    ],
+)
+def test_config_collect_urls(mutable_empty_config, mock_spider_configs, url, isfile):
+    with spack.config.override("config:url_fetch_method", "curl"):
+        urls = spack.config.collect_urls(url)
+        if url:
+            if isfile:
+                expected = 1 if url.endswith(".yaml") else 0
+                assert len(urls) == expected
+            else:
+                # Expect multiple configuration files for a "directory"
+                assert len(urls) > 1
+        else:
+            assert not urls
+
+
+@pytest.mark.parametrize(
+    "url,isfile,fail",
+    [
+        (github_url.format("tree"), False, False),
+        (gitlab_url, False, False),
+        ("{0}/README.md".format(github_url.format("blob")), True, True),
+        ("{0}/compilers.yaml".format(gitlab_url), True, False),
+        (None, False, True),
+    ],
+)
+def test_config_fetch_remote_configs(
+    tmpdir,
+    mutable_empty_config,
+    mock_collect_urls,
+    mock_curl_configs,
+    url,
+    isfile,
+    fail,
+):
+    def _has_content(filename):
+        # The first element of all configuration files for this test happen to
+        # be the basename of the file so this check leverages that feature. If
+        # that changes, then this check will need to change accordingly.
+        element = "{0}:".format(os.path.splitext(os.path.basename(filename))[0])
+        with open(filename, "r") as fd:
+            for line in fd:
+                if element in line:
+                    return True
+        tty.debug("Expected {0} in '{1}'".format(element, filename))
+        return False
+
+    dest_dir = join_path(tmpdir.strpath, "defaults")
+    if fail:
+        msg = "Cannot retrieve configuration"
+        with spack.config.override("config:url_fetch_method", "curl"):
+            with pytest.raises(spack.config.ConfigFileError, match=msg):
+                spack.config.fetch_remote_configs(url, dest_dir)
+    else:
+        with spack.config.override("config:url_fetch_method", "curl"):
+            path = spack.config.fetch_remote_configs(url, dest_dir)
+            assert os.path.exists(path)
+            if isfile:
+                # Ensure correct file is "fetched"
+                assert os.path.basename(path) == os.path.basename(url)
+                # Ensure contents of the file has expected config element
+                assert _has_content(path)
+            else:
+                for filename in os.listdir(path):
+                    assert _has_content(join_path(path, filename))
+
+
+@pytest.fixture(scope="function")
+def mock_collect_urls(mock_config_data, monkeypatch):
+    """Mock the collection of URLs to avoid mocking spider."""
+
+    _, config_files = mock_config_data
+
+    def _collect(base_url):
+        if not base_url:
+            return []
+
+        ext = os.path.splitext(base_url)[1]
+        if ext:
+            return [base_url] if ext == ".yaml" else []
+
+        return [join_path(base_url, f) for f in config_files]
+
+    monkeypatch.setattr(spack.config, "collect_urls", _collect)
+
+    yield
+
+
+@pytest.mark.parametrize(
+    "url,skip",
+    [
+        (github_url.format("tree"), True),
+        ("{0}/compilers.yaml".format(gitlab_url), True),
+    ],
+)
+def test_config_fetch_remote_configs_skip(
+    tmpdir, mutable_empty_config, mock_collect_urls, mock_curl_configs, url, skip
+):
+    """Ensure skip fetching remote config file if it already exists when
+    required and not skipping if replacing it."""
+
+    def check_contents(filename, expected):
+        with open(filename, "r") as fd:
+            lines = fd.readlines()
+            if expected:
+                assert lines[0] == "compilers:"
+            else:
+                assert not lines
+
+    dest_dir = join_path(tmpdir.strpath, "defaults")
+    filename = "compilers.yaml"
+
+    # Create a stage directory with an empty configuration file
+    path = join_path(dest_dir, filename)
+    touchp(path)
+
+    # Do NOT replace the existing cached configuration file if skipping
+    expected = None if skip else "compilers:"
+
+    with spack.config.override("config:url_fetch_method", "curl"):
+        path = spack.config.fetch_remote_configs(url, dest_dir, skip)
+        result_filename = path if path.endswith(".yaml") else join_path(path, filename)
+        check_contents(result_filename, expected)
+
+
+def test_config_file_dir_failure(tmpdir, mutable_empty_config):
+    with pytest.raises(spack.config.ConfigFileError, match="not a file"):
+        spack.config.read_config_file(tmpdir.strpath)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="chmod not supported on Windows")
+def test_config_file_read_perms_failure(tmpdir, mutable_empty_config):
+    """Test reading a configuration file without permissions to ensure
+    ConfigFileError is raised."""
+    filename = join_path(tmpdir.strpath, "test.yaml")
+    touch(filename)
+    os.chmod(filename, 0o200)
+
+    with pytest.raises(spack.config.ConfigFileError, match="not readable"):
+        spack.config.read_config_file(filename)
+
+
+def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
+    """Test reading a configuration file with invalid (unparseable) YAML
+    raises a ConfigFileError."""
+    filename = join_path(tmpdir.strpath, "test.yaml")
+    with open(filename, "w") as f:
+        f.write("spack:\nview")
+
+    with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
+        spack.config.read_config_file(filename)

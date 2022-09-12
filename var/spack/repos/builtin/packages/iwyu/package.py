@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 import archspec
 
 from spack.package import *
@@ -17,6 +19,10 @@ class Iwyu(CMakePackage):
     url = "https://include-what-you-use.org/downloads/include-what-you-use-0.13.src.tar.gz"
 
     maintainers = ["sethrj"]
+
+    tags = ["build-tools"]
+
+    executables = ["^include-what-you-use$"]
 
     version("0.18", sha256="9102fc8419294757df86a89ce6ec305f8d90a818d1f2598a139d15eb1894b8f3")
     version("0.17", sha256="eca7c04f8b416b6385ed00e33669a7fa4693cd26cb72b522cde558828eb0c665")
@@ -42,6 +48,12 @@ class Iwyu(CMakePackage):
     _arches = set(str(x.family) for x in archspec.cpu.TARGETS.values())
     for _arch in _arches - set(["x86", "x86_64"]):
         depends_on("llvm targets=x86", when="arch={0}:".format(_arch))
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"include-what-you-use\s+(\S+)", output)
+        return match.group(1) if match else None
 
     @when("@0.14:")
     def cmake_args(self):

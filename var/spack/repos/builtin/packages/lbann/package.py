@@ -91,6 +91,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant("pfe", default=True, description="Python Frontend for generating and launching models")
     variant("boost", default=False, description="Enable callbacks that use Boost libraries")
     variant("asan", default=False, description="Build with support for address-sanitizer")
+    variant("unit_tests", default=False, description="Support for unit testing")
 
     # LBANN benefits from high performance linkers, but passing these in as command
     # line options forces the linker flags to unnecessarily propagate to all
@@ -240,14 +241,15 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
     depends_on("py-argparse", type="run", when="@:0.90,0.99: +pfe ^python@:2.6,3.0:3.1")
-    depends_on("py-protobuf+cpp@3.10.0", type=("build", "run"), when="@:0.90,0.99: +pfe")
+    depends_on("py-protobuf+cpp@3.10.0:", type=("build", "run"), when="@:0.90,0.99: +pfe")
 
-    depends_on("protobuf+shared@3.10.0", when="@:0.90,0.99:")
+    depends_on("protobuf+shared@3.10.0:", when="@:0.90,0.99:")
+    depends_on("zlib", when="protobuf@3.11.0:")
 
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
     depends_on("cereal@:1.3.0")
-    depends_on("catch2@2.9.0:2.99.999", type=("build", "test"))
+    depends_on("catch2@2.9.0:2.99.999", when="+unit_tests", type=("build", "test"))
     depends_on("clara")
 
     depends_on("llvm-openmp", when="%apple-clang")
@@ -333,7 +335,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 "-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s" % ("+python" in spec),
                 "-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s" % ("+pfe" in spec),
                 "-DLBANN_WITH_TBINF=OFF",
-                "-DLBANN_WITH_UNIT_TESTING:BOOL=%s" % (self.run_tests),
+                "-DLBANN_WITH_UNIT_TESTING:BOOL=%s" % ("+unit_tests" in spec),
                 "-DLBANN_WITH_VISION:BOOL=%s" % ("+vision" in spec),
                 "-DLBANN_WITH_VTUNE:BOOL=%s" % ("+vtune" in spec),
                 "-DLBANN_DATATYPE={0}".format(spec.variants["dtype"].value),
