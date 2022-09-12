@@ -14,7 +14,7 @@ class Wi4mpi(CMakePackage):
     url = "https://github.com/cea-hpc/wi4mpi/archive/v3.4.1.tar.gz"
     maintainers = ["adrien-cotte", "marcjoos-cea"]
 
-    version("3.6.0", sha256="9b790ffd5b73933fa8c32adeb0c429341e12efe146493904d1d4f04be7cf74c9")
+    version("3.6.0", sha256="06f48bf506643edba51dd04bfdfbaa824363d28549f8eabf002b760ba516227b")
     version("3.5.0", sha256="36dd3dfed4f0f37bc817204d4810f049e624900b1b32641122f09a183135522f")
     version("3.4.1", sha256="92bf6738216426069bc07bff19cd7c933e33e397a941ff9f89a639380fab3737")
     version("3.3.0", sha256="fb7fb3b591144e90b3d688cf844c2246eb185f54e1da6baef857e035ef730d96")
@@ -28,7 +28,7 @@ class Wi4mpi(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    depends_on("mpi")
+    depends_on("mpi", when="@:3.5")
 
     def cmake_args(self):
         if "%gcc" in self.spec:
