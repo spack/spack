@@ -25,7 +25,7 @@ class PyPillowBase(PythonPackage):
     variant("jpeg2000", default=False, description="JPEG 2000 functionality")
     variant("imagequant", when="@3.3:", default=False, description="Improved color quantization")
     variant("xcb", when="@7.1:", default=False, description="X11 screengrab support")
-    variant("raqm", default=False, description="RAQM support")
+    variant("raqm", when="@8.4.0:", default=False, description="RAQM support")
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
