@@ -21,6 +21,7 @@ class PyKeras(PythonPackage):
     git = "https://github.com/keras-team/keras.git"
     url = "https://github.com/keras-team/keras/archive/refs/tags/v2.7.0.tar.gz"
 
+    version("2.10.0", sha256="b1d8d9358700f4a585455854a142d88cc987419c1638ef935b440842d593ad04")
     version("2.9.0", sha256="90226eaa0337573304f3e5ab44d4d9e3a65fe002776c5cbd0f65b738152c1084")
     version("2.8.0", sha256="5e777b0101d8385d3a90fc9056f1b2f6313f2c830d2e8181828b300c9229ec0c")
     version("2.7.0", sha256="7502746467ab15184e2e267f13fbb2c3f33ba24f8e02a097d229ba376dabaa04")
@@ -89,9 +90,17 @@ class PyKeras(PythonPackage):
     depends_on("py-scipy@0.14:", type=("build", "run"), when="@2.0.8:")
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    for ver in ["2.9", "2.8", "2.7", "2.6", "2.5"]:
-        depends_on("py-tensorflow@" + ver, type=("build", "run"), when="@" + ver)
-        depends_on("py-tensorboard@" + ver, type=("build", "run"), when="@" + ver)
+    for minor_ver in range(5, 11):
+        depends_on(
+            "py-tensorflow@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
+        depends_on(
+            "py-tensorboard@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
     depends_on("py-theano", type=("build", "run"), when="@:2.0.7")
 
     # Required dependencies not listed anywhere?
