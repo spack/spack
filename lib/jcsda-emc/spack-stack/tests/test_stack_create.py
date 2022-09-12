@@ -44,6 +44,8 @@ def all_containers():
     container_path = stack_path('configs', 'containers')
     if container_path:
         _, _, containers = next(os.walk(container_path))
+        # Exclude files like "README.md"
+        containers = [x for x in containers if x.endswith(".yaml")]
         return containers
     else:
         return None
