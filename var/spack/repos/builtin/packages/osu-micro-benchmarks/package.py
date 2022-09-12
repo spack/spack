@@ -16,8 +16,11 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
     and can be used for both traditional and GPU-enhanced nodes."""
 
     homepage = "https://mvapich.cse.ohio-state.edu/benchmarks/"
-    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-5.6.3.tar.gz"
+    url = "https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmarks-6.0.tar.gz"
 
+    maintainers = ["natshineman", "harisubramoni", "MatthewLieber"]
+
+    version("6.0", sha256="309fb7583ff54562343b0e0df1eebde3fc245191e183be362f031ac74f4ab542")
     version("5.9", sha256="d619740a1c2cc7c02a9763931546b320d0fa4093c415ff3873c2958e121c0609")
     version(
         "5.7.1",
