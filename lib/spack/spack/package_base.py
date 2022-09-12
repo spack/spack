@@ -1769,6 +1769,10 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
 
         return b32_hash
 
+    @property
+    def cmake_prefix_paths(self):
+        return [self.prefix]
+
     def _has_make_target(self, target):
         """Checks to see if 'target' is a valid target in a Makefile.
 
