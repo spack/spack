@@ -178,6 +178,7 @@ spack:
   - mfem +cuda cuda_arch=80
   - papi +cuda
   - petsc +cuda cuda_arch=80
+  - py-torch +cuda cuda_arch=80
   - raja +cuda cuda_arch=80
   - slate +cuda cuda_arch=80
   - slepc +cuda cuda_arch=80
