@@ -15,27 +15,27 @@ class NceplibsEnv(BundlePackage):
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS"
     # There is no URL since there is no code to download.
 
-    maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ["kgerheiser", "Hang-Lei-NOAA"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('bacio')
-    depends_on('bufr')
-    depends_on('crtm@2.4.0')
-    depends_on('g2')
-    depends_on('g2c')
-    depends_on('g2tmpl')
-    depends_on('gfsio')
-    depends_on('ip')
-    depends_on('landsfcutil')
-    depends_on('ncio')
-    depends_on('nemsio')
-    depends_on('sfcio')
-    depends_on('sigio')
-    depends_on('sp')
-    depends_on('w3emc')
-    depends_on('w3nco')
-    depends_on('wrf-io')
-    depends_on('wgrib2')
+    depends_on("bacio")
+    depends_on("bufr")
+    depends_on("crtm@2.4.0")
+    depends_on("g2")
+    depends_on("g2c")
+    depends_on("g2tmpl")
+    depends_on("gfsio")
+    depends_on("ip")
+    depends_on("landsfcutil")
+    depends_on("ncio")
+    depends_on("nemsio")
+    depends_on("sfcio")
+    depends_on("sigio")
+    depends_on("sp")
+    depends_on("w3emc")
+    depends_on("w3nco")
+    depends_on("wrf-io")
+    depends_on("wgrib2")
 
     # There is no need for install() since there is no code.

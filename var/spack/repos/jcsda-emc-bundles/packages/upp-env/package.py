@@ -10,23 +10,23 @@ class UppEnv(BundlePackage):
     """Development environment for UPP"""
 
     homepage = "https://github.com/NOAA-EMC/UPP"
-    git      = "https://github.com/NOAA-EMC/UPP.git"
+    git = "https://github.com/NOAA-EMC/UPP.git"
 
-    maintainers = ['kgerheiser']
+    maintainers = ["kgerheiser"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('netcdf-fortran')
-    depends_on('bacio')
-    depends_on('crtm@2.4.0')
-    depends_on('g2')
-    depends_on('g2tmpl')
-    depends_on('nemsio')
-    depends_on('sfcio')
-    depends_on('sigio')
-    depends_on('sp')
-    depends_on('w3nco')
-    depends_on('w3emc')
-    depends_on('wrf-io')
+    depends_on("netcdf-fortran")
+    depends_on("bacio")
+    depends_on("crtm@2.4.0")
+    depends_on("g2")
+    depends_on("g2tmpl")
+    depends_on("nemsio")
+    depends_on("sfcio")
+    depends_on("sigio")
+    depends_on("sp")
+    depends_on("w3nco")
+    depends_on("w3emc")
+    depends_on("wrf-io")
 
     # There is no need for install() since there is no code.
