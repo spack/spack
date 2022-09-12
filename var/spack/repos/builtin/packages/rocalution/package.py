@@ -152,6 +152,8 @@ class Rocalution(CMakePackage):
     # This fix is added to address the compilation failure and it is
     # already taken in 5.2.3 rocm release.
     patch("0003-fix-compilation-for-rocalution-5.2.0.patch", when="@5.2.0:")
+    # Fix build for most Radeon 5000 and Radeon 6000 series GPUs.
+    patch("0004-fix-navi-1x.patch", when="@5.2.0:")
 
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocalution-test")
