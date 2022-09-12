@@ -44,6 +44,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("nlohmann-json-schema-validator", type="run")
     depends_on("odc", type="run")
     depends_on("py-eccodes", type="run")
+    depends_on("py-f90nml", type="run")
     depends_on("py-h5py", type="run")
     depends_on("py-netcdf4", type="run")
     depends_on("py-pandas", type="run")
@@ -53,6 +54,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("py-python-dateutil", type="run")
     depends_on("py-pyyaml", type="run")
     depends_on("py-scipy", type="run")
+    depends_on("py-xarray", type="run")
     depends_on("udunits", type="run")
 
     # There is no need for install() since there is no code.
