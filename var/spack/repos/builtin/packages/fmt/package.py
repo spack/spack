@@ -14,6 +14,8 @@ class Fmt(CMakePackage):
     homepage = "https://fmt.dev/"
     url = "https://github.com/fmtlib/fmt/releases/download/7.1.3/fmt-7.1.3.zip"
 
+    version("9.1.0", sha256="cceb4cb9366e18a5742128cb3524ce5f50e88b476f1e54737a47ffdf4df4c996")
+    version("9.0.0", sha256="fc96dd2d2fdf2bded630787adba892c23cb9e35c6fd3273c136b0c57d4651ad6")
     version("8.1.1", sha256="23778bad8edba12d76e4075da06db591f3b0e3c6c04928ced4a7282ca3400e5d")
     version("8.1.0", sha256="d8e9f093b2241c3a9fc3895e23231ef9de00c762cfa0a9c65e4748755bc352ae")
     version("8.0.1", sha256="a627a56eab9554fc1e5dd9a623d0768583b3a383ff70a4312ba68f94c9d415bf")
@@ -54,6 +56,10 @@ class Fmt(CMakePackage):
     conflicts("cxxstd=11", when="@5.0.0")
     # 4.1 fails with C++17 (https://github.com/fmtlib/fmt/issues/722)
     conflicts("cxxstd=17", when="@4.1.0")
+    # edg based compilers have issues with fmt 9.0.0 and C++17 standard
+    # (https://github.com/fmtlib/fmt/issues/3028)
+    conflicts("cxxstd=17", when="@9.0.0%intel")
+    conflicts("cxxstd=17", when="@9.0.0%nvhpc")
 
     # Use CMAKE_CXX_STANDARD to define C++ flag, as in later versions
     patch("fmt-use-cmake-cxx-standard_3.0.0.patch", when="@3.0.0")
