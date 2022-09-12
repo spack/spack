@@ -35,6 +35,8 @@ class Ghost(CMakePackage, CudaPackage):
     depends_on("scotch", when="+scotch")
     depends_on("zoltan", when="+zoltan")
 
+    conflicts("^hwloc@2:")
+
     def cmake_args(self):
         spec = self.spec
         # note: we require the cblas_include_dir property from the blas
