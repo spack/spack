@@ -21,10 +21,16 @@ class FenicsDolfinx(CMakePackage):
     version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4")
     version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
-    conflicts("%gcc@:9.10", when="@0.5.0:",
-              msg="fenics-dolfinx requires GCC-10 or newer for C++20 support")
-    conflicts("%clang@:9.10", when="@0.5.0:",
-              msg="fenics-dolfinx requires Clang-10 or newer for C++20 support")
+    conflicts(
+        "%gcc@:9.10",
+        when="@0.5.0:",
+        msg="fenics-dolfinx requires GCC-10 or newer for C++20 support",
+    )
+    conflicts(
+        "%clang@:9.10",
+        when="@0.5.0:",
+        msg="fenics-dolfinx requires Clang-10 or newer for C++20 support",
+    )
 
     # Graph partitioner variants
     variant(

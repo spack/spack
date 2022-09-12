@@ -21,10 +21,14 @@ class FenicsBasix(CMakePackage):
     version("0.2.0", sha256="e1ec537737adb283717060221635092474e3f2b5b5ba79dfac74aa496bec2fcb")
     version("0.1.0", sha256="2ab41fe6ad4f6c42f01b17a6e7c39debb4e0ae61c334d1caebee78b741bca4e7")
 
-    conflicts("%gcc@:9.10", when="@0.5.0:",
-              msg="fenics-basix requires GCC-10 or newer for C++20 support")
-    conflicts("%clang@:9.10", when="@0.5.0:",
-              msg="fenics-basix requires Clang-10 or newer for C++20 support")
+    conflicts(
+        "%gcc@:9.10", when="@0.5.0:", msg="fenics-basix requires GCC-10 or newer for C++20 support"
+    )
+    conflicts(
+        "%clang@:9.10",
+        when="@0.5.0:",
+        msg="fenics-basix requires Clang-10 or newer for C++20 support",
+    )
 
     depends_on("cmake@3.18:", type="build")
     depends_on("xtl@0.7.2:")
