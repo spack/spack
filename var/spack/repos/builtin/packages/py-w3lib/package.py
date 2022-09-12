@@ -4,14 +4,14 @@ from spack.package import *
 
 class PyW3lib(PythonPackage):
     """This is a Python library of web-related functions, such as:
-        - remove comments, or tags from HTML snippets
-        - extract base url from HTML snippets
-        - translate entites on HTML strings
-        - convert raw HTTP headers to dicts and vice-versa
-        - construct HTTP auth header
-        - converting HTML pages to unicode
-        - sanitize urls (like browsers do)
-        - extract arguments from urls
+    - remove comments, or tags from HTML snippets
+    - extract base url from HTML snippets
+    - translate entites on HTML strings
+    - convert raw HTTP headers to dicts and vice-versa
+    - construct HTTP auth header
+    - converting HTML pages to unicode
+    - sanitize urls (like browsers do)
+    - extract arguments from urls
     """
 
     homepage = "https://github.com/scrapy/w3lib"
