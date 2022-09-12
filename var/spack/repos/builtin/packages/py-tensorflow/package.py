@@ -30,6 +30,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
     version("2.9.2", sha256="8cd7ed82b096dc349764c3369331751e870d39c86e73bbb5374e1664a59dcdf7")
     version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
     version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
@@ -155,13 +156,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # https://github.com/tensorflow/tensorflow/issues/33374
     depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
 
-    # TODO: Older versions of TensorFlow don't list the viable version range,
-    # just the minimum version of bazel that will work. The latest version of
-    # bazel doesn't seem to work, so for now we force them to use min version.
-    # Need to investigate further.
-
+    # See .bazelversion
+    depends_on("bazel@5.1.1", type="build", when="@2.10:")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9:")
+    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
     depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
     depends_on("bazel@3.7.2:4.99.0", type="build", when="@2.7")
     depends_on("bazel@3.7.2:3.99.0", type="build", when="@2.5:2.6")
@@ -201,7 +199,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9:")
+    depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:")
+    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9")
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
     depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
@@ -249,8 +248,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@0.11:1.3")
     depends_on("py-numpy@1.10.1:1.14.5", type=("build", "run"), when="@0.7.1:0.10 platform=darwin")
     depends_on("py-numpy@1.8.2:1.14.5", type=("build", "run"), when="@0.5:0.10")
-    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
+    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
     depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
@@ -310,11 +309,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    depends_on("py-tensorboard@2.9", type=("build", "run"), when="@2.9")
-    depends_on("py-tensorboard@2.8", type=("build", "run"), when="@2.8")
-    depends_on("py-tensorboard@2.7", type=("build", "run"), when="@2.7")
-    depends_on("py-tensorboard@2.6", type=("build", "run"), when="@2.6")
-    depends_on("py-tensorboard@2.5", type=("build", "run"), when="@2.5")
+    for minor_ver in range(5, 11):
+        depends_on(
+            "py-tensorboard@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
     # TODO: is this still true? We now install tensorboard from wheel for all versions
     # depends_on('py-tensorboard', when='@:2.4')  # circular dep
     # depends_on('py-tensorflow-estimator')  # circular dep
