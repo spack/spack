@@ -31,10 +31,12 @@ class Nvshmem(MakefilePackage, CudaPackage):
     variant("gdrcopy", default=True, description="Build with gdrcopy support")
     variant("mpi", default=True, description="Build with MPI support")
     variant("shmem", default=False, description="Build with shmem support")
-    variant("gpu_initiated_support",
-            default=False,
-            when='@2.6:',
-            description="Build with support for GPU initiated communication")
+    variant(
+        "gpu_initiated_support",
+        default=False,
+        when="@2.6:",
+        description="Build with support for GPU initiated communication",
+    )
     conflicts("~cuda")
 
     def url_for_version(self, version):
