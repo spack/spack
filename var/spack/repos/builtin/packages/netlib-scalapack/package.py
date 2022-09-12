@@ -46,7 +46,7 @@ class ScalapackBase(CMakePackage):
     )
     # In file `scalapack-2.2.0/REDIST/SRC/pgemraux.c`, change variable n type from `Int` to `long long`,
     # so that `xxmr2d:out of memory` can be avoid
-    patch("mr2d_malloc-memory.patch", when='@2.2.0')
+    patch("mr2d_malloc-memory.patch", when="@2.2.0")
 
     @property
     def libs(self):
