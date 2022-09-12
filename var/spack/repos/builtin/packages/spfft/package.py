@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Spfft(CMakePackage, CudaPackage):
+class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""
 
     homepage = "https://github.com/eth-cscs/SpFFT"
@@ -49,9 +49,6 @@ class Spfft(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cmake@3.11:", type="build")
 
-    # ROCM variants + dependencies
-    variant("rocm", default=False, description="Use ROCm backend")
-
     depends_on("cuda@:10", when="@:0.9.11 +cuda")
 
     with when("+rocm"):
@@ -59,24 +56,9 @@ class Spfft(CMakePackage, CudaPackage):
         depends_on("hip@:4.0", when="@:1.0.1")
         # Workaround for compiler bug in ROCm 4.5 added in SpFFT 1.0.6
         depends_on("hip@:4.3.1", when="@:1.0.5")
-        depends_on("hip")
         depends_on("rocfft")
         # rocFFT and hipFFT have split with latest versions
         depends_on("hipfft", when="^rocfft@4.1.0:")
-
-        amdgpu_targets = (
-            "gfx701",
-            "gfx801",
-            "gfx802",
-            "gfx803",
-            "gfx900",
-            "gfx906",
-            "gfx908",
-            "gfx1010",
-            "gfx1011",
-            "gfx1012",
-        )
-        variant("amdgpu_target", default="gfx803,gfx900,gfx906", multi=True, values=amdgpu_targets)
 
     # Fix compilation error in some cases due to missing include statement
     # before version 1.0.3
