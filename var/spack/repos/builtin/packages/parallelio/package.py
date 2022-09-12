@@ -33,7 +33,7 @@ class Parallelio(CMakePackage):
     depends_on("netcdf-c +mpi", type="link")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
-    
+
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="+fortran %gcc@10:")
 
