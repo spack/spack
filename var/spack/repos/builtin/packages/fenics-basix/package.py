@@ -31,8 +31,8 @@ class FenicsBasix(CMakePackage):
     )
 
     depends_on("cmake@3.18:", type="build")
-    depends_on("xtl@0.7.2:")
-    depends_on("xtensor@0.23.10:")
+    depends_on("xtl@0.7.2:", type="build", when="@:0.4.2")
+    depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
     depends_on("blas")
     depends_on("lapack")
 

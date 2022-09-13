@@ -32,8 +32,8 @@ class PyFenicsBasix(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.18:", type="build")
-    depends_on("xtl@0.7.2:", type="build")
-    depends_on("xtensor@0.23.10:", type="build")
+    depends_on("xtl@0.7.2:", type="build", when="@:0.4.2")
+    depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
     depends_on("py-pybind11@2.6.2:", type="build")
 
     build_directory = "python"
