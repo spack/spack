@@ -27,8 +27,12 @@ class PyEccodes(PythonPackage):
     def setup_build_environment(self, env):
         if sys.platform == "darwin":
             env.prepend_path("DYLD_LIBRARY_PATH", self.spec["eccodes"].libs.directories[0])
+            if self.spec.satisfies("@1.5.0"):
+                env.prepend_path("DYLD_LIBRARY_PATH", self.spec["libffi"].libs.directories[0])
         else:
             env.prepend_path("LD_LIBRARY_PATH", self.spec["eccodes"].libs.directories[0])
+            if self.spec.satisfies("@1.5.0"):
+                env.prepend_path("LD_LIBRARY_PATH", self.spec["libffi"].libs.directories[0])
 
     def setup_run_environment(self, env):
         self.setup_build_environment(env)
