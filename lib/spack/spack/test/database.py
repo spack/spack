@@ -412,6 +412,8 @@ def test_default_queries(database):
 
     spec = rec.spec
 
+    print(os.listdir(spec["zmpi"].prefix.lib))
+
     libraries = spec["zmpi"].libs
     assert len(libraries) == 1
     assert libraries.names[0] == "zmpi"
