@@ -134,7 +134,7 @@ class ArmForge(Package):
     variant(
         "accept-eula",
         default=False,
-        description='Accept the EULA',
+        description="Accept the EULA",
     )
 
     # forge-probe executes with "/usr/bin/env python"
