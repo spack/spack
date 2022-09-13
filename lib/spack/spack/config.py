@@ -835,6 +835,7 @@ def _config():
 
         # Each scope can have per-platfom overrides in subdirectories
         _add_platform_scope(cfg, ConfigScope, name, path)
+        _add_os_scope(cfg, ConfigScope, name, path)
 
     # add command-line scopes
     _add_command_line_scopes(cfg, command_line_scopes)
