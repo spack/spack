@@ -121,9 +121,9 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
-    # spack GitLab CI pipelines use ^mpich %gcc@7.5.0, but @1.9.6: kernel_lib=builtin fails
-    # due to the use of the mpi_f08 module in phist/builtin. We therefore force the concretizer
-    # to pick another kernel_lib (e.g. epetra or petsc) by this conflict statement.
+    # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
+    # phist 1.9.6, which causes compile-time errors with mpich and older
+    # GCC versions.
     conflicts("kernel_lib=builtin", when="@1.9.6: ^mpich %gcc@:10")
     # in older versions, it is not possible to completely turn off OpenMP
     conflicts("~openmp", when="@:1.7.3")
