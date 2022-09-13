@@ -58,7 +58,12 @@ class Harfbuzz(MesonPackage):
     )
 
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
-    variant("coretext", default=False, when="platform=darwin", description="Enable CoreText shaper backend on macOS")
+    variant(
+        "coretext",
+        default=False,
+        when="platform=darwin",
+        description="Enable CoreText shaper backend on macOS",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
