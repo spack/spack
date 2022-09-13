@@ -10,7 +10,7 @@ class Sperr(CMakePackage):
     """SPERR is a lossy scientific (floating-point) data compressor that can
     perform either error-bounded or size-bounded data compression"""
 
-    homepage = "https://github.com/shaomeng/SPERR"
+    homepage = "https://github.com/NCAR/SPERR"
     git = "https://github.com/robertu94/SPERR"
 
     version("2022.07.18", commit="640305d049db9e9651ebdd773e6936e2c028ff3a")
