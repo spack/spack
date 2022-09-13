@@ -172,7 +172,6 @@ class WindowsRPath(object):
             self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
 
-
 #: Registers which are the detectable packages, by repo and package name
 #: Need a pass of package repositories to be filled.
 detectable_packages = collections.defaultdict(list)
@@ -317,6 +316,7 @@ class DetectablePackageMeta(object):
 class PackageMeta(
     spack.builder.PhaseCallbacksMeta,
     DetectablePackageMeta,
+    WindowsRPathMeta,
     spack.directives.DirectiveMeta,
     spack.multimethod.MultiMethodMeta,
 ):
@@ -367,21 +367,6 @@ def on_package_attributes(**attr_dict):
         return _wrapper
 
     return _execute_under_condition
-
-
-class WindowsPackageMixin(object):
-    """Collection of functionality surrounding Windows runtime linking
-    feature. This is essentially meaningless for all other platforms
-    due to their use of RPATH. All methods within this class are no-ops on
-    non Windows. Packages can customize and manipulate this class as
-    they would a genuine RPATH, i.e. adding directories that contain
-    runtime binary dependencies"""
-
-    win_rpath = fsys.WindowsRuntimePath()
-
-    def establish_win_link(self):
-        if is_windows:
-            self.win_rpath.establish_runtime_link()
 
 
 class PackageViewMixin(object):
@@ -674,6 +659,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: specs.
     test_suite = None
 
+    # On Windows, concept of rpath does not exist, after install
+    # establish runtime linkage via Windows Runtime link object
+    run_after('install')(PackageMeta.windows_establish_runtime_linkage)
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -698,7 +687,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         # Set up timing variables
         self._fetch_time = 0.0
 
+<<<<<<< HEAD
         self.win_rpath = fsys.WindowsSimulatedRPath(self)
+=======
+        self.win_rpath = fsys.WindowsRuntimePath(self)
+>>>>>>> 8c9c042425 (Implementation additions)
 
         if self.is_extension:
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
