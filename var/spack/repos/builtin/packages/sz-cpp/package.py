@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install sz-cpp
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit sz-cpp
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,24 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class SzCpp(CMakePackage):
+    """Refactorization of SZ in cpp"""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    homepage      = "https://github.com/robertu94/meta_compressor/"
+    git      = "https://github.com/robertu94/meta_compressor/"
 
-    maintainers = ['jtian0', 'dingwentao']
+    maintainers = []
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    version('2022-01-27', commit='9441b79abc89d4bcce53fe18edf0df53fd92d1d7')
 
-    version('develop', branch='develop')
+    variant('shared', description="build shared libs", default=True)
 
-    depends_on('cub', when="^ cuda@:10.2.89")
+    depends_on('zstd')
+    depends_on('pkgconfig')
 
     def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
         args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('BUILD_TESTING', self.run_tests)
         ]
         return args

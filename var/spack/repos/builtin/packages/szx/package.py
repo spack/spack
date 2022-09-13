@@ -11,37 +11,36 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install szx
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit szx
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
+from spack.package import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class Szx(AutotoolsPackage):
+    """An ultra fast error bounded compressor for scientific datasets"""
+    homepage = "https://github.com/szcompressor/szx"
+    url = "https://github.com/szcompressor/szx"
+    git = "ssh://git@github.com/szcompressor/szx"
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    maintainers = ["robertu94"]
 
-    maintainers = ['jtian0', 'dingwentao']
+    force_autoreconf = True
+    version("main", branch="main")
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
-    version('develop', branch='develop')
-
-    depends_on('cub', when="^ cuda@:10.2.89")
-
-    def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
+    def configure_args(self):
         args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
+            "--enable-openmp",
+            "--enable-fortran"
         ]
         return args

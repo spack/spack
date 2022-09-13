@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install mgardx
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit mgardx
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,24 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class Mgardx(CMakePackage):
+    """MGARD implementation for research purposes"""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage      = "https://github.com/lxAltria/MGARDx"
+    git           = "https://github.com/robertu94/MGARDx"
 
-    maintainers = ['jtian0', 'dingwentao']
+    variant('shared', description="build shared libraries", default=True)
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    version('2022-01-27', commit='aabe9de1a331eaeb8eec41125dd45e30c1d03af4')
 
-    version('develop', branch='develop')
-
-    depends_on('cub', when="^ cuda@:10.2.89")
+    depends_on('sz-cpp')
+    depends_on('pkgconfig')
+    depends_on('zstd')
 
     def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
         args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
         return args

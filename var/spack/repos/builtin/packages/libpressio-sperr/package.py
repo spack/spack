@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install libpressio-sperr
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit libpressio-sperr
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,18 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class LibpressioSperr(CMakePackage):
+    """A LibPressio plugin for Sperr"""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "https://github.com/robertu94"
+    url      = "https://github.com/robertu94/libpressio-sperr/archive/refs/tags/0.0.1.tar.gz"
+    git      = url
 
-    maintainers = ['jtian0', 'dingwentao']
+    depends_on('libpressio')
+    depends_on('sperr')
+    depends_on('pkgconfig', type='build')
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
-
-    version('develop', branch='develop')
-
-    depends_on('cub', when="^ cuda@:10.2.89")
-
-    def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
-        args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
-        ]
-        return args
+    version('master', branch='master')
+    version('0.0.2', sha256='61995d687f9e7e798e17ec7238d19d917890dc0ff5dec18293b840c4d6f8c115')
+    version('0.0.1', sha256='e2c164822708624b97654046b42abff704594cba6537d6d0646d485bdf2d03ca')

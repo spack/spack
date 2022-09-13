@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install qoz
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit qoz
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,24 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class Qoz(CMakePackage):
+    """Quality optimized version of SZ3 is the next generation of the SZ compressor framework"""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    git      = "https://github.com/robertu94/QoZ"
+    homepage = git
 
-    maintainers = ['jtian0', 'dingwentao']
+    version('master', branch='develop')
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    maintainers = ['disheng222']
 
-    version('develop', branch='develop')
+    depends_on('zstd')
+    depends_on('gsl')
+    depends_on('pkgconfig')
 
-    depends_on('cub', when="^ cuda@:10.2.89")
 
     def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
         args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
+            "-DQoZ_USE_BUNDLED_ZSTD=OFF",
+            "-DQoZ_DEBUG_TIMINGS=OFF",
         ]
         return args

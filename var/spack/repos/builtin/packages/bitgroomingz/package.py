@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install bitgroomingz
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit bitgroomingz
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,24 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class Bitgroomingz(CMakePackage):
+    """BGZ: Bit Grooming Compressor"""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    homepage = "https://github.com/disheng222/BitGroomingZ"
+    git      = "https://github.com/robertu94/BitGroomingZ"
 
-    maintainers = ['jtian0', 'dingwentao']
+    version('master', branch='master')
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    variant('shared', default=True, description='build shared libs')
 
-    version('develop', branch='develop')
-
-    depends_on('cub', when="^ cuda@:10.2.89")
+    # FIXME: Add dependencies if required.
+    depends_on('zlib')
 
     def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
-        args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
-        ]
+        args = []
+        if "+shared" in self.spec:
+            args.append("-DBUILD_SHARED_LIBS=ON")
+        else:
+            args.append("-DBUILD_SHARED_LIBS=OFF")
         return args
+

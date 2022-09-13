@@ -1,4 +1,4 @@
-# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,11 +11,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install cusz
+#     spack install qcat
 #
 # You can edit this file again by typing:
 #
-#     spack edit cusz
+#     spack edit qcat
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
@@ -23,25 +23,22 @@
 from spack import *
 
 
-class Cusz(CMakePackage, CudaPackage):
-    """A GPU accelerated error-bounded lossy compression for scientific data"""
+class Qcat(CMakePackage):
+    """FIXME: Put a proper description of your package here."""
 
-    homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "https://github.com/szcompressor/qcat"
+    git =      "https://github.com/robertu94/qcat"
 
-    maintainers = ['jtian0', 'dingwentao']
+    # FIXME: Add a list of GitHub accounts to
+    # notify when the package is updated.
+    maintainers = ['disheng222', 'robertu94']
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    version('master', branch="master")
 
-    version('develop', branch='develop')
-
-    depends_on('cub', when="^ cuda@:10.2.89")
+    # FIXME: Add dependencies if required.
+    depends_on('zstd')
 
     def cmake_args(self):
-        cuda_arch = self.spec.variants["cuda_arch"].value
-        args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
-        ]
+        args = ["-DQCAT_USE_BUNDLES=OFF"]
         return args
