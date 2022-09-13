@@ -21,16 +21,20 @@ class Sperr(CMakePackage):
     depends_on("pkgconf", type=("build"), when="+zstd")
 
     variant("shared", description="build shared libaries", default=True)
-    variant("qz", description="coding terminates by quantization level", default=True)
     variant("zstd", description="use Zstd for more compression", default=True)
+    variant("openmp", description="use openmp for acceleration", default=True)
 
     maintainers = ["robertu94"]
 
     def cmake_args(self):
+        # ensure the compiler supports OpenMP if it is used
+        if "+openmp" in self.spec:
+            self.compiler.openmp_flag
+
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("QZ_TERM", "qz"),
             self.define_from_variant("USE_ZSTD", "zstd"),
+            self.define_from_variant("USE_OMP", "openmp"),
             "-DSPERR_PREFER_RPATH=OFF",
             "-DUSE_BUNDLED_ZSTD=OFF",
             "-DBUILD_CLI_UTILITIES=OFF",
