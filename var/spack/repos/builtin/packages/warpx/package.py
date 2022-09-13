@@ -241,6 +241,7 @@ class Warpx(CMakePackage):
                 cli_args.append("diag1.fields_to_plot=Er Et Ez Br Bt Bz jr jt jz rho")
         return cli_args
 
+    @tag("build-check")
     def check(self):
         """Checks after the build phase"""
         if "+app" not in self.spec:
@@ -258,6 +259,7 @@ class Warpx(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         if "+app" not in self.spec:

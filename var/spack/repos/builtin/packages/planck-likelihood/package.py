@@ -123,6 +123,7 @@ class PlanckLikelihood(Package):
         env.set("CLIK_DATA", self.prefix.share.clik)
         env.set("CLIK_PLUGIN", "rel2015")
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

@@ -54,6 +54,7 @@ class Patchelf(AutotoolsPackage):
             )
         )
 
+    @tag("functional-checks")
     def test(self):
         # Check patchelf in prefix and reports the correct version
         reason = "test: ensuring patchelf version is {0}".format(self.spec.version)

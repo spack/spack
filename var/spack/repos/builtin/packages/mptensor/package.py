@@ -68,6 +68,7 @@ class Mptensor(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(".")
 
+    @tag("functional-checks")
     def test(self):
         if "+mpi" not in self.spec:
             print("Test of mptensor only runs with +mpi option.")

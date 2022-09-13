@@ -163,6 +163,7 @@ class Gpi2(AutotoolsPackage):
     # for them NUMA is set by default, thus the number of processes is
     # limited by the number of sockets, i.e., it there is just one,
     # the machine file can not contain more than one host
+    @tag("build-check")
     @when("@1.4.0:")
     def check(self):
         self.set_machines()

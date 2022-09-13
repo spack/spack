@@ -208,6 +208,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
         install_tree("example", prefix.example)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
@@ -222,6 +223,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             make("run-tests", "NETWORKS=smp")  # runs tests for smp backend
         make("tests-clean")  # cleanup
 
+    @tag("functional-checks")
     def test(self):
         # run post-install smoke test:
         test_install = join_path(self.prefix.bin, "test-upcxx-install.sh")

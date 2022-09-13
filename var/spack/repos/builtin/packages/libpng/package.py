@@ -36,6 +36,7 @@ class Libpng(AutotoolsPackage):
         ]
         return args
 
+    @tag("build-check")
     def check(self):
         # Libpng has both 'check' and 'test' targets that are aliases.
         # Only need to run the tests once.

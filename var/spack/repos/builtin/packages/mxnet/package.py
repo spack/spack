@@ -175,6 +175,7 @@ class Mxnet(CMakePackage, CudaPackage):
                 args = std_pip_args + ["--prefix=" + prefix, "."]
                 pip(*args)
 
+    @tag("functional-checks")
     def test(self):
         """Attempts to import modules of the installed package."""
 

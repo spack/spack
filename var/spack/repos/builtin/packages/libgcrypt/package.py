@@ -30,6 +30,7 @@ class Libgcrypt(AutotoolsPackage):
 
     depends_on("libgpg-error@1.25:")
 
+    @tag("build-check")
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
         # https://bugs.gnupg.org/gnupg/issue2056

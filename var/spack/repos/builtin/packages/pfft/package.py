@@ -54,6 +54,7 @@ class Pfft(AutotoolsPackage):
             with working_dir("long-double"):
                 make()
 
+    @tag("build-check")
     def check(self):
         spec = self.spec
         fftw = spec["fftw"]

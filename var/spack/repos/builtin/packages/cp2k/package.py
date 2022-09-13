@@ -777,6 +777,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 handle.seek(0)
                 handle.write(content)
 
+    @tag("build-check")
     def check(self):
         data_dir = join_path(self.stage.source_path, "data")
 

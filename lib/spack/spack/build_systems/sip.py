@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import find, join_path, working_dir
 
 from spack.directives import depends_on, extends
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class SIPPackage(PackageBase):
@@ -150,6 +150,7 @@ class SIPPackage(PackageBase):
 
     # Testing
 
+    @tag("sanity-check")
     def test(self):
         """Attempts to import modules of the installed package."""
 

@@ -49,6 +49,7 @@ class GromacsChainCoordinate(Gromacs):
 
         self.remove_parent_versions()
 
+    @tag("build-check")
     def check(self):
         """The default 'test' targets does not compile the test programs"""
         with working_dir(self.build_directory):

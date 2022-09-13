@@ -245,6 +245,7 @@ class NetcdfC(AutotoolsPackage):
 
         return config_args
 
+    @tag("build-check")
     def check(self):
         # h5_test fails when run in parallel
         make("check", parallel=False)

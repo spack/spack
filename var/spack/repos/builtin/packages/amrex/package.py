@@ -328,6 +328,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         # TODO: Remove once self.spec['cmake'] is available here
         self.cmake_bin(set=True)
 
+    @tag("functional-checks")
     def test(self):
         """Skip smoke tests for AMReX versions less than 21.12."""
         if self.spec.satisfies("@:21.11"):

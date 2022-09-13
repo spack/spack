@@ -41,5 +41,6 @@ class SlurmDrmaa(AutotoolsPackage):
     depends_on("gperf")
     depends_on("ragel")
 
+    @tag("skip-build-check")
     def check(self):
         pass

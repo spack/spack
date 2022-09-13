@@ -302,10 +302,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
             cmake(*(["--build", "."]))
             ctest(*(["--verbose"]))
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
         self.smoke_test()
 
+    @tag("functional-checks")
     def test(self):
         self.smoke_test()

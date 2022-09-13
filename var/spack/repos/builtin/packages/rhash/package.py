@@ -50,6 +50,7 @@ class Rhash(MakefilePackage):
         configure("--prefix=")
         make()
 
+    @tag("build-check")
     def check(self):
         # Makefile has both `test` and `check` targets:
         #

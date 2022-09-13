@@ -58,6 +58,7 @@ class Sprng(AutotoolsPackage):
         # raise RuntimeError("test")
 
     # FIXME: update after features in #15702 are enabled
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def check_build(self):

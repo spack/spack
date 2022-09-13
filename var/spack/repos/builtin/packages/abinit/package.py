@@ -289,6 +289,7 @@ class Abinit(AutotoolsPackage):
 
         return options
 
+    @tag("build-check")
     def check(self):
         """This method is called after the build phase if tests have been
         explicitly activated by user.

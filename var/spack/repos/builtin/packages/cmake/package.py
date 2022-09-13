@@ -405,6 +405,7 @@ class Cmake(Package):
         module.cmake = Executable(self.spec.prefix.bin.cmake)
         module.ctest = Executable(self.spec.prefix.bin.ctest)
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         spec_vers_str = "version {0}".format(self.spec.version)

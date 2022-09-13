@@ -30,6 +30,7 @@ class PyGenshi(PythonPackage):
     depends_on("py-six", type=("build", "run", "test"))
 
     # Suite of unittests added in 0.6.1.
+    @tag("functional-checks")
     @when("@0.6.1:")
     def test(self):
         # All the unittests pass for py-genshi@0.7.7 but 14 tests fail for

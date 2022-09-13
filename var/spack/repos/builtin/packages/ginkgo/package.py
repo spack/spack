@@ -206,6 +206,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             print("Skipping Ginkgo test: failed to build test")
             return
 
+    @tag("functional-checks")
     def test(self):
         """Run the smoke tests."""
         # For now only 1.4.0 and later releases support this scheme.

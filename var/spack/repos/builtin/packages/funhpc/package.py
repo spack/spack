@@ -33,6 +33,7 @@ class Funhpc(CMakePackage):
             options += ["-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true"]
         return options
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             make("test", "CTEST_OUTPUT_ON_FAILURE=1")

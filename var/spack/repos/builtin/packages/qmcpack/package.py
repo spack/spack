@@ -397,6 +397,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         env.prepend_path("PATH", self.prefix.nexus.bin)
         env.prepend_path("PYTHONPATH", self.prefix.nexus.lib)
 
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def check_install(self):

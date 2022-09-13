@@ -28,6 +28,7 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     version("20160422", sha256="065a8f471266361218a9eb45c5f8ab995d73b181cc1180600ee08cc768c9ac42")
     version("20160322", sha256="6430f649ec07243645c955e8d6bee6da1df2e699b1e49b185946d1ab38731b08")
 
+    @tag("build-check")
     def check(self):
         # The Makefile has a 'test' target, but it does not work
         make("check")

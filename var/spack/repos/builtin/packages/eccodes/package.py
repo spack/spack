@@ -394,6 +394,7 @@ class Eccodes(CMakePackage):
                     join_path(self.prefix.share.eccodes, center_dir),
                 )
 
+    @tag("build-check")
     def check(self):
         # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
         with working_dir(self.build_directory):

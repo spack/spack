@@ -180,6 +180,7 @@ class Tfel(CMakePackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         """Skip the target 'test' which doesn't build all test programs used by tests"""
         with working_dir(self.build_directory):

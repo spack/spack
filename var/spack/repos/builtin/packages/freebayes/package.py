@@ -75,6 +75,7 @@ class Freebayes(MesonPackage):
             env.prepend_path("PATH", self.vcflib_builddir)
             env.prepend_path("PATH", self.build_directory)
 
+    @tag("build-check")
     @when("@1.3.4:")
     def check(self):
         mkdir(self.vcflib_builddir)

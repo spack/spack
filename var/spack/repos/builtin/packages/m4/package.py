@@ -111,6 +111,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
         return args
 
+    @tag("functional-checks")
     def test(self):
         spec_vers = str(self.spec.version)
         reason = "test: ensuring m4 version is {0}".format(spec_vers)

@@ -40,6 +40,7 @@ class Prmon(CMakePackage):
         ]
         return args
 
+    @tag("build-check")
     def check(self):
         # some tests expect to run on an otherwise idle machine
         # so we need to make sure that they are not running in parallel

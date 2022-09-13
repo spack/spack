@@ -199,6 +199,7 @@ class Superlu(CMakePackage):
         if not self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir):
             tty.warn("Skipping test: failed to run example")
 
+    @tag("functional-checks")
     def test(self):
         config_args = self._generate_make_hdr_for_test()
 

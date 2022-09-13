@@ -89,6 +89,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
         with working_dir(self.prefix.bin):
             symlink("wish{0}".format(self.version.up_to(2)), "wish")
 
+    @tag("functional-checks")
     def test(self):
         self.run_test(self.spec["tk"].command.path, ["-h"], purpose="test wish command")
 

@@ -65,6 +65,7 @@ class GmapGsnap(AutotoolsPackage):
             with working_dir(simd):
                 make()
 
+    @tag("build-check")
     def check(self):
         for simd in self.spec.variants["simd"].value:
             with working_dir(simd):

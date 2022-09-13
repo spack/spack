@@ -1273,6 +1273,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
                 work_dir=self._cached_tests_work_dir,
             )
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests on the installed package."""
         # Simple version check tests on selected installed binaries

@@ -89,6 +89,7 @@ class Fortrilinos(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests using installed package."""
         cmake_args = [

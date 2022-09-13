@@ -22,6 +22,7 @@ class Libjpeg(AutotoolsPackage):
 
     provides("jpeg")
 
+    @tag("build-check")
     def check(self):
         # Libjpeg has both 'check' and 'test' targets that are aliases.
         # Only need to run the tests once.

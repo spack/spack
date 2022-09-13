@@ -125,6 +125,7 @@ class Subversion(AutotoolsPackage):
                 perl = spec["perl"].command
                 perl("Makefile.PL", "INSTALL_BASE={0}".format(prefix))
 
+    @tag("build-check")
     def check(self):
         make("check")
         if "+perl" in self.spec:

@@ -14,6 +14,7 @@ class Mpi(Package):
     homepage = "https://www.mpi-forum.org/"
     virtual = True
 
+    @tag("functional-checks")
     def test(self):
         for lang in ("c", "f"):
             filename = self.test_suite.current_test_data_dir.join("mpi_hello." + lang)

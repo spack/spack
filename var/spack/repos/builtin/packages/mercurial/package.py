@@ -92,6 +92,7 @@ class Mercurial(PythonPackage):
             with open(hgrc_filename, "w") as hgrc:
                 hgrc.write("[web]\ncacerts = {0}".format(certificate))
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

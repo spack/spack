@@ -131,6 +131,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
                 msg = "SWIG+Fortran runtime does not exist at '{0}'".format(swigfile)
                 self.test_failures.append([None, msg])
 
+    @tag("functional-checks")
     def test(self):
         self._test_version()
         self._test_swiglib()

@@ -43,6 +43,7 @@ class SalomeMed(CMakePackage):
 
     patch("MAJ_400_410_champs.patch", when="@4.1.0+static", working_dir="./tools/medimport/4.0.0")
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             make("test", parallel=False)

@@ -115,6 +115,7 @@ class Vim(AutotoolsPackage):
         return args
 
     # Tests must be run in serial
+    @tag("build-check")
     def check(self):
         make("test", parallel=False)
 

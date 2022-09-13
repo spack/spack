@@ -210,20 +210,24 @@ class Oommf(Package):
 
         print("output received from oommf is %s" % output)
 
+    @tag("install-check")
     @run_after("install")
     def check_install_version(self):
         self._check_install_oommf_command(["+version"])
 
+    @tag("install-check")
     @run_after("install")
     def check_install_platform(self):
         self._check_install_oommf_command(["+platform"])
 
+    @tag("install-check")
     @run_after("install")
     def check_install_stdprob3(self):
         oommf_examples = join_path(self.spec.prefix.usr.bin, "oommf/app/oxs/examples")
         task = join_path(oommf_examples, "stdprob3.mif")
         self._check_install_oommf_command(["boxsi", "+fg", "-kill", "all", task])
 
+    @tag("functional-checks")
     def test(self):
         """Run these smoke tests when requested explicitly"""
 

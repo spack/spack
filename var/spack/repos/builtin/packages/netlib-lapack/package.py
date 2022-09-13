@@ -257,6 +257,7 @@ class NetlibLapack(CMakePackage):
         for self._building_shared in (False, True):
             super(NetlibLapack, self).install(spec, prefix)
 
+    @tag("build-check")
     @when("+shared")
     def check(self):
         for self._building_shared in (False, True):

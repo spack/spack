@@ -7,7 +7,7 @@
 import inspect
 
 from spack.directives import depends_on
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class SConsPackage(PackageBase):
@@ -60,6 +60,7 @@ class SConsPackage(PackageBase):
 
     # Testing
 
+    @tag("build-checks")
     def build_test(self):
         """Run unit tests after build.
 

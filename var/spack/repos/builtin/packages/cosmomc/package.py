@@ -146,6 +146,7 @@ class Cosmomc(Package):
             for filename in fnmatch.filter(filenames, "*~"):
                 os.remove(os.path.join(dirpath, filename))
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

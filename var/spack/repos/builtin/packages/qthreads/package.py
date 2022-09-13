@@ -132,6 +132,7 @@ class Qthreads(AutotoolsPackage):
             reason = "test:{0}: Checking ability to execute.".format(test)
             self.run_test(test, [], purpose=reason)
 
+    @tag("functional-checks")
     def test(self):
         # Build
         self.build_tests()

@@ -65,6 +65,7 @@ class PyYt(PythonPackage):
             with open("rockstar.cfg", "w") as rockstar_cfg:
                 rockstar_cfg.write(self.spec["rockstar"].prefix)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

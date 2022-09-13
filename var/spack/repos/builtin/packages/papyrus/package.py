@@ -104,5 +104,6 @@ class Papyrus(CMakePackage):
                 work_dir=test_dir,
             )
 
+    @tag("functional-checks")
     def test(self):
         self.run_example_tests()

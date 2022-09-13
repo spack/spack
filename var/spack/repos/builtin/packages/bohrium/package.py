@@ -211,6 +211,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Quick tests
     #
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

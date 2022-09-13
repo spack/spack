@@ -59,6 +59,7 @@ class Pkgconf(AutotoolsPackage):
         """Adds the ACLOCAL path for autotools."""
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
 
+    @tag("skip-build-check")
     def check(self):
         # TODO: running the checks needs kyua (a package not yet in spack)
         # see TODO above

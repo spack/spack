@@ -125,6 +125,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         for pattern, subst in entries_to_patch.items():
             filter_file(pattern, subst, mkoctfile_in)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_mkoctfile_works_outside_of_build_env(self):

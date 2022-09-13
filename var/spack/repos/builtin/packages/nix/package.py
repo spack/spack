@@ -95,6 +95,7 @@ class Nix(AutotoolsPackage):
         filter_file("@ENV_PROG@", "/usr/bin/env", "tests/shell.shebang.sh")
         filter_file("@SHELL_PROG@", "/usr/bin/env nix-shell", "tests/shell.shebang.rb")
 
+    @tag("install-check")
     def installcheck(self):
         # We have to clean this tmpdir ourself later as it contains readonly directories
         self.test_path = tempfile.mkdtemp(

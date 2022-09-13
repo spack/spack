@@ -108,6 +108,7 @@ class Cpmd(MakefilePackage):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
+    @tag("functional-checks")
     def test(self):
         test_dir = self.test_suite.current_test_data_dir
         test_file = join_path(test_dir, "1-h2o-pbc-geoopt.inp")

@@ -98,6 +98,7 @@ class Gptune(CMakePackage):
     def setup_run_environment(self, env):
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
 
+    @tag("functional-checks")
     def test(self):
         spec = self.spec
         comp_name = self.compiler.name

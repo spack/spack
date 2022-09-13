@@ -54,6 +54,7 @@ class NlohmannJson(CMakePackage):
             self.define("JSON_BuildTests", self.run_tests),
         ]
 
+    @tag("build-check")
     @when("@3.1.1:")
     def check(self):
         # cmake_fetch_content_configure relies on git to fetch a file, fails from tar:

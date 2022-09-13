@@ -76,6 +76,7 @@ class Mgis(CMakePackage):
         """Fix the test suite to use the PYTHONPATH provided by the spack buildenv"""
         filter_file("tests/;", "tests:", "bindings/python/tests/CMakeLists.txt")
 
+    @tag("build-check")
     def check(self):
         """skip target 'test' which doesn't build the test programs used by tests"""
         with working_dir(self.build_directory):

@@ -49,6 +49,7 @@ class PyChainer(PythonPackage):
         if "+mn" in self.spec:
             self.cache_extra_test_sources("examples")
 
+    @tag("functional-checks")
     def test(self):
         if "+mn" in self.spec:
             # Run test of ChainerMN

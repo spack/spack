@@ -53,6 +53,7 @@ class Nfft(AutotoolsPackage):
             with working_dir("long-double"):
                 make()
 
+    @tag("build-check")
     def check(self):
         if "double" in self.fftw_selected_precisions:
             with working_dir("double"):

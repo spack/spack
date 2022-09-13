@@ -580,6 +580,7 @@ class Hdf5(CMakePackage):
                     if not os.path.exists(tgt_filename):
                         symlink(src_filename, tgt_filename)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
@@ -725,6 +726,7 @@ HDF5 version {version} {version}
             work_dir=".",
         )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         # Simple version check tests on known binaries

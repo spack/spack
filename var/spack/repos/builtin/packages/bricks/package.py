@@ -68,6 +68,7 @@ class Bricks(CMakePackage):
         ]
         self.cache_extra_test_sources(srcs)
 
+    @tag("functional-checks")
     def test(self):
         """Test bricklib package"""
         # Test prebuilt binary

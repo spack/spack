@@ -29,6 +29,7 @@ class PyPsyclone(PythonPackage):
     depends_on("py-nose", type="test")
     depends_on("py-pytest", type="test")
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_build(self):

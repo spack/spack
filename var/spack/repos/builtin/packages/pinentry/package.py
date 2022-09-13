@@ -89,6 +89,7 @@ class Pinentry(AutotoolsPackage):
 
         return args
 
+    @tag("functional-checks")
     def test(self):
         kwargs = {
             "exe": self.prefix.bin.pinentry,

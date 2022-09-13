@@ -98,6 +98,7 @@ class Rocfft(CMakePackage):
     depends_on("boost@1.64.0: +program_options", type="test")
     depends_on("llvm-amdgpu +openmp", type="test")
 
+    @tag("build-check")
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocfft-test")
         self.run_test(exe, options="--gtest_filter=mix*:adhoc*")

@@ -11,7 +11,7 @@ from typing import List  # novm
 from llnl.util.filesystem import working_dir
 
 from spack.directives import depends_on, variant
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class MesonPackage(PackageBase):
@@ -192,6 +192,7 @@ class MesonPackage(PackageBase):
 
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("build-checks")
     def check(self):
         """Searches the Meson-generated file for the target ``test``
         and runs it if found.

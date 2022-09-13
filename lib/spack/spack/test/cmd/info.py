@@ -82,7 +82,6 @@ def test_is_externally_detectable(pkg_query, expected, parser, print_buffer):
         "hdf5",
         "cloverleaf3d",
         "trilinos",
-        "gcc",  # This should ensure --test's c_names processing loop covered
     ],
 )
 def test_info_fields(pkg_query, parser, print_buffer):
@@ -95,10 +94,13 @@ def test_info_fields(pkg_query, parser, print_buffer):
         "Installation Phases:",
         "Virtual Packages:",
         "Tags:",
+        "Tagged Methods:",
     )
 
     args = parser.parse_args(["--all", pkg_query])
-    spack.cmd.info.info(parser, args)
+    current_paths = [r.root for r in spack.repo.path.repos]
+    with spack.repo.use_repositories(*current_paths):
+        spack.cmd.info.info(parser, args)
 
     for text in expected_fields:
         assert any(x for x in print_buffer if text in x)

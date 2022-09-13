@@ -43,6 +43,7 @@ class Uftrace(AutotoolsPackage):
     def patch(self):
         filter_file("shell git", "shell test -e .git && git", "Makefile")
 
+    @tag("build-check")
     def check(self):
         make("test", *["V=1", "-j{0}".format(max(int(make_jobs), 20))])
         # In certain cases, tests using TCP/IP can hang. Ensure that spack can continue:
@@ -51,9 +52,11 @@ class Uftrace(AutotoolsPackage):
     def install(self, spec, prefix):
         make("install", *["V=1"])
 
+    @tag("skip-install-check")
     def installcheck(self):
         pass
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests using the installed package."""
         uftrace = self.prefix.bin.uftrace

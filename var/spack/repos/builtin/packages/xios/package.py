@@ -223,6 +223,7 @@ OASIS_LIB=""
         install_tree("etc", spec.prefix.etc)
         install_tree("cfg", spec.prefix.cfg)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_build(self):

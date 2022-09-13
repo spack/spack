@@ -150,6 +150,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         """Override CMakePackage's check() to enforce seralized test runs
         since they are already parallelized"""

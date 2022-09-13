@@ -111,6 +111,7 @@ class Meep(AutotoolsPackage):
 
         return config_args
 
+    @tag("build-check")
     def check(self):
         spec = self.spec
 

@@ -14,6 +14,7 @@ class C(Package):
     homepage = "http://open-std.org/JTC1/SC22/WG14/www/standards"
     virtual = True
 
+    @tag("functional-checks")
     def test(self):
         test_source = self.test_suite.current_test_data_dir
 

@@ -289,6 +289,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke test on installed HYPRE package."""
         if "+mpi" not in self.spec:

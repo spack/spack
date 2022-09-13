@@ -197,3 +197,21 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
 
     # Perform a little cleanup
     shutil.rmtree(os.path.dirname(source_path))
+
+
+def test_get_virtual_specs_compiler():
+    s = spack.spec.Spec("gcc").concretized()
+    s.package.spec.concretize()
+    v_specs = spack.package_base.get_virtual_specs(s.package)
+    v_names = [spec.name for spec in v_specs]
+    for lang in ["c", "cxx", "fortran"]:
+        assert lang in v_names
+
+
+def test_get_virtual_specs_provider():
+    s = spack.spec.Spec("openblas").concretized()
+    s.package.spec.concretize()
+    v_specs = spack.package_base.get_virtual_specs(s.package)
+    v_names = [spec.name for spec in v_specs]
+    for virtual in ["blas", "lapack"]:
+        assert virtual in v_names

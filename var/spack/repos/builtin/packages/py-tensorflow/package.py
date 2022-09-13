@@ -1049,6 +1049,7 @@ def protobuf_deps():
             pip(*args)
         remove_linked_tree(tmp_path)
 
+    @tag("functional-checks")
     def test(self):
         """Attempts to import modules of the installed package."""
 

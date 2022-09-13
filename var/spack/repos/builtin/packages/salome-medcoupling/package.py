@@ -74,6 +74,7 @@ class SalomeMedcoupling(CMakePackage):
     depends_on("salome-med@4.0.0+static", when="@9.3.0~mpi+static")
     depends_on("salome-med@4.0.0", when="@9.3.0~mpi")
 
+    @tag("skip-build-check")
     def check(self):
         pass
 

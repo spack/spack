@@ -376,6 +376,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         ):
             tty.warn("Failed to run kokkos test")
 
+    @tag("functional-checks")
     def test(self):
         # Skip if unsupported version
         cmake_path = join_path(

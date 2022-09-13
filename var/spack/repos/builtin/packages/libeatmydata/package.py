@@ -19,6 +19,7 @@ class Libeatmydata(AutotoolsPackage):
 
     depends_on("strace", type="test")
 
+    @tag("build-check")
     def check(self):
         # Tests must run in serial
         make("check", parallel=False)

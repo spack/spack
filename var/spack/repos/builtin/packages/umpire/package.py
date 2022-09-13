@@ -235,6 +235,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         options = []
         return options
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone checks on the installed package."""
         if self.spec.satisfies("@:1") or not os.path.isdir(self.prefix.bin):

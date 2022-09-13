@@ -119,6 +119,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         if self.compiler.fc is None:
             env.set("FC", "no")
 
+    @tag("build-check")
     @when("@2.4.6")
     def check(self):
         """installcheck of libtool-2.4.6 runs the full testsuite, skip 'make check'"""

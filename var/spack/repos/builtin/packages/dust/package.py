@@ -27,6 +27,7 @@ class Dust(Package):
         cargo = which("cargo")
         cargo("install", "--root", prefix, "--path", ".")
 
+    @tag("install-check")
     @run_after("install")
     def check_install(self):
         print("Attempt to call 'dust' with '--version'")
@@ -38,6 +39,7 @@ class Dust(Package):
         print("stdout received fromm dust is '{}".format(output))
         assert "Dust " in output
 
+    @tag("functional-checks")
     def test(self):
         """Run this smoke test when requested explicitly"""
 

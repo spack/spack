@@ -42,6 +42,7 @@ class Biobambam2(AutotoolsPackage):
         self.cache_extra_test_sources(self.test_src_dir)
         self._fix_shortsort()
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke test on installed package."""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)

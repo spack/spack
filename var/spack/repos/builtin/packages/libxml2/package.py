@@ -113,6 +113,7 @@ class Libxml2(AutotoolsPackage):
             )
             filter_file("-Wno-long-long -Wno-format-extra-args", "", "configure")
 
+    @tag("sanity-checks")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
@@ -120,6 +121,7 @@ class Libxml2(AutotoolsPackage):
             with working_dir("spack-test", create=True):
                 python("-c", "import libxml2")
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package"""
         # Start with what we already have post-install

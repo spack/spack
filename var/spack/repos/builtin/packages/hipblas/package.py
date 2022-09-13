@@ -97,6 +97,7 @@ class Hipblas(CMakePackage):
     patch("link-clients-blas-4.5.0.patch", when="@4.5.0:4.5.2")
     patch("hipblas-link-clients-blas-5.0.0.patch", when="@5.0.0:5.0.2")
 
+    @tag("build-check")
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "hipblas-test")
         self.run_test(exe, options=["--gtest_filter=-*known_bug*"])

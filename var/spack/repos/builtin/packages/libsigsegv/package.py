@@ -71,6 +71,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             reason = "test: checking {0} output".format(exe)
             self.run_test(exe, [], expected, installed=True, purpose=reason, skip_missing=True)
 
+    @tag("functional-checks")
     def test(self):
         # Run the simple built-in smoke test
         self._run_smoke_tests()

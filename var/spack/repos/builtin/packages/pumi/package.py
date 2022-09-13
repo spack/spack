@@ -105,6 +105,7 @@ class Pumi(CMakePackage):
             args.append("-DSIM_MPI=" + mpi_id)
         return args
 
+    @tag("functional-checks")
     def test(self):
         if self.spec.version <= Version("2.2.6"):
             return
