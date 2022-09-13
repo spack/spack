@@ -94,7 +94,7 @@ class Rocksdb(MakefilePackage):
         env["CFLAGS"] = " ".join(cflags)
         env["PLATFORM_FLAGS"] = " ".join(ldflags)
 
-        if "+werror" not in self.spec:
+        if "~werror" in self.spec:
             env["DISABLE_WARNING_AS_ERROR"] = "1"
 
         if self.spec.satisfies("@6.13.2:"):
