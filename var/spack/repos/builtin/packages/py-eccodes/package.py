@@ -14,6 +14,7 @@ class PyEccodes(PythonPackage):
     homepage = "https://github.com/ecmwf/eccodes-python"
     pypi = "eccodes/eccodes-1.3.2.tar.gz"
 
+    version("1.4.2", sha256="63fa80a1d1b445904f486bc396a6a6605df029f4e215acc28ceb1a1ff5eb664f")
     version("1.3.2", sha256="f282adfdc1bc658356163c9cef1857d4b2bae99399660d3d4fcb145a52d3b2a6")
 
     depends_on("py-setuptools", type="build")
