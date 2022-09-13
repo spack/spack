@@ -2179,6 +2179,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
 
     return LibraryList(found_libs)
 
+
 def find_all_shared_libraries(root, recursive=False):
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
