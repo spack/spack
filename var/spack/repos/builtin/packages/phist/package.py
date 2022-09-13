@@ -34,6 +34,10 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    # updated the Trilinos interface to work with trilinos@13:
+    # without using deprecated interfaces in tpetra
+    version("1.10.0", sha256="3ec660c85d37818ee219edc80e977140dfb062bdca1f38623c94a45d13634bd1")
+
     # phist-1.9.6 updated from the older "use mpi" to the newer "use mpi_f08" (MPI3.1):
     # The motivation was fixing it on Cray: https://github.com/spack/spack/issues/26002
     # Documentation: https://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node408.htm
@@ -180,6 +184,11 @@ class Phist(CMakePackage):
     depends_on("py-numpy", type="test", when="+mpi")
     # The test_install compiles the examples and needs pkgconfig for it
     depends_on("pkgconfig", type="test")
+
+    # in 1.10 we removed some use of deprecated Trilinos interfaces
+    # (some functions in tpetra were renamed)
+    conflicts("^trilinos@13.4:", when="@:1.9 kernel_lib=tpetra")
+    conflicts("^trilinos@:13.2", when="@1.10: kernel_lib=tpetra")
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
