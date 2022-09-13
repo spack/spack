@@ -5,23 +5,6 @@
 
 from spack.package import *
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install sz-cpp
-#
-# You can edit this file again by typing:
-#
-#     spack edit sz-cpp
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 class SzCpp(CMakePackage):
     """Refactorization of SZ in cpp"""
@@ -29,7 +12,7 @@ class SzCpp(CMakePackage):
     homepage = "https://github.com/robertu94/meta_compressor/"
     git = "https://github.com/robertu94/meta_compressor/"
 
-    maintainers = []
+    maintainers = ["robertu94"]
 
     version("2022-01-27", commit="9441b79abc89d4bcce53fe18edf0df53fd92d1d7")
 

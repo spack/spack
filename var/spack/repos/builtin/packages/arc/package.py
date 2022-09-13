@@ -5,29 +5,11 @@
 
 from spack.package import *
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install arc
-#
-# You can edit this file again by typing:
-#
-#     spack edit arc
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 class Arc(CMakePackage):
     """ARC is an automatic resiliency library designed to provide security
     to lossy compressed data or other uint8_t data arrays"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/FTHPC/ARC"
     url = "https://github.com/FTHPC/ARC"
     git = "https://github.com/robertu94/ARC"

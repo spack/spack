@@ -8,6 +8,8 @@ class LibpressioOpt(CMakePackage):
     git = "git@github.com:robertu94/libpressio_opt"
     url = "https://github.com/robertu94/libpressio_opt/archive/refs/tags/0.11.0.tar.gz"
 
+    maintainers = ["robertu94"]
+
     version("develop", branch="develop")
     version("sdr-develop", branch="develop", git="git@github.com:szcompressor/SDRFramework")
     version("0.13.3", sha256="98436b7fa6a53dd9cc09a9b978dc81c299501930cb8b844713080fc42d39d173")

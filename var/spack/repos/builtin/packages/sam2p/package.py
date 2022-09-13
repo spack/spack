@@ -13,6 +13,8 @@ class Sam2p(Package):
     url = "https://github.com/pts/sam2p/archive/v0.49.4.tar.gz"
     git = homepage
 
+    maintainers = ["robertu94"]
+
     version("master", branch="master")
 
     def install(self, spec, prefix):

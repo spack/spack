@@ -5,23 +5,6 @@
 
 from spack.package import *
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install sperr
-#
-# You can edit this file again by typing:
-#
-#     spack edit sperr
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 class Sperr(CMakePackage):
     """SPERR is a lossy scientific (floating-point) data compressor that can
@@ -40,6 +23,8 @@ class Sperr(CMakePackage):
     variant("shared", description="build shared libaries", default=True)
     variant("qz", description="coding terminates by quantization level", default=True)
     variant("zstd", description="use Zstd for more compression", default=True)
+
+    maintainers = ["robertu94"]
 
     def cmake_args(self):
         args = [

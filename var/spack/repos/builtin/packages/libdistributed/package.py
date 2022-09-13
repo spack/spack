@@ -9,6 +9,8 @@ class Libdistributed(CMakePackage):
     url = "https://github.com/robertu94/libdistributed/archive/0.0.3.tar.gz"
     git = "https://github.com/robertu94/libdistributed"
 
+    maintainers = ["robertu94"]
+
     version("master", branch="master")
     version("0.4.0", sha256="7895d268c4f9b5444e4378f60b5a28198720bc48633d0e5d072c39e3366b096c")
     version("0.3.0", sha256="57443c72a5a9aa57d7f8760c878a77dcffca0b3b5ccf5124cdf5c1fad8a44ae8")

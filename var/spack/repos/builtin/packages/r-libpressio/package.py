@@ -5,23 +5,6 @@
 
 from spack.package import *
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install r-libpressio
-#
-# You can edit this file again by typing:
-#
-#     spack edit r-libpressio
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 class RLibpressio(RPackage):
     """R package for libpressio"""

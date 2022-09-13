@@ -8,6 +8,8 @@ class LibpressioTools(CMakePackage):
     url = "https://github.com/robertu94/pressio-tools/archive/refs/tags/0.0.15.tar.gz"
     git = "https://github.com/robertu94/pressio-tools"
 
+    maintainers = ["robertu94"]
+
     version("master", branch="master")
     version("0.1.5", sha256="b35f495fae53df87dd2abf58c0c51ed17710b16aaa2d0842a543fddd3b2a8035")
     version("0.1.4", sha256="39adc4b09a63548a416ee4b1dcc87ec8578b15a176a11a2845c276c6c211f2d0")

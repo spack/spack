@@ -5,31 +5,13 @@
 
 from spack.package import *
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install libpressio-rmetric
-#
-# You can edit this file again by typing:
-#
-#     spack edit libpressio-rmetric
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 
 class LibpressioRmetric(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """LibPressio metric that runs R code"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
     url = "https://github.com/robertu94/libpressio-rmetric/archive/refs/tags/0.0.2.tar.gz"
     git = "https://github.com/robertu94/libpressio-rmetric"
+    homepage = git
 
     maintainers = ["robertu94"]
 
