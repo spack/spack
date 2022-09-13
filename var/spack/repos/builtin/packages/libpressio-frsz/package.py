@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,32 +13,30 @@ from spack.package import *
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install qcat
+#     spack install libpressio-frsz
 #
 # You can edit this file again by typing:
 #
-#     spack edit qcat
+#     spack edit libpressio-frsz
 #
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
 
-class Qcat(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+class LibpressioFrsz(CMakePackage):
+    """Fized Rate SZ"""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://github.com/szcompressor/qcat"
-    git = "https://github.com/robertu94/qcat"
+    homepage = "https://github.com/robertu94/frsz"
+    url = "https://github.com/robertu94/frsz"
+    git = "ssh://git@github.com/robertu94/frsz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    maintainers = ["disheng222", "robertu94"]
+    maintainers = ["robertu94"]
 
-    version("master", branch="master")
+    version("master", branch="main")
 
-    # FIXME: Add dependencies if required.
-    depends_on("zstd")
+    depends_on("libpressio")
 
     def cmake_args(self):
-        args = ["-DQCAT_USE_BUNDLES=OFF"]
+        args = ["-DBUILD_TESTING=OFF"]
         return args

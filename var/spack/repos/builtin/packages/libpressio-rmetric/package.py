@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -20,31 +22,29 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
-
 
 class LibpressioRmetric(CMakePackage):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://github.com/robertu94/libpressio-rmetric/archive/refs/tags/0.0.2.tar.gz"
-    git      = "https://github.com/robertu94/libpressio-rmetric"
+    url = "https://github.com/robertu94/libpressio-rmetric/archive/refs/tags/0.0.2.tar.gz"
+    git = "https://github.com/robertu94/libpressio-rmetric"
 
-    maintainers = ['robertu94']
+    maintainers = ["robertu94"]
 
-    version('master', branch='master')
-    #note versions <= 0.0.3 do not build with spack
-    version('0.0.4', sha256='166af5e84d7156c828a3f0dcc5bf531793ea4ec44bbf468184fbab96e1f0a91f')
-    version('0.0.3', sha256='c45948f83854c87748c7ec828ca2f06d7cf6f98a34f763b68c13a4e2deb7fd79')
+    version("master", branch="master")
+    # note versions <= 0.0.3 do not build with spack
+    version("0.0.4", sha256="166af5e84d7156c828a3f0dcc5bf531793ea4ec44bbf468184fbab96e1f0a91f")
+    version("0.0.3", sha256="c45948f83854c87748c7ec828ca2f06d7cf6f98a34f763b68c13a4e2deb7fd79")
 
-    depends_on('libpressio@0.85.0:')
-    depends_on('r')
-    depends_on('r-rcpp')
-    depends_on('r-rinside')
+    depends_on("libpressio@0.85.0:")
+    depends_on("r")
+    depends_on("r-rcpp")
+    depends_on("r-rinside")
 
     def cmake_args(self):
-        args = ['HAS_SPACK=ON']
+        args = ["HAS_SPACK=ON"]
 
         if self.run_tests:
             args.append("-DBUILD_TESTING=ON")
@@ -53,7 +53,7 @@ class LibpressioRmetric(CMakePackage):
 
         return args
 
-    @run_after('build')
+    @run_after("build")
     @on_package_attributes(run_tests=True)
     def test(self):
-        make('test')
+        make("test")

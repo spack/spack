@@ -3,18 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Sam2p(Package):
     """A raster to PostScript/PDF image conversn program"""
 
     homepage = "https://github.com/pts/sam2p"
-    url      = "https://github.com/pts/sam2p/archive/v0.49.4.tar.gz"
-    git      = homepage
+    url = "https://github.com/pts/sam2p/archive/v0.49.4.tar.gz"
+    git = homepage
 
-    version('master', branch='master')
-
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         compile_sh = Executable("./compile.sh")

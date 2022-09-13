@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -20,28 +22,23 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
-
 
 class Cusz(CMakePackage, CudaPackage):
     """A GPU accelerated error-bounded lossy compression for scientific data"""
 
     homepage = "https://szcompressor.org/"
-    git      = "https://github.com/robertu94/cusz"
+    git = "https://github.com/robertu94/cusz"
 
-    maintainers = ['jtian0', 'dingwentao']
+    maintainers = ["jtian0", "dingwentao"]
 
-    conflicts('~cuda')
-    conflicts('cuda_arch=none', when="+cuda")
+    conflicts("~cuda")
+    conflicts("cuda_arch=none", when="+cuda")
 
-    version('develop', branch='develop')
+    version("develop", branch="develop")
 
-    depends_on('cub', when="^ cuda@:10.2.89")
+    depends_on("cub", when="^ cuda@:10.2.89")
 
     def cmake_args(self):
         cuda_arch = self.spec.variants["cuda_arch"].value
-        args = [
-            "-DBUILD_TESTING=OFF",
-            ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)
-        ]
+        args = ["-DBUILD_TESTING=OFF", ("-DCMAKE_CUDA_ARCHITECTURES=%s" % cuda_arch)]
         return args

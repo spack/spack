@@ -1,16 +1,17 @@
-from spack import *
+from spack.package import *
+
 
 class LibpressioErrorinjector(CMakePackage):
     """LibPressioErrorInjector injects errors in to data for sensitivity studies"""
 
     homepage = "https://github.com/robertu94/libpressio-errorinjector"
-    git      = "git@github.com:robertu94/libpressio-errorinjector.git"
+    git = "git@github.com:robertu94/libpressio-errorinjector.git"
 
-    maintainers = ['robertu94']
+    maintainers = ["robertu94"]
 
-    version('master', branch="master")
+    version("master", branch="master")
 
-    depends_on('libpressio')
+    depends_on("libpressio")
 
     def cmake_args(self):
         args = []

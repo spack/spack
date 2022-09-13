@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -20,23 +22,20 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
-
 
 class Qoz(CMakePackage):
     """Quality optimized version of SZ3 is the next generation of the SZ compressor framework"""
 
-    git      = "https://github.com/robertu94/QoZ"
+    git = "https://github.com/robertu94/QoZ"
     homepage = git
 
-    version('master', branch='develop')
+    version("master", branch="develop")
 
-    maintainers = ['disheng222']
+    maintainers = ["disheng222"]
 
-    depends_on('zstd')
-    depends_on('gsl')
-    depends_on('pkgconfig')
-
+    depends_on("zstd")
+    depends_on("gsl")
+    depends_on("pkgconfig")
 
     def cmake_args(self):
         args = [

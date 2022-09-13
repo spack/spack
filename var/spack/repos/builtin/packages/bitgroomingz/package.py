@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -20,21 +22,19 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack import *
-
 
 class Bitgroomingz(CMakePackage):
     """BGZ: Bit Grooming Compressor"""
 
     homepage = "https://github.com/disheng222/BitGroomingZ"
-    git      = "https://github.com/robertu94/BitGroomingZ"
+    git = "https://github.com/robertu94/BitGroomingZ"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    variant('shared', default=True, description='build shared libs')
+    variant("shared", default=True, description="build shared libs")
 
     # FIXME: Add dependencies if required.
-    depends_on('zlib')
+    depends_on("zlib")
 
     def cmake_args(self):
         args = []
@@ -43,4 +43,3 @@ class Bitgroomingz(CMakePackage):
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
         return args
-
