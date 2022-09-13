@@ -25,7 +25,7 @@ class PyPillowBase(PythonPackage):
     variant("jpeg2000", default=False, description="JPEG 2000 functionality")
     variant("imagequant", when="@3.3:", default=False, description="Improved color quantization")
     variant("xcb", when="@7.1:", default=False, description="X11 screengrab support")
-    variant("raqm", when="@8.4.0:", default=False, description="RAQM support")
+    variant("raqm", when="@8.2:", default=False, description="RAQM support")
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/latest/installation.html#notes
@@ -55,6 +55,9 @@ class PyPillowBase(PythonPackage):
     depends_on("libxcb", when="+xcb")
     depends_on("libraqm", when="+raqm")
 
+    # Conflicting options
+    conflicts("+raqm", when="~freetype")
+
     def patch(self):
         """Patch setup.py to provide library and include directories
         for dependencies."""
@@ -72,7 +75,7 @@ class PyPillowBase(PythonPackage):
 
         def variant_to_cfg(variant):
             able = "enable" if "+" + variant in self.spec else "disable"
-            return "{0}-{1}=1\n".format(able, variant)
+            return "{0}_{1}=1\n".format(able, variant)
 
         with open("setup.cfg", "a") as setup:
             setup.write("[build_ext]\n")
