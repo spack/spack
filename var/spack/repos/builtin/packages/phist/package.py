@@ -121,8 +121,6 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
-    # ###################### Variant conflicts ##########################
-
     # spack GitLab CI pipelines use ^mpich %gcc@7.5.0, but @1.9.6: kernel_lib=builtin fails
     # due to the use of the mpi_f08 module in phist/builtin. We therefore force the concretizer
     # to pick another kernel_lib (e.g. epetra or petsc) by this conflict statement.
