@@ -11,7 +11,7 @@ class Libcatalyst(CMakePackage):
     scientific data producers) to analyze and visualize data in situ."""
 
     homepage = 'https://gitlab.kitware.com/paraview/catalyst'
-    url      = "https://gitlab.kitware.com/paraview/catalyst/-/archive/{0}/catalyst-{0}.tar.bz2"
+    git = "https://gitlab.kitware.com/paraview/catalyst.git"
 
     maintainers = ['mathstuf']
 
@@ -25,10 +25,6 @@ class Libcatalyst(CMakePackage):
 
     # TODO: catalyst doesn't support an external conduit
     # depends_on('conduit')
-
-    def url_for_version(self, version):
-        _urlfmt  = self.url
-        return _urlfmt.format(version)
 
     def cmake_args(self):
         """Populate cmake arguments for libcatalyst."""
