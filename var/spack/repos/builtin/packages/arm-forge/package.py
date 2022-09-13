@@ -162,7 +162,7 @@ class ArmForge(Package):
     def abort_without_eula_acceptance(self):
         install_example = "spack install arm-forge +accept-eula"
         license_terms_path = os.path.join(self.stage.source_path, "license_terms")
-        if not self.spec.variants['accept-eula'].value:
+        if not self.spec.variants["accept-eula"].value:
             raise InstallError(
                 "\n\n\nNOTE:\nUse +accept-eula "
                 + "during installation "
