@@ -195,7 +195,7 @@ class Hdf5(CMakePackage):
         multi=False,
     )
 
-    depends_on("mpi" when="+mpi")
+    depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     # numactl does not currently build on darwin
     if sys.platform != "darwin" and sys.platform != "win32":
