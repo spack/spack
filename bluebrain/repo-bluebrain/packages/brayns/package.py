@@ -12,12 +12,13 @@ class Brayns(CMakePackage):
     homepage = "https://github.com/BlueBrain/Brayns"
     git = "https://github.com/BlueBrain/Brayns.git"
     generator = 'Ninja'
+    submodules = True
 
-    version('develop', submodules=True)
-    version('1.0.1', tag='1.0.1', submodules=True)
-    version('1.1.0', tag='1.1.0', submodules=True)
+    version('develop', branch='master')
+    version('1.0.1', tag='1.0.1')
+    version('1.1.0', tag='1.1.0')
     version('2.0.0', tag='2.0.0', submodules=False)
-    version('immersive', branch='videostreaming', submodules=True)
+    version('immersive', branch='videostreaming')
 
     variant('assimp', default=True, description='Build with assimp support')
     variant('ospray', default=True, description='Enable OSPRray engine')

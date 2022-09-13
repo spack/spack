@@ -15,12 +15,14 @@ class Brion(CMakePackage):
     git = "https://github.com/BlueBrain/Brion.git"
     generator = 'Ninja'
 
-    version('develop', submodules=True)
-    version('3.3.0', tag='3.3.0', submodules=True)
-    version('3.3.1', tag='3.3.1', submodules=True)
-    version('3.3.2', tag='3.3.2', submodules=True)
-    version('3.3.3', tag='3.3.3', submodules=True)
-    version('3.3.4', tag='3.3.4', submodules=True)
+    submodules = True
+
+    version('develop', branch='master')
+    version('3.3.0', tag='3.3.0')
+    version('3.3.1', tag='3.3.1')
+    version('3.3.2', tag='3.3.2')
+    version('3.3.3', tag='3.3.3')
+    version('3.3.4', tag='3.3.4')
     version('3.3.5', tag='3.3.5', submodules=False)
     version('3.3.6', tag='3.3.6', submodules=False)
     version('3.3.7', tag='3.3.7', submodules=False)

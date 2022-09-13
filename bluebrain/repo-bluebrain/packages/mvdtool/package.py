@@ -12,23 +12,23 @@ class Mvdtool(CMakePackage):
     """
 
     homepage = "https://github.com/BlueBrain/MVDTool"
-    url      = "https://github.com/BlueBrain/MVDTool.git"
-    git      = "https://github.com/BlueBrain/MVDTool.git"
+    url = "https://github.com/BlueBrain/MVDTool.git"
+    git = "https://github.com/BlueBrain/MVDTool.git"
 
-    version('develop', get_full_repo=False, submodules=True)
-    version('2.4.2', tag='v2.4.2', get_full_repo=False)
-    version('2.4.0', tag='v2.4.0', get_full_repo=False)
-    version('2.3.6', tag='v2.3.6', get_full_repo=False)
-    version('2.3.5', tag='v2.3.5', get_full_repo=False)
-    version('2.3.4', tag='v2.3.4', get_full_repo=False)
-    version('2.3.3', tag='v2.3.3', get_full_repo=False)
-    version('2.3.2', tag='v2.3.2', get_full_repo=False)
-    version('2.3.1', tag='v2.3.1', get_full_repo=False)
-    version('2.3.0', tag='v2.3.0', get_full_repo=False)
-    version('2.2.1', tag='v2.2.1', get_full_repo=False)
-    version('2.2.0', tag='v2.2.0', get_full_repo=False)
-    version('2.1.0', tag='v2.1.0', get_full_repo=False)
-    version('2.0.0', tag='v2.0.0', get_full_repo=False)
+    version('develop', submodules=True)
+    version('2.4.2', tag='v2.4.2')
+    version('2.4.0', tag='v2.4.0')
+    version('2.3.6', tag='v2.3.6')
+    version('2.3.5', tag='v2.3.5')
+    version('2.3.4', tag='v2.3.4')
+    version('2.3.3', tag='v2.3.3')
+    version('2.3.2', tag='v2.3.2')
+    version('2.3.1', tag='v2.3.1')
+    version('2.3.0', tag='v2.3.0')
+    version('2.2.1', tag='v2.2.1')
+    version('2.2.0', tag='v2.2.0')
+    version('2.1.0', tag='v2.1.0')
+    version('2.0.0', tag='v2.0.0')
     version('1.5.1', tag='v1.5.1')
     version('1.5', tag='v1.5')
     version('1.4', tag='v1.4')

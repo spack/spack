@@ -11,20 +11,22 @@ class PyMvdtool(PythonPackage):
     """
 
     homepage = "https://github.com/BlueBrain/MVDTool"
-    url      = "https://github.com/BlueBrain/MVDTool.git"
-    git      = "https://github.com/BlueBrain/MVDTool.git"
+    url = "https://github.com/BlueBrain/MVDTool.git"
+    git = "https://github.com/BlueBrain/MVDTool.git"
 
-    version('develop', branch='master', submodules=True, get_full_repo=False)
-    version('2.4.2', tag='v2.4.2', submodules=True, get_full_repo=False)
-    version('2.4.0', tag='v2.4.0', submodules=True, get_full_repo=False)
-    version('2.3.6', tag='v2.3.6', submodules=True, get_full_repo=False)
-    version('2.3.5', tag='v2.3.5', submodules=True, get_full_repo=False)
-    version('2.3.4', tag='v2.3.4', submodules=True, get_full_repo=False)
-    version('2.3.3', tag='v2.3.3', submodules=True, get_full_repo=False)
-    version('2.3.2', tag='v2.3.2', submodules=True, get_full_repo=False)
-    version('2.3.1', tag='v2.3.1', submodules=True, get_full_repo=False)
-    version('2.3.0', tag='v2.3.0', submodules=True, get_full_repo=False)
-    version('2.2.1', tag='v2.2.1', submodules=True, get_full_repo=False)
+    submodules = True
+
+    version('develop', branch='master')
+    version('2.4.2', tag='v2.4.2')
+    version('2.4.0', tag='v2.4.0')
+    version('2.3.6', tag='v2.3.6')
+    version('2.3.5', tag='v2.3.5')
+    version('2.3.4', tag='v2.3.4')
+    version('2.3.3', tag='v2.3.3')
+    version('2.3.2', tag='v2.3.2')
+    version('2.3.1', tag='v2.3.1')
+    version('2.3.0', tag='v2.3.0')
+    version('2.2.1', tag='v2.2.1')
 
     variant('mpi', default=True, description='Build with support for MPI')
 

@@ -10,11 +10,11 @@ class PyMorphio(PythonPackage):
     """Python library for reading / writing morphology files"""
 
     homepage = "https://github.com/BlueBrain/MorphIO"
-    git      = "https://github.com/BlueBrain/MorphIO.git"
+    git = "https://github.com/BlueBrain/MorphIO.git"
     pypi = "morphio/MorphIO-3.3.2.tar.gz"
 
-    version('develop', branch='master', submodules=True, get_full_repo=True)
-    version('unifurcation', branch='unifurcation', submodules=True, get_full_repo=True)
+    version('develop', branch='master', submodules=True)
+    version('unifurcation', branch='unifurcation', submodules=True)
 
     version('3.3.3', sha256='f6d91970cfd734b2e5fb8f9239a0bfa00519fe082dd8e403e4cc204dbdf0a9fa')
     version('3.3.2', sha256="fc961defbfbfb3f11360954fb3ec51373eaff25b154fa31d6b31decca6937780")

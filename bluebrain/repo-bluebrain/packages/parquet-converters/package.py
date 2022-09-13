@@ -10,17 +10,16 @@ class ParquetConverters(CMakePackage):
     """Parquet conversion tools developed by Blue Brain Project, EPFL
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters"
-    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
+    url = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/parquet-converters.git"
 
-    version('develop', submodules=True)
-    version('0.8.0', tag='v0.8.0', submodules=True)
-    version('0.7.0', tag='v0.7.0', submodules=True)
-    version('0.6.1', tag='v0.6.1', submodules=True)
-    version('0.5.7', tag='v0.5.7', submodules=True)
-    version('0.4.1', tag='v0.4.1')
-    version('0.3', tag='v0.3')
-    version('0.2.1', tag='v0.2.1')
+    submodules = True
+
+    version('develop', branch='main')
+    version('0.8.0', tag='v0.8.0')
+    version('0.7.0', tag='v0.7.0')
+    version('0.6.1', tag='v0.6.1')
+    version('0.5.7', tag='v0.5.7')
 
     depends_on('hdf5+mpi')
     depends_on('highfive+mpi')
@@ -30,7 +29,6 @@ class ParquetConverters(CMakePackage):
     depends_on('nlohmann-json', when='@0.7.1:')
     depends_on('snappy~shared')
     depends_on('synapsetool+mpi')
-    depends_on('synapsetool+mpi@:0.5.6', when='@:0.5.2')
     depends_on('mpi')
     depends_on('range-v3@:0.10', when='@0.4:')
 

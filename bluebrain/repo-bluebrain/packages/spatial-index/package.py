@@ -9,27 +9,19 @@ class SpatialIndex(PythonPackage):
     """Spatial indexer for geometries and morphologies"""
 
     homepage = "https://bbpgitlab.epfl.ch/hpc/SpatialIndex"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
-    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
+    url = "ssh://git@bbpgitlab.epfl.ch/hpc/SpatialIndex.git"
 
-    version('develop', branch='main', submodules=True)
-    version('0.7.0', tag="0.7.0", submodules=True)
-    version('0.6.0', tag="0.6.0", submodules=True)
-    version('0.5.1', tag='0.5.1', submodules=True)
-    version('0.5.0', tag='0.5.0', submodules=True)
-    version('0.4.9', tag='0.4.9', submodules=True)
-    version('0.4.8', tag='0.4.8', submodules=True)
-    version('0.4.7', tag='0.4.7', submodules=True)
-    version('0.4.6', tag='0.4.6', submodules=True)
-    version('0.4.5', tag='0.4.5', submodules=True)
-    version('0.4.4', tag='0.4.4', submodules=True)
-    version('0.4.3', tag='0.4.3', submodules=True)
-    version('0.4.2', tag='0.4.2', submodules=True)
-    version('0.4.1', tag='0.4.1', submodules=True)
-    version('0.4.0', tag='0.4.0', submodules=True)
-    version('0.3.0', tag='0.3.0', submodules=True)
-    version('0.2.1', tag='0.2.1', submodules=True)
-    version('0.1.0', tag='0.1.0', submodules=True)
+    submodules = True
+
+    version('develop', branch='main')
+    version('0.7.0', tag="0.7.0")
+    version('0.6.0', tag="0.6.0")
+    version('0.5.1', tag='0.5.1')
+    version('0.4.9', tag='0.4.9')
+    version('0.3.0', tag='0.3.0')
+    version('0.2.1', tag='0.2.1')
+    version('0.1.0', tag='0.1.0')
 
     depends_on("py-setuptools")
     depends_on("cmake@3.2:", type="build")

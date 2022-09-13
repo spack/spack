@@ -12,12 +12,14 @@ class PyLibsonata(PythonPackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
-    version('develop', branch='master', submodules=True, get_full_repo=True)
-    version('0.1.14', tag='v0.1.14', submodules=True, get_full_repo=True)
-    version('0.1.13', tag='v0.1.13', submodules=True, get_full_repo=True)
-    version('0.1.12', tag='v0.1.12', submodules=True, get_full_repo=True)
-    version('0.1.11', tag='v0.1.11', submodules=True, get_full_repo=True)
-    version('0.1.10', tag='v0.1.10', submodules=True, get_full_repo=True)
+    submodules = True
+
+    version('develop', branch='master')
+    version('0.1.14', tag='v0.1.14')
+    version('0.1.13', tag='v0.1.13')
+    version('0.1.12', tag='v0.1.12')
+    version('0.1.11', tag='v0.1.11')
+    version('0.1.10', tag='v0.1.10')
 
     depends_on('cmake@3.3:', type='build')
     depends_on('hdf5')

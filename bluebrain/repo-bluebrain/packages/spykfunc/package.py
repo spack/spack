@@ -12,18 +12,20 @@ class Spykfunc(PythonPackage):
     """Spykfunc - Spark functionalizer developed by Blue Brain Project, EPFL
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc"
-    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
+    url = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/circuit-building/spykfunc.git"
 
-    version('develop', submodules=True, get_full_repo=True)
-    version('0.17.2', tag='v0.17.2', submodules=True, get_full_repo=True)
-    version('0.17.1', tag='v0.17.1', submodules=True, get_full_repo=True)
-    version('0.17.0', tag='v0.17.0', submodules=True, get_full_repo=True)
-    version('0.16.99', tag='v0.16.99', submodules=True, get_full_repo=True)
-    version('0.15.9', tag='v0.15.9', submodules=True, get_full_repo=True)
+    submodules = True
+
+    version('develop', branch='main')
+    version('0.17.2', tag='v0.17.2')
+    version('0.17.1', tag='v0.17.1')
+    version('0.17.0', tag='v0.17.0')
+    version('0.16.99', tag='v0.16.99')
+    version('0.15.9', tag='v0.15.9')
     # versions 0.13.2-0.14.x require legacy mvdtool+python
-    version('0.13.1', tag='v0.13.1', submodules=True, get_full_repo=True)
-    version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
+    version('0.13.1', tag='v0.13.1')
+    version('0.12.2', tag='v0.12.2')
 
     depends_on('cmake', type='build', when='@0.15.4:')
     depends_on('ninja', type='build', when='@0.17.3:')

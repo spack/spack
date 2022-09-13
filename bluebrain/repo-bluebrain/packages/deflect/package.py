@@ -14,7 +14,7 @@ class Deflect(CMakePackage):
     generator = 'Ninja'
 
     version('develop', submodules=True)
-    version('1.0.3', tag='1.0.3', submodules=True, preferred=True)
+    version('1.0.3', tag='1.0.3', submodules=True)
 
     variant('deflect-qt', default=False, description="Build DeflectQt library")
 

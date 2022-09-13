@@ -10,30 +10,31 @@ class Touchdetector(CMakePackage):
     """Detects touches between cells
     """
     homepage = "https://bbpgitlab.epfl.ch/hpc/touchdetector"
-    url      = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
+    url = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/touchdetector.git"
 
     generator = "Ninja"
+    submodules = True
 
-    version('develop', submodules=True)
-    version('5.7.0', tag='5.7.0', submodules=True)
-    version('5.6.1', tag='5.6.1', submodules=True)
-    version('5.6.0', tag='5.6.0', submodules=True)
-    version('5.5.1', tag='5.5.1', submodules=True)
-    version('5.5.0', tag='5.5.0', submodules=True)
-    version('5.4.0', tag='5.4.0', submodules=True)
-    version('5.3.4', tag='5.3.4', submodules=True)
-    version('5.3.3', tag='5.3.3', submodules=True)
-    version('5.3.2', tag='5.3.2', submodules=True)
-    version('5.3.1', tag='5.3.1', submodules=True)
-    version('5.3.0', tag='5.3.0', submodules=True)
-    version('5.2.0', tag='5.2.0', submodules=True)
-    version('5.1.0', tag='5.1.0', submodules=True)
-    version('5.0.1', tag='5.0.1', submodules=True)
-    version('5.0.0', tag='5.0.0', submodules=True)
-    version('4.4.2', tag='4.4.2', submodules=True)
-    version('4.4.1', tag='4.4.1', submodules=True)
-    version('4.3.3', tag='4.3.3', submodules=True)
+    version('develop', branch='main')
+    version('5.7.0', tag='5.7.0')
+    version('5.6.1', tag='5.6.1')
+    version('5.6.0', tag='5.6.0')
+    version('5.5.1', tag='5.5.1')
+    version('5.5.0', tag='5.5.0')
+    version('5.4.0', tag='5.4.0')
+    version('5.3.4', tag='5.3.4')
+    version('5.3.3', tag='5.3.3')
+    version('5.3.2', tag='5.3.2')
+    version('5.3.1', tag='5.3.1')
+    version('5.3.0', tag='5.3.0')
+    version('5.2.0', tag='5.2.0')
+    version('5.1.0', tag='5.1.0')
+    version('5.0.1', tag='5.0.1')
+    version('5.0.0', tag='5.0.0')
+    version('4.4.2', tag='4.4.2')
+    version('4.4.1', tag='4.4.1')
+    version('4.3.3', tag='4.3.3')
 
     variant('openmp', default=False, description='Enables OpenMP support')
     variant('caliper', default=True, description='Enables profiling with Caliper')
