@@ -24,6 +24,8 @@ spack:
           - openmpi
           - mpich
       variants: +mpi
+    tbb:
+      require: "intel-tbb"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
       version:
