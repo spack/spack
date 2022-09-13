@@ -1528,6 +1528,9 @@ class TestConcretize(object):
         assert root.dag_hash() == new_root.dag_hash()
 
     @pytest.mark.regression("29201")
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     def test_installed_version_is_selected_only_for_reuse(
         self, mutable_database, repo_with_changing_recipe
     ):
@@ -1769,6 +1772,9 @@ class TestConcretize(object):
             s.concretized()
 
     @pytest.mark.regression("31484")
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
         """Test that external specs that are in the DB can be reused."""
         if spack.config.get("config:concretizer") == "original":
