@@ -23,7 +23,7 @@ class PyFenicsBasix(PythonPackage):
     version("0.1.0", sha256="2ab41fe6ad4f6c42f01b17a6e7c39debb4e0ae61c334d1caebee78b741bca4e7")
 
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
-    depends_on("fenics-basix@0.5.0", type=("build", "run"), when="@0.5.0")
+    depends_on("fenics-basix@0.5.1", type=("build", "run"), when="@0.5.1")
     depends_on("fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
     depends_on("fenics-basix@0.3.0", type=("build", "run"), when="@0.3.0")
     depends_on("fenics-basix@0.2.0", type=("build", "run"), when="@0.2.0")
