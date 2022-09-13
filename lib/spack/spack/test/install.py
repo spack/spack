@@ -5,6 +5,7 @@
 
 import os
 import shutil
+import sys
 
 import pytest
 
@@ -85,12 +86,11 @@ def test_pkg_attributes(install_mockery, mock_fetch, monkeypatch):
     # assert baz_headers.basenames == ['baz.h']
     assert baz_headers.directories == [spec["baz"].home.include]
 
-    if "platform=windows" in spec:
-        lib_suffix = ".lib"
-    elif "platform=darwin" in spec:
+    lib_suffix = ".so"
+    if sys.platform == "win32":
+        lib_suffix = ".dll"
+    elif sys.platform == "darwin":
         lib_suffix = ".dylib"
-    else:
-        lib_suffix = ".so"
 
     foo_libs = spec[foo].libs
     assert foo_libs.basenames == ["libFoo" + lib_suffix]

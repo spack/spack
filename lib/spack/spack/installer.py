@@ -84,6 +84,9 @@ STATUS_DEQUEUED = "dequeued"
 #: queue invariants).
 STATUS_REMOVED = "removed"
 
+is_windows = sys.platform == "win32"
+is_osx = sys.platform == "darwin"
+
 
 class InstallAction(object):
     #: Don't perform an install
@@ -165,7 +168,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    dso_suffix = ".dylib" if sys.platform == "darwin" else ".so"
+    plat_shared = ".dll" if is_windows else ".so"
+    plat_static = ".lib" if is_windows else ".a"
+    dso_suffix = ".dylib" if is_osx else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
@@ -180,7 +185,7 @@ def _do_fake_install(pkg):
 
     # Install fake shared and static libraries
     fs.mkdirp(pkg.prefix.lib)
-    for suffix in [dso_suffix, ".a"]:
+    for suffix in [dso_suffix, plat_static]:
         fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
 
     # Install fake man page
@@ -1214,7 +1219,10 @@ class PackageInstaller(object):
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
                 pkg, build_process, install_args
             )
-
+            # Currently this is how RPATH-like behavior is achieved on Windows, after install
+            # establish runtime linkage via Windows Runtime link object
+            # Note: this is a no-op on non Windows platforms
+            pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
