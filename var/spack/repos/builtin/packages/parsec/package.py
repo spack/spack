@@ -26,6 +26,11 @@ class Parsec(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version(
+        "3.0.2209",
+        sha256="67d383d076991484cb2a265f56420abdea7cc1f329c63ac65a3e96fbfb6cc295",
+        url="https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2209.tar.bz2",
+    )
+    version(
         "3.0.2012",
         sha256="f565bcfffe106be8237b6aea3e83a5770607b7236606414b6f270244fa6ec3bc",
         url="https://bitbucket.org/icldistcomp/parsec/get/parsec-3.0.2012.tar.bz2",
