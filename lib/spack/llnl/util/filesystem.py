@@ -2055,22 +2055,22 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         raise TypeError(message)
 
     if is_windows:
-        static = "lib"
-        shared = "dll"
+        static_ext = "lib"
+        shared_ext = "dll"
     else:
         # Used on both Linux and macOS
-        static = "a"
-        shared = "so"
+        static_ext = "a"
+        shared_ext = "so"
 
     # Construct the right suffix for the library
     if shared:
         # Used on both Linux and macOS
-        suffixes = [shared]
+        suffixes = [shared_ext]
         if sys.platform == "darwin":
             # Only used on macOS
             suffixes.append("dylib")
     else:
-        suffixes = [static]
+        suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
