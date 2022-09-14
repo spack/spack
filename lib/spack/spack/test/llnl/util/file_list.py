@@ -86,7 +86,7 @@ class TestLibraryList(object):
         expected = " ".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % plat_apple_shared_ext if not is_windows else ".dll",
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -101,7 +101,7 @@ class TestLibraryList(object):
         expected = ";".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % plat_apple_shared_ext if not is_windows else ".dll",
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
