@@ -34,6 +34,7 @@ class JediBaseEnv(BundlePackage):
     depends_on("fftw-api", when="+fftw", type="run")
     depends_on("flex", type="run")
     depends_on("git-lfs", type="run")
+    depends_on("gsibec", type="run")
     depends_on("gsl-lite", type="run")
     depends_on("hdf", type="run")
     depends_on("jedi-cmake", type="run")
