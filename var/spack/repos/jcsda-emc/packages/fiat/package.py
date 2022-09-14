@@ -19,9 +19,12 @@ class Fiat(CMakePackage):
     # Defined for spack use only
     version("1.0.0", commit="1295120464c3905e5edcbb887e4921686653eab8", preferred=True)
 
-    variant("build_type", default="RelWithDebInfo",
-            description="CMake build type",
-            values=("Debug", "Release", "RelWithDebInfo"))
+    variant(
+        "build_type",
+        default="RelWithDebInfo",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo"),
+    )
 
     variant("mpi", default=True, description="Use MPI?")
     variant("openmp", default=True, description="Use OpenMP?")
