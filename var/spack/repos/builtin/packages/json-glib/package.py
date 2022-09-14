@@ -39,6 +39,7 @@ class JsonGlib(MesonPackage):
 
     depends_on("glib")
     depends_on("gobject-introspection")
+    depends_on("pkgconfig", type="build")
 
     @when("@:1.5")
     def meson(self, spec, prefix):
