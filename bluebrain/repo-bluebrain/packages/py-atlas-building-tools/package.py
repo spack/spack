@@ -9,12 +9,12 @@ from spack.package import *
 class PyAtlasBuildingTools(PythonPackage):
     """BBP Python tools to build brain region atlases."""
     homepage = "https://bbpgitlab.epfl.ch/nse/atlas-building-tools"
-    git      = "ssh://git@bbpgitlab.epfl.ch/nse/atlas-building-tools.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/nse/atlas-building-tools.git"
 
     version('develop', branch='main')
     version('0.1.9', tag='atlas-building-tools-v0.1.9')
 
-    depends_on('py-atlas-densities@0.1.1:', type=('build', 'run'))
+    depends_on('py-atlas-densities@0.1.2:', type=('build', 'run'))
     depends_on('py-atlas-direction-vectors@0.1.1:', type=('build', 'run'))
     depends_on('py-atlas-placement-hints@0.1.1:', type=('build', 'run'))
     depends_on('py-atlas-splitter@0.1.1:', type=('build', 'run'))
