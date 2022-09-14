@@ -4981,7 +4981,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, VER, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
@@ -5001,10 +5001,13 @@ class SpecLexer(spack.parse.Lexer):
         )
         super(SpecLexer, self).__init__(
             [
-                (r"\^", lambda scanner, val: self.token(DEP, val)),
-                (r"\@", lambda scanner, val: self.token(AT, val)),
+                (
+                    r"\@([\w.\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?",
+                    lambda scanner, val: self.token(VER, val),
+                ),
                 (r"\:", lambda scanner, val: self.token(COLON, val)),
                 (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                (r"\^", lambda scanner, val: self.token(DEP, val)),
                 (r"\+", lambda scanner, val: self.token(ON, val)),
                 (r"\-", lambda scanner, val: self.token(OFF, val)),
                 (r"\~", lambda scanner, val: self.token(OFF, val)),
@@ -5142,7 +5145,7 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
-                    if self.next.type in (AT, ON, OFF, PCT):
+                    if self.next.type in (VER, ON, OFF, PCT):
                         # Raise an error if the previous spec is already concrete
                         if specs and specs[-1].concrete:
                             raise RedundantSpecError(specs[-1], "compiler, version, " "or variant")
@@ -5250,7 +5253,7 @@ class SpecParser(spack.parse.Parser):
         spec.name = spec_name
 
         while self.next:
-            if self.accept(AT):
+            if self.accept(VER):
                 vlist = self.version_list()
                 spec._add_versions(vlist)
 
@@ -5268,7 +5271,6 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ID):
                 self.previous = self.token
                 if self.accept(EQ):
-                    # We're adding a key-value pair to the spec
                     self.expect(VAL)
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
@@ -5304,16 +5306,24 @@ class SpecParser(spack.parse.Parser):
             return self.token.value
 
     def version(self):
+
         start = None
         end = None
-        if self.accept(ID):
-            start = self.token.value
-            if self.accept(EQ):
-                # This is for versions that are associated with a hash
-                # i.e. @[40 char hash]=version
-                start += self.token.value
-                self.expect(VAL)
-                start += self.token.value
+
+        def str_translate(value):
+            # return None for empty strings since we can end up with `'@'.strip('@')`
+            if not (value and value.strip()):
+                return None
+            else:
+                return value
+
+        if self.token.type is COMMA:
+            # need to increment commas, could be ID or COLON
+            self.accept(ID)
+
+        if self.token.type in (VER, ID):
+            version_spec = self.token.value.lstrip("@")
+            start = str_translate(version_spec)
 
         if self.accept(COLON):
             if self.accept(ID):
@@ -5323,10 +5333,10 @@ class SpecParser(spack.parse.Parser):
                 else:
                     end = self.token.value
         elif start:
-            # No colon, but there was a version.
+            # No colon, but there was a version
             return vn.Version(start)
         else:
-            # No colon and no id: invalid version.
+            # No colon and no id: invalid version
             self.next_token_error("Invalid version specifier")
 
         if start:
@@ -5349,7 +5359,7 @@ class SpecParser(spack.parse.Parser):
         compiler = CompilerSpec.__new__(CompilerSpec)
         compiler.name = self.token.value
         compiler.versions = vn.VersionList()
-        if self.accept(AT):
+        if self.accept(VER):
             vlist = self.version_list()
             compiler._add_versions(vlist)
         else:
