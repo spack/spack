@@ -509,8 +509,7 @@ def ci_rebuild(args):
             "install",
             "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
-            # Uncomment once #32537 is merged
-            # "--use-buildcache dependencies:only,packages:never",
+            "--use-buildcache", "dependencies:only,package:never",
         ]
     )
 
