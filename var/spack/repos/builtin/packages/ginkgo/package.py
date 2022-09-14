@@ -153,48 +153,52 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 )
         return args
 
+    extra_install_tests = join_path("test", "test_install")
 
-    extra_install_tests = join_path('test', 'test_install')
-
-    @run_after('install')
+    @run_after("install")
     def cache_test_sources(self):
         self.cache_extra_test_sources(self.extra_install_tests)
 
     @property
     def _cached_tests_src_dir(self):
-        """The working directory for cached test sources."""
-        return join_path(self.test_suite.current_test_cache_dir,
-                self.extra_install_tests)
+        """The cached smoke test source directory."""
+        return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
 
     @property
     def _cached_tests_work_dir(self):
         """The working directory for cached test sources."""
-        return join_path(self._cached_tests_src_dir, 'build')
+        return join_path(self._cached_tests_src_dir, "build")
 
     def _build_test(self):
         cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-        cmake_args = [ self._cached_tests_src_dir ]
+        cmake_args = [self._cached_tests_src_dir]
 
         # Fix: For HIP tests, add the ARCH compilation flags when not present
         if "+rocm" in self.spec:
             src_path = join_path(self._cached_tests_src_dir, "CMakeLists.txt")
             cmakelists = open(src_path, "rt")
             data = cmakelists.read()
-            data = data.replace('CLANG_OPTIONS "${GINKGO_PIC_OPTION}"',
-                    'CLANG_OPTIONS "${GINKGO_AMD_ARCH_FLAGS}" "${GINKGO_PIC_OPTION}"')
+            data = data.replace(
+                'CLANG_OPTIONS "${GINKGO_PIC_OPTION}"',
+                'CLANG_OPTIONS "${GINKGO_AMD_ARCH_FLAGS}" "${GINKGO_PIC_OPTION}"',
+            )
             cmakelists.close()
             cmakelists = open(src_path, "wt")
             cmakelists.write(data)
             cmakelists.close()
 
-        if not self.run_test(cmake_bin, options=cmake_args,
-                purpose="Generate the Makefile",
-                work_dir=self._cached_tests_work_dir):
+        if not self.run_test(
+            cmake_bin,
+            options=cmake_args,
+            purpose="Generate the Makefile",
+            work_dir=self._cached_tests_work_dir,
+        ):
             print("Skipping Ginkgo test: failed to generate Makefile")
             return
 
-        if not self.run_test("make", purpose="Build test software",
-                work_dir=self._cached_tests_work_dir):
+        if not self.run_test(
+            "make", purpose="Build test software", work_dir=self._cached_tests_work_dir
+        ):
             print("Skipping Ginkgo test: failed to build test")
             return
 
