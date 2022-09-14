@@ -72,7 +72,7 @@ plat_static_ext = "lib" if is_windows else "a"
 plat_shared_ext = "dll" if is_windows else "so"
 
 
-plat_apple_shared_ext = "dll" if is_windows else "dylib"
+plat_apple_shared_ext = "dylib"
 
 
 class TestLibraryList(object):
@@ -86,7 +86,7 @@ class TestLibraryList(object):
         expected = " ".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % plat_apple_shared_ext,
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -101,7 +101,7 @@ class TestLibraryList(object):
         expected = ";".join(
             [
                 "/dir1/liblapack.%s" % plat_static_ext,
-                "/dir2/libpython3.6.%s" % plat_apple_shared_ext,
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
                 "/dir1/libblas.%s" % plat_static_ext,
                 "/dir3/libz.%s" % plat_shared_ext,
                 "libmpi.%s.20.10.1" % plat_shared_ext,
@@ -252,6 +252,29 @@ class TestHeaderList(object):
 
 #: Directory where the data for the test below is stored
 search_dir = os.path.join(spack.paths.test_path, "data", "directory_search")
+
+
+@pytest.mark.parametrize(
+    "lib_list,kwargs",
+    [
+        (["liba"], {"shared": True, "recursive": True}),
+        (["liba"], {"shared": False, "recursive": True}),
+        (["libc", "liba"], {"shared": True, "recursive": True}),
+        (["liba", "libc"], {"shared": False, "recursive": True}),
+        (["libc", "libb", "liba"], {"shared": True, "recursive": True}),
+        (["liba", "libb", "libc"], {"shared": False, "recursive": True}),
+    ],
+)
+def test_library_type_search(lib_list, kwargs):
+    results = find_libraries(lib_list, search_dir, **kwargs)
+    assert len(results) != 0
+    for result in results:
+        lib_type_ext = plat_shared_ext
+        if not kwargs["shared"]:
+            lib_type_ext = plat_static_ext
+        assert result.endswith(lib_type_ext) or (
+            kwargs["shared"] and result.endswith(plat_apple_shared_ext)
+        )
 
 
 @pytest.mark.parametrize(
