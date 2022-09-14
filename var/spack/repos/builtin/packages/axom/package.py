@@ -280,8 +280,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             # Fixes for mpi for rocm until wrapper paths are fixed
             # These flags are already part of the wrapped compilers on TOSS4 systems
-            # hip_link_flags = "-Wl,--disable-new-dtags -L{0}/lib -L{0}/../lib64 -L{0}/../lib -Wl,-rpath,{0}/lib:{0}/../lib:{0}/../lib64 -lamdhip64 -lhsakmt -lhsa-runtime64".format(hip_root)
-
+            hip_link_flags = ""
             if "+fortran" in spec:
                 # Flags for crayftn
                 if self.is_fortran_compiler("crayftn"):
@@ -296,13 +295,18 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                             )
                         )
 
-                    hip_link_flags = "-Wl,--disable-new-dtags -L/opt/cray/pe/cce/13.0.1/cce/x86_64/lib -L/opt/cray/pe/cce/13.0.1/cce/x86_64/lib -Wl,-rpath,/opt/cray/pe/cce/13.0.1/cce/x86_64/lib:/opt/cray/pe/cce/13.0.1/cce/x86_64/lib -lmodules -lquadmath -lfi -lcraymath -lf -lu -lcsup"
+                    cray_cce_prefix = "/opt/cray/pe/cce/13.0.1/cce/x86_64"
+                    hip_link_flags += "-Wl,--disable-new-dtags "
+                    hip_link_flags += "-L{0}/lib -L{0}/lib ".format(cray_cce_prefix)
+                    hip_link_flags += "-Wl,-rpath,{0}/lib:{0}/lib ".format(cray_cce_prefix)
+                    hip_link_flags += "-lmodules -lquadmath -lfi -lcraymath -lf -lu -lcsup"
 
                 # Flags for amdflang
                 if self.is_fortran_compiler("amdflang"):
-                    hip_link_flags = "-Wl,--disable-new-dtags -L{0}/../llvm/lib -L{0}/lib -Wl,-rpath,{0}/../llvm/lib:{0}/lib -lpgmath -lflang -lflangrti -lompstub -lamdhip64".format(
-                        hip_root
-                    )
+                    hip_link_flags += "-Wl,--disable-new-dtags "
+                    hip_link_flags += "-L{0}/../llvm/lib -L{0}/lib ".format(hip_root)
+                    hip_link_flags += "-Wl,-rpath,{0}/../llvm/lib:{0}/lib ".format(hip_root)
+                    hip_link_flags += "-lpgmath -lflang -lflangrti -lompstub -lamdhip64 "
 
             # Additional libraries for TOSS4
             hip_link_flags += (
