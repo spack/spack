@@ -5,16 +5,17 @@
 
 import argparse
 import filecmp
+import itertools
 import os
 import re
 import sys
 import time
-import itertools
 
 import pytest
 from six.moves import builtins
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.cmd.install
 import spack.compilers as compilers
@@ -1092,6 +1093,7 @@ def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
     assert output.count("method not implemented") == 1
     assert output.count("TestFailure: 1 tests failed") == 1
 
+
 def test_install_use_buildcache(
     capsys,
     mock_packages,
@@ -1100,7 +1102,7 @@ def test_install_use_buildcache(
     mutable_config,
     mock_binary_index,
     tmpdir,
-    install_mockery
+    install_mockery,
 ):
     """
     Make sure installing with use-buildcache behaves correctly.
@@ -1109,39 +1111,31 @@ def test_install_use_buildcache(
     package_name = "dependent-install"
     dependency_name = "dependency-install"
 
-    def install_use_buildcache(package="auto", dependencies="auto"):
-        def validate(mode, out, pkg):
-            def assert_auto(pkg, out):
-                assert "==> Extracting {0}".format(pkg) in out
+    def validate(mode, out, pkg):
+        def assert_auto(pkg, out):
+            assert "==> Extracting {0}".format(pkg) in out
 
-            def assert_only(pkg, out):
-                assert "==> Extracting {0}".format(pkg) in out
+        def assert_only(pkg, out):
+            assert "==> Extracting {0}".format(pkg) in out
 
-            def assert_never(pkg, out):
-                assert "==> {0}: Executing phase: 'install'".format(pkg) in out
+        def assert_never(pkg, out):
+            assert "==> {0}: Executing phase: 'install'".format(pkg) in out
 
-            if mode == "auto":
-                assert_auto(pkg, out)
-            elif mode == "only":
-                assert_only(pkg, out)
-            else:
-                assert_never(pkg, out)
+        if mode == "auto":
+            assert_auto(pkg, out)
+        elif mode == "only":
+            assert_only(pkg, out)
+        else:
+            assert_never(pkg, out)
 
-        dep_out = install("--no-check-signature", "--only", "dependencies", "--use-buildcache", "package:{0},dependencies:{1}".format(
-                    package,
-                    dependencies),
-                  package_name,
-                  fail_on_error=True
+    def install_use_buildcache(opt):
+        out = install(
+            "--no-check-signature", "--use-buildcache", opt, package_name, fail_on_error=True
         )
-        validate(dependencies, dep_out, dependency_name)
 
-        pkg_out = install("--no-check-signature", "--only", "package", "--use-buildcache", "package:{0},dependencies:{1}".format(
-                    package,
-                    dependencies),
-                  package_name,
-                  fail_on_error=True
-        )
-        validate(package, pkg_out, package_name)
+        parsed = spack.cmd.install.parse_use_buildcache(opt)
+        validate(parsed["dependencies"], out, dependency_name)
+        validate(parsed["package"], out, package_name)
 
         # Clean up installed packages
         uninstall("-y", "-a")
@@ -1161,6 +1155,18 @@ def test_install_use_buildcache(
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror("add", "test-mirror", mirror_url)
 
-    # Install using the matrix of possible combinations with --use-buildcache
-    for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
-        install_use_buildcache(package=pkg, dependencies=deps)
+    with capsys.disabled():
+        # Install using the matrix of possible combinations with --use-buildcache
+        for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
+            tty.debug(
+                "Testing `spack install --use-buildcache package:{0},dependencies:{1}`".format(
+                    pkg, deps
+                )
+            )
+            install_use_buildcache("package:{0},dependencies:{1}".format(pkg, deps))
+            install_use_buildcache("dependencies:{0},package:{1}".format(deps, pkg))
+
+        # Install using a default override option
+        # Alternative to --cache-only (always) or --no-cache (never)
+        for opt in ["auto", "only", "never"]:
+            install_use_buildcache(opt)

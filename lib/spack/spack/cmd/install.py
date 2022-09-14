@@ -34,9 +34,9 @@ level = "short"
 
 def parse_use_buildcache(args):
     bc_parsed = {}
-    bc_keys = ["package", "dependencies", ""]
+    bc_keys = ["package:", "dependencies:", ""]
     bc_values = ["only", "never", "auto"]
-    kv_list = re.findall("([a-z]+)?:?([a-z]+)", args.use_buildcache)
+    kv_list = re.findall("([a-z]+:)?([a-z]+)", args)
 
     # Verify keys and values
     bc_map = {k: v for k, v in kv_list if k in bc_keys and v in bc_values}
@@ -45,42 +45,39 @@ def parse_use_buildcache(args):
         tty.error("Unrecognized arguments passed to use-buildcache: %s" % unrecognized_args)
         tty.error(
             "Expected: --use-buildcache "
-            ":{[auto|only|never],[[package:[auto|only|never]],[dependencies:[auto|only|never]]]"
+            "[[auto|only|never],[package:[auto|only|never]],[dependencies:[auto|only|never]]]"
         )
         exit(1)
-        return None
 
-    package_use_buildcache = "auto"
-    dependencies_use_buildcache = "auto"
+    bc_parsed["package"] = "auto"
+    bc_parsed["dependencies"] = "auto"
     if "" in bc_map:
-        package_use_buildcache = bc_map[""]
-        dependencies_use_buildcache = bc_map[""]
-    if "package" in bc_map:
-        package_use_buildcache = bc_map["package"]
-    if "dependencies" in bc_map:
-        dependencies_use_buildcache = bc_map["dependencies"]
-
-    if package_use_buildcache == "auto":
-        bc_parsed["package_use_cache"] = args.use_cache
-        bc_parsed["package_cache_only"] = args.cache_only
-    elif package_use_buildcache == "only":
-        bc_parsed["package_use_cache"] = True
-        bc_parsed["package_cache_only"] = True
-    elif package_use_buildcache == "never":
-        bc_parsed["package_use_cache"] = False
-        bc_parsed["package_cache_only"] = False
-
-    if dependencies_use_buildcache == "auto":
-        bc_parsed["dependencies_use_cache"] = args.use_cache
-        bc_parsed["dependencies_cache_only"] = args.cache_only
-    elif dependencies_use_buildcache == "only":
-        bc_parsed["dependencies_use_cache"] = True
-        bc_parsed["dependencies_cache_only"] = True
-    elif dependencies_use_buildcache == "never":
-        bc_parsed["dependencies_use_cache"] = False
-        bc_parsed["dependencies_cache_only"] = False
+        bc_parsed["package"] = bc_map[""]
+        bc_parsed["dependencies"] = bc_map[""]
+    if "package:" in bc_map:
+        bc_parsed["package"] = bc_map["package:"]
+    if "dependencies:" in bc_map:
+        bc_parsed["dependencies"] = bc_map["dependencies:"]
 
     return bc_parsed
+
+
+def args_use_cache(args, use_buildcache):
+    if use_buildcache == "auto":
+        return args.use_cache
+    elif use_buildcache == "only":
+        return True
+    elif use_buildcache == "never":
+        return False
+
+
+def args_cache_only(args, use_buildcache):
+    if use_buildcache == "auto":
+        return args.cache_only
+    elif use_buildcache == "only":
+        return True
+    elif use_buildcache == "never":
+        return False
 
 
 def install_kwargs_from_args(args):
@@ -88,7 +85,7 @@ def install_kwargs_from_args(args):
     to the package installer.
     """
 
-    cache_ops = parse_use_buildcache(args)
+    cache_ops = parse_use_buildcache(args.use_buildcache)
 
     return {
         "fail_fast": args.fail_fast,
@@ -99,10 +96,10 @@ def install_kwargs_from_args(args):
         "verbose": args.verbose or args.install_verbose,
         "fake": args.fake,
         "dirty": args.dirty,
-        "package_use_cache": cache_ops["package_use_cache"],
-        "package_cache_only": cache_ops["package_cache_only"],
-        "dependencies_use_cache": cache_ops["dependencies_use_cache"],
-        "dependencies_cache_only": cache_ops["dependencies_cache_only"],
+        "package_use_cache": args_use_cache(args, cache_ops["package"]),
+        "package_cache_only": args_cache_only(args, cache_ops["package"]),
+        "dependencies_use_cache": args_use_cache(args, cache_ops["dependencies"]),
+        "dependencies_cache_only": args_cache_only(args, cache_ops["dependencies"]),
         "include_build_deps": args.include_build_deps,
         "explicit": True,  # Use true as a default for install command
         "stop_at": args.until,
