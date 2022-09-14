@@ -39,6 +39,11 @@ class BerkeleyDb(AutotoolsPackage):
     build_directory = "build_unix"
 
     patch("drop-docs.patch", when="~docs")
+    # Correct autoconf macro to detect TLS support.
+    # Patch developed by @eschnett. There is no upstream issue because
+    # Oracle's web site does not have instructions for submitting such
+    # an issue or pull request.
+    patch("tls.patch")
 
     conflicts("%clang@7:", when="@5.3.28")
     conflicts("%gcc@8:", when="@5.3.28")
