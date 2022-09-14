@@ -19,7 +19,9 @@ class PyPyprecice(PythonPackage):
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
-    version("2.4.0.0", sha256="8877da85df97d66966892440c7e777b667d8e6a33747304ed3762f4c33b729ec")
+    version("2.5.0.1", sha256="e2602f828d4f907ea93e34f7d4adb8db086044a75a446592a4099423d56ed62c")
+    version("2.5.0.0", sha256="9f55a22594bb602cde8a5987217728569f16d9576ea53ed00497e9046a2e1794")
+    version("2.4.0.0", sha256="e80d16417b8ce1fdac80c988cb18ae1e16f785c5eb1035934d8b37ac18945242")
     version("2.3.0.1", sha256="ed4e48729b662680beaa4ee2a9aff724a79e760534c6c58181be739988da2789")
     version("2.2.1.1", sha256="139bac5077c3807e1b7b83d8d0da5ca0fc8c17393fd0df4bc5999cd63a351b78")
     version("2.2.0.2", sha256="2287185f9ad7500dced53459543d27bb66bd2438c2e4bf81ee3317e6a00513d5")
@@ -32,16 +34,20 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
-    depends_on("precice@develop", when="@develop")
-    depends_on("precice@2.4.0", when="@2.4.0.1:2.4.0")
-    depends_on("precice@2.3.0", when="@2.3.0.1:2.3.1")
-    depends_on("precice@2.2.1", when="@2.2.1.1:2.2.1")
-    depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0")
-    depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1")
-    depends_on("precice@2.1.0", when="@2.1.0.1:2.1.0")
-    depends_on("precice@2.0.2", when="@2.0.2.1:2.0.2")
-    depends_on("precice@2.0.1", when="@2.0.1.1:2.0.1")
-    depends_on("precice@2.0.0", when="@2.0.0.1:2.0.0")
+    for ver in [
+        "develop",
+        "2.5.0",
+        "2.4.0",
+        "2.3.0",
+        "2.2.1",
+        "2.2.0",
+        "2.1.1",
+        "2.1.0",
+        "2.0.2",
+        "2.0.1",
+        "2.0.0",
+    ]:
+        depends_on("precice@" + ver, when="@" + ver)
 
     depends_on("python@3:", type=("build", "link", "run"))
     depends_on("py-setuptools", type="build")
@@ -50,6 +56,7 @@ class PyPyprecice(PythonPackage):
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-packaging", type="build")
     depends_on("py-pip@19.0.0:", type="build")
+    depends_on("py-pkgconfig", type="build", when="@2.5:")
 
     @when("@:2.1")
     def patch(self):
