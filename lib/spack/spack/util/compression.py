@@ -197,6 +197,15 @@ def _lzma_decomp(archive_file):
             return _xz(archive_file)
 
 
+def _win_compressed_tarball_handler(archive_file):
+    """Decompress and extract compressed tarballs on Windows.
+    This method uses 7zips in conjunction with the tar utility
+    to perform decompression and extraction in a two step process
+    first using 7zip to decompress, and tar to extract.
+    """
+    return _untar(_7zip(archive_file))
+
+
 def _xz(archive_file):
     """Decompress lzma compressed .xz files via xz command line
     tool. Available only on Unix
@@ -281,8 +290,11 @@ unrecognized file extension: '%s'"
     if re.match(r"xz", ext):
         return _lzma_decomp
 
+    # Catch tar.xz/tar.Z files here for Windows
+    # as the tar utility on Windows cannot handle such
+    # compression types directly
     if ("xz" in ext or "Z" in ext) and is_windows:
-        return _7zip
+        return _win_compressed_tarball_handler
 
     return _untar
 
