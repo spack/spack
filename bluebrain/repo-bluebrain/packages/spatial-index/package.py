@@ -15,6 +15,7 @@ class SpatialIndex(PythonPackage):
     submodules = True
 
     version('develop', branch='main')
+    version('0.8.0', tag="0.8.0")
     version('0.7.0', tag="0.7.0")
     version('0.6.0', tag="0.6.0")
     version('0.5.1', tag='0.5.1')
