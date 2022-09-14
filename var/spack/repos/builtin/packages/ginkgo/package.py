@@ -60,9 +60,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("intel-oneapi-dpl", when="+oneapi")
 
     conflicts("%gcc@:5.2.9")
-
     conflicts("+rocm", when="@:1.1.1")
-
     conflicts("+cuda", when="+rocm")
     conflicts("+openmp", when="+oneapi")
 
