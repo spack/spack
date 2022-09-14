@@ -13,6 +13,7 @@ def hip_repair_options(options, spec):
     path = glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
     options.append(cmake_cache_path("HIP_CLANG_INCLUDE_PATH", path))
 
+
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
