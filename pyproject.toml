@@ -9,6 +9,9 @@ dependencies=[
 ]
 dynamic = ["version"]
 
+[project.scripts]
+spack = "lib.spack.spack_installable.main:main"
+
 [tool.hatch.version]
 path = "lib/spack/spack/__init__.py"
 
@@ -33,6 +36,22 @@ ci = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "/bin",
+  "/etc",
+  "/lib",
+  "/share",
+  "/var",
+  "CITATION.cff",
+  "COPYRIGHT",
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
+  "NOTICE",
+  "README.md",
+  "SECURITY.md",
+]
 
 [tool.hatch.envs.default]
 detached = true
