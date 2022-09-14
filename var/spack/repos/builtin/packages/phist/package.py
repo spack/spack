@@ -45,23 +45,7 @@ class Phist(CMakePackage):
     # https://stackoverflow.com/questions/65750862
     version("1.9.6", sha256="98ed5ccb22bb98d5b6bf9de0c9960105473e5244978853070b9a3c44138db662")
 
-    # As spack GitLab CI pipelines use ^mpich %gcc@7.5.0, @1.9.6 with it can't be used:
-    # A conflict would be possible, but when %gcc@10: or another compiler is available,
-    # clingo can select the other compiler despite a request for %gcc@7.5.0 in place,
-    # at least when the version is requested: spack solve phist@1.9.6 ^mpich %gcc@7.5.0
-    # With conflicts('mpich', when='@1.9.6:%gcc@:9'), this is the result:
-    # spack solve phist@1.9.6 ^mpich %gcc@7.5.0|grep -e phist -e mpich|sed 's/+.*//'
-    # phist@1.9.6%gcc@11.2.0
-    # ^mpich@3.4.2%gcc@7.5.0~argobots
-    # A mismatch of gfortan between gcc@7.5.0(for mpich) and @10:(phist) would not work,
-    # and also does not solve the build problem.
-    # Instead, a check with a helpful error message is added to the build (see below).
-    # and we use preferred=True to select 1.9.5 by default:
-    version(
-        "1.9.5",
-        sha256="24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32",
-        preferred=True,
-    )
+    version("1.9.5", sha256="24faa3373003f185c82a658c510e36cba9acc4110eb60cbfded9de370ae9ea32")
     version("1.9.4", sha256="9dde3ca0480358fa0877ec8424aaee4011c5defc929219a5930388a7cdb4c8a6")
     version("1.9.3", sha256="3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf")
     version("1.9.2", sha256="289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5")
@@ -141,6 +125,10 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
+    # The builtin kernels switched from the 'mpi' to the 'mpi_f08' module in
+    # phist 1.9.6, which causes compile-time errors with mpich and older
+    # GCC versions.
+    conflicts("kernel_lib=builtin", when="@1.9.6: ^mpich %gcc@:10")
     # in older versions, it is not possible to completely turn off OpenMP
     conflicts("~openmp", when="@:1.7.3")
     # in older versions, it is not possible to turn off the use of host-
