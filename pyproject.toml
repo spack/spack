@@ -1,14 +1,16 @@
 [project]
 name="spack"
-version="0.19.0.dev0"
 description="The spack package manager"
 dependencies=[
+  "clingo",
+  "setuptools",
   "six",
   "types-six",
-  "setuptools",
-  "clingo",
 ]
-packages = []
+dynamic = ["version"]
+
+[tool.hatch.version]
+path = "lib/spack/spack/__init__.py"
 
 [project.optional-dependencies]
 dev = [
