@@ -212,14 +212,17 @@ def _win_compressed_tarball_handler(archive_file):
     # record name of new archive so we can extract
     # and later clean up
     decomped_tarball = _7zip(archive_file)
-
-    # run tar on newly decomped archive
-    outfile = _untar(decomped_tarball)
-
-    # clean intermediate archive to mimic end result
-    # produced by one shot decomp/extraction
-    os.remove(decomped_tarball)
-    return outfile
+    # 7zip is able to one shot extract compressed archives
+    # that have been named .txz. If that is the case, there will
+    # be no intermediate archvie to extract.
+    if os.path.exists(decomped_tarball):
+        # run tar on newly decomped archive
+        outfile = _untar(decomped_tarball)
+        # clean intermediate archive to mimic end result
+        # produced by one shot decomp/extraction
+        os.remove(decomped_tarball)
+        return outfile
+    return decomped_tarball
 
 
 def _xz(archive_file):
