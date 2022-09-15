@@ -9,7 +9,6 @@ import re
 import shutil
 import sys
 from itertools import product
-import tarfile
 
 import spack.util.path as spath
 from spack.util.executable import CommandNotFoundError, which
@@ -202,8 +201,25 @@ def _win_compressed_tarball_handler(archive_file):
     This method uses 7zips in conjunction with the tar utility
     to perform decompression and extraction in a two step process
     first using 7zip to decompress, and tar to extract.
+
+    The motivation for this method is the inability of 7zip
+    to directly decompress and extract compressed archives
+    in a single shot without undocumented workarounds, and
+    inconsistent degrees of lzma and compress compression
+    support on the Windows platform
     """
-    return _untar(_7zip(archive_file))
+    # perform intermediate extraction step
+    # record name of new archive so we can extract
+    # and later clean up
+    decomped_tarball = _7zip(archive_file)
+
+    # run tar on newly decomped archive
+    outfile = _untar(decomped_tarball)
+
+    # clean intermediate archive to mimic end result
+    # produced by one shot decomp/extraction
+    os.remove(decomped_tarball)
+    return outfile
 
 
 def _xz(archive_file):
