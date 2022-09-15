@@ -10,7 +10,8 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiItac(IntelOneApiPackage):
-    """The Intel® Trace Analyzer and Collector profiles and analyzes MPI applications to help focus your optimization efforts.
+    """The Intel® Trace Analyzer and Collector profiles and analyzes MPI applications to help
+    focus your optimization efforts.
 
     Find temporal dependencies and bottlenecks in your code.
     Check the correctness of your application.
@@ -29,10 +30,8 @@ class IntelOneapiItac(IntelOneApiPackage):
     if platform.system() == "Linux":
         version(
             "2021.6.0",
-            url=
-            "https://registrationcenter-download.intel.com/akdlm/irc_nas/18694/l_itac_oneapi_p_2021.6.0.434_offline.sh",
-            sha256=
-            "1ecc2735da960041b051e377cadb9f6ab2f44e8aa44d0f642529a56a3cbba436",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18694/l_itac_oneapi_p_2021.6.0.434_offline.sh",
+            sha256="1ecc2735da960041b051e377cadb9f6ab2f44e8aa44d0f642529a56a3cbba436",
             expand=False,
         )
 
