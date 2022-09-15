@@ -26,10 +26,25 @@ class Fplo(MakefilePackage):
 
     version("22.00-62", sha256="0d1d4e9c1e8e41900901e26c3cd08ee39dcfdeb3f2c4c8862055eaf704b6d69e")
 
+    # TODO: Try to get LAPACK to work with something other than MKL. The build
+    # fails even with the fallback/builtin lapack.
+
+    # This patch replaces the default builtin lapack with MKL, as MKL is the
+    # only functioning LAPACK implementation.
     patch("lapackconfig.patch")
+
+    # This patch does 3 things: (1) Change the order of the src directories so
+    # the object dependencies are correct; (2) removes interactivity; and (3)
+    # explicitly sets the configuration.
     patch("MMakefile.patch")
+
+    # Add '-ltinfo' for linking.
     patch("ncurses.patch")
+
+    # Set the names for QT and PYTHON.
     patch("qt-make.patch")
+
+    # Sets the correct python module import order.
     patch("fedit_py.patch")
 
     depends_on("mkl")
