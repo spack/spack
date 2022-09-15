@@ -181,9 +181,6 @@ class Libpressio(CMakePackage, CudaPackage):
     variant(
         "cusz", default=False, description="build support for the cusz compressor", when="@0.86.0:"
     )
-    variant(
-        "szx", default=False, description="build support for the cusz compressor", when="@0.87.0:"
-    )
 
     depends_on("boost", when="@:0.51.0+boost")
 
@@ -243,7 +240,6 @@ class Libpressio(CMakePackage, CudaPackage):
     depends_on("bzip2", when="+bzip2")
     depends_on("qoz", when="+qoz")
     depends_on("cusz", when="+cusz")
-    depends_on("szx", when="+szx")
 
     extends("python", when="+python")
 
@@ -317,8 +313,6 @@ class Libpressio(CMakePackage, CudaPackage):
             args.append("-DLIBPRESSIO_HAS_QoZ=ON")
         if "+cusz" in self.spec:
             args.append("-DLIBPRESSIO_HAS_CUSZ=ON")
-        if "+szx" in self.spec:
-            args.append("-DLIBPRESSIO_HAS_SZx=ON")
         if self.run_tests:
             args.append("-DBUILD_TESTING=ON")
         else:
