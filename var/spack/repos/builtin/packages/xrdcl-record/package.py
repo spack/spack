@@ -8,7 +8,7 @@ from spack.package import *
 
 class XrdclRecord(CMakePackage):
     """XrdClRecorder Plugin. This XRootD Client Plugin can be used to record
-       all user's actions on XrdCl::File object and store them into a csv file."""
+    all user's actions on XrdCl::File object and store them into a csv file."""
 
     homepage = "https://github.com/xrootd/xrdcl-record"
     url = "https://github.com/xrootd/xrdcl-record/archive/refs/tags/v5.4.2.tar.gz"
