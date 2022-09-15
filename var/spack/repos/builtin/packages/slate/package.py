@@ -25,6 +25,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2022.07.00", sha256="5da23f3c3c51fde65120f80df2b2f703aee1910389c08f971804aa77d11ac027"
+    )
+    version(
         "2022.06.00", sha256="4da23f3c3c51fde65120f80df2b2f703aee1910389c08f971804aa77d11ac027"
     )
     version(
@@ -56,6 +59,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blaspp ~rocm", when="~rocm")
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+    depends_on("lapackpp@2022.07.00", when="@2022.07.00:")
     depends_on("lapackpp@2022.05.00", when="@2022.05.00:")
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")

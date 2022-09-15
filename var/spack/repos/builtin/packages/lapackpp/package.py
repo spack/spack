@@ -11,6 +11,7 @@ from spack.package import *
 _versions = [
     # LAPACK++,     BLAS++
     ["master", "master"],
+    ["2022.07.00", "2022.07.00"],
     ["2022.05.00", "2022.05.00"],
     ["2020.10.00", "2020.10.00"],
     ["2020.10.01", "2020.10.01"],
@@ -19,7 +20,7 @@ _versions = [
 ]
 
 
-class Lapackpp(CMakePackage):
+class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     """LAPACK++: C++ API for the LAPACK Linear Algebra Package. Developed
     by the Innovative Computing Laboratory at the University of Tennessee,
     Knoxville."""
@@ -30,6 +31,9 @@ class Lapackpp(CMakePackage):
     maintainers = ["teonnik", "Sely85", "G-Ragghianti", "mgates3"]
 
     version("master", branch="master")
+    version(
+        "2022.07.00", sha256="40f548cbc9d4ac46b1f961834d113173c0b433074f77bcfd69c7c31cb89b7ff2"
+    )
     version(
         "2022.05.00", sha256="d0f548cbc9d4ac46b1f961834d113173c0b433074f77bcfd69c7c31cb89b7ff2"
     )
