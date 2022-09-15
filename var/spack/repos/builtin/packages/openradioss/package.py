@@ -71,11 +71,6 @@ class Openradioss(CMakePackage):
         spec = self.spec
         debug = spec.variants["debug"].value
 
-        if debug == "1":
-            ddebug = "_db"
-        else:
-            ddebug = ""
-
         if debug == "2":
             sanitize = "1"
         else:
@@ -137,7 +132,15 @@ class Openradioss(CMakePackage):
 
     def install(self, spec, prefix):
         """Installation is just moving executables."""
-        extension = "_" + spec.variants["arch"].value
+        if spec.variants["debug"].value == "1":
+            ddebug = "_db"
+        else:
+            ddebug = ""
+        if spec.variants["precision"].value == "sp":
+            suffix = "_sp"
+        else:
+            suffix = ""
+        extension = "_" + spec.variants["arch"].value + suffix + ddebug
         os.mkdir(self.prefix.bin)
         os.mkdir(self.prefix.lib64)
 
@@ -146,7 +149,7 @@ class Openradioss(CMakePackage):
             os.path.join(self.prefix.bin, "starter" + extension),
         )
         if "+mpi" in spec:
-            extension += "_ompi"
+            extension = "_" + spec.variants["arch"].value + "_ompi" + suffix + ddebug
         move(
             os.path.join(self.build_directory, "engine" + extension),
             os.path.join(self.prefix.bin, "engine" + extension),
