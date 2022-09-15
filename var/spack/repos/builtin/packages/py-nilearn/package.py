@@ -11,7 +11,10 @@ class PyNilearn(PythonPackage):
 
     homepage = "https://nilearn.github.io/"
     pypi = "nilearn/nilearn-0.7.1.tar.gz"
+    git = "https://github.com/nilearn/nilearn"
 
+    version("0.9.2", sha256="8da8d3835d92cd7b8a6cc92455a489d7e7f5994cf64fc71bce653e362773b9e4")
+    version("0.9.0", sha256="f9c8e30adef51489910aec7724b5699de178427d3ae63873dad9b23dd321fe76")
     version("0.8.1", sha256="a0489940855130f35bbc4cac0750479a6f82025215ea7b1d778faca064219298")
     version("0.8.0", sha256="f2d3dc81005f829f3a183efa6c90d698ea6818c06264d2e3f03e805c4340febb")
     version("0.7.1", sha256="8b1409a5e1f0f6d1a1f02555c2f11115a2364f45f1e57bcb5fb3c9ea11f346fa")
@@ -53,29 +56,10 @@ class PyNilearn(PythonPackage):
     depends_on("py-matplotlib@1.1.1:3.3", when="@:0.6 +plotting", type=("build", "run"))
 
     @property
-    def import_modules(self):
-        modules = [
-            "nilearn",
-            "nilearn.connectome",
-            "nilearn.datasets",
-            "nilearn.decoding",
-            "nilearn.decomposition",
-            "nilearn.image",
-            "nilearn.input_data",
-            "nilearn.masking",
-            "nilearn.mass_univariate",
-            "nilearn.regions",
-            "nilearn.signal",
-            "nilearn.surface",
-        ]
+    def skip_modules(self):
+        modules = []
 
-        if self.spec.satisfies("@0.6:"):
-            modules.append("nilearn.externals")
-
-        if self.spec.satisfies("@0.7:"):
-            modules.append("nilearn.glm")
-
-        if "+plotting" in self.spec:
+        if self.spec.satisfies("~plotting"):
             modules.append("nilearn.plotting")
             if self.spec.satisfies("@0.7:"):
                 modules.append("nilearn.reporting")
