@@ -3,27 +3,27 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class EmcGfsWafsEnv(BundlePackage):
     """Development environment for EMC GFS WAFS"""
 
     homepage = "https://github.com/NOAA-EMC/EMC_gfs_wafs"
-    git      = "https://github.com/NOAA-EMC/EMC_gfs_wafs.git"
+    git = "https://github.com/NOAA-EMC/EMC_gfs_wafs.git"
 
-    maintainers = ['kgerheiser']
+    maintainers = ["kgerheiser"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('netcdf-fortran')
-    depends_on('netcdf-c')
-    depends_on('bacio')
-    depends_on('w3emc')
-    depends_on('w3nco')
-    depends_on('sp')
-    depends_on('ip')
-    depends_on('g2')
-    depends_on('bufr')
+    depends_on("netcdf-fortran")
+    depends_on("netcdf-c")
+    depends_on("bacio")
+    depends_on("w3emc")
+    depends_on("w3nco")
+    depends_on("sp")
+    depends_on("ip")
+    depends_on("g2")
+    depends_on("bufr")
 
     # There is no need for install() since there is no code.

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class UfsSrwAppEnv(BundlePackage):
@@ -15,32 +15,32 @@ class UfsSrwAppEnv(BundlePackage):
     git = "https://github.com/ufs-community/ufs-srweather-app.git"
     # There is no URL since there is no code to download.
 
-    maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ["kgerheiser", "Hang-Lei-NOAA"]
 
-    variant('python', default=True, description='Build Python dependencies')
+    variant("python", default=True, description="Build Python dependencies")
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('ufs-pyenv', when='+python')
-    depends_on('netcdf-fortran')
-    depends_on('parallelio')
-    depends_on('esmf')
-    depends_on('fms')
-    depends_on('bacio')
-    depends_on('crtm')
-    depends_on('g2')
-    depends_on('g2tmpl')
-    depends_on('ip')
-    depends_on('sp')
-    depends_on('w3nco')
-    depends_on('upp')
-    depends_on('gfsio')
-    depends_on('landsfcutil')
-    depends_on('nemsio')
-    depends_on('nemsiogfs')
-    depends_on('sfcio')
-    depends_on('sigio')
-    depends_on('w3emc')
-    depends_on('wgrib2')
+    depends_on("ufs-pyenv", when="+python")
+    depends_on("netcdf-fortran")
+    depends_on("parallelio")
+    depends_on("esmf")
+    depends_on("fms@2022.01")
+    depends_on("bacio")
+    depends_on("crtm@2.4.0")
+    depends_on("g2")
+    depends_on("g2tmpl")
+    depends_on("ip")
+    depends_on("sp")
+    depends_on("w3nco")
+    depends_on("upp")
+    depends_on("gfsio")
+    depends_on("landsfcutil")
+    depends_on("nemsio")
+    depends_on("nemsiogfs")
+    depends_on("sfcio")
+    depends_on("sigio")
+    depends_on("w3emc")
+    depends_on("wgrib2")
 
     # There is no need for install() since there is no code.

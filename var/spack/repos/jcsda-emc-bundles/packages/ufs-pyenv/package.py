@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class UfsPyenv(BundlePackage):
@@ -14,19 +14,19 @@ class UfsPyenv(BundlePackage):
     homepage = ""
     # There is no URL since there is no code to download.
 
-    maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ["kgerheiser", "Hang-Lei-NOAA"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('py-cython')
-    depends_on('py-cftime')
-    depends_on('py-h5py')
-    depends_on('py-numpy')
-    depends_on('py-pandas')
-    depends_on('py-python-dateutil')
-    depends_on('py-netcdf4')
-    depends_on('py-jinja2')
-    depends_on('py-pyyaml')
-    depends_on('py-f90nml')
+    depends_on("py-cython")
+    depends_on("py-cftime")
+    depends_on("py-h5py")
+    depends_on("py-numpy")
+    depends_on("py-pandas")
+    depends_on("py-python-dateutil")
+    depends_on("py-netcdf4")
+    depends_on("py-jinja2")
+    depends_on("py-pyyaml")
+    depends_on("py-f90nml")
 
     # There is no need for install() since there is no code.
