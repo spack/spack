@@ -614,11 +614,11 @@ def generate_gitlab_ci_yaml(
     cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
     build_group = cdash_handler.build_group if cdash_handler else None
 
-    prune_untouched_packages = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    if prune_untouched_packages:
+    prune_untouched_packages = False
+    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
+    if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
         # Requested to prune untouched packages, but assume we won't do that
         # unless we're actually in a git repo.
-        prune_untouched_packages = False
         rev1, rev2 = get_change_revisions()
         tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
         if rev1 and rev2:
