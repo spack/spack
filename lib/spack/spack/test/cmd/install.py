@@ -1133,9 +1133,9 @@ def test_install_use_buildcache(
             "--no-check-signature", "--use-buildcache", opt, package_name, fail_on_error=True
         )
 
-        parsed = spack.cmd.install.parse_use_buildcache(opt)
-        validate(parsed["dependencies"], out, dependency_name)
-        validate(parsed["package"], out, package_name)
+        pkg_opt, dep_opt = spack.cmd.install.parse_use_buildcache(opt)
+        validate(dep_opt, out, dependency_name)
+        validate(pkg_opt, out, package_name)
 
         # Clean up installed packages
         uninstall("-y", "-a")
