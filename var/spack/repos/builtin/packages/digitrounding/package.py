@@ -15,7 +15,7 @@ class Digitrounding(CMakePackage):
     maintainers = ["robertu94"]
 
     version("master", branch="master")
-    version("2020-27-20", commit="7b18679aded7a85e6f221f7f5cd4f080f322bc33")
+    version("2020-02-27", commit="7b18679aded7a85e6f221f7f5cd4f080f322bc33")
 
     depends_on("zlib")
 

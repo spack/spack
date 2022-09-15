@@ -34,8 +34,8 @@ class LibpressioTools(CMakePackage):
     version("0.0.15", sha256="bcdf865d77969a34e2d747034ceeccf5cb766a4c11bcc856630d837f442ee33e")
 
     depends_on("mpi", when="+mpi")
-    depends_on("libpressio+hdf5+libdistributed+mpi", when="+mpi")
-    depends_on("libpressio+hdf5", when="~mpi")
+    depends_on("libpressio+hdf5")
+    depends_on("libpressio+libdistributed+mpi", when="+mpi")
 
     depends_on("boost")
 
@@ -52,7 +52,6 @@ class LibpressioTools(CMakePackage):
     depends_on("libpressio-tthresh", when="+tthresh")
     depends_on("libpressio-rmetric", when="+rcpp")
     depends_on("libpressio-adios2", when="+adios2")
-    depends_on("libpressio-frsz", when="+frsz")
     depends_on("libpressio-sperr", when="+sperr")
 
     variant("opt", default=False, description="support the libpressio-opt package")
@@ -63,7 +62,6 @@ class LibpressioTools(CMakePackage):
     variant("rcpp", default=False, description="depend on the GPL licensed libpressio-rmetric")
     variant("mpi", default=False, description="depend on MPI for distributed parallelism")
     variant("adios2", default=False, description="depend on ADIOS2 for IO modules")
-    variant("frsz", default=False, description="depend on frsz", when="@0.1.1:")
     variant("sperr", default=False, description="depend on sperr", when="@0.1.2:")
     conflicts("+opt", "~mpi")
 
@@ -79,8 +77,6 @@ class LibpressioTools(CMakePackage):
             args.append("-DLIBPRESSIO_TOOLS_HAS_TTHRESH=YES")
         if "+rcpp" in self.spec:
             args.append("-DLIBPRESSIO_TOOLS_HAS_RMETRIC=YES")
-        if "+frsz" in self.spec:
-            args.append("-DLIBPRESSIO_TOOLS_HAS_FRSZ=YES")
         if "+sperr" in self.spec:
             args.append("-DLIBPRESSIO_TOOLS_HAS_SPERR=YES")
         if self.run_tests:

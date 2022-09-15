@@ -12,7 +12,6 @@ class RLibpressio(RPackage):
     homepage = "https://github.com/robertu94/libpressio-r"
     url = "https://github.com/robertu94/libpressio-r/archive/0.0.1.tar.gz"
 
-    # notify when the package is updated.
     maintainers = ["robertu94"]
 
     version("1.5.0", sha256="6b0e095610f190aad5dded0dbc6c0783893d4d5e773afc80328fc8c5befeff58")
@@ -30,6 +29,6 @@ class RLibpressio(RPackage):
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r-rcpp", type=("build", "link", "run"))
     depends_on("libpressio+json", type=("build", "link", "run"))
-    depends_on("libpressio@0.65.0:+json", type=("build", "link", "run"), when="@1.2:")
+    depends_on("libpressio@0.65.0:", type=("build", "link", "run"), when="@1.2:")
     depends_on("pkgconfig", type=("build"))
     depends_on("libpressio-tools@0.1.4:", type=("build", "link", "run"), when="+third_party")

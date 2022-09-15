@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class LibpressioErrorinjector(CMakePackage):
-    """LibPressioErrorInjector injects errors in to data for sensitivity studies"""
+    """LibPressioErrorInjector injects errors into data for sensitivity studies"""
 
     homepage = "https://github.com/robertu94/libpressio-errorinjector"
     git = "git@github.com:robertu94/libpressio-errorinjector.git"

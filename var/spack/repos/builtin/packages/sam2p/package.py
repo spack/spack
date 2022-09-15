@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class Sam2p(Package):
-    """A raster to PostScript/PDF image conversn program"""
+    """A raster to PostScript/PDF image conversion program"""
 
     homepage = "https://github.com/pts/sam2p"
     url = "https://github.com/pts/sam2p/archive/v0.49.4.tar.gz"

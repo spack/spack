@@ -16,7 +16,7 @@ class Mgard(CMakePackage, CudaPackage):
 
     version("master", branch="master")
     version("robertu94", git="https://github.com/robertu94/MGARD", branch="master", prefered=True)
-    version("2020-10-01", commit="b67a0ac")
+    version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
     depends_on("zlib")
     depends_on("zstd")
