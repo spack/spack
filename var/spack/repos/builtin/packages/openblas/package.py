@@ -402,6 +402,8 @@ class Openblas(MakefilePackage):
 
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
+            
+        return make_defs
 
     @property
     def headers(self):
