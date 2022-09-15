@@ -15,7 +15,8 @@ class Octopus(Package, CudaPackage):
     theory code."""
 
     homepage = "https://octopus-code.org/"
-    url = "https://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
+    urls = ["https://gitlab.com/octopus-code/octopus/-/archive/11.3/octopus-11.3.tar.gz",
+            "https://octopus-code.org/down.php?file=11.3/octopus-11.3.tar.gz"]
     git = "https://gitlab.com/octopus-code/octopus"
 
     maintainers = ["fangohr", "RemiLacroix-IDRIS"]
