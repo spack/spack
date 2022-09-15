@@ -94,7 +94,7 @@ class PyPip(Package):
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):
-        pip = self.spec["python"].command
+        pip = dependent_spec["python"].command
         pip.add_default_arg("-m")
         pip.add_default_arg("pip")
         setattr(module, "pip", pip)
