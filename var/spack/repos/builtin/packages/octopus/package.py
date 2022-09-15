@@ -15,24 +15,62 @@ class Octopus(Package, CudaPackage):
     theory code."""
 
     homepage = "https://octopus-code.org/"
-    urls = ["https://gitlab.com/octopus-code/octopus/-/archive/11.3/octopus-11.3.tar.gz",
-            "https://octopus-code.org/down.php?file=11.3/octopus-11.3.tar.gz"]
+    urls = [
+        "https://gitlab.com/octopus-code/octopus/-/archive/11.3/octopus-11.3.tar.gz",
+        "https://octopus-code.org/down.php?file=11.3/octopus-11.3.tar.gz",
+    ]
     git = "https://gitlab.com/octopus-code/octopus"
 
     maintainers = ["fangohr", "RemiLacroix-IDRIS"]
 
-    version("11.4", sha256="73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7")
-    version("11.3", sha256="0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930")
-    version("11.1", sha256="d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da")
-    version("10.5", sha256="deb92e3491b0c6ac5736960d075b44cab466f528b69715ed44968ecfe2953ec4")
-    version("10.4", sha256="4de9dc6f5815a45e43320e4abc7ef3e501e34bc327441376ea20ca1a992bdb72")
-    version("10.3", sha256="4633490e21593b51b60a8391b8aa0ed17fa52a3a0030630de123b67a41f88b33")
-    version("10.2", sha256="393e2ba7b18af1b736ad6deb339ba0cef18c6417671da7a6f1fcc3a5d8f7586b")
-    version("10.1", sha256="b6a660a99ed593c1d491e2d11cfff9ce87f0d80d527d9ff47fd983533d45adc6")
-    version("10.0", sha256="ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23")
-    version("7.3", sha256="ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742")
-    version("6.0", sha256="4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198")
-    version("5.0.1", sha256="3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0")
+    version(
+        "11.4",
+        sha256="73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7",
+    )
+    version(
+        "11.3",
+        sha256="0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930",
+    )
+    version(
+        "11.1",
+        sha256="d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da",
+    )
+    version(
+        "10.5",
+        sha256="deb92e3491b0c6ac5736960d075b44cab466f528b69715ed44968ecfe2953ec4",
+    )
+    version(
+        "10.4",
+        sha256="4de9dc6f5815a45e43320e4abc7ef3e501e34bc327441376ea20ca1a992bdb72",
+    )
+    version(
+        "10.3",
+        sha256="4633490e21593b51b60a8391b8aa0ed17fa52a3a0030630de123b67a41f88b33",
+    )
+    version(
+        "10.2",
+        sha256="393e2ba7b18af1b736ad6deb339ba0cef18c6417671da7a6f1fcc3a5d8f7586b",
+    )
+    version(
+        "10.1",
+        sha256="b6a660a99ed593c1d491e2d11cfff9ce87f0d80d527d9ff47fd983533d45adc6",
+    )
+    version(
+        "10.0",
+        sha256="ccf62200e3f37911bfff6d127ebe74220996e9c09383a10b1420c81d931dcf23",
+    )
+    version(
+        "7.3",
+        sha256="ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742",
+    )
+    version(
+        "6.0",
+        sha256="4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198",
+    )
+    version(
+        "5.0.1",
+        sha256="3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0",
+    )
 
     version("develop", branch="develop")
 
@@ -41,7 +79,9 @@ class Octopus(Package, CudaPackage):
     variant("parmetis", default=False, description="Compile with ParMETIS")
     variant("netcdf", default=False, description="Compile with Netcdf")
     variant("arpack", default=False, description="Compile with ARPACK")
-    variant("cgal", default=False, description="Compile with CGAL library support")
+    variant(
+        "cgal", default=False, description="Compile with CGAL library support"
+    )
     variant("pfft", default=False, description="Compile with PFFT")
     # poke here refers to https://gitlab.e-cam2020.eu/esl/poke
     # variant('poke', default=False,
@@ -130,7 +170,8 @@ class Octopus(Package, CudaPackage):
             args.extend(
                 [
                     "--with-netcdf-prefix=%s" % spec["netcdf-fortran"].prefix,
-                    "--with-netcdf-include=%s" % spec["netcdf-fortran"].prefix.include,
+                    "--with-netcdf-include=%s"
+                    % spec["netcdf-fortran"].prefix.include,
                 ]
             )
         if "+arpack" in spec:
@@ -195,7 +236,11 @@ class Octopus(Package, CudaPackage):
         # let compiler know that the entire line is meaningful.
         # TODO: For the lack of better approach, assume that clang is mixed
         # with GNU fortran.
-        if spec.satisfies("%apple-clang") or spec.satisfies("%clang") or spec.satisfies("%gcc"):
+        if (
+            spec.satisfies("%apple-clang")
+            or spec.satisfies("%clang")
+            or spec.satisfies("%gcc")
+        ):
             # In case of GCC version 10, we will have errors because of
             # argument mismatching. Need to provide a flag to turn this into a
             # warning and build sucessfully
@@ -270,15 +315,20 @@ class Octopus(Package, CudaPackage):
         expected = [
             "Running octopus",
             "CalculationMode = recipe",
-            "DISCLAIMER: The authors do not " "guarantee that the implementation",
-            "recipe leads to an edible dish, " 'for it is clearly "system-dependent".',
+            "DISCLAIMER: The authors do not "
+            "guarantee that the implementation",
+            "recipe leads to an edible dish, "
+            'for it is clearly "system-dependent".',
             "Calculation ended on",
         ]
         options = []
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            copy(
+                join_path(os.path.dirname(__file__), "test", "recipe.inp"),
+                "inp",
+            )
             self.run_test(
                 exe,
                 options=options,
