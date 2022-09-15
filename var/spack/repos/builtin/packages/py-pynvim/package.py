@@ -19,4 +19,4 @@ class PyPynvim(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-greenlet", type=("build", "run"))
 
-    depends_on("py-msgpack", type=("build", "run"))
+    depends_on("py-msgpack@0.5:", type=("build", "run"))
