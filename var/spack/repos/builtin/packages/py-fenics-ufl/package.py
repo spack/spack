@@ -19,6 +19,7 @@ class PyFenicsUfl(PythonPackage):
     maintainers = ["chrisrichardson", "garth-wells"]
 
     version("main", branch="main")
+    version("2022.2.0", sha256="d6e18e06df5d7a626c3138d49a543914d68186afb6159c4d1a7cd72b2a199b02")
     version("2022.1.0", sha256="48359903d47fb397900d105fe4a60b459c50bbf9d9da78beb9accb54e4e4acaf")
     version("2021.1.0", sha256="130fdc09bb7fcd39dcd2618426912b8a25a03431d94575711068b38c666b4337")
     version("2019.1.0", sha256="46ac0df4e96327be10b9576d2b8fa8b2c4ca62d3c681d407f5718b162d3ca22d")
