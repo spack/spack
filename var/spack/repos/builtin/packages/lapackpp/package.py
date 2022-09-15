@@ -59,13 +59,23 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
 
+    conflicts("+rocm", when="+cuda", msg="LAPACK++ can only support one GPU backend at a time")
+
     def cmake_args(self):
         spec = self.spec
+
+        backend = "none"
+        if self.version >= Version("2022.07.00"):
+            if "+cuda" in spec:
+                backend = "cuda"
+            if "+rocm" in spec:
+                backend = "hip"
 
         args = [
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
             "-Dbuild_tests=%s" % self.run_tests,
             "-DLAPACK_LIBRARIES=%s" % spec["lapack"].libs.joined(";"),
+            "-Dgpu_backend=%s" % backend,
         ]
 
         if spec["blas"].name == "cray-libsci":
