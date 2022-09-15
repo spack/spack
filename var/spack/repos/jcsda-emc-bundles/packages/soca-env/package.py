@@ -3,21 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class SocaEnv(BundlePackage):
     """Development environment for soca-bundle"""
 
     homepage = "https://github.com/JCSDA/soca"
-    git      = "https://github.com/JCSDA/soca.git"
+    git = "https://github.com/JCSDA/soca.git"
 
-    maintainers = ['climbfuji', 'travissluka']
+    maintainers = ["climbfuji", "travissluka"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('base-env',      type='run')
-    depends_on('jedi-base-env', type='run')
-    depends_on('nco',           type='run')
+    depends_on("base-env", type="run")
+    depends_on("jedi-base-env", type="run")
+    depends_on("nco", type="run")
 
     # There is no need for install() since there is no code.

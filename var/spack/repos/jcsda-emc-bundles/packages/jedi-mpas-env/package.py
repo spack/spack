@@ -3,21 +3,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class JediMpasEnv(BundlePackage):
     """Development environment for mpas-bundle"""
 
     homepage = "https://github.com/JCSDA/mpas-bundle"
-    git      = "https://github.com/JCSDA/mpas-bundle.git"
+    git = "https://github.com/JCSDA/mpas-bundle.git"
 
-    maintainers = ['climbfuji', 'rhoneyager']
+    maintainers = ["climbfuji", "rhoneyager"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('base-env',          type='run')
-    depends_on('jedi-base-env',     type='run')
+    depends_on("base-env", type="run")
+    depends_on("jedi-base-env", type="run")
 
     # Anything missing?
 

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class JediUmEnv(BundlePackage):
@@ -12,16 +12,16 @@ class JediUmEnv(BundlePackage):
     # Note. Internal only, but this repo was being frozen
     # in May 2022 and won't be developed any further.
     homepage = "https://github.com/JCSDA-internal/um-bundle"
-    git      = "https://github.com/JCSDA-internal/um-bundle.git"
+    git = "https://github.com/JCSDA-internal/um-bundle.git"
 
-    maintainers = ['climbfuji', 'rhoneyager']
+    maintainers = ["climbfuji", "rhoneyager"]
 
-    version('1.0.0')
+    version("1.0.0")
 
-    depends_on('base-env',      type='run')
-    depends_on('ectrans',       type='run')
-    depends_on('fiat',          type='run')
-    depends_on('jedi-base-env', type='run')
-    depends_on('shumlib',       type='run')
+    depends_on("base-env", type="run")
+    depends_on("ectrans", type="run")
+    depends_on("fiat", type="run")
+    depends_on("jedi-base-env", type="run")
+    depends_on("shumlib", type="run")
 
     # There is no need for install() since there is no code.
