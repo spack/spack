@@ -107,7 +107,8 @@ class Openradioss(CMakePackage):
     def build_directory(self):
         return os.path.join(self.stage.source_path, self.root_cmakelists_dir, "build_dir")
 
-    # Run cmake in "starter" directory as well. This is a copy of lib/spack/spack/build_systems.py:cmake()
+    # Run cmake in "starter" directory as well.
+    # This is a copy of lib/spack/spack/build_systems.py:cmake()
     @run_before("cmake")
     def cmake_starter(self):
         """Runs ``cmake`` in the build directory"""
@@ -119,7 +120,8 @@ class Openradioss(CMakePackage):
         ):
             inspect.getmodule(self).cmake(*options)
 
-    # Run build in "starter" directory as well. This is a copy of lib/spack/spack/build_systems.py:build()
+    # Run build in "starter" directory as well.
+    # This is a copy of lib/spack/spack/build_systems.py:build()
     @run_before("build")
     def build_starter(self):
         """Make the build targets"""
