@@ -25,9 +25,9 @@ class FenicsBasix(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    depends_on("xtensor@0.23.10:", type="build", when=":0.4.2")
-    depends_on("xtl@0.7.2:", type="build", when=":0.4.2")
-    depends_on("xtensor-blas@0.19.1:", when=":0.3.0")
+    depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
+    depends_on("xtl@0.7.2:", type="build", when="@:0.4.2")
+    depends_on("xtensor-blas@0.19.1:", when="@:0.3.0")
 
     conflicts("%gcc@:10", when="@0.5.0:", msg="fenics-basix requires C++20 support")
     conflicts("%clang@:9.10", when="@0.5.0:", msg="fenics-basix requires C++20 support")
