@@ -15,6 +15,7 @@ def hip_repair_options(options, spec):
         + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
     )
 
+
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
