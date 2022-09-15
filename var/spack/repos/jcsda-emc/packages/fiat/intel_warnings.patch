@@ -20,3 +20,20 @@
 +#  ecbuild_add_c_flags("-diag-disable=279")   # controlling expression is constant
 +#  ecbuild_add_c_flags("-diag-disable=11076") # inline limits
 +#endif()
+--- a/src/fiat/CMakeLists.txt
++++ b/src/fiat/CMakeLists.txt
+@@ -26,10 +26,10 @@ endif()
+
+ ### Compilation flags
+
+-if( CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
+-  ## To disable checking of argument correctness of dummy mpi symbols
+-  ecbuild_add_fortran_flags( -nowarn nointerfaces )
+-endif()
++#if( CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
++#  ## To disable checking of argument correctness of dummy mpi symbols
++#  ecbuild_add_fortran_flags( -nowarn nointerfaces )
++#endif()
+
+ if( CMAKE_Fortran_COMPILER_ID MATCHES "GNU" )
+   ecbuild_add_fortran_flags( -ffree-line-length-none )
