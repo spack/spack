@@ -1099,10 +1099,9 @@ def test_install_use_buildcache(
     mock_packages,
     mock_fetch,
     mock_archive,
-    mutable_config,
     mock_binary_index,
     tmpdir,
-    install_mockery,
+    install_mockery_mutable_config,
 ):
     """
     Make sure installing with use-buildcache behaves correctly.
