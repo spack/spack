@@ -24,31 +24,50 @@ class Maqao(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("cmake@2.8.12:", type="build")
-    depends_on('gcc@4.8.1: languages="c,c++"', when="%gcc")
-
     # From 'profiles' subdirectory
+    supported_profiles = ("default", "release", "release.intel64-xeonphi")
+
+    # From 'src/arch.h' source file
+    supported_arches = ("ia32", "x86_64", "k1om", "arm", "arm64", "power", "thumb")
+
+    # Function to map Spack-detected system architecture to a supported MAQAO arch code
+    def detect_arch(self):
+        if spec.satisfies(target=x86):
+            return "ia32"
+        elif spec.satisfies(target=mic_knl):
+            return "k1om"
+        elif spec.satisfies(target=x86_64):
+            return "x86_64"
+        elif spec.satisfies(target=arm):
+            return "arm"
+        elif spec.satisfies(target=aarch64):
+            return "arm64"
+        elif spec.satisfies(target=ppc64le):
+            return "power"
+        else:
+            raise RuntimeError("Unsupported architecture")
+
     variant(
         "profile",
         multi=False,
         default="default",
-        values=("default", "release", "release.intel64-xeonphi"),
+        values=supported_profiles,
         description="What profile to build",
     )
 
-    # From 'src/arch.h' source file
     variant(
         "arch",
         multi=True,
-        default="x86_64",
-        values=("ia32", "x86_64", "k1om", "arm", "arm64", "power", "thumb"),
+        default=detect_arch(),
+        values=supported_arches.values,
         description="What architectures to build",
     )
 
     variant(
         "exclude_uarch",
         multi=True,
-        default="none",
+        default=None,
+        values=supported_arches.values,
         description="Microarchitectures to exclude from build",
     )
 
@@ -61,16 +80,17 @@ class Maqao(CMakePackage):
         values=("lua", "luajit"),
         description="Lua compiler to use",
     )
-    depends_on("lua", type=("build", "run"), when="lua=lua")
-    depends_on("lua-luajit", type=("build", "run"), when="lua=luajit")
 
     variant("xlsx", default=False, description="Enable .xlsx output for ONE-View")
+
+    variant("docs", default=False, description="Generate documentation")
+
+    depends_on("cmake@2.8.12:", type="build")
+    depends_on('gcc@4.8.1: languages="c,c++"', when="%gcc")
+    depends_on("lua", type=("build", "run"), when="lua=lua")
+    depends_on("lua-luajit", type=("build", "run"), when="lua=luajit")
     depends_on("zip", type=("build", "run"), when="+xlsx")
-
-    variant("doxygen", default=False, description="Generate Doxygen documentation")
-    depends_on("doxygen", type="build", when="+doxygen")
-
-    variant("luadoc", default=False, description="Generate Luadoc documentation")
+    depends_on("doxygen", type="build", when="+docs")
 
     # Workaround for glibc-static dependency
     def find_glibc_static(self):
@@ -83,25 +103,35 @@ class Maqao(CMakePackage):
         compiler = Executable(self.compiler.cxx)
         return compiler("--print-file-name=libstdc++.a", output=str, error=str)
 
+    # Find luadoc and install it using luarocks when not found
+    def find_luadoc(self):
+        luadoc = which("luadoc")
+        if luadoc is None:
+            luarocks = self.spec["lua"].luarocks
+            if luarocks is None:
+                raise RuntimeError(
+                    "Spack cannot find both luarocks and luadoc"
+                    " on your system. Please install luarocks first,"
+                    " then install luadoc with `luarocks install luadoc`"
+                )
+            luarocks("install", "luadoc")
+            luadoc = which("luadoc")
+        return luadoc.command.path
+
     def cmake_args(self):
 
         spec = self.spec
-        platform = spec.platform
         define = self.define
         from_variant = self.define_from_variant
 
         args = []
 
-        if "profile" in spec:
-            args.append(from_variant("PROFILE", "profile"))
-
-        if "arch" in spec:
-            args.append(from_variant("ARCHS", "arch"))
-
-        if "exclude_uarch" in spec:
+        args.append(from_variant("PROFILE", "profile"))
+        args.append(from_variant("ARCHS", "arch"))
+        if spec.exclude_uarch is not None:
             args.append(from_variant("EXCLUDE_UARCHS", "exclude_uarch"))
 
-        if platform.beginswith("linux"):
+        if spec.platform.beginswith("linux"):
 
             # Workaround for glibc-static dependency
             liblist = self.find_glibc_static()
@@ -119,14 +149,10 @@ class Maqao(CMakePackage):
             zip_bin = which("zip")
             args.append(define("ZIP_BIN", zip_bin))
 
-        if "+doxygen" in spec:
-            doxygen_bin = which("doxygen")
-            args.append(define("DOXYGEN_BIN", doxygen_bin))
-
-        if "+luadoc" in spec:
-            luarocks = Executable(which("luarocks"))
-            luarocks("install luadoc")
-            luadoc_bin = which("luadoc")
-            args.append(define("LUADOC_BIN", luadoc_bin))
+        if "+docs" in spec:
+            doxygen = spec["doxygen"].command.path
+            luadoc = self.find_luadoc()
+            args.append(define("DOXYGEN_BIN", doxygen))
+            args.append(define("LUADOC_BIN", luadoc))
 
         return args
