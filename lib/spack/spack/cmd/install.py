@@ -170,14 +170,12 @@ the dependencies""",
         "--use-buildcache",
         dest="use_buildcache",
         default="package:auto,dependencies:auto",
+        metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
         help="""select the mode of buildcache for the 'package' and 'dependencies'.
-Available modes are 'auto', 'only', and 'never'.
-'auto' will utilize the default behavior, similar to --use-cache
-'only' will enable --cache-only,
-'never' will enable --no-cache
-
-ex.
---use-buildcache package:only,dependencies:never
+Default: package:auto,dependencies:auto
+- `auto` behaves like --use-cache
+- `only` behaves like --cache-only
+- `never` behaves like --no-cache
 """,
     )
 
