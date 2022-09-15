@@ -10,9 +10,10 @@ from spack.package import *
 
 def hip_repair_options(options, spec):
     # there is only one dir like this, but the version component is unknown
-    path = glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
-    options.append(cmake_cache_path("HIP_CLANG_INCLUDE_PATH", path))
-
+    options.append(
+        "-DHIP_CLANG_INCLUDE_PATH="
+        + glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0]
+    )
 
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
