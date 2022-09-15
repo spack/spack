@@ -17,5 +17,6 @@ class PyPynvim(PythonPackage):
     version("0.4.3", sha256="3a795378bde5e8092fbeb3a1a99be9c613d2685542f1db0e5c6fd467eed56dff")
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-greenlet", type=("build", "run"))
 
-    depends_on("py-msgpack", type=("build", "run"))
+    depends_on("py-msgpack@0.5:", type=("build", "run"))
