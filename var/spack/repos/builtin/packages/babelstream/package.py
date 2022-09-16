@@ -145,9 +145,9 @@ class Babelstream(CMakePackage):
 
         if "acc" in model:
             for flag in [
-                "-DCMAKE_CXX_COMPILER=" + self.compiler.cxx
-                "-DTARGET_DEVICE=gpu"
-                "-DOpenACC_CXX_FLAGS= "
+                "-DCMAKE_CXX_COMPILER=" + self.compiler.cxx,
+                "-DTARGET_DEVICE=gpu",
+                "-DOpenACC_CXX_FLAGS= ",
             ]:
                 args.append(flag)
 
