@@ -1445,6 +1445,9 @@ class SpackSolverSetup(object):
 
         # dependencies
         if spec.concrete:
+            # older specs do not have package hashes, so we have to do this carefully
+            if getattr(spec, "_package_hash", None):
+                clauses.append(fn.package_hash(spec.name, spec._package_hash))
             clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies

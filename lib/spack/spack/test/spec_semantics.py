@@ -1257,3 +1257,25 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 def test_unsupported_compiler():
     with pytest.raises(UnsupportedCompilerError):
         Spec("gcc%fake-compiler").validate_or_raise()
+
+
+def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
+    a1 = Spec("a").concretized()
+    a2 = Spec("a").concretized()
+
+    assert hash(a1) == hash(a2)
+    assert a1.dag_hash() == a2.dag_hash()
+    assert a1.process_hash() == a2.process_hash()
+
+    a1.clear_cached_hashes()
+    a2.clear_cached_hashes()
+
+    # tweak the dag hash of one of these specs
+    new_hash = "00000000000000000000000000000000"
+    if new_hash == a1._package_hash:
+        new_hash = "11111111111111111111111111111111"
+    a1._package_hash = new_hash
+
+    assert hash(a1) != hash(a2)
+    assert a1.dag_hash() != a2.dag_hash()
+    assert a1.process_hash() != a2.process_hash()
