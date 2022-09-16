@@ -130,10 +130,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         """
         super(IntelOneapiCompilers, self).setup_run_environment(env)
 
-        env.set("CC", self.component_prefix.bin.icx)
-        env.set("CXX", self.component_prefix.bin.icpx)
-        env.set("F77", self.component_prefix.bin.ifx)
-        env.set("FC", self.component_prefix.bin.ifx)
+        env.set("CC", self.component_prefix.linux.bin.icx)
+        env.set("CXX", self.component_prefix.linux.bin.icpx)
+        env.set("F77", self.component_prefix.linux.bin.ifx)
+        env.set("FC", self.component_prefix.linux.bin.ifx)
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
