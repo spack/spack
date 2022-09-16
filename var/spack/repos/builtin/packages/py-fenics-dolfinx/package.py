@@ -17,6 +17,7 @@ class PyFenicsDolfinx(PythonPackage):
 
     version("main", branch="main")
     version("0.5.1", sha256="a570e3f6ed8e7c570e7e61d0e6fd44fa9dad2c5f8f1f48a6dc9ad22bacfbc973")
+    version("0.5.0", sha256="503c70c01a44d1ffe48e052ca987693a49f8d201877652cabbe2a44eb3b7c040")
     version("0.4.1", sha256="68dcf29a26c750fcea5e02d8d58411e3b054313c3bf6fcbc1d0f08dd2851117f")
     version("0.3.0", sha256="4857d0fcb44a4e9bf9eb298ba5377abdee17a7ad0327448bdd06cce73d109bed", deprecated=True)
     version("0.2.0", sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4", deprecated=True)
@@ -30,27 +31,29 @@ class PyFenicsDolfinx(PythonPackage):
 
     depends_on("fenics-dolfinx@main", when="@main")
     depends_on("fenics-dolfinx@0.5.1", when="@0.5.1")
+    depends_on("fenics-dolfinx@0.5.0", when="@0.5.0")
     depends_on("fenics-dolfinx@0.4.1", when="@0.4.1")
     depends_on("fenics-dolfinx@0.3.0", when="@0.3.0")
     depends_on("fenics-dolfinx@0.2.0", when="@0.2.0")
     depends_on("fenics-dolfinx@0.1.0", when="@0.1.0")
 
     depends_on("fenics-basix@main", type=("build", "link"), when="@main")
-    depends_on("fenics-basix@0.5.1", type=("build", "link"), when="@0.5.1")
+    depends_on("fenics-basix@0.5.1:0.5", type=("build", "link"), when="@0.5.1:0.5")
     depends_on("fenics-basix@0.4.2", type=("build", "link"), when="@0.4.1")
     depends_on("fenics-basix@0.3.0", type=("build", "link"), when="@0.3.0")
     depends_on("fenics-basix@0.2.0", type=("build", "link"), when="@0.2.0")
     depends_on("fenics-basix@0.1.0", type=("build", "link"), when="@0.1.0")
 
     depends_on("py-fenics-ffcx@main", type="run", when="@main")
-    depends_on("py-fenics-ffcx@0.5.0.post0", type="run", when="@0.5.0.post0")
+    depends_on("py-fenics-ffcx@0.5.0.post0", type="run", when="@0.5.1:0.5")
     depends_on("py-fenics-ffcx@0.4.2", type="run", when="@0.4.1")
     depends_on("py-fenics-ffcx@0.3.0", type="run", when="@0.3.0")
     depends_on("py-fenics-ffcx@0.2.0", type="run", when="@0.2.0")
     depends_on("py-fenics-ffcx@0.1.0", type="run", when="@0.1.0")
 
     depends_on("py-fenics-ufl@main", type="run", when="@main")
-    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.1")
+    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.1:0.5")
+    depends_on("py-fenics-ufl@2022.2.0", type="run", when="@0.5.0")
     depends_on("py-fenics-ufl@2022.1.0", type="run", when="@0.4.1")
     depends_on("py-fenics-ufl@2021.1.0", type="run", when="@0.1:0.3.99")
 

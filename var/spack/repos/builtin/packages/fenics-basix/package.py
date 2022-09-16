@@ -29,8 +29,14 @@ class FenicsBasix(CMakePackage):
     depends_on("xtl@0.7.2:", type="build", when="@:0.4.2")
     depends_on("xtensor-blas@0.19.1:", when="@:0.3.0")
 
-    conflicts("%gcc@:10", when="@0.5.0:", msg="fenics-basix requires C++20 support")
-    conflicts("%clang@:9.10", when="@0.5.0:", msg="fenics-basix requires C++20 support")
+    conflicts(
+        "%gcc@:9.10", when="@0.5.0:", msg="fenics-basix requires GCC-10 or newer for C++20 support"
+    )
+    conflicts(
+        "%clang@:9.10",
+        when="@0.5.0:",
+        msg="fenics-basix requires Clang-10 or newer for C++20 support",
+    )
 
     @property
     def root_cmakelists_dir(self):
