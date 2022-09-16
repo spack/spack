@@ -44,7 +44,7 @@ class PyPytest(PythonPackage):
     depends_on("py-setuptools@40.0:", when="@3.9.2:6.1", type=("build", "run"))
     depends_on("py-setuptools@30.3:", when="@3.9.0:3.9.1", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.2.4: +toml", when="@7:", type="build")
+    depends_on("py-setuptools-scm@6.2.3: +toml", when="@7:", type="build")
     depends_on("py-setuptools-scm@3.4: +toml", when="@6.2:", type="build")
     depends_on("py-setuptools-scm", when="@3.1:", type="build")
 
