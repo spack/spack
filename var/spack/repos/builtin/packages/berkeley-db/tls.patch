@@ -1,0 +1,24 @@
+--- a/dist/aclocal/tls.m4
++++ b/dist/aclocal/tls.m4
+@@ -15,7 +15,8 @@
+       for ax_tls_defn_keyword in $ax_tls_keywords ""; do
+           test -z "$ax_tls_decl_keyword" &&
+               test -z "$ax_tls_defn_keyword" && continue
+-          AC_TRY_COMPILE([template <typename T>class TLSClass {
++          AC_TRY_COMPILE([#include <stdlib.h>
++              template <typename T>class TLSClass {
+               public: static ] $ax_tls_decl_keyword [ T *tlsvar;
+               };
+               class TLSClass2 {
+--- a/dist/configure
++++ b/dist/configure
+@@ -19044,7 +19044,8 @@
+               test -z "$ax_tls_defn_keyword" && continue
+           cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+-template <typename T>class TLSClass {
++#include <stdlib.h>
++              template <typename T>class TLSClass {
+               public: static  $ax_tls_decl_keyword  T *tlsvar;
+               };
+               class TLSClass2 {

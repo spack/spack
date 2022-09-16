@@ -1543,7 +1543,19 @@ def for_package_version(pkg, version):
             ref_type: version.ref,
             "no_cache": True,
         }
+
         kwargs["submodules"] = getattr(pkg, "submodules", False)
+
+        # if we have a ref_version already, and it is a version from the package
+        # we can use that version's submodule specifications
+        if pkg.version.ref_version:
+            ref_version = spack.version.Version(pkg.version.ref_version[0])
+            ref_version_attributes = pkg.versions.get(ref_version)
+            if ref_version_attributes:
+                kwargs["submodules"] = ref_version_attributes.get(
+                    "submodules", kwargs["submodules"]
+                )
+
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
