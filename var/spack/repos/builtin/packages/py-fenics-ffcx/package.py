@@ -15,11 +15,25 @@ class PyFenicsFfcx(PythonPackage):
     maintainers = ["chrisrichardson", "garth-wells", "jhale"]
 
     version("main", branch="main")
-    version("0.5.0.post0", sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882")
+    version(
+        "0.5.0.post0", sha256="039908c9998b51ba53e5deb3a97016062c262f0a4285218644304f7d3cd35882"
+    )
     version("0.4.2", sha256="3be6eef064d6ef907245db5b6cc15d4e603762e68b76e53e099935ca91ef1ee4")
-    version("0.3.0", sha256="33fa1a0cc5762f360033c25a99ec9462be933f8ba413279e35cd2c3b5c3e6096", deprecated=True)
-    version("0.2.0", sha256="562a704163a6427e0341d267e69b8bf55d8f53d673829170b443191577e8d9b6", deprecated=True)
-    version("0.1.0", sha256="98a47906146ac892fb4a358e04cbfd04066f12d0a4cdb505a6b08ff0b1a17e89", deprecated=True)
+    version(
+        "0.3.0",
+        sha256="33fa1a0cc5762f360033c25a99ec9462be933f8ba413279e35cd2c3b5c3e6096",
+        deprecated=True,
+    )
+    version(
+        "0.2.0",
+        sha256="562a704163a6427e0341d267e69b8bf55d8f53d673829170b443191577e8d9b6",
+        deprecated=True,
+    )
+    version(
+        "0.1.0",
+        sha256="98a47906146ac892fb4a358e04cbfd04066f12d0a4cdb505a6b08ff0b1a17e89",
+        deprecated=True,
+    )
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools@58:", type="build", when="@0.4:")
