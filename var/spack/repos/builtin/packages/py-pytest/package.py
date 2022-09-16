@@ -75,7 +75,7 @@ class PyPytest(PythonPackage):
     # Historic dependencies
     depends_on("py-atomicwrites@1.0:", when="@5.3:7.1.2 platform=windows", type=("build", "run"))
     depends_on("py-atomicwrites@1.0:", when="@3.6:5.2", type=("build", "run"))
-    depends_on("py-toml", when="@6.0:6", type=("build", "run"))
+    depends_on("py-toml", when="@6", type=("build", "run"))
     depends_on("py-six@1.10.0:", when="@3.3:4", type=("build", "run"))
     depends_on("py-more-itertools@4.0.0:", when="@3.5.1:5", type=("build", "run"))
     depends_on(
