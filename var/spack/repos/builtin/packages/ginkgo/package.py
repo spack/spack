@@ -171,7 +171,11 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     def _build_test(self):
         cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-        cmake_args = [self._cached_tests_src_dir]
+        cmake_args = [
+            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
+            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+            self._cached_tests_src_dir,
+        ]
 
         # Fix: For HIP tests, add the ARCH compilation flags when not present
         if "+rocm" in self.spec:
