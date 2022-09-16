@@ -3,7 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import re
+import platform
+import spack.platforms
 
+import llnl.util.filesystem as filesystem
 from spack.package import *
 
 
@@ -97,6 +101,19 @@ class Pmix(AutotoolsPackage):
         perl = which("perl")
         perl("./autogen.pl")
 
+    def find_external_lib_path(self, lib_name, pkg_name, path_match_str=""):
+        spec = self.spec
+        tgt_libpath = ""
+        dir_list = filesystem.find_libraries(lib_name, spec[pkg_name].external_path, True, True)
+        for entry in dir_list:
+            if lib_name in entry:
+                if path_match_str=="" or (path_match_str!="" and path_match_str in entry):
+                    tgt_libpath = entry
+                    break
+        path_list = tgt_libpath.split('/')
+        del path_list[-1]
+        return '/'.join(path_list)
+
     def configure_args(self):
         spec = self.spec
 
@@ -104,6 +121,17 @@ class Pmix(AutotoolsPackage):
 
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
+        host_platform = spack.platforms.host()
+        host_os = host_platform.operating_system("default_os")
+
+        if platform.machine()=="x86_64" and  \
+                re.search('ubuntu', str(host_os), re.IGNORECASE):
+            if spec["libevent"].external_path:
+                dep_libpath = self.find_external_lib_path("libevent","libevent","64")
+                config_args.append("--with-libevent-libdir=" + dep_libpath)
+            if spec["hwloc"].external_path:
+                dep_libpath = self.find_external_lib_path("libhwloc","hwloc","64")
+                config_args.append("--with-hwloc-libdir=" + dep_libpath)
 
         config_args.extend(self.enable_or_disable("python-bindings", variant="python"))
 
