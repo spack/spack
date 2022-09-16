@@ -21,7 +21,7 @@ class Openradioss(CMakePackage):
     homepage = "https://www.openradioss.org/"
     url = "https://github.com/OpenRadioss/OpenRadioss/archive/refs/tags/latest-20220914.tar.gz"
 
-    version("20220914", sha256="8e160707dacd729c72ebeb7c6ef4daa10d71859c444f00810c4896dc2f6edd0a")
+    version("20220914", sha256="7764c3bbaaee63d78938ea632cde2b90fa56c9ad954aca184b392ae2b76dae16")
 
     variant(
         "arch",
