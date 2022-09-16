@@ -55,9 +55,9 @@ class PyDatalad(PythonPackage):
     depends_on("py-patool@1.7:", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-annexremote", type=("build", "run"))
+    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
     depends_on("py-appdirs", when="@:0.15", type=("build", "run"))
     depends_on("py-wrapt", when="@:0.15", type=("build", "run"))
-    # additional dependency on 'colorama' if platform_system=="Windows"'
 
     # downloaders
     depends_on("py-boto", type=("build", "run"))
