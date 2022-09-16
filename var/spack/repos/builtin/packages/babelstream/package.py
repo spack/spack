@@ -9,7 +9,8 @@ from spack.package import *
 
 
 class Babelstream(CMakePackage):
-    """Measure memory transfer rates to/from global device memory on GPUs. This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
+    """Measure memory transfer rates to/from global device memory on GPUs.
+    This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
 
     homepage = "https://github.com/UoB-HPC/BabelStream"
     git = "https://github.com/UoB-HPC/BabelStream.git"
