@@ -28,13 +28,22 @@ class PyNilearn(PythonPackage):
 
     variant("plotting", default=False, description="Enable plotting functionalities")
 
+    depends_on("py-joblib@0.15:", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-joblib@0.12:", when="@0.7:", type=("build", "run"))
+    depends_on("py-joblib@0.11:", when="@0.6:", type=("build", "run"))
+    depends_on("py-lxml", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-nibabel@3:", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-nibabel@2.5:", when="@0.8:", type=("build", "run"))
+    depends_on("py-nibabel@2.0.2:", type=("build", "run"))
+    depends_on("py-numpy@1.18:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-numpy@1.16:", when="@0.8:", type=("build", "run"))
     depends_on("py-numpy@1.11:", when="@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.6.1:", type=("build", "run"))
-    depends_on("py-scipy@1.2:", when="@0.8:", type=("build", "run"))
-    depends_on("py-scipy@0.19:", when="@0.6:", type=("build", "run"))
-    depends_on("py-scipy@0.17:", when="@0.5:", type=("build", "run"))
-    depends_on("py-scipy@0.14:", type=("build", "run"))
+    depends_on("py-pandas@1:", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-pandas@0.24.0:", when="@0.8:", type=("build", "run"))
+    depends_on("py-pandas@0.18.0:", when="@0.7:", type=("build", "run"))
+    depends_on("py-requests@2:", when="@0.7:", type=("build", "run"))
+    depends_on("py-scikit-learn@0.22:", when="@0.9.1:", type=("build", "run"))
     depends_on("py-scikit-learn@0.21:", when="@0.8:", type=("build", "run"))
     depends_on("py-scikit-learn@0.19:", when="@0.7:", type=("build", "run"))
     # sklearn.linear_model.base was deprecated in py-scikit.learn@0.24
@@ -42,18 +51,18 @@ class PyNilearn(PythonPackage):
     # older py-nilearn versions use import sklearn.external.joblib which was
     # deprecated in py-scikit-learn@0.23:
     depends_on("py-scikit-learn@0.15:0.22", when="@:0.5", type=("build", "run"))
-    depends_on("py-joblib@0.12:", when="@0.7:", type=("build", "run"))
-    depends_on("py-joblib@0.11:", when="@0.6:", type=("build", "run"))
-    depends_on("py-nibabel@2.5:", when="@0.8:", type=("build", "run"))
-    depends_on("py-nibabel@2.0.2:", type=("build", "run"))
-    depends_on("py-pandas@0.24.0:", when="@0.8:", type=("build", "run"))
-    depends_on("py-pandas@0.18.0:", when="@0.7:", type=("build", "run"))
-    depends_on("py-requests@2:", when="@0.7:", type=("build", "run"))
+    depends_on("py-scipy@1.5:", when="@0.9.1:", type=("build", "run"))
+    depends_on("py-scipy@1.2:", when="@0.8:", type=("build", "run"))
+    depends_on("py-scipy@0.19:", when="@0.6:", type=("build", "run"))
+    depends_on("py-scipy@0.17:", when="@0.5:", type=("build", "run"))
+    depends_on("py-scipy@0.14:", type=("build", "run"))
 
-    depends_on("py-matplotlib@2.0:", when="@0.6: +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@3:", when="@0.9.1: +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@2:", when="@0.6: +plotting", type=("build", "run"))
     # older py-nilearn versions use matplotlib.cm.revcmap which was deprecated
     # in py-matplotlib@3.4:
-    depends_on("py-matplotlib@1.1.1:3.3", when="@:0.6 +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@1.5.1:3.3", when="@:0.5 +plotting", type=("build", "run"))
+    depends_on("py-matplotlib@1.1.1:3.3", when="0.4.2 +plotting", type=("build", "run"))
 
     @property
     def skip_modules(self):
