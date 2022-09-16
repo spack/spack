@@ -105,7 +105,7 @@ class Openradioss(CMakePackage):
 
     @property
     def build_directory(self):
-        return os.path.join(self.stage.source_path, self.root_cmakelists_dir, "build_dir")
+        return join_path(self.stage.source_path, self.root_cmakelists_dir, "build_dir")
 
     # Run cmake in "starter" directory as well.
     # This is a copy of lib/spack/spack/build_systems.py:cmake()
@@ -115,9 +115,7 @@ class Openradioss(CMakePackage):
         options = self.std_cmake_args
         options += self.cmake_args()
         options.append(os.path.abspath("starter"))
-        with working_dir(
-            os.path.join(self.stage.source_path, "starter", "build_dir"), create=True
-        ):
+        with working_dir(join_path(self.stage.source_path, "starter", "build_dir"), create=True):
             inspect.getmodule(self).cmake(*options)
 
     # Run build in "starter" directory as well.
@@ -125,7 +123,7 @@ class Openradioss(CMakePackage):
     @run_before("build")
     def build_starter(self):
         """Make the build targets"""
-        with working_dir(os.path.join(self.stage.source_path, "starter", "build_dir")):
+        with working_dir(join_path(self.stage.source_path, "starter", "build_dir")):
             if self.generator == "Unix Makefiles":
                 inspect.getmodule(self).make(*self.build_targets)
             elif self.generator == "Ninja":
@@ -143,34 +141,32 @@ class Openradioss(CMakePackage):
         else:
             suffix = ""
         extension = "_" + spec.variants["arch"].value + suffix + ddebug
-        os.mkdir(self.prefix.bin)
-        os.mkdir(self.prefix.lib64)
+        mkdirp(self.prefix.bin)
+        mkdirp(self.prefix.lib64)
 
         move(
-            os.path.join(self.stage.source_path, "starter", "build_dir", "starter" + extension),
-            os.path.join(self.prefix.bin, "starter" + extension),
+            join_path(self.stage.source_path, "starter", "build_dir", "starter" + extension),
+            join_path(self.prefix.bin, "starter" + extension),
         )
         if "+mpi" in spec:
             extension = "_" + spec.variants["arch"].value + "_ompi" + suffix + ddebug
         move(
-            os.path.join(self.build_directory, "engine" + extension),
-            os.path.join(self.prefix.bin, "engine" + extension),
+            join_path(self.build_directory, "engine" + extension),
+            join_path(self.prefix.bin, "engine" + extension),
         )
         move(
-            os.path.join(
-                self.stage.source_path, "extlib/hm_reader/linux64/libhm_reader_linux64.so"
-            ),
-            os.path.join(self.prefix.lib64, "libhm_reader_linux64.so"),
+            join_path(self.stage.source_path, "extlib/hm_reader/linux64/libhm_reader_linux64.so"),
+            join_path(self.prefix.lib64, "libhm_reader_linux64.so"),
         )
         move(
-            os.path.join(self.stage.source_path, "extlib/h3d/lib/linux64/libh3dwriter.so"),
-            os.path.join(self.prefix.lib64, "libh3dwriter.so"),
+            join_path(self.stage.source_path, "extlib/h3d/lib/linux64/libh3dwriter.so"),
+            join_path(self.prefix.lib64, "libh3dwriter.so"),
         )
         move(
-            os.path.join(self.stage.source_path, "hm_cfg_files"),
-            os.path.join(self.prefix, "hm_cfg_files"),
+            join_path(self.stage.source_path, "hm_cfg_files"),
+            join_path(self.prefix, "hm_cfg_files"),
         )
 
     def setup_run_environment(self, env):
-        env.set("RAD_CFG_PATH", os.path.join(self.prefix, "hm_cfg_files"))
+        env.set("RAD_CFG_PATH", join_path(self.prefix, "hm_cfg_files"))
         env.set("OMP_STACKSIZE", "400m")
