@@ -26,7 +26,8 @@ import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
 import llnl.util.lang
-from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+import llnl.util.tty as tty
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -47,8 +48,9 @@ import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
+from spack.util.web import FetchError
 
 is_windows = sys.platform == "win32"
 
@@ -801,7 +803,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes, _store
             with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
-        store_path.copy(store_cache, mode=True, stat=True)
+        copy_tree(str(store_path), str(store_cache))
 
     # Make the DB filesystem read-only to ensure we can't modify entries
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
@@ -842,7 +844,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
     store_path.remove(rec=1)
-    store_cache.copy(store_path, mode=True, stat=True)
+    copy_tree(str(store_cache), str(store_path))
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
 
 
@@ -1684,3 +1686,82 @@ def noncyclical_dir_structure(tmpdir):
         with open(j("file_3"), "wb"):
             pass
     yield d
+
+
+@pytest.fixture(scope="function")
+def mock_config_data():
+    config_data_dir = os.path.join(spack.paths.test_path, "data", "config")
+    return config_data_dir, os.listdir(config_data_dir)
+
+
+@pytest.fixture(scope="function")
+def mock_curl_configs(mock_config_data, monkeypatch):
+    """
+    Mock curl-based retrieval of configuration files from the web by grabbing
+    them from the test data configuration directory.
+
+    Fetches a single (configuration) file if the name matches one in the test
+    data directory.
+    """
+    config_data_dir, config_files = mock_config_data
+
+    class MockCurl(object):
+        def __init__(self):
+            self.returncode = None
+
+        def __call__(self, *args, **kwargs):
+            url = [a for a in args if a.startswith("http")][0]
+            basename = os.path.basename(url)
+            if os.path.splitext(url)[1]:
+                if basename in config_files:
+                    filename = os.path.join(config_data_dir, basename)
+
+                    with open(filename, "r") as f:
+                        lines = f.readlines()
+                        write_file(os.path.basename(filename), "".join(lines))
+
+                    self.returncode = 0
+                else:
+                    # This is a "404" and is technically only returned if -f
+                    # flag is provided to curl.
+                    tty.msg("curl: (22) The requested URL returned error: 404")
+                    self.returncode = 22
+
+    def mock_curl(*args):
+        return MockCurl()
+
+    monkeypatch.setattr(spack.util.web, "_curl", mock_curl)
+
+    yield
+
+
+@pytest.fixture(scope="function")
+def mock_spider_configs(mock_config_data, monkeypatch):
+    """
+    Mock retrieval of configuration file URLs from the web by grabbing
+    them from the test data configuration directory.
+    """
+    config_data_dir, config_files = mock_config_data
+
+    def _spider(*args, **kwargs):
+        root_urls = args[0]
+        if not root_urls:
+            return [], set()
+
+        root_urls = [root_urls] if isinstance(root_urls, str) else root_urls
+
+        # Any URL with an extension will be treated like a file; otherwise,
+        # it is considered a directory/folder and we'll grab all available
+        # files.
+        urls = []
+        for url in root_urls:
+            if os.path.splitext(url)[1]:
+                urls.append(url)
+            else:
+                urls.extend([os.path.join(url, f) for f in config_files])
+
+        return [], set(urls)
+
+    monkeypatch.setattr(spack.util.web, "spider", _spider)
+
+    yield

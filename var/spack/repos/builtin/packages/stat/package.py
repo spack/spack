@@ -21,7 +21,7 @@ class Stat(AutotoolsPackage):
         sha256="137529889ec5b5f9b9bae3a0864a385c5814e989d0074228dd3500e3e713801d",
         url="https://github.com/LLNL/STAT/releases/download/v4.2.1/stat-4.2.1.tar.gz",
     )
-    version(
+
         "4.2.0",
         sha256="d244d53585b0949e308354eb024f7a89ee3467fd2866b818e8aa6c8b5d372ced",
         url="https://github.com/LLNL/STAT/releases/download/v4.2.0/stat-4.2.0.tar.gz",
