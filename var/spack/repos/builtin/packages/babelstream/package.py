@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import os
+
+from spack.package import *
+
 
 class Babelstream(CMakePackage):
     """Measure memory transfer rates to/from global device memory on GPUs. This benchmark is similar in spirit, and based on, the STREAM benchmark for CPUs."""
@@ -19,39 +21,45 @@ class Babelstream(CMakePackage):
     version("develop", branch="develop")
     version("4.0", sha256="a9cd39277fb15d977d468435eb9b894f79f468233f0131509aa540ffda4f5953")
 
-    variant("build_type", default="Release",
+    variant(
+        "build_type", 
+        default="Release",
         description="CMake build type",
-        values=("Debug", "Release"))
+        values=("Debug", "Release")
+    )
 
     variant(
         "model", 
         values=[
-            "std-data", "std-indices","std-ranges","ocl",
-            "omp","hip","cuda","kokkos", "sycl","sycl2020",
-            "acc","raja","tbb","thrust"], 
+            "std-data", 
+            "std-indices",
+            "std-ranges",
+            "ocl",
+            "omp",
+            "hip",
+            "cuda",
+            "kokkos",
+            "sycl",
+            "sycl2020",
+            "acc",
+            "raja",
+            "tbb",
+            "thrust"
+        ], 
         default="std-data", 
         description="Specify the model to be built"
     )
 
     variant(
-        "flags",
-        values=str,
-        default=" ",
-        description="Additional CXX flags to be provided"
+        "flags", values=str, default=" ", description="Additional CXX flags to be provided"
     )
 
     variant(
-        "amd_arch",
-        values=str,
-        default="none",
-        description="Target AMD GPU device being used."
+        "amd_arch", values=str, default="none", description="Target AMD GPU device being used."
     )
 
     variant(
-        "cuda_arch",
-        values=str,
-        default="none",
-        description="The CUDA architecture being used."
+        "cuda_arch", values=str, default="none", description="The CUDA architecture being used."
     )
 
     variant("cuda", default=False, description="Enable CUDA support")
@@ -68,34 +76,35 @@ class Babelstream(CMakePackage):
     for variant in ["+cuda", "+openmp"]:
         with when(variant):
             for model in ["kokkos", "raja"]:
-                with when ("model=" + model):
+                with when("model=" + model):
                     depends_on(model + variant)
     with when("~cuda") and when("~openmp"):
         for model in ["kokkos", "raja"]:
-            with when ("model=" + model):
+            with when("model=" + model):
                     depends_on(model)
 
     for model in ["sycl", "sycl2020"]:
-        with when ("model=" + model):
+        with when("model=" + model):
             depends_on("intel-oneapi-compilers", when="model=" + model)
 
-    with when ("model=tbb"):
+    with when("model=tbb"):
         depends_on("opencv")
         depends_on("intel-oneapi-tbb")
 
-    with when ("model=hip"):
+    with when("model=hip"):
         depends_on("hip@5.2.0")
         conflicts(
             "amd_arch=none", 
             when="~cuda", 
-            msg="HIP requires AMD architecture to be specified by amd_arch=")
+            msg="HIP requires AMD architecture to be specified by amd_arch=",
+        )
 
     conflicts("~cuda", when="model=cuda", msg="CUDA requires +cuda variant")
     conflicts("~cuda", when="model=thrust", msg="Thrust requires +cuda variant")
     conflicts(
         "cuda_arch=none", 
         when="+cuda", 
-        msg="CUDA requires architecture to be specfied by cuda_arch="
+        msg="CUDA requires architecture to be specfied by cuda_arch=",
     )
 
     def cmake_args(self):
@@ -103,11 +112,11 @@ class Babelstream(CMakePackage):
             "-DMODEL=" + self.spec.variants["model"].value,
             "-DRELEASE_FLAGS=",
             "-DCXX_EXTRA_FLAGS=" + self.spec.variants["flags"].value + " -O3",
-            ]
+        ]
 
         model = self.spec.variants["model"].value
 
-        if model not in ["kokkos", "raja" ,"acc", "hip"]:
+        if model not in ["kokkos", "raja", "acc", "hip"]:
             args.append("-DCMAKE_CXX_COMPILER_FORCED=True")   
 
         if self.spec.satisfies("+cuda"):
@@ -121,7 +130,7 @@ class Babelstream(CMakePackage):
                     "-DENABLE_CUDA=ON",
                     "-DTARGET=NVIDIA",
                     "-DCUDA_TOOLKIT_ROOT_DIR=" + cuda_dir,
-                    "-DCMAKE_CUDA_ARCHITECTURES=80"
+                    "-DCMAKE_CUDA_ARCHITECTURES=80",
                 ]:
                     args.append(flag)
 
@@ -131,27 +140,32 @@ class Babelstream(CMakePackage):
 
         if "std-ranges" in model:
             args.append(
-                "-DCXX_EXTRA_FLAGS= --std=c++2a " + 
-                self.spec.variants["flags"].value + 
-                " -O3") 
+                "-DCXX_EXTRA_FLAGS= --std=c++2a " + self.spec.variants["flags"].value + " -O3"
+            ) 
 
         if "acc" in model:
-            args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
-            args.append("-DTARGET_DEVICE=gpu")
-            args.append("-DOpenACC_CXX_FLAGS= ")
+            for flag in [
+                "-DCMAKE_CXX_COMPILER=" + self.compiler.cxx
+                "-DTARGET_DEVICE=gpu"
+                "-DOpenACC_CXX_FLAGS= "
+            ]:
+                args.append(flag)
 
         if "hip" in model:
             hip_comp = self.spec["hip"].prefix + "/bin/hipcc"
             args.append("-DCMAKE_CXX_COMPILER=" + hip_comp)
             if self.spec.variants["amd_arch"].value != "none":
-                args.append("-DCXX_EXTRA_FLAGS= --offload-arch=" + 
-                    self.spec.variants["amd_arch"].value + " " +
-                    self.spec.variants["flags"].value + 
-                    " -O3")
+                args.append(
+                    "-DCXX_EXTRA_FLAGS= --offload-arch=" 
+                    + self.spec.variants["amd_arch"].value 
+                    + " " 
+                    + self.spec.variants["flags"].value 
+                    + " -O3"
+                )
 
         if "sycl" in model:
             os.system("spack load intel-oneapi-compilers")
-            args.append("-DSYCL_COMPILER=ONEAPI-DPCPP")      
+            args.append("-DSYCL_COMPILER=ONEAPI-DPCPP")
 
         if "kokkos" in model:
             args.append("-DCMAKE_CXX_COMPILER=" + self.compiler.cxx)
@@ -170,7 +184,7 @@ class Babelstream(CMakePackage):
 
         if "tbb" in model:
             args.append("-DTBB_ROOT=" + self.spec["tbb"].prefix + "/lib/cmake/tbb")
-            # Hack to get around the fact that TBBConfig.cmake is linking 32bit libs. 
+            # Hack to get around the fact that TBBConfig.cmake is linking 32bit libs.
             args.append("-DCMAKE_SIZEOF_VOID_P=8")
 
         return args
