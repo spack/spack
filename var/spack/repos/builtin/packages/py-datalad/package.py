@@ -61,7 +61,7 @@ class PyDatalad(PythonPackage):
 
     # downloaders
     depends_on("py-boto", type=("build", "run"))
-    depends_on("py-keyring@20.0:23.8,23.10:", when="@0.16:", type=("build", "run"))
+    depends_on("py-keyring@20.0:23.8,23.9.1:", when="@0.16:", type=("build", "run"))
     depends_on("py-keyring@8.0:", type=("build", "run"))
     depends_on("py-keyrings-alt", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"))
