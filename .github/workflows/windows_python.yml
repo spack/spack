@@ -30,8 +30,9 @@ jobs:
     - name: Unit Test
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        spack unit-test --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
         cd spack
+        del .\lib\spack\docs\_spack_root
+        spack unit-test --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
@@ -55,8 +56,9 @@ jobs:
     - name: Command Unit Test
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        spack unit-test --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
         cd spack
+        del .\lib\spack\docs\_spack_root
+        spack unit-test --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
