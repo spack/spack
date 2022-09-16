@@ -471,8 +471,12 @@ def ci_rebuild(args):
         spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
 
     check_matches = True if check_updated and check_updated.lower() == "true" else False
-    matches = None if not check_matches else bindist.get_mirrors_for_spec(
-        job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+    matches = (
+        None
+        if not check_matches
+        else bindist.get_mirrors_for_spec(
+            job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+        )
     )
 
     if matches:
@@ -509,7 +513,8 @@ def ci_rebuild(args):
             "install",
             "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
-            "--use-buildcache", "dependencies:only,package:never",
+            "--use-buildcache",
+            "dependencies:only,package:never",
         ]
     )
 
