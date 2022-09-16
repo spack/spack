@@ -61,6 +61,7 @@ jobs:
             - 'lib/spack/**'
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
+            - '.github/workflows/ci.yaml'
             core:
             - './!(var/**)/**'
             packages:
