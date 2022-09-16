@@ -135,7 +135,8 @@ class Rocblas(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
-    depends_on("llvm-amdgpu +openmp", type="test")
+    depends_on("llvm-amdgpu", type="test")
+    depends_on("rocm-openmp-extras", type="test")
 
     def check(self):
         if "@4.2.0:" in self.spec:
@@ -176,6 +177,7 @@ class Rocblas(CMakePackage):
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
+        depends_on("rocm-openmp-extras@" + ver, type="build", when="@" + ver)
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
 
     depends_on("python@3.6:", type="build")
