@@ -28,6 +28,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     version("master", branch="master", submodules=True)
     version(
+        "5.11.0-RC1", sha256="892c4617b3f23f6e5c9a08ecc9b3e9f16b9e2f54c044155c3c252f00b0fbafd9"
+    )
+    version(
         "5.10.1",
         sha256="520e3cdfba4f8592be477314c2f6c37ec73fb1d5b25ac30bdbd1c5214758b9c2",
         preferred=True,
@@ -219,11 +222,11 @@ class Paraview(CMakePackage, CudaPackage):
 
     # ParaView depends on nlohmann-json due to changes in MR
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8550
-    depends_on("nlohmann-json", when="@master")
+    depends_on("nlohmann-json", when="@5.11:")
 
     # ParaView depends on proj@8.1.0 due to changes in MR
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/8474
-    depends_on("proj@8.1.0", when="@master")
+    depends_on("proj@8.1.0", when="@5.11:")
 
     patch("stl-reader-pv440.patch", when="@4.4.0")
 
@@ -275,7 +278,7 @@ class Paraview(CMakePackage, CudaPackage):
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
         if self.spec.version == Version("master"):
-            return "paraview-5.10"
+            return "paraview-5.11"
         else:
             return "paraview-{0}".format(self.spec.version.up_to(2))
 

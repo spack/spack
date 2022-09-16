@@ -1445,6 +1445,9 @@ class SpackSolverSetup(object):
 
         # dependencies
         if spec.concrete:
+            # older specs do not have package hashes, so we have to do this carefully
+            if getattr(spec, "_package_hash", None):
+                clauses.append(fn.package_hash(spec.name, spec._package_hash))
             clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
@@ -1516,8 +1519,10 @@ class SpackSolverSetup(object):
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
+                # v can be a string so force it into an actual version for comparisons
+                ver = spack.version.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
         for spec in specs:
