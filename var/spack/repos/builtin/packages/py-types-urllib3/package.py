@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyTypesUrllib3(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Typing stubs for urllib3."""
 
     homepage = "https://github.com/python/typeshed"
     pypi = "types-urllib3/types-urllib3-1.26.24.tar.gz"
