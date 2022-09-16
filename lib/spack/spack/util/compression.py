@@ -415,11 +415,8 @@ class BZipFileType(CompressedFileTypeInterface):
     @classmethod
     def decomp_in_memory(cls, stream):
         if is_bz2_supported():
-            return io.BytesIO(
-                initial_bytes=bz2.BZ2Decompressor().decompress(
-                    stream.read(), max_length=TarFileType.offset() + TarFileType.header_size()
-                )
-            )
+            comp_stream = stream.read(TarFileType.offset() + TarFileType.header_size())
+            return io.BytesIO(initial_bytes=bz2.BZ2Decompressor().decompress(comp_stream))
         return None
 
 
@@ -449,7 +446,7 @@ class ZCompressedFileType(CompressedFileTypeInterface):
 
     @classmethod
     def decomp_in_memory(cls, stream):
-        # python has no method of decompressing `.Z` files
+        # python has no method of decompressing `.Z` files in memory
         return None
 
 
