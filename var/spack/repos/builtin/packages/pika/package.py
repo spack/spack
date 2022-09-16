@@ -59,7 +59,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
-    variant("p2300", default=False, description="Use P2300 reference implementation for sender/receiver functionality", when="@main")
+    variant(
+        "p2300",
+        default=False,
+        description="Use P2300 reference implementation for sender/receiver functionality",
+        when="@main",
+    )
 
     # Build dependencies
     depends_on("git", type="build")
@@ -132,7 +137,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
             self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "p2300"),
-
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
