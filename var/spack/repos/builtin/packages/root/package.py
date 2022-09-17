@@ -214,12 +214,8 @@ class Root(CMakePackage):
     depends_on("ftgl@2.4.0:", when="+opengl")
     depends_on("glew", when="+opengl")
     depends_on("gl2ps", when="+opengl")
-    if sys.platform != "darwin":
-        depends_on("gl", when="+x+opengl")
-        depends_on("glu", when="+x+opengl")
-    else:
-        depends_on("gl", when="+opengl")
-        depends_on("glu", when="+opengl")
+    depends_on("gl", when="+opengl")
+    depends_on("glu", when="+opengl")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
