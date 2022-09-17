@@ -186,7 +186,17 @@ class PyMatplotlib(PythonPackage):
         depends_on("py-pygobject", when="backend=" + backend, type="run")
         depends_on("py-pycairo@1.14:", when="backend=" + backend, type="run")
     # Cairo
-    for backend in ["gtkcairo", "gtk3cairo", "gtk4cairo", "qtcairo", "qt4cairo", "qt5cairo", "tkcairo", "wxcairo", "cairo"]:
+    for backend in [
+        "gtkcairo",
+        "gtk3cairo",
+        "gtk4cairo",
+        "qtcairo",
+        "qt4cairo",
+        "qt5cairo",
+        "tkcairo",
+        "wxcairo",
+        "cairo",
+    ]:
         depends_on("py-pycairo@1.14:", when="backend=" + backend, type="run")
     # Wx
     for backend in ["wx", "wxagg", "wxcairo"]:
