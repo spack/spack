@@ -76,7 +76,7 @@ class QtBase(CMakePackage):
         import os
         import shutil
 
-        vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
+        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
         vendor_deps_to_keep = [
             "blake2",
             "easing",
