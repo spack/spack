@@ -138,11 +138,27 @@ class PythonPackage(PackageBase):
                     path.replace(root + os.sep, "", 1).replace(".py", "").replace("/", ".")
                 )
 
-        modules = [mod for mod in modules if re.match("[a-zA-Z0-9._]+$", mod)]
+        modules = [
+            mod
+            for mod in modules
+            if re.match("[a-zA-Z0-9._]+$", mod) and not any(map(mod.startswith, self.skip_modules))
+        ]
 
         tty.debug("Detected the following modules: {0}".format(modules))
 
         return modules
+
+    @property
+    def skip_modules(self):
+        """Names of modules that should be skipped when running tests.
+
+        These are a subset of import_modules. If a module has submodules,
+        they are skipped as well (meaning a.b is skipped if a is contained).
+
+        Returns:
+            list: list of strings of module names
+        """
+        return []
 
     @property
     def build_directory(self):
