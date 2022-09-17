@@ -22,7 +22,7 @@ class Xyce(CMakePackage):
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
     maintainers = ["kuberry"]
 
-    version("github.master", branch="master", preferred=True)
+    version("master", branch="master")
     version("7.5.0", "854d7d5e19e0ee2138d1f20f10f8f27f2bebb94ec81c157040955cff7250dacd")
     version("7.4.0", "2d6bc1b7377834b2e0bf50131e96728c5be83dbb3548e765bb48911067c87c91")
     version("7.3.0", "43869a70967f573ff6f00451db3f4642684834bdad1fd3926380e3789016b446")
@@ -71,7 +71,8 @@ class Xyce(CMakePackage):
         "+epetraextexperimental+epetraextgraphreorderings"
     )
     # tested versions of Trilinos for everything up to 7.4.0
-    depends_on("trilinos@12.12.1:13.2.0", when="@:7.4.0")
+    depends_on("trilinos@12.12.1:13.4", when="@:7.5")
+    depends_on("trilinos@13.5.0:develop", when="@7.6.0:master")
     depends_on("trilinos gotype=all cxxstd=11", when="^trilinos@:12.15")
     # pymi requires Kokkos/KokkosKernels >= 3.3, Trilinos 13.2 onward
     depends_on("trilinos@13.2.0:", when="+pymi")
