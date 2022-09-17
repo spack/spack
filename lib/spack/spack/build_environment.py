@@ -65,6 +65,7 @@ import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
 from spack.error import NoHeadersError, NoLibrariesError
+from spack.installer import InstallError
 from spack.util.cpus import cpus_available
 from spack.util.environment import (
     EnvironmentModifications,
@@ -136,14 +137,16 @@ class MakeExecutable(Executable):
     -j).
     """
 
-    def __init__(self, name, jobs):
-        super(MakeExecutable, self).__init__(name)
+    def __init__(self, name, jobs, **kwargs):
+        super(MakeExecutable, self).__init__(name, **kwargs)
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
+        # TODO: figure out how to check if we are using a jobserver-supporting ninja,
+        # the two split ninja packages make this very difficult right now
         parallel = should_set_parallel_jobs(jobserver_support=True) and kwargs.pop(
             "parallel", self.jobs > 1
         )
@@ -533,7 +536,6 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
-    m.scons = MakeExecutable("scons", jobs)
     m.ninja = MakeExecutable("ninja", jobs)
 
     # easy shortcut to os.environ
@@ -542,10 +544,6 @@ def _set_variables_for_single_module(pkg, module):
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable("./configure")
-
-    m.meson = Executable("meson")
-    m.cmake = Executable("cmake")
-    m.ctest = MakeExecutable("ctest", jobs)
 
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
@@ -1032,8 +1030,11 @@ def get_cmake_prefix_path(pkg):
                 spack_built.insert(0, dspec)
 
     ordered_build_link_deps = spack_built + externals
-    build_link_prefixes = filter_system_paths(x.prefix for x in ordered_build_link_deps)
-    return build_link_prefixes
+    cmake_prefix_path_entries = []
+    for spec in ordered_build_link_deps:
+        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
+
+    return filter_system_paths(cmake_prefix_path_entries)
 
 
 def _setup_pkg_and_run(
@@ -1280,15 +1281,6 @@ def get_package_context(traceback, context=3):
         lines.append(marked)
 
     return lines
-
-
-class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install.
-
-    Any subclass of InstallError will be annotated by Spack with a
-    ``pkg`` attribute on failure, which the caller can use to get the
-    package for which the exception was raised.
-    """
 
 
 class ChildError(InstallError):

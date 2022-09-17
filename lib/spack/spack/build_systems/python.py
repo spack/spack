@@ -22,8 +22,9 @@ from llnl.util.filesystem import (
 from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
-from spack.error import NoHeadersError, NoLibrariesError
+from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.package_base import PackageBase, run_after
+from spack.version import Version
 
 
 class PythonPackage(PackageBase):
@@ -32,7 +33,7 @@ class PythonPackage(PackageBase):
     #: Package name, version, and extension on PyPI
     pypi = None  # type: Optional[str]
 
-    maintainers = ["adamjstewart"]
+    maintainers = ["adamjstewart", "pradyunsg"]
 
     # Default phases
     phases = ["install"]
@@ -155,13 +156,43 @@ class PythonPackage(PackageBase):
         """
         return self.stage.source_path
 
+    def config_settings(self, spec, prefix):
+        """Configuration settings to be passed to the PEP 517 build backend.
+
+        Requires pip 22.1+, which requires Python 3.7+.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            dict: dictionary of KEY, VALUE settings
+        """
+        return {}
+
     def install_options(self, spec, prefix):
-        """Extra arguments to be supplied to the setup.py install command."""
+        """Extra arguments to be supplied to the setup.py install command.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            list: list of options
+        """
         return []
 
     def global_options(self, spec, prefix):
         """Extra global options to be supplied to the setup.py call before the install
-        or bdist_wheel command."""
+        or bdist_wheel command.
+
+        Args:
+            spec (spack.spec.Spec): build spec
+            prefix (spack.util.prefix.Prefix): installation prefix
+
+        Returns:
+            list: list of options
+        """
         return []
 
     def install(self, spec, prefix):
@@ -169,6 +200,14 @@ class PythonPackage(PackageBase):
 
         args = PythonPackage._std_args(self) + ["--prefix=" + prefix]
 
+        for key, value in self.config_settings(spec, prefix).items():
+            if spec["py-pip"].version < Version("22.1"):
+                raise SpecError(
+                    "'{}' package uses 'config_settings' which is only supported by "
+                    "pip 22.1+. Add the following line to the package to fix this:\n\n"
+                    '    depends_on("py-pip@22.1:", type="build")'.format(spec.name)
+                )
+            args.append("--config-settings={}={}".format(key, value))
         for option in self.install_options(spec, prefix):
             args.append("--install-option=" + option)
         for option in self.global_options(spec, prefix):

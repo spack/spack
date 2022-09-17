@@ -14,11 +14,12 @@ class Rocthrust(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
     git = "https://github.com/ROCmSoftwarePlatform/rocThrust.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
 
+    version("5.2.0", sha256="afa126218485586682c78e97df8025ae4efd32f3751c340e84c436e08868c326")
     version("5.1.3", sha256="8d92de1e69815d92a423b7657f2f37c90f1d427f5bc92915c202d4c266254dad")
     version("5.1.0", sha256="fee779ae3d55b97327d87beca784fc090fa02bc95238d9c3bf3021e266e73979")
     version("5.0.2", sha256="60f0cf1848cc7cd8663f15307bd695eee3c5b20d3ad3baa4bc696189ffdcfd53")
@@ -76,6 +77,11 @@ class Rocthrust(CMakePackage):
         deprecated=True,
     )
 
+    amdgpu_targets = ROCmPackage.amdgpu_targets
+
+    # the rocthrust library itself is header-only, but the build_type and amdgpu_target
+    # are relevant to the test client
+    variant("amdgpu_target", values=auto_or_any_combination_of(*amdgpu_targets))
     variant(
         "build_type",
         default="Release",
@@ -84,7 +90,8 @@ class Rocthrust(CMakePackage):
     )
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
-    depends_on("numactl", when="@3.7.0:")
+
+    depends_on("googletest@1.10.0:", type="test")
 
     for ver in [
         "3.5.0",
@@ -103,6 +110,7 @@ class Rocthrust(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -112,9 +120,18 @@ class Rocthrust(CMakePackage):
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
-        args = [self.define("CMAKE_MODULE_PATH", "{0}/cmake".format(self.spec["hip"].prefix))]
+        args = [
+            self.define("CMAKE_MODULE_PATH", "{0}/cmake".format(self.spec["hip"].prefix)),
+            self.define("BUILD_TEST", self.run_tests),
+        ]
+
+        if "auto" not in self.spec.variants["amdgpu_target"]:
+            args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
+
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args

@@ -29,6 +29,7 @@ aomp = [
     "64669ac448c439e89ec4b6e0506158e6d9b5a3edfae05882aee4c9bcd5f187b7",
     "e69fe0c933cb30daafe49d9f1df71fe16f387e0287bba921995feeefdf9ac262",
     "8bab3d621343f419b29043ac0cb56e062f114991dc3ec1e33e786f771deecc8f",
+    "20e21312816272222d1f427ea72a99a9a67077078552f5e2638a40860d161d25",
 ]
 
 devlib = [
@@ -45,6 +46,7 @@ devlib = [
     "49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e",
     "47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f",
     "c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e",
+    "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c",
 ]
 
 llvm = [
@@ -61,6 +63,7 @@ llvm = [
     "99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf",
     "db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10",
     "d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128",
+    "0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f",
 ]
 
 flang = [
@@ -77,6 +80,7 @@ flang = [
     "9b9a53150009ff58bd0ab665b970dbebc51be891343fd5dc8e77a2133ac44333",
     "d95e36f3b93097ab6fb319c744ddc71cd94af0c358accc1e5224c2bbd431266d",
     "d7847b5c6e1344dc0b4723dbe76a859257b4c242644dedb34e425f07738530d4",
+    "20f48cac9b58496230fa2428eba4e15ec0a6e92d429569b154a328b7a8c5da17",
 ]
 
 extras = [
@@ -93,6 +97,7 @@ extras = [
     "a4affb77bebaafb6f8d22c51d66aa6fa05381ec54cc1e14a4b10e0f3dc00157f",
     "c3a2a83d8f586ee765df96a692ebe010631446f700273fa31738ea260dfc35f7",
     "2e3151a47d77166d071213af2a1691487691aae0abd5c1718d818a6d7d09cb2d",
+    "817c2e8975e56a8875ff56f9d1ea34d5e7e50f1b541b7f1236e3e5c8d9eee47f",
 ]
 
 versions = [
@@ -109,6 +114,7 @@ versions = [
     "5.0.2",
     "5.1.0",
     "5.1.3",
+    "5.2.0",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -126,10 +132,11 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-5.1.3.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "estewart08"]
+    maintainers = ["srekolam", "renjithravindrankannath", "estewart08"]
+    version("5.2.0", sha256=versions_dict["5.2.0"]["aomp"])
     version("5.1.3", sha256=versions_dict["5.1.3"]["aomp"])
     version("5.1.0", sha256=versions_dict["5.1.0"]["aomp"])
     version("5.0.2", sha256=versions_dict["5.0.2"]["aomp"])
@@ -166,6 +173,7 @@ class RocmOpenmpExtras(Package):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
@@ -258,13 +266,13 @@ class RocmOpenmpExtras(Package):
         else:
             plugin = "/plugins/amdgpu/CMakeLists.txt"
 
-        filter_file(
-            "{ROCM_DIR}/amdgcn/bitcode",
-            "{DEVICE_LIBS_DIR}",
-            aomp_extras.format(src) + "/aompextras/CMakeLists.txt",
-            libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
-        )
-
+        if self.spec.version < Version("5.2.0"):
+            filter_file(
+                "{ROCM_DIR}/amdgcn/bitcode",
+                "{DEVICE_LIBS_DIR}",
+                aomp_extras.format(src) + "/aompextras/CMakeLists.txt",
+                libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
+            )
         # Libm moved into llvm-project in 4.5.0
         if self.spec.version < Version("4.5.0"):
             filter_file(
@@ -289,7 +297,7 @@ class RocmOpenmpExtras(Package):
                 libomptarget.format(src) + "/deviceRTLs/amdgcn/CMakeLists.txt",
             )
 
-        if self.spec.version >= Version("4.5.0"):
+        if self.spec.version <= Version("5.1.3"):
             filter_file(
                 "{ROCM_DIR}/amdgcn/bitcode",
                 "{DEVICE_LIBS_DIR}",

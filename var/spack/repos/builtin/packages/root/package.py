@@ -31,6 +31,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
     version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
     version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
     version("6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31")
@@ -81,6 +82,19 @@ class Root(CMakePackage):
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch("root7-webgui.patch", level=1, when="@6.16.00")
+    # 6.26.00:6.26.06 can fail with empty string COMPILE_DEFINITIONS, which this patch
+    # protects against
+    patch(
+        "https://github.com/root-project/root/pull/11111.patch?full_index=1",
+        sha256="3115be912bd948979c9c2a3d89ffe6437fe17bd3b81396958c6cb6f51f64ae62",
+        when="@6.26:6.26.06",
+    )
+    # 6.26.00:6.26.06 fails for recent nlohmann-json single headers versions
+    patch(
+        "https://github.com/root-project/root/pull/11225.patch?full_index=1",
+        sha256="397f2de7db95a445afdb311fc91c40725fcfad485d58b4d72e6c3cdd0d0c5de7",
+        when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
+    )
 
     if sys.platform == "darwin":
         # Resolve non-standard use of uint, _cf_
@@ -601,6 +615,9 @@ class Root(CMakePackage):
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)
+        # the following vars are copied from thisroot.sh; silence a cppyy warning
+        env.set("CLING_STANDARD_PCH", "none")
+        env.set("CPPYY_API_PATH", "none")
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
@@ -611,7 +628,7 @@ class Root(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
-        if "platform=darwin" in spec:
+        if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
 

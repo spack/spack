@@ -478,14 +478,21 @@ them to the Environment.
    spack:
      include:
      - relative/path/to/config.yaml
+     - https://github.com/path/to/raw/config/compilers.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files with either relative or absolute
-paths. Inline configurations take precedence over included
-configurations, so you don't have to change shared configuration files
-to make small changes to an individual Environment. Included configs
-listed earlier will have higher precedence, as the included configs are
-applied in reverse order.
+Environments can include files or URLs. File paths can be relative or
+absolute. URLs include the path to the text for individual files or
+can be the path to a directory containing configuration files.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration precedence
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inline configurations take precedence over included configurations, so
+you don't have to change shared configuration files to make small changes
+to an individual environment. Included configurations listed earlier will
+have higher precedence, as the included configs are applied in reverse order.
 
 -------------------------------
 Manually Editing the Specs List
@@ -972,9 +979,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========

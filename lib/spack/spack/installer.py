@@ -54,6 +54,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 import spack.util.executable
+import spack.util.path
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 from spack.util.timer import Timer
@@ -82,6 +83,9 @@ STATUS_DEQUEUED = "dequeued"
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
 STATUS_REMOVED = "removed"
+
+is_windows = sys.platform == "win32"
+is_osx = sys.platform == "darwin"
 
 
 class InstallAction(object):
@@ -164,7 +168,9 @@ def _do_fake_install(pkg):
     if not pkg.name.startswith("lib"):
         library = "lib" + library
 
-    dso_suffix = ".dylib" if sys.platform == "darwin" else ".so"
+    plat_shared = ".dll" if is_windows else ".so"
+    plat_static = ".lib" if is_windows else ".a"
+    dso_suffix = ".dylib" if is_osx else plat_shared
 
     # Install fake command
     fs.mkdirp(pkg.prefix.bin)
@@ -179,7 +185,7 @@ def _do_fake_install(pkg):
 
     # Install fake shared and static libraries
     fs.mkdirp(pkg.prefix.lib)
-    for suffix in [dso_suffix, ".a"]:
+    for suffix in [dso_suffix, plat_static]:
         fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
 
     # Install fake man page
@@ -295,7 +301,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    print(colorize("@*g{[+]} ") + message)
+    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def _process_external_package(pkg, explicit):
@@ -819,7 +825,7 @@ class PackageInstaller(object):
             if spack.store.db.prefix_failed(dep):
                 action = "'spack install' the dependency"
                 msg = "{0} is marked as an install failure: {1}".format(dep_id, action)
-                raise InstallError(err.format(request.pkg_id, msg))
+                raise InstallError(err.format(request.pkg_id, msg), pkg=dep_pkg)
 
             # Attempt to get a read lock to ensure another process does not
             # uninstall the dependency while the requested spec is being
@@ -827,7 +833,7 @@ class PackageInstaller(object):
             ltype, lock = self._ensure_locked("read", dep_pkg)
             if lock is None:
                 msg = "{0} is write locked by another process".format(dep_id)
-                raise InstallError(err.format(request.pkg_id, msg))
+                raise InstallError(err.format(request.pkg_id, msg), pkg=request.pkg)
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.spec.installed_upstream:
@@ -882,6 +888,7 @@ class PackageInstaller(object):
                     "Install prefix collision for {0}".format(task.pkg_id),
                     long_msg="Prefix directory {0} already used by another "
                     "installed spec.".format(task.pkg.spec.prefix),
+                    pkg=task.pkg,
                 )
 
             # Make sure the installation directory is in the desired state
@@ -1212,7 +1219,10 @@ class PackageInstaller(object):
             spack.package_base.PackageBase._verbose = spack.build_environment.start_build_process(
                 pkg, build_process, install_args
             )
-
+            # Currently this is how RPATH-like behavior is achieved on Windows, after install
+            # establish runtime linkage via Windows Runtime link object
+            # Note: this is a no-op on non Windows platforms
+            pkg.windows_establish_runtime_linkage()
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
@@ -1357,7 +1367,8 @@ class PackageInstaller(object):
             pkg (spack.package_base.Package): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
-            tty.debug("Creating the installation directory {0}".format(pkg.spec.prefix))
+            path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
+            tty.debug("Creating the installation directory {0}".format(path))
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
@@ -1569,7 +1580,8 @@ class PackageInstaller(object):
                 raise InstallError(
                     "Cannot proceed with {0}: {1} uninstalled {2}: {3}".format(
                         pkg_id, task.priority, dep_str, ",".join(task.uninstalled_deps)
-                    )
+                    ),
+                    pkg=pkg,
                 )
 
             # Skip the installation if the spec is not being installed locally
@@ -1594,7 +1606,7 @@ class PackageInstaller(object):
                 spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
-                    raise InstallError(fail_fast_err)
+                    raise InstallError(fail_fast_err, pkg=pkg)
 
                 continue
 
@@ -1637,7 +1649,8 @@ class PackageInstaller(object):
                 ltype, lock = self._ensure_locked("read", pkg)
                 if lock is not None:
                     self._update_installed(task)
-                    _print_installed_pkg(pkg.prefix)
+                    path = spack.util.path.debug_padded_filter(pkg.prefix)
+                    _print_installed_pkg(path)
 
                     # It's an already installed compiler, add it to the config
                     if task.compiler:
@@ -1715,7 +1728,7 @@ class PackageInstaller(object):
                     )
                 # Terminate if requested to do so on the first failure.
                 if self.fail_fast:
-                    raise InstallError("{0}: {1}".format(fail_fast_err, str(exc)))
+                    raise InstallError("{0}: {1}".format(fail_fast_err, str(exc)), pkg=pkg)
 
                 # Terminate at this point if the single explicit spec has
                 # failed to install.
@@ -1724,7 +1737,7 @@ class PackageInstaller(object):
 
                 # Track explicit spec id and error to summarize when done
                 if task.explicit:
-                    failed_explicits.append((pkg_id, str(exc)))
+                    failed_explicits.append((pkg, pkg_id, str(exc)))
 
             finally:
                 # Remove the install prefix if anything went wrong during
@@ -1747,19 +1760,38 @@ class PackageInstaller(object):
         # Ensure we properly report if one or more explicit specs failed
         # or were not installed when should have been.
         missing = [
-            request.pkg_id
+            (request.pkg, request.pkg_id)
             for request in self.build_requests
             if request.install_args.get("install_package") and request.pkg_id not in self.installed
         ]
+
         if failed_explicits or missing:
-            for pkg_id, err in failed_explicits:
+            for _, pkg_id, err in failed_explicits:
                 tty.error("{0}: {1}".format(pkg_id, err))
 
-            for pkg_id in missing:
+            for _, pkg_id in missing:
                 tty.error("{0}: Package was not installed".format(pkg_id))
 
+            pkg = None
+            if len(failed_explicits) > 0:
+                pkg = failed_explicits[0][0]
+                ids = [pkg_id for _, pkg_id, _ in failed_explicits]
+                tty.debug(
+                    "Associating installation failure with first failed "
+                    "explicit package ({0}) from {1}".format(ids[0], ", ".join(ids))
+                )
+
+            if not pkg and len(missing) > 0:
+                pkg = missing[0][0]
+                ids = [pkg_id for _, pkg_id in missing]
+                tty.debug(
+                    "Associating installation failure with first "
+                    "missing package ({0}) from {1}".format(ids[0], ", ".join(ids))
+                )
+
             raise InstallError(
-                "Installation request failed.  Refer to " "reported errors for failing package(s)."
+                "Installation request failed.  Refer to reported errors for failing package(s).",
+                pkg=pkg,
             )
 
 
@@ -1805,8 +1837,8 @@ class BuildProcessInstaller(object):
 
         # If we are using a padded path, filter the output to compress padded paths
         # The real log still has full-length paths.
-        filter_padding = spack.config.get("config:install_tree:padded_length", None)
-        self.filter_fn = spack.util.path.padding_filter if filter_padding else None
+        padding = spack.config.get("config:install_tree:padded_length", None)
+        self.filter_fn = spack.util.path.padding_filter if padding else None
 
         # info/debug information
         pid = "{0}: ".format(os.getpid()) if tty.show_pid() else ""
@@ -2057,7 +2089,7 @@ class BuildTask(object):
         # queue.
         if status == STATUS_REMOVED:
             msg = "Cannot create a build task for {0} with status '{1}'"
-            raise InstallError(msg.format(self.pkg_id, status))
+            raise InstallError(msg.format(self.pkg_id, status), pkg=pkg)
 
         self.status = status
 
@@ -2181,7 +2213,8 @@ class BuildTask(object):
             tty.debug(
                 "{0}: Removed {1} from uninstalled deps list: {2}".format(
                     self.pkg_id, pkg_id, self.uninstalled_deps
-                )
+                ),
+                level=2,
             )
 
     @property
@@ -2347,10 +2380,15 @@ class BuildRequest(object):
 
 
 class InstallError(spack.error.SpackError):
-    """Raised when something goes wrong during install or uninstall."""
+    """Raised when something goes wrong during install or uninstall.
 
-    def __init__(self, message, long_msg=None):
+    The error can be annotated with a ``pkg`` attribute to allow the
+    caller to get the package for which the exception was raised.
+    """
+
+    def __init__(self, message, long_msg=None, pkg=None):
         super(InstallError, self).__init__(message, long_msg)
+        self.pkg = pkg
 
 
 class BadInstallPhase(InstallError):
