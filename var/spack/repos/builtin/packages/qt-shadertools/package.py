@@ -53,7 +53,3 @@ class QtShadertools(CMakePackage):
                 if os.path.isdir(dep):
                     if dep not in vendor_deps_to_keep:
                         shutil.rmtree(dep)
-
-    def cmake_args(self):
-        args = []
-        return args
