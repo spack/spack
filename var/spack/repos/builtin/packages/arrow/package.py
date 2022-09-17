@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,27 +29,34 @@ class Arrow(CMakePackage, CudaPackage):
     version("0.9.0", sha256="65f89a3910b6df02ac71e4d4283db9b02c5b3f1e627346c7b6a5982ae994af91")
     version("0.8.0", sha256="c61a60c298c30546fc0b418a35be66ef330fb81b06c49928acca7f1a34671d54")
 
-    depends_on("boost@1.60:")
+    depends_on("boost@1.60: +filesystem +system")
     depends_on("cmake@3.2.0:", type="build")
     depends_on("flatbuffers")
-    depends_on("llvm+clang", when="+gandiva", type="build")
-    depends_on("openssl", when="+gandiva @6.0.0:")
+    depends_on("llvm@:11 +clang", when="+gandiva @:3", type="build")
+    depends_on("llvm@:12 +clang", when="+gandiva @:4", type="build")
+    depends_on("llvm@:13 +clang", when="+gandiva @:7", type="build")
+    depends_on("llvm@:14 +clang", when="+gandiva @8:", type="build")
     depends_on("lz4", when="+lz4")
     depends_on("ninja", type="build")
+    depends_on("openssl", when="+gandiva @6.0.0:")
+    depends_on("openssl", when="@4.0.0:")
     depends_on("orc", when="+orc")
     depends_on("protobuf", when="+gandiva")
     depends_on("py-numpy", when="+python")
     depends_on("python", when="+python")
     depends_on("rapidjson")
+    depends_on("re2+shared", when="+compute")
     depends_on("re2+shared", when="+gandiva")
-    depends_on("snappy~shared", when="+snappy")
+    depends_on("snappy~shared", when="+snappy @9:")
+    depends_on("snappy~shared", when="@8:")
     depends_on("thrift+pic", when="+parquet")
-    depends_on("utf8proc")
-    depends_on("zlib+pic", when="+zlib")
-    # depends_on('zstd+pic', when='+zstd')
-    depends_on("zstd", when="+zstd")
-    depends_on("openssl", when="@4.0.0:")
-    depends_on("xsimd", when="@9.0.0:")
+    depends_on("utf8proc@2.7.0: +shared", when="+compute")
+    depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
+    depends_on("xsimd@8.1.0:", when="@9.0.0:")
+    depends_on("zlib+pic", when="+zlib @9:")
+    depends_on("zlib+pic", when="@:8")
+    depends_on("zstd", when="+zstd @9:")
+    depends_on("zstd", when="@:8")
 
     variant("brotli", default=False, description="Build support for Brotli compression")
     variant(
@@ -59,16 +66,9 @@ class Arrow(CMakePackage, CudaPackage):
         values=("Debug", "FastDebug", "Release"),
     )
     variant(
-        "compute", default=True, description="Computational kernel functions and other support"
+        "compute", default=False, description="Computational kernel functions and other support"
     )
-    variant(
-        "cxxstd",
-        default="11",
-        values=("11", "17"),
-        multi=False,
-        description="Require a specific C++ standard",
-    )
-    variant("gandiva", default=True, description="Build Gandiva support")
+    variant("gandiva", default=False, description="Build Gandiva support")
     variant(
         "glog",
         default=False,
@@ -81,14 +81,14 @@ class Arrow(CMakePackage, CudaPackage):
     )
     variant("ipc", default=True, description="Build the Arrow IPC extensions")
     variant("jemalloc", default=False, description="Build the Arrow jemalloc-based allocator")
-    variant("lz4", default=True, description="Build support for lz4 compression")
+    variant("lz4", default=False, description="Build support for lz4 compression")
     variant("orc", default=False, description="Build integration with Apache ORC")
     variant("parquet", default=False, description="Build Parquet interface")
     variant("python", default=False, description="Build Python interface")
     variant("shared", default=True, description="Build shared libs")
     variant("snappy", default=False, description="Build support for Snappy compression")
     variant("tensorflow", default=False, description="Build Arrow with TensorFlow support enabled")
-    variant("zlib", default=True, description="Build support for zlib (gzip) compression")
+    variant("zlib", default=False, description="Build support for zlib (gzip) compression")
     variant("zstd", default=False, description="Build support for ZSTD compression")
 
     root_cmakelists_dir = "cpp"
@@ -143,5 +143,10 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_SNAPPY", "snappy"))
         args.append(self.define_from_variant("ARROW_WITH_ZLIB", "zlib"))
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
+
+        with when("@:8"):
+            for dep in ("flatbuffers", "rapidjson", "snappy", "zlib", "zstd"):
+                args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
+            args.append("-DZLIB_LIBRARIES={0}".format(self.spec["zlib"].libs))
 
         return args
