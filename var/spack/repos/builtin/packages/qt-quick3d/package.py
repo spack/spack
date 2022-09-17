@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+import shutil
+
 from spack.package import *
 
 
@@ -45,9 +48,6 @@ class QtQuick3d(CMakePackage):
         depends_on("qt-quicktimeline@" + v, when="@" + v)
 
     def patch(self):
-        import os
-        import shutil
-
         vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
         vendor_deps_to_keep = ["xatlas"]
         with working_dir(vendor_dir):
