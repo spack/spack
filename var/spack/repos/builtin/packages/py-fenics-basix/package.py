@@ -41,7 +41,7 @@ class PyFenicsBasix(PythonPackage):
     depends_on("fenics-basix@0.2.0", type=("build", "run"), when="@0.2.0")
     depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.19:", type="build")
     depends_on("py-pybind11@2.6.2:", type="build")
