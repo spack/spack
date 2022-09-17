@@ -432,7 +432,7 @@ class Root(CMakePackage):
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
 
-        afterimage_enabled = "+x" if "platform=darwin" not in self.spec else True
+        afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
 
         options += [
             define("builtin_afterimage", afterimage_enabled),
