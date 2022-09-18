@@ -3,17 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-from spack.operating_systems.mac_os import macos_version
-
-
-MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
-
-
 import os
 import shutil
+import sys
 
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
+
+MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 
 
 class QtBase(CMakePackage):
@@ -31,14 +28,18 @@ class QtBase(CMakePackage):
     version("6.2.3", sha256="2dd095fa82bff9e0feb7a9004c1b2fb910f79ecc6111aa64637c95a02b7a8abb")
 
     variant("dbus", default=False, description="Build with D-Bus support.")
-    variant("framework", default=bool(MACOS_VERSION), description="Build as a macOS Framework package.")
+    variant(
+        "framework", default=bool(MACOS_VERSION), description="Build as a macOS Framework package."
+    )
     variant("gui", default=True, description="Build the Qt GUI module and dependencies.")
     variant("shared", default=True, description="Build shared libraries.")
     variant("sql", default=True, description="Build with SQL support.")
     variant("network", default=True, description="Build with SSL support.")
 
     # GUI-only dependencies
-    variant("accessibility", default=True, when="+gui", description="Build with accessibility support.")
+    variant(
+        "accessibility", default=True, when="+gui", description="Build with accessibility support."
+    )
     variant("gtk", default=False, when="+gui", description="Build with gtkplus.")
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
@@ -79,12 +80,13 @@ class QtBase(CMakePackage):
         depends_on("libproxy")
         depends_on("openssl")
 
-
     @property
     def archive_files(self):
         """Save both the CMakeCache and the config summary."""
-        return [join(self.build_directory, filename)
-                for filename in ["CMakeCache.txt", "config.summary"]]
+        return [
+            join(self.build_directory, filename)
+            for filename in ["CMakeCache.txt", "config.summary"]
+        ]
 
     def patch(self):
         vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
@@ -136,11 +138,11 @@ class QtBase(CMakePackage):
         define_feature("dbus")
         define_feature("framework")
         define_feature("gui")
-        define_feature("network") # note: private feature
+        define_feature("network")  # note: private feature
         # testlib: default to on
         # thread: default to on
-        define_feature("widgets") # note: private feature
-        define_feature("sql") # note: private feature
+        define_feature("widgets")  # note: private feature
+        define_feature("sql")  # note: private feature
         # xml: default to on
 
         # Extra FEATURE_ toggles
