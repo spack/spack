@@ -48,7 +48,7 @@ class QtQuick3d(CMakePackage):
         depends_on("qt-quicktimeline@" + v, when="@" + v)
 
     def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
+        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
         vendor_deps_to_keep = ["xatlas"]
         with working_dir(vendor_dir):
             for dep in os.listdir():
