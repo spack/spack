@@ -45,7 +45,7 @@ class QtDeclarative(CMakePackage):
         depends_on("qt-shadertools@" + v, when="@" + v)
 
     def patch(self):
-        vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
+        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
         vendor_deps_to_keep = ["masm"]
         with working_dir(vendor_dir):
             for dep in os.listdir():
