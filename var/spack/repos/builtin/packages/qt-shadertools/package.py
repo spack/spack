@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+import shutil
+
 from spack.package import *
 
 
@@ -43,10 +46,7 @@ class QtShadertools(CMakePackage):
         depends_on("qt-base@" + v, when="@" + v)
 
     def patch(self):
-        import os
-        import shutil
-
-        vendor_dir = join_path(self.stage.source_path, "src/3rdparty")
+        vendor_dir = join_path(self.stage.source_path, "src", "3rdparty")
         vendor_deps_to_keep = ["glslang", "patches", "SPIRV-Cross"]
         with working_dir(vendor_dir):
             for dep in os.listdir():
