@@ -107,34 +107,13 @@ class PyDatalad(PythonPackage):
     with when("+duecredit"):
         depends_on("py-duecredit", type=("build", "run"))
 
-    with when("+full"):
-        # all the above
-        # downloaders-extra
-        depends_on("py-requests-ftp", type=("build", "run"))
-        # misc
-        depends_on("py-argcomplete@1.12.3:", when="@0.16.5:", type=("build", "run"))
-        depends_on("py-argcomplete", when="@0.14.7:", type=("build", "run"))
-        depends_on("py-pyperclip", type=("build", "run"))
-        depends_on("py-python-dateutil", type=("build", "run"))
-        # tests
-        depends_on("py-beautifulsoup4", type=("build", "run"))
-        depends_on("py-httpretty@0.9.4:", type=("build", "run"))
-        depends_on("py-mypy@0.900:0", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-pytest@7.0:7", when="@0.17:", type=("build", "run"))
-        depends_on("py-pytest-cov@3.0:3", when="@0.17:", type=("build", "run"))
-        depends_on("py-pytest-fail-slow@0.2:0", when="@0.17:", type=("build", "run"))
-        depends_on("py-types-python-dateutil", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-types-requests", when="@0.17.4:", type=("build", "run"))
-        depends_on("py-vcrpy", type=("build", "run"))
-        depends_on("py-nose@1.3.4:", when="@:0.16", type=("build", "run"))
-        # metadata-extra
-        depends_on("py-pyyaml", type=("build", "run"))
-        depends_on("py-mutagen@1.36:", type=("build", "run"))
-        depends_on("py-exifread", type=("build", "run"))
-        depends_on("py-python-xmp-toolkit", type=("build", "run"))
-        depends_on("pil", type=("build", "run"))
-        # duecredit
-        depends_on("py-duecredit", type=("build", "run"))
+    # full
+    # use conflict to avoid to have to maintain the dependencies twice
+    conflicts("~downloaders-extra", when="+full")
+    conflicts("~misc", when="+full")
+    conflicts("~tests", when="+full")
+    conflicts("~metadata-extra", when="+full")
+    conflicts("~duecredit", when="+full")
 
     install_time_test_callbacks = ["test", "installtest"]
 
