@@ -15,7 +15,14 @@ class Fasttree(Package):
 
     homepage = "http://www.microbesonline.org/fasttree"
     url = "http://www.microbesonline.org/fasttree/FastTree-2.1.10.c"
+    maintainers = ["snehring"]
 
+    version(
+        "2.1.11",
+        sha256="9026ae550307374be92913d3098f8d44187d30bea07902b9dcbfb123eaa2050f",
+        expand=False,
+        url="http://www.microbesonline.org/fasttree/FastTree-2.1.11.c",
+    )
     version(
         "2.1.10",
         sha256="54cb89fc1728a974a59eae7a7ee6309cdd3cddda9a4c55b700a71219fc6e926d",
