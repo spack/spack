@@ -14,6 +14,7 @@ class PySip(PythonPackage):
     homepage = "https://www.riverbankcomputing.com/software/sip"
     pypi = "sip/sip-6.4.0.tar.gz"
 
+    version("6.6.2", sha256="0e3efac1c5dfd8e525ae57140927df26993e13f58b89d1577c314f4105bfd90d")
     version("6.4.0", sha256="42ec368520b8da4a0987218510b1b520b4981e4405086c1be384733affc2bcb0")
     version("5.5.0", sha256="5d024c419b30fea8a6de8c71a560c7ab0bc3c221fbfb14d55a5b865bd58eaac5")
     version("4.19.21", sha256="3bfd58e875a87471c00e008f25a01d8312885aa01efc4f688e5cac861c8676e4")
@@ -32,15 +33,19 @@ class PySip(PythonPackage):
         multi=False,
     )
 
-    depends_on("python@3.6:", when="@6:", type=("build", "run"))
+    depends_on("python@3.7:", when="@6.6:", type=("build", "link", "run"))
+    depends_on("python@3.6:", when="@6:", type=("build", "link", "run"))
+
+    depends_on("py-ply", when="@6.6:", type=("build", "run"))
 
     with when("@5:"):
-        depends_on("python@3.5.1:", type=("build", "run"))
+        depends_on("python@3.5.1:", type=("build", "link", "run"))
         depends_on("py-packaging", type="build")
         depends_on("py-setuptools@30.3:", type="build")
         depends_on("py-toml", type="build")
 
     with when("@:4"):
+        depends_on("python", type=("build", "link", "run"))
         depends_on("flex", type="build")
         depends_on("bison", type="build")
 
