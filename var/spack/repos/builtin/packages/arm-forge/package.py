@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import platform
 import subprocess
 
@@ -130,6 +131,12 @@ class ArmForge(Package):
         description='Detect available PMU counters via "forge-probe" during install',
     )
 
+    variant(
+        "accept-eula",
+        default=False,
+        description="Accept the EULA",
+    )
+
     # forge-probe executes with "/usr/bin/env python"
     depends_on("python@2.7:", type="build", when="+probe")
 
@@ -143,7 +150,7 @@ class ArmForge(Package):
         "ALLINEA_LICENSE_FILE",
         "ALLINEA_LICENCE_FILE",
     ]
-    license_url = "https://developer.arm.com/tools-and-software/server-and-hpc/help/help-and-tutorials/system-administration/licensing/arm-licence-server"
+    license_url = "https://developer.arm.com/documentation/101169/latest/Use-Arm-Licence-Server"
 
     def url_for_version(self, version):
         return "https://content.allinea.com/downloads/arm-forge-%s-linux-%s.tar" % (
@@ -151,8 +158,22 @@ class ArmForge(Package):
             platform.machine(),
         )
 
+    @run_before("install")
+    def abort_without_eula_acceptance(self):
+        install_example = "spack install arm-forge +accept-eula"
+        license_terms_path = os.path.join(self.stage.source_path, "license_terms")
+        if not self.spec.variants["accept-eula"].value:
+            raise InstallError(
+                "\n\n\nNOTE:\nUse +accept-eula "
+                + "during installation "
+                + "to accept the license terms in:\n"
+                + "  {0}\n".format(os.path.join(license_terms_path, "license_agreement.txt"))
+                + "  {0}\n\n".format(os.path.join(license_terms_path, "supplementary_terms.txt"))
+                + "Example: '{0}'\n".format(install_example)
+            )
+
     def install(self, spec, prefix):
-        subprocess.call(["./textinstall.sh", "--accept-licence", prefix])
+        subprocess.call(["./textinstall.sh", "--accept-license", prefix])
         if spec.satisfies("+probe"):
             probe = join_path(prefix, "bin", "forge-probe")
             subprocess.call([probe, "--install", "global"])
