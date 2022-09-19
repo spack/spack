@@ -334,6 +334,8 @@ class Root(CMakePackage):
             v.append("cxxstd=14")
         elif "cxx17" in f:
             v.append("cxxstd=17")
+        elif "cxx20" in f:
+            v.append("cxxstd=20")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
