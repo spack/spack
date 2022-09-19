@@ -12,6 +12,7 @@ class PyPytest(PythonPackage):
     homepage = "https://pytest.org/"
     pypi = "pytest/pytest-5.2.1.tar.gz"
 
+    version("7.1.3", sha256="4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39")
     version("6.2.5", sha256="131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89")
     version("6.2.4", sha256="50bcad0a0b9c5a72c8e4e7c9855a3ad496ca6a881a3641b4260605450772c54b")
     version("6.2.1", sha256="66e419b1899bc27346cb2c993e12c5e5e8daba9073c1fbce33b9807abc95c306")
@@ -31,16 +32,19 @@ class PyPytest(PythonPackage):
     version("3.0.2", sha256="64d8937626dd2a4bc15ef0edd307d26636a72a3f3f9664c424d78e40efb1e339")
 
     # python_requires
+    depends_on("python@3.7:", when="@7.1:", type=("build", "run"))
     depends_on("python@3.6:", when="@6.2:", type=("build", "run"))
     depends_on("python@3.5:", when="@5:6.1", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@3.3:4", type=("build", "run"))
     depends_on("python@2.6:2.8,3.3:", when="@:3.2", type=("build", "run"))
 
     # setup_requires
+    depends_on("py-setuptools@45.0:", when="@7:", type=("build", "run"))
     depends_on("py-setuptools@42.0:", when="@6.2:", type=("build", "run"))
     depends_on("py-setuptools@40.0:", when="@3.9.2:6.1", type=("build", "run"))
     depends_on("py-setuptools@30.3:", when="@3.9.0:3.9.1", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.2.3: +toml", when="@7:", type="build")
     depends_on("py-setuptools-scm@3.4: +toml", when="@6.2:", type="build")
     depends_on("py-setuptools-scm", when="@3.1:", type="build")
 
@@ -63,14 +67,15 @@ class PyPytest(PythonPackage):
     depends_on("py-py@1.4.33:", when="@3.1.2:3.2.3,3.2.5:3.2", type=("build", "run"))
     depends_on("py-py@1.4.33:1.4", when="@3.2.4", type=("build", "run"))
     depends_on("py-py@1.4.29:", when="@:3.1.1", type=("build", "run"))
-    depends_on("py-toml", when="@6.0:", type=("build", "run"))
-    depends_on("py-atomicwrites@1.0:", when="@5.3: platform=windows", type=("build", "run"))
-    depends_on("py-atomicwrites@1.0:", when="@3.6:5.2", type=("build", "run"))
+    depends_on("py-tomli@1:", when="@7:", type=("build", "run"))
     depends_on("py-colorama", when="platform=windows", type=("build", "run"))
     depends_on("py-importlib-metadata@0.12:", when="@4.6:5.0", type=("build", "run"))
     depends_on("py-importlib-metadata@0.12:", when="@5.1: ^python@:3.7", type=("build", "run"))
 
     # Historic dependencies
+    depends_on("py-atomicwrites@1.0:", when="@5.3:7.1.2 platform=windows", type=("build", "run"))
+    depends_on("py-atomicwrites@1.0:", when="@3.6:5.2", type=("build", "run"))
+    depends_on("py-toml", when="@6", type=("build", "run"))
     depends_on("py-six@1.10.0:", when="@3.3:4", type=("build", "run"))
     depends_on("py-more-itertools@4.0.0:", when="@3.5.1:5", type=("build", "run"))
     depends_on(
