@@ -54,10 +54,11 @@ class Edm4hep(CMakePackage):
 
     patch("test-deps.patch", when="@:0.3.2")
 
+    _cxxstd_values = ("17", "20")
     variant(
         "cxxstd",
         default="17",
-        values=("17",),
+        values=_cxxstd_values,
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -70,6 +71,9 @@ class Edm4hep(CMakePackage):
     depends_on("podio@0.14.1:", when="@0.4.1:")
     depends_on("podio@0.14", when="@0.4")
     depends_on("podio@0.13.0:0.13", when="@:0.3")
+    for _std in _cxxstd_values:
+        depends_on("podio cxxstd=" + _std, when="cxxstd=" + _std)
+
     depends_on("py-jinja2", type="build")
     depends_on("py-pyyaml", type="build")
 
