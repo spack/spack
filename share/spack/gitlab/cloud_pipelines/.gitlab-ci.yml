@@ -7,10 +7,22 @@ default:
 # Job templates
 ########################################
 
-.pr:
+.aws-pr-creds:
+  variables:
+    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+.aws-protected-creds:
+  variables:
+    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
+    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+
+.pr-refs:
   only:
   - /^pr[\d]+_.*$/
-  - /^github\/pr[\d]+_.*$/
+
+.pr:
+  extends: [ ".pr-refs" ]
   variables:
     SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
@@ -21,7 +33,6 @@ default:
   - /^develop$/
   - /^releases\/v.*/
   - /^v.*/
-  - /^github\/develop$/
 
 .protected:
   extends: [ ".protected-refs" ]
@@ -30,7 +41,7 @@ default:
     SPACK_COPY_BUILDCACHE: "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
     SPACK_PIPELINE_TYPE: "spack_protected_branch"
 
-.generate:
+.generate-base:
   stage: generate
   script:
     - uname -a || true
@@ -61,6 +72,13 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
+.generate:
+  extends: [ ".generate-base" ]
+  tags: ["spack", "aws", "public", "medium", "x86_64"]
+  variables:
+    KUBERNETES_CPU_REQUEST: 4000m
+    KUBERNETES_MEMORY_REQUEST: 8G
+
 .generate-aarch64:
   extends: [ ".generate" ]
   tags: ["spack", "aws", "public", "medium", "aarch64"]
@@ -81,20 +99,14 @@ default:
   stage: build
 
 .pr-build:
-  extends: [ ".pr", ".build" ]
-  variables:
-    AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  extends: [ ".pr", ".build", ".aws-pr-creds" ]
 
 .protected-build:
-  extends: [ ".protected", ".build" ]
-  variables:
-    AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
+  extends: [ ".protected", ".build", ".aws-protected-creds" ]
 
 protected-publish:
   stage: publish
-  extends: [ ".protected" ]
+  extends: [ ".protected", ".aws-protected-creds" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   retry:
@@ -199,7 +211,6 @@ protected-publish:
 #   variables:
 #     AWS_ACCESS_KEY_ID: ${PR_MIRRORS_AWS_ACCESS_KEY_ID}
 #     AWS_SECRET_ACCESS_KEY: ${PR_MIRRORS_AWS_SECRET_ACCESS_KEY}
-
 # .mac-protected-build:
 #   extends: [ ".mac-protected", ".build" ]
 #   variables:
@@ -357,41 +368,61 @@ e4s-oneapi-protected-build:
 ########################################
 # E4S on Power
 ########################################
-# .power-e4s-generate-tags-and-image:
-#   image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu20.04-runner-ppc64le:2021-07-01", "entrypoint": [""] }
-#   tags: ["spack", "public", "medium", "ppc64le"]
+.e4s-power-generate-tags-and-image:
+  image: { "name": "ecpe4s/ubuntu20.04-runner-ppc64le:2023-01-01", "entrypoint": [""] }
+  tags: ["spack", "large", "ppc64le"]
 
-# .e4s-on-power:
-#   variables:
-#     SPACK_CI_STACK_NAME: e4s-on-power
+.e4s-power:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-power
 
-# e4s-on-power-pr-generate:
-#   extends: [ ".e4s-on-power", ".pr-generate", ".power-e4s-generate-tags-and-image"]
+# Redefine what it means to be pr vs protected in this stack, mostly to omit
+# "SPACK_PIPELINE_TYPE" which triggers addition of tags during pipeline
+# generation which have the effect of picking special aws runners for protected
+# build jobs.  This allows running protected build jobs on UO runners, where
+# they won't have access to the baked-in signing credentials, and thus need to
+# use the less trusted signing approach of supplying the "SPACK_SIGNING_KEY"
+# environment variable.
+.e4s-power-pr:
+  extends: [ ".pr-refs" ]
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_PRUNE_UNTOUCHED: "True"
 
-# e4s-on-power-protected-generate:
-#   extends: [ ".e4s-on-power", ".protected-generate", ".power-e4s-generate-tags-and-image"]
+.e4s-power-protected:
+  extends: [ ".protected-refs" ]
+  variables:
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
 
-# e4s-on-power-pr-build:
-#   extends: [ ".e4s-on-power", ".pr-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-pr-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-on-power-pr-generate
+e4s-power-pr-generate:
+  extends: [ ".e4s-power", ".e4s-power-pr", ".generate-base", ".e4s-power-generate-tags-and-image"]
 
-# e4s-on-power-protected-build:
-#   extends: [ ".e4s-on-power", ".protected-build" ]
-#   trigger:
-#     include:
-#       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-#         job: e4s-on-power-protected-generate
-#     strategy: depend
-#   needs:
-#     - artifacts: True
-#       job: e4s-on-power-protected-generate
+e4s-power-protected-generate:
+  extends: [ ".e4s-power", ".e4s-power-protected", ".generate-base", ".e4s-power-generate-tags-and-image"]
+
+e4s-power-pr-build:
+  extends: [ ".e4s-power", ".e4s-power-pr", ".build", ".aws-pr-creds" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-pr-generate
+
+e4s-power-protected-build:
+  extends: [ ".e4s-power", ".e4s-power-protected", ".build", ".aws-protected-creds" ]
+  variables:
+    SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-power-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-power-protected-generate
 
 #########################################
 # Build tests for different build-systems
