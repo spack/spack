@@ -32,7 +32,7 @@ class Maqao(CMakePackage):
 
     # Function to map Spack-detected system architecture to a supported MAQAO arch code
     def detect_arch(self):
-        elif self.spec.satisfies(target=mic_knl):
+        if self.spec.satisfies(target=mic_knl):
             return "k1om"
         elif self.spec.satisfies(target=x86_64):
             return "x86_64"
