@@ -27,25 +27,17 @@ class Maqao(CMakePackage):
     # From 'profiles' subdirectory
     supported_profiles = ("default", "release", "release.intel64-xeonphi")
 
-    # From 'src/arch.h' source file
-    supported_arches = ("ia32", "x86_64", "k1om", "arm", "arm64", "power", "thumb")
+    # Currently supported architectures
+    supported_arches = ("x86_64", "k1om")
 
     # Function to map Spack-detected system architecture to a supported MAQAO arch code
     def detect_arch(self):
-        if spec.satisfies(target=x86):
-            return "ia32"
-        elif spec.satisfies(target=mic_knl):
+        elif self.spec.satisfies(target=mic_knl):
             return "k1om"
-        elif spec.satisfies(target=x86_64):
+        elif self.spec.satisfies(target=x86_64):
             return "x86_64"
-        elif spec.satisfies(target=arm):
-            return "arm"
-        elif spec.satisfies(target=aarch64):
-            return "arm64"
-        elif spec.satisfies(target=ppc64le):
-            return "power"
         else:
-            raise RuntimeError("Unsupported architecture")
+            return None
 
     variant(
         "profile",
@@ -55,11 +47,12 @@ class Maqao(CMakePackage):
         description="What profile to build",
     )
 
+    default_arch = self.detect_arch()
     variant(
         "arch",
         multi=True,
-        default=detect_arch(),
-        values=supported_arches.values,
+        default=default_arch,
+        values=supported_arches,
         description="What architectures to build",
     )
 
@@ -67,7 +60,7 @@ class Maqao(CMakePackage):
         "exclude_uarch",
         multi=True,
         default=None,
-        values=supported_arches.values,
+        values=supported_arches,
         description="Microarchitectures to exclude from build",
     )
 
@@ -128,8 +121,7 @@ class Maqao(CMakePackage):
 
         args.append(from_variant("PROFILE", "profile"))
         args.append(from_variant("ARCHS", "arch"))
-        if spec.exclude_uarch is not None:
-            args.append(from_variant("EXCLUDE_UARCHS", "exclude_uarch"))
+        args.append(from_variant("EXCLUDE_UARCHS", "exclude_uarch"))
 
         if spec.platform.beginswith("linux"):
 
