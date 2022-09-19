@@ -1184,12 +1184,8 @@ class PackageInstaller(object):
 
         explicit = task.explicit
         install_args = task.request.install_args
-        if task.is_package:
-            cache_only = install_args.get("package_cache_only")
-            use_cache = install_args.get("package_use_cache")
-        else:
-            cache_only = install_args.get("dependencies_cache_only")
-            use_cache = install_args.get("dependencies_use_cache")
+        cache_only = task.cache_only
+        use_cache = task.use_cache
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
 
@@ -2233,6 +2229,22 @@ class BuildTask(object):
         return self.pkg == self.request.pkg
 
     @property
+    def use_cache(self):
+        _use_cache = True
+        if self.is_package:
+            return self.request.install_args.get("package_use_cache", _use_cache)
+        else:
+            return self.request.install_args.get("dependencies_use_cache", _use_cache)
+
+    @property
+    def cache_only(self):
+        _cache_only = False
+        if self.is_package:
+            return self.request.install_args.get("package_cache_only", _cache_only)
+        else:
+            return self.request.install_args.get("dependencies_cache_only", _cache_only)
+
+    @property
     def key(self):
         """The key is the tuple (# uninstalled dependencies, sequence)."""
         return (self.priority, self.sequence)
@@ -2321,8 +2333,8 @@ class BuildRequest(object):
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
-            ("packages_cache_only", False),
-            ("packages_use_cache", True),
+            ("package_cache_only", False),
+            ("package_use_cache", True),
             ("keep_prefix", False),
             ("keep_stage", False),
             ("restage", False),
