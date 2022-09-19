@@ -149,7 +149,7 @@ class Slurm(AutotoolsPackage):
     depends_on("http-parser", when="+restd")
     depends_on("libyaml", when="+restd")
     depends_on("libjwt", when="+restd")
-    
+
     depends_on('lua+pcfile', when='+lua')
 
     executables = ["^srun$", "^salloc$"]
