@@ -122,6 +122,7 @@ class Slurm(AutotoolsPackage):
         description="Set system configuration path (possibly /etc/slurm)",
     )
     variant("restd", default=False, description="Enable the slurmrestd server")
+    variant('lua', default=False, description='Enable lua')
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -148,6 +149,8 @@ class Slurm(AutotoolsPackage):
     depends_on("http-parser", when="+restd")
     depends_on("libyaml", when="+restd")
     depends_on("libjwt", when="+restd")
+    
+    depends_on('lua+pcfile', when='+lua')
 
     executables = ["^srun$", "^salloc$"]
 
