@@ -44,7 +44,7 @@ dag_hash = SpecHashDescriptor(deptype=("build", "link", "run"), package_hash=Tru
 
 #: Hash descriptor used only to transfer a DAG, as is, across processes
 process_hash = SpecHashDescriptor(
-    deptype=("build", "link", "run", "test"), package_hash=False, name="process_hash"
+    deptype=("build", "link", "run", "test"), package_hash=True, name="process_hash"
 )
 
 

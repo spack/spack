@@ -569,7 +569,7 @@ _spack_buildcache_copy() {
 }
 
 _spack_buildcache_sync() {
-    SPACK_COMPREPLY="-h --help --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
+    SPACK_COMPREPLY="-h --help --manifest-glob --src-directory --src-mirror-name --src-mirror-url --dest-directory --dest-mirror-name --dest-mirror-url"
 }
 
 _spack_buildcache_update_index() {
@@ -1568,7 +1568,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -i -m --path"
+        SPACK_COMPREPLY="-h --help -V --version -c -u -i -m --path"
     else
         SPACK_COMPREPLY=""
     fi
