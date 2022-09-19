@@ -28,13 +28,15 @@ class Sartre(CMakePackage):
 
     def patch(self):
         for file in ["src/CMakeLists.txt", "gemini/CMakeLists.txt"]:
-            filter_file(r"set\(CMAKE_CXX_STANDARD 11\)",
-                        "set(CMAKE_CXX_STANDARD 11 CACHE STRING \"C++ standard\")",
-                        file)
+            filter_file(
+                r"set\(CMAKE_CXX_STANDARD 11\)",
+                'set(CMAKE_CXX_STANDARD 11 CACHE STRING "C++ standard")',
+                file,
+            )
 
-    def cmake_args(self):
-        args = [
-            '-DCMAKE_CXX_STANDARD={0}'.format(self.spec['root'].variants['cxxstd'].value),
-            '-DMULTITHREADED=ON',
+     def cmake_args(self):
+         args = [
+            "-DCMAKE_CXX_STANDARD={0}".format(self.spec["root"].variants["cxxstd"].value),
+            "-DMULTITHREADED=ON",
         ]
         return args
