@@ -34,8 +34,8 @@ class Sartre(CMakePackage):
                 file,
             )
 
-     def cmake_args(self):
-         args = [
+    def cmake_args(self):
+        args = [
             "-DCMAKE_CXX_STANDARD={0}".format(self.spec["root"].variants["cxxstd"].value),
             "-DMULTITHREADED=ON",
         ]
