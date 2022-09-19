@@ -1184,12 +1184,12 @@ class PackageInstaller(object):
 
         explicit = task.explicit
         install_args = task.request.install_args
-        if task.dependency:
-            cache_only = install_args.get("dependencies_cache_only")
-            use_cache = install_args.get("dependencies_use_cache")
-        else:
+        if task.is_package:
             cache_only = install_args.get("package_cache_only")
             use_cache = install_args.get("package_use_cache")
+        else:
+            cache_only = install_args.get("dependencies_cache_only")
+            use_cache = install_args.get("dependencies_use_cache")
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
 
@@ -2224,12 +2224,13 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.pkg == self.request.pkg and self.request.install_args.get("explicit", True)
+        return self.is_package and self.request.install_args.get("explicit", True)
 
     @property
-    def dependency(self):
-        """The package is a dependency requested by another package."""
-        return not self.explicit
+    def is_package(self):
+        """The package was requested directly, but may or may not be explicit
+        in an environment."""
+        return self.pkg == self.request.pkg
 
     @property
     def key(self):
