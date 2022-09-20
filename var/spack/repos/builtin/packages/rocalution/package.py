@@ -24,6 +24,7 @@ class Rocalution(CMakePackage):
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
     libraries = ["librocalution_hip"]
 
+    version("5.2.1", sha256="f246bd5b5d1b5821c29b566610a1c1d5c5cc361e0e5c373b8b04168b05e9b26f")
     version("5.2.0", sha256="a5aac471bbec87d019ad7c6db779c73327ad40ecdea09dc5ab2106e62cd6b7eb")
     version("5.1.3", sha256="7febe8179f120cbe58ea255bc233ad5d1b4c106f3934eb8e670135a8b7bd09c7")
     version("5.1.0", sha256="d9122189103ebafe7ec5aeb50e60f3e02af5c2747021f9071aab91e7f875c29e")
@@ -111,6 +112,7 @@ class Rocalution(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocprim@" + ver, when="@" + ver)
@@ -141,6 +143,7 @@ class Rocalution(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         for tgt in itertools.chain(["auto"], amdgpu_targets):
             depends_on(
