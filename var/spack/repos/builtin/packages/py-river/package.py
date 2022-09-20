@@ -8,8 +8,8 @@ from spack.package import *
 
 class PyRiver(PythonPackage):
     """River is a Python library for online machine learning. It aims to be the most
-        user-friendly library for doing machine learning on streaming data. River is
-        the result of a merge between creme and scikit-multiflow."""
+    user-friendly library for doing machine learning on streaming data. River is the
+    result of a merge between creme and scikit-multiflow."""
 
     homepage = "https://riverml.xyz/0.13.0/"
     pypi = "river/river-0.13.0.tar.gz"
