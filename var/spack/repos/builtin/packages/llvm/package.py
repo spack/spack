@@ -377,6 +377,12 @@ class Llvm(CMakePackage, CudaPackage):
         when="@8:11",
     )
 
+    # fix detection of LLDB_PYTHON_EXE_RELATIVE_PATH
+    # see https://reviews.llvm.org/D133513
+    # TODO: adjust version constraint and switch to fetching from the upstream GitHub repo
+    #  when/if the bugfix is merged
+    patch("D133513.diff", level=0, when="@14:15+lldb+python")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #

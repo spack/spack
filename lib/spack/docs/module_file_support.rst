@@ -77,7 +77,7 @@ installation of a package.
 
    Spack only generates modulefiles when a package is installed. If
    you attempt to install a package and it is already installed, Spack
-   will not regenerate modulefiles for the package. This may to
+   will not regenerate modulefiles for the package. This may lead to
    inconsistent modulefiles if the Spack module configuration has
    changed since the package was installed, either by editing a file
    or changing scopes or environments.
