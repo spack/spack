@@ -26,5 +26,5 @@ class Vmc(CMakePackage):
     depends_on("root@6.18.04: ~vmc")
 
     def setup_build_environment(self, env):
-        if "platform=darwin" in self.spec:
+        if self.spec.satisfies("platform=darwin"):
             env.unset("MACOSX_DEPLOYMENT_TARGET")
