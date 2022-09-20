@@ -9,7 +9,7 @@ from spack.package import *
 
 class PyRichClick(PythonPackage):
     """The intention of rich-click is to provide attractive help output
-       from click, formatted with rich, with minimal customisation required."""
+    from click, formatted with rich, with minimal customisation required."""
 
     homepage = "https://github.com/ewels/rich-click"
     pypi = "rich-click/rich-click-1.5.2.tar.gz"
@@ -18,6 +18,6 @@ class PyRichClick(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-click@7:", type=("build", "run"))  
+    depends_on("py-click@7:", type=("build", "run"))
     depends_on("py-rich@10.7.0:", type=("build", "run"))
     depends_on("py-importlib-metadata", type=("build", "run"), when="^python@:3.7")
