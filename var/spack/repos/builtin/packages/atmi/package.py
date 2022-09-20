@@ -123,7 +123,9 @@ class Atmi(CMakePackage):
     # Reset the installation path and remove direct reference to rsync.
     patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:5.2.0")
     # Remove direct reference to /usr/bin/rsync path for rsync command
-    patch("0002-Remove-direct-reference-to-usr-bin-rysnc-for-rsync-cmd-5.2.1.patch", when="@5.2.1:")
+    patch(
+        "0002-Remove-direct-reference-to-usr-bin-rysnc-for-rsync-cmd-5.2.1.patch", when="@5.2.1:"
+    )
 
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]
