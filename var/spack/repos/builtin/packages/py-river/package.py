@@ -16,7 +16,7 @@ class PyRiver(PythonPackage):
 
     version('0.13.0', sha256='9d068b7a9db32302fbd581af81315681dfe61774a5d777fb3d5982d3c3061340')
 
-    depends_on('python@3.8:', type='build')
+    depends_on('python@3.8:',type='build')
     depends_on('py-numpy@1.18.5:')
     depends_on('py-pandas@1.3:')
     depends_on('py-python-dateutil@2.8.1:')
