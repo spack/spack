@@ -1,0 +1,18 @@
+--- a/gribapi/bindings.py
++++ b/gribapi/bindings.py
+@@ -25,14 +25,7 @@ __version__ = "1.5.0"
+ 
+ LOG = logging.getLogger(__name__)
+ 
+-try:
+-    import ecmwflibs as findlibs
+-except ImportError:
+-    import findlibs
+-
+-library_path = findlibs.find("eccodes")
+-if library_path is None:
+-    raise RuntimeError("Cannot find the ecCodes library")
++library_path = "@ECCODES_PATH@"
+ 
+ # default encoding for ecCodes strings
+ ENC = "ascii"
