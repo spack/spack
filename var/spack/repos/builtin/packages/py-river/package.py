@@ -20,7 +20,7 @@ class PyRiver(PythonPackage):
     depends_on("py-cython", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-rust", type="build")
-    
+
     # setup.py
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.22:", type=("build", "run"))
