@@ -321,7 +321,7 @@ class Openblas(MakefilePackage):
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
         make_defs = ["CC={0}".format(spack_cc)]
-        if "+fortran" in self.spec:
+        if "~fortran" not in self.spec:
             make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
