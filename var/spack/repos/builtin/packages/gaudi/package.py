@@ -65,6 +65,7 @@ class Gaudi(CMakePackage):
     depends_on("cmake", type="build")
     depends_on("cppgsl")
     depends_on("fmt", when="@33.2:")
+    depends_on("fmt@:8", when="@:36.7")
     depends_on("intel-tbb")
     depends_on("uuid")
     depends_on("nlohmann-json", when="@35.0:")
