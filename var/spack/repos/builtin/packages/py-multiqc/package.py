@@ -42,6 +42,7 @@ class PyMultiqc(PythonPackage):
     depends_on("py-rich@10:", type=("build", "run"), when="@1.13:")
     depends_on("py-rich-click", type=("build", "run"), when="@1.13:")
     depends_on("py-simplejson", type=("build", "run"))
-    depends_on("py-spectra@0.0.10:", type=("build", "run"))
+    depends_on("py-spectra@0.0.10:", type=("build", "run"), when="@1.5:")
+    depends_on("py-spectra", type=("build", "run"))
     depends_on("py-enum34", type=("build", "run"), when="@1.4:1.5 ^python@:3.3")
     depends_on("py-enum34", type=("build", "run"), when="@1.3")
