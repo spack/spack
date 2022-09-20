@@ -10,7 +10,7 @@ from spack.package import *
 
 @IntelOneApiPackage.update_description
 class IntelOneapiItac(IntelOneApiPackage):
-    """The Intel® Trace Analyzer and Collector profiles and analyzes MPI applications to help
+    """The Intel Trace Analyzer and Collector profiles and analyzes MPI applications to help
     focus your optimization efforts.
 
     Find temporal dependencies and bottlenecks in your code.
