@@ -18,6 +18,7 @@ class RoctracerDevApi(Package):
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.2.1", sha256="e200b5342bdf840960ced6919d4bf42c8f30f8013513f25a2190ee8767667e59")
     version("5.2.0", sha256="9747356ce61c57d22c2e0a6c90b66a055e435d235ba3459dc3e3f62aabae6a03")
     version("5.1.3", sha256="45f19875c15eb609b993788b47fd9c773b4216074749d7744f3a671be17ef33c")
     version("5.1.0", sha256="58b535f5d6772258190e4adcc23f37c916f775057a91b960e1f2ee1f40ed5aac")
@@ -83,5 +84,5 @@ class RoctracerDevApi(Package):
         def only_headers(p):
             return p.endswith("CMakeLists.txt") or p.endswith("RPM") or p.endswith("DEBIAN")
 
-        mkdirp(prefix.roctracer.inc)
-        install_tree(include, prefix.roctracer.inc, ignore=only_headers)
+        mkdirp(prefix.roctracer.include)
+        install_tree(include, prefix.roctracer.include, ignore=only_headers)

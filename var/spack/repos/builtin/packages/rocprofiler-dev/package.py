@@ -19,6 +19,7 @@ class RocprofilerDev(CMakePackage):
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["librocprofiler64"]
 
+    version("5.2.1", sha256="c6768ec428590aadfb0e7ef6e22b8dc5ac8ed97babeb56db07f2d5d41cd122e2")
     version("5.2.0", sha256="1f4db27b56ef1863d4c9e1d96bac9117d66be45156d0637cfe4fd38cae61a23a")
     version("5.1.3", sha256="eca7be451c7bf000fd9c75683e7f5dfbed32dbb385b5ac685d2251ee8c3abc96")
     version("5.1.0", sha256="4a1c6ed887b0159392406af8796508df2794353a4c3aacc801116044fb4a10a5")
@@ -103,6 +104,7 @@ class RocprofilerDev(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -137,7 +139,7 @@ class RocprofilerDev(CMakePackage):
     def cmake_args(self):
         return [
             self.define(
-                "PROF_API_HEADER_PATH", self.spec["roctracer-dev-api"].prefix.roctracer.inc.ext
+                "PROF_API_HEADER_PATH", self.spec["roctracer-dev-api"].prefix.roctracer.include.ext
             ),
             self.define("ROCM_ROOT_DIR", self.spec["hsakmt-roct"].prefix.include),
         ]

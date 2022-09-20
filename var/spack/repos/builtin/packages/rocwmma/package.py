@@ -26,6 +26,7 @@ class Rocwmma(CMakePackage):
 
     maintainers = ["srekolam"]
 
+    version("5.2.1", sha256="73adb6a0ae99051493459a9902ad718b0452d6d819583a58d713ce52fa813f21")
     version("5.2.0", sha256="257ccd1cf2bc1d8064e72e78d276ef7446b2cb7e2dec05ff8331bb44eff2b7cb")
 
     # gfx908:xnack-;gfx90a:xnack-;gfx90a:xnack+
@@ -46,7 +47,7 @@ class Rocwmma(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
 
-    for ver in ["5.2.0"]:
+    for ver in ["5.2.0", "5.2.1"]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)

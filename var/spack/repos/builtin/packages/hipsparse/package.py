@@ -20,6 +20,7 @@ class Hipsparse(CMakePackage):
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipsparse"]
 
+    version("5.2.1", sha256="7b8e4ff264285ae5aabb3c5c2b38bf28f90b2af44efb0398fcf13ffc24bc000a")
     version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
     version("5.1.3", sha256="6e6a0752654f0d391533df8cedf4b630a78ad34c99087741520c582963ce1602")
     version("5.1.0", sha256="f41329534f2ff477a0db6b7f77a72bb062f117800970c122d676db8b207ce80b")
@@ -106,6 +107,7 @@ class Hipsparse(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -126,6 +128,7 @@ class Hipsparse(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("rocprim@" + ver, when="@" + ver)
 

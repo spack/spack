@@ -19,6 +19,7 @@ class Migraphx(CMakePackage):
     maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["libmigraphx"]
 
+    version("5.2.1", sha256="300d990e1b92ad27c3eba3e94ef34538730ca9556398b8b9f7d61d28bf66c57d")
     version("5.2.0", sha256="33afcdf52c6e0e3a2f939fcf30e87f712b8e8ef3633a3dc03a19fea359704925")
     version("5.1.3", sha256="686e068774500a46b6e6488370bbf5bd0bba6d19ecdb00636f951704d19c9ef2")
     version("5.1.0", sha256="6398efaef18a74f2a475aa21bd34bc7c077332a430ee3f6ba4fde6e6a6aa9f89")
@@ -127,6 +128,7 @@ class Migraphx(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
