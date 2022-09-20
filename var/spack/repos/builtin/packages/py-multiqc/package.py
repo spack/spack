@@ -38,7 +38,7 @@ class PyMultiqc(PythonPackage):
     depends_on("py-markdown", type=("build", "run"), when="@1.3:")
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-pyyaml@4:", type=("build", "run"), when="@1.13:")
-    depends_on("py-requests", type=("build", "run"), when="@1.5:")
+    depends_on("py-requests", type=("build", "run"), when="@1.3:")
     depends_on("py-rich@10:", type=("build", "run"), when="@1.13:")
     depends_on("py-rich-click", type=("build", "run"), when="@1.13:")
     depends_on("py-simplejson", type=("build", "run"))
