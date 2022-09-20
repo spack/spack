@@ -28,6 +28,7 @@ class PyMultiqc(PythonPackage):
     depends_on("py-matplotlib@:2.1.0", type=("build", "run"), when="@1.5")
     depends_on("py-matplotlib", type=("build", "run"), when="@:1.3")
     depends_on("py-networkx@2.5.1:", type=("build", "run"), when="@1.13:")
+    depends_on("py-networkx@:1", type=("build", "run"), when="@1.3")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
     depends_on("py-coloredlogs", type=("build", "run"))
