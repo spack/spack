@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 from spack.package import *
 
@@ -19,7 +18,7 @@ class AppleGlu(Package):
 
     version("1.3.0")
 
-    provides("glu@1.3", when=sys.platform == "darwin")
+    provides("glu@1.3")
 
     # Only supported on 'platform=darwin' and compiler=apple-clang
     conflicts("platform=linux")

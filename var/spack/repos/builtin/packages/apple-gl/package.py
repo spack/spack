@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 from spack.package import *
 
@@ -19,7 +18,7 @@ class AppleGl(Package):
 
     version("4.1.0")
 
-    provides("gl@4.1", when=sys.platform == "darwin")
+    provides("gl@4.1")
 
     # Only supported on 'platform=darwin' and compiler=apple-clang
     conflicts("platform=linux")
