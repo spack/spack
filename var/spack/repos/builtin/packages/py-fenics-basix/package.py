@@ -7,8 +7,7 @@ from spack.package import *
 
 
 class PyFenicsBasix(PythonPackage):
-    """Python basis evaluation library for Next generation FEniCS problem solving
-    environment"""
+    """Python interface to Basix, a finite element definition and tabulation runtime library"""
 
     homepage = "https://github.com/FEniCS/basix"
     url = "https://github.com/FEniCS/basix/archive/v0.1.0.tar.gz"
@@ -47,6 +46,5 @@ class PyFenicsBasix(PythonPackage):
     depends_on("py-pybind11@2.6.2:", type="build")
 
     depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
-    depends_on("xtl@0.7.2:", type="build", when="@:0.4.2")
 
     build_directory = "python"

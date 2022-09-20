@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class PyFenicsDolfinx(PythonPackage):
-    """Python interface library to Next generation FEniCS problem solving
+    """Python interface to the next generation FEniCS problem solving
     environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"

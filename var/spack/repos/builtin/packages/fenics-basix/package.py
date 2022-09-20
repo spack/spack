@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class FenicsBasix(CMakePackage):
-    """FEniCS element and quadrature runtime"""
+    """Basix is a finite element definition and tabulation runtime library"""
 
     homepage = "https://github.com/FEniCS/basix"
     url = "https://github.com/FEniCS/basix/archive/v0.1.0.tar.gz"
@@ -38,7 +38,7 @@ class FenicsBasix(CMakePackage):
     depends_on("lapack")
 
     depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
-    depends_on("xtensor-blas@0.19.1:", when="@:0.3.0")
+    depends_on("xtensor-blas@0.19.1:", type="build", when="@:0.3.0")
 
     conflicts(
         "%gcc@:9.10", when="@0.5.0:", msg="fenics-basix requires GCC-10 or newer for C++20 support"
