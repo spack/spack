@@ -15,6 +15,8 @@ class CpuFeatures(CMakePackage):
     version("main", branch="main")
     version("develop", branch="main", deprecated=True)
 
+    version("0.7.0", tag="v0.7.0")
+
     depends_on("cmake@3.0.0:", type="build")
 
     def cmake_args(self):
