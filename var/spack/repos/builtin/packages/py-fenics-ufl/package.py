@@ -33,6 +33,6 @@ class PyFenicsUfl(PythonPackage):
     )
     version("2016.2.0", tag="ufl-2016.2.0")
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
