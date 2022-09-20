@@ -31,7 +31,7 @@ class PyMultiqc(PythonPackage):
     depends_on("py-networkx@:1", type=("build", "run"), when="@1.3")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-click", type=("build", "run"))
-    depends_on("py-coloredlogs", type=("build", "run"))
+    depends_on("py-coloredlogs", type=("build", "run"), when="@1.13:")
     depends_on("py-future@0.14.1:", type=("build", "run"))
     depends_on("py-jinja2@2.9:", type=("build", "run"))
     depends_on("py-lzstring", type=("build", "run"))
