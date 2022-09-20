@@ -20,8 +20,8 @@ class PyMultiqc(PythonPackage):
     version("1.3", sha256="cde17845680131e16521ace04235bb9496c78c44cdc7b5a0fb6fd93f4ad7a13b")
     version("1.0", sha256="1a49331a3d3f2e591a6e9902bc99b16e9205731f0cd2d6eaeee0da3d0f0664c9")
 
-    depends_on("python@2.7:", when="@1.0:1.7")
-    depends_on("python@3:", when="@1.9:")
+    depends_on("python@2.7:", when="@:1.7", type=("build", "run"))
+    depends_on("python@3:", when="@1.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-matplotlib@2.1.1:", type=("build", "run"), when="@:1.13")
     depends_on("py-matplotlib@2.1.1:2", type=("build", "run"), when="@1.7")
