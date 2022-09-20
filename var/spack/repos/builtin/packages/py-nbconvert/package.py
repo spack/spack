@@ -13,6 +13,7 @@ class PyNbconvert(PythonPackage):
     homepage = "https://github.com/jupyter/nbconvert"
     pypi = "nbconvert/nbconvert-6.0.1.tar.gz"
 
+    version("6.5.1", sha256="2c01f3f518fee736c3d3f999dd20e0a16febba17a0d60a3b0fd28fbdec14115d")
     version("6.5.0", sha256="223e46e27abe8596b8aed54301fadbba433b7ffea8196a68fd7b1ff509eee99d")
     version("6.4.2", sha256="eb2803db18f6facce6bf3b01b684fe47907994bd156d15eaccdf011e3d7f8164")
     version("6.3.0", sha256="5e77d6203854944520105e38f2563a813a4a3708e8563aa598928a3b5ee1081a")
@@ -60,6 +61,7 @@ class PyNbconvert(PythonPackage):
     depends_on("py-traitlets", type=("build", "run"))
     depends_on("py-traitlets@4.2:", type=("build", "run"), when="@5:")
     depends_on("py-traitlets@5:", type=("build", "run"), when="@6.2.0:")
+    depends_on("py-lxml", type=("build", "run"), when="@6.5.1:")
 
     # https://bugs.gentoo.org/720870
     # https://github.com/jupyter/nbconvert/pull/937
