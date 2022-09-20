@@ -16,7 +16,7 @@ class Babelstream(CMakePackage):
     git = "https://github.com/UoB-HPC/BabelStream.git"
     url = "https://github.com/UoB-HPC/BabelStream/archive/refs/tags/v4.0.tar.gz"
 
-    maintainers = ["rob64j", "tomdeakin", "tom91136"]
+    maintainers = ["robj0nes ", "tomdeakin", "tom91136"]
 
     version("main", branch="main")
     version("develop", branch="develop")
