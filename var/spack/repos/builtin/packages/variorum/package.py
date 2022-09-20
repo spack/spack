@@ -17,6 +17,8 @@ class Variorum(CMakePackage):
 
     maintainers = ["slabasan", "rountree"]
 
+    version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
+    version("0.5.0", sha256="de331762e7945ee882d08454ff9c66436e2b6f87f761d2b31c6ab3028723bfed")
     version("0.4.1", sha256="be7407b856bc2239ecaa27d3df80aee2f541bb721fbfa183612bd9c0ce061f28")
     version("0.4.0", sha256="70ff1c5a3ae15d0bd07d409ab6f3c128e69528703a829cb18ecb4a50adeaea34")
     version("0.3.0", sha256="f79563f09b8fe796283c879b05f7730c36d79ca0346c12995b7bccc823653f42")
@@ -28,7 +30,6 @@ class Variorum(CMakePackage):
     ############
     variant("shared", default=True, description="Build Variorum as shared lib")
     variant("docs", default=False, description="Build Variorum's documentation")
-    variant("log", default=False, description="Enable Variorum's logs")
     variant(
         "build_type",
         default="Release",
@@ -77,11 +78,6 @@ class Variorum(CMakePackage):
             cmake_args.append("-DVARIORUM_DEBUG=ON")
         else:
             cmake_args.append("-DVARIORUM_DEBUG=OFF")
-
-        if "+log" in spec:
-            cmake_args.append("-DVARIORUM_LOG=ON")
-        else:
-            cmake_args.append("-DVARIORUM_LOG=OFF")
 
         if self.run_tests:
             cmake_args.append("-DBUILD_TESTS=ON")
