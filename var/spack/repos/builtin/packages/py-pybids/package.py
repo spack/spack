@@ -12,6 +12,7 @@ class PyPybids(PythonPackage):
     homepage = "https://github.com/bids-standard/pybids"
     pypi = "pybids/pybids-0.13.1.tar.gz"
 
+    version("0.15.3", sha256="4d99c979bc4bc209cff70a02d1da309c9bf8c6b0338e2a0b66ebea77c7f3c461")
     version("0.15.1", sha256="0253507a04dbfea43eb1f75a1f71aab04be21076bfe96c004888000b802e38f2")
     version("0.14.0", sha256="73c4d03aad333f2a7cb4405abe96f55a33cffa4b5a2d23fad6ac5767c45562ef")
     version("0.13.2", sha256="9692013af3b86b096b5423b88179c6c9b604baff5a6b6f89ba5f40429feb7a3e")
@@ -34,6 +35,7 @@ class PyPybids(PythonPackage):
     depends_on("py-sqlalchemy", type=("build", "run"))
     depends_on("py-bids-validator", type=("build", "run"))
     depends_on("py-num2words", type=("build", "run"))
+    depends_on("py-click@8:", when="@0.15.2:", type=("build", "run"))
     depends_on("py-click", when="@0.12.1:", type=("build", "run"))
 
     depends_on("py-patsy", when="@:0.13", type=("build", "run"))
