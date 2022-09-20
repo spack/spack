@@ -118,7 +118,7 @@ class Harfbuzz(MesonPackage):
 
         if "+coretext" in self.spec:
             args.append("-Dcoretext=enabled")
-        elif "~coretet" in self.spec:
+        elif "~coretext" in self.spec:
             args.append("-Dcoretext=disabled")
 
         return args
@@ -138,7 +138,7 @@ class Harfbuzz(MesonPackage):
 
         if "+coretext" in self.spec:
             args.append("--with-coretext")
-        elif "~coretet" in self.spec:
+        elif "~coretext" in self.spec:
             args.append("--without-coretext")
 
         return args
