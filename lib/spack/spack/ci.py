@@ -656,7 +656,7 @@ def generate_gitlab_ci_yaml(
     remote_mirror_url = mirror_urls[0]
 
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-    if spack_buildcache_copy:
+    if spack_buildcache_copy and not use_fake:
         buildcache_copies = {}
         buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
         buildcache_copy_dest_prefix = spack_buildcache_copy
