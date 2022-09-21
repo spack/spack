@@ -45,7 +45,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # make sure Debug mode is not used when optimizing
-    conflicts("build_type=Debug", when="+full_optimizations", msg="Use Release mode when optimizing")
+    conflicts(
+        "build_type=Debug", when="+full_optimizations", msg="Use Release mode when optimizing"
+    )
 
     depends_on("cmake@3.9:", type="build")
     depends_on("cuda@9:", when="+cuda")

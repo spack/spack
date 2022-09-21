@@ -16,7 +16,6 @@ def hip_repair_options(options, spec):
     )
 
 
-
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
