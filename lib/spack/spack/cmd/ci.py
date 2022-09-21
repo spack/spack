@@ -31,6 +31,13 @@ CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "-d", "-v"]
 INSTALL_FAIL_CODE = 1
 
 
+def use_fake_packages(args):
+    ret = get_env_var("SPACK_CI_USE_FAKE")
+    if not ret:
+        ret = args.use_fake
+    return ret
+
+
 def deindent(desc):
     return desc.replace("    ", "")
 
@@ -44,6 +51,14 @@ def get_env_var(variable_name):
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help="CI sub-commands")
+    subparsers.add_argument(
+        "--use-fake",
+        action="store_true",
+        dest="use_fake",
+        default=False,
+        help="""(Experimental) CI will use fake packages.
+Also configured using env var SPACK_CI_USE_FAKE""",
+    )
 
     # Dynamic generation of the jobs yaml from a spack environment
     generate = subparsers.add_parser(
@@ -200,6 +215,7 @@ def ci_generate(args):
     index_only = args.index_only
     artifacts_root = args.artifacts_root
     buildcache_destination = args.buildcache_destination
+    use_fake = use_fake_packages(args)
 
     if not output_file:
         output_file = os.path.abspath(".gitlab-ci.yml")
@@ -220,6 +236,7 @@ def ci_generate(args):
         use_dependencies=use_dependencies,
         artifacts_root=artifacts_root,
         remote_mirror_override=buildcache_destination,
+        use_fake=use_fake,
     )
 
     if copy_yaml_to:
@@ -285,6 +302,7 @@ def ci_rebuild(args):
     spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
+    use_fake = use_fake_packages(args)
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
@@ -515,6 +533,9 @@ def ci_rebuild(args):
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
+
+    if use_fake:
+        install_args.append("--fake")
 
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
