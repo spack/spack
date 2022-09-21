@@ -29,6 +29,7 @@ class RocmOpencl(CMakePackage):
 
     version("master", branch="main")
 
+    version("5.2.3", sha256="932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94")
     version("5.2.1", sha256="eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5")
     version("5.2.0", sha256="80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0")
     version("5.1.3", sha256="44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31")
@@ -100,6 +101,7 @@ class RocmOpencl(CMakePackage):
     depends_on("numactl", type="link", when="@3.7.0:")
 
     for d_version, d_shasum in [
+        ("5.2.3", "0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998"),
         ("5.2.1", "465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba"),
         ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
         ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
@@ -156,6 +158,7 @@ class RocmOpencl(CMakePackage):
         "5.1.3",
         "5.2.0",
         "5.2.1",
+        "5.2.3",
         "master",
     ]:
         depends_on("comgr@" + ver, type="build", when="@" + ver)
