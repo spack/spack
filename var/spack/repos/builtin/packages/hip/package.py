@@ -25,6 +25,8 @@ class Hip(CMakePackage):
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
+
+    version("5.2.3", sha256="5b83d1513ea4003bfad5fe8fa741434104e3e49a87e1d7fad49e5a8c1d06e57b")
     version("5.2.1", sha256="7d4686a2f8a9124bb21f7f3958e451c57019f48a0cbb42ffdc56ed02860a46c3")
     version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
     version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
@@ -128,6 +130,7 @@ class Hip(CMakePackage):
         "5.1.3",
         "5.2.0",
         "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -146,6 +149,7 @@ class Hip(CMakePackage):
 
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
+        ("5.2.3", "5031d07554ce07620e24e44d482cbc269fa972e3e35377e935d2694061ff7c04"),
         ("5.2.1", "4feaa3883cbc54ddcd5d2d5becbe0f3fe3edd5b3b468dc73b5104893029eefac"),
         ("5.2.0", "8774958bebc29a4b7eb9dc2d38808d79d9a24bf9c1f44e801ff99d2d5ba82240"),
         ("5.1.3", "707f2217f0e7aeb62d7b76830a271056d665542bf5f7a54e40adf4d5f299ca93"),
@@ -168,6 +172,7 @@ class Hip(CMakePackage):
         )
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.2.3", "932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94"),
         ("5.2.1", "eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5"),
         ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
         ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
@@ -189,6 +194,7 @@ class Hip(CMakePackage):
             when="@{0}".format(d_version),
         )
     for d_version, d_shasum in [
+        ("5.2.3", "0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998"),
         ("5.2.1", "465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba"),
         ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
         ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
@@ -238,7 +244,7 @@ class Hip(CMakePackage):
     patch(
         "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
         ".5.2.1.patch",
-        when="@5.2.1",
+        when="@5.2.1:",
     )
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
