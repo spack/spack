@@ -13,6 +13,7 @@ class Harfbuzz(MesonPackage):
     url = "https://github.com/harfbuzz/harfbuzz/releases/download/2.9.1/harfbuzz-2.9.1.tar.xz"
     git = "https://github.com/harfbuzz/harfbuzz.git"
 
+    version("5.1.0", sha256="2edb95db668781aaa8d60959d21be2ff80085f31b12053cdd660d9a50ce84f05")
     version("4.2.1", sha256="bd17916513829aeff961359a5ccebba6de2f4bf37a91faee3ac29c120e3d7ee1")
     version("4.1.0", sha256="f7984ff4241d4d135f318a93aa902d910a170a8265b7eaf93b5d9a504eed40c8")
     version("4.0.1", sha256="98f68777272db6cd7a3d5152bac75083cd52a26176d87bc04c8b3929d33bce49")
@@ -57,6 +58,12 @@ class Harfbuzz(MesonPackage):
     )
 
     variant("graphite2", default=False, description="enable support for graphite2 font engine")
+    variant(
+        "coretext",
+        default=False,
+        when="platform=darwin",
+        description="Enable CoreText shaper backend on macOS",
+    )
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")
@@ -109,6 +116,11 @@ class Harfbuzz(MesonPackage):
             "-Dgraphite2=" + ("enabled" if self.spec.satisfies("+graphite2") else "disabled")
         )
 
+        if "+coretext" in self.spec:
+            args.append("-Dcoretext=enabled")
+        elif "~coretext" in self.spec:
+            args.append("-Dcoretext=disabled")
+
         return args
 
     @when("@:2.9")
@@ -123,6 +135,11 @@ class Harfbuzz(MesonPackage):
         args.append("GTKDOC_MKPDF={0}".format(true))
         args.append("GTKDOC_REBASE={0}".format(true))
         args.extend(self.with_or_without("graphite2"))
+
+        if "+coretext" in self.spec:
+            args.append("--with-coretext")
+        elif "~coretext" in self.spec:
+            args.append("--without-coretext")
 
         return args
 
