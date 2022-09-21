@@ -27,7 +27,7 @@ import archspec.cpu.schema
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -803,7 +803,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes, _store
             with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
-        store_path.copy(store_cache, mode=True, stat=True)
+        copy_tree(str(store_path), str(store_cache))
 
     # Make the DB filesystem read-only to ensure we can't modify entries
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
@@ -844,7 +844,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
     store_path.remove(rec=1)
-    store_cache.copy(store_path, mode=True, stat=True)
+    copy_tree(str(store_cache), str(store_path))
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
 
 
