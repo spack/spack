@@ -228,8 +228,8 @@ class PseudoShell(object):
         self.minion_function = minion_function
 
         # these can be optionally set to change defaults
-        self.controller_timeout = 1
-        self.sleep_time = 0
+        self.controller_timeout = 3
+        self.sleep_time = 0.1
 
     def start(self, **kwargs):
         """Start the controller and minion processes.

@@ -210,7 +210,7 @@ def test_setdefault_command(mutable_database, mutable_config):
     for k in preferred, other_spec:
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
-    assert os.path.realpath(link_name) == writers[other_spec].layout.filename
+    assert os.path.realpath(link_name) == os.path.realpath(writers[other_spec].layout.filename)
 
     # Reset the default to be the preferred spec
     module("lmod", "setdefault", preferred)
@@ -219,4 +219,4 @@ def test_setdefault_command(mutable_database, mutable_config):
     for k in preferred, other_spec:
         assert os.path.exists(writers[k].layout.filename)
     assert os.path.exists(link_name) and os.path.islink(link_name)
-    assert os.path.realpath(link_name) == writers[preferred].layout.filename
+    assert os.path.realpath(link_name) == os.path.realpath(writers[preferred].layout.filename)

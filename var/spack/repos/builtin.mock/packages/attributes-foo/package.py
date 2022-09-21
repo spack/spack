@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 from spack.package import *
 
@@ -14,13 +15,12 @@ class AttributesFoo(BundlePackage):
     provides("baz")
 
     def install(self, spec, prefix):
-        if "platform=windows" in spec:
-            lib_suffix = ".lib"
-        elif "platform=darwin" in spec:
-            lib_suffix = ".dylib"
-        else:
-            lib_suffix = ".so"
 
+        lib_suffix = ".so"
+        if sys.platform == "win32":
+            lib_suffix = ".dll"
+        elif sys.platform == "darwin":
+            lib_suffix = ".dylib"
         mkdirp(prefix.include)
         touch(prefix.include.join("foo.h"))
         mkdirp(prefix.include.bar)
