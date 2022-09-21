@@ -203,7 +203,7 @@ def diff(parser, args):
         if spec.concrete:
             specs.append(spec)
         else:
-            specs.append(spack.cmd.disambiguiate_spec(spec, env, first=args.load_first))
+            specs.append(spack.cmd.disambiguate_spec(spec, env, first=args.load_first))
 
     # Calculate the comparison (c)
     color = False if args.dump_json else get_color_when()
