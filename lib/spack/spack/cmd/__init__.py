@@ -291,12 +291,12 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
     elif first:
         return matching_specs[0]
 
-    require_specific_spec(spec, matching_specs)
+    ensure_single_spec_or_die(spec, matching_specs)
 
     return matching_specs[0]
 
 
-def require_specific_spec(spec, matching_specs):
+def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 

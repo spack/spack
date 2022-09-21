@@ -65,7 +65,7 @@ def disambiguate_in_view(specs, view):
             tty.die("Spec matches no installed packages.")
 
         matching_in_view = [ms for ms in matching_specs if ms in view_specs]
-        spack.cmd.require_specific_spec("Spec", matching_in_view)
+        spack.cmd.ensure_single_spec_or_die("Spec", matching_in_view)
 
         return matching_in_view[0] if matching_in_view else matching_specs[0]
 
