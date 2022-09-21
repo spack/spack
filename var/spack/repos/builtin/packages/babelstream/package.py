@@ -51,7 +51,7 @@ class Babelstream(CMakePackage):
         description="Specify the model to be built",
     )
 
-    # TODO: Will likely need revising once PR #29761 has been merged. 
+    # TODO: Will likely need revising once PR #29761 has been merged.
     variant("flags", values=str, default=" ", description="Additional CXX flags to be provided")
 
     variant(
