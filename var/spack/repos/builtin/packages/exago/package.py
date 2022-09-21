@@ -46,7 +46,11 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
 
-    # Dependencides
+    # Profling and optimization flags
+    variant("full_optimizations", default=False, description="Enable/Disable optimizations and release type")
+    #variant("with_profiling", default="none", description="Specify profiling tools", multi=True, values=("none", "hpctoolkit", "tau"))
+
+    # Dependencies
     depends_on("pkgconfig", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("blas")
@@ -61,6 +65,24 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("umpire+cuda~shared", when="+raja+cuda")
 
     depends_on("cmake@3.18:", type="build")
+
+    # Profiling and optimizations
+    depends_on("hiop+deepchecking~full_optimizations", when="+hiop~full_optimizations")
+    depends_on("hiop~deepchecking+full_optimizations", when="+hiop+full_optimizations")
+
+    # Force RelWithDebInfo when not using optimizations 
+    conflicts("build_type=Release", when="~full_optimizations", msg="Use RelWithDebInfo when not using optimizations")
+    conflicts("build_type=Debug", when="~full_optimizations", msg="Use RelWithDebInfo when not using optimizations")
+    conflicts("build_type=MinSizeRel", when="~full_optimizations", msg="Use RelWithDebInfo when not using optimizations")
+
+    # Force Release mode when using optimizations
+    conflicts("build_type=RelWithDebInfo", when="+full_optimizations", msg="Use Release when using optimizations")
+    conflicts("build_type=Debug", when="+full_optimizations", msg="Use Release when using optimizations")
+    conflicts("build_type=MinSizeRel", when="+full_optimizations", msg="Use Release when using optimizations")
+
+    #depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
+    #depends_on("tau", when="with_profiling=tau")
+    #^ need to depend when both hpctoolkit and tau
 
     # HiOp dependency logic
     depends_on("hiop+raja", when="+hiop+raja")
