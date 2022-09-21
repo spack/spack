@@ -25,6 +25,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version("5.2.3", sha256="bbcdb5808d2bc880486dffa89f4111fb4b1d6dfe9b11fcd46fbd17939d057cf0")
     version("5.2.1", sha256="201996b31f59a8d5e4cc3f17d17a5b81158a34d2a1c833b65ccc3dceb21d176f")
     version("5.2.0", sha256="fee620a1edd3bce18b2cec9ef26ec2afe0a85d6da8a37ed713ab0d1342382503")
     version("5.1.3", sha256="62591d5caedc13832c3ccef629a88d9c2a43c884daad1124ddcb9c5f7d5470e9")
@@ -167,7 +168,6 @@ class Mivisionx(CMakePackage):
     # HIP as backend did not build for older releases 5.1.0 where
     # OPENCL was default backend.
     conflicts("+opencl+hip")
-    conflicts("~opencl~hip")
     conflicts("+hip", when="@:5.1.0")
 
     with when("+opencl"):
@@ -189,6 +189,7 @@ class Mivisionx(CMakePackage):
             "5.1.3",
             "5.2.0",
             "5.2.1",
+            "5.2.3",
         ]:
             depends_on("rocm-opencl@" + ver, when="@" + ver)
             depends_on("miopengemm@" + ver, when="@" + ver)
@@ -203,6 +204,7 @@ class Mivisionx(CMakePackage):
             "5.1.3",
             "5.2.0",
             "5.2.1",
+            "5.2.3",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
 
@@ -218,11 +220,12 @@ class Mivisionx(CMakePackage):
         protobuf = spec["protobuf"].prefix.include
         args = [
             self.define("CMAKE_CXX_FLAGS", "-I{0}".format(protobuf)),
-            self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix),
         ]
         if self.spec.satisfies("+opencl"):
             args.append(self.define("BACKEND", "OPENCL"))
+            args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
         if self.spec.satisfies("+hip"):
             args.append(self.define("BACKEND", "HIP"))
+            args.append(self.define("HSA_PATH", spec["hsa-rocr-dev"].prefix))
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
         return args
