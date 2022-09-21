@@ -2,13 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import numbers
 
 import pytest
 
 import spack.error
+import spack.variant
 from spack.variant import (
     BoolValuedVariant,
     DuplicateVariantError,
@@ -737,3 +736,11 @@ def test_disjoint_set_fluent_methods():
         assert "none" not in d
         assert "none" not in [x for x in d]
         assert "none" not in d.feature_values
+
+
+@pytest.mark.regression("32694")
+@pytest.mark.parametrize("other", [True, False])
+def test_conditional_value_comparable_to_bool(other):
+    value = spack.variant.Value("98", when="@1.0")
+    comparison = value == other
+    assert comparison is False

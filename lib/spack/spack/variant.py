@@ -886,7 +886,7 @@ class Value(object):
         return hash(self.value)
 
     def __eq__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, (six.string_types, bool)):
             return self.value == other
         return self.value == other.value
 
