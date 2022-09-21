@@ -15,7 +15,7 @@ class PyOcpModels(PythonPackage):
 
     tags = ["proxy-app"]
 
-    depends_on("python@3.8:", type=("build", "run"))
+    depends_on("python@3.8", type=("build", "run"))
     depends_on("py-ase@3.21", type=("build", "run"))
     depends_on("py-matplotlib@3.3", type=("build", "run"))
     depends_on("py-pre-commit@2.10", type=("build", "run"))
@@ -30,6 +30,8 @@ class PyOcpModels(PythonPackage):
     depends_on("py-black", type=("build", "run"))
     depends_on("py-torch", type=("build", "run"))
     depends_on("py-torch-scatter", type=("build", "run"))
+    depends_on("py-torch-cluster", type=("build", "run"))
+    depends_on("py-torch-sparse", type=("build", "run"))
     depends_on("py-torch-spline-conv", type=("build", "run"))
     depends_on("py-demjson", type=("build", "run"))
     depends_on("py-pillow", type=("build", "run"))

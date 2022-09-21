@@ -24,4 +24,3 @@ class PyDemjson(PythonPackage):
     version("1.4", sha256="e5858dc54a80290cecbc1d1514c6ce50dca44fbd15ccc195c4a8b6969b45a41f")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@2.6:", type=("build", "run"), when="@:0.20")
