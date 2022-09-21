@@ -33,8 +33,6 @@ class PyFenicsBasix(PythonPackage):
         deprecated=True,
     )
 
-    variant("numba", default=False, description="numba features")
-
     depends_on("fenics-basix@main", type=("build", "run"), when="@main")
     depends_on("fenics-basix@0.5.1", type=("build", "run"), when="@0.5.1")
     depends_on("fenics-basix@0.4.2", type=("build", "run"), when="@0.4.2")
@@ -44,13 +42,9 @@ class PyFenicsBasix(PythonPackage):
 
     depends_on("cmake@3.19:", type="build")
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-numba", type=("run"), when="+numba")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-pip", type="build")
     depends_on("py-pybind11@2.6.2:", type="build")
-    depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
 
-    depends_on("xtensor@0.23.10:", type="build", when="@:0.4.2")
+    depends_on("xtensor@0.23.10:", type="build", when="@:0.4")
 
     build_directory = "python"
