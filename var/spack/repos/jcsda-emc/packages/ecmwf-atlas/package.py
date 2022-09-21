@@ -17,7 +17,8 @@ class EcmwfAtlas(CMakePackage):
 
     version('master', branch='master')
     version('develop', branch='develop')
-    version('0.29.0', commit='b2558897fa22b18164d4481089423e7b443436f9', preferred=True)
+    version('0.30.0', commit='xxx58897fa22b18164d4481089423e7b443436f9', preferred=True)
+    version('0.29.0', commit='b2558897fa22b18164d4481089423e7b443436f9')
     version('0.27.0', commit='d825fad7ab415558a81415914a0fc60da1d0295a')
     version('0.26.0', commit='3ae6184a598a00fbc6b1a77c3c9d5d808f1c65ea')
     version('0.25.0', commit='3c74adda4960723f237db936132888e3fd380154')
