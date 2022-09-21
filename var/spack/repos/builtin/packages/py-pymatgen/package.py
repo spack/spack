@@ -16,6 +16,9 @@ class PyPymatgen(PythonPackage):
     pypi = "pymatgen/pymatgen-4.7.2.tar.gz"
 
     version("2021.3.9", sha256="a6f22d69133a48b7801bfd5e6a2878b47b4b4b2ef1a377b87c6c573be14cbf16")
+    version(
+        "2020.12.31", sha256="5002490facd47c55d2dae42c35712e061c1f5d881180485c0543a899589856d6"
+    )
     version("4.7.2", sha256="e439b78cc3833a03963c3c3efe349d8a0e52a1550c8a05c56a89aa1b86657436")
     version("4.6.2", sha256="f34349090c6f604f7d402cb09cd486830b38523639d7160d7fd282d504036a0e")
 
