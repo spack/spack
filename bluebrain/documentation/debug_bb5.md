@@ -16,17 +16,23 @@ during concretization, the following steps may help debug issues.
 1. Check out the pull request in your local Spack setup,
    and make sure that you sourced your local Spack clone.
 
+   Set temporary root directory on BB5 if not setup already:
+
+   ```console
+   export TMPDIR=${TMPDIR-/tmp}
+   ```
+
    Then unset or reset any variables that may interfere with the PR building:
    ```console
    unset SPACK_SYSTEM_CONFIG_PATH
-   export SPACK_USER_CACHE_PATH=/tmp/debug_spack_pr_$(whoami)_cache
+   export SPACK_USER_CACHE_PATH=${TMPDIR}/debug_spack_pr_$(whoami)_cache
    ```
 2. Note the job that is failing, i.e., `libraries` in the `applications`
-   stage, with id `140355`.
+   stage, with GitLab job id `140355`.
 
    Copy its configuration to different location and use it:
    ```console
-   export SPACK_USER_CONFIG_PATH=/tmp/debug_spack_pr_$(whoami)_config
+   export SPACK_USER_CONFIG_PATH=${TMPDIR}/debug_spack_pr_$(whoami)_config
 
    export FAILED_JOB=140355
    export STUB=/gpfs/bbp.cscs.ch/ssd/gitlab_map_jobs/bbpcihpcdeploy
@@ -34,8 +40,8 @@ during concretization, the following steps may help debug issues.
    ```
    Then set the installation directory to a temporary writable one:
    ```console
-   spack config add config:install_tree:root:/tmp/debug_spack_pr_$(whoami)_software
-   spack config add config:module_roots:tcl:/tmp/debug_spack_pr_$(whoami)_modules
+   spack config add config:install_tree:root:${TMPDIR}/debug_spack_pr_$(whoami)_software
+   spack config add config:module_roots:tcl:${TMPDIR}/debug_spack_pr_$(whoami)_modules
    ```
 3. Recreate the environment used to build in the CI and activate it.
    Recall that `applications` was failing in `libraries`:
@@ -56,9 +62,9 @@ during concretization, the following steps may help debug issues.
    issues.
 8. Clean everything up:
    ```console
-   rm -r /tmp/debug_spack_pr_$(whoami)_cache
-   rm -r /tmp/debug_spack_pr_$(whoami)_config
-   rm -r /tmp/debug_spack_pr_$(whoami)_modules
-   rm -r /tmp/debug_spack_pr_$(whoami)_software
+   rm -r ${TMPDIR}/debug_spack_pr_$(whoami)_cache
+   rm -r ${TMPDIR}/debug_spack_pr_$(whoami)_config
+   rm -r ${TMPDIR}/debug_spack_pr_$(whoami)_modules
+   rm -r ${TMPDIR}/debug_spack_pr_$(whoami)_software
    ```
    Finally, to ensure a clean reset of your shell environment, close your SSH connection to BlueBrain5.
