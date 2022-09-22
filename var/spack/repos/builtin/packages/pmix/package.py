@@ -103,7 +103,7 @@ class Pmix(AutotoolsPackage):
         tgt_libpath = ""
         dir_list = spec[pkg_name].libs
         for entry in dir_list:
-            if path_match_str=="" or (path_match_str!="" and path_match_str in entry):
+            if path_match_str == "" or (path_match_str != "" and path_match_str in entry):
                 tgt_libpath = entry
                 break
         path_list = tgt_libpath.split(os.sep)
@@ -118,12 +118,17 @@ class Pmix(AutotoolsPackage):
         config_args.append("--with-libevent=" + spec["libevent"].prefix)
         config_args.append("--with-hwloc=" + spec["hwloc"].prefix)
 
+        # As of 09/22/22 pmix build does not detect the hwloc version
+        # for 32-bit architecture correctly. Since, we have only been
+        # able to test on 64-bit architecture, we are keeping this
+        # check for "64" in place. We will need to re-visit this when we
+        # have the fix in Pmix for 32-bit library version detection
         if "64" in platform.machine():
             if spec["libevent"].external_path:
-                dep_libpath = self.find_external_lib_path("libevent","64")
+                dep_libpath = self.find_external_lib_path("libevent", "64")
                 config_args.append("--with-libevent-libdir=" + dep_libpath)
             if spec["hwloc"].external_path:
-                dep_libpath = self.find_external_lib_path("hwloc","64")
+                dep_libpath = self.find_external_lib_path("hwloc", "64")
                 config_args.append("--with-hwloc-libdir=" + dep_libpath)
 
         config_args.extend(self.enable_or_disable("python-bindings", variant="python"))
