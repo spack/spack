@@ -19,7 +19,7 @@ class MgcfdOp2(MakefilePackage):
     homepage = "https://github.com/warwick-hpsc/MG-CFD-app-OP2"
     git = "https://github.com/warwick-hpsc/MG-CFD-app-OP2.git"
 
-    maintainers = ["robj0nes", "tomdeakin", "gihanmudalige"]
+    maintainers = ["tomdeakin", "gihanmudalige", "bozbez"]
 
     version("v1.0.0-rc1")
 

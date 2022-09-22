@@ -17,6 +17,7 @@ class Mlirmiopen(CMakePackage):
 
     maintainers = ["srekolam"]
 
+    version("5.2.1", sha256="912eed29ceff038ae537aeb2bc70abdef6d05f3143862c4efe3513e9e9ca2e8d")
     version("5.2.0", sha256="546121f203e7787d3501fbaf6673bdbeefbb39e0446b02c480454338362a1f01")
     version("5.1.3", sha256="936f92707ffe9a1973728503db6365bb7f14e5aeccfaef9f0924e54d25080c69")
     version("5.1.0", sha256="56dab11877295784cbb754c10bf2bd6535a3dfea31ec0b97ffe77b94115109dc")
@@ -37,7 +38,7 @@ class Mlirmiopen(CMakePackage):
     depends_on("half")
     depends_on("pkgconfig", type="build")
 
-    for ver in ["5.1.0", "5.1.3", "5.2.0"]:
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)

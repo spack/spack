@@ -54,15 +54,14 @@ jobs:
           # built-in repository or documentation
           filters: |
             bootstrap:
-            - '!var/spack/repos/builtin/**'
             - 'var/spack/repos/builtin/packages/clingo-bootstrap/**'
             - 'var/spack/repos/builtin/packages/clingo/**'
             - 'var/spack/repos/builtin/packages/python/**'
             - 'var/spack/repos/builtin/packages/re2c/**'
-            - '!lib/spack/docs/**'
             - 'lib/spack/**'
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
+            - '.github/workflows/ci.yaml'
             core:
             - './!(var/**)/**'
             packages:
