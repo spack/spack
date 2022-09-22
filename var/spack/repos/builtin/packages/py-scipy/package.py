@@ -152,6 +152,12 @@ class PyScipy(PythonPackage):
             if self.spec.satisfies("^py-numpy@1.16:1.17"):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
+        # https://github.com/scipy/scipy/issues/14935
+        if (self.spec.satisfies('%intel ^py-pythran')
+            or self.spec.satisfies('%oneapi ^py-pythran')):
+            if spec["py-pythran"].version < Version("0.12"):
+                env.set('SCIPY_USE_PYTHRAN', '0')
+
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
 
