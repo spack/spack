@@ -32,19 +32,20 @@ class MgcfdOp2(MakefilePackage):
     depends_on("op2-dsl+mpi", when="+mpi")
     depends_on("op2-dsl~mpi", when="~mpi")
 
-    def edit(self, spec, prefix):
+    def setup_build_environment(self, env):
         compiler_map = {
             "gcc": "gnu",
             "arm": "clang",
             "cce": "cray",
             "nvhpc": "pgi",
         }
-
         if self.spec.compiler.name in compiler_map:
-            env["COMPILER"] = compiler_map[self.spec.compiler.name]
+            env.set("COMPILER", compiler_map[self.spec.compiler.name])
         else:
-            env["COMPILER"] = self.spec.compiler.name
+            env.set("COMPILER", self.spec.compiler.name)
 
+
+    def edit(self, spec, prefix):
         # Makefile tweaks to ensure the correct compiler commands are called.
         makefile = FileFilter("Makefile")
         if self.spec.compiler.name == "arm":
@@ -79,9 +80,20 @@ class MgcfdOp2(MakefilePackage):
         return builds
 
     def build(self, spec, prefix):
-        for b in self.get_builds():
-            make("clean_" + b)
-            make(b)
+        if "+mpi" in self.spec:
+            if "+cuda" in self.spec and spec.variants["cuda_arch"].value[0] != "none":
+                make("mpi_cuda")
+            else:
+                make("mpi")
+                make("mpi_vec")
+                make("mpi_openmp")
+            
+        else:
+            if "+cuda" in self.spec and spec.variants["cuda_arch"].value[0] != "none":
+                make("cuda")
+            else:
+                make("seq")
+                make("openmp")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
