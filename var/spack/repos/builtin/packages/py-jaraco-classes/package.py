@@ -16,7 +16,7 @@ class PyJaracoClasses(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@56:", type="build")
     depends_on("py-setuptools-scm@3.4.1: +toml", type="build")
 
     depends_on("py-more-itertools", type=("build", "run"))
