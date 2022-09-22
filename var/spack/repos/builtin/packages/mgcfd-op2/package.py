@@ -25,7 +25,7 @@ class MgcfdOp2(MakefilePackage):
 
     variant("mpi", default=False, description="Enable MPI support")
 
-    depends_on("gmake@4.3")
+    depends_on("gmake@4.3:")
     # KaHIP is a new MGCFD-OP2 dependency and
     # NVHPC builds require the latest develop branch at time of writing (Sept 22)
     depends_on("kahip@develop+metis", when="+mpi")
