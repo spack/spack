@@ -70,8 +70,6 @@ class PyMatplotlib(PythonPackage):
     # https://matplotlib.org/tutorials/introductory/usage.html#backends
     # From `lib/matplotlib/rcsetup.py`:
     interactive_bk = [
-        # https://github.com/spack/spack/issues/32694
-        "macosx",
         # GTK
         conditional("gtk", when="@:2"),
         conditional("gtkagg", when="@:2"),
@@ -95,7 +93,7 @@ class PyMatplotlib(PythonPackage):
         "wxagg",
         conditional("wxcairo", when="@2.2:"),
         # Other
-        # "macosx",
+        "macosx",
         "nbagg",
         "webagg",
     ]
