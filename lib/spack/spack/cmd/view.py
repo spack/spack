@@ -35,7 +35,6 @@ YamlFilesystemView.
 """
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
-from llnl.util.tty.color import colorize
 
 import spack.cmd
 import spack.environment as ev
@@ -66,16 +65,7 @@ def disambiguate_in_view(specs, view):
             tty.die("Spec matches no installed packages.")
 
         matching_in_view = [ms for ms in matching_specs if ms in view_specs]
-
-        if len(matching_in_view) > 1:
-            spec_format = "{name}{@version}{%compiler}{arch=architecture}"
-            args = ["Spec matches multiple packages.", "Matching packages:"]
-            args += [
-                colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(spec_format)
-                for s in matching_in_view
-            ]
-            args += ["Use a more specific spec."]
-            tty.die(*args)
+        spack.cmd.ensure_single_spec_or_die("Spec", matching_in_view)
 
         return matching_in_view[0] if matching_in_view else matching_specs[0]
 
