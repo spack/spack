@@ -17,4 +17,4 @@ class PyTinydb(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-poetry-core", type="build")
-    depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="^python@:3.6")
+    depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="^python@:3.7")
