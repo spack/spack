@@ -79,12 +79,12 @@ class ConstraintAction(argparse.Action):
 
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.db.query(q_args)
+            return spack.store.db.query(**q_args)
 
         # Return only matching stuff otherwise.
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, q_args):
+            for s in spack.store.db.query(spec, **q_args):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
 
