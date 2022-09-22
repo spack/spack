@@ -17,6 +17,7 @@ class Xtensor(CMakePackage):
 
     version("develop", branch="master")
     version("0.24.1", sha256="dd1bf4c4eba5fbcf386abba2627fcb4a947d14a806c33fde82d0cc1194807ee4")
+    version("0.24.0", sha256="37738aa0865350b39f048e638735c05d78b5331073b6329693e8b8f0902df713")
     version("0.23.10", sha256="2e770a6d636962eedc868fef4930b919e26efe783cd5d8732c11e14cf72d871c")
     version("0.23.4", sha256="c8377f8ec995762c89dea2fdf4ac06b53ba491a6f0df3421c4719355e42425d2")
     version("0.23.2", sha256="fde26dcf93f5d95996b8cc7e556b84930af41ff699492b7b20b2e3335e12f862")
@@ -35,6 +36,7 @@ class Xtensor(CMakePackage):
     depends_on("xsimd", when="@develop")
 
     depends_on("xsimd@8.0.5:", when="@0.24.1: +xsimd")
+    depends_on("xsimd@8.0.2:", when="@0.24.0 +xsimd")
     depends_on("xsimd@7.4.10:7", when="@0.23.4:0.23 +xsimd")
     depends_on("xsimd@7.4.9:7", when="@0.23.2 +xsimd")
     depends_on("xsimd@7.2.3:7", when="@0.20.7 +xsimd")
