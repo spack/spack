@@ -155,7 +155,7 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/14935
         if (self.spec.satisfies('%intel ^py-pythran')
             or self.spec.satisfies('%oneapi ^py-pythran')):
-            if spec["py-pythran"].version < Version("0.12"):
+            if self.spec["py-pythran"].version < Version("0.12"):
                 env.set('SCIPY_USE_PYTHRAN', '0')
 
         # Pick up Blas/Lapack from numpy
