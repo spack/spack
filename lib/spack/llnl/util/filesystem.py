@@ -24,7 +24,7 @@ from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import Executable, which
+from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = _platform == "win32"
@@ -115,7 +115,14 @@ def path_contains_subdirectory(path, root):
 
 @memoized
 def file_command(*args):
-    file_cmd = which("file")
+    """Creates entry point to `file` system command with provided arguments"""
+    try:
+        file_cmd = which("file", required=True)
+    except CommandNotFoundError as e:
+        if is_windows:
+            raise CommandNotFoundError("`file` utility is not available on Windows")
+        else:
+            raise e
     for arg in args:
         file_cmd.add_default_arg(arg)
     return file_cmd
@@ -123,6 +130,9 @@ def file_command(*args):
 
 @memoized
 def _get_mime_type():
+    """Generate method to call `file` system command to aquire mime type
+    for a specified path
+    """
     return file_command("-b", "-h", "--mime-type")
 
 

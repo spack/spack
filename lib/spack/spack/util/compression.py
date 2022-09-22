@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
 import io
 import os
 import re
@@ -198,15 +199,14 @@ def _lzma_decomp(archive_file):
 
 def _win_compressed_tarball_handler(archive_file):
     """Decompress and extract compressed tarballs on Windows.
-    This method uses 7zips in conjunction with the tar utility
+    This method uses 7zip in conjunction with the tar utility
     to perform decompression and extraction in a two step process
     first using 7zip to decompress, and tar to extract.
 
     The motivation for this method is the inability of 7zip
     to directly decompress and extract compressed archives
     in a single shot without undocumented workarounds, and
-    inconsistent degrees of lzma and compress compression
-    support on the Windows platform
+    the Windows tar utility's lack of access to the xz tool (unsupported on Windows)
     """
     # perform intermediate extraction step
     # record name of new archive so we can extract
@@ -272,47 +272,49 @@ unable to extract %s files. 7z can be installed via Spack"
     return outfile
 
 
-def decompressor_for(path):
+def decompressor_for(path, extension=None):
     """Returns a function pointer to appropriate decompression
     algorithm based on extension type.
 
     Args:
         path (str): path of the archive file requiring decompression
     """
-    ext = extension_from_file(path, decompress=True)
-    if not allowed_archive(ext):
+    if not extension:
+        extension = extension_from_file(path, decompress=True)
+
+    if not allowed_archive(extension):
         raise CommandNotFoundError(
             "Cannot extract archive, \
 unrecognized file extension: '%s'"
-            % ext
+            % extension
         )
 
-    if re.match(r"\.?zip$", ext) or path.endswith(".zip"):
+    if re.match(r"\.?zip$", extension) or path.endswith(".zip"):
         return _unzip
 
-    if re.match(r"gz", ext):
+    if re.match(r"gz", extension):
         return _gunzip
 
-    if re.match(r"bz2", ext):
+    if re.match(r"bz2", extension):
         return _bunzip2
 
     # Python does not have native support
     # of any kind for .Z files. In these cases,
     # we rely on external tools such as tar,
     # 7z, or uncompressZ
-    if re.match(r"Z$", ext):
+    if re.match(r"Z$", extension):
         return _unZ
 
     # Python and platform may not have support for lzma
     # compression. If no lzma support, use tools available on systems
     # 7zip on Windows and the xz tool on Unix systems.
-    if re.match(r"xz", ext):
+    if re.match(r"xz", extension):
         return _lzma_decomp
 
     # Catch tar.xz/tar.Z files here for Windows
     # as the tar utility on Windows cannot handle such
     # compression types directly
-    if ("xz" in ext or "Z" in ext) and is_windows:
+    if ("xz" in extension or "Z" in extension) and is_windows:
         return _win_compressed_tarball_handler
 
     return _untar
@@ -340,36 +342,29 @@ class FileTypeInterface:
     the method that checks a types magic numbers against a given file's.
     """
 
-    _OFFSET = 0
-    _compressed = False
+    OFFSET = 0
+    compressed = False
 
-    @classmethod
+    @staticmethod
     def name(cls):
         raise NotImplementedError
 
     @classmethod
-    def is_compression_type(cls):
-        return cls._compressed
-
-    @classmethod
-    def offset(cls):
-        return cls._OFFSET
-
-    @classmethod
     def magic_number(cls):
-        return cls._MAGIC_NUMBER
-
-    @classmethod
-    def extension(cls):
-        return cls._ext
+        """Return a list of all potential magic numbers for a filetype"""
+        return [x[1] for x in inspect.getmembers(cls) if x[0].startswith("_MAGIC_NUMBER")]
 
     @classmethod
     def header_size(cls):
-        return len(cls.magic_number())
+        """Return size of largest magic number associated with file type"""
+        return max([len(x) for x in cls.magic_number()])
 
     @classmethod
     def _bytes_check(cls, magic_bytes):
-        return cls._MAGIC_NUMBER == magic_bytes
+        for magic in cls.magic_number():
+            if magic_bytes.startswith(magic):
+                return True
+        return False
 
     @classmethod
     def is_file_of_type(cls, iostream):
@@ -385,7 +380,7 @@ class FileTypeInterface:
         if not iostream:
             return False
         # move to location of magic bytes
-        iostream.seek(cls.offset())
+        iostream.seek(cls.OFFSET)
         magic_bytes = iostream.read(cls.header_size())
         # return to beginning of file
         iostream.seek(0)
@@ -397,25 +392,31 @@ class FileTypeInterface:
 class CompressedFileTypeInterface(FileTypeInterface):
     """Interface class for FileTypes that include compression information"""
 
-    _compressed = True
+    compressed = True
 
-    @classmethod
-    def decomp_in_memory(cls, stream):
+    @staticmethod
+    def decomp_in_memory(stream):
+        """This method decompresses and loads the first 200 or so bytes of a compressed file
+        to check for compressed archives. This does not decompress the entire file and should
+        not be used for direct expansion of archives/compressed files
+        """
         raise NotImplementedError("Implementation by compression subclass required")
 
 
 class BZipFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b"\x42\x5a\x68"
-    _ext = "bz2"
+    extension = "bz2"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "bzip2 compressed data"
 
-    @classmethod
-    def decomp_in_memory(cls, stream):
+    @staticmethod
+    def decomp_in_memory(stream):
         if is_bz2_supported():
-            comp_stream = stream.read(TarFileType.offset() + TarFileType.header_size())
+            # checking for underlying archive, only decomp as many bytes
+            # as is absolutely neccesary for largest archive header (tar)
+            comp_stream = stream.read(TarFileType.OFFSET + TarFileType.header_size())
             return io.BytesIO(initial_bytes=bz2.BZ2Decompressor().decompress(comp_stream))
         return None
 
@@ -423,47 +424,34 @@ class BZipFileType(CompressedFileTypeInterface):
 class ZCompressedFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER_LZW = b"\x1f\x9d"
     _MAGIC_NUMBER_LZH = b"\x1f\xa0"
-    _ext = "Z"
+    extension = "Z"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "compress'd data"
 
-    @classmethod
-    def magic_number(cls):
-        return [cls._MAGIC_NUMBER_LZH, cls._MAGIC_NUMBER_LZW]
-
-    @classmethod
-    def header_size(cls):
-        return max(len(cls._MAGIC_NUMBER_LZW), len(cls._MAGIC_NUMBER_LZH))
-
-    @classmethod
-    def _bytes_check(cls, magic_bytes):
-        for magic in cls.magic_number():
-            if magic_bytes.startswith(magic):
-                return True
-        return False
-
-    @classmethod
-    def decomp_in_memory(cls, stream):
+    @staticmethod
+    def decomp_in_memory(stream):
         # python has no method of decompressing `.Z` files in memory
         return None
 
 
 class GZipFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b"\x1f\x8b\x08"
-    _ext = "gz"
+    extension = "gz"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "gzip compressed data"
 
-    @classmethod
-    def decomp_in_memory(cls, stream):
+    @staticmethod
+    def decomp_in_memory(stream):
         if is_gzip_supported():
+            # checking for underlying archive, only decomp as many bytes
+            # as is absolutely neccesary for largest archive header (tar)
             return io.BytesIO(
                 initial_bytes=gzip.GzipFile(fileobj=stream).read(
-                    TarFileType.offset() + TarFileType.header_size()
+                    TarFileType.OFFSET + TarFileType.header_size()
                 )
             )
         return None
@@ -471,16 +459,18 @@ class GZipFileType(CompressedFileTypeInterface):
 
 class LzmaFileType(CompressedFileTypeInterface):
     _MAGIC_NUMBER = b"\xfd7zXZ"
-    _ext = "xz"
+    extension = "xz"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "xz compressed data"
 
-    @classmethod
-    def decomp_in_memory(cls, stream):
+    @staticmethod
+    def decomp_in_memory(stream):
         if is_lzma_supported():
-            max_size = TarFileType.offset() + TarFileType.header_size()
+            # checking for underlying archive, only decomp as many bytes
+            # as is absolutely neccesary for largest archive header (tar)
+            max_size = TarFileType.OFFSET + TarFileType.header_size()
             return io.BytesIO(
                 initial_bytes=lzma.LZMADecompressor().decompress(
                     stream.read(max_size), max_length=max_size
@@ -490,42 +480,21 @@ class LzmaFileType(CompressedFileTypeInterface):
 
 
 class TarFileType(FileTypeInterface):
-    _OFFSET = 257
-    _GNU_MAGIC = b"ustar  \0"
-    _POSIX_MAGIC = b"ustar\x0000"
-    _ext = "tar"
+    OFFSET = 257
+    _MAGIC_NUMBER_GNU = b"ustar  \0"
+    _MAGIC_NUMBER_POSIX = b"ustar\x0000"
+    extension = "tar"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "tar archive"
-
-    @classmethod
-    def magic_number(cls):
-        return [cls._GNU_MAGIC, cls._POSIX_MAGIC]
-
-    @classmethod
-    def header_size(cls):
-        return max(len(cls._GNU_MAGIC), len(cls._POSIX_MAGIC))
-
-    @classmethod
-    def _bytes_check(cls, magic_bytes):
-        for magic in cls.magic_number():
-            if magic_bytes.startswith(magic):
-                return True
-
-        # unable to detect magic number for tarfile
-        # however, certain versions of tar and 7zip
-        # do not include the magic number in the tar
-        # header. To handle this we fall back on Python's
-        # TarFile module to use the
-        return False
 
 
 class ZipFleType(FileTypeInterface):
     _MAGIC_NUMBER = b"PK\003\004"
-    _ext = "zip"
+    extension = "zip"
 
-    @classmethod
+    @staticmethod
     def name(cls):
         return "Zip archive data"
 
@@ -563,9 +532,9 @@ def extension_from_stream(stream, decompress=False):
     """
     for arc_type in VALID_FILETYPES:
         if arc_type.is_file_of_type(stream):
-            suffix_ext = arc_type.extension()
+            suffix_ext = arc_type.extension
             prefix_ext = ""
-            if arc_type.is_compression_type() and decompress:
+            if arc_type.compressed and decompress:
                 # stream represents compressed file
                 # get decompressed stream (if possible)
                 decomp_stream = arc_type.decomp_in_memory(stream)
@@ -584,9 +553,9 @@ def extension_from_file(file, decompress=False):
     """Return extension from archive file path
     Extension is derived based on magic number parsing similar
     to the `file` utility. Attempts to return abbreviated file extensions
-    whenever relevant (i.e. compressed tarball as `.tgz`). This distinction
-    in abbreivated extension names is accomplished by string parsing.
-
+    whenever a file has an abbreviated extension such as `.tgz` or `.txz`.
+    This distinction in abbreivated extension names is accomplished
+    by string parsing.
 
     Args:
         file (os.PathLike): path descibing file on system for which ext

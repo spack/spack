@@ -78,6 +78,8 @@ def test_system_unpacking(tmpdir_factory, archive_file, compr_support_check):
 
 
 def test_unallowed_extension():
+    # use a cxx file as python files included for the test
+    # are picked up by the linter and break style checks
     bad_ext_archive = "Foo.cxx"
     with pytest.raises(CommandNotFoundError):
         scomp.decompressor_for(bad_ext_archive)
