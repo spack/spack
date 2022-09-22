@@ -294,7 +294,7 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
             data = json.load(f)
         return data
 
-    def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform):
+    def _install_by_hash(self, pkg_hash, pkg_sha256, index, bincache_platform, relocate=True):
         index_spec = next(x for x in index if x.dag_hash() == pkg_hash)
         # Reconstruct the compiler that we need to use for bootstrapping
         compiler_entry = {
@@ -316,7 +316,12 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
                 matches = spack.store.find([spec_str], multiple=False, query_fn=query)
                 for match in matches:
                     spack.binary_distribution.install_root_node(
-                        match, allow_root=True, unsigned=True, force=True, sha256=pkg_sha256
+                        match,
+                        allow_root=True,
+                        unsigned=True,
+                        force=True,
+                        sha256=pkg_sha256,
+                        relocate=relocate,
                     )
 
     def _install_and_test(self, abstract_spec, bincache_platform, bincache_data, test_fn):
@@ -332,6 +337,11 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
 
             for item in bincache_data["verified"]:
                 candidate_spec = item["spec"]
+                # Do we need to do the relocation logic for this package?
+                # This is also used to break the recursion of needing patchelf
+                # to relocate patchelf -- patchelf is relocatable already, no need
+                # to patch binaries.
+                do_relocate = not item.get("relocatable", False)
                 # This will be None for things that don't depend on python
                 python_spec = item.get("python", None)
                 # Skip specs which are not compatible
@@ -343,7 +353,9 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
 
                 for pkg_name, pkg_hash, pkg_sha256 in item["binaries"]:
                     # TODO: undo installations that didn't complete?
-                    self._install_by_hash(pkg_hash, pkg_sha256, index, bincache_platform)
+                    self._install_by_hash(
+                        pkg_hash, pkg_sha256, index, bincache_platform, relocate=do_relocate
+                    )
 
                 info = {}
                 if test_fn(query_spec=abstract_spec, query_info=info):

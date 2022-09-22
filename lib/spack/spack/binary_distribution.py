@@ -1600,7 +1600,9 @@ def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum
     return tarfile_path
 
 
-def extract_tarball(spec, download_result, allow_root=False, unsigned=False, force=False):
+def extract_tarball(
+    spec, download_result, allow_root=False, unsigned=False, force=False, relocate=True
+):
     """
     extract binary tarball for given package into install area
     """
@@ -1696,7 +1698,8 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     os.remove(specfile_path)
 
     try:
-        relocate_package(spec, allow_root)
+        if relocate:
+            relocate_package(spec, allow_root)
     except Exception as e:
         shutil.rmtree(spec.prefix)
         raise e
@@ -1715,7 +1718,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
         _delete_staged_downloads(download_result)
 
 
-def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None):
+def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None, relocate=True):
     """Install the root node of a concrete spec from a buildcache.
 
     Checking the sha256 sum of a node before installation is usually needed only
@@ -1731,6 +1734,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
             local store
         sha256 (str): optional sha256 of the binary package, to be checked
             before installation
+        relocate (bool): enable relocation logic for this binary package
     """
     # Early termination
     if spec.external or spec.virtual:
@@ -1758,7 +1762,7 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
     # don't print long padded paths while extracting/relocating binaries
     with spack.util.path.filter_padding():
         tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-        extract_tarball(spec, download_result, allow_root, unsigned, force)
+        extract_tarball(spec, download_result, allow_root, unsigned, force, relocate)
         spack.hooks.post_install(spec)
         spack.store.db.add(spec, spack.store.layout)
 
