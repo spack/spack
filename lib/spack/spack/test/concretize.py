@@ -1189,7 +1189,7 @@ class TestConcretize(object):
         assert first_spec.dag_hash() != second_spec.dag_hash()
 
     @pytest.mark.skipif(
-         sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
     )
     @pytest.mark.regression("20292")
     @pytest.mark.parametrize(
@@ -1514,7 +1514,7 @@ class TestConcretize(object):
         assert s.satisfies("target=k10")
 
     @pytest.mark.skipif(
-         sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
     )
     @pytest.mark.regression("29201")
     def test_delete_version_and_reuse(self, mutable_database, repo_with_changing_recipe):
