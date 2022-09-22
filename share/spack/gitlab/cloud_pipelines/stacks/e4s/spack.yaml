@@ -1,10 +1,8 @@
 spack:
   view: false
-
   concretizer:
     reuse: false
     unify: when_possible
-
   config:
     concretizer: clingo
     install_tree:
@@ -35,21 +33,8 @@ spack:
     chai:
       variants: ~benchmarks ~tests
     ecp-data-vis-sdk:
-      variants: +adios2
-                +ascent
-                +cinema
-                +darshan
-                +faodel
-                +hdf5
-                +paraview
-                +pnetcdf
-                +sensei
-                +sz
-                +unifyfs
-                +veloc
-                +visit
-                +vtkm
-                +zfp
+      variants: +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf
+        +sensei +sz +unifyfs +veloc +visit +vtkm +zfp
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
@@ -61,13 +46,16 @@ spack:
     libunwind:
       variants: +pic +xz
     mesa:
-      version: [21.3.8]
+      version: [22.1.2, 21.3.8]
+      variants: +llvm
     mpich:
       variants: ~wrapperrpath
     ncurses:
       variants: +termlib
     openblas:
       variants: threads=openmp
+    paraview:
+      variants: ~qt +osmesa use_vtkm=on
     python:
       version: [3.8.13]
     trilinos:
@@ -79,8 +67,17 @@ spack:
       variants: +ascent +sensei +shared
     xz:
       variants: +pic
-
   specs:
+
+  # Preferred providers required in spec or implicit
+  # dependencies will be used that are not desired.
+  - openblas # do not use nvhpc
+  - mpich    # do not use openmpi
+
+  # Use osmesa in container backend unless using HIP
+  - mesa +osmesa +glx
+  - glew gl=osmesa
+
   # CPU
   - adios
   - alquimia
@@ -172,19 +169,23 @@ spack:
   - trilinos@13.0.1 ~cuda
   - turbine
   - umap
-  - upcxx ~rocm
-  - variorum
+  - umpire
+  - upcxx ~cuda ~rocm
   - wannier90
+
+
+
+
 
   # CUDA
   - amrex +cuda cuda_arch=80
-  - ecp-data-vis-sdk +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
+  - ecp-data-vis-sdk +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
@@ -209,7 +210,10 @@ spack:
   - tasmanian +cuda cuda_arch=80
   - tau +mpi +cuda
   - trilinos@13.4.0 +cuda cuda_arch=80
-  #- umpire +shared +cuda cuda_arch=80
+  - umpire +cuda cuda_arch=80
+  - upcxx +cuda cuda_arch=80
+
+
 
   # ROCm
   - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
@@ -247,11 +251,13 @@ spack:
   - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
-  #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- loki                                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
-  #- paraview +qt                                 # llvm@14
-  #- pruners-ninja                                # test/ninja_test_util.c:34: multiple definition of `a';
-  #- rempi                                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  #- charliecloud   # autogen.sh: 6: [[: not found
+  #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
+  #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
+  #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
+  #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
   #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
@@ -260,10 +266,8 @@ spack:
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
   #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
-
+  mirrors: {mirror: 's3://spack-binaries/develop/e4s'}
   gitlab-ci:
-
     script:
       - uname -a || true
       - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
@@ -284,7 +288,7 @@ spack:
     image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
     broken-tests-packages:
-      - gptune
+    - gptune
 
     match_behavior: first
     mappings:
@@ -470,12 +474,13 @@ spack:
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:
-      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
-      tags: ["spack", "aws"]
+      image: {name: 'ghcr.io/spack/notary:latest', entrypoint: ['']}
+      tags: [spack, aws]
       script:
-        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
-        - /sign.sh
-        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+      - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
+        /tmp
+      - /sign.sh
+      - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
     build-group: E4S
