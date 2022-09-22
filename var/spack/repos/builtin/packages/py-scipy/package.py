@@ -110,11 +110,6 @@ class PyScipy(PythonPackage):
 
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
-    @run_before("install")
-    def set_blas_lapack(self):
-        # Pick up Blas/Lapack from numpy
-        self.spec["py-numpy"].package.set_blas_lapack()
-
     # On macOS with GNU gcc instead of Apple/LLVM clang:
     # build/src.macosx-12-x86_64-3.9/scipy/integrate/vodemodule.c:94:10:
     #   fatal error: threads.h: No such file or directory
@@ -125,6 +120,27 @@ class PyScipy(PythonPackage):
     patch("use_stdc_no_threads.patch", when="platform=darwin %gcc")
     # Additional changes needed for scipy-1.8.0
     patch("use_stdc_no_threads_scipy180_addon.patch", when="@1.8: platform=darwin %gcc")
+
+    @run_before("install")
+    def set_blas_lapack(self):
+        # Pick up Blas/Lapack from numpy
+        self.spec["py-numpy"].package.set_blas_lapack()
+
+    @run_before("install")
+    def set_fortran_compiler(self):
+        if self.spec.satisfies("%fj"):
+            with open("setup.cfg", "w") as f:
+                f.write("[config_fc]\n")
+                f.write("fcompiler = fujitsu\n")
+        elif (self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi")):
+            if self.spec.satisfies("target=x86:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intel\n")
+            elif self.spec.satisfies("target=x86_64:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intelem\n")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -151,12 +167,6 @@ class PyScipy(PythonPackage):
         # (There is a fix in their development tree.)
         if platform.mac_ver()[0][0:2] == "11":
             env.set("MACOSX_DEPLOYMENT_TARGET", "10.15")
-
-    def install_options(self, spec, prefix):
-        args = []
-        if spec.satisfies("%fj"):
-            args.extend(["config_fc", "--fcompiler=fujitsu"])
-        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
