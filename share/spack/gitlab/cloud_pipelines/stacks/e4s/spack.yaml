@@ -14,9 +14,14 @@ spack:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
 
   packages:
+    # These specs are the default preferred for all packages,
+    # however, variants may be disabled in the following spec
+    # list as needed.
     all:
       compiler: [gcc@11.1.0]
       providers:
+        # Note: Providers will likely need to be updated
+        # for optimal performance on some systems.
         blas: [openblas]
         mpi: [mpich]
       target: [x86_64]
@@ -27,14 +32,36 @@ spack:
       variants: +ld +gold +headers +libiberty ~nls
     cuda:
       version: [11.7.0]
+    chai:
+      variants: ~benchmarks ~tests
+    ecp-data-vis-sdk:
+      variants: +adios2
+                +ascent
+                +cinema
+                +darshan
+                +faodel
+                +hdf5
+                +paraview
+                +pnetcdf
+                +sensei
+                +sz
+                +unifyfs
+                +veloc
+                +visit
+                +vtkm
+                +zfp
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
       variants: +fortran +hl +shared
+    hpx:
+      variants: networking=mpi
     libfabric:
       variants: fabrics=sockets,tcp,udp,rxm
     libunwind:
       variants: +pic +xz
+    mesa:
+      version: [21.3.8]
     mpich:
       variants: ~wrapperrpath
     ncurses:
@@ -48,69 +75,49 @@ spack:
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    warpx:
+      variants: +ascent +sensei +shared
     xz:
       variants: +pic
-    mesa:
-      version: [21.3.8]
 
   specs:
   # CPU
   - adios
-  #- adios2
   - alquimia
   - aml
-  - amrex
-  - arborx
+  - amrex ~cuda ~rocm
+  - arborx ~cuda ~rocm
   - archer
   - argobots
-  #- ascent
   - axom
   - bolt
-  - bricks
+  - bricks ~cuda
   - butterflypack
-  - cabana
+  - cabana ~cuda
   - caliper
   - chai ~benchmarks ~tests
   - charliecloud
-  #- conduit
-  #- darshan-runtime
-  #- darshan-util
   - datatransferkit
   - dyninst
   - exaworks
   - ecp-data-vis-sdk ~cuda ~rocm
-      +adios2
-      +ascent
-      +cinema
-      +darshan
-      +faodel
-      +hdf5
-      +paraview
-      +pnetcdf
-      +sensei
-      +sz
-      +unifyfs
-      +veloc
-      +visit
-      +vtkm
-      +zfp
-  - flecsi
+  - flecsi ~cuda
   - flit
-  - flux-core
+  - flux-core ~cuda
   - fortrilinos
-  - gasnet
-  - ginkgo
+  - gasnet ~rocm
+  - ginkgo ~cuda ~rocm
   - globalarrays
   - gmp
   - gotcha
   - gptune
   - h5bench
-  - heffte +fftw
-  - hpctoolkit
-  - hpx networking=mpi
-  - hypre
-  - kokkos +openmp
-  - kokkos-kernels +openmp
+  - heffte +fftw ~cuda ~rocm
+  - hpctoolkit ~cuda ~rocm
+  - hpx ~cuda ~rocm
+  - hypre ~cuda
+  - kokkos +openmp ~cuda ~rocm
+  - kokkos-kernels +openmp ~cuda
   - lammps
   - legion
   - libnrm
@@ -118,7 +125,7 @@ spack:
   - libunwind
   - mercury
   - metall
-  - mfem
+  - mfem ~cuda
   - mpark-variant
   - mpifileutils ~xattr
   - nccmp
@@ -129,12 +136,12 @@ spack:
   - omega-h
   - openmpi
   - openpmd-api
-  - papi
+  - papi ~cuda ~rocm
   - papyrus
   - parallel-netcdf
   - parsec ~cuda
   - pdt
-  - petsc
+  - petsc ~cuda ~rocm
   - phist
   - plasma
   - plumed
@@ -149,53 +156,30 @@ spack:
   - py-warpx ^warpx dims=rz
   - qthreads scheduler=distrib
   - quantum-espresso
-  - raja
+  - raja ~cuda
   - scr
   - slate ~cuda
-  - slepc
+  - slepc ~cuda ~rocm
   - stc
-  - strumpack ~slate
-  - sundials
+  - strumpack ~cuda ~rocm ~slate
+  - sundials ~cuda ~rocm
   - superlu
-  - superlu-dist
+  - superlu-dist ~cuda ~rocm
   - swig
   - swig@4.0.2-fortran
-  #- sz
-  - tasmanian
-  - tau +mpi +python
-  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
-    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
-    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - tasmanian ~cuda ~rocm
+  - tau ~cuda ~rocm +mpi +python
+  - trilinos@13.0.1 ~cuda
   - turbine
   - umap
-  #- umpire
-  #- unifyfs
-  - upcxx
+  - upcxx ~rocm
   - variorum
   - wannier90
-  #- zfp
 
   # CUDA
   - amrex +cuda cuda_arch=80
-  - ecp-data-vis-sdk +adios2 +cuda cuda_arch=80
-      +ascent
-      +cinema
-      +darshan
-      +faodel
-      +hdf5
-      +paraview
-      +pnetcdf
-      +sensei
-      +sz
-      +unifyfs
-      +veloc
-      +visit
-      +vtkm
-      +zfp
-  #- adios2 +cuda cuda_arch=80
+  - ecp-data-vis-sdk +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
-  - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
@@ -226,25 +210,9 @@ spack:
   - tau +mpi +cuda
   - trilinos@13.4.0 +cuda cuda_arch=80
   #- umpire +shared +cuda cuda_arch=80
-  #- vtk-m +cuda cuda_arch=80
-  #- zfp +cuda cuda_arch=80
 
   # ROCm
   - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
-      +ascent
-      +cinema
-      +darshan
-      +faodel
-      +hdf5
-      +paraview
-      +pnetcdf
-      +sensei
-      +sz
-      +unifyfs
-      +veloc
-      +visit
-      +vtkm
-      +zfp
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm
@@ -314,7 +282,7 @@ spack:
       - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
-    
+
     broken-tests-packages:
       - gptune
 
