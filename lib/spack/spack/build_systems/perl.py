@@ -11,7 +11,7 @@ import re
 from llnl.util.filesystem import filter_file
 
 from spack.directives import extends
-from spack.package_base import PackageBase, run_after, run_before
+from spack.package_base import PackageBase, run_after
 from spack.util.executable import Executable
 from spack.version import ver
 
@@ -105,7 +105,7 @@ class PerlPackage(PackageBase):
     # Build.PL may be too long causing the build to fail. Patching the shebang
     # does not happen until after install so set '/usr/bin/env perl' here in
     # the Build script.
-    @run_before("build")
+    @run_after("configure")
     def fix_shebang(self):
         if self.build_method == "Build.PL":
             pattern = "#!{0}".format(self.spec["perl"].command.path)
