@@ -74,16 +74,26 @@ class ConstraintAction(argparse.Action):
         if env:
             kwargs["hashes"] = set(env.all_hashes())
 
+        q_args = dict(kwargs)
+        q_args.pop("show_concretized", None)
+
         # return everything for an empty query.
         if not qspecs:
-            return spack.store.db.query(**kwargs)
+            return spack.store.db.query(q_args)
 
         # Return only matching stuff otherwise.
         specs = {}
         for spec in qspecs:
-            for s in spack.store.db.query(spec, **kwargs):
+            for s in spack.store.db.query(spec, q_args):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
+
+        if kwargs.get('show_concretized', False):
+            for qspec in qspecs:
+                for user_spec, spec in env.concretized_specs():
+                    for dep_spec in spec.traverse():
+                        if dep_spec.satisfies(qspec):
+                            specs[dep_spec.dag_hash()] = dep_spec
 
         return sorted(specs.values())
 

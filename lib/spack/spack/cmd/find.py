@@ -254,6 +254,7 @@ def find(parser, args):
 
 def _find(parser, args):
     q_args = query_arguments(args)
+    q_args['show_concretized'] = args.show_concretized
     results = args.specs(**q_args)
 
     env = ev.active_environment()
