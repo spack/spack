@@ -88,7 +88,7 @@ class ConstraintAction(argparse.Action):
                 # This is fast for already-concrete specs
                 specs[s.dag_hash()] = s
 
-        if kwargs.get('show_concretized', False):
+        if kwargs.get("show_concretized", False):
             for qspec in qspecs:
                 for user_spec, spec in env.concretized_specs():
                     for dep_spec in spec.traverse():
