@@ -45,6 +45,7 @@ class Remhos(MakefilePackage):
         return targets
 
     # See lib/spack/spack/build_systems/makefile.py
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             make("tests", *self.build_targets)

@@ -228,6 +228,7 @@ class Libint(AutotoolsPackage):
             configure(*config_args)
             make()
 
+    @tag("build-check")
     @when("@2.6.0:")
     def check(self):
         with working_dir(os.path.join(self.build_directory, "generated")):

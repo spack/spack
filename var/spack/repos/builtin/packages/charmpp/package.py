@@ -362,6 +362,7 @@ class Charmpp(Package):
                 os.remove(prefix.doc)
                 mkdirp(prefix.doc)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_build(self):

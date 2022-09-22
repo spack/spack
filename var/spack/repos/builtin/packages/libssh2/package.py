@@ -53,6 +53,7 @@ class Libssh2(CMakePackage):
         if self.spec.satisfies("platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
 
+    @tag("build-check")
     def check(self):
         # Docker is required to run tests
         if which("docker"):

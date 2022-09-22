@@ -27,6 +27,7 @@ class Kcov(CMakePackage):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/kcov.rb
         return ["-DSPECIFY_RPATH=ON"]
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):

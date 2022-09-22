@@ -526,6 +526,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
 
+    @tag("functional-checks")
     def test(self):
         """Smoke tests"""
         exe = self.spec["perl"].command.name

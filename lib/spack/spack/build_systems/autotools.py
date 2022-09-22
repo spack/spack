@@ -16,7 +16,7 @@ from llnl.util.filesystem import force_remove, working_dir
 from spack.build_environment import InstallError
 from spack.directives import conflicts, depends_on
 from spack.operating_systems.mac_os import macos_version
-from spack.package_base import PackageBase, run_after, run_before
+from spack.package_base import PackageBase, run_after, run_before, tag
 from spack.util.executable import Executable
 from spack.version import Version
 
@@ -459,6 +459,7 @@ To resolve this problem, please try the following:
 
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("build-checks")
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
         and runs them if found.
@@ -640,6 +641,7 @@ To resolve this problem, please try the following:
 
     run_after("install")(PackageBase._run_default_install_time_test_callbacks)
 
+    @tag("install-checks")
     def installcheck(self):
         """Searches the Makefile for an ``installcheck`` target
         and runs it if found.

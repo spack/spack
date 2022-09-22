@@ -18,6 +18,7 @@ import functools
 import glob
 import hashlib
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -98,6 +99,39 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 
 
 is_windows = sys.platform == "win32"
+
+
+def _list_tagged_methods(cls):
+    """Returns a set tagged methods for the given class."""
+    if cls.__name__ == "object":
+        return set()
+
+    return set(y for x, y in cls.__dict__.items() if callable(y) and hasattr(y, "tag_values"))
+
+
+def _list_tagged_parent_methods(cls):
+    """Returns a set tagged methods for the parents of the given class."""
+    if cls.__name__ == "object":
+        return set()
+
+    return set(
+        itertools.chain.from_iterable(
+            _list_tagged_methods(c).union(_list_tagged_parent_methods(c)) for c in cls.__bases__
+        )
+    )
+
+
+def list_all_tagged_methods(pkg):
+    """Returns a set of all tagged methods associated with the package.
+
+    Args:
+        pkg (Package): The package whose tagged methods are to be returned
+
+    Returns:
+        (set): set of methods with at least one associated tag
+    """
+    cls = pkg if inspect.isclass(pkg) else pkg.__class__
+    return _list_tagged_methods(cls).union(_list_tagged_parent_methods(cls))
 
 
 def preferred_version(pkg):
@@ -468,6 +502,27 @@ def on_package_attributes(**attr_dict):
     return _execute_under_condition
 
 
+def tag(value):
+    """
+    Decorator: Adds a tag to a method
+    Arguments:
+        value (str): tag to be associated with the method
+    """
+
+    def _tag(method):
+        @functools.wraps(method)
+        def _wrapper(*args, **kwargs):
+            method(*args, **kwargs)
+
+        if hasattr(_wrapper, "tag_values"):
+            _wrapper.tag_values.append(value)
+        else:
+            _wrapper.tag_values = [value]
+        return _wrapper
+
+    return _tag
+
+
 class PackageViewMixin(object):
     """This collects all functionality related to adding installed Spack
     package to views. Packages can customize how they are added to views by
@@ -525,6 +580,29 @@ class PackageViewMixin(object):
         removed when both packages are removed.
         """
         view.remove_files(merge_map.values())
+
+
+def get_virtual_specs(pkg):
+    """Return a list of the virtual specs associated with the package.
+
+    Args:
+        pkg (Package): The package whose virtual specs are to be returned.
+
+    Returns:
+        (list): the list of virtual spack.spec.Spec associated with the package
+    """
+    v_names = [vspec.name for vspec in pkg.virtuals_provided]
+
+    # hack for compilers that are not dependencies (yet)
+    # TODO: this all eventually goes away
+    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
+    if pkg.name in c_names:
+        v_names.extend(["c", "cxx", "fortran"])
+    if pkg.spec.satisfies("llvm+clang"):
+        v_names.extend(["c", "cxx"])
+
+    # return the associated specs
+    return list(set([(spack.spec.Spec(v_name)) for v_name in sorted(v_names)]))
 
 
 def test_log_pathname(test_stage, spec):
@@ -2030,6 +2108,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
             kwargs["verbose"] = True
         spack.build_environment.start_build_process(self, test_process, kwargs)
 
+    @tag("stand-alone-test")
     def test(self):
         # Defer tests to virtual and concrete packages
         pass
@@ -2174,6 +2253,8 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         return True
 
+    @tag("install-checks")
+    @tag("sanity-checks")
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
 
@@ -2882,17 +2963,7 @@ def test_process(pkg, kwargs):
 
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
-        v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-        # hack for compilers that are not dependencies (yet)
-        # TODO: this all eventually goes away
-        c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-        if pkg.name in c_names:
-            v_names.extend(["c", "cxx", "fortran"])
-        if pkg.spec.satisfies("llvm+clang"):
-            v_names.extend(["c", "cxx"])
-
-        test_specs = [pkg.spec] + [spack.spec.Spec(v_name) for v_name in sorted(v_names)]
+        test_specs = [pkg.spec] + get_virtual_specs(pkg)
 
         ran_actual_test_function = False
         try:
@@ -2930,7 +3001,7 @@ def test_process(pkg, kwargs):
                     # since they do not contribute to package testing.
                     source = (inspect.getsource(test_fn)).splitlines()[1:]
                     lines = (ln.strip() for ln in source)
-                    statements = [ln for ln in lines if not ln.startswith("#")]
+                    statements = [ln for ln in lines if not re.search(r"^(@tag|def |#)", ln)]
                     if len(statements) > 0 and statements[0] == "pass":
                         continue
 

@@ -94,6 +94,7 @@ class N2p2(MakefilePackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(".")
 
+    @tag("functional-checks")
     def test(self):
         with working_dir(join_path(self.install_test_root, "test"), create=False):
             make("clean")

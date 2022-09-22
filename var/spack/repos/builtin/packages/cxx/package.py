@@ -14,6 +14,7 @@ class Cxx(Package):
     homepage = "https://isocpp.org/std/the-standard"
     virtual = True
 
+    @tag("functional-checks")
     def test(self):
         test_source = self.test_suite.current_test_data_dir
 

@@ -104,6 +104,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
+    @tag("functional-checks")
     def test(self):
         # using the tests installed in <prefix>/share/heffte/testing
         cmake_dir = join_path(self.prefix, "share", "heffte", "testing")

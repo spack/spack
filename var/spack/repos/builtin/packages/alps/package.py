@@ -79,6 +79,8 @@ class Alps(CMakePackage):
             exename, options=options, expected=["Finished with everything."], work_dir=target
         )
 
+    @tag("functional-checks")
+    @tag("stand-alone-test")
     def test(self):
         self._single_test("mc-02-susceptibilities", "spinmc", "parm2a", ["--Tmin", "10"])
         self._single_test("ed-01-sparsediag", "sparsediag", "parm1a")

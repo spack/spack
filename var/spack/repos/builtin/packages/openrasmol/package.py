@@ -58,6 +58,7 @@ class Openrasmol(MakefilePackage):
             bash = which("bash")
             bash("./rasmol_install.sh", "--prefix={0}".format(prefix))
 
+    @tag("functional-checks")
     def test(self):
         testdir = self.test_suite.current_test_data_dir
         opts = []

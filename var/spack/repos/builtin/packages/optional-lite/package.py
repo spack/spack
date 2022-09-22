@@ -45,6 +45,7 @@ class OptionalLite(CMakePackage):
     def install(self, spec, prefix):
         copytree("include", prefix.include)
 
+    @tag("skip-build-check")
     @when("@:3.1")
     def check(self):
         pass

@@ -146,6 +146,7 @@ class Sz(CMakePackage):
 
         return args
 
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def test_build(self):
@@ -226,6 +227,7 @@ class Sz(CMakePackage):
             work_dir=test_data_dir,
         )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package"""
         # run 2D compression and decompression (float)

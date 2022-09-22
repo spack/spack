@@ -134,6 +134,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
             make("-C", c + "-conduit", "testtools-par")
             install(c + "-conduit/testtools", self.prefix.tests)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
@@ -148,6 +149,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
                 purpose="Running testtools",
             )
 
+    @tag("functional-checks")
     def test(self):
         if "conduits=none" in self.spec:
             spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")

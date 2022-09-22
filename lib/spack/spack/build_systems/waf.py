@@ -9,7 +9,7 @@ import inspect
 from llnl.util.filesystem import working_dir
 
 from spack.directives import depends_on
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class WafPackage(PackageBase):
@@ -107,6 +107,7 @@ class WafPackage(PackageBase):
 
     # Testing
 
+    @tag("build-checks")
     def build_test(self):
         """Run unit tests after build.
 
@@ -117,6 +118,7 @@ class WafPackage(PackageBase):
 
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("install-checks")
     def install_test(self):
         """Run unit tests after install.
 

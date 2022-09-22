@@ -221,5 +221,6 @@ class Slepc(Package, CudaPackage, ROCmPackage):
             work_dir=test_dir,
         )
 
+    @tag("functional-checks")
     def test(self):
         self.run_hello_test()

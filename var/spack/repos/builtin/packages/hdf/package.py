@@ -184,6 +184,7 @@ class Hdf(AutotoolsPackage):
     # Otherwise, we randomly get:
     # SDgetfilename:
     #   incorrect file being opened - expected <file755>, retrieved <file754>
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             make("check", parallel=False)
@@ -269,6 +270,7 @@ class Hdf(AutotoolsPackage):
             work_dir=work_dir,
         )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         # Simple version check tests on subset of known binaries that respond

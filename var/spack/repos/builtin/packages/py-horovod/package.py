@@ -268,6 +268,7 @@ class PyHorovod(PythonPackage, CudaPackage):
         else:
             env.set("HOROVOD_CPU_OPERATIONS", self.spec.variants["tensor_ops"].value.upper())
 
+    @tag("functional-checks")
     def test(self):
         super(PyHorovod, self).test()
         self.run_test(self.prefix.bin.horovodrun, "--check-build")

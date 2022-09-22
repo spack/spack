@@ -176,6 +176,7 @@ class ParallelNetcdf(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
+    @tag("functional-checks")
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
         # pnetcdf has many examples to serve as a suitable smoke check.

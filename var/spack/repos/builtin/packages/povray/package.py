@@ -146,6 +146,7 @@ class Povray(AutotoolsPackage):
 
         return extra_args
 
+    @tag("functional-checks")
     def test(self):
         povs = find(self.prefix.share, "biscuit.pov")[0]
         copy(povs, ".")

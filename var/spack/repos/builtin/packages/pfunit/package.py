@@ -99,6 +99,7 @@ class Pfunit(CMakePackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         """Searches the CMake-generated Makefile for the target ``test``
         and runs it if found.

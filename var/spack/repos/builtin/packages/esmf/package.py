@@ -352,6 +352,7 @@ class Esmf(MakefilePackage):
     def install_findesmf(self):
         install_tree("cmake", self.prefix.cmake)
 
+    @tag("build-check")
     def check(self):
         make("check", parallel=False)
 

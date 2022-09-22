@@ -93,6 +93,7 @@ class Open3d(CMakePackage, CudaPackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             tests = Executable(os.path.join("bin", "tests"))
@@ -112,9 +113,10 @@ class Open3d(CMakePackage, CudaPackage):
     #         pytest = which('pytest')
     #         pytest(os.path.join('python', 'test'))
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def test_install(self):
         if "+python" in self.spec:
             self.run_test(
                 self.spec["python"].command.path,

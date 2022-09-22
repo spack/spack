@@ -55,5 +55,6 @@ class Ghost(CMakePackage, CudaPackage):
         ]
         return args
 
+    @tag("build-check")
     def check(self):
         make("test")

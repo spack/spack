@@ -634,6 +634,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             self.cache_extra_test_sources("src/ksp/ksp/tutorials")
             self.cache_extra_test_sources("src/snes/tutorials")
 
+    @tag("functional-checks")
     def test(self):
         # solve Poisson equation in 2D to make sure nothing is broken:
         spec = self.spec

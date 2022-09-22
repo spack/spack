@@ -59,6 +59,7 @@ class ImprovedRdock(MakefilePackage):
     def setup_run_environment(self, env):
         env.set("RBT_ROOT", self.prefix)
 
+    @tag("functional-checks")
     def test(self):
         copy(join_path(self.prefix.example, "1sj0", "*"), ".")
         opts = ["-r", "1sj0_rdock.prm", "-was"]

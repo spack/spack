@@ -9,7 +9,7 @@ import inspect
 from llnl.util.filesystem import working_dir
 
 from spack.directives import depends_on
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class QMakePackage(PackageBase):
@@ -71,6 +71,7 @@ class QMakePackage(PackageBase):
 
     # Tests
 
+    @tag("build-checks")
     def check(self):
         """Searches the Makefile for a ``check:`` target and runs it if found."""
 

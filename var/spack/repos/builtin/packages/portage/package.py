@@ -110,6 +110,7 @@ class Portage(CMakePackage):
 
         return options
 
+    @tag("build-check")
     def check(self):
         if self.run_tests:
             with working_dir(self.build_directory):

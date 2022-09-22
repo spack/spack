@@ -104,6 +104,7 @@ class AprUtil(AutotoolsPackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         # FIXME: Database driver tests fail, at least on macOS:
         #

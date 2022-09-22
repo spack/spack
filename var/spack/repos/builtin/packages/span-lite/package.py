@@ -43,6 +43,7 @@ class SpanLite(CMakePackage):
     def install(self, spec, prefix):
         copytree("include", prefix.include)
 
+    @tag("skip-build-check")
     @when("@:0.4")
     def check(self):
         pass

@@ -10,7 +10,7 @@ import os
 from llnl.util.filesystem import filter_file
 
 from spack.directives import extends
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 from spack.util.executable import Executable
 
 
@@ -98,6 +98,7 @@ class PerlPackage(PackageBase):
     # Ensure that tests run after build (if requested):
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("build-checks")
     def check(self):
         """Runs built-in tests of a Perl package."""
         self.build_executable("test")

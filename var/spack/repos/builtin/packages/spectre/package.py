@@ -322,6 +322,7 @@ class Spectre(CMakePackage):
             join_path(self.build_directory, "BuildInfo.txt")
         ]
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             # The test suite contains a lot of tests. We select only those

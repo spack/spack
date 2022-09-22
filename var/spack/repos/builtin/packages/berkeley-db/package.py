@@ -93,6 +93,7 @@ class BerkeleyDb(AutotoolsPackage):
 
         return config_args
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package binaries."""
         exes = [

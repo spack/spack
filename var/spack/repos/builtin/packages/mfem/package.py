@@ -901,6 +901,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def build(self, spec, prefix):
         make("lib")
 
+    @tag("build-check")
     @run_after("build")
     def check_or_test(self):
         # Running 'make check' or 'make test' may fail if MFEM_MPIEXEC or
@@ -954,6 +955,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         make("examples/clean", parallel=False)
         self.cache_extra_test_sources([self.examples_src_dir, self.examples_data_dir])
 
+    @tag("functional-checks")
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 

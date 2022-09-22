@@ -219,6 +219,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                 work_dir=test_dir,
             )
 
+    @tag("functional-checks")
     def test(self):
         """Run the stand-alone tests for the installed software."""
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
@@ -236,6 +237,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         else:
             self._test_example(test_exe, test_dir, test_exe, exe_arg)
 
+    @tag("build-check")
     def check(self):
         """Skip the builtin testsuite, use the stand-alone tests instead."""
         pass

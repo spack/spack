@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import collections
 import inspect
 import textwrap
 
@@ -18,7 +19,12 @@ import spack.cmd.common.arguments as arguments
 import spack.fetch_strategy as fs
 import spack.repo
 import spack.spec
-from spack.package_base import has_test_method, preferred_version
+from spack.package_base import (
+    get_virtual_specs,
+    has_test_method,
+    list_all_tagged_methods,
+    preferred_version,
+)
 
 description = "get detailed information on a particular package"
 section = "basic"
@@ -52,6 +58,7 @@ def setup_parser(subparser):
         ("--no-variants", "do not " + print_variants.__doc__),
         ("--no-versions", "do not " + print_versions.__doc__),
         ("--phases", print_phases.__doc__),
+        ("--tagged-methods", print_tagged_methods.__doc__),
         ("--tags", print_tags.__doc__),
         ("--tests", print_tests.__doc__),
         ("--virtuals", print_virtuals.__doc__),
@@ -159,7 +166,6 @@ class VariantFormatter(object):
 
 def print_dependencies(pkg):
     """output build, link, and run package dependencies"""
-
     for deptype in ("build", "link", "run"):
         color.cprint("")
         color.cprint(section_title("%s Dependencies:" % deptype.capitalize()))
@@ -219,6 +225,44 @@ def print_phases(pkg):
         color.cprint(phase_str)
 
 
+def method_tags_dict(pkg):
+    """Builds dictionary listing methods keyed by tags."""
+
+    methods = list_all_tagged_methods(pkg)
+    v_specs = get_virtual_specs(pkg)
+    for v_spec in v_specs:
+        pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
+        pkg = pkg_cls(v_spec)
+        methods.union(list_all_tagged_methods(pkg))
+
+    method_tags = collections.defaultdict(list)
+    for meth in methods:
+        tags = meth.tag_values if isinstance(meth.tag_values, (set, list)) else [meth.tag_values]
+        for tag in tags:
+            try:
+                name = meth.__qualname__
+            except Exception:
+                name = meth.im_class
+            method_tags[tag].append(name)
+    return method_tags
+
+
+def print_tagged_methods(pkg):
+    """Print out a plain text description of any method tags for the package."""
+
+    method_tags = method_tags_dict(pkg)
+    color.cprint("")
+    color.cprint(section_title("Tagged Methods: "))
+    if method_tags:
+        blank_line = ""
+        for tag in sorted(method_tags):
+            color.cprint("{0}    {1}:".format(blank_line, tag))
+            colify(sorted(method_tags[tag]), indent=8)
+            blank_line = "\n"
+    else:
+        color.cprint("    None")
+
+
 def print_tags(pkg):
     """output package tags"""
 
@@ -274,22 +318,7 @@ def print_tests(pkg):
         test_pkgs = list(set(test_pkgs))
         names.extend([(test.split()[1]).lower() for test in test_pkgs])
 
-    # TODO Refactor START
-    # Use code from package_base.py's test_process IF this functionality is
-    # accepted.
-    v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
-
-    # hack for compilers that are not dependencies (yet)
-    # TODO: this all eventually goes away
-    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
-    if pkg.name in c_names:
-        v_names.extend(["c", "cxx", "fortran"])
-    if pkg.spec.satisfies("llvm+clang"):
-        v_names.extend(["c", "cxx"])
-    # TODO Refactor END
-
-    v_specs = [spack.spec.Spec(v_name) for v_name in v_names]
-    for v_spec in v_specs:
+    for v_spec in get_virtual_specs(pkg):
         try:
             pkg_cls = spack.repo.path.get_pkg_class(v_spec.name)
             if has_test_method(pkg_cls):
@@ -412,6 +441,7 @@ def info(parser, args):
         (args.all or args.phases, print_phases),
         (args.all or not args.no_dependencies, print_dependencies),
         (args.all or args.virtuals, print_virtuals),
+        (args.all or args.tagged_methods, print_tagged_methods),
         (args.all or args.tests, print_tests),
     ]
     for print_it, func in sections:

@@ -50,6 +50,7 @@ class Dsqss(CMakePackage):
 
         return args
 
+    @tag("functional-checks")
     def test(self):
         test01 = find(self.prefix.share, "01_spindimer")[0]
         copy(join_path(test01, "std.toml"), ".")

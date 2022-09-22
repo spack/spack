@@ -65,6 +65,7 @@ class Parflow(CMakePackage):
 
     examples_dir = "examples"
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke test on installed ParFlow package."""
         # Run the single phase flow test

@@ -227,6 +227,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 work_dir=self._extra_tests_path,
             )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests."""
         self._test_examples()

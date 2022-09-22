@@ -21,6 +21,7 @@ class Blitz(AutotoolsPackage):
 
     build_targets = ["lib"]
 
+    @tag("build-check")
     def check(self):
         make("check-testsuite")
         make("check-examples")

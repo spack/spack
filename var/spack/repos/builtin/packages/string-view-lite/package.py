@@ -42,6 +42,7 @@ class StringViewLite(CMakePackage):
     def install(self, spec, prefix):
         copytree("include", prefix.include)
 
+    @tag("build-check")
     @when("@:1.1")
     def check(self):
         pass

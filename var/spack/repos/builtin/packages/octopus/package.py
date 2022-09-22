@@ -224,6 +224,7 @@ class Octopus(Package, CudaPackage):
         """
         self.smoke_tests()
 
+    @tag("functional-checks")
     def test(self):
         """Entry point for smoke tests run through `spack test run octopus`."""
         self.smoke_tests()

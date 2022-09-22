@@ -20,5 +20,6 @@ class Axel(AutotoolsPackage):
     depends_on("gettext")
     depends_on("openssl")
 
+    @tag("install-check")
     def installcheck(self):
         Executable(self.prefix.bin.axel)("--version")

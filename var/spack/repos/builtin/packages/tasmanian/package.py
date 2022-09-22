@@ -183,6 +183,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         )
         self.cmake_bin(set=True)
 
+    @tag("functional-checks")
     def test(self):
         cmake_bin = self.cmake_bin(set=False)
 

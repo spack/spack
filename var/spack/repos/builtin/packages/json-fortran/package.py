@@ -36,6 +36,7 @@ class JsonFortran(CMakePackage):
             "-DUSE_GNU_INSTALL_CONVENTION=ON",
         ]
 
+    @tag("build-check")
     def check(self):
         # `make check` works but `make test` doesn't:
         # https://github.com/jacobwilliams/json-fortran/issues/154

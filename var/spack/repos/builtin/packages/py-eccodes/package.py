@@ -38,6 +38,7 @@ class PyEccodes(PythonPackage):
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
 
+    @tag("functional-checks")
     def test(self):
         super(PyEccodes, self).test()
 

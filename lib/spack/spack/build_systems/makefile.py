@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 from spack.directives import conflicts
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 
 
 class MakefilePackage(PackageBase):
@@ -94,6 +94,7 @@ class MakefilePackage(PackageBase):
 
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("build-checks")
     def check(self):
         """Searches the Makefile for targets ``test`` and ``check``
         and runs them if found.
@@ -104,6 +105,7 @@ class MakefilePackage(PackageBase):
 
     run_after("install")(PackageBase._run_default_install_time_test_callbacks)
 
+    @tag("install-checks")
     def installcheck(self):
         """Searches the Makefile for an ``installcheck`` target
         and runs it if found.

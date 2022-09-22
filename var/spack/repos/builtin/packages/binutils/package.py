@@ -179,6 +179,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 iflags.append("-Wl,-z,notext")
         return (iflags, None, flags)
 
+    @tag("functional-checks")
     def test(self):
         spec_vers = str(self.spec.version)
 

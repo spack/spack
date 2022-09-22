@@ -181,6 +181,7 @@ class NetcdfFortran(AutotoolsPackage):
         # TODO: resolve the NAG-related issues in a similar way: remove the
         #  respective patch files and tune the generated libtool script instead.
 
+    @tag("build-check")
     @when("@:4.4.5")
     def check(self):
         with working_dir(self.build_directory):

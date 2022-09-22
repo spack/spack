@@ -284,6 +284,7 @@ class Hpctoolkit(AutotoolsPackage):
     build_time_test_callbacks = []  # type: List[str]
     install_time_test_callbacks = []  # type: List[str]
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):
@@ -301,6 +302,7 @@ class Hpctoolkit(AutotoolsPackage):
         if self.spec.satisfies("@2022:"):
             self.cache_extra_test_sources(["tests"])
 
+    @tag("functional-checks")
     def test(self):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "tests")
         if self.spec.satisfies("@2022:"):

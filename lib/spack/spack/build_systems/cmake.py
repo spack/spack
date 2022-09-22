@@ -18,7 +18,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.build_environment
 from spack.directives import conflicts, depends_on, variant
-from spack.package_base import InstallError, PackageBase, run_after
+from spack.package_base import InstallError, PackageBase, run_after, tag
 from spack.util.path import convert_to_posix_path
 
 # Regex to extract the primary generator from the CMake generator
@@ -397,6 +397,7 @@ class CMakePackage(PackageBase):
 
     run_after("build")(PackageBase._run_default_build_time_test_callbacks)
 
+    @tag("build-checks")
     def check(self):
         """Searches the CMake-generated Makefile for the target ``test``
         and runs it if found.

@@ -238,6 +238,7 @@ class Dd4hep(CMakePackage):
 
     # dd4hep tests need to run after install step:
     # disable the usual check
+    @tag("skip-build-check")
     def check(self):
         pass
 

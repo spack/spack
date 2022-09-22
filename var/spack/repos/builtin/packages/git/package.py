@@ -413,6 +413,7 @@ class Git(AutotoolsPackage):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r" -lrt$", "", "Makefile")
 
+    @tag("build-check")
     def check(self):
         make("test")
 

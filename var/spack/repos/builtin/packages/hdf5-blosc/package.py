@@ -109,6 +109,7 @@ class Hdf5Blosc(Package):
         if self.run_tests:
             self.check_install(spec)
 
+    @tag("install-check")
     def check_install(self, spec):
         "Build and run a small program to test the installed HDF5 Blosc plugin"
         print("Checking HDF5-Blosc plugin...")

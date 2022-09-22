@@ -75,6 +75,7 @@ class Tix(AutotoolsPackage):
         if "platform=darwin" in self.spec:
             fix_darwin_install_name(self.prefix.lib.Tix + str(self.version))
 
+    @tag("functional-checks")
     def test(self):
         test_data_dir = self.test_suite.current_test_data_dir
         test_file = test_data_dir.join("test.tcl")

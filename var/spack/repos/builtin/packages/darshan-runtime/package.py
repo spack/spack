@@ -216,5 +216,6 @@ class DarshanRuntime(AutotoolsPackage):
                     else:
                         self.test_failures.append((exc, m))
 
+    @tag("functional-checks")
     def test(self):
         self._test_intercept()

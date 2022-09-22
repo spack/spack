@@ -111,6 +111,7 @@ class Rocsolver(CMakePackage):
 
     patch("link-clients-blas.patch", when="@4.3.0:4.3.2")
 
+    @tag("build-check")
     def check(self):
         exe = join_path(self.build_directory, "clients", "staging", "rocsolver-test")
         self.run_test(exe, options=["--gtest_filter=checkin*-*known_bug*"])

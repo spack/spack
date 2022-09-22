@@ -134,5 +134,6 @@ class DarshanUtil(AutotoolsPackage):
             work_dir=None,
         )
 
+    @tag("functional-checks")
     def test(self):
         self._test_parser()

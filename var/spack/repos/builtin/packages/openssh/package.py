@@ -128,5 +128,6 @@ class Openssh(AutotoolsPackage):
             "multiplex addrmatch cfgmatch cfgmatchlisten percent",
         )
 
+    @tag("install-check")
     def installcheck(self):
         make("-e", "tests", parallel=False)

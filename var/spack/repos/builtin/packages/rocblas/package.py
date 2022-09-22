@@ -115,6 +115,7 @@ class Rocblas(CMakePackage):
     depends_on("netlib-lapack@3.7.1:", type="test")
     depends_on("llvm-amdgpu +openmp", type="test")
 
+    @tag("build-check")
     def check(self):
         if "@4.2.0:" in self.spec:
             exe = join_path(self.build_directory, "clients", "staging", "rocblas-test")

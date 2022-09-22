@@ -89,6 +89,7 @@ class Parsec(CMakePackage, CudaPackage):
         ]
         return args
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check(self):
@@ -102,6 +103,7 @@ class Parsec(CMakePackage, CudaPackage):
                 warn += "https://bitbucket.org/icldistcomp/parsec/issues"
                 tty.msg(warn)
 
+    @tag("functional-checks")
     def test(self):
         """Compile and run a user program with the installed library"""
         with working_dir(join_path(self.install_test_root, "contrib/build_with_parsec")):

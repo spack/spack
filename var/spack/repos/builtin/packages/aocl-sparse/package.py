@@ -82,6 +82,7 @@ class AoclSparse(CMakePackage):
 
         return args
 
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def check(self):

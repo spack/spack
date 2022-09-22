@@ -63,6 +63,7 @@ class Giflib(MakefilePackage, SourceforgePackage):
             ["libgif"], root=self.prefix.lib64
         )
 
+    @tag("build-check")
     def check(self):
         make("check", parallel=False)
 

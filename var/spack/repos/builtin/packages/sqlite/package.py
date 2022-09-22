@@ -260,6 +260,7 @@ class Sqlite(AutotoolsPackage):
             exe, "-version", vers_str, installed=True, purpose=reason, skip_missing=False
         )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         # Perform a simple version check

@@ -163,6 +163,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             "--with-libiconv-prefix={0}".format(spec["iconv"].prefix),
         ]
 
+    @tag("build-check")
     def check(self):
         make("tests")
 

@@ -403,6 +403,7 @@ class Tau(Package):
             mm_dir,
         )
 
+    @tag("functional-checks")
     def test(self):
         # Run mm test program pulled from the build
         self._run_matmult_test()

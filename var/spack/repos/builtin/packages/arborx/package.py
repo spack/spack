@@ -131,6 +131,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             "make", [], purpose="test: building the tests", work_dir=self.cached_tests_work_dir
         )
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests on the installed package."""
         self.build_tests()

@@ -459,5 +459,6 @@ class Legion(CMakePackage, ROCmPackage):
 
         self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
 
+    @tag("functional-checks")
     def test(self):
         self.run_local_function_tasks_test()

@@ -52,6 +52,7 @@ class Eigenexa(AutotoolsPackage):
         """Save off benchmark files for stand-alone tests."""
         self.cache_extra_test_sources("benchmark")
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests using pre-built benchmarks."""
         # NOTE: This package would ideally build the test program using

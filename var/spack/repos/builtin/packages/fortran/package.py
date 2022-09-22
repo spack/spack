@@ -14,6 +14,7 @@ class Fortran(Package):
     homepage = "https://wg5-fortran.org/"
     virtual = True
 
+    @tag("functional-checks")
     def test(self):
         test_source = self.test_suite.current_test_data_dir
 

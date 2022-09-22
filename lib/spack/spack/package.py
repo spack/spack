@@ -73,6 +73,7 @@ from spack.package_base import (
     on_package_attributes,
     run_after,
     run_before,
+    tag,
 )
 from spack.spec import InvalidSpecDetected, Spec
 from spack.util.executable import *

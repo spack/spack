@@ -141,6 +141,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
 
+    @tag("functional-checks")
     def test(self):
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
         superludriver = join_path(self.prefix.lib, "EXAMPLE", "pddrive")

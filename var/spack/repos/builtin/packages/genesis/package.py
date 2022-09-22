@@ -116,6 +116,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
         if self.spec.satisfies("@master"):
             self.cache_extra_test_sources(["tests"])
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests using installed package."""
         if not self.spec.satisfies("@master"):

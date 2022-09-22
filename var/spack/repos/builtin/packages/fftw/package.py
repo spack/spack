@@ -191,6 +191,7 @@ class FftwBase(AutotoolsPackage):
     def build(self, spec, prefix):
         self.for_each_precision_make()
 
+    @tag("build-check")
     def check(self):
         self.for_each_precision_make("check")
 

@@ -112,6 +112,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
                 string=True,
             )
 
+    @tag("skip-build-check")
     def check(self):
         # libxc provides a testsuite, but many tests fail
         # http://www.tddft.org/pipermail/libxc/2013-February/000032.html

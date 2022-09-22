@@ -240,6 +240,7 @@ class Qgis(CMakePackage):
             args.append("-DWITH_GRASS7=OFF")
         return args
 
+    @tag("build-check")
     def check(self):
         """The tests of fail without access to an X server, cant run on build servers"""
         pass

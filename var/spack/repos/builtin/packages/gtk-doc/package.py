@@ -52,6 +52,7 @@ class GtkDoc(AutotoolsPackage):
         make("install", "V=1")
         install(join_path("buildsystems", "autotools", "gtkdocize"), prefix.bin)
 
+    @tag("skip-install-check")
     def installcheck(self):
         """gtk-doc does not support installcheck properly, skip it"""
         pass

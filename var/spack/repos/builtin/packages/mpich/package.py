@@ -599,6 +599,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         self.run_test(exe, purpose="test: run {0} example".format(exe), work_dir=test_dir)
 
+    @tag("functional-checks")
     def test(self):
         self.run_mpich_test(join_path("test", "mpi", "init"), "finalized")
         self.run_mpich_test(join_path("test", "mpi", "basic"), "sendrecv")

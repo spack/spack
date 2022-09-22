@@ -28,6 +28,7 @@ class Intltool(AutotoolsPackage):
         level=0,
     )
 
+    @tag("skip-build-check")
     def check(self):
         # `make check` passes but causes `make install` to fail
         pass

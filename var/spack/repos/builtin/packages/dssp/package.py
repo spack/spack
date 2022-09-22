@@ -51,6 +51,7 @@ class Dssp(AutotoolsPackage):
         """Save off the pdb sources for stand-alone testing."""
         self.cache_extra_test_sources("pdb")
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke test on installed package."""
         pdb_path = join_path(self.test_suite.current_test_cache_dir, "pdb")

@@ -136,6 +136,7 @@ class NetcdfCxx4(AutotoolsPackage):
             if os.path.exists(fname):
                 os.rename(fname, "{0}.txt".format(fname))
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             make("check", parallel=False)

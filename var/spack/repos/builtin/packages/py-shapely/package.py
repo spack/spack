@@ -74,6 +74,7 @@ class PyShapely(PythonPackage):
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_build_environment(env)
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):

@@ -422,6 +422,7 @@ class Openblas(MakefilePackage):
 
         return self.make_defs + targets
 
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def check_build(self):
@@ -435,6 +436,7 @@ class Openblas(MakefilePackage):
         ]
         return make_args + self.make_defs
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

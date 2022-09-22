@@ -92,5 +92,6 @@ class PyLibensemble(PythonPackage):
             work_dir=test_dir,
         )
 
+    @tag("functional-checks")
     def test(self):
         self.run_tutorial_tests("test_uniform_sampling.py")

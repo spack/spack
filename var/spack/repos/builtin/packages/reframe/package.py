@@ -104,6 +104,7 @@ class Reframe(Package):
     ]
 
     # check if we can run reframe
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_list(self):

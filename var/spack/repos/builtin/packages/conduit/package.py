@@ -221,6 +221,7 @@ class Conduit(CMakePackage):
         options.extend(["-C", host_config, "../spack-src/src/"])
         return options
 
+    @tag("build-check")
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
@@ -228,6 +229,7 @@ class Conduit(CMakePackage):
             print("Running Conduit Unit Tests...")
             make("test")
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def check_install(self):

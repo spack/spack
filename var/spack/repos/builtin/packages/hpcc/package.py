@@ -164,6 +164,7 @@ class Hpcc(MakefilePackage):
     def build(self, spec, prefix):
         make("arch={0}".format(self.arch))
 
+    @tag("build-check")
     def check(self):
         """Simple check that compiled binary is working:
         launch with 4 MPI processes and check that test finished."""
@@ -177,6 +178,7 @@ class Hpcc(MakefilePackage):
         if not re.search("End of HPC Challenge tests", hpccoutf):
             raise Exception("Test run was not successfull!")
 
+    @tag("install-check")
     def installcheck(self):
         """Same as check but within prefix location"""
         with working_dir(self.prefix.share.hpcc):

@@ -84,6 +84,7 @@ class XsdkExamples(CMakePackage, CudaPackage):
 
         return args
 
+    @tag("build-check")
     def check(self):
         with working_dir(self.build_directory):
             ctest(parallel=False)

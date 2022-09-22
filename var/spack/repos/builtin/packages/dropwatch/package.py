@@ -30,6 +30,7 @@ class Dropwatch(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh")
 
+    @tag("build-check")
     def check(self):
         """`make check` starts a daemon which does not terminate, blocking the builds"""
         pass

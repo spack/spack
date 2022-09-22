@@ -120,6 +120,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
                 with open(self.prefix.etc.gdbinit, "w") as gdbinit:
                     gdbinit.write("add-auto-load-safe-path {0}\n".format(tool))
 
+    @tag("skip-build-check")
     def check(self):
         """The GDB testsuite is extensive and is hard to pass. Skip it for now."""
         pass

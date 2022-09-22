@@ -130,5 +130,6 @@ class Aml(AutotoolsPackage):
         )
         self.run_test(self.smoke_test, purpose="test: run {0} tutorial".format(self.smoke_test))
 
+    @tag("functional-checks")
     def test(self):
         self.run_install_tutorial_check()

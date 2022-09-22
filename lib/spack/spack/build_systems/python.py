@@ -23,7 +23,7 @@ from llnl.util.lang import classproperty, match_predicate
 
 from spack.directives import depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
-from spack.package_base import PackageBase, run_after
+from spack.package_base import PackageBase, run_after, tag
 from spack.version import Version
 
 
@@ -271,6 +271,7 @@ class PythonPackage(PackageBase):
 
     # Testing
 
+    @tag("sanity-checks")
     def test(self):
         """Attempts to import modules of the installed package."""
 

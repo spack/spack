@@ -133,6 +133,7 @@ class Libfabric(AutotoolsPackage):
 
         return args
 
+    @tag("install-check")
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()

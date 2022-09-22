@@ -696,6 +696,7 @@ class Gdal(CMakePackage):
             with working_dir("swig/java"):
                 make()
 
+    @tag("build-check")
     @when("@:3.4")
     def check(self):
         # no top-level test target
@@ -717,6 +718,7 @@ class Gdal(CMakePackage):
         if self.spec.satisfies("@:3.4 platform=darwin"):
             fix_darwin_install_name(self.prefix.lib)
 
+    @tag("functional-checks")
     def test(self):
         """Attempts to import modules of the installed package."""
 

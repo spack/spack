@@ -141,6 +141,7 @@ class Gtkplus(MesonPackage):
     def install(self, spec, prefix):
         make("install")
 
+    @tag("skip-build-check")
     def check(self):
         """All build time checks open windows in the X server, don't do that"""
         pass

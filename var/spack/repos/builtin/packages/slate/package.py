@@ -101,6 +101,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources(["examples"])
 
+    @tag("functional-checks")
     def test(self):
         if self.spec.satisfies("@2020.10.00") or "+mpi" not in self.spec:
             print("Skipping: stand-alone tests")

@@ -1625,6 +1625,7 @@ config.update(get_paths())
             else:
                 os.remove(dst)
 
+    @tag("functional-checks")
     def test(self):
         # do not use self.command because we are also testing the run env
         exe = self.spec["python"].command.name

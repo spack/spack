@@ -72,6 +72,7 @@ class Flibcpp(CMakePackage):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
+    @tag("functional-checks")
     def test(self):
         """Perform stand-alone/smoke tests."""
         cmake_args = [

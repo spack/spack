@@ -123,6 +123,7 @@ class Draco(CMakePackage):
             )
         return options
 
+    @tag("build-check")
     def check(self):
         """Run ctest after building project."""
         with working_dir(self.build_directory):

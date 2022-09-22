@@ -139,6 +139,7 @@ class Mercury(CMakePackage):
 
         return cmake_args
 
+    @tag("build-check")
     def check(self):
         """Unit tests fail when run in parallel."""
 

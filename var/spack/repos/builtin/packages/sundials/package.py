@@ -652,6 +652,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         return libs or None  # Raise an error if no libs are found
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):
@@ -752,6 +753,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             with working_dir(work_dir):
                 self.run_test(exe="make", options=["clean"])
 
+    @tag("functional-checks")
     def test(self):
         self.build_smoke_tests()
         self.run_smoke_tests()

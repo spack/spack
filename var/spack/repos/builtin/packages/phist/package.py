@@ -285,6 +285,7 @@ class Phist(CMakePackage):
             else:
                 make("check")
 
+    @tag("install-check")
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def test_install(self):

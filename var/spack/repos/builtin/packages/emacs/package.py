@@ -104,6 +104,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
                 exe, ["--version"], expected, installed=True, purpose=reason, skip_missing=True
             )
 
+    @tag("functional-checks")
     def test(self):
         """Perform smoke tests on the installed package."""
         # Simple version check tests on known binaries
