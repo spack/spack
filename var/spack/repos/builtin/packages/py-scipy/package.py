@@ -118,6 +118,15 @@ class PyScipy(PythonPackage):
             with open("setup.cfg", "w") as f:
                 f.write("[config_fc]\n")
                 f.write("fcompiler = fujitsu\n")
+        elif (self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi")):
+            if self.spec.satisfies("target=x86:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intel\n")
+            elif self.spec.satisfies("target=x86_64:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intelem\n")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
