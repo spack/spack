@@ -5,6 +5,8 @@
 
 import inspect
 
+from llnl.util.filesystem import filter_file
+
 from spack.package import *
 
 
@@ -15,7 +17,7 @@ class _WrappedExecutable(Executable):
     def __call__(self, *args, **kwargs):
         spack_answers_filename = "common_sense_answer.txt"
         with open(spack_answers_filename, "w") as f:
-            f.writelines("n\n")
+            f.writelines("N\n")
         with open(spack_answers_filename, "r") as f:
             super(_WrappedExecutable, self).__call__(*args, **kwargs, input=f)
 
@@ -36,6 +38,10 @@ class PerlMozillaPublicsuffix(PerlPackage):
     depends_on("perl@5.8:", type=("build", "run"))  # AUTO-CPAN2Spack
     depends_on("perl-uri", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-build@0.28:", type="build")  # AUTO-CPAN2Spack
+
+    def patch(self):
+        """HTTP::Tiny has a bad interaction with Errno.pm for Perl <5.22"""
+        filter_file(r"^use HTTP::Tiny;$", "", "Build.PL", stop_at="^my", backup=False)
 
     def configure(self, spec, prefix):
         perl_safe = inspect.getmodule(self).perl
