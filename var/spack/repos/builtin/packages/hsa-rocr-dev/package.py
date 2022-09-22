@@ -17,7 +17,7 @@ class HsaRocrDev(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/ROCR-Runtime"
     git = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
-    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
@@ -25,6 +25,7 @@ class HsaRocrDev(CMakePackage):
 
     version("master", branch="master")
 
+    version("5.2.3", sha256="978de85d3455207bb82bef2254a4624e9116b1258a8c164d7a7e21a644eff12f")
     version("5.2.1", sha256="448a7409bdc6618332a42b9503122996f26b91768140b710ba99bff8a8c03dd9")
     version("5.2.0", sha256="529e49693dd9f6459586dd0a26f14dd77dbdf8c0b45fb54830b294eba7babd27")
     version("5.1.3", sha256="479340ec34cdffbbdb1002c85a47d1fccd23e8394631a1f001ef6130be08287d")
@@ -119,6 +120,7 @@ class HsaRocrDev(CMakePackage):
         "5.1.3",
         "5.2.0",
         "5.2.1",
+        "5.2.3",
         "master",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
