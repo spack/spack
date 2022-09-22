@@ -30,5 +30,5 @@ class PyConan(PythonPackage):
     depends_on("py-jinja2@2.9:2", type=("build", "run"), when="^python@:2.7")
     depends_on("py-markupsafe@:2.0.1", type=("build", "run"), when="^python@:2.7")
     depends_on("py-jinja2@3.0:3", type=("build", "run"), when="^python@3:")
-    depends_on("py-python-dateutil@2.7.0:2", type=("build", "run"), when="^python@:2.7")
+    depends_on("py-python-dateutil@2.7.0:2", type=("build", "run"))
     depends_on("py-configparser@3.5:", type=("build", "run"), when="^python@:2.7")
