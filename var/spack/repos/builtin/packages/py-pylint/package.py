@@ -25,6 +25,7 @@ class PyPylint(PythonPackage):
         "pylint.reporters.ureports",
     ]
 
+    version("2.15.0", sha256="4f3f7e869646b0bd63b3dfb79f3c0f28fc3d2d923ea220d52620fd625aed92b0")
     version("2.14.4", sha256="47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a")
     version("2.13.5", sha256="dab221658368c7a05242e673c275c488670144123f4bd262b2777249c1c0de9b")
     version("2.11.1", sha256="2c9843fff1a88ca0ad98a256806c82c5a8f86086e7ccbdb93297d86c3f90c436")
@@ -51,8 +52,9 @@ class PyPylint(PythonPackage):
     depends_on("py-astroid@2.2.0:2", type=("build", "run"), when="@2.3.0:2.7")
     depends_on("py-astroid@2.5.6:2.6", type=("build", "run"), when="@2.8.0:2.10")
     depends_on("py-astroid@2.8.0:2.8", type=("build", "run"), when="@2.11.1")
-    depends_on("py-astroid@2.11.2:2.11", type=("build", "run"), when="@2.13.5:")
-    depends_on("py-astroid@2.11.6:2.11", type=("build", "run"), when="@2.14.2:")
+    depends_on("py-astroid@2.11.2:2.11", type=("build", "run"), when="@2.13.5:2.13")
+    depends_on("py-astroid@2.11.6:2.11", type=("build", "run"), when="@2.14.2:2.14")
+    depends_on("py-astroid@2.12.4:2.14", type=("build", "run"), when="@2.15.0:")
     depends_on("py-backports-functools-lru-cache", when="^python@:2.8", type=("build", "run"))
     depends_on("py-configparser", when="^python@:2.8", type=("build", "run"))
     depends_on("py-dill@0.2:", when="@2.13.5:", type=("build", "run"))
@@ -66,6 +68,7 @@ class PyPylint(PythonPackage):
     # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on("py-setuptools-scm", type="build", when="@2.8.2")
     depends_on("py-setuptools@17.1:", type="build")
+    depends_on("py-setuptools@62.6:62", type="build", when="@2.15.0:")
     depends_on("py-singledispatch", when="^python@:3.3", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@1:2.3.1")
     depends_on("py-toml@0.7.1:", type=("build", "run"), when="@2.8.2:2.12.2")

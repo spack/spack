@@ -13,6 +13,7 @@ class PyAstroid(PythonPackage):
     homepage = "https://github.com/PyCQA/astroid"
     pypi = "astroid/astroid-2.8.3.tar.gz"
 
+    version("2.12.10", sha256="81f870105d892e73bf535da77a8261aa5bde838fa4ed12bb2f435291a098c581")
     version("2.11.6", sha256="4f933d0bf5e408b03a6feb5d23793740c27e07340605f236496cd6ce552043d6")
     version("2.11.5", sha256="f4e4ec5294c4b07ac38bab9ca5ddd3914d4bf46f9006eb5c0ae755755061044e")
     version("2.11.4", sha256="561dc6015eecce7e696ff7e3b40434bc56831afeff783f0ea853e19c4f635c06")
@@ -40,6 +41,7 @@ class PyAstroid(PythonPackage):
     depends_on("python@3.5:", when="@2.3.3:", type=("build", "run"))
     depends_on("python@3.6:", when="@2.5.6:", type=("build", "run"))
     depends_on("python@3.6.2:", when="@2.11.4:", type=("build", "run"))
+    depends_on("python@3.7.2:", when="@2.12.10:", type=("build", "run"))
     depends_on("py-lazy-object-proxy", type=("build", "run"))
     # Starting with astroid 2.3.1, astroid's dependencies were restricted
     # to a given minor version, c.f. commit e1b4e11.
@@ -61,3 +63,4 @@ class PyAstroid(PythonPackage):
     depends_on("py-typing-extensions@3.10:", when="@2.8.3: ^python@:3.9", type=("build", "run"))
     depends_on("py-setuptools@17.1:", type=("build", "run"))
     depends_on("py-setuptools@20:", type=("build", "run"), when="@2.7.3:")
+    depends_on("py-setuptools@62.6:62", type=("build", "run"), when="@2.12.10:")
