@@ -26,7 +26,7 @@ class PyJsonschema(PythonPackage):
     depends_on("python@2.6:2.8,3.4:", type=("build", "run"))
 
     depends_on("py-hatchling", when="@4.10:", type="build")
-    depends_on("py-hatchling-vcs", when="@4.10:", type="build")
+    depends_on("py-hatch-vcs", when="@4.10:", type="build")
     depends_on("py-setuptools@40.6.0:", when="@4:4.4", type="build")
     depends_on("py-setuptools", when="@3", type=("build", "run"))
     depends_on("py-setuptools", when="@:2", type="build")

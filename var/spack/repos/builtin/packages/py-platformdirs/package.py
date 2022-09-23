@@ -20,10 +20,10 @@ class PyPlatformdirs(PythonPackage):
 
     depends_on("python@3.7:", when="@2.4.1:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-setuptools@44:", when="@:2.5", type="build")
-    depends_on("py-setuptools-scm@5:+toml", when="@:2.5", type="build")
+    depends_on("py-setuptools@44:", when="@:2.5.1", type="build")
+    depends_on("py-setuptools-scm@5:+toml", when="@:2.5.1", type="build")
     depends_on("py-hatchling@0.22.0:", when="@2.5.2:", type="build")
-    depends_on("py-hatchling-vcs", when="@2.5.2:", type="build")
+    depends_on("py-hatch-vcs", when="@2.5.2:", type="build")
 
     @when("^python@:3.6")
     def setup_build_environment(self, env):

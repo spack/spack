@@ -16,4 +16,4 @@ class PyPkgutilResolveName(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
 
-    depends_on("py-flit-core@2:2", type="build")
+    depends_on("py-flit-core@2", type="build")

@@ -22,7 +22,7 @@ class PyPoetry(PythonPackage):
     depends_on("py-poetry-core@1.1.0", type=("build", "run"), when="@1.2.0:")
     depends_on("py-poetry-plugin-export@1.0.6:1", type=("build", "run"), when="@1.2.0:")
     depends_on("py-cleo@0.8.1:0.8", type=("build", "run"), when="@:1.1")
-    depends_on("py-cleo@1.0.0a5:", type=("build", "run"), when="@1.2.0:")
+    depends_on("py-cleo@1:", type=("build", "run"), when="@1.2.0:")
     depends_on("py-clikit@0.6.2:0.6", type=("build", "run"))
     depends_on("py-crashtest@0.3.0:0.3", when="^python@3.6:3", type=("build", "run"))
     depends_on("py-requests@2.18:2", type=("build", "run"))
