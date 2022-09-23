@@ -506,7 +506,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         options = []
 
-        options.append("-DBLT_SOURCE_DIR:PATH={0}".format(spec["blt"].prefix))
+        options.append("-DBLT_SOURCE_DIR:PATH={0}".format(self.spec["blt"].prefix))
 
         if self.run_tests is False:
             options.append("-DENABLE_TESTS=OFF")
