@@ -950,7 +950,7 @@ def get_versions(args, name):
     ) == 1
     git_single_version = git_single_version and (args.version is not None)
     # python2: args.version is False if not set
-    git_single_version = git_single_version and (args.version != False)
+    git_single_version = git_single_version and (args.version is not False)
 
     if git:
         if has_git_option:
