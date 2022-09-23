@@ -949,6 +949,8 @@ def get_versions(args, name):
         len(args.branch or []) + len(args.commit or []) + len(args.tag or [])
     ) == 1
     git_single_version = git_single_version and (args.version is not None)
+    # python2: args.version is False if not set
+    git_single_version = git_single_version and (args.version != False)
 
     if git:
         if has_git_option:
