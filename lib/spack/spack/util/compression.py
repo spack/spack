@@ -548,7 +548,7 @@ def extension_from_stream(stream, decompress=False):
                     )
                     return extension_from_path(stream.name)
             resultant_ext = suffix_ext if not prefix_ext else ".".join([prefix_ext, suffix_ext])
-            tty.debug("File extension %s successfully dervived by magic number." % resultant_ext)
+            tty.debug("File extension %s successfully derived by magic number." % resultant_ext)
             return resultant_ext
     return None
 
