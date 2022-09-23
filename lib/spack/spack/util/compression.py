@@ -26,6 +26,10 @@ ALLOWED_ARCHIVE_TYPES = (
     [".".join(ext) for ext in product(PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 )
 
+ALLOWED_SINGLE_EXT_ARCHIVE_TYPES = (
+    PRE_EXTS + EXTS + NOTAR_EXTS
+)
+
 is_windows = sys.platform == "win32"
 
 try:
@@ -79,8 +83,7 @@ def _untar(archive_file):
         archive_file (str): absolute path to the archive to be extracted.
         Can be one of .tar(.[gz|bz2|xz|Z]) or .(tgz|tbz|tbz2|txz).
     """
-    _, ext = os.path.splitext(archive_file)
-    outfile = os.path.basename(archive_file.strip(ext))
+    outfile = os.path.basename(strip_extension(archive_file, "tar"))
 
     tar = which("tar", required=True)
     tar.add_default_arg("-oxf")
@@ -95,9 +98,8 @@ def _bunzip2(archive_file):
     Args:
         archive_file (str): absolute path to the bz2 archive to be decompressed
     """
-    _, ext = os.path.splitext(archive_file)
     compressed_file_name = os.path.basename(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
+    decompressed_file = os.path.basename(strip_extension(archive_file, "bz2"))
     working_dir = os.getcwd()
     archive_out = os.path.join(working_dir, decompressed_file)
     copy_path = os.path.join(working_dir, compressed_file_name)
@@ -123,8 +125,7 @@ def _gunzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
+    decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     if is_gzip_supported():
@@ -138,8 +139,7 @@ def _gunzip(archive_file):
 
 
 def _system_gunzip(archive_file):
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
+    decompressed_file = os.path.basename(strip_extension(archive_file, "gz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -159,17 +159,16 @@ def _unzip(archive_file):
     Args:
         archive_file (str): absolute path of the file to be decompressed
     """
-
-    destination_abspath = os.getcwd()
-    exe = "unzip"
-    arg = "-q"
+    extracted_file = os.path.basename(strip_extension(archive_file, "zip"))
     if is_windows:
-        exe = "tar"
-        arg = "-xf"
-    unzip = which(exe, required=True)
-    unzip.add_default_arg(arg)
-    unzip(archive_file)
-    return destination_abspath
+        return _untar(archive_file)
+    else:
+        exe = "unzip"
+        arg = "-q"
+        unzip = which(exe, required=True)
+        unzip.add_default_arg(arg)
+        unzip(archive_file)
+    return extracted_file
 
 
 def _unZ(archive_file):
@@ -186,8 +185,7 @@ def _lzma_decomp(archive_file):
     to find available Python support. This is the xz command
     on Unix and 7z on Windows"""
     if is_lzma_supported():
-        _, ext = os.path.splitext(archive_file)
-        decompressed_file = os.path.basename(archive_file.strip(ext))
+        decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
         archive_out = os.path.join(os.getcwd(), decompressed_file)
         with open(archive_out, "wb") as ar:
             with lzma.open(archive_file) as lar:
@@ -217,19 +215,13 @@ def _win_compressed_tarball_handler(archive_file):
     # 7zip is able to one shot extract compressed archives
     # that have been named .txz. If that is the case, there will
     # be no intermediate archvie to extract.
-    if os.path.exists(decomped_tarball):
+    if check_extension(decomped_tarball, "tar"):
         # run tar on newly decomped archive
         outfile = _untar(decomped_tarball)
         # clean intermediate archive to mimic end result
         # produced by one shot decomp/extraction
         os.remove(decomped_tarball)
         return outfile
-    else:
-        # File was a .txz, 7zip can directly extract/decompress these
-        # in one shot (this behavior is undocumented)
-        # so be sure we return the correct extensions in the path
-        _, ext = os.path.splitext(decomped_tarball)
-        decomped_tarball = os.path.basename(decomped_tarball.strip(ext))
     return decomped_tarball
 
 
@@ -239,8 +231,7 @@ def _xz(archive_file):
     """
     if is_windows:
         raise RuntimeError("XZ tool unavailable on Windows")
-    _, ext = os.path.splitext(archive_file)
-    decompressed_file = os.path.basename(archive_file.strip(ext))
+    decompressed_file = os.path.basename(strip_extension(archive_file, "xz"))
     working_dir = os.getcwd()
     destination_abspath = os.path.join(working_dir, decompressed_file)
     compressed_file = os.path.basename(archive_file)
@@ -266,14 +257,13 @@ def _7zip(archive_file):
     Args:
         archive_file (str): absolute path of file to be unarchived
     """
-    _, ext = os.path.splitext(archive_file)
-    outfile = os.path.basename(archive_file.strip(ext))
+    outfile = os.path.basename(strip_last_extension(archive_file))
     _7z = which("7z")
     if not _7z:
         raise CommandNotFoundError(
             "7z unavailable,\
 unable to extract %s files. 7z can be installed via Spack"
-            % ext
+            % extension_from_path(archive_file)
         )
     _7z.add_default_arg("e")
     _7z(archive_file)
@@ -557,8 +547,9 @@ def extension_from_stream(stream, decompress=False):
                         " falling back to regex path parsing."
                     )
                     return extension_from_path(stream.name)
-            tty.debug("File extension successfully dervived by magic number.")
-            return suffix_ext if not prefix_ext else ".".join([prefix_ext, suffix_ext])
+            resultant_ext = suffix_ext if not prefix_ext else ".".join([prefix_ext, suffix_ext])
+            tty.debug("File extension %s successfully dervived by magic number." % resultant_ext)
+            return resultant_ext
     return None
 
 
@@ -601,13 +592,39 @@ def extension_from_file(file, decompress=False):
     return None
 
 
-def strip_extension(path):
-    """Get the part of a path that does not include its compressed
-    type extension."""
+def extension_from_path(path):
+    """Get the allowed archive extension for a path.
+    If path does not include a valid archive extension
+    (see`spack.util.compression.ALLOWED_ARCHIVE_TYPES`) return None
+    """
+    if path is None:
+        raise ValueError("Can't call extension() on None")
+
     for t in ALLOWED_ARCHIVE_TYPES:
         if check_extension(path, t):
-            suffix = r"\.%s" % t
-            return re.sub(suffix, "", path)
+            return t
+    return None
+
+
+def strip_last_extension(path):
+    """Strips last supported archive extension from path"""
+    if path:
+        for ext in ALLOWED_SINGLE_EXT_ARCHIVE_TYPES:
+            mod_path = check_and_remove_ext(path, ext)
+            if mod_path != path:
+                return mod_path
+    return path
+
+
+def strip_extension(path, ext=None):
+    """Get the part of a path that does not include its compressed
+    type extension."""
+    if ext:
+        return check_and_remove_ext(path, ext)
+    for t in ALLOWED_ARCHIVE_TYPES:
+        mod_path = check_and_remove_ext(path, t)
+        if mod_path != path:
+            return mod_path
     return path
 
 
@@ -622,15 +639,17 @@ def check_extension(path, ext):
     return False
 
 
-def extension_from_path(path):
-    """Get the allowed archive extension for a path.
-    If path does not include a valid archive extension
-    (see`spack.util.compression.ALLOWED_ARCHIVE_TYPES`) return None
-    """
-    if path is None:
-        raise ValueError("Can't call extension() on None")
+def reg_remove_ext(path, ext):
+    """Regex remove ext from path"""
+    if path and ext:
+        suffix = r"\.%s$" % ext
+        return re.sub(suffix, "", path)
+    return path
 
-    for t in ALLOWED_ARCHIVE_TYPES:
-        if check_extension(path, t):
-            return t
-    return None
+
+def check_and_remove_ext(path, ext):
+    """If given extension is present in path, remove and return,
+    otherwise just return path"""
+    if check_extension(path, ext):
+        return reg_remove_ext(path, ext)
+    return path
