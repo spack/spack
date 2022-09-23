@@ -32,6 +32,11 @@ class AwsOfiRccl(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
+    # To enable this plug-in to work with RCCL add it to the LD_LIBRARY_PATH
+    def setup_run_environment(self, env):
+        aws_ofi_rccl_home = self.spec["aws-ofi-rccl"].prefix
+        env.append_path("LD_LIBRARY_PATH", aws_ofi_rccl_home.lib)
+
     def configure_args(self):
         spec = self.spec
         args = []
