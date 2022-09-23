@@ -28,7 +28,7 @@ class OciSystemdHook(AutotoolsPackage):
     depends_on("go-md2man")
 
     def configure_args(self):
-        args = ["LDFLAGS=-lintl"]
+        args = ["LDFLAGS={0}".format(self.spec['gettext'].libs_intl)]
         return args
 
     def install(self, spec, prefix):

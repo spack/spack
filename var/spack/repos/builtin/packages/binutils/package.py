@@ -105,7 +105,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             env.append_flags("LDFLAGS", "-Wl,-z,muldefs")
 
         if "+nls" in self.spec:
-            env.append_flags("LDFLAGS", "-lintl")
+            env.append_flags("LDFLAGS", self.spec['gettext'].libs_intl)
 
     def configure_args(self):
         spec = self.spec

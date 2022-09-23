@@ -453,7 +453,7 @@ class Qt(Package):
     # correctly, so add it here.
     def flag_handler(self, name, flags):
         if "+webkit" in self.spec and name == "ldlibs":
-            flags.append("-lintl")
+            flags.append(self.spec['gettext'].libs_intl)
 
         return (flags, None, None)
 

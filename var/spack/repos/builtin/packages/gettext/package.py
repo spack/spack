@@ -104,8 +104,20 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
+        # on redhat and clones, there is /usr/lib64/preloadable_libintl.so instead of libintl.so
+        # and sometimes 32 bit libraries you don't want in /usr/lib.
+
+        if self.prefix = '/usr' and self.os[:-1] in ['scientific','redhat','centos']:
+            root = '/usr/lib64'
+        else:
+            root = self.prefix,
+
         return find_libraries(
-            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
-            root=self.prefix,
+            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "*libintl"],
+            root=root,
             recursive=True,
         )
+
+    @property
+    def libs_intl(self):
+        return LibraryList(self.libs[-1])

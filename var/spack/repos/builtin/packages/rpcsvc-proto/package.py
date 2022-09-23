@@ -20,7 +20,7 @@ class RpcsvcProto(AutotoolsPackage):
     depends_on("gettext")
 
     def configure_args(self):
-        return ["LIBS=-lintl"]
+        return ["LIBS={0}".format(self.spec['gettext'].libs_intl]
 
     @run_before("build")
     def change_makefile(self):
