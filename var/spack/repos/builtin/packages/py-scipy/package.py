@@ -118,6 +118,15 @@ class PyScipy(PythonPackage):
             with open("setup.cfg", "w") as f:
                 f.write("[config_fc]\n")
                 f.write("fcompiler = fujitsu\n")
+        elif self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
+            if self.spec.satisfies("target=x86:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intel\n")
+            elif self.spec.satisfies("target=x86_64:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intelem\n")
 
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
@@ -128,6 +137,11 @@ class PyScipy(PythonPackage):
             env.set("FFLAGS", "-fallow-argument-mismatch")
             if self.spec.satisfies("^py-numpy@1.16:1.17"):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
+
+        # https://github.com/scipy/scipy/issues/14935
+        if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
+            if self.spec["py-pythran"].version < Version("0.12"):
+                env.set("SCIPY_USE_PYTHRAN", "0")
 
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
