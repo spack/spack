@@ -18,7 +18,7 @@ class PyTomlkit(PythonPackage):
     version("0.7.0", sha256="ac57f29693fab3e309ea789252fcce3061e19110085aa31af5446ca749325618")
 
     depends_on("python@2.7,3.5:", type=("build", "run"))
-    depends_on("python@3.6:", when="@0.11.0:", type=("build", "run"))
+    depends_on("python@3.6:3", when="@0.11.0:", type=("build", "run"))
     depends_on("py-poetry-core@1:", type="build")
     depends_on("py-enum34@1.1:1", when="^python@2.7", type=("build", "run"))
     depends_on("py-functools32@3.2.3:3", when="^python@2.7", type=("build", "run"))
