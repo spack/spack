@@ -2220,10 +2220,10 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.is_package and self.request.install_args.get("explicit", True)
+        return self.is_root and self.request.install_args.get("explicit", True)
 
     @property
-    def is_package(self):
+    def is_root(self):
         """The package was requested directly, but may or may not be explicit
         in an environment."""
         return self.pkg == self.request.pkg
@@ -2231,7 +2231,7 @@ class BuildTask(object):
     @property
     def use_cache(self):
         _use_cache = True
-        if self.is_package:
+        if self.is_root:
             return self.request.install_args.get("package_use_cache", _use_cache)
         else:
             return self.request.install_args.get("dependencies_use_cache", _use_cache)
@@ -2239,7 +2239,7 @@ class BuildTask(object):
     @property
     def cache_only(self):
         _cache_only = False
-        if self.is_package:
+        if self.is_root:
             return self.request.install_args.get("package_cache_only", _cache_only)
         else:
             return self.request.install_args.get("dependencies_cache_only", _cache_only)
