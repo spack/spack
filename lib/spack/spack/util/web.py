@@ -444,7 +444,8 @@ def url_exists(url, curl=None):
     try:
         read_from_url(url)
         return True
-    except (SpackWebError, URLError):
+    except (SpackWebError, URLError) as e:
+        tty.debug("Failure reading URL: " + str(e))
         return False
 
 
