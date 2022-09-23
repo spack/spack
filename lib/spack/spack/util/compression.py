@@ -11,6 +11,8 @@ import shutil
 import sys
 from itertools import product
 
+from llnl.util import tty
+
 import spack.util.path as spath
 from spack.util.executable import CommandNotFoundError, which
 
@@ -222,6 +224,12 @@ def _win_compressed_tarball_handler(archive_file):
         # produced by one shot decomp/extraction
         os.remove(decomped_tarball)
         return outfile
+    else:
+        # File was a .txz, 7zip can directly extract/decompress these
+        # in one shot (this behavior is undocumented)
+        # so be sure we return the correct extensions in the path
+        _, ext = os.path.splitext(decomped_tarball)
+        decomped_tarball = os.path.basename(decomped_tarball.strip(ext))
     return decomped_tarball
 
 
@@ -346,7 +354,7 @@ class FileTypeInterface:
     compressed = False
 
     @staticmethod
-    def name(cls):
+    def name():
         raise NotImplementedError
 
     @classmethod
@@ -408,7 +416,7 @@ class BZipFileType(CompressedFileTypeInterface):
     extension = "bz2"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "bzip2 compressed data"
 
     @staticmethod
@@ -427,7 +435,7 @@ class ZCompressedFileType(CompressedFileTypeInterface):
     extension = "Z"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "compress'd data"
 
     @staticmethod
@@ -441,7 +449,7 @@ class GZipFileType(CompressedFileTypeInterface):
     extension = "gz"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "gzip compressed data"
 
     @staticmethod
@@ -462,7 +470,7 @@ class LzmaFileType(CompressedFileTypeInterface):
     extension = "xz"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "xz compressed data"
 
     @staticmethod
@@ -486,7 +494,7 @@ class TarFileType(FileTypeInterface):
     extension = "tar"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "tar archive"
 
 
@@ -495,7 +503,7 @@ class ZipFleType(FileTypeInterface):
     extension = "zip"
 
     @staticmethod
-    def name(cls):
+    def name():
         return "Zip archive data"
 
 
@@ -544,7 +552,12 @@ def extension_from_stream(stream, decompress=False):
                     # a nested extension from decompressed file.
                     # Try to use filename parsing to check for
                     # potential nested extensions if there are any
+                    tty.debug(
+                        "Cannot derive file extension from magic number;"
+                        " falling back to regex path parsing."
+                    )
                     return extension_from_path(stream.name)
+            tty.debug("File extension successfully dervived by magic number.")
             return suffix_ext if not prefix_ext else ".".join([prefix_ext, suffix_ext])
     return None
 
