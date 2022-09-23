@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyBluepyConfigfile(PythonPackage):
     git      = "ssh://git@bbpgitlab.epfl.ch/nse/bluepy-configfile.git"
 
     version('develop', branch='main')
-    version('0.1.18', tag='bluepy-configfile-v0.1.18')
+    version('0.1.19', tag='bluepy-configfile-v0.1.19')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
