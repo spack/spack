@@ -432,7 +432,8 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set("HIPRAND_PATH", self.spec["rocrand"].prefix)
             env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
-            env.set("RCCL_PATH", self.spec["rccl"].prefix)
+            if "+nccl" in self.spec:
+                env.set("RCCL_PATH", self.spec["rccl"].prefix)
             env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
             env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
@@ -454,7 +455,7 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable("breakpad")
 
         enable_or_disable("nccl")
-        if "+nccl" in self.spec:
+        if "+cuda+nccl" in self.spec:
             env.set("NCCL_LIB_DIR", self.spec["nccl"].libs.directories[0])
             env.set("NCCL_INCLUDE_DIR", self.spec["nccl"].prefix.include)
 
