@@ -54,7 +54,8 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "libfabric",
         default=False,
-        description="Builds with support for libfabric enhanced RCCL communication lib")
+        description="Builds with support for libfabric enhanced RCCL communication lib",
+    )
 
     depends_on("cmake@3.21.0:", type="build", when="@1.0.1:")
     depends_on("cmake@3.17.0:", type="build", when="@:1.0.0")

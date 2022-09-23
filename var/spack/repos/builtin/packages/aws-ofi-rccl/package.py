@@ -5,7 +5,7 @@
 
 from spack.package import *
 
-#, ROCmPackage
+
 class AwsOfiRccl(AutotoolsPackage):
     """AWS OFI RCCL is a plug-in which enables EC2 developers to use
     libfabric as a network provider while running AMD's RCCL based
