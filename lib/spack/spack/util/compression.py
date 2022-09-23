@@ -26,9 +26,7 @@ ALLOWED_ARCHIVE_TYPES = (
     [".".join(ext) for ext in product(PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 )
 
-ALLOWED_SINGLE_EXT_ARCHIVE_TYPES = (
-    PRE_EXTS + EXTS + NOTAR_EXTS
-)
+ALLOWED_SINGLE_EXT_ARCHIVE_TYPES = PRE_EXTS + EXTS + NOTAR_EXTS
 
 is_windows = sys.platform == "win32"
 
