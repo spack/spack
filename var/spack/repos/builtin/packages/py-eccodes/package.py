@@ -24,10 +24,11 @@ class PyEccodes(PythonPackage):
     depends_on("eccodes@2.21.0:+shared", type="run")
 
     def setup_build_environment(self, env):
-        if sys.platform == "darwin":
-            env.prepend_path("DYLD_LIBRARY_PATH", self.spec["eccodes"].libs.directories[0])
-        else:
-            env.prepend_path("LD_LIBRARY_PATH", self.spec["eccodes"].libs.directories[0])
+        eccodes_libs = self.spec["eccodes:c,shared"].libs
+        # ECCODES_HOME has the highest precedence when searching for the library with py-findlibs:
+        env.set("ECCODES_HOME", eccodes_libs.directories[0])
+        # but not if ecmwflibs (https://pypi.org/project/ecmwflibs/) is in the PYTHONPATH:
+        env.set("ECMWFLIBS_ECCODES", eccodes_libs.files[0])
 
     def setup_run_environment(self, env):
         self.setup_build_environment(env)
