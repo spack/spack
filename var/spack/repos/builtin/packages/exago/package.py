@@ -46,14 +46,17 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
 
-    # Profling and optimization flags
+    # optimization flag
     variant(
         "full_optimizations",
         default=False,
         description="Enable/Disable optimizations and release type",
     )
-    # variant("with_profiling", default="none",
-    # description="Specify profiling tools", multi=True, values=("none", "hpctoolkit", "tau"))
+    variant(
+        "debug",
+        default=False,
+        description="Enable RelWithDebInfo",
+    )
 
     # Dependencies
     depends_on("pkgconfig", type="build")
@@ -72,23 +75,23 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build")
 
     # Profiling and optimizations
-    depends_on("hiop+deepchecking~full_optimizations", when="+hiop~full_optimizations")
+    depends_on("hiop+deepchecking+debug", when="+hiop+debug")
     depends_on("hiop~deepchecking+full_optimizations", when="+hiop+full_optimizations")
 
     # Force RelWithDebInfo when not using optimizations
     conflicts(
         "build_type=Release",
-        when="~full_optimizations",
+        when="+debug",
         msg="Use RelWithDebInfo when not using optimizations",
     )
     conflicts(
         "build_type=Debug",
-        when="~full_optimizations",
+        when="+debug",
         msg="Use RelWithDebInfo when not using optimizations",
     )
     conflicts(
         "build_type=MinSizeRel",
-        when="~full_optimizations",
+        when="+debug",
         msg="Use RelWithDebInfo when not using optimizations",
     )
 
