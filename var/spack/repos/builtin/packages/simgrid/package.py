@@ -116,6 +116,7 @@ class Simgrid(CMakePackage):
     variant("smpi", default=True, description="SMPI provides MPI")
     variant("examples", default=False, description="Install examples")
     variant("mc", default=False, description="Model checker")
+    variant("msg", default=False, description="Enables the old MSG interface")
 
     # does not build correctly with some old compilers -> rely on packages
     depends_on("boost@:1.69.0", when="@:3.21")
@@ -145,7 +146,8 @@ class Simgrid(CMakePackage):
             args.append("-Denable_documentation=OFF")
         if spec.satisfies("+mc"):
             args.append("-Denable_model-checking=ON")
-
+        if spec.satisfies("+msg"):
+            args.append("-Denable_msg=ON")
         return args
 
     def install(self, spec, prefix):
