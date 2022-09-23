@@ -12,6 +12,7 @@ class PyBoostHistogram(PythonPackage):
     homepage = "https://github.com/scikit-hep/boost-histogram"
     pypi = "boost_histogram/boost_histogram-1.2.1.tar.gz"
 
+    version("1.3.1", sha256="31cd396656f3a37834e07d304cdb84d9906bc2172626a3d92fe577d08bcf410f")
     version("1.2.1", sha256="a27842b2f1cfecc509382da2b25b03056354696482b38ec3c0220af0fc9b7579")
 
     depends_on("python@3.6:", type=("build", "run"))
