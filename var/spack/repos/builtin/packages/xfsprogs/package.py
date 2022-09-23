@@ -36,7 +36,7 @@ class Xfsprogs(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            "LDFLAGS={0}".format(self.spec['gettext'].libs_intl,
+            "LDFLAGS={0}".format(self.spec['gettext'].libs_intl),
             "--with-systemd-unit-dir=" + self.spec["xfsprogs"].prefix.lib.systemd.system,
         ]
         return args

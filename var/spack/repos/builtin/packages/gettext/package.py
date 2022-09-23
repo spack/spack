@@ -107,7 +107,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         # on redhat and clones, there is /usr/lib64/preloadable_libintl.so instead of libintl.so
         # and sometimes 32 bit libraries you don't want in /usr/lib.
 
-        if self.prefix = '/usr' and self.os[:-1] in ['scientific','redhat','centos']:
+        if self.prefix == '/usr' and self.os[:-1] in ['scientific','redhat','centos']:
             root = '/usr/lib64'
         else:
             root = self.prefix,

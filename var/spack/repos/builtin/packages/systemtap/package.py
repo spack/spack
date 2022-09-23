@@ -29,5 +29,5 @@ class Systemtap(AutotoolsPackage):
     depends_on("python", type=("build", "run"))
 
     def configure_args(self):
-        args = ["LDFLAGS={0}".format(self.spec['gettext'].libs_intl]
+        args = ["LDFLAGS={0}".format(self.spec['gettext'].libs_intl)]
         return args
