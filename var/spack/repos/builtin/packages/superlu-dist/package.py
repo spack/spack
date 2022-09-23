@@ -117,12 +117,9 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             append_define("TPL_ENABLE_CUDALIB", True)
-            append_define(
-                "TPL_CUDA_LIBRARIES", "-L%s -lcublas -lcudart" % spec["cuda"].libs.directories[0]
-            )
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch[0] != "none":
-                append_define("CMAKE_CUDA_FLAGS", "-arch=sm_" + cuda_arch[0])
+                append_define("CMAKE_CUDA_ARCHITECTURES", cuda_arch[0])
 
         if "+rocm" in spec and spec.satisfies("@amd"):
             append_define("TPL_ENABLE_HIPLIB", True)
