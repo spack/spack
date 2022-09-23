@@ -132,7 +132,7 @@ class Simgrid(CMakePackage):
 
         if self.spec.satisfies("+smpi"):
             self.spec.smpicc = join_path(self.prefix.bin, "smpicc")
-            self.spec.smpicxx = join_path(self.prefix.bin, "smpicxx -std=c++11")
+            self.spec.smpicxx = join_path(self.prefix.bin, "smpicxx")
             self.spec.smpifc = join_path(self.prefix.bin, "smpif90")
             self.spec.smpif77 = join_path(self.prefix.bin, "smpiff")
 
