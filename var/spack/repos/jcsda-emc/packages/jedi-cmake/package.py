@@ -11,17 +11,19 @@ class JediCmake(CMakePackage):
 
     homepage = "https://github.com/JCSDA/jedi-cmake"
     git = "https://github.com/JCSDA/jedi-cmake.git"
-    url = "https://github.com/JCSDA/jedi-cmake/archive/refs/tags/1.3.0.tar.gz"
+    url = "https://github.com/JCSDA/jedi-cmake/archive/refs/tags/1.4.0.tar.gz"
 
     maintainers = ["climbfuji"]
 
     version("master", branch="master", no_cache=True)
     version("develop", branch="develop", no_cache=True)
     version(
-        "1.3.0",
-        sha256="3e92339df858e9663b2cdd9f7bb7e56d18098e9c60606fe7af9e5f5911e5ca55",
+        "1.4.0",
+        commit="36fc99bdff5d3d8835480b37a3dcc75e5f8da256",
         preferred=True,
+        submodules=True,
     )
+    version("1.3.0", sha256="3e92339df858e9663b2cdd9f7bb7e56d18098e9c60606fe7af9e5f5911e5ca55")
     version("1.2.0", sha256="eb9f1c403d1b43a90a5e774097382b183d56d5b40a1204b51af2da8db1559b21")
     version("1.1.0", sha256="f1fe41eb5edd343bdf57eb76bea6d1b9f015878f0a9d0eb1e9dba18b903d3b35")
     version("1.0.0", sha256="d773a800350e69372355b45e89160b593818cd438a86925b8a689c47996a0b9a")
