@@ -23,17 +23,22 @@ class AwsOfiRccl(AutotoolsPackage):
 
     variant("enable-trace", default=False, description="Enable printing trace messages")
     variant("disable-tests", default=False, description="Disable build of tests")
-    
+
     depends_on("libfabric")
     depends_on("hip")
     depends_on("rccl")
     depends_on("mpi")
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
 
     # To enable this plug-in to work with RCCL add it to the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
+        aws_ofi_rccl_home = self.spec["aws-ofi-rccl"].prefix
+        env.append_path("LD_LIBRARY_PATH", aws_ofi_rccl_home.lib)
+
+    # To enable this plug-in to work with RCCL add it to the LD_LIBRARY_PATH
+    def setup_dependent_run_environment(self, env, dependent_spec):
         aws_ofi_rccl_home = self.spec["aws-ofi-rccl"].prefix
         env.append_path("LD_LIBRARY_PATH", aws_ofi_rccl_home.lib)
 

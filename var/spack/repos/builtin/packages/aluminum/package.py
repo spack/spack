@@ -51,9 +51,10 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         " Put/Get and IPC RMA functionality",
     )
     variant("rccl", default=False, description="Builds with support for RCCL communication lib")
-    variant("libfabric",
-            default=False,
-            description="Builds with support for libfabric enhanced RCCL communication lib")
+    variant(
+        "libfabric",
+        default=False,
+        description="Builds with support for libfabric enhanced RCCL communication lib")
 
     depends_on("cmake@3.21.0:", type="build", when="@1.0.1:")
     depends_on("cmake@3.17.0:", type="build", when="@:1.0.0")
