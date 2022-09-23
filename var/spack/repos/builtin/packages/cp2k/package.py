@@ -761,20 +761,21 @@ class Cp2k(MakefilePackage, CudaPackage):
         In case such approach causes issues in the future, it might be necessary
         to generate and override entire libcp2k.pc.
         """
-        with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
-            content = handle.read().rstrip()
+        if self.spec.satisfies("@9.1:"):
+            with open(join_path(self.prefix.lib.pkgconfig, "libcp2k.pc"), "r+") as handle:
+                content = handle.read().rstrip()
 
-            content += " " + self.spec["blas"].libs.ld_flags
-            content += " " + self.spec["lapack"].libs.ld_flags
-            content += " " + self.spec["fftw-api"].libs.ld_flags
+                content += " " + self.spec["blas"].libs.ld_flags
+                content += " " + self.spec["lapack"].libs.ld_flags
+                content += " " + self.spec["fftw-api"].libs.ld_flags
 
-            if "^fftw+openmp" in self.spec:
-                content += " -lfftw3_omp"
+                if "^fftw+openmp" in self.spec:
+                    content += " -lfftw3_omp"
 
-            content += "\n"
+                content += "\n"
 
-            handle.seek(0)
-            handle.write(content)
+                handle.seek(0)
+                handle.write(content)
 
     def check(self):
         data_dir = join_path(self.stage.source_path, "data")

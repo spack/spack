@@ -4574,6 +4574,9 @@ other checks.
    * - :ref:`AutotoolsPackage <autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
+   * - :ref:`CachedCMakePackage <cachedcmakepackage>`
+     - ``check`` (``make check``, ``make test``)
+     - Not applicable
    * - :ref:`CMakePackage <cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
@@ -4598,6 +4601,9 @@ other checks.
    * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
+   * - :ref:`WafPackage <wafpackage>`
+     - ``build_test`` (must be overridden)
+     - ``install_test`` (must be overridden)
 
 For example, the ``Libelf`` package inherits from ``AutotoolsPackage``
 and its ``Makefile`` has a standard ``check`` target. So Spack will

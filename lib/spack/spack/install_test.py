@@ -12,6 +12,7 @@ import sys
 import six
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 import spack.error
 import spack.paths
@@ -180,6 +181,9 @@ class TestSuite(object):
                     if spec.external and not externals:
                         status = "SKIPPED"
                         skipped += 1
+                    elif not spec.installed:
+                        status = "SKIPPED"
+                        skipped += 1
                     else:
                         status = "NO-TESTS"
                         untested += 1
@@ -187,6 +191,7 @@ class TestSuite(object):
                 self.write_test_result(spec, status)
             except BaseException as exc:
                 self.fails += 1
+                tty.debug("Test failure: {0}".format(str(exc)))
                 if isinstance(exc, (SyntaxError, TestSuiteSpecError)):
                     # Create the test log file and report the error.
                     self.ensure_stage()
