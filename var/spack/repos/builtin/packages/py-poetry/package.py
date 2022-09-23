@@ -32,7 +32,9 @@ class PyPoetry(PythonPackage):
     depends_on("py-cachy@0.3.0:0.3", type=("build", "run"))
     depends_on("py-requests-toolbelt@0.9.1:0.9", type=("build", "run"))
     depends_on("py-cachecontrol@0.12.4:0.12+filecache", when="^python@:3.5", type=("build", "run"))
-    depends_on("py-cachecontrol@0.12.9:0.12+filecache", when="@1.2.1: ^python@:3.5", type=("build", "run"))
+    depends_on(
+        "py-cachecontrol@0.12.9:0.12+filecache", when="@1.2.1: ^python@:3.5", type=("build", "run")
+    )
     depends_on(
         "py-cachecontrol@0.12.9:0.12+filecache", when="^python@3.6:3", type=("build", "run")
     )
