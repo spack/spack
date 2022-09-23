@@ -173,11 +173,11 @@ class PySetuptools(Package):
     )
 
     extends("python")
-    depends_on("python@3.7:", type=("build", "run"), when="@59.7:")
-    depends_on("python@3.6:", type=("build", "run"), when="@51:")
-    depends_on("python@3.5:", type=("build", "run"), when="@45:50")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@44")
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@:43")
+    depends_on("python@3.7:", when="@59.7:", type=("build", "run"))
+    depends_on("python@3.6:", when="@51:", type=("build", "run"))
+    depends_on("python@3.5:", when="@45:50", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.5:", when="@44", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@:43", type=("build", "run"))
     depends_on("py-pip", type="build")
 
     def url_for_version(self, version):
