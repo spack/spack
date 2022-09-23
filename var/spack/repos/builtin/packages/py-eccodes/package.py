@@ -21,7 +21,7 @@ class PyEccodes(PythonPackage):
     depends_on("py-attrs", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-findlibs", type=("build", "run"))
-    depends_on("eccodes", type="run")
+    depends_on("eccodes@2.21.0:+shared", type="run")
 
     def setup_build_environment(self, env):
         if sys.platform == "darwin":
