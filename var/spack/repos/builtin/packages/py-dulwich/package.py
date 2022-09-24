@@ -24,5 +24,6 @@ class PyDulwich(PythonPackage):
     depends_on("python@3.5.0:", type=("build", "run"))
     depends_on("python@3.6.0:", when="@0.20.44:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-certifi", type=("build", "run"))
+    depends_on("py-certifi", when="@:0.20.44", type=("build", "run"))
     depends_on("py-urllib3@1.24.1:", type=("build", "run"))
+    depends_on("py-urllib3@1.25:", when="@0.20.46:", type=("build", "run"))

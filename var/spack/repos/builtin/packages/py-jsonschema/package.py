@@ -31,7 +31,7 @@ class PyJsonschema(PythonPackage):
     depends_on("py-setuptools", when="@3", type=("build", "run"))
     depends_on("py-setuptools", when="@:2", type="build")
     depends_on("py-vcversioner", when="@:2", type="build")
-    depends_on("py-setuptools-scm+toml@3.4:", when="@4:", type="build")
+    depends_on("py-setuptools-scm+toml@3.4:", when="@4.4.0", type="build")
     depends_on("py-setuptools-scm", when="@3", type="build")
 
     depends_on("py-attrs@17.4:", when="@3:", type=("build", "run"))
