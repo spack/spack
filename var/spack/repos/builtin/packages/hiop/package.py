@@ -108,7 +108,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # force dependencies build types for optimizations
-    depends_on("{0} build_type=Release".format("ginko"), when="+full_optimizations")
+    depends_on("{0} build_type=Release".format("ginkgo"), when="+full_optimizations")
     for pkg in ["raja", "umpire", "magma", "camp"]:
         depends_on("{0} build_type=Release".format(pkg), when="+full_optimizations")
         depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")
