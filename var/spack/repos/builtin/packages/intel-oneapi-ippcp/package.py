@@ -32,7 +32,7 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
-            "2021.7",
+            "2021.6.1",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18923/l_ippcp_oneapi_p_2021.6.1.8714_offline.sh",
             sha256="a83c2e74f78ea00aae877259df38baab31e78bc04c0a387a1de36fff712eb225",
             expand=False,

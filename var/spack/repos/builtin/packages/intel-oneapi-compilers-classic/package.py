@@ -22,6 +22,7 @@ class IntelOneapiCompilersClassic(Package):
     phases = []
 
     for ver in [
+        "2022.2.0",
         "2022.1.0",
         "2022.0.2",
         "2022.0.1",
