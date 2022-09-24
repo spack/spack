@@ -49,7 +49,7 @@ class PyPoetry(PythonPackage):
     depends_on("py-packaging@20.4:20", when="@:1.1", type=("build", "run"))
     depends_on("py-packaging@20.4:", when="@1.2:", type=("build", "run"))
     depends_on("py-virtualenv@20.0.26:20", when="@:1.1", type=("build", "run"))
-    depends_on("py-virtualenv@20.4.3:20.4.5,20.4.7:", when="@1.2:", type=("build", "run"))
+    depends_on("py-virtualenv@20.4.3:20.4.4,20.4.7:", when="@1.2:", type=("build", "run"))
     depends_on("py-typing@3.6:3", when="^python@2.7", type=("build", "run"))
     depends_on("py-pathlib2@2.3:2", when="^python@2.7", type=("build", "run"))
     depends_on("py-futures@3.3:3", when="^python@2.7", type=("build", "run"))
