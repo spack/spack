@@ -31,6 +31,7 @@ import spack.config
 import spack.error
 import spack.hash_types as ht
 import spack.hooks
+import spack.main
 import spack.paths
 import spack.repo
 import spack.schema.env
@@ -123,7 +124,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 4
+lockfile_format_version = 5
 
 
 READER_CLS = {
@@ -2079,6 +2080,7 @@ class Environment:
                 "file-type": "spack-lockfile",
                 "lockfile-version": lockfile_format_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
+                "spack-commit": spack.main.get_spack_commit(),
             },
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
