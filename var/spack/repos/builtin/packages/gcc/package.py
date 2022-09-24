@@ -331,6 +331,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
 
+    # https://github.com/iains/gcc-12-branch/issues/6
+    conflicts("%apple-clang@14:")
+
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
