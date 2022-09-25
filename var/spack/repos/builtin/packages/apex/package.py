@@ -116,7 +116,8 @@ class Apex(CMakePackage):
             args.append("-DBFD_ROOT={0}".format(spec["binutils"].prefix))
 
         if "+binutils ^binutils+nls" in spec:
-            args.append("-DCMAKE_SHARED_LINKER_FLAGS=%s" % self.spec['gettext'].libs_lintl)
+            if "intl" in self.spec["gettext"].libs.names:
+                args.append("-DCMAKE_SHARED_LINKER_FLAGS=-lintl")
 
         if "+otf2" in spec:
             args.append("-DOTF2_ROOT={0}".format(spec["otf2"].prefix))

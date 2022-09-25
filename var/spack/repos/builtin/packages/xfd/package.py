@@ -32,7 +32,8 @@ class Xfd(AutotoolsPackage, XorgPackage):
     # correctly, so add it here.
     def flag_handler(self, name, flags):
         if name == "ldlibs":
-            flags.append(self.spec['gettext'].libs_intl)
+            if "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
 
         return (flags, None, None)
 

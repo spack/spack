@@ -29,5 +29,8 @@ class Systemtap(AutotoolsPackage):
     depends_on("python", type=("build", "run"))
 
     def configure_args(self):
-        args = ["LDFLAGS={0}".format(self.spec['gettext'].libs_intl)]
+        if "intl" in self.spec["gettext"].libs.names:
+            args = ["LDFLAGS=-lintl"]
+        else:
+            args = []
         return args

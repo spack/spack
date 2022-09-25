@@ -27,7 +27,8 @@ class Acl(AutotoolsPackage):
     depends_on("gettext")
 
     def setup_build_environment(self, env):
-        env.append_flags("LDFLAGS", self.spec['gettext'].libs_intl)
+        if "intl" in self.spec["gettext"].libs.names:
+            env.append_flags("LDFLAGS", "-lintl")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")

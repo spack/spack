@@ -108,10 +108,11 @@ class Subversion(AutotoolsPackage):
                     # Using .libs.link_flags is the canonical way to add these arguments,
                     # but since libintl is much smaller than the rest and also the only
                     # necessary one, we would specify it by hand here
-                    "LIBS={0}".format(self.spec['gettext'].libs_intl.link_flags),
                     "--enable-nls",
                 ]
             )
+            if "intl" in self.spec["gettext"].libs.names:
+                args.append("LIBS=-lintl")
         else:
             args.append("--disable-nls")
 

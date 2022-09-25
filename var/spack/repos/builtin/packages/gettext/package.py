@@ -7,7 +7,6 @@ import re
 
 from spack.package import *
 
-
 class Gettext(AutotoolsPackage, GNUMirrorPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
@@ -103,21 +102,25 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
         return config_args
 
     @property
-    def libs(self):
-        # on redhat and clones, there is /usr/lib64/preloadable_libintl.so instead of libintl.so
-        # and sometimes 32 bit libraries you don't want in /usr/lib.
+    def gettext_libs(self):
+        return self.libs
 
-        if self.prefix == '/usr' and self.os[:-1] in ['scientific','redhat','centos']:
+
+    @property
+    def libs(self):
+        # on redhat and clones, libintl is magic, you just want libc.
+        # and sometimes 32 bit libraries you don't want in are in /usr/lib.
+
+        if self.prefix == '/usr' and self.spec.os[:-1] in ['scientific','redhat','centos']:
             root = '/usr/lib64'
+            intl = 'libc'
         else:
             root = self.prefix,
+            intl = 'libintl'
 
         return find_libraries(
-            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "*libintl"],
+            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", intl],
             root=root,
             recursive=True,
         )
 
-    @property
-    def libs_intl(self):
-        return LibraryList(self.libs[-1])

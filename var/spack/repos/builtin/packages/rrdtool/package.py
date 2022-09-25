@@ -23,7 +23,8 @@ class Rrdtool(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            "LDFLAGS={0}".format(self.spec['gettext'].libs_intl),
             "--with-systemdsystemunitdir=" + self.spec["rrdtool"].prefix.lib.systemd.system,
         ]
+        if "intl" in self.spec["gettext"].libs.names:
+            args.append("LDFLAGS=-lintl")
         return args

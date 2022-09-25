@@ -112,7 +112,8 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
         if "+nls" in spec:
             # configure doesn't use LIBS correctly
-            args.append("LDFLAGS=-Wl,--no-as-needed %s" % spec["gettext"].libs_intl)
+            if "intl" in self.spec["gettext"].libs.names:
+                args.append("LDFLAGS=-Wl,--no-as-needed -lintl")
         else:
             args.append("--disable-nls")
 
