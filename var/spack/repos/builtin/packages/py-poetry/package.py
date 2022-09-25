@@ -35,7 +35,7 @@ class PyPoetry(PythonPackage):
     depends_on("py-cachy@0.3.0:0.3", type=("build", "run"))
     depends_on("py-cleo@0.8.1:0.8", when="@:1.1", type=("build", "run"))
     depends_on("py-cleo@1", type=("build", "run"), when="@1.2.0:")
-    depends_on("py-clikit@0.6.2:0.6", type=("build", "run"))
+    depends_on("py-clikit@0.6.2:0.6", when="@:1.1", type=("build", "run"))
     depends_on("py-crashtest@0.3.0:0.3", when="^python@3.6:3", type=("build", "run"))
     depends_on("py-html5lib@1.0:1", type=("build", "run"))
     depends_on("py-importlib-metadata@1.6:1", when="@:1.1 ^python@:3.7", type=("build", "run"))
