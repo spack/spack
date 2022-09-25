@@ -53,7 +53,7 @@ class PyAstroid(PythonPackage):
     depends_on("py-wrapt@1.11:1.12", when="@2.3.3:2.8.2", type=("build", "run"))
     depends_on("py-wrapt@1.11:1.13", when="@2.8.3:2.10", type=("build", "run"))
     depends_on("py-wrapt@1.11:1", when="@2.11", type=("build", "run"))
-    depends_on("py-wrapt@1.11:1", when="@2.12.10: ^python@:3.11", type=("build", "run"))
+    depends_on("py-wrapt@1.11:1", when="@2.12.10: ^python@:3.10", type=("build", "run"))
     depends_on("py-wrapt@1.14:1", when="@2.12.10: ^python@3.11:", type=("build", "run"))
     depends_on("py-enum34@1.1.3:", when="^python@:3.3", type=("build", "run"))
     depends_on("py-singledispatch", when="^python@:3.3", type=("build", "run"))
