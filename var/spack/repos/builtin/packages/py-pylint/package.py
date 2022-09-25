@@ -74,7 +74,6 @@ class PyPylint(PythonPackage):
     depends_on("py-backports-functools-lru-cache", when="^python@:2.8", type=("build", "run"))
     depends_on("py-configparser", when="^python@:2.8", type=("build", "run"))
     depends_on("py-editdistance", when="@:1.7", type=("build", "run"))
-    depends_on("py-pip", type=("build"))  # see https://github.com/spack/spack/issues/27075
     depends_on("py-singledispatch", when="^python@:3.3", type=("build", "run"))
     depends_on("py-six", when="@1:2.3.1", type=("build", "run"))
     depends_on("py-toml@0.7.1:", when="@2.8.2:2.12.2", type=("build", "run"))
