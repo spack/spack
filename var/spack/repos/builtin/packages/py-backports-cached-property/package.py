@@ -16,5 +16,6 @@ class PyBackportsCachedProperty(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
     depends_on("py-typing@3.6:", when="^python@:3.6", type=("build", "run"))
