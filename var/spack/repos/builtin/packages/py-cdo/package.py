@@ -21,6 +21,8 @@ class PyCdo(PythonPackage):
         deprecated=True,
     )
 
+    depends_on("python@2.7:", type=("build", "run"))
+
     depends_on("py-setuptools", type="build")
     depends_on("cdo+netcdf", type="run")
     depends_on("py-netcdf4", type=("build", "run"))
