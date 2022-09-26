@@ -34,6 +34,9 @@ class PyCryptography(PythonPackage):
     depends_on("py-setuptools@18.5:", when="@2.2:2.6", type="build")
     depends_on("py-setuptools@11.3:", when="@:2.1", type="build")
     depends_on("py-setuptools-rust@0.11.4:", when="@3.4:", type=("build", "run"))
+    depends_on("rust@1.48:", when="@38:", type="build")
+    depends_on("rust@1.41:", when="@3.4.5:", type="build")
+    depends_on("rust@1.45:", when="@3.4.3:3.4.4", type="build")
 
     depends_on("py-cffi@1.12:", when="@3.3:", type=("build", "run"))
     depends_on("py-cffi@1.8:1.11.2,1.11.4:", when="@2.5:3.2", type=("build", "run"))
