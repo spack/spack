@@ -89,9 +89,6 @@ class Ncl(Package):
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
     depends_on("esmf", type="run")
 
-    # In Spack, we also do not have an option to compile netcdf-c without DAP
-    # support, so we will tell the ncl configuration script that we have it.
-
     # Some of the optional dependencies according to the manual:
     depends_on("hdf", when="+hdf4")
     depends_on("gdal@:2.4", when="+gdal")
@@ -238,7 +235,7 @@ class Ncl(Package):
                 # If you are using NetCDF V4.x, did you enable NetCDF-4 support?
                 "y\n",
                 # Did you build NetCDF with OPeNDAP support?
-                "y\n",
+                "y\n" if self.spec.satisfies("^netcdf-c+dap") else "n\n",
                 # Build GDAL support (optional) into NCL?
                 "y\n" if "+gdal" in self.spec else "n\n",
                 # Build EEMD support (optional) into NCL?
