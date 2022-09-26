@@ -27,7 +27,7 @@ class Hdf5VolAsync(CMakePackage):
     depends_on("hdf5@1.13: +mpi +threadsafe")
 
     def setup_run_environment(self, env):
-        env.set("HDF5_PLUGIN_PATH", self.spec.prefix)
+        env.set("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
         vol_connector = "async under_vol=0;under_info=[]"
         env.set("HDF5_VOL_CONNECTOR", vol_connector)
         env.set("MPICH_MAX_THREAD_SAFETY", "multiple")
