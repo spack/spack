@@ -44,7 +44,6 @@ class PyPylint(PythonPackage):
     depends_on("python@3.6:", when="@2.8.2:", type=("build", "run"))
     depends_on("python@3.6.2:", when="@2.13.5:", type=("build", "run"))
     depends_on("python@3.7.2:", when="@2.14.0:", type=("build", "run"))
-    # depends_on('py-setuptools-scm@1.15.0:', type='build')
     depends_on("py-setuptools-scm", when="@2.8.2", type="build")
     depends_on("py-setuptools@17.1:", type="build")
     depends_on("py-setuptools@62.6:62", when="@2.15.0:", type="build")
