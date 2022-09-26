@@ -71,6 +71,15 @@ def win_exe_ext():
     return ".exe"
 
 
+def find_sourceforge_suffix(path):
+    """find and match sourceforge filepath components
+    Return match object"""
+    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
+    if match:
+        return match.groups()
+    return path, ""
+
+
 def path_to_os_path(*pths):
     """
     Takes an arbitrary number of positional parameters

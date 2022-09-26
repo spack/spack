@@ -24,7 +24,7 @@ from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import Executable
+from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = _platform == "win32"
@@ -111,6 +111,69 @@ def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
+
+
+@memoized
+def file_command(*args):
+    """Creates entry point to `file` system command with provided arguments"""
+    try:
+        file_cmd = which("file", required=True)
+    except CommandNotFoundError as e:
+        if is_windows:
+            raise CommandNotFoundError("`file` utility is not available on Windows")
+        else:
+            raise e
+    for arg in args:
+        file_cmd.add_default_arg(arg)
+    return file_cmd
+
+
+@memoized
+def _get_mime_type():
+    """Generate method to call `file` system command to aquire mime type
+    for a specified path
+    """
+    return file_command("-b", "-h", "--mime-type")
+
+
+@memoized
+def _get_mime_type_compressed():
+    """Same as _get_mime_type but attempts to check for
+    compression first
+    """
+    mime_uncompressed = _get_mime_type()
+    mime_uncompressed.add_default_arg("-Z")
+    return mime_uncompressed
+
+
+def mime_type(filename):
+    """Returns the mime type and subtype of a file.
+
+    Args:
+        filename: file to be analyzed
+
+    Returns:
+        Tuple containing the MIME type and subtype
+    """
+    output = _get_mime_type()(filename, output=str, error=str).strip()
+    tty.debug("==> " + output)
+    type, _, subtype = output.partition("/")
+    return type, subtype
+
+
+def compressed_mime_type(filename):
+    """Same as mime_type but checks for type that has been compressed
+
+    Args:
+        filename (str): file to be analyzed
+
+    Returns:
+        Tuple containing the MIME type and subtype
+    """
+    output = _get_mime_type_compressed()(filename, output=str, error=str).strip()
+    tty.debug("==> " + output)
+    type, _, subtype = output.partition("/")
+    return type, subtype
 
 
 #: This generates the library filenames that may appear on any OS.
