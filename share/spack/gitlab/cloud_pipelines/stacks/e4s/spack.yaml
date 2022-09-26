@@ -41,6 +41,8 @@ spack:
       variants: threads=openmp
     python:
       version: [3.8.13]
+    superlu-dist:
+      version: [7.2.0]   # Pin here until trilinos can support @8
     trilinos:
       variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
