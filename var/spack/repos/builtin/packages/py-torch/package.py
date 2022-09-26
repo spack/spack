@@ -100,6 +100,7 @@ class PyTorch(PythonPackage, CudaPackage):
     )
 
     conflicts("+cuda+rocm")
+    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
