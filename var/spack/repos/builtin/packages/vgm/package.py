@@ -19,6 +19,7 @@ class Vgm(CMakePackage):
     maintainer = ["wdconinc"]
 
     version("master", branch="master")
+    version("5-0", sha256="ab929df1aa9b0cda40451f5a98982c3328901865b33e30207ee9b9fe14331344")
     version("4-8", sha256="4fcd607b4f100fc00a65fec7a5803575daf9d4919d1808bbd6a30be263c001dd")
     version("4-7", sha256="a5f5588db457dc3e6562d1f7da1707960304560fbb0a261559fa3f112a476aea")
     version("4-6", sha256="6bf0aeef38f357a313e376090b45d3e0713ef9e52ca198075fae8579b8d5a23a")

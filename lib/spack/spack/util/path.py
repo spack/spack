@@ -71,6 +71,15 @@ def win_exe_ext():
     return ".exe"
 
 
+def find_sourceforge_suffix(path):
+    """find and match sourceforge filepath components
+    Return match object"""
+    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
+    if match:
+        return match.groups()
+    return path, ""
+
+
 def path_to_os_path(*pths):
     """
     Takes an arbitrary number of positional parameters
@@ -306,7 +315,14 @@ def add_padding(path, length):
 
 
 def canonicalize_path(path):
-    """Same as substitute_path_variables, but also take absolute path."""
+    """Same as substitute_path_variables, but also take absolute path.
+
+    Arguments:
+        path (str): path being converted as needed
+
+    Returns:
+        (str): An absolute path with path variable substitution
+    """
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     filename = None

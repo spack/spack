@@ -13,6 +13,8 @@ class Googletest(CMakePackage):
     url = "https://github.com/google/googletest/archive/release-1.10.0.tar.gz"
     git = "https://github.com/google/googletest"
 
+    maintainers = ["sethrj"]
+
     version("main", branch="main")
     version("1.12.1", sha256="81964fe578e9bd7c94dfdb09c8e4d6e6759e19967e397dbea48d1c10e45d0df2")
     version("1.12.0", sha256="2a4f11dce6188b256f3650061525d0fe352069e5c162452818efbbf8d0b5fe1c")
@@ -23,30 +25,33 @@ class Googletest(CMakePackage):
     version("1.7.0", sha256="9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b")
     version("1.6.0", sha256="a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a")
 
-    variant("gmock", default=False, description="Build with gmock")
-    conflicts("+gmock", when="@:1.7.0")
-
+    variant("gmock", default=True, when="@1.8:", description="Build with gmock")
     variant("pthreads", default=True, description="Build multithreaded version with pthreads")
     variant("shared", default=True, description="Build shared libraries (DLLs)")
 
+    variant(
+        "cxxstd",
+        default="11",
+        values=("98", "11", "14", "17"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
+    conflicts("cxxstd=98", when="@1.9:")
+    conflicts("cxxstd=11", when="@1.13:")
+
     def cmake_args(self):
         spec = self.spec
-        if "@1.8.0:" in spec:
+        args = [
+            self.define_from_variant("gtest_disable_pthreads", "pthreads"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+        ]
+        if spec.satisfies("@1.8:"):
             # New style (contains both Google Mock and Google Test)
-            options = ["-DBUILD_GTEST=ON"]
-            if "+gmock" in spec:
-                options.append("-DBUILD_GMOCK=ON")
-            else:
-                options.append("-DBUILD_GMOCK=OFF")
-        else:
-            # Old style (contains only GTest)
-            options = []
+            args.append(self.define("BUILD_GTEST", True))
+            args.append(self.define_from_variant("BUILD_GMOCK", "gmock"))
 
-        options.append(
-            "-Dgtest_disable_pthreads={0}".format("OFF" if "+pthreads" in spec else "ON")
-        )
-        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
-        return options
+        return args
 
     @when("@:1.7.0")
     def install(self, spec, prefix):

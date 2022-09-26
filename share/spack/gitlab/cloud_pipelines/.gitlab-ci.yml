@@ -12,7 +12,7 @@ default:
   - /^pr[\d]+_.*$/
   - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
 
@@ -88,7 +88,7 @@ default:
 
 protected-publish:
   stage: publish
-  extends: [ ".protected-refs" ]
+  extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:
@@ -97,7 +97,9 @@ protected-publish:
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
-    - spack buildcache update-index --mirror-url "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
+    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -193,13 +195,14 @@ e4s-mac-pr-generate:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
-  - omicron
+  - lambda
   interruptible: true
   retry:
     max: 2

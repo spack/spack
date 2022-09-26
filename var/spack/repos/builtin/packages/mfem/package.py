@@ -180,6 +180,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     )
     variant("examples", default=False, description="Build and install examples")
     variant("miniapps", default=False, description="Build and install miniapps")
+    variant("exceptions", default=False, description="Enable the use of exceptions")
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
@@ -531,6 +532,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "MFEM_USE_FMS=%s" % yes_no("+fms"),
             "MFEM_MPIEXEC=%s" % mfem_mpiexec,
             "MFEM_MPIEXEC_NP=%s" % mfem_mpiexec_np,
+            "MFEM_USE_EXCEPTIONS=%s" % yes_no("+exceptions"),
         ]
 
         cxxflags = spec.compiler_flags["cxxflags"]

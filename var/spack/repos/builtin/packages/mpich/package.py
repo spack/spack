@@ -180,6 +180,14 @@ with '-Wl,-commons,use_dylibs' and without
         when="@3.3:3.3.0",
     )
 
+    # Fix reduce operations for unsigned integers
+    # See https://github.com/pmodels/mpich/issues/6083
+    patch(
+        "https://github.com/pmodels/mpich/commit/3a1f618e017547c9710ab4fb01ae258a01477190.patch?full_index=1",
+        sha256="d4c0e99a80f6cb0cb0ced91f6ad5da776c4a70f70f805f08096939ec9a92483e",
+        when="@4.0:4.0.2",
+    )
+
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")
 
@@ -190,6 +198,7 @@ with '-Wl,-commons,use_dylibs' and without
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on("libfabric@:1.6", when="device=ch3 netmod=ofi")
+    depends_on("libfabric@1.5:", when="@3.4: device=ch4 netmod=ofi")
 
     depends_on("ucx", when="netmod=ucx")
     depends_on("mxm", when="netmod=mxm")

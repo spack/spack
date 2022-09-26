@@ -74,8 +74,13 @@ class Clingo(CMakePackage):
         """
         python = self.spec["python"]
         return [
-            self.define("Python_EXECUTABLE", python.command),
+            self.define("Python_EXECUTABLE", python.command.path),
             self.define("Python_INCLUDE_DIR", python.headers.directories[0]),
+            self.define("Python_LIBRARIES", python.libs[0]),
+            # XCode command line tools on macOS has no python-config executable, and
+            # CMake assumes you have python 2 if it does not find a python-config,
+            # so we set the version explicitly so that it's passed to FindPython.
+            self.define("CLINGO_PYTHON_VERSION", python.version.up_to(2)),
         ]
 
     @property
