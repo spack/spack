@@ -59,6 +59,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
+    variant(
+        "p2300",
+        default=False,
+        description="Use P2300 reference implementation for sender/receiver functionality",
+        when="@main",
+    )
 
     # Build dependencies
     depends_on("git", type="build")
@@ -71,6 +77,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     # Pika is requiring the std::filesystem support starting from version 0.2.0
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
+    conflicts("+p2300", when="cxxstd=17")
 
     # Other dependecies
     depends_on("hwloc@1.11.5:")
@@ -89,6 +96,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
+    depends_on("p2300", when="+p2300")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
@@ -128,6 +136,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
+            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "p2300"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
