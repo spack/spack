@@ -82,7 +82,7 @@ spack:
     - r-xgboost
     - xgboost
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/ml" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/fake" }
 
   gitlab-ci:
     script:
