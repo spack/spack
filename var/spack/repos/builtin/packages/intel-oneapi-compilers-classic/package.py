@@ -21,17 +21,19 @@ class IntelOneapiCompilersClassic(Package):
 
     phases = []
 
-    for ver in [
-        "2022.1.0",
-        "2022.0.2",
-        "2022.0.1",
-        "2021.4.0",
-        "2021.3.0",
-        "2021.2.0",
-        "2021.1.2",
-    ]:
+    # Versions before 2021 are in the `intel` package
+    # intel-oneapi versions before 2022 use intel@19.0.4
+    for ver, oneapi_ver in {
+        "2021.1.2": "2021.1.2",
+        "2021.2.0": "2021.2.0",
+        "2021.3.0": "2021.3.0",
+        "2021.4.0": "2021.4.0",
+        "2021.5.0": "2022.0.1:2022.0.2",
+        "2021.6.0": "2022.1.0",
+        "2021.7.0": "2022.2.0",
+    }.items():
         version(ver)
-        depends_on("intel-oneapi-compilers@" + ver, when="@" + ver, type="run")
+        depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
