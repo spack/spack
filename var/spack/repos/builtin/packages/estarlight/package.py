@@ -18,8 +18,6 @@ class Estarlight(CMakePackage):
 
     maintainers = ['wdconinc']
 
-    tags = ['eic']
-
     version('master', branch='master')
     version('1.0.0', sha256='a963bd4e08218767030ddadb7ad72d8d93f2468dfdce309abf566e87326c81f4')
 
