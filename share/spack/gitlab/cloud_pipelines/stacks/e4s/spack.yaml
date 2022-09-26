@@ -146,7 +146,7 @@ spack:
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
     +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
     +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
-    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long ^superlu-dist@7.2.0  # Until trilinos supports superlu-dist@8
   - turbine
   - umap
   - umpire
