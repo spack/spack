@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
+class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     """The Ohio MicroBenchmark suite is a collection of independent MPI
     message passing performance microbenchmarks developed and written at
     The Ohio State University. It includes traditional benchmarks and
@@ -47,6 +47,12 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage):
             cuda_arch = spec.variants["cuda_arch"].value
             if "none" not in cuda_arch:
                 config_args.append("NVCCFLAGS=" + " ".join(self.cuda_flags(cuda_arch)))
+
+        if "+rocm" in spec:
+            config_args.extend(["--enable-rocm", "--with-rocm=%s" % spec["hip"].prefix])
+            rocm_arch = spec.variants["amdgpu_target"].value
+            if "none" not in rocm_arch:
+                config_args.append("HCC_AMDGPU_TARGET=" + " ".join(self.hip_flags(rocm_arch)))
 
         # librt not available on darwin (and not required)
         if not sys.platform == "darwin":
