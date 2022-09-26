@@ -317,11 +317,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 12+
+    # aarch64/M1 is supported in GCC 11.3-12.2
     conflicts(
-        "@:11.2,11.3.1:",
+        "@:11.2,12.3:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3.0 supports macOS M1 (aarch64)",
+        msg="Only GCC 11.3-12.2 support macOS M1 (aarch64)",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -330,6 +330,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # GCC 11 requires GCC 4.8 or later (https://gcc.gnu.org/gcc-11/changes.html)
     conflicts("%gcc@:4.7", when="@11:")
+
+    # https://github.com/iains/gcc-12-branch/issues/6
+    conflicts("%apple-clang@14:")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -370,6 +373,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             "https://raw.githubusercontent.com/Homebrew/formula-patches/22dec3fc/gcc/gcc-11.3.0-arm.diff",
             sha256="e02006b7ec917cc1390645d95735a6a866caed0dfe506d5bef742f7862cab218",
             when="@11.3.0 target=aarch64:",
+        )
+        # https://github.com/iains/gcc-12-branch
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/76677f2b/gcc/gcc-12.1.0-arm.diff",
+            sha256="a000f1d9cb1dd98c7c4ef00df31435cd5d712d2f9d037ddc044f8bf82a16cf35",
+            when="@12.1.0 target=aarch64:",
+        )
+        patch(
+            "https://raw.githubusercontent.com/Homebrew/formula-patches/1d184289/gcc/gcc-12.2.0-arm.diff",
+            sha256="a7843b5c6bf1401e40c20c72af69c8f6fc9754ae980bb4a5f0540220b3dcb62d",
+            when="@12.2.0 target=aarch64:",
         )
         conflicts("+bootstrap", when="@11.3.0 target=aarch64:")
 
