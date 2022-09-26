@@ -22,6 +22,6 @@ class PyDataladMetalad(PythonPackage):
     depends_on("py-six", when="@0.3.1:", type=("build", "run"))
     depends_on("py-datalad@0.15.6:", when="@0.3:", type=("build", "run"))
     depends_on("py-datalad@0.12.3:", type=("build", "run"))
-    depends_on("py-datalad-metadata-model@0.3.0:0.3", type=("build", "run"))
+    depends_on("py-datalad-metadata-model@0.3.5:0.3", type=("build", "run"))
     depends_on("py-pyyaml", when="@0.3.1:", type=("build", "run"))
     depends_on("git-annex", type=("run"))
