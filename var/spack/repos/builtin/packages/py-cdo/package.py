@@ -23,10 +23,10 @@ class PyCdo(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("cdo+netcdf", type="run")
-    depends_on("py-netcdf4", type="run")
-    depends_on("py-scipy", type="run", when="@:1.4")
-    depends_on("py-xarray", type="run", when="@1.3.4:")
-    depends_on("py-six", type="run", when="@1.3.3:")
+    depends_on("py-netcdf4", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"), when="@:1.4")
+    depends_on("py-xarray", type=("build", "run"), when="@1.3.4:")
+    depends_on("py-six", type=("build", "run"), when="@1.3.3:")
 
     def setup_run_environment(self, env):
         env.set("CDO", self.spec["cdo"].prefix.bin.cdo)
