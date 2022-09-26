@@ -26,7 +26,8 @@ class Ncl(Package):
 
     patch("for_aarch64.patch", when="target=aarch64:")
 
-    patch("spack_ncl.patch")
+    # Use Spack config file, which we generate during the installation:
+    patch("set_spack_config.patch")
     # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
     patch("hdf5.patch", when="@6.4.0")
     # ymake-filter's buffer may overflow (upstream as of 6.5.0)
