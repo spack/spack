@@ -31,7 +31,7 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
-            "2021.7",
+            "2021.7.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18891/l_oneapi_ccl_p_2021.7.0.8733_offline.sh",
             sha256="a0e64db03868081fe075afce8abf4cb94236effc6c52e5049118cfb2ef81a6c7",
             expand=False,

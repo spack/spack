@@ -27,7 +27,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
-            "2021.7",
+            "2021.7.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18926/l_mpi_oneapi_p_2021.7.0.8711_offline.sh",
             sha256="4eb1e1487b67b98857bc9b7b37bcac4998e0aa6d1b892b2c87b003bf84fb38e9",
             expand=False,

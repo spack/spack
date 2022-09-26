@@ -28,7 +28,7 @@ class IntelOneapiAdvisor(IntelOneApiPackage):
 
     if platform.system() == "Linux":
         version(
-            "2022.3",
+            "2022.3.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18872/l_oneapi_advisor_p_2022.3.0.8704_offline.sh",
             sha256="ae1e542e6030b04f70f3b9831b5e92def97ce4692c974da44e7e9d802f25dfa7",
             expand=False,

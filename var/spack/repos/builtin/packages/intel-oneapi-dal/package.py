@@ -30,7 +30,7 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
-            "2021.7",
+            "2021.7.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18895/l_daal_oneapi_p_2021.7.0.8746_offline.sh",
             sha256="c18e68df120c2b1db17877cfcbb1b5c93a47b2f4756a3444c663d0f03be4eee3",
             expand=False,
