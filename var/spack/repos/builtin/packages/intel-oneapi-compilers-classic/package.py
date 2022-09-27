@@ -38,6 +38,9 @@ class IntelOneapiCompilersClassic(Package):
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file."""
         oneapi_pkg = self.spec["intel-oneapi-compilers"].package
+
+        oneapi_pkg.setup_run_environment(env)
+
         bin_prefix = oneapi_pkg.component_prefix.linux.bin.intel64
         env.set("CC", bin_prefix.icc)
         env.set("CXX", bin_prefix.icpc)
