@@ -13,7 +13,7 @@ class Estarlight(CMakePackage):
 
     homepage = "https://github.com/eic/estarlight"
     url = "https://github.com/eic/estarlight/archive/refs/tags/v1.0.0.zip"
-    list_url = "https://github.com/eic/estarlight/releases"
+    list_url = "https://github.com/eic/estarlight/tags"
     git = "https://github.com/eic/estarlight.git"
 
     maintainers = ["wdconinc"]
