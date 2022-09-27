@@ -57,6 +57,12 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     for (lpp_ver, bpp_ver) in _versions:
         depends_on("blaspp@" + bpp_ver, when="@" + lpp_ver)
 
+    depends_on("blaspp ~cuda", when="~cuda")
+    depends_on("blaspp +cuda", when="+cuda")
+    depends_on("blaspp ~rocm", when="~rocm")
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("rocblas", when="+rocm")
