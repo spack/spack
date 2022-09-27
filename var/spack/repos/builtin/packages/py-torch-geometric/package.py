@@ -18,7 +18,7 @@ class PyTorchGeometric(PythonPackage):
     your own), and helpful transforms, both for learning on arbitrary
     graphs as well as on 3D meshes or point clouds."""
 
-    homepage = "https://github.com/rusty1s/pytorch_geometric"
+    homepage = "https://github.com/pyg-team/pytorch_geometric"
     pypi = "torch-geometric/torch_geometric-2.1.0.post1.tar.gz"
 
     version(
