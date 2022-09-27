@@ -29,6 +29,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("release", branch="release")
+    version("1.9.0-rc1", sha256="45cf3ece8fa2ed95d13d7cd37c4614a56428066034207cebc3c130b2480cdf81")
     version(
         "1.8.0",
         sha256="fcedee6e8f4ac50dde56e8c533d48604dbfb663cea1561542a837e8e80ba8768",
