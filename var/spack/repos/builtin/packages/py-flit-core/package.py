@@ -25,7 +25,6 @@ class PyFlitCore(PythonPackage):
     version("2.3.0", sha256="a50bcd8bf5785e3a7d95434244f30ba693e794c5204ac1ee908fc07c4acdbf80")
 
     # pyproject.toml
-    depends_on("python@3.7:", when="@3.7:", type=("build", "run"))
     depends_on("python@3.6:", when="@3.4:", type=("build", "run"))
     depends_on("python@3.4:", when="@3:", type=("build", "run"))
     depends_on("python@2.7,3.4:", type=("build", "run"))
