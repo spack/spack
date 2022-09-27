@@ -52,7 +52,8 @@ class Cgal(CMakePackage):
     depends_on("cmake@2.8.11:", type="build")
 
     # Essential Third Party Libraries
-    depends_on("boost+exception+math+random+container")
+    depends_on("boost+exception+math+random+container", when="@5.0:")
+    depends_on("boost+thread+system", when="@:5.0")
     depends_on("gmp")
     depends_on("mpfr")
 
