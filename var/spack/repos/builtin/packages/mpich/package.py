@@ -360,8 +360,8 @@ with '-Wl,-commons,use_dylibs' and without
         return results
 
     def setup_build_environment(self, env):
-        env.unset("F90")
         env.unset("F90FLAGS")
+        env.unset("F90")
 
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies("%gcc@10:"):
