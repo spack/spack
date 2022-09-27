@@ -3,12 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
 
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
-
-is_windows = sys.platform == "win32"
 
 
 class Clingo(CMakePackage):

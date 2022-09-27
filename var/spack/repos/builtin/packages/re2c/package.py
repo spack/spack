@@ -29,7 +29,7 @@ class Re2c(Package):
     phases = ["configure", "build", "install"]
 
     @property
-    def make(self):
+    def make_tool(self):
         if is_windows:
             return ninja
         else:
@@ -58,8 +58,8 @@ class Re2c(Package):
 
     def build(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            self.make()
+            self.make_tool()
 
     def install(self, spec, prefix):
         with working_dir(self.stage.source_path):
-            self.make("install")
+            self.make_tool("install")
