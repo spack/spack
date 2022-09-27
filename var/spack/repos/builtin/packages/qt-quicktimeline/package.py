@@ -16,6 +16,7 @@ class QtQuicktimeline(CMakePackage):
 
     maintainers = ["wdconinc", "sethrj"]
 
+    version("6.3.2", sha256="ca6e53a92b022b49098c15f2cc5897953644de8477310696542a03bbbe5666aa")
     version("6.3.1", sha256="ba1e808d4c0fce899c235942df34ae5d349632f61a302d14feeae7465cf1f197")
     version("6.3.0", sha256="09e27bbdefbbf50d15525d26119a00d86eba76d2d1bc9421557d1ed86edcacdf")
     version("6.2.4", sha256="d73cb33e33f0b7a1825b863c22e6b552ae86aa841bcb805a41aca02526a4e8bc")
@@ -28,7 +29,7 @@ class QtQuicktimeline(CMakePackage):
     depends_on("pkgconfig", type="build")
     depends_on("python", when="@5.7.0:", type="build")
 
-    _versions = ["6.3.1", "6.3.0", "6.2.4", "6.2.3"]
+    _versions = ["6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.3"]
     for v in _versions:
         depends_on("qt-base@" + v, when="@" + v)
         depends_on("qt-declarative@" + v, when="@" + v)
