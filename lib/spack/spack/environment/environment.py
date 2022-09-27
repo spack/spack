@@ -77,13 +77,12 @@ lockfile_name = "spack.lock"
 #: Name of the directory where environments store repos, logs, views
 env_subdir_name = ".spack-env"
 
+
 def env_root_path():
     """Override default root path if the user specified it"""
-    config_path = spack.config.get("config:environments_root", default = None)
-    if config_path:
-        return config_path
-    else:
-        return env_path
+    return spack.util.path.canonicalize_path(
+        spack.config.get("config:environments_root", default=env_path), allow_env=False
+    )
 
 
 def default_manifest_yaml():

@@ -1444,9 +1444,9 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
     assert tmpdir.strpath in env_dir
     assert not os.path.isdir(env_dir)
     os.makedirs(env_dir)
-    env('create', 'test')
-    out = env('list')
-    assert 'test' in out
+    env("create", "test")
+    out = env("list")
+    assert "test" in out
 
-    assert env_dir in ev.root('test')
-    assert os.path.isdir(os.path.join(env_dir, 'test'))
+    assert env_dir in ev.root("test")
+    assert os.path.isdir(os.path.join(env_dir, "test"))

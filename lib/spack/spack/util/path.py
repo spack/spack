@@ -262,7 +262,7 @@ def substitute_config_variables(path, allow_env=True):
     return re.sub(r"(\$\w+\b|\$\{\w+\})", repl, path)
 
 
-def substitute_path_variables(path, allow_env = True):
+def substitute_path_variables(path, allow_env=True):
     """Substitute config vars, expand environment vars, expand user home."""
     path = substitute_config_variables(path, allow_env)
     path = os.path.expandvars(path)
@@ -306,7 +306,7 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path, allow_env = True):
+def canonicalize_path(path, allow_env=True):
     """Same as substitute_path_variables, but also take absolute path.
 
     Arguments:
