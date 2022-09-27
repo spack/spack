@@ -39,6 +39,7 @@ class PyTorchGeometric(PythonPackage):
     depends_on("py-jinja2", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-pyparsing", when="@2:", type=("build", "run"))
+    depends_on("py-scikit-learn", type=("build", "run"))
 
     # README.md
     depends_on("py-torch-scatter+cuda", when="+cuda", type=("build", "run"))
