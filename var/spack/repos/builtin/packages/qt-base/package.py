@@ -75,6 +75,7 @@ class QtBase(CMakePackage):
         depends_on("libpng")
         with when("platform=linux"):
             depends_on("libxkbcommon")
+            depends_on("libxcb@1.13:")  # requires xinput
             depends_on("libxrender")
 
     with when("+network"):
@@ -178,6 +179,10 @@ class QtBase(CMakePackage):
                 ("harfbuzz", True),
                 ("textmarkdownreader", False),
             ]
+            with when("platform=linux"):
+                sys_features += [
+                    ("xcb_xinput", True),
+                ]
         if "+network" in spec:
             sys_features += [
                 ("proxies", True),
