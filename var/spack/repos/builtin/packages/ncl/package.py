@@ -33,6 +33,12 @@ class Ncl(Package):
     # ymake-filter's buffer may overflow (upstream as of 6.5.0)
     patch("ymake-filter.patch", when="@6.4.0")
     # ymake additional local library and includes will be filtered improperly
+    # WARNING: it is tempting to replace '-Dlinux=linux -Dx86_64=x86_64' with '-Ulinux -Ux86_64'
+    # to get rid of 'error: detected recursion whilst expanding macro "linux"' but that breaks
+    # the building because the Makefile generation logic depends on whether those macros are
+    # defined. Also, the errors can be ignored since "GCC detects when it is expanding recursive
+    # macros, emits an error message, and *continues* after the offending macro invocation"
+    # (see https://gcc.gnu.org/onlinedocs/cpp/Traditional-macros.html#Traditional-macros).
     patch("ymake.patch", when="@6.4.0:")
     # ncl does not build with gcc@10:
     # https://github.com/NCAR/ncl/issues/123
