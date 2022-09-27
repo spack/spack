@@ -1441,12 +1441,25 @@ def test_environment_created_in_users_location(mutable_config, tmpdir):
     """Test that an environment is created in a location based on the config"""
     spack.config.set("config:environments_root", str(tmpdir.join("envs")))
     env_dir = spack.config.get("config:environments_root")
+
     assert tmpdir.strpath in env_dir
     assert not os.path.isdir(env_dir)
+
     os.makedirs(env_dir)
     env("create", "test")
     out = env("list")
-    assert "test" in out
 
+    assert "test" in out
     assert env_dir in ev.root("test")
     assert os.path.isdir(os.path.join(env_dir, "test"))
+
+
+def test_environment_errors_if_root_missing(mutable_config, tmpdir):
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
+
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
+
+    with pytest.raises(ev.SpackEnvironmentError, match=env_dir):
+        env("create", "test")

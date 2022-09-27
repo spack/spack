@@ -248,6 +248,12 @@ def read(name):
 
 def create(name, init_file=None, with_view=None, keep_relative=False):
     """Create a named environment in Spack."""
+    if not os.path.isdir(env_root_path()):
+        # double check that the root path exists before we check the full environment name
+        raise SpackEnvironmentError(
+            "The environments_root '{er}' does not exist.  Please create the directory or provide "
+            "a valid path in the config.yaml".format(er=env_root_path())
+        )
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
