@@ -19,7 +19,7 @@ class Estarlight(CMakePackage):
     maintainers = ["wdconinc"]
 
     version("master", branch="master")
-    version("1.0.0", sha256="a963bd4e08218767030ddadb7ad72d8d93f2468dfdce309abf566e87326c81f4")
+    version("1.0.1", sha256="b43c1dd3663d8f325f30b17dd7cf4b49f2eb8ceeed7319c5aabebec8676279fd")
 
     variant("dpmjet", default=False, description="Use dpmjet for jets")
     variant("hepmc3", default=False, description="Support HepMC3 writing")
