@@ -63,7 +63,10 @@ _active_environment = None
 
 
 #: path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, "environments")
+# circular dependency to use canonicalize_path but we want to ignore an active env anyways
+# env_path = spack.config.get(os.path.expandvars(os.path.expanduser("config:environments_root")))
+def env_path():
+    return spack.util.path.canonicalize_path(spack.config.get("config:environments_root"), False)
 
 
 #: Name of the input yaml file for an environment
@@ -205,7 +208,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path, name)
+    return os.path.join(env_path(), name)
 
 
 def root(name):
@@ -257,10 +260,10 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path):
+    if not os.path.exists(env_path()):
         return []
 
-    candidates = sorted(os.listdir(env_path))
+    candidates = sorted(os.listdir(env_path()))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
@@ -842,7 +845,7 @@ class Environment(object):
     @property
     def internal(self):
         """Whether this environment is managed by Spack."""
-        return self.path.startswith(env_path)
+        return self.path.startswith(env_path())
 
     @property
     def name(self):

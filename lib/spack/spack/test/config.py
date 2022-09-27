@@ -28,6 +28,9 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
+from spack.main import SpackCommand
+
+env = SpackCommand("env")
 
 # sample config data
 config_low = {
@@ -1005,6 +1008,7 @@ spack:
     config:
         verify_ssl: False
         dirty: False
+        environtments_dir: ~/my/env/location
     repos:
         - ~/my/repo/location
     mirrors:
@@ -1431,3 +1435,18 @@ def test_config_file_read_invalid_yaml(tmpdir, mutable_empty_config):
 
     with pytest.raises(spack.config.ConfigFileError, match="parsing yaml"):
         spack.config.read_config_file(filename)
+
+
+def test_environment_created_in_users_location(mutable_config, tmpdir):
+    """Test that an environment is created in a location based on the config"""
+    spack.config.set("config:environments_root", str(tmpdir.join("envs")))
+    env_dir = spack.config.get("config:environments_root")
+    assert tmpdir.strpath in env_dir
+    assert not os.path.isdir(env_dir)
+    os.makedirs(env_dir)
+    env('create', 'test')
+    out = env('list')
+    assert 'test' in out
+
+    assert env_dir in ev.root('test')
+    assert os.path.isdir(os.path.join(env_dir, 'test'))
