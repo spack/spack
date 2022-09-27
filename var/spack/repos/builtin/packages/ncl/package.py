@@ -88,7 +88,9 @@ class Ncl(Package):
     depends_on("szip")
 
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
-    depends_on("esmf", type="run")
+    # There might be more requirements to ESMF but at least the NetCDF support is required to run
+    # the examples (see https://www.ncl.ucar.edu/Applications/ESMF.shtml)
+    depends_on("esmf+netcdf", type="run")
 
     # Some of the optional dependencies according to the manual:
     depends_on("hdf", when="+hdf4")
@@ -136,6 +138,7 @@ class Ncl(Package):
 
     def setup_run_environment(self, env):
         env.set("NCARG_ROOT", self.spec.prefix)
+        env.set("ESMFBINDIR", self.spec["esmf"].prefix.bin)
 
     def prepare_site_config(self):
         fc_flags = []
