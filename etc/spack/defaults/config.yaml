@@ -77,7 +77,7 @@ config:
 
 
   ## Directory where spack managed environments are created and stored
-  environments_root: $spack/var/spack/environments
+  # environments_root: $spack/var/spack/environments
 
 
   # Cache directory for miscellaneous files, like the package index.

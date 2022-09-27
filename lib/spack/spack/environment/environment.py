@@ -62,11 +62,8 @@ spack_env_var = "SPACK_ENV"
 _active_environment = None
 
 
-#: path where environments are stored in the spack tree
-# circular dependency to use canonicalize_path but we want to ignore an active env anyways
-# env_path = spack.config.get(os.path.expandvars(os.path.expanduser("config:environments_root")))
-def env_path():
-    return spack.util.path.canonicalize_path(spack.config.get("config:environments_root"), False)
+#: default path where environments are stored in the spack tree
+env_path = os.path.join(spack.paths.var_path, "environments")
 
 
 #: Name of the input yaml file for an environment
@@ -79,6 +76,14 @@ lockfile_name = "spack.lock"
 
 #: Name of the directory where environments store repos, logs, views
 env_subdir_name = ".spack-env"
+
+def env_root_path():
+    """Override default root path if the user specified it"""
+    config_path = spack.config.get("config:environments_root", default = None)
+    if config_path:
+        return config_path
+    else:
+        return env_path
 
 
 def default_manifest_yaml():
@@ -208,7 +213,7 @@ def active_environment():
 
 def _root(name):
     """Non-validating version of root(), to be used internally."""
-    return os.path.join(env_path(), name)
+    return os.path.join(env_root_path(), name)
 
 
 def root(name):
@@ -260,10 +265,10 @@ def all_environment_names():
     """List the names of environments that currently exist."""
     # just return empty if the env path does not exist.  A read-only
     # operation like list should not try to create a directory.
-    if not os.path.exists(env_path()):
+    if not os.path.exists(env_root_path()):
         return []
 
-    candidates = sorted(os.listdir(env_path()))
+    candidates = sorted(os.listdir(env_root_path()))
     names = []
     for candidate in candidates:
         yaml_path = os.path.join(_root(candidate), manifest_name)
@@ -845,7 +850,7 @@ class Environment(object):
     @property
     def internal(self):
         """Whether this environment is managed by Spack."""
-        return self.path.startswith(env_path())
+        return self.path.startswith(env_root_path())
 
     @property
     def name(self):
