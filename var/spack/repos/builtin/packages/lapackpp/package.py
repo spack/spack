@@ -31,9 +31,10 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["teonnik", "Sely85", "G-Ragghianti", "mgates3"]
 
     version("master", branch="master")
-    version(
-        "2022.07.00", sha256="11e59efcc7ea0764a2bfc0e0f7b1abf73cee2943c1df11a19601780641a9aa18"
-    )
+    version("2022.07.00", git="https://github.com/G-Ragghianti/lapackpp")
+    #version(
+    #    "2022.07.00", sha256="11e59efcc7ea0764a2bfc0e0f7b1abf73cee2943c1df11a19601780641a9aa18"
+    #)
     version(
         "2022.05.00", sha256="d0f548cbc9d4ac46b1f961834d113173c0b433074f77bcfd69c7c31cb89b7ff2"
     )
