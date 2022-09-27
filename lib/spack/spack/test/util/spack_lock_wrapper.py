@@ -80,6 +80,10 @@ def test_lock_checks_group(tmpdir):
     gid = next((g for g in group_ids() if g != uid), None)
     if not gid:
         pytest.skip("user has no group with gid != uid")
+    try:
+        tmpdir.chown(uid, gid)
+    except OSError:
+        pytest.skip("chown not supported on target filesystem")
 
     # self-owned, another group
     tmpdir.chown(uid, gid)

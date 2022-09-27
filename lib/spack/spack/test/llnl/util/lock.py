@@ -220,6 +220,10 @@ def lock_path(lock_dir):
 
     yield lock_file
 
+    try:
+        lk.file_tracker.release_fh(lock_file)
+    except AssertionError:
+        pass
     if os.path.exists(lock_file):
         make_writable(lock_dir, lock_file)
         os.unlink(lock_file)
