@@ -6,6 +6,7 @@
 import platform
 import subprocess
 
+from spack.error import NoHeadersError
 from spack.package import *
 
 
@@ -372,6 +373,21 @@ class PyNumpy(PythonPackage):
             lapack = "lapack"
 
         env.set("NPY_LAPACK_ORDER", lapack)
+
+    @property
+    def headers(self):
+        """Discover header files in platlib."""
+
+        # Headers may be in either location
+        include = join_path(self.prefix, self.spec["python"].package.include)
+        platlib = join_path(self.prefix, self.spec["python"].package.platlib)
+        headers = find_all_headers(include) + find_all_headers(platlib)
+
+        if headers:
+            return headers
+
+        msg = "Unable to locate {} headers in {} or {}"
+        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
