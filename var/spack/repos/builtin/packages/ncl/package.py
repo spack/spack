@@ -84,7 +84,7 @@ class Ncl(Package):
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
     # statement.
-    depends_on("hdf5@:1.10+szip")
+    depends_on("hdf5+szip")
     depends_on("szip")
 
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
@@ -145,6 +145,9 @@ class Ncl(Package):
         if "+openmp" in self.spec:
             fc_flags.append(self.compiler.openmp_flag)
             cc_flags.append(self.compiler.openmp_flag)
+
+        if self.spec.satisfies("^hdf5@1.11:"):
+            cc_flags.append("-DH5_USE_110_API")
 
         if self.compiler.name == "gcc":
             fc_flags.append("-fno-range-check")
