@@ -109,6 +109,7 @@ class Root(CMakePackage):
     # options are or are not supported, and why.
 
     variant("aqua", default=False, description="Enable Aqua interface")
+    variant("arrow", default=False, description="Enable Arrow interface")
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -229,6 +230,7 @@ class Root(CMakePackage):
     depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
 
     # Optional dependencies
+    depends_on("arrow", when="+arrow")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -465,7 +467,7 @@ class Root(CMakePackage):
             define("afdsmrgd", False),
             define("afs", False),
             define("alien", False),
-            define("arrow", False),
+            define_from_variant("arrow"),
             define("asimage", True),
             define("astiff", True),
             define("bonjour", False),
