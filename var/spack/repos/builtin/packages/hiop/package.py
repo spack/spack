@@ -63,7 +63,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
     variant("cusolver", default=False, description="Enable/disable cuSovler")
 
-
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")

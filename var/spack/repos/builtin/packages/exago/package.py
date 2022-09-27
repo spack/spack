@@ -77,12 +77,12 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # Profiling and optimizations
     depends_on("hiop+deepchecking build_type=RelWithDebInfo", when="+hiop+debug")
     depends_on("hiop~deepchecking  build_type=Release ", when="+hiop+full_optimizations")
-    
+
     # Control the package's build-type depending on the full_optimizations or debug flag
     for pkg in ["raja", "umpire", "magma", "camp"]:
         depends_on("{0} build_type=Release".format(pkg), when="+full_optimizations")
-        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")	
-    
+        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")
+
     # Force RelWithDebInfo when not using optimizations
     conflicts(
         "build_type=Release",
