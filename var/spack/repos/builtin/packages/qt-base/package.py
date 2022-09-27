@@ -84,7 +84,7 @@ class QtBase(CMakePackage):
     def archive_files(self):
         """Save both the CMakeCache and the config summary."""
         return [
-            join(self.build_directory, filename)
+            join_path(self.build_directory, filename)
             for filename in ["CMakeCache.txt", "config.summary"]
         ]
 
