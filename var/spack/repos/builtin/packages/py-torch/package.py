@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTorch(PythonPackage, CudaPackage):
+class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
