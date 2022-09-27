@@ -719,6 +719,14 @@ class Python(Package):
         for lib in static_libraries:
             copy(lib, prefix.libs)
 
+    @run_before("configure")
+    def patch_configure_ipv6(self):
+        # configure fails to build with ipv6 support if ipv6 isn't 
+        # configured on this box...
+        # but we want it to work anyway so pull its teeth.
+        filter_file(r' test \$ipv6 = yes', ' false ', 'configure')
+
+
     def configure_args(self):
         spec = self.spec
         config_args = []

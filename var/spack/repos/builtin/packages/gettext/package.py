@@ -113,13 +113,13 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
         if self.prefix == '/usr' and self.spec.os[:-1] in ['scientific','redhat','centos']:
             root = '/usr/lib64'
-            intl = 'libc'
+            liblist = ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc"],
         else:
             root = self.prefix,
-            intl = 'libintl'
+            liblist = ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
 
         return find_libraries(
-            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", intl],
+            liblist,
             root=root,
             recursive=True,
         )

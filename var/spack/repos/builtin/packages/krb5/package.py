@@ -85,5 +85,6 @@ class Krb5(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "ldlibs":
-            flags.append(self.spec["gettext"].libs[4])
+            if "intl" in self.spec["gettext"].libs.names:
+                flags.append("-lintl")
         return (flags, None, None)
