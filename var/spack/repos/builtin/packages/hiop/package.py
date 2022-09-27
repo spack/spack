@@ -63,55 +63,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     variant("ginkgo", default=False, description="Enable/disable ginkgo solver")
     variant("cusolver", default=False, description="Enable/disable cuSovler")
 
-    variant(
-        "full_optimizations",
-        default=False,
-        description="Enable/Disable optimizations and release type",
-    )
-    variant(
-        "debug",
-        default=False,
-        description="Force RelWithDebInfo mode",
-    )
-
-    # force optimizations flag to use Release mode
-    conflicts(
-        "build_type=Debug",
-        when="+full_optimizations",
-        msg="Use Release mode when with optimizations",
-    )
-    conflicts(
-        "build_type=MinSizeRel",
-        when="+full_optimizations",
-        msg="Use Release mode when with optimizations",
-    )
-    conflicts(
-        "build_type=RelWithDebInfo",
-        when="+full_optimizations",
-        msg="Use Release mode when with optimizations",
-    )
-    # force RelWithDebInfo mode when +debug flag is used
-    conflicts(
-        "build_type=Release",
-        when="+debug",
-        msg="Use RelWithDebInfo mode when without optimizations",
-    )
-    conflicts(
-        "build_type=Debug",
-        when="+debug",
-        msg="Use RelWithDebInfo mode when without optimizations",
-    )
-    conflicts(
-        "build_type=MinSizeRel",
-        when="+debug",
-        msg="Use RelWithDebInfo mode when without optimizations",
-    )
-
-    # force dependencies build types for optimizations
-    depends_on("{0} build_type=Release".format("ginkgo"), when="+full_optimizations")
-    for pkg in ["raja", "umpire", "magma", "camp"]:
-        depends_on("{0} build_type=Release".format(pkg), when="+full_optimizations")
-        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")
 
     depends_on("lapack")
     depends_on("blas")

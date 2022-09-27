@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
-    maintainers = ["ashermancinelli", "CameronRutherford", "pelesh"]
+    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
 
     version(
         "1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True, preferred=True
@@ -75,9 +75,14 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build")
 
     # Profiling and optimizations
-    depends_on("hiop+deepchecking+debug", when="+hiop+debug")
-    depends_on("hiop~deepchecking+full_optimizations", when="+hiop+full_optimizations")
-
+    depends_on("hiop+deepchecking build_type=RelWithDebInfo", when="+hiop+debug")
+    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop+full_optimizations")
+    
+    # Control the package's build-type depending on the full_optimizations or debug flag
+    for pkg in ["raja", "umpire", "magma", "camp"]:
+        depends_on("{0} build_type=Release".format(pkg), when="+full_optimizations")
+        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")	
+    
     # Force RelWithDebInfo when not using optimizations
     conflicts(
         "build_type=Release",
