@@ -49,7 +49,7 @@ class Hpctoolkit(AutotoolsPackage):
     variant(
         "cray",
         default=False,
-        description="Build for Cray compute nodes, including " "hpcprof-mpi.",
+        description="Build for Cray compute nodes, including hpcprof-mpi.",
     )
 
     variant("mpi", default=False, description="Build hpcprof-mpi, the MPI version of hpcprof.")
@@ -67,7 +67,7 @@ class Hpctoolkit(AutotoolsPackage):
     variant(
         "all-static",
         default=False,
-        description="Needed when MPICXX builds static binaries " "for the compute nodes.",
+        description="Needed when MPICXX builds static binaries for the compute nodes.",
     )
 
     variant(
@@ -120,6 +120,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
     depends_on("xz+pic", type="link")
+    depends_on("yaml-cpp@0.7.0:", when="@develop")
     depends_on("zlib+shared")
 
     depends_on("cuda", when="+cuda")
@@ -214,6 +215,9 @@ class Hpctoolkit(AutotoolsPackage):
             args.append("--with-papi=%s" % spec["papi"].prefix)
         else:
             args.append("--with-perfmon=%s" % spec["libpfm4"].prefix)
+
+        if spec.satisfies("@develop"):
+            args.append("--with-yaml-cpp=%s" % spec["yaml-cpp"].prefix)
 
         if "+cuda" in spec:
             args.append("--with-cuda=%s" % spec["cuda"].prefix)
