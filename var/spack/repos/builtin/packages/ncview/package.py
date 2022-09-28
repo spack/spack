@@ -28,8 +28,8 @@ class Ncview(AutotoolsPackage):
         # Problems on some systems (e.g. NASA Discover with Intel)
         # to find udunits include and library files despite
         # dependency being specified above
-        config_args.append("--with-udunits2_incdir={}".format(spec["udunits"].prefix.include)
-        config_args.append("--with-udunits2_libdir={}".format(spec["udunits"].prefix.lib)
+        config_args.append("--with-udunits2_incdir={}".format(spec["udunits"].prefix.include))
+        config_args.append("--with-udunits2_libdir={}".format(spec["udunits"].prefix.lib))
 
         if spec.satisfies("^netcdf-c+mpi"):
             config_args.append("CC={}".format(spec["mpi"].mpicc))
