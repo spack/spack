@@ -93,17 +93,17 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
+
     depends_on("umpire", when="+umpire")
-
-    with when("+cuda"):
-        for sm_ in CudaPackage.cuda_arch_values:
-            depends_on("umpire+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
-
-    with when("+rocm"):
-        for arch in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "umpire+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
-            )
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "umpire+rocm amdgpu_target={0}".format(gfx),
+            when="+umpire+rocm amdgpu_target={0}".format(gfx),
+        )
 
     # Conflicts
     conflicts("+cuda", when="+int64")
