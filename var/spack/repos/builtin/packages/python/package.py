@@ -20,7 +20,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import dedupe, match_predicate
 
-from spack.build_environment import dso_suffix
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -1105,10 +1105,12 @@ config.update(get_paths())
         )
 
         dag_hash = self.spec.dag_hash()
-
+        lib_prefix = "lib" if not is_windows else ""
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
+            if is_windows:
+                version = str(version).split(".")[0]
             config = {
                 # get_config_vars
                 "BINDIR": self.prefix.bin,
@@ -1121,8 +1123,8 @@ config.update(get_paths())
                 "LIBPL": self.prefix.lib.join("python{0}")
                 .join("config-{0}-{1}")
                 .format(version, sys.platform),
-                "LDLIBRARY": "libpython{}.{}".format(version, dso_suffix),
-                "LIBRARY": "libpython{}.a".format(version),
+                "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
+                "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
                 "LDCXXSHARED": "c++",
                 "PYTHONFRAMEWORKPREFIX": "/System/Library/Frameworks",
@@ -1210,8 +1212,16 @@ config.update(get_paths())
 
         # Windows libraries are installed directly to BINDIR
         win_bin_dir = self.config_vars["BINDIR"]
+        win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        directories = [
+            libdir,
+            libpl,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir,
+        ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -1226,17 +1236,19 @@ config.update(get_paths())
     @property
     def libs(self):
         py_version = self.version.up_to(2)
-
+        if is_windows:
+            py_version = str(py_version).replace(".", "")
+        lib_prefix = "lib" if not is_windows else ""
         # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
         shared_libs = [
             self.config_vars["LDLIBRARY"],
-            "libpython{}.{}".format(py_version, dso_suffix),
+            "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
         ]
         static_libs = [
             self.config_vars["LIBRARY"],
-            "libpython{}.a".format(py_version),
+            "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
         ]
 
         # The +shared variant isn't reliable, as `spack external find` currently can't
@@ -1246,6 +1258,7 @@ config.update(get_paths())
             candidates = shared_libs + static_libs
         else:
             candidates = static_libs + shared_libs
+
         candidates = dedupe(candidates)
 
         for candidate in candidates:

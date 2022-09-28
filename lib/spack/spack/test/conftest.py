@@ -634,12 +634,11 @@ def configuration_dir(tmpdir_factory, linux_os):
 
     # Slightly modify config.yaml and compilers.yaml
     if is_windows:
-        solver = "original"
         locks = False
     else:
-        solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
         locks = True
 
+    solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
     config_yaml = test_config.join("config.yaml")
     modules_root = tmpdir_factory.mktemp("share")
     tcl_root = modules_root.ensure("modules", dir=True)
