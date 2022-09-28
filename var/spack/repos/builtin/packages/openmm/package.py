@@ -28,7 +28,9 @@ class Openmm(CMakePackage, CudaPackage):
 
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("cmake@3.1:", type="build")
-    depends_on("doxygen", type="build")
+    # See: https://github.com/openmm/openmm/issues/3317
+    depends_on("doxygen@:1.9.1", type="build", when="@:7.5.1")
+    depends_on("doxygen", type="build", when="@7.6.0:")
     depends_on("swig", type="build")
     depends_on("fftw")
     depends_on("py-cython", type="build")
