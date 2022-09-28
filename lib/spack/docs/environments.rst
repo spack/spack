@@ -5,49 +5,48 @@
 
 .. _environments:
 
-=========================
-Environments (spack.yaml)
-=========================
+=====================================
+Environments (spack.yaml, spack.lock)
+=====================================
 
-An environment is used to group together a set of specs for the
-purpose of building, rebuilding and deploying in a coherent fashion.
-Environments provide a number of advantages over the *à la carte*
-approach of building and loading individual Spack modules:
+An environment is used to group together a set of specs for the purpose
+of building, rebuilding, and deploying software in a coherent fashion.
+It separates *which*, *how*, *where*, and *when* software is installed
+and loaded. Advantages over the *à la carte* approach of building and
+loading individual Spack modules include:
 
-#. Environments separate the steps of (a) choosing what to
-   install, (b) concretizing, and (c) installing.  This allows
-   Environments to remain stable and repeatable, even if Spack packages
-   are upgraded: specs are only re-concretized when the user
-   explicitly asks for it.  It is even possible to reliably
-   transport environments between different computers running
-   different versions of Spack!
-#. Environments allow several specs to be built at once; a more robust
-   solution than ad-hoc scripts making multiple calls to ``spack
-   install``.
-#. An Environment that is built as a whole can be loaded as a whole
-   into the user environment. An Environment can be built to maintain
-   a filesystem view of its packages, and the environment can load
-   that view into the user environment at activation time. Spack can
-   also generate a script to load all modules related to an
-   environment.
+#. separating *which* specs to install means aggregating the identification
+   and configuration of multiple specs forming an abstract definition of an
+   environment that enables those specs to be processed together;
+#. separating the abstract definition from *how* an environment's specs are
+   fully configured, in terms of options and constrained dependencies (through
+   concretization), allows environments to be stable even after package
+   upgrades (unless they are explicitly re-concretized);
+#. separating *where* the environment *as a whole* is installed maintains
+   a filesystem view of the installed software in a manner that allows
+   re-use of a single installation across multiple environments; and
+#. separating *when* the environment *as a whole* is loaded (through
+   activation) limits the available software to those packages identified
+   as actually being needed by the environment.
 
 Other packaging systems also provide environments that are similar in
 some ways to Spack environments; for example, `Conda environments
 <https://conda.io/docs/user-guide/tasks/manage-environments.html>`_ or
 `Python Virtual Environments
 <https://docs.python.org/3/tutorial/venv.html>`_.  Spack environments
-provide some distinctive features:
+provide some distinctive features though:
 
 #. A spec installed "in" an environment is no different from the same
-   spec installed anywhere else in Spack.  Environments are assembled
-   simply by collecting together a set of specs.
+   spec installed anywhere else in Spack since environments represent
+   a collection of specs intended for a specific purpose.
 #. Spack Environments may contain more than one spec of the same
    package.
 
 Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
-managers. The user input file is named ``spack.yaml`` and the lock
-file is named ``spack.lock``
+managers. The manifest, or abstract definition or user input file,
+is named ``spack.yaml``. The lock, or fully configured and concretized,
+file is named ``spack.lock``.
 
 .. _environments-using:
 
@@ -413,7 +412,7 @@ also be used as valid concrete versions (see :ref:`version-specifier`).
 This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
 the ``main`` branch of the package, and ``spack install`` will install from
 that git clone if ``foo`` is in the environment.
-Further development on ``foo`` can be tested by reinstalling the environment,
+Further development on ``foo`` can be tested by re-installing the environment,
 and eventually committed and pushed to the upstream git repo.
 
 If the package being developed supports out-of-source builds then users can use the
