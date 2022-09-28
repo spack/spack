@@ -32,4 +32,5 @@ class Dpmjet(MakefilePackage):
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
         install_tree("lib", prefix.lib)
+        install_tree("include", prefix.include)
         pass
