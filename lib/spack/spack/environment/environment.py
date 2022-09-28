@@ -63,7 +63,7 @@ _active_environment = None
 
 
 #: default path where environments are stored in the spack tree
-env_path = os.path.join(spack.paths.var_path, "environments")
+default_env_path = os.path.join(spack.paths.var_path, "environments")
 
 
 #: Name of the input yaml file for an environment
@@ -81,7 +81,7 @@ env_subdir_name = ".spack-env"
 def env_root_path():
     """Override default root path if the user specified it"""
     return spack.util.path.canonicalize_path(
-        spack.config.get("config:environments_root", default=env_path), allow_env=False
+        spack.config.get("config:environments_root", default=default_env_path), allow_env=False
     )
 
 
