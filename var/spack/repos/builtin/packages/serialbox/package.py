@@ -63,6 +63,10 @@ class Serialbox(CMakePackage):
     patch("nag/examples.patch", when="@2.3.1:%nag+fortran+examples")
     patch("nag/ftg.patch", when="@2.3.1:%nag+ftg")
 
+    # Add missing include directives
+    # (part of https://github.com/GridTools/serialbox/pull/259):
+    patch("missing_includes.patch", when="@:2.6.1+c")
+
     conflicts(
         "+ftg",
         when="~fortran",
