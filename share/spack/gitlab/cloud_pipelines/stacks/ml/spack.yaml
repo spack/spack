@@ -19,13 +19,17 @@ spack:
       target: [x86_64_v4]
       variants: +cuda cuda_arch=80
 
+    llvm:
+      # https://github.com/spack/spack/issues/27999
+      require: ~cuda
+
   specs:
     # Horovod
     - py-horovod
 
     # JAX
-    - py-jax
-    - py-jaxlib
+    # - py-jax
+    # - py-jaxlib
 
     # Keras
     - py-keras
@@ -79,7 +83,7 @@ spack:
 
     # XGBoost
     - py-xgboost
-    - r-xgboost
+    # - r-xgboost
     - xgboost
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml" }
