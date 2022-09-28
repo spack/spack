@@ -295,10 +295,11 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
                             )
                         )
 
-                    cray_cce_prefix = "/opt/cray/pe/cce/13.0.1/cce/x86_64"
                     hip_link_flags += "-Wl,--disable-new-dtags "
-                    hip_link_flags += "-L{0}/lib -L{0}/lib ".format(cray_cce_prefix)
-                    hip_link_flags += "-Wl,-rpath,{0}/lib:{0}/lib ".format(cray_cce_prefix)
+                    cray_cce_prefix = "/opt/cray/pe/cce/13.0.1/cce/x86_64"
+                    if os.path.isdir(cray_cce_prefix):
+                        hip_link_flags += "-L{0}/lib -L{0}/lib ".format(cray_cce_prefix)
+                        hip_link_flags += "-Wl,-rpath,{0}/lib:{0}/lib ".format(cray_cce_prefix)
                     hip_link_flags += "-lmodules -lquadmath -lfi -lcraymath -lf -lu -lcsup"
 
                 # Flags for amdflang
