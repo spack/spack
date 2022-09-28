@@ -17,6 +17,6 @@ class PyPoetryDynamicVersioning(PythonPackage):
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-poetry-core@1:", type="build")
 
-    depends_on("py-dunamai@1.12:2", type=("build", "run"))
+    depends_on("py-dunamai@1.12:1", type=("build", "run"))
     depends_on("py-tomlkit@0.4:", type=("build", "run"))
     depends_on("py-jinja2@2.11.1:3", type=("build", "run"))
