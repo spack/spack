@@ -1008,7 +1008,7 @@ spack:
     config:
         verify_ssl: False
         dirty: False
-        environtments_dir: ~/my/env/location
+        environments_root: ~/my/env/location
     repos:
         - ~/my/repo/location
     mirrors:
