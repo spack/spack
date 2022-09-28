@@ -598,7 +598,7 @@ def generate_gitlab_ci_yaml(
             is used to populate several mirrors with binaries, based on some
             criteria.  Spack protected pipelines populate different mirrors based
             on branch name, facilitated by this option.
-        use_fake (bool): CI for using fake packages, overrides the runner
+        use_fake (bool): CI for using fake package installs, overrides the runner
             mappings and tags to avoid using larger limited resources.
     """
     with spack.concretize.disable_compiler_existence_check():
@@ -647,6 +647,9 @@ def generate_gitlab_ci_yaml(
 
     # Values: "spack_pull_request", "spack_protected_branch", or not set
     spack_pipeline_type = os.environ.get("SPACK_PIPELINE_TYPE", None)
+    if spack_pipeline_type == "spack_protected_branch":
+        tty.error("--use-fake is not allowed in protected pipelines")
+        exit(1)
 
     if "mirrors" not in yaml_root or len(yaml_root["mirrors"].values()) < 1:
         tty.die("spack ci generate requires an env containing a mirror")
@@ -655,8 +658,15 @@ def generate_gitlab_ci_yaml(
     mirror_urls = [url for url in ci_mirrors.values()]
     remote_mirror_url = mirror_urls[0]
 
+    # Append _fake to the end of all of the mirrors
     spack_buildcache_copy = os.environ.get("SPACK_COPY_BUILDCACHE", None)
-    if spack_buildcache_copy and not use_fake:
+
+    if use_fake:
+        remote_mirror_override = "{0}_fake".format(remote_mirror_override)
+        remote_mirror_url = "{0}_fake".format(remote_mirror_url)
+        spack_buildcache_copy = "{0}_fake".format(spack_buildcache_copy)
+
+    if spack_buildcache_copy:
         buildcache_copies = {}
         buildcache_copy_src_prefix = remote_mirror_override or remote_mirror_url
         buildcache_copy_dest_prefix = spack_buildcache_copy
@@ -878,6 +888,7 @@ def generate_gitlab_ci_yaml(
                     # that minimize required resources
                     runner_attribs["variables"].update(
                         [
+                            ("CI_JOB_SIZE", "default")
                             ("KUBERNETES_CPU_REQUEST", "250m"),
                             ("KUBERNETES_MEMORY_REQUEST", "100M"),
                             ("SPACK_CI_USE_FAKE", "1"),
