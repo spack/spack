@@ -195,9 +195,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-dsuperlu")
 
         if "+umpire" in spec:
-            configure_args.append(
-                "--with-umpire-include=%s" % spec["umpire"].prefix.include
-            )
+            configure_args.append("--with-umpire-include=%s" % spec["umpire"].prefix.include)
             configure_args.append("--with-umpire-lib=%s" % spec["umpire"].libs)
             if "~cuda~rocm" in spec:
                 configure_args.append("--with-umpire-host")
