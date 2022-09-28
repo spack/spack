@@ -6,11 +6,13 @@ on:
       - develop
       - releases/**
       - jcsda_emc_spack_stack
+      - release/**
   pull_request:
     branches:
       - develop
       - releases/**
       - jcsda_emc_spack_stack
+      - release/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
