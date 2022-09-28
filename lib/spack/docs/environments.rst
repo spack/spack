@@ -623,31 +623,6 @@ The following two Environment manifests are identical:
 Spec matrices can be used to install swaths of software across various
 toolchains.
 
-The concretization logic for spec matrices differs slightly from the
-rest of Spack. If a variant or dependency constraint from a matrix is
-invalid, Spack will reject the constraint and try again without
-it. For example, the following two Environment manifests will produce
-the same specs:
-
-.. code-block:: yaml
-
-   spack:
-     specs:
-       - matrix:
-           - [zlib, libelf, hdf5+mpi]
-           - [^mvapich2@2.2, ^openmpi@3.1.0]
-
-   spack:
-     specs:
-       - zlib
-       - libelf
-       - hdf5+mpi ^mvapich2@2.2
-       - hdf5+mpi ^openmpi@3.1.0
-
-This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminately to packages,
-without regard for the applicability of the constraint.
-
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References
 ^^^^^^^^^^^^^^^^^^^^
