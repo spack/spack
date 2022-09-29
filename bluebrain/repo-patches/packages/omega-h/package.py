@@ -13,8 +13,8 @@ class OmegaH(CMakePackage):
     """
 
     homepage = "https://github.com/sandialabs/omega_h"
-    url      = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
-    git      = "https://github.com/sandialabs/omega_h.git"
+    url = "https://github.com/sandialabs/omega_h/archive/v9.34.1.tar.gz"
+    git = "https://github.com/sandialabs/omega_h.git"
 
     maintainers = ['cwsmith']
     tags = ['e4s']
