@@ -97,6 +97,13 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
 
         if (spec.satisfies("%xl") or spec.satisfies("%xl_r")) and spec.satisfies("@:6.1.1"):
             append_define("CMAKE_C_FLAGS", "-DNoChange")
+        if spec.satisfies("%oneapi"):
+            #
+            # 2022 and later  Intel OneAPI compilers throws errors compiling
+            # some of the non ISO C99 compliant code in this package
+            # see https://reviews.llvm.org/D122983
+            #
+            append_define("CMAKE_C_FLAGS", "-Wno-error=implicit-function-declaration")
 
         append_define("XSDK_INDEX_SIZE", "64" if "+int64" in spec else "32")
 
