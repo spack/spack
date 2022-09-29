@@ -360,6 +360,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # add -lpthread to build OpenMP libraries
     patch("llvm13-14-thread.patch", when="@13:14")
+    patch("llvm15-thread.patch", when="@15")
 
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
