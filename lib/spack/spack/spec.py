@@ -5000,14 +5000,15 @@ HASH, DEP, VER, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
 spec_id_re = r"\w[\w.-]*"
 
 
-_filename_re_base = r'[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*'
-_windows_filename_prefix = r'([A-Za-z]:)*?'
+_filename_re_base = r"[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*"
+_windows_filename_prefix = r"([A-Za-z]:)*?"
 # Spec strings require posix-style paths on Windows
 # because the result is later passed to shlex.
-_windows_filename_re = f"{_windows_filename_prefix}{_filename_re_base}"
+_windows_filename_re = _windows_filename_prefix + _filename_re_base
 
 #: Regex for literal filenames.
 filename_reg = _windows_filename_re if is_windows else _filename_re_base
+
 
 class SpecLexer(spack.parse.Lexer):
 
@@ -5021,44 +5022,44 @@ class SpecLexer(spack.parse.Lexer):
         super(SpecLexer, self).__init__(
             [
                 (
-                    'BEGIN_PHASE',
+                    "BEGIN_PHASE",
                     [
-                        # '^': dependency, or "AND":
-                        (re.escape('^'), DEP),
                         # '@': begin a Version, VersionRange, or VersionList:
-                        (re.escape('@'), AT),
+                        (r"@([\w.\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?", VER),
                         # VersionRange syntax:
-                        (re.escape(':'), COLON),
+                        (re.escape(":"), COLON),
                         # VersionList syntax:
-                        (re.escape(','), COMMA),
+                        (re.escape(","), COMMA),
+                        # '^': dependency, or "AND":
+                        (re.escape("^"), DEP),
                         # variant syntax:
-                        (re.escape('+'), ON),
-                        (re.escape('-'), OFF),
-                        (re.escape('~'), OFF),
+                        (re.escape("+"), ON),
+                        (re.escape("-"), OFF),
+                        (re.escape("~"), OFF),
                         # Compiler dependency syntax:
-                        (re.escape('%'), PCT),
+                        (re.escape("%"), PCT),
                         # This is *not* used in version string parsing.
-                        (re.escape('='), EQ),
+                        (re.escape("="), EQ),
                         # Filenames match before identifiers, so no initial filename
                         # component is parsed as a spec (e.g., in subdir/spec.yaml)
                         (filename_reg, FILE),
                         # Hash match after filename. No valid filename can be a hash
                         # (files end w/.yaml), but a hash can match a filename prefix.
-                        (re.escape('/'), HASH),
+                        (re.escape("/"), HASH),
                         # Identifiers match after filenames and hashes.
                         (spec_id_re, ID),
                         # Gobble up all remaining whitespace between tokens.
-                        (r'\s+', None),
+                        (r"\s+", None),
                     ],
-                    {'EQUALS_PHASE': [EQ]},
+                    {"EQUALS_PHASE": [EQ]},
                 ),
                 (
-                    'EQUALS_PHASE',
+                    "EQUALS_PHASE",
                     [
-                        (r'[\S].*', VAL),
-                        (r'\s+', None),
+                        (r"[\S].*", VAL),
+                        (r"\s+", None),
                     ],
-                    {'BEGIN_PHASE': [VAL]},
+                    {"BEGIN_PHASE": [VAL]},
                 ),
             ]
         )

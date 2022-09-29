@@ -9,7 +9,7 @@ import re
 import shlex
 import sys
 from textwrap import dedent
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Tuple
 
 import six
 
@@ -22,7 +22,7 @@ class Token(object):
 
     __slots__ = "type", "value", "start", "end"
 
-    def __init__(self, type, value='', start=0, end=0):
+    def __init__(self, type, value="", start=0, end=0):
         # type: (Any, str, int, int) -> None
         self.type = type
         self.value = value
@@ -43,7 +43,7 @@ class Token(object):
         return (self.type == other.type) and (self.value == other.value)
 
 
-_Lexicon = List['Tuple[str, Any]']
+_Lexicon = List["Tuple[str, Any]"]
 _Switches = Dict[str, List]
 
 
@@ -54,7 +54,7 @@ class Lexer(object):
 
     def __init__(self, lexicon_and_mode_switches):
         # type: (List[Tuple[str, _Lexicon, _Switches]]) -> None
-        self.scanners = {}    # type: Dict[str, re.Scanner] # type: ignore[name-defined]
+        self.scanners = {}  # type: Dict[str, re.Scanner] # type: ignore[name-defined]
         self.switchbook = {}  # type: Dict[str, _Switches]
         self.mode = lexicon_and_mode_switches[0][0]
         for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
@@ -69,12 +69,10 @@ class Lexer(object):
             self.scanners[mode_name] = re.Scanner(transformed_lexicon)  # type: ignore[attr-defined] # noqa: E501
             self.switchbook[mode_name] = mode_switches_dict
 
-    def token(self, type, value=''):
+    def token(self, type, value=""):
         # type: (Any, str) -> Token
         cur_scanner = self.scanners[self.mode]
-        return Token(type, value,
-                     cur_scanner.match.start(0),
-                     cur_scanner.match.end(0))
+        return Token(type, value, cur_scanner.match.start(0), cur_scanner.match.end(0))
 
     def _transform_token_callback(self, tok):
         if tok is None:
@@ -97,8 +95,9 @@ class Lexer(object):
                     # scan in other mode
                     self.mode = other_mode  # swap 0/1
                     remainder_was_used = True
-                    tokens = tokens[:i + 1] + self.lex_word(
-                        word[word.index(t.value) + len(t.value):])
+                    tokens = tokens[: i + 1] + self.lex_word(
+                        word[word.index(t.value) + len(t.value) :]
+                    )
                     break
 
         if remainder and not remainder_was_used:
@@ -204,10 +203,12 @@ class LexError(ParseError):
 
     def __init__(self, message, string, pos):
         bad_char = string[pos]
-        printed = dedent("""\
+        printed = dedent(
+            """\
         {0}: '{1}'
         -------
         {2}
         {3}^
-        """).format(message, bad_char, string, pos * ' ')
+        """
+        ).format(message, bad_char, string, pos * " ")
         super(LexError, self).__init__(printed, string, pos)
