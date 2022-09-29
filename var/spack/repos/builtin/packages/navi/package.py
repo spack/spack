@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Navi(MakefilePackage):
+class Navi(Package):
     """An interactive cheatsheet tool for the command-line"""
 
     homepage = "https://github.com/denisidoro/navi"
