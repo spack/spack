@@ -44,7 +44,7 @@ class Token(object):
 
 
 _Lexicon = List["Tuple[str, Any]"]
-_Switches = Dict[str, List]
+_Switches = "Dict[str, List[Any]]"
 
 
 class Lexer(object):
