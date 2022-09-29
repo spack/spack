@@ -124,7 +124,7 @@ class Lexer(object):
                 for tok in self.lex_word(word):
                     yield tok
         except LexWordError as e:
-            raise six.raise_from(LexError(text, e), e)
+            raise six.raise_from(LexError(text, e), e)  # type: ignore[attr-defined]
 
 
 @six.add_metaclass(abc.ABCMeta)
