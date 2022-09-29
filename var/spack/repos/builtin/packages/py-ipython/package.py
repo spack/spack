@@ -88,12 +88,7 @@ class PyIpython(PythonPackage):
         type=("build", "run"),
     )
 
-    @property
-    def skip_modules(self):
-
-        if self.spec.satisfies("@8:"):
-            return []
-
-        # 'IPython.kernel' is deprecated and fails to import, leave out of
-        # 'import_modules' to ensure that import tests pass.
-        return ["IPython.kernel"]
+    # "IPython.kernel" was deprecated for py-ipython@:7 and fails to import, leave
+    # out of "import_modules" to ensure that import tests pass.
+    # for py-ipython@8: "IPython.kernel" was removed
+    skip_modules = ["IPython.kernel"]
