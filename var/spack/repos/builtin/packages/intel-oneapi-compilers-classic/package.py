@@ -36,26 +36,13 @@ class IntelOneapiCompilersClassic(Package):
         depends_on("intel-oneapi-compilers@" + oneapi_ver, when="@" + ver, type="run")
 
     def setup_run_environment(self, env):
-        """Adds environment variables to the generated module file.
+        """Adds environment variables to the generated module file."""
+        oneapi_pkg = self.spec["intel-oneapi-compilers"].package
 
-        These environment variables come from running:
+        oneapi_pkg.setup_run_environment(env)
 
-        .. code-block:: console
-
-           $ source {prefix}/{component}/{version}/env/vars.sh
-
-        and from setting CC/CXX/F77/FC
-        """
-
-        bin = join_path(
-            self.spec["intel-oneapi-compilers"].prefix,
-            "compiler",
-            self.spec["intel-oneapi-compilers"].version,
-            "linux",
-            "bin",
-            "intel64",
-        )
-        env.set("CC", join_path(bin, "icc"))
-        env.set("CXX", join_path(bin, "icpc"))
-        env.set("F77", join_path(bin, "ifort"))
-        env.set("FC", join_path(bin, "ifort"))
+        bin_prefix = oneapi_pkg.component_prefix.linux.bin.intel64
+        env.set("CC", bin_prefix.icc)
+        env.set("CXX", bin_prefix.icpc)
+        env.set("F77", bin_prefix.ifort)
+        env.set("FC", bin_prefix.ifort)
