@@ -1,0 +1,23 @@
+diff --git a/CMake/version.cmake b/CMake/version.cmake
+index ea171ade..f2b85e76 100644
+--- a/CMake/version.cmake
++++ b/CMake/version.cmake
+@@ -1,12 +1,14 @@
+ set(tmp)
+ find_package(Git QUIET)
+ if(GIT_FOUND)
+-    execute_process(COMMAND ${GIT_EXECUTABLE}
+-        --git-dir=${CMAKE_SOURCE_DIR}/.git describe --tags
+-        OUTPUT_VARIABLE tmp OUTPUT_STRIP_TRAILING_WHITESPACE)
++  execute_process(COMMAND ${GIT_EXECUTABLE}
++      --git-dir=${CMAKE_SOURCE_DIR}/.git describe --tags
++      OUTPUT_VARIABLE tmp OUTPUT_STRIP_TRAILING_WHITESPACE)
+ endif()
+ if(NOT tmp)
+-    set(tmp "v0.0.0")
++  # Set this to the latest released version.
++  # This version is used when using release tarballs
++  set(tmp "v4.0.0")
+ endif()
+ set(SENSEI_VERSION ${tmp} CACHE STRING "SENSEI version" FORCE)
+ 

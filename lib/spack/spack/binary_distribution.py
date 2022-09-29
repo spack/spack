@@ -19,6 +19,7 @@ from contextlib import closing
 import ruamel.yaml as yaml
 from six.moves.urllib.error import HTTPError, URLError
 
+import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -26,7 +27,6 @@ from llnl.util.filesystem import mkdirp
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
-import spack.fetch_strategy as fs
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -654,7 +654,7 @@ def get_buildfile_manifest(spec):
 
         for filename in files:
             path_name = os.path.join(root, filename)
-            m_type, m_subtype = relocate.mime_type(path_name)
+            m_type, m_subtype = fsys.mime_type(path_name)
             rel_path_name = os.path.relpath(path_name, spec.prefix)
             added = False
 
@@ -1231,7 +1231,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except fs.FetchError:
+    except web_util.FetchError:
         stage.destroy()
         return None
 
@@ -1954,7 +1954,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except fs.FetchError:
+                    except web_util.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2106,7 +2106,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except fs.FetchError as e:
+            except web_util.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:

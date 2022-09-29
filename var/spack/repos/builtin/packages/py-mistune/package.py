@@ -12,6 +12,7 @@ class PyMistune(PythonPackage):
     homepage = "https://github.com/lepture/mistune"
     pypi = "mistune/mistune-2.0.2.tar.gz"
 
+    version("2.0.4", sha256="9ee0a66053e2267aba772c71e06891fa8f1af6d4b01d5e84e267b4570d4d9808")
     version("2.0.2", sha256="6fc88c3cb49dba8b16687b41725e661cf85784c12e8974a29b9d336dd596c3a1")
     version("0.8.4", sha256="59a3429db53c50b5c6bcc8a07f8848cb00d7dc8bdb431a4ab41920d201d4756e")
     version("0.8.3", sha256="bc10c33bfdcaa4e749b779f62f60d6e12f8215c46a292d05e486b869ae306619")

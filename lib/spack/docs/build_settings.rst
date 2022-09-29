@@ -49,9 +49,8 @@ packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
 that should be used instead of Spack building its own MPI.
 
-External packages are configured through the ``packages.yaml`` file found
-in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
-directory. Here's an example of an external configuration:
+External packages are configured through the ``packages.yaml`` file.
+Here's an example of an external configuration:
 
 .. code-block:: yaml
 
@@ -97,11 +96,14 @@ Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not ever be built.
 
-The packages configuration can tell Spack to use an external location
-for certain package versions, but it does not restrict Spack to using
-external packages.  In the above example, since newer versions of OpenMPI
-are available, Spack will choose to start building and linking with the
-latest version rather than continue using the pre-installed OpenMPI versions.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Prevent packages from being built from sources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding an external spec in ``packages.yaml`` allows Spack to use an external location,
+but it does not prevent Spack from building packages from sources. In the above example,
+Spack might choose for many valid reasons to start building and linking with the
+latest version of OpenMPI rather than continue using the pre-installed OpenMPI versions.
 
 To prevent this, the ``packages.yaml`` configuration also allows packages
 to be flagged as non-buildable.  The previous example could be modified to
@@ -121,9 +123,15 @@ be:
        buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
-its own version of OpenMPI, and it will instead always rely on a pre-built
-OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
-a package name.
+its own version of OpenMPI from sources, and it will instead always rely on a pre-built
+OpenMPI.
+
+.. note::
+
+   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag)
+   pre-built specs include specs already available from a local store, an upstream store, a registered
+   buildcache or specs marked as externals in ``packages.yaml``. If ``concretizer:reuse`` is off, only
+   external specs in ``packages.yaml`` are included in the list of pre-built specs.
 
 If an external module is specified as not buildable, then Spack will load the
 external module into the build environment which can be used for linking.
@@ -131,6 +139,10 @@ external module into the build environment which can be used for linking.
 The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-buildable virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Virtual packages in Spack can also be specified as not buildable, and
 external implementations can be provided. In the example above,
@@ -153,21 +165,37 @@ but more conveniently:
        - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
          prefix: /opt/openmpi-1.6.5-intel
 
-Implementations can also be listed immediately under the virtual they provide:
+Spack can then use any of the listed external implementations of MPI
+to satisfy a dependency, and will choose depending on the compiler and
+architecture.
+
+In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers
+(available via stores or buildcaches) are not wanted, Spack can be configured to require
+specs matching only the available externals:
 
 .. code-block:: yaml
 
    packages:
      mpi:
        buildable: False
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
-         mpich@3.3 %clang@9.0.0 arch=linux-debian7-x86_64: /opt/mpich-3.3-intel
+       require:
+       - one_of: [
+           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64",
+           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug",
+           "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         ]
+     openmpi:
+       externals:
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.6.5-intel
 
-Spack can then use any of the listed external implementations of MPI
-to satisfy a dependency, and will choose depending on the compiler and
-architecture.
+This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused,
+unless it matches the requirements under ``packages:mpi:require``. For more information on requirements see
+:ref:`package-requirements`.
 
 .. _cmd-spack-external-find:
 
@@ -194,11 +222,6 @@ Specific limitations include:
 * Packages are not discoverable by default: For a package to be
   discoverable with ``spack external find``, it needs to add special
   logic. See :ref:`here <make-package-findable>` for more details.
-* The current implementation only collects and examines executable files,
-  so it is typically only useful for build/run dependencies (in some cases
-  if a library package also provides an executable, it may be possible to
-  extract a meaningful Spec by running the executable - for example the
-  compiler wrappers in MPI implementations).
 * The logic does not search through module files, it can only detect
   packages with executables defined in ``PATH``; you can help Spack locate
   externals which use module files by loading any associated modules for
@@ -396,15 +419,69 @@ choose between a set of options using ``any_of`` or ``one_of``:
   ``mpich`` already includes a conflict, so this is redundant but
   still demonstrates the concept).
 
-Other notes about ``requires``:
+.. note::
 
-* You can only specify requirements for specific packages: you cannot
-  add ``requires`` under ``all``.
-* You cannot specify requirements for virtual packages (e.g. you can
-  specify requirements for ``openmpi`` but not ``mpi``).
-* For ``any_of`` and ``one_of``, the order of specs indicates a
-  preference: items that appear earlier in the list are preferred
-  (note that these preferences can be ignored in favor of others).
+   For ``any_of`` and ``one_of``, the order of specs indicates a
+   preference: items that appear earlier in the list are preferred
+   (note that these preferences can be ignored in favor of others).
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting default requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also set default requirements for all packages under ``all``
+like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+     cmake:
+       require: '%gcc'
+
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
+to use ``clang``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting requirements on virtual specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A requirement on a virtual spec applies whenever that virtual is present in the DAG. This
+can be useful for fixing which virtual provider you want to use:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+
+With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+
+Requirements on the virtual spec and on the specific provider are both applied, if present. For
+instance with a configuration like:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+     mvapich2:
+       require: '~cuda'
+
+you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
 .. _package_permissions:
 
