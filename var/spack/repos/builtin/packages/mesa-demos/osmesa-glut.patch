@@ -1,0 +1,26 @@
+diff --git a/src/osdemos/osdemo16.c b/src/osdemos/osdemo16.c
+index f1bfccef..4b7a765d 100644
+--- a/src/osdemos/osdemo16.c
++++ b/src/osdemos/osdemo16.c
+@@ -12,7 +12,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include "GL/osmesa.h"
+-#include "glut_wrap.h"
++#include "GL/glu.h"
+ 
+ 
+ #define SAVE_TARGA
+diff --git a/src/osdemos/osdemo32.c b/src/osdemos/osdemo32.c
+index db01db6d..3411e34c 100644
+--- a/src/osdemos/osdemo32.c
++++ b/src/osdemos/osdemo32.c
+@@ -11,7 +11,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include "GL/osmesa.h"
+-#include "glut_wrap.h"
++#include "GL/glu.h"
+ 
+ 
+ #define SAVE_TARGA

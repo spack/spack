@@ -17,18 +17,18 @@ class Falcon(PythonPackage):
     front-end written in Python for convenience."""
 
     homepage = "https://github.com/PacificBiosciences/FALCON"
-    git      = "https://github.com/PacificBiosciences/FALCON.git"
+    git = "https://github.com/PacificBiosciences/FALCON.git"
 
-    version('2017-05-30', commit='86cec6157291679095ea6080b0cde6561eccc041')
+    version("2017-05-30", commit="86cec6157291679095ea6080b0cde6561eccc041")
 
-    depends_on('py-setuptools', type='run')
-    depends_on('py-pypeflow', type='run')
-    depends_on('py-networkx@1.7:1.10', type=['build', 'run'])
-    depends_on('pacbio-dazz-db', type='run')
-    depends_on('pacbio-daligner', type='run')
-    depends_on('pacbio-dextractor', type='run')
-    depends_on('pacbio-damasker', type='run')
+    depends_on("py-setuptools", type="run")
+    depends_on("py-pypeflow", type="run")
+    depends_on("py-networkx@1.7:1.10", type=["build", "run"])
+    depends_on("pacbio-dazz-db", type="run")
+    depends_on("pacbio-daligner", type="run")
+    depends_on("pacbio-dextractor", type="run")
+    depends_on("pacbio-damasker", type="run")
 
     # Python version 3 and later should return
     # a value of PyObject type. [-Wreturn-type]
-    patch('Py_None.patch', when='^python@3:')
+    patch("Py_None.patch", when="^python@3:")

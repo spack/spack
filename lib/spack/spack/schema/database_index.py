@@ -14,45 +14,45 @@ import spack.schema.spec
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack spec schema',
-    'type': 'object',
-    'required': ['database'],
-    'additionalProperties': False,
-    'properties': {
-        'database': {
-            'type': 'object',
-            'required': ['installs', 'version'],
-            'additionalProperties': False,
-            'properties': {
-                'installs': {
-                    'type': 'object',
-                    'patternProperties': {
-                        r'^[\w\d]{32}$': {
-                            'type': 'object',
-                            'properties': {
-                                'spec': spack.schema.spec.properties,
-                                'path': {
-                                    'oneOf': [
-                                        {'type': 'string'},
-                                        {'type': 'null'},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack spec schema",
+    "type": "object",
+    "required": ["database"],
+    "additionalProperties": False,
+    "properties": {
+        "database": {
+            "type": "object",
+            "required": ["installs", "version"],
+            "additionalProperties": False,
+            "properties": {
+                "installs": {
+                    "type": "object",
+                    "patternProperties": {
+                        r"^[\w\d]{32}$": {
+                            "type": "object",
+                            "properties": {
+                                "spec": spack.schema.spec.properties,
+                                "path": {
+                                    "oneOf": [
+                                        {"type": "string"},
+                                        {"type": "null"},
                                     ],
                                 },
-                                'installed': {'type': 'boolean'},
-                                'ref_count': {
-                                    'type': 'integer',
-                                    'minimum': 0,
+                                "installed": {"type": "boolean"},
+                                "ref_count": {
+                                    "type": "integer",
+                                    "minimum": 0,
                                 },
-                                'explicit': {'type': 'boolean'},
-                                'installation_time': {
-                                    'type': 'number',
-                                }
+                                "explicit": {"type": "boolean"},
+                                "installation_time": {
+                                    "type": "number",
+                                },
                             },
                         },
                     },
                 },
-                'version': {'type': 'string'},
-            }
+                "version": {"type": "string"},
+            },
         },
     },
 }

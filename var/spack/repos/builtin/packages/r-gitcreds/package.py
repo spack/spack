@@ -16,6 +16,6 @@ class RGitcreds(RPackage):
 
     cran = "gitcreds"
 
-    version('0.1.1', sha256='b14aaf4e910a9d2d6c65c93e645f0b0159c00898e669f917f83c03dfedb1dfea')
+    version("0.1.1", sha256="b14aaf4e910a9d2d6c65c93e645f0b0159c00898e669f917f83c03dfedb1dfea")
 
-    depends_on('git', type='run')
+    depends_on("git", type="run")

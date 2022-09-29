@@ -10,15 +10,15 @@ class Httpress(MakefilePackage):
     """High performance HTTP server stress & benchmark utility."""
 
     homepage = "https://bitbucket.org/yarosla/httpress/wiki/Home"
-    hg       = "https://bitbucket.org/yarosla/httpress"
+    hg = "https://bitbucket.org/yarosla/httpress"
 
-    version('develop')
-    version('1.1.0', revision='1.1.0')
+    version("develop")
+    version("1.1.0", revision="1.1.0")
 
-    depends_on('mercurial', type='build')
-    depends_on('libev')
-    depends_on('gnutls')
+    depends_on("mercurial", type="build")
+    depends_on("libev")
+    depends_on("gnutls")
 
     def install(self, spec, prefix):
-        install_tree('./bin/Release', prefix.bin)
-        install_tree('./obj/Release', prefix.obj)
+        install_tree("./bin/Release", prefix.bin)
+        install_tree("./obj/Release", prefix.obj)

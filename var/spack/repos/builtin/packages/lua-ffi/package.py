@@ -13,8 +13,12 @@ class LuaFfi(LuaPackage):
     git = "https://github.com/facebook/luaffifb/"
     url = "https://github.com/facebook/luaffifb/"
 
-    maintainers = ['trws']
+    maintainers = ["trws"]
 
-    version('0.0.1.fakever', git="https://github.com/facebook/luaffifb/", commit='a1cb731b08c91643b0665935eb5622b3d621211b')
+    version(
+        "0.0.1.fakever",
+        git="https://github.com/facebook/luaffifb/",
+        commit="a1cb731b08c91643b0665935eb5622b3d621211b",
+    )
 
-    depends_on('lua@5.1:5.1.99')
+    depends_on("lua@5.1:5.1.99")

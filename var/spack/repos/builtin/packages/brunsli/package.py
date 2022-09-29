@@ -12,12 +12,12 @@ class Brunsli(CMakePackage):
     homepage = "https://github.com/google/brunsli"
     git = "https://github.com/google/brunsli.git"
 
-    version('0.1', tag='v0.1', submodules=True)
+    version("0.1", tag="v0.1", submodules=True)
 
-    depends_on('cmake@3.1:', type='build')
+    depends_on("cmake@3.1:", type="build")
 
     @property
     def libs(self):
         return find_libraries(
-            ['libbrunslidec-c', 'libbrunslienc-c'], root=self.prefix, recursive=True
+            ["libbrunslidec-c", "libbrunslienc-c"], root=self.prefix, recursive=True
         )

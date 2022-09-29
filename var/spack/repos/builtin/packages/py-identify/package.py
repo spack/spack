@@ -12,10 +12,13 @@ class PyIdentify(PythonPackage):
     Given a file (or some information about a file), return a set of
     standardized tags identifying what the file is."""
 
-    homepage = "https://github.com/chriskuehl/identify"
+    homepage = "https://github.com/pre-commit/identify"
     pypi = "identify/identify-1.4.7.tar.gz"
 
-    version('1.4.7', sha256='d8919589bd2a5f99c66302fec0ef9027b12ae150b0b0213999ad3f695fc7296e')
+    version("2.5.5", sha256="322a5699daecf7c6fd60e68852f36f2ecbb6a36ff6e6e973e0d2bb6fca203ee6")
+    version("2.5.3", sha256="887e7b91a1be152b0d46bbf072130235a8117392b9f1828446079a816a05ef44")
+    version("1.4.7", sha256="d8919589bd2a5f99c66302fec0ef9027b12ae150b0b0213999ad3f695fc7296e")
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.7:", when="@2.4.5:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

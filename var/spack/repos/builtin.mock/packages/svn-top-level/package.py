@@ -9,5 +9,5 @@ from spack.package import *
 class SvnTopLevel(Package):
     """Mock package that uses svn for fetching."""
 
-    svn = 'https://example.com/some/svn/repo'
-    version('1.0')
+    svn = "https://example.com/some/svn/repo"
+    version("1.0")

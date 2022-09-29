@@ -13,15 +13,15 @@ class PyPhylophlan(PythonPackage):
     homepage = "https://github.com/biobakery/phylophlan"
     url = "https://github.com/biobakery/phylophlan/archive/refs/tags/3.0.2.tar.gz"
 
-    version('3.0.2', sha256='c342116662bbfbb49f0665291fc7c0be5a0d04a02a7be2da81de0322eb2256b4')
+    version("3.0.2", sha256="c342116662bbfbb49f0665291fc7c0be5a0d04a02a7be2da81de0322eb2256b4")
 
-    depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-numpy@1.12.1:', type=('build', 'run'))
-    depends_on('py-biopython@1.70:', type=('build', 'run'))
-    depends_on('py-dendropy@4.2.0:', type=('build', 'run'))
-    depends_on('muscle', type=('build', 'run'))
-    depends_on('blast-plus', type=('build', 'run'))
-    depends_on('diamond', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-seaborn', type=('build', 'run'))
+    depends_on("python@3:", type=("build", "run"))
+    depends_on("py-numpy@1.12.1:", type=("build", "run"))
+    depends_on("py-biopython@1.70:", type=("build", "run"))
+    depends_on("py-dendropy@4.2.0:", type=("build", "run"))
+    depends_on("muscle", type=("build", "run"))
+    depends_on("blast-plus", type=("build", "run"))
+    depends_on("diamond", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-seaborn", type=("build", "run"))

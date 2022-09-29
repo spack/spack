@@ -12,7 +12,7 @@ default:
   - /^pr[\d]+_.*$/
   - /^github\/pr[\d]+_.*$/
   variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
+    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
     SPACK_PIPELINE_TYPE: "spack_pull_request"
     SPACK_PRUNE_UNTOUCHED: "True"
 
@@ -88,7 +88,7 @@ default:
 
 protected-publish:
   stage: publish
-  extends: [ ".protected-refs" ]
+  extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
   variables:
@@ -97,7 +97,9 @@ protected-publish:
   script:
     - . "./share/spack/setup-env.sh"
     - spack --version
-    - spack buildcache update-index --mirror-url "s3://spack-binaries/${CI_COMMIT_REF_NAME}"
+    - export COPY_SPECS_DIR=${CI_PROJECT_DIR}/jobs_scratch_dir/specs_to_copy
+    - spack buildcache sync --manifest-glob "${COPY_SPECS_DIR}/*.json"
+    - spack buildcache update-index --mirror-url ${SPACK_COPY_BUILDCACHE}
 
 ########################################
 # TEMPLATE FOR ADDING ANOTHER PIPELINE
@@ -193,13 +195,14 @@ e4s-mac-pr-generate:
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
     - spack ci generate --check-index-only
+      --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir"
   tags:
-  - omicron
+  - lambda
   interruptible: true
   retry:
     max: 2
@@ -264,11 +267,11 @@ e4s-mac-protected-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
-  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -291,6 +294,43 @@ e4s-protected-build:
   needs:
     - artifacts: True
       job: e4s-protected-generate
+
+########################################
+# E4S OneAPI Pipeline
+########################################
+.e4s-oneapi:
+  variables:
+    SPACK_CI_STACK_NAME: e4s-oneapi
+
+e4s-oneapi-pr-generate:
+  extends: [ ".e4s-oneapi", ".pr-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-protected-generate:
+  extends: [ ".e4s-oneapi", ".protected-generate"]
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+
+e4s-oneapi-pr-build:
+  extends: [ ".e4s-oneapi", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-pr-generate
+
+e4s-oneapi-protected-build:
+  extends: [ ".e4s-oneapi", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-oneapi-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-oneapi-protected-generate
 
 ########################################
 # E4S on Power

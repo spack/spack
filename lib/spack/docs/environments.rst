@@ -376,6 +376,30 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Developing Packages in a Spack Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack develop`` command allows one to develop Spack packages in
+an environment. It requires a spec containing a concrete version, and
+will configure Spack to install the package from local source. By
+default, it will also clone the package to a subdirectory in the
+environment. This package will have a special variant ``dev_path``
+set, and Spack will ensure the package and its dependents are rebuilt
+any time the environment is installed if the package's local source
+code has been modified. Spack ensures that all instances of a
+developed package in the environment are concretized to match the
+version (and other constraints) passed as the spec argument to the
+``spack develop`` command.
+
+For packages with ``git`` attributes, git branches, tags, and commits can
+also be used as valid concrete versions (see :ref:`version-specifier`).
+This means that for a package ``foo``, ``spack develop foo@git.main`` will clone 
+the ``main`` branch of the package, and ``spack install`` will install from
+that git clone if ``foo`` is in the environment.
+Further development on ``foo`` can be tested by reinstalling the environment,
+and eventually committed and pushed to the upstream git repo.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -454,14 +478,21 @@ them to the Environment.
    spack:
      include:
      - relative/path/to/config.yaml
+     - https://github.com/path/to/raw/config/compilers.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files with either relative or absolute
-paths. Inline configurations take precedence over included
-configurations, so you don't have to change shared configuration files
-to make small changes to an individual Environment. Included configs
-listed earlier will have higher precedence, as the included configs are
-applied in reverse order.
+Environments can include files or URLs. File paths can be relative or
+absolute. URLs include the path to the text for individual files or
+can be the path to a directory containing configuration files.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration precedence
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inline configurations take precedence over included configurations, so
+you don't have to change shared configuration files to make small changes
+to an individual environment. Included configurations listed earlier will
+have higher precedence, as the included configs are applied in reverse order.
 
 -------------------------------
 Manually Editing the Specs List
@@ -591,31 +622,6 @@ The following two Environment manifests are identical:
 
 Spec matrices can be used to install swaths of software across various
 toolchains.
-
-The concretization logic for spec matrices differs slightly from the
-rest of Spack. If a variant or dependency constraint from a matrix is
-invalid, Spack will reject the constraint and try again without
-it. For example, the following two Environment manifests will produce
-the same specs:
-
-.. code-block:: yaml
-
-   spack:
-     specs:
-       - matrix:
-           - [zlib, libelf, hdf5+mpi]
-           - [^mvapich2@2.2, ^openmpi@3.1.0]
-
-   spack:
-     specs:
-       - zlib
-       - libelf
-       - hdf5+mpi ^mvapich2@2.2
-       - hdf5+mpi ^openmpi@3.1.0
-
-This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminately to packages,
-without regard for the applicability of the constraint.
 
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References
@@ -948,9 +954,6 @@ Variable            Paths
 PATH                bin
 MANPATH             man, share/man
 ACLOCAL_PATH        share/aclocal
-LD_LIBRARY_PATH     lib, lib64
-LIBRARY_PATH        lib, lib64
-CPATH               include
 PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========
