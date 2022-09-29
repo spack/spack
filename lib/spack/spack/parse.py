@@ -95,10 +95,13 @@ class Lexer(object):
                     # scan in other mode
                     self.mode = other_mode  # swap 0/1
                     remainder_was_used = True
-                    tokens = tokens[: i + 1] + self.lex_word(
-                        word[word.index(t.value) + len(t.value) :]
-                    )
+                    already_matched = tokens[: i + 1]
+                    input_for_next_recursion = word[word.index(t.value) + len(t.value) :]
+                    recursion_output = self.lex_word(input_for_next_recursion)
+                    tokens = already_matched + list(recursion_output)
                     break
+            if remainder_was_used:
+                break
 
         if remainder and not remainder_was_used:
             raise LexError("Invalid character", word, word.index(remainder))
