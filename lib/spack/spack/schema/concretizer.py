@@ -15,18 +15,28 @@ properties = {
         "additionalProperties": False,
         "properties": {
             "reuse": {
-                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["dependencies"]}]
+                "oneOf": [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["dependencies"]},
+                ]
             },
             "enable_node_namespace": {"type": "boolean"},
+            "limit_target_reuse": {"type": "array"},
             "targets": {
                 "type": "object",
                 "properties": {
                     "host_compatible": {"type": "boolean"},
-                    "granularity": {"type": "string", "enum": ["generic", "microarchitectures"]},
+                    "granularity": {
+                        "type": "string",
+                        "enum": ["generic", "microarchitectures"],
+                    },
                 },
             },
             "unify": {
-                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
+                "oneOf": [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["when_possible"]},
+                ]
             },
         },
     }

@@ -459,7 +459,7 @@ class ConfigSetAction(argparse.Action):
     """
 
     def __init__(
-        self, option_strings, dest, const, default=None, required=False, help=None, metavar=None
+            self, option_strings, dest, nargs=0, const=None, default=None, required=False, help=None, metavar=None
     ):
         # save the config option we're supposed to set
         self.config_path = dest
@@ -471,7 +471,7 @@ class ConfigSetAction(argparse.Action):
         super(ConfigSetAction, self).__init__(
             option_strings=option_strings,
             dest=dest,
-            nargs=0,
+            nargs=nargs,
             const=const,
             default=default,
             required=required,
@@ -483,7 +483,11 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.set(self.config_path, self.const, scope="command_line")
+        if self.const:
+            spack.config.set(self.config_path, self.const, scope="command_line")
+        else:
+            if isinstance(self.default, list) and isinstance(values[0], str):
+                spack.config.set(self.config_path, values[0].split(","), scope="command_line")
 
 
 def add_concretizer_args(subparser):
@@ -523,6 +527,14 @@ def add_concretizer_args(subparser):
         const="dependencies",
         default=None,
         help="reuse installed dependencies only",
+    )
+    subgroup.add_argument(
+        "--limit-target-reuse",
+        action=ConfigSetAction,
+        dest="concretizer:limit_target_reuse",
+        nargs=1,
+        default=[],
+        help="limit reuse to specific target-architectures"
     )
 
 

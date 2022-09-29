@@ -16,6 +16,8 @@ concretizer:
   # concretization. If `dependencies`, we'll only reuse dependencies but
   # give you a fresh concretization for your root specs.
   reuse: dependencies
+  reuse: true
+  # limit_target_reuse: [x86_64, x86_64_v2] # limit the arches the concretizer will use for concretization
   # Options that tune which targets are considered for concretization. The
   # concretization process is very sensitive to the number targets, and the time
   # needed to reach a solution increases noticeably with the number of targets
