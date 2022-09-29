@@ -21,14 +21,19 @@ contents have.  Lockfiles are JSON-formatted and their top-level sections are:
       * ``lockfile-version``: an integer representing the lockfile format version
       * ``specfile-version``: an integer representing the spec format version (since
         ``v0.17``)
-      * ``spack-commit``: the Spack git commit (since ``v0.19``)
 
-  2. ``roots`` (list): an ordered list of records representing the roots of the Spack
+  2. ``spack`` (object): optional, this identifies information about Spack
+      used to concretize the environment:
+      * ``type``: required, identifies form Spack version took (e.g., ``git``, ``release``)
+      * ``commit``: the commit if the version is from git
+      * ``version``: the Spack version
+
+  3. ``roots`` (list): an ordered list of records representing the roots of the Spack
       environment. Each has two fields:
       * ``hash``: a Spack spec hash uniquely identifying the concrete root spec
       * ``spec``: a string representation of the abstract spec that was concretized
 
-3. ``concrete_specs``: a dictionary containing the specs in the environment.
+  4. ``concrete_specs``: a dictionary containing the specs in the environment.
 
 Compatibility
 -------------
@@ -45,10 +50,8 @@ upgrade Spack to use them.
      - ``v2``
      - ``v3``
      - ``v4``
-     - ``v5``
    * - ``v0.12:0.14``
      - ✅
-     -
      -
      -
      -
@@ -57,21 +60,12 @@ upgrade Spack to use them.
      - ✅
      -
      -
-     -
    * - ``v0.17``
      - ✅
      - ✅
      - ✅
      -
-     -
    * - ``v0.18:``
-     - ✅
-     - ✅
-     - ✅
-     - ✅
-     -
-   * - ``v0.19:``
-     - ✅
      - ✅
      - ✅
      - ✅
@@ -283,6 +277,8 @@ now includes build dependencies and a canonical hash of the ``package.py`` file.
 Dependencies are keyed by ``hash`` (DAG hash) as well. There are no more ``build_hash``
 fields in the specs, and there are no more issues with lockfiles being able to store
 multiple specs with the same DAG hash (because the DAG hash is now finer-grained).
+An optional ``spack`` property may be included to track version information, such as
+the commit or version.
 
 
 .. code-block:: json
@@ -338,68 +334,6 @@ multiple specs with the same DAG hash (because the DAG hash is now finer-grained
             }
         }
     }
-
-
-Version 5
----------
-
-Version 5 adds the Spack (git) commit.
-
-.. code-block:: json
-
-    {
-        "_meta": {
-            "file-type": "spack-lockfile",
-            "lockfile-version": 5,
-            "specfile-version": 3,
-            "spack-commit": "457daf4be65478a592102177662eb9dad52b8767"
-        },
-        "roots": [
-            {
-                "hash": "<dag_hash 1>",
-                "spec": "<abstract spec 1>"
-            },
-            {
-                "hash": "<dag_hash 2>",
-                "spec": "<abstract spec 2>"
-            }
-        ],
-        "concrete_specs": {
-            "<dag_hash 1>": {
-                "... <spec dict attributes> ...": { },
-                "dependencies": [
-                    {
-                        "name": "depname_1",
-                        "hash": "<dag_hash for depname_1>",
-                        "type": ["build", "link"]
-                    },
-                    {
-                        "name": "depname_2",
-                        "hash": "<dag_hash for depname_2>",
-                        "type": ["build", "link"]
-                    }
-                ],
-                "hash": "<dag_hash 1>",
-            },
-            "<daghash 2>": {
-                "... <spec dict attributes> ...": { },
-                "dependencies": [
-                    {
-                        "name": "depname_3",
-                        "hash": "<dag_hash for depname_3>",
-                        "type": ["build", "link"]
-                    },
-                    {
-                        "name": "depname_4",
-                        "hash": "<dag_hash for depname_4>",
-                        "type": ["build", "link"]
-                    }
-                ],
-                "hash": "<dag_hash 2>"
-            }
-        }
-    }
-
 """
 
 from .environment import (

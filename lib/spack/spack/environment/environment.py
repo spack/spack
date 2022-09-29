@@ -124,7 +124,7 @@ spack:
 valid_environment_name_re = r"^\w[\w-]*$"
 
 #: version of the lockfile format. Must increase monotonically.
-lockfile_format_version = 5
+lockfile_format_version = 4
 
 
 READER_CLS = {
@@ -2073,6 +2073,14 @@ class Environment:
 
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
 
+        spack_dict = {"version": spack.spack_version}
+        spack_commit = spack.main.get_spack_commit()
+        if spack_commit:
+            spack_dict["type"] = "git"
+            spack_dict["commit"] = spack_commit
+        else:
+            spack_dict["type"] = "release"
+
         # this is the lockfile we'll write out
         data = {
             # metadata about the format
@@ -2080,10 +2088,14 @@ class Environment:
                 "file-type": "spack-lockfile",
                 "lockfile-version": lockfile_format_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
-                "spack-commit": spack.main.get_spack_commit(),
             },
+
+            # spack version information
+            "spack": spack_dict,
+
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
+
             # Concrete specs by hash, including dependencies
             "concrete_specs": concrete_specs,
         }

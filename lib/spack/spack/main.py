@@ -143,7 +143,7 @@ def get_spack_commit():
 
     git = spack.util.git.git()
     if not git:
-        return None
+        return get_spack_tag_commit(spack.spack_version)
 
     rev = git(
         "-C",
@@ -155,7 +155,7 @@ def get_spack_commit():
         fail_on_error=False,
     )
     if git.returncode != 0:
-        return None
+        return get_spack_tag_commit(spack.spack_version)
 
     match = re.match(r"[a-f\d]{7,}$", rev)
     return match.group(0) if match else None
