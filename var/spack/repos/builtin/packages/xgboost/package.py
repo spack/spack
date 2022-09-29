@@ -22,6 +22,7 @@ class Xgboost(CMakePackage, CudaPackage):
     maintainers = ["adamjstewart"]
 
     version("master", branch="master", submodules=True)
+    version("1.6.2", tag="v1.6.2", submodules=True)
     version("1.6.1", tag="v1.6.1", submodules=True)
     version("1.5.2", tag="v1.5.2", submodules=True)
     version("1.3.3", tag="v1.3.3", submodules=True)
