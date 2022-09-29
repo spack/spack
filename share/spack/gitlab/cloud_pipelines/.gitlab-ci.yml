@@ -751,35 +751,103 @@ tutorial-protected-build:
       job: tutorial-protected-generate
 
 ########################################
-# Machine Learning
+# Machine Learning (CPU)
 ########################################
-.ml:
+.ml-cpu:
   variables:
-    SPACK_CI_STACK_NAME: ml
+    SPACK_CI_STACK_NAME: ml-cpu
 
-.ml-generate:
-  extends: .ml
+.ml-cpu-generate:
+  extends: .ml-cpu
   image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
-ml-pr-generate:
-  extends: [ ".ml-generate", ".pr-generate"]
+ml-cpu-pr-generate:
+  extends: [ ".ml-cpu-generate", ".pr-generate"]
 
-ml-protected-generate:
-  extends: [ ".ml-generate", ".protected-generate"]
+ml-cpu-protected-generate:
+  extends: [ ".ml-cpu-generate", ".protected-generate"]
 
-ml-stack-pr-build:
-  extends: [ ".ml", ".pr-build" ]
+ml-cpu-pr-build:
+  extends: [ ".ml-cpu", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-pr-generate
+        job: ml-cpu-pr-generate
     strategy: depend
 
-ml-protected-build:
-  extends: [ ".ml", ".protected-build" ]
+ml-cpu-protected-build:
+  extends: [ ".ml-cpu", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: ml-protected-generate
+        job: ml-cpu-protected-generate
+    strategy: depend
+
+########################################
+# Machine Learning (CUDA)
+########################################
+.ml-cuda:
+  variables:
+    SPACK_CI_STACK_NAME: ml-cuda
+
+.ml-cuda-generate:
+  extends: .ml-cuda
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
+ml-cuda-pr-generate:
+  extends: [ ".ml-cuda-generate", ".pr-generate"]
+
+ml-cuda-protected-generate:
+  extends: [ ".ml-cuda-generate", ".protected-generate"]
+
+ml-cuda-pr-build:
+  extends: [ ".ml-cuda", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cuda-pr-generate
+    strategy: depend
+
+ml-cuda-protected-build:
+  extends: [ ".ml-cuda", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cuda-protected-generate
+    strategy: depend
+
+########################################
+# Machine Learning (ROCm)
+########################################
+.ml-rocm:
+  variables:
+    SPACK_CI_STACK_NAME: ml-rocm
+
+.ml-rocm-generate:
+  extends: .ml-rocm
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
+ml-rocm-pr-generate:
+  extends: [ ".ml-rocm-generate", ".pr-generate"]
+
+ml-rocm-protected-generate:
+  extends: [ ".ml-rocm-generate", ".protected-generate"]
+
+ml-rocm-pr-build:
+  extends: [ ".ml-rocm", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-rocm-pr-generate
+    strategy: depend
+
+ml-rocm-protected-build:
+  extends: [ ".ml-rocm", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-rocm-protected-generate
     strategy: depend
