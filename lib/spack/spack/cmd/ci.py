@@ -533,10 +533,8 @@ def ci_rebuild(args):
     if compiler_action != "FIND_ANY":
         install_args.append("--no-add")
 
-    # TODO: once we have the concrete spec registry, use the DAG hash
-    # to identify the spec to install, rather than the concrete spec
-    # json file.
-    install_args.extend(["-f", job_spec_json_path])
+    # Identify spec to install by hash
+    install_args.append("/{0}".format(job_spec.dag_hash()))
 
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", install_args, repro_dir)
