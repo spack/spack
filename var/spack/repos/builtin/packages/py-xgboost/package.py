@@ -33,8 +33,7 @@ class PyXgboost(PythonPackage):
     for ver in ["1.3.3", "1.5.2", "1.6.1", "1.6.2"]:
         depends_on("xgboost@" + ver, when="@" + ver)
 
-    depends_on("python@3.8:", when="@1.6.2:", type=("build", "run"))
-    depends_on("python@3.7:", when="@1.6.1", type=("build", "run"))
+    depends_on("python@3.7:", when="@1.6.1:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type=("build"))
     depends_on("py-numpy", type=("build", "run"))
