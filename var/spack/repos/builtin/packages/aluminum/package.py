@@ -50,7 +50,12 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
         description="Builds with support for CUDA intra-node "
         " Put/Get and IPC RMA functionality",
     )
-    variant("rccl", default=False, description="Builds with support for NCCL communication lib")
+    variant("rccl", default=False, description="Builds with support for RCCL communication lib")
+    variant(
+        "ofi_rccl_plugin",
+        default=False,
+        description="Builds with support for OFI libfabric enhanced RCCL communication lib",
+    )
 
     depends_on("cmake@3.21.0:", type="build", when="@1.0.1:")
     depends_on("cmake@3.17.0:", type="build", when="@:1.0.0")
@@ -62,8 +67,13 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cub", when="@:0.1,0.6.0: +cuda ^cuda@:10")
     depends_on("hipcub", when="@:0.1,0.6.0: +rocm")
 
+    depends_on("rccl", when="+rccl")
+    depends_on("aws-ofi-rccl", when="+ofi_rccl_plugin platform=cray")
+
     conflicts("~cuda", when="+cuda_rma", msg="CUDA RMA support requires CUDA")
     conflicts("+cuda", when="+rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("+nccl", when="+rccl", msg="NCCL and RCCL support are mutually exclusive")
+    conflicts("~rccl", when="+ofi_rccl_plugin", msg="libfabric enhancements require RCCL support")
 
     generator = "Ninja"
     depends_on("ninja", type="build")
