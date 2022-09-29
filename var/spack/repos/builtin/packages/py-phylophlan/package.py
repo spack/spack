@@ -12,10 +12,10 @@ class PyPhylophlan(PythonPackage):
     phylogenetic profiling of genomes and metagenomes."""
 
     homepage = "https://github.com/biobakery/phylophlan"
-    pypi = "PhyloPhlAn/PhyloPhlAn-3.0.3.tar.gz"
+    url = "https://github.com/biobakery/phylophlan/archive/refs/tags/3.0.3.tar.gz"
 
-    version("3.0.3", sha256="a71ff6a1e0b8438da9ca0b6b464573c8d241bc40c87d074120148d46a0b52be4")
-    version("3.0.2", sha256="9bb6588721f4e76b9c993b0d3b6a5c3f6cab1d9fe9096dd09f586d732d3e55c1")
+    version("3.0.3", sha256="d8d0082c95d58d7b11a60c1e2214b35c1a23a65675005f1393e7647d76c6a054")
+    version("3.0.2", sha256="c342116662bbfbb49f0665291fc7c0be5a0d04a02a7be2da81de0322eb2256b4")
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
