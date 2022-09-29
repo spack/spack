@@ -115,11 +115,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("veloc", when="+veloc")
 
-    propagate_to_sensei = [(v, v) for v in ["adios2", "ascent", "hdf5"]]
-    propagate_to_sensei.extend([("paraview", "catalyst"), ("visit", "libsim")])
-    dav_sdk_depends_on(
-        "sensei@4: ~vtkio +python", when="+sensei", propagate=dict(propagate_to_sensei)
-    )
+    # Skipping propagating ascent, catalyst(paraview), and libsim(visit) to sensei
+    # due to incomaptiblity between these variants in sensei.
+    dav_sdk_depends_on("sensei@4: ~vtkio +python", when="+sensei", propagate=["adios2", "hdf5"])
 
     # Fortran support with ascent is problematic on some Cray platforms so the
     # SDK is explicitly disabling it until the issues are resolved.

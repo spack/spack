@@ -5,6 +5,7 @@
 
 import fnmatch
 import os.path
+import sys
 
 import pytest
 import six
@@ -19,18 +20,30 @@ from llnl.util.filesystem import (
 
 import spack.paths
 
+is_windows = sys.platform == "win32"
+
 
 @pytest.fixture()
 def library_list():
     """Returns an instance of LibraryList."""
     # Test all valid extensions: ['.a', '.dylib', '.so']
-    libs = [
-        "/dir1/liblapack.a",
-        "/dir2/libpython3.6.dylib",  # name may contain periods
-        "/dir1/libblas.a",
-        "/dir3/libz.so",
-        "libmpi.so.20.10.1",  # shared object libraries may be versioned
-    ]
+    libs = (
+        [
+            "/dir1/liblapack.a",
+            "/dir2/libpython3.6.dylib",  # name may contain periods
+            "/dir1/libblas.a",
+            "/dir3/libz.so",
+            "libmpi.so.20.10.1",  # shared object libraries may be versioned
+        ]
+        if not is_windows
+        else [
+            "/dir1/liblapack.lib",
+            "/dir2/libpython3.6.dll",
+            "/dir1/libblas.lib",
+            "/dir3/libz.dll",
+            "libmpi.dll.20.10.1",
+        ]
+    )
 
     return LibraryList(libs)
 
@@ -52,6 +65,16 @@ def header_list():
     return h
 
 
+# TODO: Remove below when llnl.util.filesystem.find_libraries becomes spec aware
+plat_static_ext = "lib" if is_windows else "a"
+
+
+plat_shared_ext = "dll" if is_windows else "so"
+
+
+plat_apple_shared_ext = "dylib"
+
+
 class TestLibraryList(object):
     def test_repr(self, library_list):
         x = eval(repr(library_list))
@@ -62,11 +85,11 @@ class TestLibraryList(object):
         s1 = library_list.joined()
         expected = " ".join(
             [
-                "/dir1/liblapack.a",
-                "/dir2/libpython3.6.dylib",
-                "/dir1/libblas.a",
-                "/dir3/libz.so",
-                "libmpi.so.20.10.1",
+                "/dir1/liblapack.%s" % plat_static_ext,
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir1/libblas.%s" % plat_static_ext,
+                "/dir3/libz.%s" % plat_shared_ext,
+                "libmpi.%s.20.10.1" % plat_shared_ext,
             ]
         )
         assert s1 == expected
@@ -77,11 +100,11 @@ class TestLibraryList(object):
         s3 = library_list.joined(";")
         expected = ";".join(
             [
-                "/dir1/liblapack.a",
-                "/dir2/libpython3.6.dylib",
-                "/dir1/libblas.a",
-                "/dir3/libz.so",
-                "libmpi.so.20.10.1",
+                "/dir1/liblapack.%s" % plat_static_ext,
+                "/dir2/libpython3.6.%s" % (plat_apple_shared_ext if not is_windows else "dll"),
+                "/dir1/libblas.%s" % plat_static_ext,
+                "/dir3/libz.%s" % plat_shared_ext,
+                "libmpi.%s.20.10.1" % plat_shared_ext,
             ]
         )
         assert s3 == expected
@@ -117,7 +140,7 @@ class TestLibraryList(object):
 
     def test_get_item(self, library_list):
         a = library_list[0]
-        assert a == "/dir1/liblapack.a"
+        assert a == "/dir1/liblapack.%s" % plat_static_ext
 
         b = library_list[:]
         assert type(b) == type(library_list)
@@ -126,9 +149,9 @@ class TestLibraryList(object):
 
     def test_add(self, library_list):
         pylist = [
-            "/dir1/liblapack.a",  # removed from the final list
-            "/dir2/libmpi.so",
-            "/dir4/libnew.a",
+            "/dir1/liblapack.%s" % plat_static_ext,  # removed from the final list
+            "/dir2/libmpi.%s" % plat_shared_ext,
+            "/dir4/libnew.%s" % plat_static_ext,
         ]
         another = LibraryList(pylist)
         both = library_list + another
@@ -229,6 +252,29 @@ class TestHeaderList(object):
 
 #: Directory where the data for the test below is stored
 search_dir = os.path.join(spack.paths.test_path, "data", "directory_search")
+
+
+@pytest.mark.parametrize(
+    "lib_list,kwargs",
+    [
+        (["liba"], {"shared": True, "recursive": True}),
+        (["liba"], {"shared": False, "recursive": True}),
+        (["libc", "liba"], {"shared": True, "recursive": True}),
+        (["liba", "libc"], {"shared": False, "recursive": True}),
+        (["libc", "libb", "liba"], {"shared": True, "recursive": True}),
+        (["liba", "libb", "libc"], {"shared": False, "recursive": True}),
+    ],
+)
+def test_library_type_search(lib_list, kwargs):
+    results = find_libraries(lib_list, search_dir, **kwargs)
+    assert len(results) != 0
+    for result in results:
+        lib_type_ext = plat_shared_ext
+        if not kwargs["shared"]:
+            lib_type_ext = plat_static_ext
+        assert result.endswith(lib_type_ext) or (
+            kwargs["shared"] and result.endswith(plat_apple_shared_ext)
+        )
 
 
 @pytest.mark.parametrize(

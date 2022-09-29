@@ -17,6 +17,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/pika-org/pika.git"
     maintainers = ["msimberg", "albestro", "teonnik", "aurianer"]
 
+    version("0.8.0", sha256="058e82d7c8f95badabe52bbb4682d55aadf340d67ced1226c0673b4529adc182")
     version("0.7.0", sha256="e1bf978c88515f7af28ee47f98b795ffee521c15b39877ea4cfb405f31d507ed")
     version("0.6.0", sha256="cb4ebd7b92da39ec4df7b0d05923b94299d6ee2f2f49752923ffa2266ca76568")
     version("0.5.0", sha256="c43de7e92d04bea0ce59716756ef5f3a5a54f9e4affed872c1468632ad855f7c")
@@ -58,17 +59,25 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant("apex", default=False, description="Enable APEX support", when="@0.2:")
     variant("tracy", default=False, description="Enable Tracy support", when="@0.7:")
+    variant(
+        "p2300",
+        default=False,
+        description="Use P2300 reference implementation for sender/receiver functionality",
+        when="@main",
+    )
 
     # Build dependencies
     depends_on("git", type="build")
     depends_on("ninja", type="build")
     depends_on("cmake@3.18:", type="build")
+    depends_on("cmake@3.22:", when="@0.8:", type="build")
 
     conflicts("%gcc@:6")
     conflicts("%clang@:6")
     # Pika is requiring the std::filesystem support starting from version 0.2.0
     conflicts("%gcc@:8", when="@0.2:")
     conflicts("%clang@:8", when="@0.2:")
+    conflicts("+p2300", when="cxxstd=17")
 
     # Other dependecies
     depends_on("hwloc@1.11.5:")
@@ -83,9 +92,11 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda@11:", when="+cuda")
     depends_on("apex", when="+apex")
     depends_on("tracy-client", when="+tracy")
+    depends_on("hip@5.2:", when="@0.8: +rocm")
     depends_on("rocblas", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
+    depends_on("p2300", when="+p2300")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
@@ -125,12 +136,13 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("PIKA_WITH_TRACY", "tracy"),
             self.define("PIKA_WITH_TESTS", self.run_tests),
             self.define_from_variant("PIKA_WITH_GENERIC_CONTEXT_COROUTINES", "generic_coroutines"),
+            self.define_from_variant("PIKA_WITH_P2300_REFERENCE_IMPLEMENTATION", "p2300"),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("HWLOC_ROOT", spec["hwloc"].prefix),
         ]
 
-        # HIP support requires compiling with hipcc
-        if "+rocm" in self.spec:
+        # HIP support requires compiling with hipcc for < 0.8.0
+        if "@:0.7 +rocm" in self.spec:
             args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args += [self.define("__skip_rocmclang", True)]
