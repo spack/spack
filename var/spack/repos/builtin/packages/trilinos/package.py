@@ -30,7 +30,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://trilinos.org/"
-    url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
     maintainers = ["keitat", "sethrj", "kuberry"]
@@ -481,7 +481,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         return (flags, None, None)
 
     def url_for_version(self, version):
-        url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
+        url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
