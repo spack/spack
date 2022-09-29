@@ -61,7 +61,7 @@ class Wgrib2(MakefilePackage):
         default=False,
         description="Add commands for user-defined functions and shell commands",
     )
-    variant("regex", default=True, description="Use regular expression library (POSIX-2")
+    variant("regex", default=True, description="Use regular expression library (POSIX-2)")
     variant("tigge", default=True, description="Ability for TIGGE-like variable names")
     variant("proj4", default=False, description="The proj4 library is used to verify gctpc.")
     variant(
@@ -81,6 +81,7 @@ class Wgrib2(MakefilePackage):
     variant("openmp", default=True, description="OpenMP parallelization")
     variant("wmo_validation", default=False, description="WMO validation")
 
+    conflicts("+netcdf3", when="+netcdf4")
     conflicts("+openmp", when="%apple-clang")
 
     variant_map = {
