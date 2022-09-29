@@ -57,10 +57,10 @@ def exclude_variants(variants, exclude):
 class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     """ECP Data & Vis SDK"""
 
-    homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
+    homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["chuckatkins", "kwryankrattiger"]
+    maintainers = ["kwryankrattiger", "svenevs"]
 
     version("1.0")
 
