@@ -86,7 +86,7 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine -a
           coverage xml
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
@@ -117,7 +117,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: shelltests,linux
 
@@ -179,7 +179,7 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine -a
           coverage xml
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -219,6 +219,6 @@ jobs:
         # Delete the symlink going from ./lib/spack/docs/_spack_root back to
         # the initial directory, since it causes ELOOP errors with codecov/actions@2
         rm lib/spack/docs/_spack_root
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos

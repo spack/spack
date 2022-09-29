@@ -14,6 +14,7 @@ class PyPytorchLightning(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("1.7.7", sha256="27c2dd01a18db2415168e3fa3775ccb5a1fa1e2961a50439ad9365507fe9d4ae")
     version("1.7.6", sha256="93266c83f8340c100e41b3777bbab26dd2c20b4df3deccce3b8a15652326b9c8")
     version("1.7.5", sha256="a5838ae990f0eef9a894fa863be3bc1f5594d2abba7848fb21317ba3e885d7cd")
     version("1.7.4", sha256="d80df235228a8f6d6b77df4bfa34b3d667d734bd40e960bb4ca553a2746523eb")

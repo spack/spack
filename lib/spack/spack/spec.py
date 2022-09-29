@@ -4056,6 +4056,9 @@ class Spec(object):
         yield self.compiler_flags
         yield self.architecture
 
+        # this is not present on older specs
+        yield getattr(self, "_package_hash", None)
+
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
         return (other is not None) and lang.lazy_eq(self._cmp_node, other._cmp_node)
@@ -4064,6 +4067,16 @@ class Spec(object):
         """Lazily yield components of self for comparison."""
         for item in self._cmp_node():
             yield item
+
+        # This needs to be in _cmp_iter so that no specs with different process hashes
+        # are considered the same by `__hash__` or `__eq__`.
+        #
+        # TODO: We should eventually unify the `_cmp_*` methods with `to_node_dict` so
+        # TODO: there aren't two sources of truth, but this needs some thought, since
+        # TODO: they exist for speed.  We should benchmark whether it's really worth
+        # TODO: having two types of hashing now that we use `json` instead of `yaml` for
+        # TODO: spec hashing.
+        yield self.process_hash() if self.concrete else None
 
         def deps():
             for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
