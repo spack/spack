@@ -5,7 +5,6 @@
 
 import os
 import shutil
-import sys
 
 import llnl.util.tty as tty
 
@@ -195,12 +194,11 @@ class Hdf5(CMakePackage):
         multi=False,
     )
 
+    depends_on("cmake@3.12:", type="build")
+
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
-    # numactl does not currently build on darwin
-    if sys.platform != "darwin" and sys.platform != "win32":
-        depends_on("numactl", when="+mpi+fortran")
-        depends_on("szip", when="+szip")
+    depends_on("szip", when="+szip")
     depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
@@ -217,7 +215,6 @@ class Hdf5(CMakePackage):
     conflicts("+fortran", when="+shared@:1.8.15")
     # See https://github.com/spack/spack/issues/31085
     conflicts("+fortran+mpi", when="@1.8.22")
-    conflicts("+mpi", when="platform=windows")
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -498,16 +495,10 @@ class Hdf5(CMakePackage):
         ]
 
         api = spec.variants["api"].value
-        if sys.platform == "win32" and self.spec.satisfies("+staticmt"):
-            args.append(self.define("CMAKE_POLICY_DEFAULT_CMP0091", "NEW"))
-            args.append(
-                self.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-            )
-
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and sys.platform != "win32":
+        if "+mpi" in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
@@ -536,8 +527,7 @@ class Hdf5(CMakePackage):
         if self.spec.satisfies("@1.8.21:1.8.22,1.10.2:1.10.7,1.12.0+mpi"):
             with working_dir(self.prefix.bin):
                 # No try/except here, fix the condition above instead:
-                if sys.platform != "win32":
-                    symlink("h5cc", "h5pcc")
+                symlink("h5cc", "h5pcc")
 
         # The same as for 'h5pcc'. However, the CMake installation produces the
         # Fortran compiler wrapper called 'h5fc' only starting versions 1.8.22,
