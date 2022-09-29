@@ -64,7 +64,7 @@ class Claw(CMakePackage):
             if any(
                 [
                     self.spec.compiler.satisfies(s)
-                    for s in ["gcc@10:", "clang@11:", "cce@11:", "aocc@3:"]
+                    for s in ["gcc@10:", "clang@11:", "cce@11:", "aocc@3:", "oneapi"]
                 ]
             ):
                 # https://gcc.gnu.org/gcc-10/porting_to.html
