@@ -44,7 +44,9 @@ class Token(object):
 
 
 _Lexicon = List["Tuple[str, Any]"]
-_Switches = "Dict[str, List[Any]]"
+# FIXME: Generic types with more than one argument aren't yet accepted by our py2 mypy
+# compat shims.
+# _Switches = Dict[str, List[Any]]
 
 
 class Lexer(object):
@@ -53,14 +55,16 @@ class Lexer(object):
     __slots__ = "scanners", "mode", "switchbook"
 
     def __init__(self, lexicon_and_mode_switches):
-        # type: (List[Tuple[str, _Lexicon, _Switches]]) -> None
+        # type: (List[Tuple[str, _Lexicon, Dict[str, List[Any]]]]) -> None
         self.scanners = {}  # type: Dict[str, re.Scanner] # type: ignore[name-defined]
-        self.switchbook = {}  # type: Dict[str, _Switches]
+        self.switchbook = {}  # type: Dict[str, Dict[str, List[Any]]]
         self.mode = lexicon_and_mode_switches[0][0]
         for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
 
             # Convert the static description of the token id into a callback that
-            # executes self.token(...) when the pattern is recognized.
+            # executes self.token(...) when the pattern is recognized. This particular construction
+            # is required by re.Scanner, which is considered "experimental" and not
+            # well documented.
             transformed_lexicon = []
             for pattern, maybe_tok in lexicon:
                 callback = self._transform_token_callback(maybe_tok)
@@ -86,7 +90,7 @@ class Lexer(object):
         mode_switches_dict = self.switchbook[self.mode]
 
         tokens, remainder = scanner.scan(word)
-        remainder_was_used = False
+        remainder_was_consumed_by_next_mode = False
 
         for i, t in enumerate(tokens):
             for other_mode, mode_switches in mode_switches_dict.items():
@@ -94,25 +98,33 @@ class Lexer(object):
                     # Combine post-switch tokens with remainder and
                     # scan in other mode
                     self.mode = other_mode  # swap 0/1
-                    remainder_was_used = True
+                    remainder_was_consumed_by_next_mode = True
                     already_matched = tokens[: i + 1]
                     input_for_next_recursion = word[word.index(t.value) + len(t.value) :]
                     recursion_output = self.lex_word(input_for_next_recursion)
                     tokens = already_matched + list(recursion_output)
                     break
-            if remainder_was_used:
+            # We call `self.lex_word()` recursively when we switch modes. When we do this, the
+            # *recursive* `.lex_word()` call is now responsible for handling all the remaining
+            # input from the current word as `input_for_next_recursion`. We don't want to produce
+            # any more tokens from this outer recursive call, since the inner call handled it, so
+            # we break iteration here.
+            if remainder_was_consumed_by_next_mode:
                 break
 
-        if remainder and not remainder_was_used:
-            raise LexError("Invalid character", word, word.index(remainder))
+        if remainder and not remainder_was_consumed_by_next_mode:
+            raise LexWordError("Invalid character", word, word.index(remainder))
 
         return tokens
 
     def lex(self, text):
         # type: (str) -> Iterator[Token]
-        for word in text:
-            for tok in self.lex_word(word):
-                yield tok
+        try:
+            for word in text:
+                for tok in self.lex_word(word):
+                    yield tok
+        except LexWordError as e:
+            raise six.raise_from(LexError(text, e), e)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -196,22 +208,36 @@ class ParseError(spack.error.SpackError):
     """Raised when we hit an error while parsing."""
 
     def __init__(self, message, string, pos):
-        super(ParseError, self).__init__(message)
+        # type: (str, str, int) -> None
+        long_message = dedent(
+            """
+            -------
+            {1}
+            {2}^
+            """
+        ).format(message, string, pos * " ")
+        super(ParseError, self).__init__(message, long_message)
         self.string = string
         self.pos = pos
 
 
-class LexError(ParseError):
-    """Raised when we don't know how to lex something."""
+class LexWordError(ParseError):
+    """Raised when we don't know how to lex a specific word in a string."""
 
     def __init__(self, message, string, pos):
-        bad_char = string[pos]
-        printed = dedent(
+        # type: (str, str, int) -> None
+        super(LexWordError, self).__init__(message, string, pos)
+
+
+class LexError(spack.error.SpackError):
+    """Raised when a lexing error occurred at any word within the lexed string."""
+
+    def __init__(self, parent_string, inner):
+        # type: (str, LexWordError) -> None
+        message = dedent(
             """\
-        {0}: '{1}'
-        -------
-        {2}
-        {3}^
-        """
-        ).format(message, bad_char, string, pos * " ")
-        super(LexError, self).__init__(printed, string, pos)
+            "While lexing parent string '{0}'":
+            {1}
+            """
+        ).format(parent_string, str(inner))
+        super(LexError, self).__init__(message)
