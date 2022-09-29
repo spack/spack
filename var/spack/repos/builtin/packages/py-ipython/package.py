@@ -27,8 +27,16 @@ class PyIpython(PythonPackage):
     version("7.3.0", sha256="06de667a9e406924f97781bda22d5d76bfb39762b678762d86a466e63f65dc39")
     version("5.8.0", sha256="4bac649857611baaaf76bc82c173aa542f7486446c335fe1a6c05d0d491c8906")
     version("5.1.0", sha256="7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961")
-    version("3.1.0", sha256="532092d3f06f82b1d8d1e5c37097eae19fcf025f8f6a4b670dd49c3c338d5624")
-    version("2.3.1", sha256="3e98466aa2fe54540bcba9aa6e01a39f40110d67668c297340c4b9514b7cc49c")
+    version(
+        "3.1.0",
+        sha256="532092d3f06f82b1d8d1e5c37097eae19fcf025f8f6a4b670dd49c3c338d5624",
+        deprecated=True,
+    )
+    version(
+        "2.3.1",
+        sha256="3e98466aa2fe54540bcba9aa6e01a39f40110d67668c297340c4b9514b7cc49c",
+        deprecated=True,
+    )
 
     depends_on("python@3.8:", when="@8:", type=("build", "run"))
     depends_on("python@3.7:", when="@7.17:", type=("build", "run"))
