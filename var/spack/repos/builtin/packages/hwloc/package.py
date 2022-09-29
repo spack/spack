@@ -26,8 +26,6 @@ class Hwloc(AutotoolsPackage):
 
     homepage = "https://www.open-mpi.org/projects/hwloc/"
     url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
-    list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 2
     git = "https://github.com/open-mpi/hwloc.git"
 
     maintainers = ["bgoglin"]
@@ -74,7 +72,13 @@ class Hwloc(AutotoolsPackage):
         default=(sys.platform != "darwin"),
         description="Support analyzing devices on PCI bus",
     )
-    variant("shared", default=True, description="Build shared libraries")
+    variant(
+        "libs",
+        default="shared,static",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
     variant(
         "cairo", default=False, description="Enable the Cairo back-end of hwloc's lstopo command"
     )
@@ -140,10 +144,8 @@ class Hwloc(AutotoolsPackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (
-            version.up_to(2),
-            version,
-        )
+        url = "https://download.open-mpi.org/release/hwloc/v{0}/hwloc-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = []
@@ -178,7 +180,7 @@ class Hwloc(AutotoolsPackage):
         args.extend(self.enable_or_disable("libxml2"))
         args.extend(self.enable_or_disable("libudev"))
         args.extend(self.enable_or_disable("pci"))
-        args.extend(self.enable_or_disable("shared"))
+        args.extend(self.enable_or_disable("libs"))
 
         if "+cuda" in self.spec:
             args.append("--with-cuda={0}".format(self.spec["cuda"].prefix))
