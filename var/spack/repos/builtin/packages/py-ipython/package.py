@@ -15,6 +15,11 @@ class PyIpython(PythonPackage):
     pypi = "ipython/ipython-7.18.1.tar.gz"
     git = "https://github.com/ipython/ipython"
 
+    # "IPython.kernel" was deprecated for py-ipython@:7 and fails to import, leave
+    # out of "import_modules" to ensure that import tests pass.
+    # for py-ipython@8: "IPython.kernel" was removed
+    skip_modules = ["IPython.kernel"]
+
     version("8.5.0", sha256="097bdf5cd87576fd066179c9f7f208004f7a6864ee1b20f37d346c0bcb099f84")
     version("8.0.1", sha256="ab564d4521ea8ceaac26c3a2c6e5ddbca15c8848fd5a5cc325f960da88d42974")
     version("7.31.1", sha256="b5548ec5329a4bcf054a5deed5099b0f9622eb9ea51aaa7104d215fece201d8c")
@@ -87,8 +92,3 @@ class PyIpython(PythonPackage):
         when="@5:7.9 ^python@:3.5 platform=windows",
         type=("build", "run"),
     )
-
-    # "IPython.kernel" was deprecated for py-ipython@:7 and fails to import, leave
-    # out of "import_modules" to ensure that import tests pass.
-    # for py-ipython@8: "IPython.kernel" was removed
-    skip_modules = ["IPython.kernel"]
