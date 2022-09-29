@@ -43,7 +43,10 @@ class Crtm(CMakePackage):
     # depends_on("ecbuild", when="@2.4.0:", type=("build"))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
-    version("2.4.0", commit="5ddd0d6")  # use commit="690da37" for JCSDA-internal
+    # Use this hash with JCSDA (public)
+    version("2.4.0", commit="5ddd0d6")
+    # Use this hash with JCSDA-internal
+    # version("2.4.0", commit="690da37")
     # Uses the tip of REL-2.3.0_emc branch
     version("2.3.0", commit="99760e6")
     # JEDI applications so far use these versions
