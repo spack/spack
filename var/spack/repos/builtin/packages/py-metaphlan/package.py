@@ -35,6 +35,7 @@ class PyMetaphlan(PythonPackage):
     depends_on("py-phylophlan", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("bowtie2@2.3:", type=("build", "run"))
+    depends_on("muscle@3.8.1551:", type=("build", "run"))
     depends_on("blast-plus@2.6:", type=("build", "run"))
     depends_on("raxml@8.2.10:", type=("build", "run"))
     depends_on("samtools@1.9:", type=("build", "run"))
