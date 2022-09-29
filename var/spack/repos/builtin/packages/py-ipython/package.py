@@ -13,7 +13,9 @@ class PyIpython(PythonPackage):
 
     homepage = "https://ipython.readthedocs.org/"
     pypi = "ipython/ipython-7.18.1.tar.gz"
+    git = "https://github.com/ipython/ipython"
 
+    version("8.5.0", sha256="097bdf5cd87576fd066179c9f7f208004f7a6864ee1b20f37d346c0bcb099f84")
     version("8.0.1", sha256="ab564d4521ea8ceaac26c3a2c6e5ddbca15c8848fd5a5cc325f960da88d42974")
     version("7.31.1", sha256="b5548ec5329a4bcf054a5deed5099b0f9622eb9ea51aaa7104d215fece201d8c")
     version("7.28.0", sha256="2097be5c814d1b974aea57673176a924c4c8c9583890e7a5f082f547b9975b11")
@@ -35,43 +37,49 @@ class PyIpython(PythonPackage):
     depends_on("python@3.3:", when="@6:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.3:", type=("build", "run"))
     depends_on("py-setuptools@51:", when="@8:", type="build")
-    depends_on("py-setuptools@18.5:", when="@4.1:", type="run")
+    depends_on("py-setuptools@18.5:", when="@4.1:7", type="run")
+    depends_on("py-setuptools", type="build")
+
+    depends_on("py-appnope", when="@4: platform=darwin", type=("build", "run"))
+    depends_on("py-backcall", when="@7.3.0:", type=("build", "run"))
+    depends_on("py-colorama", when="@5: platform=windows", type=("build", "run"))
+    depends_on("py-decorator", when="@4:", type=("build", "run"))
     depends_on("py-jedi@0.16:", when="@7.18,7.20:", type=("build", "run"))
     depends_on("py-jedi@0.10:", when="@7.5:7.17,7.19", type=("build", "run"))
-    depends_on("py-black", when="@8:", type=("build", "run"))
-    depends_on("py-decorator", type=("build", "run"))
-    depends_on("py-pickleshare", type=("build", "run"))
-    depends_on("py-traitlets@5:", when="@8:", type=("build", "run"))
-    depends_on("py-traitlets@4.2:", type=("build", "run"))
-    depends_on("py-prompt-toolkit@2.0.0:2,3.0.2:3.0", when="@7.26:", type=("build", "run"))
-    depends_on("py-prompt-toolkit@3.0.2:3.0", when="@7.18:7.25", type=("build", "run"))
-    depends_on("py-prompt-toolkit@2.0.0:2.0", when="@7.5.0", type=("build", "run"))
-    depends_on("py-prompt-toolkit@2.0.0:2", when="@7.0.0:7.5.0", type=("build", "run"))
-    depends_on("py-prompt-toolkit@1.0.4:1", when="@:7.0.0", type=("build", "run"))
-    depends_on("py-pygments", type=("build", "run"))
-    depends_on("py-backcall", when="@7.3.0:", type=("build", "run"))
-    depends_on("py-stack-data", when="@8:", type=("build", "run"))
     depends_on("py-matplotlib-inline", when="@7.23:", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=linux", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=darwin", type=("build", "run"))
     depends_on("py-pexpect@4.4:", when="@7.18: platform=cray", type=("build", "run"))
-    depends_on("py-pexpect", type=("build", "run"))
-    depends_on("py-appnope", when="platform=darwin", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
+    depends_on("py-pexpect", when="@4: platform=linux", type=("build", "run"))
+    depends_on("py-pexpect", when="@4: platform=darwin", type=("build", "run"))
+    depends_on("py-pexpect", when="@4: platform=cray", type=("build", "run"))
+    depends_on("py-pickleshare", when="@4:", type=("build", "run"))
+    depends_on("py-prompt-toolkit@3.0.2:3.0", when="@8.5:", type=("build", "run"))
+    depends_on("py-prompt-toolkit@2.0.0:2,3.0.2:3.0", when="@7.26:", type=("build", "run"))
+    depends_on("py-prompt-toolkit@3.0.2:3.0", when="@7.18:7.25", type=("build", "run"))
+    depends_on("py-prompt-toolkit@2.0.0:2.0", when="@7.5.0", type=("build", "run"))
+    depends_on("py-prompt-toolkit@2.0.0:2", when="@7.0.0:7.5.0", type=("build", "run"))
+    depends_on("py-prompt-toolkit@1.0.4:1", when="@5:7.0.0", type=("build", "run"))
+    depends_on("py-prompt-toolkit@1.0.3:1", when="@5:7.0.0", type=("build", "run"))
+    depends_on("py-pygments@2.4:", when="@8.1:", type=("build", "run"))
+    depends_on("py-pygments", when="@5:", type=("build", "run"))
+    depends_on("py-stack-data", when="@8:", type=("build", "run"))
+    depends_on("py-traitlets@5:", when="@8:", type=("build", "run"))
+    depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
+    depends_on("py-traitlets", when="@4:", type=("build", "run"))
 
-    depends_on("py-backports-shutil-get-terminal-size", when="^python@:3.2", type=("build", "run"))
-    depends_on("py-pathlib2", when="^python@:3.3", type=("build", "run"))
-    depends_on("py-simplegeneric@0.8:", when="@:7.0.0", type=("build", "run"))
+    depends_on("py-backports-shutil-get-terminal-size", when="@4.2: ^python@:3.2", type=("build", "run"))
+    depends_on("py-black", when="@8.0", type=("build", "run"))
+    depends_on("py-pathlib2", when="@5: ^python@:3.3", type=("build", "run"))
+    depends_on("py-simplegeneric@0.8:", when="@4:7.0.0", type=("build", "run"))
+    depends_on("py-win-unicode-console@5:", when="@5:7.9 ^python@:3.5 platform=windows", type=("build", "run"))
 
     @property
-    def import_modules(self):
-        modules = super(__class__, self).import_modules
+    def skip_modules(self):
 
         if self.spec.satisfies("@8:"):
-            return modules
+            return []
 
         # 'IPython.kernel' is deprecated and fails to import, leave out of
         # 'import_modules' to ensure that import tests pass.
-        ignored_imports = ["IPython.kernel"]
-
-        return [i for i in modules if not any(map(i.startswith, ignored_imports))]
+        return ["IPython.kernel"]
