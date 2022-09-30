@@ -26,7 +26,7 @@ class PyFenicsDolfinx(PythonPackage):
     )
     version(
         "0.2.0",
-        sha256="4c9b5a5c7ef33882c99299c9b4d98469fb7aa470a37a91bc5be3bb2fc5b863a4",
+        sha256="e6462fc3b9653d335c28096f9b0393f966c55a64c77ed64cc6c949406cb1f2c3",
         deprecated=True,
     )
     version(
