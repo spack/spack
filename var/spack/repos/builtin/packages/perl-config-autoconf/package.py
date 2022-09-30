@@ -16,6 +16,8 @@ class PerlConfigAutoconf(PerlPackage):
 
     version("0.320", sha256="bb57a958ef49d3f7162276dae14a7bd5af43fd1d8513231af35d665459454023")
 
+    depends_on("perl-extutils-cbuilder@0.23:", type=("build", "test"))  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-cbuilder@0.28.22:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-file-slurper", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.18:", type="run")  # AUTO-CPAN2Spack
