@@ -28,7 +28,22 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      # Vermin's "heuristics" for files to analyze include .pyi files (why????), which will never be
+      # executed by a python interpreter. Since vermin also has no way to exclude a file by glob or
+      # by an annotation within the file, and its --exclude option can't differentiate between .pyi
+      # and .py sources, we are temporarily renaming all .pyi files to allow vermin to succeed.
+      # This should *really* be supported upstream.
+      run: |
+        find lib/spack/spack -name '*.pyi' -type f > pyi-files.txt
+        cat pyi-files.txt | while read -r pyi_src; do
+            pyx_path="$(echo "$pyi_src" | sed -e 's#\.pyi$#.pyx#')"
+            mv -v "$pyi_src" "$pyx_path"
+        done
+        vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+        cat pyi-files.txt | while read -r pyi_src; do
+            pyx_path="$(echo "$pyi_src" | sed -e 's#\.pyi$#.pyx#')"
+            mv -v "$pyx_path" "$pyi_src"
+        done
     - name: vermin (Repositories)
       run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
