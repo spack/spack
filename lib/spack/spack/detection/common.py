@@ -197,27 +197,32 @@ def update_configuration(detected_packages, scope=None, buildable=True):
 
     return all_new_specs
 
+
 def find_windows_compiler_paths():
 
     msvc_paths = list(winOs.WindowsOs.vs_install_paths)
+
+
+
+
+def find_windows_cmake_paths():
+
     msvc_cmake_paths = [
         os.path.join(
             path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
         )
         for path in msvc_paths
     ]
+
+
+def find_windows_ninja_paths():
+    """Semi hard-coded search heuristic for locating ninja bundled with MSVC
+    """
     msvc_ninja_paths = [
         os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
         for path in msvc_paths
     ]
 
-def find_windows_cmake_paths():
-
-    pass
-
-
-def find_windows_ninja_paths():
-    pass
 
 def find_win32_additional_install_paths():
     """Not all programs on Windows live on the PATH
@@ -292,3 +297,7 @@ def find_windows_kit_paths():
     wdk_versions = [pth for pth in wdk_version_candidates if \
         re.search(r'[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]', pth)]
     return wdk_versions
+
+
+def find_windows_drivers():
+    pass

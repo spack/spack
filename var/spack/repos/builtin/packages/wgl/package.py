@@ -9,5 +9,6 @@ import re
 
 from spack.package import *
 
+
 class WGL(Package):
     """WGL is the Windows platform analog to GLX. Handles windowing manager interactions"""

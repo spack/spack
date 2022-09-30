@@ -38,10 +38,10 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ["cl.exe"]
+    cc_names = ["cl.exe"]  # type: List[str]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ["cl.exe"]
+    cxx_names = ["cl.exe"]  # type: List[str]
 
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ["ifx.exe"]  # type: List[str]
