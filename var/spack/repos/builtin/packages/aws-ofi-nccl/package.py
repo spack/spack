@@ -19,8 +19,8 @@ class AwsOfiNccl(AutotoolsPackage):
 
     version("master", branch="master", default=True)
 
-    variant("enable-trace", default=False, description="Enable printing trace messages")
-    variant("disable-tests", default=False, description="Disable build of tests")
+    variant("trace", default=False, description="Enable printing trace messages")
+    variant("tests", default=False, description="Build tests")
 
     depends_on("libfabric")
     depends_on("cuda")
@@ -44,6 +44,8 @@ class AwsOfiNccl(AutotoolsPackage):
         spec = self.spec
         args = []
 
+        # Always set configure's external paths to use the Spack
+        # provided dependencies
         args.extend(
             [
                 "--with-libfabric={0}".format(spec["libfabric"].prefix),
@@ -53,10 +55,7 @@ class AwsOfiNccl(AutotoolsPackage):
             ]
         )
 
-        if "+enable-trace" in self.spec:
-            args.append("--enable-trace")
-
-        if "+disable-tests" in self.spec:
-            args.append("--disable-tests")
+        args.extend(self.enable_or_disable('trace'))
+        args.extend(self.enable_or_disable('tests'))
 
         return args
