@@ -1217,7 +1217,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = os.path.normpath(os.path.join(self.path, path))
+            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
 
             # Stage, at the moment, requires a concrete Spec, since it needs the
             # dag_hash for the stage dir name. Below though we ask for a stage
