@@ -9,6 +9,7 @@ where it makes sense.
 """
 import os
 import sys
+from typing import Any, Callable, List, Union  # novm
 
 import pytest
 
@@ -96,11 +97,13 @@ def assert_does_not_satisfy(v1, v2):
 
 
 def check_intersection(expected, a, b):
+    # type: (Union[str, List[str]], Union[str, List[str]], Union[str, List[str]]) -> None
     """Asserts that 'a' intersect 'b' == 'expected'."""
     assert ver(expected) == ver(a).intersection(ver(b))
 
 
 def check_union(expected, a, b):
+    # type: (Union[str, List[str]], Union[str, List[str]], Union[str, List[str]]) -> None
     """Asserts that 'a' union 'b' == 'expected'."""
     assert ver(expected) == ver(a).union(ver(b))
 
@@ -370,6 +373,7 @@ def test_canonicalize_list():
 
 
 def test_intersection():
+    # type: () -> None
     check_intersection("2.5", "1.0:2.5", "2.5:3.0")
     check_intersection("2.5:2.7", "1.0:2.7", "2.5:3.0")
     check_intersection("0:1", ":", "0:1")
@@ -380,6 +384,7 @@ def test_intersection():
 
 
 def test_intersect_with_containment():
+    # type: () -> None
     check_intersection("1.6.5", "1.6.5", ":1.6")
     check_intersection("1.6.5", ":1.6", "1.6.5")
 
@@ -391,6 +396,7 @@ def test_intersect_with_containment():
 
 
 def test_union_with_containment():
+    # type: () -> None
     check_union(":1.6", "1.6.5", ":1.6")
     check_union(":1.6", ":1.6", "1.6.5")
 
@@ -528,6 +534,7 @@ def test_up_to():
 
 
 def _check_repr_and_str(parse_fn, arg):
+    # type: (Callable[[str], Any], str) -> None
     a = parse_fn(arg)
     b = eval(repr(a))
     assert a == b
@@ -544,6 +551,7 @@ def _check_repr_and_str(parse_fn, arg):
     ],
 )
 def test_repr_and_str_base(version_spec):
+    # type: (str) -> None
     _check_repr_and_str(Version, version_spec)
 
 
@@ -558,6 +566,7 @@ def test_repr_and_str_base(version_spec):
     ],
 )
 def test_repr_and_str_range(range_spec):
+    # type: (str) -> None
     _check_repr_and_str(VersionRange.parse, range_spec)
 
 
@@ -571,6 +580,7 @@ def test_repr_and_str_range(range_spec):
     ],
 )
 def test_repr_and_str_list(list_spec):
+    # type: (str) -> None
     _check_repr_and_str(VersionList.parse, list_spec)
 
 
