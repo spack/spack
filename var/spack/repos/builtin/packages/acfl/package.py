@@ -17,6 +17,28 @@ _os_map = {
 
 
 _versions = {
+    "22.0.2": {
+        "RHEL-7": (
+            "e4dec577ed2d33124a556ba05584fad45a9acf6e13dccadb37b521d1bad5a826",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_RHEL-7_aarch64.tar",
+        ),
+        "RHEL-8": (
+            "3064bec6e0e3d4da9ea2bcdcb4590a8fc1f7e0e97092e24e2245c7f1745ef4f3",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_RHEL-8_aarch64.tar",
+        ),
+        "SLES-15": (
+            "82dea469dc567b848bcaa6cbaed3eb3faaf45ceb9ec7071bdfef8a383e929ef8",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_SLES-15_aarch64.tar",
+        ),
+        "Ubuntu-18.04": (
+            "355f548e86b9fa90d72684480d13ec60e6bec6b2bd837df42ac84d5a8fdebc48",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_Ubuntu-18.04_aarch64.tar",
+        ),
+        "Ubuntu-20.04": (
+            "a2a752dce089a34b91dc89c0d1dd8b58a4104bf7c9ba3affd71fd1fd593e3732",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_Ubuntu-20.04_aarch64.tar",
+        ),
+    },
     "22.0.1": {
         "RHEL-7": (
             "6b0ab76dce3fd44aab1e679baef01367c86f6bbd3544e04f9642b6685482cd76",
@@ -38,7 +60,7 @@ _versions = {
             "dea136238fc2855c41b8a8154bf279b7df5df8dba48d8f29121fa26f343e7cdb",
             "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-1/arm-compiler-for-linux_22.0.1_Ubuntu-20.04_aarch64.tar",
         ),
-    }
+    },
 }
 
 
@@ -55,15 +77,15 @@ def get_acfl_prefix(spec):
     )
 
 
-class Arm(Package):
+class Acfl(Package):
     """Arm Compiler combines the optimized tools and libraries from Arm
     with a modern LLVM-based compiler framework.
     """
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/20-2-1/Ubuntu16.04/arm-compiler-for-linux_20.2.1_Ubuntu-16.04_aarch64.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_Ubuntu-20.04_aarch64.tar"
 
-    maintainers = ["OliverPerks"]
+    maintainers = ["OliverPerks", "annop-w"]
 
     # Build Versions: establish OS for URL
     acfl_os = get_os()
