@@ -18,7 +18,7 @@ class RangeV3(CMakePackage):
     international standard."""
 
     homepage = "https://github.com/ericniebler/range-v3"
-    url = "https://github.com/ericniebler/range-v3/archive/0.3.6.tar.gz"
+    url = "https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz"
     git = "https://github.com/ericniebler/range-v3.git"
     maintainers = ["chissg"]
 
