@@ -55,7 +55,7 @@ class AwsOfiNccl(AutotoolsPackage):
             ]
         )
 
-        args.extend(self.enable_or_disable('trace'))
-        args.extend(self.enable_or_disable('tests'))
+        args.extend(self.enable_or_disable("trace"))
+        args.extend(self.enable_or_disable("tests"))
 
         return args
