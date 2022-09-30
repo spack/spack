@@ -421,7 +421,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("superlu-dist@:4.3", when="@11.14.1:12.6.1+superlu-dist")
     depends_on("superlu-dist@4.4:5.3", when="@12.6.2:12.12.1+superlu-dist")
     depends_on("superlu-dist@5.4:6.2.0", when="@12.12.2:13.0.0+superlu-dist")
-    depends_on("superlu-dist@6.3.0:7.99.99", when="@13.0.1:13.99.99 +superlu-dist")
+    depends_on("superlu-dist@6.3.0:7", when="@13.0.1:13 +superlu-dist")
     depends_on("superlu-dist@develop", when="@master: +superlu-dist")
 
     # ###################### Patches ##########################
