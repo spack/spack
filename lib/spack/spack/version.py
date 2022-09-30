@@ -27,10 +27,12 @@ be called on any of the types::
 import numbers
 import os
 import re
+from abc import ABCMeta, abstractmethod, abstractproperty
 from bisect import bisect_left
 from functools import wraps
+from typing import Any, Iterable, List, Optional, Tuple, Union  # novm
 
-from six import string_types
+from six import add_metaclass, string_types
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, working_dir
@@ -66,7 +68,11 @@ infinity_versions = ["develop", "main", "master", "head", "trunk", "stable"]
 iv_min_len = min(len(s) for s in infinity_versions)
 
 
+_AllVersionTypes = Union["VersionBase", "GitVersion", "VersionRange", "VersionList"]
+
+
 def coerce_versions(a, b):
+    # type: (_AllVersionTypes, _AllVersionTypes) -> Tuple[_AllVersionTypes, _AllVersionTypes]
     """
     Convert both a and b to the 'greatest' type between them, in this order:
            VersionBase < GitVersion < VersionRange < VersionList
@@ -87,17 +93,23 @@ def coerce_versions(a, b):
         return (a, b)
     elif order.index(ta) > order.index(tb):
         if ta == GitVersion:
+            assert isinstance(b, VersionBase)
             return (a, GitVersion(b))
         elif ta == VersionRange:
+            assert isinstance(b, (VersionBase, GitVersion))
             return (a, VersionRange(b, b))
         else:
+            assert isinstance(b, (VersionRange, VersionBase, GitVersion))
             return (a, VersionList([b]))
     else:
         if tb == GitVersion:
+            assert isinstance(a, VersionBase)
             return (GitVersion(a), b)
         elif tb == VersionRange:
+            assert isinstance(a, (VersionBase, GitVersion))
             return (VersionRange(a, a), b)
         else:
+            assert isinstance(a, (VersionRange, VersionBase, GitVersion))
             return (VersionList([a]), b)
 
 
@@ -115,12 +127,145 @@ def coerced(method):
     return coercing_method
 
 
-class VersionStrComponent(object):
-    # NOTE: this is intentionally not a UserString, the abc instanceof
-    #       check is slow enough to eliminate all gains
+# Abstract base classes to codify the types of operations we want to perform with "version"-like
+# objects, making it easier to later add new types of version comparisons such as strict
+# inequalities in https://github.com/spack/spack/pull/24025.
+#
+# These base classes are all mirrored in version.pyi, which defines types for each method.
+@add_metaclass(ABCMeta)
+class Comparable(object):
+    """Objects which can be compared to others in a partial (possibly total) order.
+
+    Ensures all the relevant methods are defined on the concrete class, and avoids the need to
+    reimplement things like __ne__ which don't need specialized logic per class.
+
+    This is mirrored in version.pyi with parameterized types."""
+
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
+    def __ne__(self, other):
+        return not (self == other)
+
+    @abstractmethod
+    def __lt__(self, other):
+        pass
+
+    def __le__(self, other):
+        return (self == other) or (self < other)
+
+    @abstractmethod
+    def __gt__(self, other):
+        pass
+
+    def __ge__(self, other):
+        return (self == other) or (self > other)
+
+
+@add_metaclass(ABCMeta)
+class Extrema(object):
+    """Objects which may have certain special points.
+
+    This is mirrored in version.pyi with parameterized types."""
+
+    @abstractmethod
+    def lowest(self):
+        pass
+
+    @abstractmethod
+    def highest(self):
+        pass
+
+    @abstractproperty
+    def concrete(self):
+        pass
+
+
+@add_metaclass(ABCMeta)
+class Interval(object):
+    """Objects which cover a range of values.
+
+    This is mirrored in version.pyi with parameterized types."""
+
+    @abstractmethod
+    def __contains__(self, other):
+        pass
+
+    @abstractmethod
+    def satisfies(self, other, strict):
+        pass
+
+    @abstractmethod
+    def overlaps(self, other):
+        pass
+
+    @abstractmethod
+    def union(self, other):
+        pass
+
+    @abstractmethod
+    def intersection(self, other):
+        pass
+
+
+@add_metaclass(ABCMeta)
+class Point(object):
+    """Objects which represent exactly one static point in a totally-ordered space.
+
+    This is mirrored in version.pyi with parameterized types."""
+
+    @abstractmethod
+    def is_predecessor(self, other):
+        pass
+
+    def is_successor(self, other):
+        return other.is_predecessor(self)
+
+
+@add_metaclass(ABCMeta)
+class Serializable(object):
+    """A protocol that makes it easier to ensure objects can round-trip via eval(repr(...))."""
+
+    @classmethod
+    @abstractmethod
+    def parse(cls, string):
+        pass
+
+    @abstractmethod
+    def __hash__(self):
+        pass
+
+    @abstractmethod
+    def __eq__(self, other):
+        pass
+
+    def __repr__(self):
+        return "{0}.parse({1})".format(type(self).__name__, repr(str(self)))
+
+    @abstractmethod
+    def __str__(self):
+        pass
+
+
+# Concrete classes which perform various comparison and aggregation operations with each other in
+# terms of their internal components. For example, VersionBase.__lt__ will delegate to
+# VersionStrComponent.__lt__ to compare non-numeric components of a version string.
+#
+# These concrete classes are all mirrored in version.pyi, which provides the type information for
+# each method that becomes visible to mypy-typed code outside of version.py.
+class VersionStrComponent(Serializable, Comparable):
+    """A wrapper for non-numeric components of a version string.
+
+    This class has been optimized for efficient comparison operations. For example, this is
+    intentionally not a UserString because the abc instanceof check is slow enough to eliminate all
+    the other gains from this code."""
+
+    # TODO: where is the abc instanceof check occurring here?
     __slots__ = ["inf_ver", "data"]
 
     def __init__(self, string):
+        # type: (str) -> None
         self.inf_ver = None
         self.data = string
         if len(string) >= iv_min_len:
@@ -128,6 +273,10 @@ class VersionStrComponent(object):
                 self.inf_ver = infinity_versions.index(string)
             except ValueError:
                 pass
+
+    @classmethod
+    def parse(cls, string):
+        return cls(string)
 
     def __hash__(self):
         return hash(self.data)
@@ -170,13 +319,22 @@ class VersionStrComponent(object):
         raise ValueError("VersionStrComponent can only be compared with itself, " "int and str")
 
     def __gt__(self, other):
-        return not self.__lt__(other)
+        return not self.__eq__(other) and not self.__lt__(other)
 
 
-def is_git_version(string):
+def _matches_git_commit(string):
+    # type: (str) -> bool
+    # Even though COMMIT_VERSION already checks for 40 chars, we check the length beforehand here
+    # in order to avoid initiating a regex search in the more common case where the version string
+    # is not exactly 40 characters long.
+    return (len(string) == 40) and bool(COMMIT_VERSION.match(string))
+
+
+def _is_git_version(string):
+    # type: (str) -> bool
     if string.startswith("git."):
         return True
-    elif len(string) == 40 and COMMIT_VERSION.match(string):
+    elif _matches_git_commit(string):
         return True
     elif "=" in string:
         return True
@@ -187,12 +345,12 @@ def Version(string):  # capitalized for backwards compatibility
     if not isinstance(string, str):
         string = str(string)  # to handle VersionBase and GitVersion types
 
-    if is_git_version(string):
-        return GitVersion(string)
-    return VersionBase(string)
+    if _is_git_version(string):
+        return GitVersion.parse(string)
+    return VersionBase.parse(string)
 
 
-class VersionBase(object):
+class VersionBase(Comparable, Extrema, Interval, Point, Serializable):
     """Class to represent versions
 
     Versions are compared by converting to a tuple and comparing
@@ -212,22 +370,21 @@ class VersionBase(object):
     commit SHAs. The following are the full rules for comparing
     versions.
 
-    1. If the version represents a git reference (i.e. commit, tag, branch), see GitVersions.
+    1. If the version represents a git reference (i.e. commit, tag, branch), see GitVersion.
 
     2. The version is split into fields based on the delimiters ``.``,
     ``-``, and ``_``, as well as alphabetic-numeric boundaries.
 
-    3. The following develop-like strings are greater (newer) than all
+    3. A static list of "``develop``-like" strings are ranked greater (newer) than all
     numbers and are ordered as ``develop > main > master > head >
-    trunk``.
+    trunk``. The version string must match any of these *exactly*.
 
     4. All other non-numeric versions are less than numeric versions,
     and are sorted alphabetically.
 
     These rules can be summarized as follows:
 
-    ``develop > main > master > head > trunk > 999 > 0 > 'zzz' > 'a' >
-    ''``
+    ``develop > main > master > head > trunk > 999 > 0 > 'zzz' > 'a' > ''``
 
     """
 
@@ -249,11 +406,19 @@ class VersionBase(object):
         if string and not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
-        self.separators, self.version = self._generate_seperators_and_components(string)
+        self.separators, self.version = self._generate_separators_and_components(string)
 
-    def _generate_seperators_and_components(self, string):
-        segments = SEGMENT_REGEX.findall(string)
-        components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
+    @classmethod
+    def parse(cls, string):
+        return cls(string)
+
+    @staticmethod
+    def _generate_separators_and_components(string):
+        # type: (str) -> Tuple[Tuple[str, ...], Tuple[Union[int, VersionStrComponent], ...]]
+        segments = SEGMENT_REGEX.findall(string)  # type: List[Tuple[str, str, str]]
+        components = tuple(
+            int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments
+        )  # type: Tuple[Union[int, VersionStrComponent], ...] # noqa: E501
         separators = tuple(m[2] for m in segments)
         return separators, components
 
@@ -269,7 +434,7 @@ class VersionBase(object):
         Returns:
             Version: The version with separator characters replaced by dots
         """
-        return type(self)(self.string.replace("-", ".").replace("_", "."))
+        return type(self).parse(self.string.replace("-", ".").replace("_", "."))
 
     @property
     def underscored(self):
@@ -284,7 +449,7 @@ class VersionBase(object):
             Version: The version with separator characters replaced by
                 underscores
         """
-        return type(self)(self.string.replace(".", "_").replace("-", "_"))
+        return type(self).parse(self.string.replace(".", "_").replace("-", "_"))
 
     @property
     def dashed(self):
@@ -298,7 +463,7 @@ class VersionBase(object):
         Returns:
             Version: The version with separator characters replaced by dashes
         """
-        return type(self)(self.string.replace(".", "-").replace("_", "-"))
+        return type(self).parse(self.string.replace(".", "-").replace("_", "-"))
 
     @property
     def joined(self):
@@ -312,10 +477,10 @@ class VersionBase(object):
         Returns:
             Version: The version with separator characters removed
         """
-        return type(self)(self.string.replace(".", "").replace("-", "").replace("_", ""))
+        return type(self).parse(self.string.replace(".", "").replace("-", "").replace("_", ""))
 
     def up_to(self, index):
-        """The version up to the specified component.
+        """the version up to the specified component.
 
         Examples:
         >>> version = Version('1.23-4b')
@@ -355,12 +520,13 @@ class VersionBase(object):
         return False
 
     @coerced
-    def satisfies(self, other):
+    def satisfies(self, other, strict=False):
         """A Version 'satisfies' another if it is at least as specific and has
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
+        assert not strict, "strict set inclusion is not yet supported for single versions"
         nself = len(self.version)
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
@@ -372,31 +538,29 @@ class VersionBase(object):
         return len(self.version)
 
     def __getitem__(self, idx):
+        # type: (Union[int, slice]) -> Union[Union[int, VersionStrComponent], VersionBase]
         cls = type(self)
 
         if isinstance(idx, numbers.Integral):
             return self.version[idx]
 
         elif isinstance(idx, slice):
-            string_arg = []
+            string_components = []
 
             pairs = zip(self.version[idx], self.separators[idx])
             for token, sep in pairs:
-                string_arg.append(str(token))
-                string_arg.append(str(sep))
+                string_components.append(str(token))
+                string_components.append(sep)
 
-            if string_arg:
-                string_arg.pop()  # We don't need the last separator
-                string_arg = "".join(string_arg)
-                return cls(string_arg)
+            if string_components:
+                string_components.pop()  # We don't need the last separator
+                joined_string = "".join(string_components)
+                return cls(joined_string)
             else:
                 return VersionBase("")
 
         message = "{cls.__name__} indices must be integers"
         raise TypeError(message.format(cls=cls))
-
-    def __repr__(self):
-        return "VersionBase(" + repr(self.string) + ")"
 
     def __str__(self):
         return self.string
@@ -430,18 +594,6 @@ class VersionBase(object):
         return self.version == other.version
 
     @coerced
-    def __ne__(self, other):
-        return not (self == other)
-
-    @coerced
-    def __le__(self, other):
-        return self == other or self < other
-
-    @coerced
-    def __ge__(self, other):
-        return not (self < other)
-
-    @coerced
     def __gt__(self, other):
         return not (self == other) and not (self < other)
 
@@ -468,10 +620,6 @@ class VersionBase(object):
         ol = other.version[-1]
         # TODO: extend this to consecutive letters, z/0, and infinity versions
         return type(sl) == int and type(ol) == int and (ol - sl == 1)
-
-    @coerced
-    def is_successor(self, other):
-        return other.is_predecessor(self)
 
     @coerced
     def overlaps(self, other):
@@ -542,6 +690,7 @@ class GitVersion(VersionBase):
     have a GitVersion that is not actually referencing a version from git."""
 
     def __init__(self, string):
+        # type: (Union[str, VersionBase, GitVersion]) -> None
         if not isinstance(string, str):
             string = str(string)  # In case we got a VersionBase or GitVersion object
 
@@ -555,12 +704,12 @@ class GitVersion(VersionBase):
 
         if "=" in pruned_string:
             self.ref, self.ref_version_str = pruned_string.split("=")
-            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            _, self.ref_version = self._generate_separators_and_components(self.ref_version_str)
             self.user_supplied_reference = True
         else:
             self.ref = pruned_string
 
-        self.is_commit = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
+        self.is_commit = _matches_git_commit(self.ref)
         self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
         self.is_ref |= bool(self.is_commit)
 
@@ -595,14 +744,14 @@ class GitVersion(VersionBase):
         return self.version
 
     @coerced
-    def satisfies(self, other):
+    def satisfies(self, other, strict=False):
         """A Version 'satisfies' another if it is at least as specific and has
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler. In the case of two GitVersions we require the ref_versions
         to satisfy one another and the versions to be an exact match.
         """
-
+        assert not strict, "strict set inclusion is not yet supported for single git versions"
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
 
@@ -626,9 +775,6 @@ class GitVersion(VersionBase):
         nself = len(self_cmp)
         nother = len(other_cmp)
         return nother <= nself and self_cmp[:nother] == other_cmp and version_match
-
-    def __repr__(self):
-        return "GitVersion(" + repr(self.string) + ")"
 
     @coerced
     def __lt__(self, other):
@@ -719,8 +865,9 @@ class GitVersion(VersionBase):
         self._ref_lookup = CommitLookup(pkg_name)
 
 
-class VersionRange(object):
+class VersionRange(Comparable, Extrema, Interval, Serializable):
     def __init__(self, start, end):
+        # type: (Optional[Union[str, VersionBase]], Optional[Union[str, VersionBase]]) -> None
         if isinstance(start, string_types):
             start = Version(start)
         if isinstance(end, string_types):
@@ -732,6 +879,8 @@ class VersionRange(object):
         # Unbounded ranges are not empty
         if not start or not end:
             return
+        assert isinstance(start, VersionBase), start
+        assert isinstance(end, VersionBase), end
 
         # Do not allow empty ranges. We have to be careful about lexicographical
         # ordering of versions here: 1.2 < 1.2.3 lexicographically, but 1.2.3:1.2
@@ -739,6 +888,13 @@ class VersionRange(object):
         min_len = min(len(start), len(end))
         if end.up_to(min_len) < start.up_to(min_len):
             raise ValueError("Invalid Version range: %s" % self)
+
+    @classmethod
+    def parse(cls, string):
+        s, e = string.split(":")
+        start = Version(s) if s else None
+        end = Version(e) if e else None
+        return cls(start, end)
 
     def lowest(self):
         return self.start
@@ -771,18 +927,6 @@ class VersionRange(object):
         )
 
     @coerced
-    def __ne__(self, other):
-        return not (self == other)
-
-    @coerced
-    def __le__(self, other):
-        return self == other or self < other
-
-    @coerced
-    def __ge__(self, other):
-        return not (self < other)
-
-    @coerced
     def __gt__(self, other):
         return not (self == other) and not (self < other)
 
@@ -813,7 +957,7 @@ class VersionRange(object):
         return in_upper
 
     @coerced
-    def satisfies(self, other):
+    def satisfies(self, other, strict=False):
         """
         x.satisfies(y) in general means that x and y have a
         non-zero intersection. For VersionRange this means they overlap.
@@ -830,6 +974,7 @@ class VersionRange(object):
         - 1:2 does not satisfy 3:4, as their intersection is empty.
         - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
         """
+        assert not strict, "strict set inclusion is not yet supported for version ranges"
         return self.overlaps(other)
 
     @coerced
@@ -920,9 +1065,6 @@ class VersionRange(object):
     def __hash__(self):
         return hash((self.start, self.end))
 
-    def __repr__(self):
-        return self.__str__()
-
     def __str__(self):
         out = ""
         if self.start:
@@ -933,21 +1075,26 @@ class VersionRange(object):
         return out
 
 
-class VersionList(object):
+class VersionList(Comparable, Extrema, Interval, Serializable):
     """Sorted, non-redundant list of Versions and VersionRanges."""
 
     def __init__(self, vlist=None):
-        self.versions = []
+        # type: (Optional[Union[str, Iterable[Any]]]) -> None
+        self.versions = []  # type: List[Union[VersionBase, GitVersion, VersionRange]]
         if vlist is not None:
             if isinstance(vlist, string_types):
-                vlist = _string_to_version(vlist)
-                if type(vlist) == VersionList:
-                    self.versions = vlist.versions
+                parsed_vlist = _string_to_version(vlist)
+                if isinstance(parsed_vlist, VersionList):
+                    self.versions = parsed_vlist.versions
                 else:
-                    self.versions = [vlist]
+                    self.versions = [parsed_vlist]
             else:
                 for v in vlist:
                     self.add(ver(v))
+
+    @classmethod
+    def parse(cls, string):
+        return cls(string.split(","))
 
     def add(self, version):
         if type(version) in (VersionBase, GitVersion, VersionRange):
@@ -1036,13 +1183,13 @@ class VersionList(object):
         else:
             return syaml_dict([("versions", [str(v) for v in self])])
 
-    @staticmethod
-    def from_dict(dictionary):
-        """Parse dict from to_dict."""
+    @classmethod
+    def from_dict(cls, dictionary):
+        """Parse result of ``self.to_dict()``."""
         if "versions" in dictionary:
-            return VersionList(dictionary["versions"])
+            return cls(dictionary["versions"])
         elif "version" in dictionary:
-            return VersionList([dictionary["version"]])
+            return cls([dictionary["version"]])
         else:
             raise ValueError("Dict must have 'version' or 'versions' in it.")
 
@@ -1119,6 +1266,7 @@ class VersionList(object):
 
         return True
 
+    # TODO: make this accept a slice the way VersionBase.__getitem__() does?
     def __getitem__(self, index):
         return self.versions[index]
 
@@ -1139,20 +1287,8 @@ class VersionList(object):
         return other is not None and self.versions == other.versions
 
     @coerced
-    def __ne__(self, other):
-        return not (self == other)
-
-    @coerced
     def __lt__(self, other):
         return other is not None and self.versions < other.versions
-
-    @coerced
-    def __le__(self, other):
-        return self == other or self < other
-
-    @coerced
-    def __ge__(self, other):
-        return not (self < other)
 
     @coerced
     def __gt__(self, other):
@@ -1164,30 +1300,26 @@ class VersionList(object):
     def __str__(self):
         return ",".join(str(v) for v in self.versions)
 
-    def __repr__(self):
-        return str(self.versions)
-
 
 def _string_to_version(string):
+    # type: (str) -> _AllVersionTypes
     """Converts a string to a Version, VersionList, or VersionRange.
     This is private.  Client code should use ver().
     """
     string = string.replace(" ", "")
 
     if "," in string:
-        return VersionList(string.split(","))
+        return VersionList.parse(string)
 
     elif ":" in string:
-        s, e = string.split(":")
-        start = Version(s) if s else None
-        end = Version(e) if e else None
-        return VersionRange(start, end)
+        return VersionRange.parse(string)
 
     else:
         return Version(string)
 
 
 def ver(obj):
+    # type: (Any) -> _AllVersionTypes
     """Parses a Version, VersionRange, or VersionList from a string
     or list of strings.
     """
