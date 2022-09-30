@@ -775,6 +775,9 @@ ml-cpu-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-cpu-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cpu-pr-generate
 
 ml-cpu-protected-build:
   extends: [ ".ml-cpu", ".protected-build" ]
@@ -783,6 +786,9 @@ ml-cpu-protected-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-cpu-protected-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cpu-protected-generate
 
 ########################################
 # Machine Learning (CUDA)
@@ -809,6 +815,9 @@ ml-cuda-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-cuda-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cuda-pr-generate
 
 ml-cuda-protected-build:
   extends: [ ".ml-cuda", ".protected-build" ]
@@ -817,6 +826,9 @@ ml-cuda-protected-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-cuda-protected-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cuda-protected-generate
 
 ########################################
 # Machine Learning (ROCm)
@@ -843,6 +855,9 @@ ml-rocm-pr-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-rocm-pr-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-rocm-pr-generate
 
 ml-rocm-protected-build:
   extends: [ ".ml-rocm", ".protected-build" ]
@@ -851,3 +866,6 @@ ml-rocm-protected-build:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
         job: ml-rocm-protected-generate
     strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-rocm-protected-generate
