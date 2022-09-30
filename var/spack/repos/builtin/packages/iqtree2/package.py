@@ -15,6 +15,6 @@ class Iqtree2(CMakePackage):
 
     version("2.1.2", sha256="3aaf5ac7f60d852ac8b733fb82832c049ca48b7203a6a865e99c5af359fcca5a")
 
-    depends_on("boost", type=("build","run"), when="@2:")
-    depends_on("eigen", type=("build","run"), when="@1.6:")
-    depends_on("zlib", type=("build","run"))
+    depends_on("boost", type=("build", "run"), when="@2:")
+    depends_on("eigen", type=("build", "run"), when="@1.6:")
+    depends_on("zlib", type=("build", "run"))

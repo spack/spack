@@ -9,8 +9,7 @@ from spack.package import *
 
 class PyHclust2(PythonPackage):
     """Hclust2 is a handy tool for plotting heat-maps with several useful
-       options to produce high quality figures that can be used in
-       publication."""
+    options to produce high quality figures that can be used in  publication."""
 
     homepage = "https://github.com/SegataLab/hclust2/"
     pypi = "hclust2/hclust2-1.0.0.tar.gz"
