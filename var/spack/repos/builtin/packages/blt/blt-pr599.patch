@@ -1,0 +1,238 @@
+diff -ruN spack-src/cmake/SetupCompilerFamily.cmake spack-src-patched/cmake/SetupCompilerFamily.cmake
+--- spack-src/cmake/SetupCompilerFamily.cmake	1970-01-01 00:00:00.000000000 +0000
++++ spack-src-patched/cmake/SetupCompilerFamily.cmake	2022-09-30 20:40:23.244737495 +0000
+@@ -0,0 +1,92 @@
++# Copyright (c) 2017-2022, Lawrence Livermore National Security, LLC and
++# other BLT Project Developers. See the top-level LICENSE file for details
++# 
++# SPDX-License-Identifier: (BSD-3-Clause)
++
++#####################################################
++# Set some variables to simplify determining compiler
++# Compiler string list from:
++#   https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html
++####################################################3
++
++# use CMAKE_BUILD_TOOL to identify visual studio
++# and CMAKE_CXX_COMPILER_ID for all other cases
++
++if("${CMAKE_BUILD_TOOL}" MATCHES "(msdev|devenv|nmake|MSBuild)")
++    set(COMPILER_FAMILY_IS_MSVC 1)
++    message(STATUS "Compiler family is MSVC")
++
++    if(CMAKE_GENERATOR_TOOLSET AND "${CMAKE_GENERATOR_TOOLSET}" MATCHES "Intel")
++        set(COMPILER_FAMILY_IS_MSVC_INTEL 1) 
++        message(STATUS "Toolset is ${CMAKE_GENERATOR_TOOLSET}")
++    endif()
++else()
++    #Determine C/C++ compiler family. 
++    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
++        set(C_COMPILER_FAMILY_IS_GNU 1)
++        message(STATUS "C Compiler family is GNU")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") # For Clang or AppleClang
++        set(C_COMPILER_FAMILY_IS_CLANG 1)
++        message(STATUS "C Compiler family is Clang")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "XL")
++        set(C_COMPILER_FAMILY_IS_XL 1)
++        message(STATUS "C Compiler family is XL")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
++        set(C_COMPILER_FAMILY_IS_INTEL 1)
++        message(STATUS "C Compiler family is Intel")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
++        set(C_COMPILER_FAMILY_IS_INTELLLVM 1)
++        message(STATUS "C Compiler family is IntelLLVM")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "PGI")
++        set(C_COMPILER_FAMILY_IS_PGI 1)
++        message(STATUS "C Compiler family is PGI")
++
++    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Cray")
++        set(C_COMPILER_FAMILY_IS_CRAY 1)
++        message(STATUS "C Compiler family is Cray")
++
++    else()
++        message(STATUS "C Compiler family not set!!!")
++    endif()
++    # Determine Fortran compiler family 
++    if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
++        set(Fortran_COMPILER_FAMILY_IS_GNU 1)
++        message(STATUS "Fortran Compiler family is GNU")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Clang") # For Clang or AppleClang
++        set(Fortran_COMPILER_FAMILY_IS_CLANG 1)
++        message(STATUS "Fortran Compiler family is Clang")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Flang") # For Flang compilers
++        set(Fortran_COMPILER_FAMILY_IS_CLANG 1 CACHE BOOL "")
++        message(STATUS "Fortran Compiler family is Clang")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "XL")
++        set(Fortran_COMPILER_FAMILY_IS_XL 1)
++        message(STATUS "Fortran Compiler family is XL")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
++        set(Fortran_COMPILER_FAMILY_IS_INTEL 1)
++        message(STATUS "Fortran Compiler family is Intel")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
++        set(Fortran_COMPILER_FAMILY_IS_INTELLLVM 1)
++        message(STATUS "Fortran Compiler family is IntelLLVM")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
++        set(Fortran_COMPILER_FAMILY_IS_PGI 1)
++        message(STATUS "Fortran Compiler family is PGI")
++
++    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Cray")
++        set(Fortran_COMPILER_FAMILY_IS_CRAY 1)
++        message(STATUS "Fortran Compiler family is Cray")
++
++    elseif(ENABLE_FORTRAN)
++        message(STATUS "Fortran Compiler family not set!!!")
++    endif()
++endif()
+diff -ruN spack-src/cmake/SetupCompilerOptions.cmake spack-src-patched/cmake/SetupCompilerOptions.cmake
+--- spack-src/cmake/SetupCompilerOptions.cmake	2022-04-13 23:35:10.000000000 +0000
++++ spack-src-patched/cmake/SetupCompilerOptions.cmake	2022-09-30 20:40:48.568876462 +0000
+@@ -7,95 +7,6 @@
+ # Setup compiler options
+ ############################
+ 
+-#####################################################
+-# Set some variables to simplify determining compiler
+-# Compiler string list from:
+-#   https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html
+-####################################################3
+-
+-# use CMAKE_BUILD_TOOL to identify visual studio
+-# and CMAKE_CXX_COMPILER_ID for all other cases
+-
+-if("${CMAKE_BUILD_TOOL}" MATCHES "(msdev|devenv|nmake|MSBuild)")
+-    set(COMPILER_FAMILY_IS_MSVC 1)
+-    message(STATUS "Compiler family is MSVC")
+-
+-    if(CMAKE_GENERATOR_TOOLSET AND "${CMAKE_GENERATOR_TOOLSET}" MATCHES "Intel")
+-        set(COMPILER_FAMILY_IS_MSVC_INTEL 1) 
+-        message(STATUS "Toolset is ${CMAKE_GENERATOR_TOOLSET}")
+-    endif()
+-else()
+-    #Determine C/C++ compiler family. 
+-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+-        set(C_COMPILER_FAMILY_IS_GNU 1)
+-        message(STATUS "C Compiler family is GNU")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") # For Clang or AppleClang
+-        set(C_COMPILER_FAMILY_IS_CLANG 1)
+-        message(STATUS "C Compiler family is Clang")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "XL")
+-        set(C_COMPILER_FAMILY_IS_XL 1)
+-        message(STATUS "C Compiler family is XL")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+-        set(C_COMPILER_FAMILY_IS_INTEL 1)
+-        message(STATUS "C Compiler family is Intel")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+-        set(C_COMPILER_FAMILY_IS_INTELLLVM 1)
+-        message(STATUS "C Compiler family is IntelLLVM")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "PGI")
+-        set(C_COMPILER_FAMILY_IS_PGI 1)
+-        message(STATUS "C Compiler family is PGI")
+-
+-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Cray")
+-        set(C_COMPILER_FAMILY_IS_CRAY 1)
+-        message(STATUS "C Compiler family is Cray")
+-
+-    else()
+-        message(STATUS "C Compiler family not set!!!")
+-    endif()
+-    # Determine Fortran compiler family 
+-    if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
+-        set(Fortran_COMPILER_FAMILY_IS_GNU 1)
+-        message(STATUS "Fortran Compiler family is GNU")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Clang") # For Clang or AppleClang
+-        set(Fortran_COMPILER_FAMILY_IS_CLANG 1)
+-        message(STATUS "Fortran Compiler family is Clang")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Flang") # For Flang compilers
+-        set(Fortran_COMPILER_FAMILY_IS_CLANG 1 CACHE BOOL "")
+-        message(STATUS "Fortran Compiler family is Clang")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "XL")
+-        set(Fortran_COMPILER_FAMILY_IS_XL 1)
+-        message(STATUS "Fortran Compiler family is XL")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+-        set(Fortran_COMPILER_FAMILY_IS_INTEL 1)
+-        message(STATUS "Fortran Compiler family is Intel")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+-        set(Fortran_COMPILER_FAMILY_IS_INTELLLVM 1)
+-        message(STATUS "Fortran Compiler family is IntelLLVM")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI")
+-        set(Fortran_COMPILER_FAMILY_IS_PGI 1)
+-        message(STATUS "Fortran Compiler family is PGI")
+-
+-    elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Cray")
+-        set(Fortran_COMPILER_FAMILY_IS_CRAY 1)
+-        message(STATUS "Fortran Compiler family is Cray")
+-
+-    elseif(ENABLE_FORTRAN)
+-        message(STATUS "Fortran Compiler family not set!!!")
+-    endif()
+-endif()
+-
+-
+ #################################################################################
+ # PGI doesn't support a SYSTEM flag for include directories. Since this is CMake's
+ # default for imported targets, we need to disable this feature for PGI.
+diff -ruN spack-src/cmake/SetupCompilerStandards.cmake spack-src-patched/cmake/SetupCompilerStandards.cmake
+--- spack-src/cmake/SetupCompilerStandards.cmake	2022-04-13 23:35:10.000000000 +0000
++++ spack-src-patched/cmake/SetupCompilerStandards.cmake	2022-09-30 20:41:38.657151323 +0000
+@@ -20,6 +20,7 @@
+         blt_append_custom_compiler_flag(
+             FLAGS_VAR CMAKE_CXX_FLAGS
+             DEFAULT " "
++	    GNU "-std=c++11"
+             XL "-std=c++11"
+             PGI "--c++11")
+     elseif( BLT_CXX_STD STREQUAL c++14)
+@@ -27,6 +28,7 @@
+         blt_append_custom_compiler_flag(
+             FLAGS_VAR CMAKE_CXX_FLAGS
+             DEFAULT " "
++	    GNU "-std=c++14"
+             XL "-std=c++14"
+             PGI "--c++14")
+     elseif( BLT_CXX_STD STREQUAL c++17)
+@@ -38,6 +40,7 @@
+         blt_append_custom_compiler_flag(
+             FLAGS_VAR CMAKE_CXX_FLAGS
+             DEFAULT " "
++	    GNU "-std=c++17"
+             PGI "--c++17")
+     elseif( BLT_CXX_STD STREQUAL c++20)
+         # Error out on what does not support C++20
+diff -ruN spack-src/SetupBLT.cmake spack-src-patched/SetupBLT.cmake
+--- spack-src/SetupBLT.cmake	2022-04-13 23:35:10.000000000 +0000
++++ spack-src-patched/SetupBLT.cmake	2022-09-30 20:40:05.404639597 +0000
+@@ -107,6 +107,12 @@
+     ################################
+     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ 
++    ###################################
++    # Setup compiler family flags
++    # Must be included before BLTMacros
++    ###################################
++    include(${BLT_ROOT_DIR}/cmake/SetupCompilerFamily.cmake)
++
+     ################################
+     # Macros
+     ################################

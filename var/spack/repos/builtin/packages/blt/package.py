@@ -35,5 +35,7 @@ class Blt(Package):
 
     depends_on("cmake", type="run")
 
+    patch("blt-pr599.patch", when="@0.5.1")
+
     def install(self, spec, prefix):
         install_tree(".", prefix)
