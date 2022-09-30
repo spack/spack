@@ -26,10 +26,9 @@ import six
 import llnl.util.tty
 
 import spack.config
+import spack.operating_systems.windows_os as winOs
 import spack.spec
 import spack.util.spack_yaml
-import spack.operating_systems.windows_os as winOs
-
 
 is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
@@ -204,7 +203,7 @@ def find_win32_additional_install_paths():
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
     """
-    drive_letter = os.environ['HOMEDRIVE']
+    drive_letter = os.environ["HOMEDRIVE"]
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
@@ -240,11 +239,12 @@ def compute_windows_program_path_for_package(pkg):
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
     program_files = "{}:\\Program Files{}\\{}"
-    drive_letter = os.environ['WINDIR'][0]
+    drive_letter = os.environ["WINDIR"][0]
 
-    return[program_files.format(drive_letter, arch, name) for
-           arch, name in itertools.product(("", " (x86)"),
-           (pkg.name, pkg.name.capitalize()))]
+    return [
+        program_files.format(drive_letter, arch, name)
+        for arch, name in itertools.product(("", " (x86)"), (pkg.name, pkg.name.capitalize()))
+    ]
 
 
 def find_windows_kit_paths():
@@ -259,17 +259,20 @@ def find_windows_kit_paths():
     # however non standard installations can be denoted by $Env:WDKContentRoot
 
     # Derive default installation glob
-    program_files = os.environ['HOMEDRIVE'] + '\\' + 'Program Files*'
+    program_files = os.environ["HOMEDRIVE"] + "\\" + "Program Files*"
     plat_ver = str(winOs.windows_version())
-    wdk_base = os.path.join(program_files, 'Windows Kits', plat_ver)
+    wdk_base = os.path.join(program_files, "Windows Kits", plat_ver)
     # Check for WDKContentRoot definition
-    wdk_content_root = os.getenv('WDKContentRoot')
+    wdk_content_root = os.getenv("WDKContentRoot")
     # Select valid WDK root
     wdk_base = wdk_base if not wdk_content_root else wdk_content_root
 
-    wdk_bin = os.path.join(wdk_base, 'bin')
+    wdk_bin = os.path.join(wdk_base, "bin")
     # Glob over versions and architectures
-    wdk_version_candidates = glob.glob(os.path.join(wdk_bin, '*', '*'))
-    wdk_versions = [pth for pth in wdk_version_candidates if \
-        re.search(r'[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]', pth)]
+    wdk_version_candidates = glob.glob(os.path.join(wdk_bin, "*", "*"))
+    wdk_versions = [
+        pth
+        for pth in wdk_version_candidates
+        if re.search(r"[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]", pth)
+    ]
     return wdk_versions

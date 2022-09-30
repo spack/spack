@@ -1,9 +1,7 @@
-
-
 import os
 import re
 
-from spack import *
+from spack.package import *
 
 
 class WinSdk(Package):
@@ -26,23 +24,21 @@ class WinSdk(Package):
     version("10.0.10586.0")
     version("10.0.26639.0")
 
-
     @classmethod
     def determine_version(cls, exe):
         """
         WinSDK that we would like to
         be discoverable externally by Spack.
         """
-        version_match_pat = re.compile(r'[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]')
+        version_match_pat = re.compile(r"[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]")
         ver_str = re.search(version_match_pat, exe)
         return ver_str if not ver_str else Version(ver_str.group())
 
-
     def install(self, spec, prefix):
-        raise RuntimeError('This package is not installable from Spack\
+        raise RuntimeError(
+            "This package is not installable from Spack\
             and should be installed on the system prior to Spack use.\
                 If not installed this package should be installed via\
                     the Visual Studio installer in order to use the \
-                        MSVC compiler on Windows.')
-
-
+                        MSVC compiler on Windows."
+        )
