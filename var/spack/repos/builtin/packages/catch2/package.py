@@ -26,6 +26,7 @@ class Catch2(CMakePackage):
     version(
         "3.0.0-preview3", sha256="06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975"
     )
+    version("2.13.9", sha256="06dbc7620e3b96c2b69d57bf337028bf245a211b3cddb843835bfe258f427a52")
     version("2.13.8", sha256="b9b592bd743c09f13ee4bf35fc30eeee2748963184f6bea836b146e6cc2a585a")
     version("2.13.7", sha256="3cdb4138a072e4c0290034fe22d9f0a80d3bcfb8d7a8a5c49ad75d3a5da24fae")
     version("2.13.6", sha256="48dfbb77b9193653e4e72df9633d2e0383b9b625a47060759668480fdf24fbd4")
