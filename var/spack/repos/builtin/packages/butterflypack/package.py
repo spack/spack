@@ -26,6 +26,7 @@ class Butterflypack(CMakePackage):
     maintainers = ["liuyangzhuan"]
 
     version("master", branch="master")
+    version("2.2.1", sha256="4cedc2896a6b368773ce4f9003aa2c0230baf56a4464a6b899a155e01406a232")
     version("2.2.0", sha256="1ce5b8461b3c4f488cee6396419e8a6f0a1bcf95254f24d7c27bfa53b391c30b")
     version("2.1.1", sha256="0d4a1ce540c84de37e4398f72ecf685ea0c4eabceba13015add5b445a4ca3a15")
     version("2.1.0", sha256="ac76cc8d431797c1a3641b23124e3de5eb8c3a3afb71c336e7ba69c6cdf150ef")
