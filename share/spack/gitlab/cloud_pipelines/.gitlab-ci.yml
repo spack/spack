@@ -130,6 +130,9 @@ protected-publish:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: my-super-cool-stack-pr-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: my-super-cool-stack-pr-generate
 #
 # my-super-cool-stack-protected-build:
 #   extends: [ ".my-super-cool-stack", ".protected-build" ]
@@ -138,6 +141,9 @@ protected-publish:
 #       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
 #         job: my-super-cool-stack-protected-generate
 #     strategy: depend
+#   needs:
+#     - artifacts: True
+#       job: my-super-cool-stack-protected-generate
 
 ########################################
 #          E4S Mac Stack
