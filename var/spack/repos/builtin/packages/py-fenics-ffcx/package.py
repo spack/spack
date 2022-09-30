@@ -26,7 +26,7 @@ class PyFenicsFfcx(PythonPackage):
     )
     version(
         "0.2.0",
-        sha256="562a704163a6427e0341d267e69b8bf55d8f53d673829170b443191577e8d9b6",
+        sha256="f1dcd0973980706aba145274aeddeb771d2d730efcdb9b4be10adbe964f40d90",
         deprecated=True,
     )
     version(
