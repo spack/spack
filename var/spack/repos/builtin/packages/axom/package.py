@@ -138,10 +138,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("mfem", when="+mfem")
     depends_on("mfem~mpi", when="+mfem~mpi")
 
-    # Disable fortran, causing "cannot compile a simple Fortran program"
-    # with crayftn
-    depends_on("hypre~fortran", when="+mfem+rocm")
-
     depends_on("python", when="+python")
 
     # Devtools
@@ -281,38 +277,15 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             # Fixes for mpi for rocm until wrapper paths are fixed
             # These flags are already part of the wrapped compilers on TOSS4 systems
             hip_link_flags = ""
-            if "+fortran" in spec:
-                # Flags for crayftn
-                if self.is_fortran_compiler("crayftn"):
-                    # Fix for working around CMake adding implicit link directories
-                    # returned by the Cray crayftn compiler to link executables with
-                    # non-system default stdlib
-                    cray_exclude_path = "/opt/cray/pe/gcc/8.1.0/snos/lib64"
-                    if os.path.isdir(cray_exclude_path):
-                        entries.append(
-                            cmake_cache_string(
-                                "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", cray_exclude_path
-                            )
-                        )
-
-                    hip_link_flags += "-Wl,--disable-new-dtags "
-                    cray_cce_prefix = "/opt/cray/pe/cce/13.0.1/cce/x86_64"
-                    if os.path.isdir(cray_cce_prefix):
-                        hip_link_flags += "-L{0}/lib -L{0}/lib ".format(cray_cce_prefix)
-                        hip_link_flags += "-Wl,-rpath,{0}/lib:{0}/lib ".format(cray_cce_prefix)
-                    hip_link_flags += "-lmodules -lquadmath -lfi -lcraymath -lf -lu -lcsup"
-
-                # Flags for amdflang
-                if self.is_fortran_compiler("amdflang"):
-                    hip_link_flags += "-Wl,--disable-new-dtags "
-                    hip_link_flags += "-L{0}/../llvm/lib -L{0}/lib ".format(hip_root)
-                    hip_link_flags += "-Wl,-rpath,{0}/../llvm/lib:{0}/lib ".format(hip_root)
-                    hip_link_flags += "-lpgmath -lflang -lflangrti -lompstub -lamdhip64 "
+            if "+fortran" in spec and self.is_fortran_compiler("amdflang"):
+                hip_link_flags += "-Wl,--disable-new-dtags "
+                hip_link_flags += "-L{0}/../llvm/lib -L{0}/lib ".format(hip_root)
+                hip_link_flags += "-Wl,-rpath,{0}/../llvm/lib:{0}/lib ".format(hip_root)
+                hip_link_flags += "-lpgmath -lflang -lflangrti -lompstub -lamdhip64 "
 
             # Additional libraries for TOSS4
-            hip_link_flags += (
-                " -L{0}/../lib64 -Wl,-rpath,{0}/../lib64 -lhsakmt -lamd_comgr".format(hip_root)
-            )
+            hip_link_flags += " -L{0}/../lib64 -Wl,-rpath,{0}/../lib64 ".format(hip_root)
+            hip_link_flags += "-lhsakmt -lamd_comgr ".format(hip_root)
 
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", hip_link_flags))
 
