@@ -527,18 +527,51 @@ def test_up_to():
     assert v.up_to(2).up_to(1).string == "1"
 
 
-def test_repr_and_str():
-    def check_repr_and_str(vrs):
-        a = Version(vrs)
-        assert repr(a) == "VersionBase('" + vrs + "')"
-        b = eval(repr(a))
-        assert a == b
-        assert str(a) == vrs
-        assert str(a) == str(b)
+def _check_repr_and_str(parse_fn, arg):
+    a = parse_fn(arg)
+    b = eval(repr(a))
+    assert a == b
+    assert str(a) == arg
+    assert str(a) == str(b)
 
-    check_repr_and_str("1.2.3")
-    check_repr_and_str("R2016a")
-    check_repr_and_str("R2016a.2-3_4")
+
+@pytest.mark.parametrize(
+    "version_spec",
+    [
+        "1.2.3",
+        "R2016a",
+        "R2016a.2-3_4",
+    ],
+)
+def test_repr_and_str_base(version_spec):
+    _check_repr_and_str(Version, version_spec)
+
+
+@pytest.mark.parametrize(
+    "range_spec",
+    [
+        "1.2:1.3",
+        "1.2:",
+        ":1.3",
+        "1.2.1:1.3",
+        "1.2:1.2.1",
+    ],
+)
+def test_repr_and_str_range(range_spec):
+    _check_repr_and_str(VersionRange.parse, range_spec)
+
+
+@pytest.mark.parametrize(
+    "list_spec",
+    [
+        "1.2:1.3,1.4",
+        ":1.2,1.3",
+        "1.2.1,1.3",
+        "1.2.0,1.2.1",
+    ],
+)
+def test_repr_and_str_list(list_spec):
+    _check_repr_and_str(VersionList.parse, list_spec)
 
 
 def test_len():
@@ -556,17 +589,17 @@ def test_get_item():
     b = a[0:2]
     assert isinstance(b, VersionBase)
     assert b == Version("0.1")
-    assert repr(b) == "VersionBase('0.1')"
+    assert repr(b) == "VersionBase.parse('0.1')"
     assert str(b) == "0.1"
     b = a[0:3]
     assert isinstance(b, VersionBase)
     assert b == Version("0.1_2")
-    assert repr(b) == "VersionBase('0.1_2')"
+    assert repr(b) == "VersionBase.parse('0.1_2')"
     assert str(b) == "0.1_2"
     b = a[1:]
     assert isinstance(b, VersionBase)
     assert b == Version("1_2-3")
-    assert repr(b) == "VersionBase('1_2-3')"
+    assert repr(b) == "VersionBase.parse('1_2-3')"
     assert str(b) == "1_2-3"
     # Raise TypeError on tuples
     with pytest.raises(TypeError):
