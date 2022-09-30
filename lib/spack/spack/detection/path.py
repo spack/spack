@@ -24,6 +24,7 @@ from .common import (
     compute_windows_program_path_for_package,
     executable_prefix,
     find_win32_additional_install_paths,
+    find_windows_kit_paths,
     is_executable,
     library_prefix,
 )
@@ -62,6 +63,7 @@ def executables_in_path(path_hints=None):
         ]
         path_hints = msvc_ninja_paths + path_hints
         path_hints.extend(find_win32_additional_install_paths())
+        path_hints.extend(find_windows_kit_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
     path_to_exe = {}
