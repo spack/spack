@@ -19,6 +19,8 @@ class Simgrid(CMakePackage):
 
     maintainers = ["viniciusvgp"]
 
+    version("3.31", sha256="4b44f77ad40c01cf4e3013957c9cbe39f33dec9304ff0c9c3d9056372ed4c61d")
+    version("3.30", sha256="0cad48088c106e72efb42fb423e65d77fc9053cc03d6f3a5ff7ba4c712bb4eb8")
     version("3.29", sha256="83e8afd653555eeb70dc5c0737b88036c7906778ecd3c95806c6bf5535da2ccf")
     version("3.28", sha256="558276e7f8135ce520d98e1bafa029c6c0f5c2d0e221a3a5e42c378fe0c5ef2c")
     version("3.27", sha256="51aeb9de0434066e5fec40e785f5ea9fa934afe7f6bfb4aa627246e765f1d6d7")
