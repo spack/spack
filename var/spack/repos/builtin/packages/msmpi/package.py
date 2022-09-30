@@ -31,7 +31,7 @@ class Msmpi(Package):
         arch = 'intel64' if self.is_64() else 'ia32'
         args = []
         ver_str = os.environ['VCToolsInstallDir']
-        ver = re.search(r'[1-9][1-9].[1-9][1-9].[1-9][1-9][1-9][1-9][1-9]', ver_str)
+        ver = re.search(r'[0-9][0-9].[0-9][0-9].[0-9][0-9][0-9][0-9][0-9]', ver_str)
         ver = '' if not ver else ver.group()
         args.append('/p:GFORTRAN_BIN=%sbin\%s' % (os.environ['IFORT_COMPILER21'], arch))
         args.append('/p:VCToolsVersion=%s' % ver)
