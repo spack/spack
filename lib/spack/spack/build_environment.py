@@ -775,6 +775,15 @@ def parent_class_modules(cls):
     return result
 
 
+def nonshared_parents(cls):
+    """Return list with cls and all superclasses that define a Package
+       class object with the same name (so excludes superclasses like
+       PackageBase).
+    """
+    all_parents = parent_class_modules(cls)
+    return list(x for x in all_parents if getattr(x, cls.__name__, None))
+
+
 def load_external_modules(pkg):
     """Traverse a package's spec DAG and load any external modules.
 
@@ -994,7 +1003,8 @@ def modifications_from_dependencies(
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
             # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(spec.package.module, spec)
+            for module in nonshared_parents(spec.package.__class__):
+                dpkg.setup_dependent_package(module, spec)
             if context == "build":
                 dpkg.setup_dependent_build_environment(env, spec)
             else:
