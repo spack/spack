@@ -285,7 +285,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
             # Additional libraries for TOSS4
             hip_link_flags += " -L{0}/../lib64 -Wl,-rpath,{0}/../lib64 ".format(hip_root)
-            hip_link_flags += "-lhsakmt -lamd_comgr ".format(hip_root)
+            hip_link_flags += "-lhsakmt -lamd_comgr "
 
             entries.append(cmake_cache_string("CMAKE_EXE_LINKER_FLAGS", hip_link_flags))
 
