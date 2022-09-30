@@ -19,7 +19,7 @@ class Esmf(MakefilePackage):
     url = "https://github.com/esmf-org/esmf/archive/ESMF_8_0_1.tar.gz"
     git = "https://github.com/esmf-org/esmf.git"
 
-    maintainers = ["climbfuji"]
+    maintainers = ["climbfuji", "jedwards4b"]
 
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
@@ -65,10 +65,22 @@ class Esmf(MakefilePackage):
         when="@8.3:",
     )
     variant(
+        "parallelio",
+        default=False,
+        description="Build with external parallelio library",
+        when="@8.3.b09",
+    )
+    variant(
         "pio",
         default=True,
         description="Enable Internal ParallelIO support",
         when="@:8.2.99",
+    )
+    variant(
+        "pio",
+        default=True,
+        description="Enable Internal ParallelIO support",
+        when="@8.3.0b09",
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
 
@@ -97,6 +109,9 @@ class Esmf(MakefilePackage):
     # Fix undefined reference errors with mvapich2
     # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
     patch("mvapich2.patch", when="@:7.0")
+
+    # explicit type cast of variables from long to int
+    patch("cce.patch", when="@:8.4.0 %cce@13.99:")
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
@@ -192,6 +207,8 @@ class Esmf(MakefilePackage):
             os.environ["ESMF_COMPILER"] = "nag"
         elif self.compiler.name == "pgi":
             os.environ["ESMF_COMPILER"] = "pgi"
+        elif self.compiler.name == "cce":
+            os.environ["ESMF_COMPILER"] = "cce"
         else:
             msg = "The compiler you are building with, "
             msg += '"{0}", is not supported by ESMF.'
@@ -297,10 +314,6 @@ class Esmf(MakefilePackage):
             # When defined, enables the use of Parallel-NetCDF.
             # ESMF_PNETCDF_LIBS will be set to "-lpnetcdf".
             os.environ["ESMF_PNETCDF"] = "pnetcdf-config"
-
-            # FIXME: determine whether or not we need to set these.
-            # ESMF_PNETCDF_INCLUDE
-            # ESMF_PNETCDF_LIBPATH
 
         ##############
         # ParallelIO #

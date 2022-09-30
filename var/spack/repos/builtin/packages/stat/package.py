@@ -17,6 +17,16 @@ class Stat(AutotoolsPackage):
 
     version("develop", branch="develop")
     version(
+        "4.2.1",
+        sha256="137529889ec5b5f9b9bae3a0864a385c5814e989d0074228dd3500e3e713801d",
+        url="https://github.com/LLNL/STAT/releases/download/v4.2.1/stat-4.2.1.tar.gz",
+    )
+    version(
+        "4.2.0",
+        sha256="d244d53585b0949e308354eb024f7a89ee3467fd2866b818e8aa6c8b5d372ced",
+        url="https://github.com/LLNL/STAT/releases/download/v4.2.0/stat-4.2.0.tar.gz",
+    )
+    version(
         "4.1.0",
         sha256="1d5b00afd563cf3bd9dd40818c44a03d7d4b13356216881513c058566c3b0080",
         url="https://github.com/LLNL/STAT/files/6193568/stat-4.1.0.tar.gz",
@@ -71,18 +81,19 @@ class Stat(AutotoolsPackage):
     variant("gui", default=True, description="enable GUI")
 
     depends_on("autoconf", type="build")
-    depends_on("automake@:1.15", type="build")
+    depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("dyninst@:11.9", when="~dysect")
+    depends_on("dyninst", when="@4.2.1:")
+    depends_on("dyninst@:11.9", when="~dysect @:4.2.0")
     depends_on("dyninst@:9", when="@:4.0.1")
     depends_on("dyninst@8.2.1+stat_dysect", when="+dysect")
     # we depend on fgfs@master to avoid seg faults with fgfs 1.1
-    depends_on("fast-global-file-status@master", when="+fgfs")
+    depends_on("fast-global-file-status@1.1.1:", when="+fgfs")
     depends_on("graphlib@2.0.0", when="@2.0.0:2.2.0")
     depends_on("graphlib@3.0.0", when="@3:")
     depends_on("graphviz", type=("build", "link", "run"))
     # we depend on mpa@master for bug fixes since launchmon 1.0.2
-    depends_on("launchmon@master")
+    depends_on("launchmon@1.2.0:")
     depends_on("mrnet")
     depends_on("python")
     depends_on("python@:2.8", when="@:4.0.0")
