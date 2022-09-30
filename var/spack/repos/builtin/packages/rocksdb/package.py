@@ -98,7 +98,7 @@ class Rocksdb(MakefilePackage):
         if "~werror" in self.spec:
             env["DISABLE_WARNING_AS_ERROR"] = "1"
 
-        if '+rtti' in self.spec:
+        if "+rtti" in self.spec:
             env["USE_RTTI"] = "1"
 
         if self.spec.satisfies("@6.13.2:"):
