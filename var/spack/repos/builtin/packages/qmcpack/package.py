@@ -370,6 +370,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append("-DBUILD_PPCONVERT=0")
 
+        args.append(self.define("Python3_EXECUTABLE", self.spec["python"].command.path))
         return args
 
     # QMCPACK needs custom install method for the following reason:
