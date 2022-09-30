@@ -10,29 +10,30 @@ class PyBbpWorkflow(PythonPackage):
     '''Blue Brain Workflow.'''
 
     homepage = 'https://bbpgitlab.epfl.ch/nse/bbp-workflow'
-    git      = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git'
+    git = 'ssh://git@bbpgitlab.epfl.ch/nse/bbp-workflow.git'
 
-    version('3.0.37', tag='bbp-workflow-v3.0.37')
+    version('3.0.38', tag='bbp-workflow-v3.0.38')
 
     depends_on('py-setuptools', type=('build'))
 
-    depends_on('py-requests-unixsocket',       type='run')
+    depends_on('py-requests-unixsocket', type='run')
     depends_on('py-dask+diagnostics@2021.6.2', type='run')
-    depends_on('py-distributed@2021.6.2',      type='run')
-    depends_on('py-luigi',                     type='run')
-    depends_on('py-luigi-tools',               type='run')
-    depends_on('py-sh',                        type='run')
-    depends_on('py-matplotlib',                type='run')
-    depends_on('py-bluepy',                    type='run')
-    depends_on('py-bluepy-configfile',         type='run')
-    depends_on('py-voxcell',                   type='run')
-    depends_on('py-entity-management',         type='run')
-    depends_on('py-xarray@0.18.2',             type='run')
-    depends_on('py-pint-xarray',               type='run')
-    depends_on('py-cheetah3',                  type='run')
-    depends_on('py-elephant',                  type='run')
-    depends_on('py-neo',                       type='run')
-    depends_on('py-pyarrow+parquet',           type='run')
+    depends_on('py-distributed@2021.6.2', type='run')
+    depends_on('py-luigi', type='run')
+    depends_on('py-luigi-tools', type='run')
+    depends_on('py-sh', type='run')
+    depends_on('py-matplotlib', type='run')
+    depends_on('py-bluepy', type='run')
+    depends_on('py-bluepy-configfile', type='run')
+    depends_on('py-voxcell', type='run')
+    depends_on('py-entity-management', type='run')
+    depends_on('py-xarray@0.18.2', type='run')
+    depends_on('py-pint-xarray', type='run')
+    depends_on('py-cheetah3', type='run')
+    depends_on('py-elephant', type='run')
+    depends_on('py-neo', type='run')
+    depends_on('py-pyarrow+parquet', type='run')
+    depends_on('py-click', type='run')
 
     # extra deps to include in the module
     # depend on a version with BBP ca root patch
