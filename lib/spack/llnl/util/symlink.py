@@ -13,6 +13,8 @@ from llnl.util import lang
 
 is_windows = _platform == "win32"
 
+if is_windows:
+    from win32file import CreateHardLink
 
 def symlink(real_path, link_path):
     """
@@ -51,6 +53,7 @@ def _win32_junction(path, link):
         path = os.path.join(parent, path)
         path = os.path.abspath(path)
 
+    CreateHardLink(link, path)
 
 @lang.memoized
 def _win32_can_symlink():
