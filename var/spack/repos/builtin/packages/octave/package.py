@@ -107,6 +107,13 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on("suite-sparse", when="+suitesparse")
     depends_on("zlib", when="+zlib")
 
+    # to fix https://savannah.gnu.org/bugs/?62750
+    patch(
+        "https://hg.savannah.gnu.org/hgweb/octave/raw-rev/8245e773bb5b",
+        sha256="ae786fe9177066c41d414a93009f6769296e63a5d34f407f55bb71344d02f803",
+        when="@7.1.0",
+    )
+
     def patch(self):
         # Filter mkoctfile.in.cc to use underlying compilers and not
         # Spack compiler wrappers. We are patching the template file
