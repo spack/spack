@@ -89,7 +89,6 @@ class R(AutotoolsPackage):
     depends_on("libxmu", when="+X")
     depends_on("libxt", when="+X")
     depends_on("tk", when="+X")
-    depends_on("texlive", type="build")
     depends_on("texinfo", type="build")
 
     patch("zlib.patch", when="@:3.3.2")
