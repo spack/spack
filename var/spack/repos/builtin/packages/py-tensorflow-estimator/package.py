@@ -51,7 +51,7 @@ class PyTensorflowEstimator(Package):
         "2.0",
         "1.13",
     ]:
-        depends_on("py-tensorflow@", +ver, when="@" + ver, type=("build", "run"))
+        depends_on("py-tensorflow@" + ver, when="@" + ver, type=("build", "run"))
 
     depends_on("bazel@0.19.0:", type="build")
     depends_on("py-pip", type="build")
