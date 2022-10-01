@@ -17,6 +17,28 @@ _os_map = {
 
 
 _versions = {
+    "22.1": {
+        "RHEL-7": (
+            "189119a72b2cf2840dc85d4fab74435c018e145d03dd3098f23364bd235ffb7b",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_RHEL-7_aarch64.tar",
+        ),
+        "RHEL-8": (
+            "28116f6030c95ee8f69eba89023966974d6b44d4a686098f5c3c03e34f7495f6",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_RHEL-8_aarch64.tar",
+        ),
+        "SLES-15": (
+            "6616dba1af4a73300ce822b645a0f1dfd363f507db5ea44cab1c6051ea388554",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_SLES-15_aarch64.tar",
+        ),
+        "Ubuntu-18.04": (
+            "3b3dd6f416299fbd14fbaf0b1bddf7e2f4445a186de7a87e9efdae0b9d0dc3d5",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-18.04_aarch64.tar",
+        ),
+        "Ubuntu-20.04": (
+            "e6361a08f75817c8dbfb56dc72578810eaf5ffb65591215e394cb3ec6bdd9c10",
+            "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar",
+        ),
+    },
     "22.0.2": {
         "RHEL-7": (
             "e4dec577ed2d33124a556ba05584fad45a9acf6e13dccadb37b521d1bad5a826",
@@ -83,9 +105,9 @@ class Acfl(Package):
     """
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/arm-allinea-studio"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-allinea-studio/22-0-2/arm-compiler-for-linux_22.0.2_Ubuntu-20.04_aarch64.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-compiler-for-linux/22-1/arm-compiler-for-linux_22.1_Ubuntu-20.04_aarch64.tar"
 
-    maintainers = ["OliverPerks", "annop-w"]
+    maintainers = ["annop-w"]
 
     # Build Versions: establish OS for URL
     acfl_os = get_os()
