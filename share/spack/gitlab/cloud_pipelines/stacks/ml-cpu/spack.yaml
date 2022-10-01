@@ -24,8 +24,9 @@ spack:
     - py-horovod
 
     # JAX
-    - py-jax
-    - py-jaxlib
+    # https://github.com/google/jax/issues/12614
+    # - py-jax
+    # - py-jaxlib
 
     # Keras
     - py-keras
@@ -45,7 +46,8 @@ spack:
     - py-torch
     - py-torch-cluster
     - py-torch-geometric
-    - py-torch-nvidia-apex
+    # https://github.com/NVIDIA/apex/issues/1498
+    # - py-torch-nvidia-apex
     - py-torch-scatter
     - py-torch-sparse
     - py-torch-spline-conv
@@ -79,7 +81,7 @@ spack:
 
     # XGBoost
     - py-xgboost
-    - r-xgboost
+    # - r-xgboost
     - xgboost
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-cpu" }

@@ -28,8 +28,9 @@ spack:
     - py-horovod
 
     # JAX
-    - py-jax
-    - py-jaxlib
+    # https://github.com/google/jax/issues/12614
+    # - py-jax
+    # - py-jaxlib
 
     # Keras
     - py-keras
@@ -83,7 +84,7 @@ spack:
 
     # XGBoost
     - py-xgboost
-    - r-xgboost
+    # - r-xgboost
     - xgboost
 
   mirrors: { "mirror": "s3://spack-binaries/develop/ml-cuda" }
