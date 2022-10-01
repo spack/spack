@@ -13,7 +13,9 @@ class PyJinja2(PythonPackage):
 
     homepage = "https://palletsprojects.com/p/jinja/"
     pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
+    git = "https://github.com/pallets/jinja"
 
+    version("3.1.2", sha256="31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852")
     version("3.0.3", sha256="611bb273cd68f3b993fabdc4064fc858c5b47a973cb5aa7999ec1ba405c87cd7")
     version("3.0.1", sha256="703f484b47a6af502e743c9122595cc812b0271f661722403114f71a79d0f5a4")
     version("2.11.3", sha256="a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6")
@@ -29,6 +31,7 @@ class PyJinja2(PythonPackage):
 
     variant("i18n", default=False, description="Enables I18N support with Babel")
 
+    depends_on("python@3.7:", when="@3.1:", type=("build", "run"))
     depends_on("python@3.6:", when="@3:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
