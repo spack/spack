@@ -58,7 +58,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-scipy", when="+scipy", type=("build", "run"))
     depends_on("metis@5.0:", when="+metis", type=("run"))
     depends_on("scotch@6.0:", when="+scotch", type=("run"))
-    depends_on("cuda@8.0:", when="+cuda", type=("run"))
+    depends_on("cuda@8.0: +allow-unsupported-compilers", when="+cuda", type=("run"))
     depends_on("rocblas@5.2.0:", when="+hip", type=("run"))
     depends_on("libxsmm@1.18:+shared blas=0", when="+libxsmm", type=("run"))
 
