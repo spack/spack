@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -121,5 +123,7 @@ class CaCertificatesMozilla(Package):
     # Install the the pem file as share/cacert.pem
     def install(self, spec, prefix):
         share = join_path(prefix, "share")
-        mkdir(share)
+        # https://github.com/spack/spack/issues/32948
+        if not os.path.isdir(share):
+            mkdir(share)
         install("cacert-{0}.pem".format(spec.version), join_path(share, "cacert.pem"))
