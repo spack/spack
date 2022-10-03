@@ -28,6 +28,7 @@ class Gdal(CMakePackage):
 
     maintainers = ["adamjstewart"]
 
+    version("3.5.2", sha256="0874dfdeb9ac42e53c37be4184b19350be76f0530e1f4fa8004361635b9030c2")
     version("3.5.1", sha256="d12c30a9eacdeaab493c0d1c9f88eb337c9cbb5bb40744c751bdd5a5af166ab6")
     version("3.5.0", sha256="d49121e5348a51659807be4fb866aa840f8dbec4d1acba6d17fdefa72125bfc9")
     version("3.4.3", sha256="02a27b35899e1c4c3bcb6007da900128ddd7e8ab7cd6ccfecf338a301eadad5a")
@@ -113,7 +114,7 @@ class Gdal(CMakePackage):
     variant("iconv", default=False, description="Required for text encoding conversion")
     variant("idb", default=False, description="Required for IDB driver")
     variant("ingres", default=False, when="@:3.4", description="Required for Ingres driver")
-    variant("jasper", default=False, when="@:3.4", description="Optional JPEG-200 library")
+    variant("jasper", default=False, when="@:3.4", description="Optional JPEG-2000 library")
     variant("jpeg", default=True, description="Required for JPEG driver")
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
@@ -222,9 +223,9 @@ class Gdal(CMakePackage):
     depends_on("arrow", when="+arrow")
     depends_on("c-blosc", when="+blosc")
     depends_on("brunsli", when="+brunsli")
-    # depends_on('bsb', when='+bdb')
+    # depends_on('bsb', when='+bsb')
     depends_on("cfitsio", when="+cfitsio")
-    # depends_on('crunch', when='+crnlib')
+    depends_on("crunch", when="+crnlib")
     depends_on("curl", when="+curl")
     depends_on("cryptopp", when="+cryptopp")
     depends_on("libdeflate", when="+deflate")
@@ -355,7 +356,6 @@ class Gdal(CMakePackage):
 
     # TODO: add packages for the following dependencies
     conflicts("+bsb")
-    conflicts("+crnlib")
     conflicts("+dods")
     conflicts("+ecw")
     conflicts("+epsilon")

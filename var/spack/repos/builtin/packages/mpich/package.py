@@ -198,6 +198,7 @@ with '-Wl,-commons,use_dylibs' and without
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on("libfabric@:1.6", when="device=ch3 netmod=ofi")
+    depends_on("libfabric@1.5:", when="@3.4: device=ch4 netmod=ofi")
 
     depends_on("ucx", when="netmod=ucx")
     depends_on("mxm", when="netmod=mxm")

@@ -11,8 +11,10 @@ import shutil
 import macholib.mach_o
 import macholib.MachO
 
+import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
 from llnl.util.symlink import symlink
 
 import spack.bootstrap
@@ -76,15 +78,14 @@ class BinaryTextReplaceError(spack.error.SpackError):
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
 
+@memoized
 def _patchelf():
     """Return the full path to the patchelf binary, if available, else None."""
     if is_macos:
         return None
 
-    patchelf = executable.which("patchelf")
-    if patchelf is None:
-        with spack.bootstrap.ensure_bootstrap_configuration():
-            patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        patchelf = spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
     return patchelf.path
 
@@ -887,7 +888,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(filename, output=str).split())
 
-    m_type, m_subtype = mime_type(filename)
+    m_type, m_subtype = fs.mime_type(filename)
     if m_type == "application":
         tty.debug("{0},{1}".format(m_type, m_subtype), level=2)
 
@@ -923,7 +924,7 @@ def is_binary(filename):
     Returns:
         True or False
     """
-    m_type, _ = mime_type(filename)
+    m_type, _ = fs.mime_type(filename)
 
     msg = "[{0}] -> ".format(filename)
     if m_type == "application":
@@ -932,30 +933,6 @@ def is_binary(filename):
 
     tty.debug(msg + "TEXT FILE")
     return False
-
-
-@llnl.util.lang.memoized
-def _get_mime_type():
-    file_cmd = executable.which("file")
-    for arg in ["-b", "-h", "--mime-type"]:
-        file_cmd.add_default_arg(arg)
-    return file_cmd
-
-
-@llnl.util.lang.memoized
-def mime_type(filename):
-    """Returns the mime type and subtype of a file.
-
-    Args:
-        filename: file to be analyzed
-
-    Returns:
-        Tuple containing the MIME type and subtype
-    """
-    output = _get_mime_type()(filename, output=str, error=str).strip()
-    tty.debug("==> " + output, level=2)
-    type, _, subtype = output.partition("/")
-    return type, subtype
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
@@ -975,7 +952,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if mime_type(abspath) != ("application", "x-mach-binary"):
+    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands

@@ -276,7 +276,8 @@ error(0, Msg) :- node(Package),
    conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
-   not external(Package).  % ignore conflicts for externals
+   not external(Package),  % ignore conflicts for externals
+   not hash(Package, _).  % ignore conflicts for installed packages
 
 #defined conflict/4.
 
@@ -436,7 +437,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
-#defined external_only/1.
+#defined buildable_false/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
 #defined node_version_satisfies/2.
@@ -463,8 +464,10 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
 
-% if a package is not buildable (external_only), only externals are allowed
-external(Package) :- external_only(Package), node(Package).
+% if a package is not buildable, only externals or hashed specs are allowed
+external(Package) :- buildable_false(Package),
+                     node(Package),
+                     not hash(Package, _).
 
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
@@ -483,7 +486,8 @@ external(Package) :- external_spec_selected(Package, _).
 % determine if an external spec has been selected
 external_spec_selected(Package, LocalIndex) :-
     external_conditions_hold(Package, LocalIndex),
-    node(Package).
+    node(Package),
+    not hash(Package, _).
 
 external_conditions_hold(Package, LocalIndex) :-
     possible_external(ID, Package, LocalIndex), condition_holds(ID).
@@ -504,9 +508,12 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % Config required semantics
 %-----------------------------------------------------------------------------
 
+activate_requirement_rules(Package) :- node(Package).
+activate_requirement_rules(Package) :- virtual_node(Package).
+
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_policy(Package, X, "one_of"),
   requirement_group(Package, X).
 
@@ -519,7 +526,7 @@ requirement_weight(Package, W) :-
 
 requirement_group_satisfied(Package, X) :-
   1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_policy(Package, X, "any_of"),
   requirement_group(Package, X).
 
@@ -535,7 +542,7 @@ requirement_weight(Package, W) :-
   requirement_group_satisfied(Package, X).
 
 error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
-  node(Package),
+  activate_requirement_rules(Package),
   requirement_group(Package, X),
   not requirement_group_satisfied(Package, X).
 
@@ -1058,6 +1065,11 @@ no_flags(Package, FlagType)
 
 % you can't choose an installed hash for a dev spec
 :- hash(Package, Hash), variant_value(Package, "dev_path", _).
+
+% You can't install a hash, if it is not installed
+:- hash(Package, Hash), not installed_hash(Package, Hash).
+% This should be redundant given the constraint above
+:- hash(Package, Hash1), hash(Package, Hash2), Hash1 != Hash2.
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).

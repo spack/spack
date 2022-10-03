@@ -58,7 +58,7 @@ class GpiSpace(CMakePackage):
         "+atomic +chrono +coroutine +context +date_time +filesystem +iostreams"
         " +program_options +random +regex +serialization +test +timer cxxstd=14"
     )
-    depends_on("hwloc@1.10: +libudev ~shared ~libxml2")
+    depends_on("hwloc@1.10: +libudev ~libxml2 libs=static")
     depends_on("libssh2@1.7:")
     depends_on("openssl@0.9:")
     depends_on("gpi-2@1.3.2:1.3.3 fabrics=infiniband", when="network=infiniband")

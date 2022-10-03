@@ -20,7 +20,12 @@ class Gxsview(QMakePackage):
     # Support email for questions ohnishi@m.mpat.go.jp
     maintainers = ["cessenat"]
 
-    version("2021.07.01", "000f9b4721d4ee03b02730dbbfe83947f96a60a183342b127f0b6b63b03e8f9a")
+    version(
+        "2022.05.09", sha256="c052797aee1fa9588574b28e6cf24d8ca9135c9a20cd86d134a58a7bbcbde67b"
+    )
+    version(
+        "2021.07.01", sha256="000f9b4721d4ee03b02730dbbfe83947f96a60a183342b127f0b6b63b03e8f9a"
+    )
 
     depends_on("fontconfig")
     depends_on("qt@5.14.0:+opengl+gui")
@@ -47,4 +52,4 @@ class Gxsview(QMakePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install(join_path("gui", "gxsview"), prefix.bin)
+        install(join_path(self.build_directory, "gxsview"), prefix.bin)
