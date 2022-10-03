@@ -301,9 +301,11 @@ To resolve this problem, please try the following:
             ]
             for o in objfile:
                 fs.filter_file(rehead + o, "", libtool_path)
+        # Hack to filter out spurious predp_objects when building with
+        # Intel dpcpp; see issue #32863
         if self.spec.satisfies("%dpcpp"):
-            fs.filter_file("/tmp/conftest-[0-9A-Fa-f]+.o", "", libtool_path)
-            fs.filter_file("/tmp/a-[0-9A-Fa-f]+.o", "", libtool_path)
+            fs.filter_file(r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
+            fs.filter_file(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
 
     @property
     def configure_directory(self):
