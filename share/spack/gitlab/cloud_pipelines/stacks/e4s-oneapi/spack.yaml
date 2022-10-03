@@ -16,37 +16,22 @@ spack:
 
   compilers:
   - compiler:
-      spec: dpcpp@2022.1.0
+      spec: oneapi@2022.2.1
       paths:
-        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/dpcpp
-        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
+        cc: /opt/intel/oneapi/compiler/2022.2.1/linux/bin/icx
+        cxx: /opt/intel/oneapi/compiler/2022.2.1/linux/bin/icpx
+        f77: /opt/intel/oneapi/compiler/2022.2.1/linux/bin/ifx
+        fc: /opt/intel/oneapi/compiler/2022.2.1/linux/bin/ifx
       flags: {}
       operating_system: ubuntu20.04
       target: x86_64
       modules: [compiler]
       environment:
         prepend_path:
-          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
+          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.2.1/linux/compiler/lib/intel64_lin
       extra_rpaths: []
   - compiler:
-      spec: oneapi@2022.1.0
-      paths:
-        cc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icx
-        cxx: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/icpx
-        f77: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
-        fc: /opt/intel/oneapi/compiler/2022.1.0/linux/bin/ifx
-      flags: {}
-      operating_system: ubuntu20.04
-      target: x86_64
-      modules: [compiler]
-      environment:
-        prepend_path:
-          LD_LIBRARY_PATH: /opt/intel/oneapi/compiler/2022.1.0/linux/compiler/lib/intel64_lin
-      extra_rpaths: []
-  - compiler:
-      spec: gcc@9.4.0
+      spec: gcc@11.1.0
       paths:
         cc: /usr/bin/gcc
         cxx: /usr/bin/g++
@@ -60,8 +45,6 @@ spack:
       extra_rpaths: []
 
   packages:
-    adios2:
-      require: "%gcc"
     all:
       require: "%oneapi"
       providers:
@@ -72,8 +55,6 @@ spack:
     binutils:
       require: "%gcc"
       variants: +ld +gold +headers +libiberty ~nls
-    cuda:
-      version: [11.4.2]
     elfutils:
       variants: +bzip2 ~nls +xz
     hdf5:
@@ -85,13 +66,13 @@ spack:
     llvm:
       require: "%gcc" # undefined reference to `_intel_fast_memset' becauase of -nodefaultlibs
     mpich:
-      variants: ~wrapperrpath
+      require: '@4.0.2 ~wrapperrpath'
     ncurses:
       variants: +termlib
     openblas:
       variants: threads=openmp
     python:
-      version: [3.8.13]
+      require: '@3.8.15'
     ruby:
       require: "%gcc" # https://github.com/spack/spack/issues/31954
     rust:
@@ -107,6 +88,19 @@ spack:
       variants: +pic
     mesa:
       version: [21.3.8]
+    adios2:
+      require: "%gcc"
+    py-cryptography:
+      require: '@38.0.1'
+    m4:
+      require: '%gcc'
+    autoconf:
+      require: '%gcc'
+    unzip:
+      require: '%gcc'
+    binutils:
+      require: '%gcc'
+      variants: +ld +gold +headers +libiberty ~nls
 
   specs:
   # CPU
@@ -129,7 +123,6 @@ spack:
   - darshan-runtime
   - darshan-util
   - datatransferkit
-  - exaworks
   - faodel
   - flit
   - flux-core
@@ -167,7 +160,6 @@ spack:
   - papi
   - papyrus
   - parallel-netcdf
-  - parsec ~cuda
   - pdt
   - petsc
   - plasma
@@ -175,7 +167,6 @@ spack:
   - precice
   - pumi
   - py-cinemasci
-  - py-jupyterhub
   - py-libensemble
   - py-petsc4py
   - py-warpx ^warpx dims=2
@@ -184,7 +175,6 @@ spack:
   - qthreads scheduler=distrib
   - raja
   - rempi
-  - scr
   - slate ~cuda
   - slepc
   - stc
@@ -193,10 +183,8 @@ spack:
   - superlu-dist
   - superlu
   - swig
-  - swig@4.0.2-fortran
   - sz
   - tasmanian
-  - tau +mpi +python
   - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
    +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
@@ -223,12 +211,18 @@ spack:
   #- adios2@2.8.0                                     # adios2
   #- charliecloud@0.26                                # charliecloud
   #- dyninst@12.1.0                                   # old intel-tbb
+  #- exaworks                                         # krb5
   #- geopm@1.1.0                                      # geopm
   #- h5bench@1.2                                      # h5bench
   #- hpctoolkit                                       # dyninst
-  #- phist@1.9.5                                      # phist
   #- paraview +qt                                     # qt
+  #- parsec ~cuda                                     # parsec
+  #- phist@1.9.5                                      # phist
   #- pruners-ninja@1.0.1                              # pruners-ninja
+  #- py-jupyterhub                                    # krb5
+  #- scr                                              # libyogrt
+  #- swig@4.0.2-fortran                               # swig@4.0.2-fortran
+  #- tau +mpi +python                                 # tau
   #- variorum@0.4.1                                   # variorum
 
   # CPU BUILD FAILURES - NOTES
@@ -239,10 +233,15 @@ spack:
   # flux-sched: include/yaml-cpp/emitter.h:171:24: error: comparison with infinity always evaluates to false in fast floating point modes [-Werror,-Wtautological-constant-compare]
   # h5bench: commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   # intel-tbb: clang++clang++clang++clang++clang++clang++clang++: : : : : : : clang++error: : unknown argument: '-flifetime-dse=1'
+  # krb5: ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  # libyogrt: configure: error: slurm is not in specified location!
+  # parsec: ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
   # phist: fortran_bindings/test/kernels.F90(63): error #8284: If the actual argument is scalar, the dummy argument shall be scalar unless the actual argument is of type character or is an element of an array that is not assumed shape, pointer, or polymorphic.   [ARGV]
   # pruners-ninja: test/ninja_test_util.c:34: multiple definition of `a';
   # ruby: limits.c:415:34: error: invalid suffix 'D' on floating constant
   # rust: /usr/bin/ld: /opt/intel/oneapi/compiler/2022.1.0/linux/bin-llvm/../compiler/lib/intel64_lin/libimf.a(libm_feature_flag.o): in function `__libm_feature_flag_init': libm_feature_flag.c:(.text+0x25): undefined reference to `__intel_cpu_feature_indicator_x'
+  # swig@4.0.2-fortran: bison/skeletons/yacc.c:420: undefined macro `b4_symbol(103, tag)'
+  # tau: /x86_64/lib/Makefile.tau-icpx-papi-mpi-pthread-python-pdt: No such file or directory
   # variorum: ld: Intel/CMakeFiles/variorum_intel.dir/msr_core.c.o:(.bss+0x0): multiple definition of `g_platform'; CMakeFiles/variorum.dir/config_architecture.c.o:(.bss+0x0): first defined here
   # vtk-m +openmp: clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
 
@@ -290,7 +289,7 @@ spack:
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+    image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-12-01
     
     match_behavior: first
     mappings:
@@ -472,7 +471,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-12-01
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:

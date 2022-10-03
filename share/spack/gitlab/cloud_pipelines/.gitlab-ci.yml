@@ -312,11 +312,11 @@ e4s-protected-build:
 
 e4s-oneapi-pr-generate:
   extends: [ ".e4s-oneapi", ".pr-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-12-01
 
 e4s-oneapi-protected-generate:
   extends: [ ".e4s-oneapi", ".protected-generate"]
-  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-12-01
 
 e4s-oneapi-pr-build:
   extends: [ ".e4s-oneapi", ".pr-build" ]
