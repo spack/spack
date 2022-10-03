@@ -16,7 +16,7 @@ class PyFenicsUfl(PythonPackage):
     homepage = "https://fenicsproject.org/"
     url = "https://github.com/FEniCS/ufl/archive/2019.1.0.tar.gz"
     git = "https://github.com/FEniCS/ufl.git"
-    maintainers = ["chrisrichardson", "garth-wells"]
+    maintainers = ["chrisrichardson", "garth-wells", "jhale"]
 
     version("main", branch="main")
     version("2022.2.0", sha256="d6e18e06df5d7a626c3138d49a543914d68186afb6159c4d1a7cd72b2a199b02")
@@ -34,5 +34,4 @@ class PyFenicsUfl(PythonPackage):
     version("2016.2.0", tag="ufl-2016.2.0")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
