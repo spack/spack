@@ -122,6 +122,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
+    # QMCPACK 3.15.0 increased the minimum gcc to 9
+    conflicts("%gcc@:8", when="@3.15.0:")
+
     # QMCPACK 3.10.0 increased the minimum requirements for compiler versions
     newer_compiler_warning = (
         "QMCPACK v3.10.0 or later requires a newer " "version of this compiler"
