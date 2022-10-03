@@ -79,7 +79,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("%clang@:8", when="@0.2:")
     conflicts("+p2300", when="cxxstd=17")
 
-    # Other dependecies
+    # Other dependencies
     depends_on("hwloc@1.11.5:")
     depends_on("boost@1.71:")
 
@@ -88,15 +88,15 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mimalloc", when="malloc=mimalloc")
     depends_on("tbb", when="malloc=tbbmalloc")
 
-    depends_on("mpi", when="+mpi")
-    depends_on("cuda@11:", when="+cuda")
     depends_on("apex", when="+apex")
-    depends_on("tracy-client", when="+tracy")
+    depends_on("cuda@11:", when="+cuda")
     depends_on("hip@5.2:", when="@0.8: +rocm")
-    depends_on("rocblas", when="+rocm")
     depends_on("hipblas", when="+rocm")
-    depends_on("rocsolver", when="@0.5: +rocm")
+    depends_on("mpi", when="+mpi")
     depends_on("p2300", when="+p2300")
+    depends_on("rocblas", when="+rocm")
+    depends_on("rocsolver", when="@0.5: +rocm")
+    depends_on("tracy-client", when="+tracy")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
