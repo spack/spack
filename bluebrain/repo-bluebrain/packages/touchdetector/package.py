@@ -58,7 +58,7 @@ class Touchdetector(CMakePackage):
     depends_on('libsonata@0.1.9:', when='@5.6.0:')
     depends_on('nlohmann-json', when='@5.3.3:')
     depends_on('intel-oneapi-tbb', when='@5.7.0:')
-    depends_on('caliper@master+mpi', when='+caliper@5.7.0:')
+    depends_on('caliper@2.8.0:+mpi', when='+caliper@5.7.0:')
     depends_on('benchmark', when='+benchmark@5.7.0:')
 
     depends_on('mvapich2', when='+asan@5.7.0:')
