@@ -304,8 +304,12 @@ To resolve this problem, please try the following:
         # Hack to filter out spurious predp_objects when building with
         # Intel dpcpp; see issue #32863
         if self.spec.satisfies("%dpcpp"):
-            fs.filter_file(r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
-            fs.filter_file(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
+            fs.filter_file(
+                r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path
+            )
+            fs.filter_file(
+                r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path
+            )
 
     @property
     def configure_directory(self):
