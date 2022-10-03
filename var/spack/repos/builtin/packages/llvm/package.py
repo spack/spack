@@ -751,7 +751,7 @@ class Llvm(CMakePackage, CudaPackage):
     @run_after("install")
     def post_install(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
         if "+cuda ~omp_as_runtime" in self.spec:
