@@ -18,7 +18,7 @@ spack:
       compiler: [gcc@11.2.0]
       target: [x86_64_v4]
       providers:
-        gl: [mesa]
+        gl: [osmesa]
       variants: ~cuda+rocm amdgpu_target=gfx90a
 
   specs:
