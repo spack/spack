@@ -28,6 +28,8 @@ class Re2c(Package):
 
     phases = ["configure", "build", "install"]
 
+    depends_on("cmake", when="platform=windows")
+
     @property
     def make_tool(self):
         if is_windows:
