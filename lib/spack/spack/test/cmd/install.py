@@ -185,6 +185,13 @@ def test_install_with_source(mock_packages, mock_archive, mock_fetch, config, in
     )
 
 
+@pytest.mark.regression("32948")
+@pytest.mark.disable_clean_stage_check
+def test_install_source_mkdir(mock_packages, mock_archive, mock_fetch, config, install_mockery):
+    """Verify that a package's install() method is allowed to assume share/ is not yet created."""
+    install("--source", "--keep-stage", "trivial-install-test-package+mkdir-share-dir")
+
+
 def test_install_env_variables(mock_packages, mock_archive, mock_fetch, config, install_mockery):
     spec = Spec("libdwarf")
     spec.concretize()
