@@ -64,6 +64,7 @@ import spack.store
 import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
+import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
@@ -131,24 +132,6 @@ def should_set_parallel_jobs(jobserver_support=False):
     ):
         return False
     return not env_flag(SPACK_NO_PARALLEL_MAKE)
-
-
-class ModuleChangeAccumulator(object):
-    def __init__(self):
-        self.changes = {}
-
-    def __setattr__(self, key, value):
-        if key == "changes":
-            super(ModuleChangeAccumulator, self).__setattr__(key, value)
-        else:
-            self.changes[key] = value
-
-    def __getattr__(self, key):
-        # Return what's in our dict, else delegate to superclass
-        if key in self.changes:
-            return self.changes[key]
-        else:
-            return super(ModuleChangeAccumulator, self).__getattribute__(key)
 
 
 class MakeExecutable(Executable):
@@ -1023,13 +1006,11 @@ def modifications_from_dependencies(
 
             # Execute changes as if on a single module
             # copy dict to ensure prior changes are available
-            module_accumulator = ModuleChangeAccumulator()
-            module_accumulator.__dict__ = spec.package.module.__dict__
-            dpkg.setup_dependent_package(module_accumulator, spec)
+            changes = spack.util.pattern.Bunch()
+            dpkg.setup_dependent_package(changes, spec)
 
             for module in modules:
-                for key, value in module_accumulator.changes.items():
-                    module.__dict__[key] = value  # setattr(module, _) python 3.7+
+                module.__dict__.update(changes.__dict__)
 
             if context == "build":
                 dpkg.setup_dependent_build_environment(env, spec)
