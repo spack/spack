@@ -18,6 +18,7 @@ class Spykfunc(PythonPackage):
     submodules = True
 
     version('develop', branch='main')
+    version('0.17.3', tag='v0.17.3')
     version('0.17.2', tag='v0.17.2')
     version('0.17.1', tag='v0.17.1')
     version('0.17.0', tag='v0.17.0')
@@ -56,6 +57,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-lxml', type=('build', 'run'))
     depends_on('py-morphio', type=('build', 'run'), when='@0.17.2:')
     depends_on('py-morpho-kit', type=('build', 'run'), when='@0.14.4:')
+    depends_on('py-mpi4py', type=('build', 'run'), when='@0.17.3:')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-packaging', type=('build', 'run'), when='@0.17.3:')
     depends_on('py-pandas', type=('build', 'run'))
