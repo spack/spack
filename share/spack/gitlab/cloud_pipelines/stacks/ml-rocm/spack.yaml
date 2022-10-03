@@ -19,6 +19,12 @@ spack:
       target: [x86_64_v4]
       variants: ~cuda+rocm amdgpu_target=gfx90a
 
+    hip:
+      externals:
+      - spec: hip@5.1.3
+        prefix: /opt/view
+      buildable: false
+
   specs:
     # Horovod
     - py-horovod
@@ -115,7 +121,7 @@ spack:
             KUBERNETES_CPU_REQUEST: 8000m
             KUBERNETES_MEMORY_REQUEST: 12G
 
-    image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+    image: { "name": "ghcr.io/rse-ops/hip-ubuntu-22.04:hip-5.1.3", "entrypoint": [""] }
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
@@ -123,7 +129,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+      image: { "name": "ghcr.io/rse-ops/hip-ubuntu-22.04:hip-5.1.3", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64_v4"]
 
     signing-job-attributes:

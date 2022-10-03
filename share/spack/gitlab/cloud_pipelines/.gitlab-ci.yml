@@ -759,7 +759,7 @@ tutorial-protected-build:
 
 .ml-cpu-generate:
   extends: .ml-cpu
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/rse-ops/ubuntu:22.04
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-cpu-pr-generate:
@@ -799,7 +799,7 @@ ml-cpu-protected-build:
 
 .ml-cuda-generate:
   extends: .ml-cuda
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/rse-ops/cuda-ubuntu-22.04:cuda-11.3.1
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-cuda-pr-generate:
@@ -839,7 +839,7 @@ ml-cuda-protected-build:
 
 .ml-rocm-generate:
   extends: .ml-rocm
-  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  image: ghcr.io/rse-ops/hip-ubuntu-22.04:hip-5.1.3
   tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
 
 ml-rocm-pr-generate:

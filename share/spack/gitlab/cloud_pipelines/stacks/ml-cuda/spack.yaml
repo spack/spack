@@ -19,6 +19,12 @@ spack:
       target: [x86_64_v4]
       variants: ~rocm+cuda cuda_arch=80
 
+    cuda:
+      externals:
+      - spec: cuda@11.3.109
+        prefix: /opt/view
+      buildable: false
+
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda
@@ -119,7 +125,7 @@ spack:
             KUBERNETES_CPU_REQUEST: 8000m
             KUBERNETES_MEMORY_REQUEST: 12G
 
-    image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+    image: { "name": "ghcr.io/rse-ops/cuda-ubuntu-22.04:cuda-11.3.1", "entrypoint": [""] }
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
@@ -127,7 +133,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+      image: { "name": "ghcr.io/rse-ops/cuda-ubuntu-22.04:cuda-11.3.1", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64_v4"]
 
     signing-job-attributes:
