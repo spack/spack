@@ -307,9 +307,7 @@ To resolve this problem, please try the following:
             fs.filter_file(
                 r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path
             )
-            fs.filter_file(
-                r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path
-            )
+            fs.filter_file(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
 
     @property
     def configure_directory(self):
