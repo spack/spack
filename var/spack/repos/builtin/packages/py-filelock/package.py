@@ -13,9 +13,10 @@ class PyFilelock(PythonPackage):
     independent file lock in Python, which provides a simple way of
     inter-process communication"""
 
-    homepage = "https://github.com/benediktschmitt/py-filelock"
+    homepage = "https://github.com/tox-dev/py-filelock"
     pypi = "filelock/filelock-3.0.4.tar.gz"
 
+    version("3.8.0", sha256="55447caa666f2198c5b6b13a26d2084d26fa5b115c00d065664b2124680c4edc")
     version("3.5.0", sha256="137b661e657f7850eec9def2a001efadba3414be523b87cd3f9a037372d80a15")
     version("3.4.0", sha256="93d512b32a23baf4cac44ffd72ccf70732aeff7b8050fcaf6d3ec406d954baf4")
     version("3.0.12", sha256="18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59")
@@ -32,7 +33,9 @@ class PyFilelock(PythonPackage):
     depends_on("python@3.7:", when="@3.4.2:", type=("build", "run"))
     depends_on("python@3.6:", when="@3.3:", type=("build", "run"))
     depends_on("python@2.7:2,3.5:", when="@3.1:", type=("build", "run"))
-    depends_on("py-setuptools@41.0.0:", when="@3.1:", type="build")
+    depends_on("py-setuptools@63.4:", when="@3.8:", type="build")
+    depends_on("py-setuptools@41:", when="@3.1:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("py-wheel@0.30:", when="@3.1:", type="build")
+    depends_on("py-setuptools-scm@7.0.5:", when="@3.8:", type="build")
     depends_on("py-setuptools-scm@2:", when="@3.1:", type="build")
+    depends_on("py-wheel@0.30:", when="@3.1:3.7", type="build")
