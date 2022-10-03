@@ -46,7 +46,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-gimmik@2.3:2", when="@:1.14.0", type=("build", "run"))
-    depends_on("py-gimmik@3:", when="@1.15.0:", type=("build", "run"))
+    depends_on("py-gimmik@3", when="@1.15.0:", type=("build", "run"))
     depends_on("py-h5py@2.10:", type=("build", "run"))
     depends_on("py-mako@1.0.0:", type=("build", "run"))
     depends_on("py-mpi4py@3.1.0:", type=("build", "run"))
@@ -73,19 +73,19 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
                     "libmetis", root=self.spec["metis"].prefix.lib, recursive=False
                 )
             env.set("PYFR_METIS_LIBRARY_PATH", lib_path[0])
-        
+
         if "+scotch" in self.spec:
             lib_path = find_libraries(
                     "libscotch", root=self.spec["scotch"].prefix.lib, recursive=False
                 )
             env.set("PYFR_SCOTCH_LIBRARY_PATH", lib_path[0])
-        
+
         if "+libxsmm" in self.spec:
             lib_path = find_libraries(
                     "libxsmm", root=self.spec["libxsmm"].prefix.lib, recursive=False
                 )
             env.set("PYFR_XSMM_LIBRARY_PATH", lib_path[0])
-        
+
         if "+cuda" in self.spec:
             lib_path = find_libraries(
                     "libcublas", root=self.spec["cuda"].prefix, recursive=True
