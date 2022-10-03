@@ -23,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("3.15.0", tag="v3.15.0")
     version("3.14.0", tag="v3.14.0")
     version("3.13.0", tag="v3.13.0")
     version("3.12.0", tag="v3.12.0")
@@ -120,6 +121,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Omitted for now due to concretizer bug
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
+
+    # QMCPACK 3.15.0 increased the minimum gcc to 9
+    conflicts("%gcc@:8", when="@3.15.0:")
 
     # QMCPACK 3.10.0 increased the minimum requirements for compiler versions
     newer_compiler_warning = (
