@@ -146,9 +146,13 @@ class RocmValidationSuite(CMakePackage):
         depends_on("hip-rocclr@" + ver, when="@" + ver)
 
     def patch(self):
-        if "@4.5.0:" in self.spec:
+        if "@4.5.0:5.1" in self.spec:
             filter_file(
                 "@ROCM_PATH@/rvs", self.spec.prefix.rvs, "rvs/conf/deviceid.sh.in", string=True
+            )
+        elif "@5.2.0:" in self.spec:
+            filter_file(
+                "@ROCM_PATH@/bin", self.spec.prefix.bin, "rvs/conf/deviceid.sh.in", string=True
             )
 
     def cmake_args(self):
