@@ -69,36 +69,36 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     # Explicitly set library path for dependencies
     def setup_run_environment(self, env):
         if "+metis" in self.spec:
-            lib_path = find_libraries(
-                    "libmetis", root=self.spec["metis"].prefix.lib, recursive=False
-                )
-            env.set("PYFR_METIS_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_METIS_LIBRARY_PATH", lib_path)
 
         if "+scotch" in self.spec:
-            lib_path = find_libraries(
-                    "libscotch", root=self.spec["scotch"].prefix.lib, recursive=False
-                )
-            env.set("PYFR_SCOTCH_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["scotch"].libs.directories[0], "libscotch.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_SCOTCH_LIBRARY_PATH", lib_path)
 
         if "+libxsmm" in self.spec:
-            lib_path = find_libraries(
-                    "libxsmm", root=self.spec["libxsmm"].prefix.lib, recursive=False
-                )
-            env.set("PYFR_XSMM_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["libxsmm"].libs.directories[0], "libxsmm.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_XSMM_LIBRARY_PATH", lib_path)
 
         if "+cuda" in self.spec:
-            lib_path = find_libraries(
-                    "libcublas", root=self.spec["cuda"].prefix, recursive=True
-                )
-            env.set("PYFR_CUBLAS_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["cuda"].libs.directories[0], "libcublas.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_CUBLAS_LIBRARY_PATH", lib_path)
 
         if "+hip" in self.spec:
-            lib_path = find_libraries(
-                    "libamdhip64", root=self.spec["hip"].prefix, recursive=True
-                )
-            env.set("PYFR_AMDHIP64_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["hip"].libs.directories[0], "libamdhip64.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_AMDHIP64_LIBRARY_PATH", lib_path)
 
-            lib_path = find_libraries(
-                    "librocblas", root=self.spec["rocblas"].prefix, recursive=True
-                )
-            env.set("PYFR_ROCBLAS_LIBRARY_PATH", lib_path[0])
+            lib_path = join_path(
+                self.spec["rocblas"].libs.directories[0], "librocblas.{0}".format(dso_suffix)
+            )
+            env.set("PYFR_ROCBLAS_LIBRARY_PATH", lib_path)
