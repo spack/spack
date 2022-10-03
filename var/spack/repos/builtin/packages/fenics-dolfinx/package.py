@@ -68,7 +68,7 @@ class FenicsDolfinx(CMakePackage):
     depends_on("parmetis", when="+parmetis")
     depends_on("scotch+mpi", when="@0.1.0:0.3.0")
 
-    variant("slepc", default=True, description="slepc support")
+    variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
 
     depends_on("cmake@3.19:", type="build")
