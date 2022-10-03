@@ -1872,10 +1872,14 @@ class BuildProcessInstaller(object):
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
+                self._real_install()
+
+                # Run package's install() method before installing sources. This means package
+                # install scripts that don't expect <prefix>/share to exist yet won't fail. See
+                # https://github.com/spack/spack/pull/32953 for where installing sources first may
+                # cause breakages.
                 if self.install_source:
                     self._install_source()
-
-                self._real_install()
 
             # Stop the timer and save results
             self.timer.stop()
