@@ -52,7 +52,7 @@ class Julia(MakefilePackage):
         " version_suffix=jl +link_llvm_dylib ~internal_unwind"
     )
     depends_on("libuv", when="@:1.7")
-    depends_on("libuv-julia@1.44.1", when="@1.8.0:1.8.1")
+    depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
     depends_on("libuv-julia@1.44.2", when="@1.8.2:")
 
     with when("@1.8.0:1.8"):
