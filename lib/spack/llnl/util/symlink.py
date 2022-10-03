@@ -55,7 +55,6 @@ def _win32_junction(path, link):
 
     CreateHardLink(link, path)
 
-
 @lang.memoized
 def _win32_can_symlink():
     tempdir = tempfile.mkdtemp()
