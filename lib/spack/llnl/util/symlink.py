@@ -16,6 +16,7 @@ is_windows = _platform == "win32"
 if is_windows:
     from win32file import CreateHardLink
 
+
 def symlink(real_path, link_path):
     """
     Create a symbolic link.
@@ -54,6 +55,7 @@ def _win32_junction(path, link):
         path = os.path.abspath(path)
 
     CreateHardLink(link, path)
+
 
 @lang.memoized
 def _win32_can_symlink():
