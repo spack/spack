@@ -15,7 +15,7 @@ class Metplus(Package):
     homepage = "https://dtcenter.org/community-code/metplus"
     url = "https://github.com/dtcenter/METplus/archive/refs/tags/v4.1.4.tar.gz"
 
-    maintainers = ['kgerheiser']
+    maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 
     version('4.1.4', sha256='6b8ac395f885807fcbeea07d814bbf97cec343566cb37bee088a3c5b65880ac7')
     version('4.1.1', sha256='81c03474f57cef6c7196d65fba6427365fd761578d99804c6c367f21a29b8ced')
