@@ -14,6 +14,7 @@ class PyCffi(PythonPackage):
     homepage = "https://cffi.readthedocs.io/en/latest/"
     pypi = "cffi/cffi-1.13.0.tar.gz"
 
+    version("1.15.1", sha256="d400bfb9a37b1351253cb402671cea7e89bdecc294e8016a707f6d1d8ac934f9")
     version("1.15.0", sha256="920f0d66a896c2d99f0adbb391f990a84091179542c205fa53ce5787aff87954")
     version("1.14.6", sha256="c9a875ce9d7fe32887784274dd533c57909b7b1dcadcc128a2ac21331a9765dd")
     version("1.14.3", sha256="f92f789e4f9241cd262ad7a555ca2c648a98178a953af117ef7fad46aa1d5591")
