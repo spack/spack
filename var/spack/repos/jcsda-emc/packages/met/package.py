@@ -12,11 +12,10 @@ class Met(AutotoolsPackage):
     configurable methods to compute statistics and diagnostics"""
 
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
-    url = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
+    url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
 
-    maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
+    maintainers = ['kgerheiser']
 
-    version('10.1.2', sha256='f0ef0de116495c91128ca6a267bb4f93088220f33d4b9d2cf57f014be6fd9742')
     version('10.1.1', sha256='9827e65fbd1c64e776525bae072bc2d37d14465e85a952778dcc32a26d8b5c9e')
     version('10.1.0', sha256='8d4c1fb2311d8481ffd24e30e407a1b1bc72a6add9658d76b9c323f1733db336')
     version('10.0.1', sha256='8e965bb0eb8353229a730af511c5fa62bad9744606ab6a218d741d29eb5f3acd')
@@ -58,7 +57,6 @@ class Met(AutotoolsPackage):
 
     def url_for_version(self, version):
         release_date = {
-            '10.1.2': '20220516',
             '10.1.1': '20220419',
             '10.1.0': '20220314',
             '10.0.1': '20211201',
