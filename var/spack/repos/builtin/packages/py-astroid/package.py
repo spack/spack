@@ -66,3 +66,4 @@ class PyAstroid(PythonPackage):
     depends_on("py-setuptools@17.1:", type=("build", "run"))
     depends_on("py-setuptools@20:", when="@2.7.3:", type=("build", "run"))
     depends_on("py-setuptools@62.6:62", when="@2.12.7:", type=("build", "run"))
+    depends_on("py-wheel@0.37.1:0.37", when="@2.12.7:", type="build")
