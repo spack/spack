@@ -20,8 +20,16 @@ class Actsvg(CMakePackage):
 
     version("0.4.22", sha256="a535dc80b309033c45a8521c01b5ea6cd82c1fc8c89661d112de8879d68be790")
 
-    variant("examples", default=False, description="Build the example applications",)
-    variant("meta", default=True, description="Build the meta level interface",)
+    variant(
+        "examples",
+        default=False,
+        description="Build the example applications",
+    )
+    variant(
+        "meta",
+        default=True,
+        description="Build the meta level interface",
+    )
 
     def cmake_args(self):
         args = [
