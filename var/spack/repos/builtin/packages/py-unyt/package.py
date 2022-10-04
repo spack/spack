@@ -21,5 +21,7 @@ class PyUnyt(PythonPackage):
     version("2.8.0", sha256="4fc95704cba4527604f21724d0d9845aea07831a6a2a3d1be9b9d18395e0c345")
     version("2.7.2", sha256="9ad36f890549d18ecb9926019e96c4d27d380e909895a89ac7f1fb168a451edd")
 
+    depends_on('py-setuptools', type='build')
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on("py-numpy@1.13.0:", type=('build', 'run'))
     depends_on("py-sympy@1.2:", type=('build', 'run'))
