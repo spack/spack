@@ -15,6 +15,7 @@ class Protobuf(Package):
     homepage = "https://developers.google.com/protocol-buffers"
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
 
+    version("21.7", sha256="75be42bd736f4df6d702a0e4e4d30de9ee40eac024c4b845d17ae4cc831fe4ae")
     version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
     version("3.21.4", sha256="85d42d4485f36f8cec3e475a3b9e841d7d78523cd775de3a86dba77081f4ca25")
     version("3.21.3", sha256="c29d8b4b79389463c546f98b15aa4391d4ed7ec459340c47bffe15db63eb9126")
@@ -138,7 +139,10 @@ class Protobuf(Package):
         args = self.cmake_args()
         args.extend(std_cmake_args)
 
-        source_directory = join_path(self.stage.source_path, "cmake")
+        if self.spec.satisfies("@:3.21.7"):
+            source_directory = join_path(self.stage.source_path, "cmake")
+        else:
+            source_directory = self.stage.source_path
         build_directory = join_path(source_directory, "build")
 
         with working_dir(build_directory, create=True):
