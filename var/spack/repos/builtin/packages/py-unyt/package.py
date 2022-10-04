@@ -12,8 +12,8 @@ class PyUnyt(PythonPackage):
 
     """
     homepage = "https://yt-project.org"
-   pypi = "unyt/unyt-2.8.0.tar.gz"
-    git      = "https://github.com/yt-project/unyt.git"
+    pypi = "unyt/unyt-2.8.0.tar.gz"
+    git = "https://github.com/yt-project/unyt.git"
 
     maintainers = ['qobilidop', 'charmoniumq']
 

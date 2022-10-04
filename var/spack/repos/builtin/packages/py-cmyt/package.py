@@ -11,7 +11,7 @@ class PyCmyt(PythonPackage):
     """Matplotlib colormaps from the yt project !"""
     homepage = "https://yt-project.org"
     pypi = "cmyt/cmyt-1.0.4.tar.gz"
-    git      = "https://github.com/yt-project/cmyt.git"
+    git = "https://github.com/yt-project/cmyt.git"
 
     maintainers = ['qobilidop', 'charmoniumq']
 
