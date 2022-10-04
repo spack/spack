@@ -74,7 +74,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
         cmake_args = []
 
         def append_define(*args):
-            cmake_args.append(CMakePackage.define(*args))
+            cmake_args.append(self.define(*args))
 
         def append_from_variant(*args):
             cmake_args.append(self.define_from_variant(*args))
