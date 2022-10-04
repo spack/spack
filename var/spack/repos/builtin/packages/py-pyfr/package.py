@@ -66,39 +66,11 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     # Conflicts for compilers not supporting OpenMP 5.1+ from v1.15.0:
     conflicts("%gcc@:11", when="@1.15.0: +libxsmm", msg="OpenMP 5.1+ supported compiler required!")
 
-    # Explicitly set library path for dependencies
+    # Explicitly add dependencies to PYFR_LIBRARY_PATH environment variable
     def setup_run_environment(self, env):
-        if "+metis" in self.spec:
-            lib_path = join_path(
-                self.spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_METIS_LIBRARY_PATH", lib_path)
-
-        if "+scotch" in self.spec:
-            lib_path = join_path(
-                self.spec["scotch"].libs.directories[0], "libscotch.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_SCOTCH_LIBRARY_PATH", lib_path)
-
-        if "+libxsmm" in self.spec:
-            lib_path = join_path(
-                self.spec["libxsmm"].libs.directories[0], "libxsmm.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_XSMM_LIBRARY_PATH", lib_path)
-
-        if "+cuda" in self.spec:
-            lib_path = join_path(
-                self.spec["cuda"].libs.directories[0], "libcublas.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_CUBLAS_LIBRARY_PATH", lib_path)
-
-        if "+hip" in self.spec:
-            lib_path = join_path(
-                self.spec["hip"].libs.directories[0], "libamdhip64.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_AMDHIP64_LIBRARY_PATH", lib_path)
-
-            lib_path = join_path(
-                self.spec["rocblas"].libs.directories[0], "librocblas.{0}".format(dso_suffix)
-            )
-            env.set("PYFR_ROCBLAS_LIBRARY_PATH", lib_path)
+        deps = ["metis", "scotch", "libxsmm", "cuda", "hip", "rocblas"]
+        pyfr_library_path = []
+        for dep in deps:
+            if "+{}".format(dep) in self.spec:
+                pyfr_library_path.extend(self.spec[dep].libs.directories)
+        env.set("PYFR_LIBRARY_PATH", ":".join(pyfr_library_path))
