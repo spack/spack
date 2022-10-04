@@ -13,7 +13,7 @@ class Metplus(Package):
     """
 
     homepage = "https://dtcenter.org/community-code/metplus"
-    url = "https://github.com/dtcenter/METplus/archive/refs/tags/v4.1.4.tar.gz"
+    url = "https://github.com/dtcenter/METplus/archive/refs/tags/v4.1.0.tar.gz"
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 

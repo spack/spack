@@ -12,7 +12,7 @@ class Met(AutotoolsPackage):
     configurable methods to compute statistics and diagnostics"""
 
     homepage = "https://dtcenter.org/community-code/model-evaluation-tools-met"
-    url = "https://github.com/dtcenter/MET/releases/download/v10.1.2/met-10.1.2.20220516.tar.gz"
+    url      = "https://github.com/dtcenter/MET/releases/download/v10.1.0/met-10.1.0.20220314.tar.gz"
 
     maintainers = ['kgerheiser', 'Hang-Lei-NOAA']
 
