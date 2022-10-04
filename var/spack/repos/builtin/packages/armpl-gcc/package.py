@@ -122,12 +122,16 @@ def get_os():
 def get_package_url(version):
     os = get_os()
     os_no_dash = get_os().replace("-", "")
+    os_lower = os.split(".")[0].lower()
     base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
     gcc_version = version.split("_")[1]
     filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
-    return base_url + armpl_version_dashed + "/" + os_no_dash + "/" + filename
+    if armpl_version == "22.1":
+        return base_url + armpl_version_dashed + "/" + os_lower + "/" + filename
+    else:
+        return base_url + armpl_version_dashed + "/" + os_no_dash + "/" + filename
 
 
 def get_armpl_prefix(spec):
@@ -154,23 +158,23 @@ class ArmplGcc(Package):
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
 
-    conflicts("%gcc@:11.0", when="@22.1_gcc-11.2")
-    conflicts("%gcc@:10.0", when="@22.1_gcc-10.2")
-    conflicts("%gcc@:9.0", when="@22.1_gcc-9.3")
-    conflicts("%gcc@:8.0", when="@22.1_gcc-8.2")
-    conflicts("%gcc@:7.0", when="@22.1_gcc-7.5")
+    conflicts("%gcc@:10", when="@22.1_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.1_gcc-7.5")
 
-    conflicts("%gcc@:11.0", when="@22.0.2_gcc-11.2")
-    conflicts("%gcc@:10.0", when="@22.0.2_gcc-10.2")
-    conflicts("%gcc@:9.0", when="@22.0.2_gcc-9.3")
-    conflicts("%gcc@:8.0", when="@22.0.2_gcc-8.2")
-    conflicts("%gcc@:7.0", when="@22.0.2_gcc-7.5")
+    conflicts("%gcc@:10", when="@22.0.2_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.0.2_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.0.2_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.0.2_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.0.2_gcc-7.5")
 
-    conflicts("%gcc@:11.0", when="@22.0.1_gcc-11.2")
-    conflicts("%gcc@:10.0", when="@22.0.1_gcc-10.2")
-    conflicts("%gcc@:9.0", when="@22.0.1_gcc-9.3")
-    conflicts("%gcc@:8.0", when="@22.0.1_gcc-8.2")
-    conflicts("%gcc@:7.0", when="@22.0.1_gcc-7.5")
+    conflicts("%gcc@:10", when="@22.0.1_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.0.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.0.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.0.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.0.1_gcc-7.5")
 
     variant("ilp64", default=False, description="use ilp64 specific Armpl library")
     variant("shared", default=True, description="enable shared libs")
@@ -191,9 +195,8 @@ class ArmplGcc(Package):
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
-        exe = Executable(
-            "./arm-performance-libraries_{0}_{1}.sh".format(spec.version.up_to(3), get_os())
-        )
+        armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
+        exe = Executable("./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os()))
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
