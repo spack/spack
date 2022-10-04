@@ -2089,13 +2089,10 @@ class Environment:
                 "lockfile-version": lockfile_format_version,
                 "specfile-version": spack.spec.SPECFILE_FORMAT_VERSION,
             },
-
             # spack version information
             "spack": spack_dict,
-
             # users specs + hashes are the 'roots' of the environment
             "roots": [{"hash": h, "spec": str(s)} for h, s in hash_spec_list],
-
             # Concrete specs by hash, including dependencies
             "concrete_specs": concrete_specs,
         }

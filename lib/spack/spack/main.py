@@ -11,7 +11,6 @@ after the system path is set up.
 from __future__ import print_function
 
 import argparse
-import codecs
 import inspect
 import io
 import operator
@@ -24,8 +23,6 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
-
-from six.moves.urllib.error import URLError
 
 import archspec.cpu
 
@@ -51,8 +48,6 @@ import spack.util.environment
 import spack.util.git
 import spack.util.path
 from spack.error import SpackError
-from spack.util.spack_json import load
-from spack.util.web import SpackWebError, read_from_url
 
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
@@ -139,11 +134,11 @@ def get_spack_commit():
     """
     git_path = os.path.join(spack.paths.prefix, ".git")
     if not os.path.exists(git_path):
-        return get_spack_tag_commit(spack.spack_version)
+        return None
 
     git = spack.util.git.git()
     if not git:
-        return get_spack_tag_commit(spack.spack_version)
+        return None
 
     rev = git(
         "-C",
@@ -155,39 +150,10 @@ def get_spack_commit():
         fail_on_error=False,
     )
     if git.returncode != 0:
-        return get_spack_tag_commit(spack.spack_version)
+        return None
 
     match = re.match(r"[a-f\d]{7,}$", rev)
     return match.group(0) if match else None
-
-
-def get_spack_tag_commit(version=spack.spack_version):
-    """Get the commit sha for the Spack tag version.
-
-    The URL used in this method only appears to work for Spack vX.Y.Z
-    releases (with Notes and Downloads). For example, information for
-    tags like releases/latest and e4s-X.Y are not returned.
-
-    Args:
-       version (str): the version whose commit is desired
-
-    Returns:
-        (str or None) the tagged version if found, otherwise None
-    """
-    tags_url = "https://api.github.com/repos/spack/spack/tags"
-
-    try:
-        _, _, response = read_from_url(tags_url)
-        page = codecs.getreader("utf-8")(response).read()
-    except (URLError, SpackWebError):
-        return None
-
-    tags = load(page)
-    for tag in tags:
-        if tag["name"] in ["v{0}".format(version), version]:
-            return tag["commit"]["sha"]
-
-    return None
 
 
 def get_version():
