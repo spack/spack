@@ -22,5 +22,5 @@ class PySoupsieve(PythonPackage):
     depends_on("python@3.6:", when="@2.2:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@42:", when="@2.2", type="build")
-    depends_on("py-hatchling@0.21.1:", when="@2.3:", type="build")
+    depends_on("py-hatchling@0.21.1:", when="@2.3.2:", type="build")
     depends_on("py-backports-functools-lru-cache", when="^python@:2", type=("build", "run"))
