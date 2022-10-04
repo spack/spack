@@ -218,7 +218,7 @@ class Phist(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         if spec.satisfies("kernel_lib=builtin") and spec.satisfies("~mpi"):
             raise InstallError("~mpi not possible with kernel_lib=builtin!")

@@ -161,7 +161,7 @@ class Seacas(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
-        define = CMakePackage.define
+        define = self.define
 
         options = []
 

@@ -522,7 +522,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options = []
 
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         define_from_variant = self.define_from_variant
 
         def _make_definer(prefix):

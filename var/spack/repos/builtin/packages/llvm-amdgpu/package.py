@@ -255,7 +255,7 @@ class LlvmAmdgpu(CMakePackage):
         # bootstraping the libcxx with the just built clang
         if self.spec.satisfies("@4.5.0:"):
             spec = self.spec
-            define = CMakePackage.define
+            define = self.define
             libcxxdir = "build-bootstrapped-libcxx"
             with working_dir(libcxxdir, create=True):
                 cmake_args = [

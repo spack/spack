@@ -60,7 +60,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
             env.append_flags("CXXFLAGS", "-no-ipo")
 
     def cmake_args(self):
-        define = CMakePackage.define
+        define = self.define
 
         vs = [
             "mpi",

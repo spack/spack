@@ -265,7 +265,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         from_variant = self.define_from_variant
 
         # List of CMake arguments
