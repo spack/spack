@@ -12,8 +12,8 @@ class PyTomli(PythonPackage):
     Tomli is fully compatible with TOML v1.0.0."""
 
     homepage = "https://github.com/hukkin/tomli"
-    url = "https://files.pythonhosted.org/packages/py3/t/tomli/tomli-1.2.2-py3-none-any.whl"
-    list_url = "https://pypi.org/simple/tomli/"
+    pypi = "https://pypi.org/project/tomli/"
+    git = "https://github.com/hukkin/tomli.git"
 
     version(
         "2.0.1",

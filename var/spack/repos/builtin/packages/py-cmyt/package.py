@@ -28,5 +28,7 @@ class PyCmyt(PythonPackage):
     depends_on("py-matplotlib@2.1.0:", type=('build', 'run'))
     depends_on("py-more-itertools@8.4.0:", type=('build', 'run'))
     depends_on("py-numpy@1.13.3:", type=('build', 'run'))
-    depends_on("py-typing-extensions@3.10.0.2:", when="^python@:3.7", type=('build', 'run'))
+    depends_on("py-typing-extensions@3.10.0.2:", when="^python@:3.6", type=('build', 'run'))
+    depends_on("python@3.6:", type=("build", "run")
+    depends_on("python@3.8:", type=("build", "run"), when="@1.1.0:")
     # python_version < "3.8"
