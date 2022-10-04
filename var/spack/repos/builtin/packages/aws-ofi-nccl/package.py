@@ -32,7 +32,7 @@ class AwsOfiNccl(AutotoolsPackage):
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
     def setup_run_environment(self, env):
-        aws_ofi_nccl_home = self.spec["aws-ofi-nccl"].prefix
+        aws_ofi_nccl_home = self.spec.prefix
         env.append_path("LD_LIBRARY_PATH", aws_ofi_nccl_home.lib)
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
