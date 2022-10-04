@@ -79,7 +79,7 @@ class Neovim(CMakePackage):
     # depend on virtual, lua-luajit-openresty preferred
     depends_on("lua-lang")
     depends_on("luajit", when="~no_luajit")
-    depends_on("lua@5.1:5.1.99", when="+no_luajit")
+    depends_on("lua@5.1:5.1", when="+no_luajit")
 
     # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^lua", type=("link", "run"))

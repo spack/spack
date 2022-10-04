@@ -22,7 +22,7 @@ class RRjags(RPackage):
 
     depends_on("r@2.14.0:", type=("build", "run"))
     depends_on("r-coda@0.13:", type=("build", "run"))
-    depends_on("jags@4.0.0:4.999.999", type=("link"))
+    depends_on("jags@4:4", type=("link"))
 
     def configure_args(self):
         args = [

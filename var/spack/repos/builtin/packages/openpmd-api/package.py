@@ -47,7 +47,7 @@ class OpenpmdApi(CMakePackage):
     depends_on("catch2@2.13.4:", type="test", when="@0.14.0:")
     depends_on("mpi@2.3:", when="+mpi")  # might become MPI 3.0+
     depends_on("nlohmann-json@3.9.1:")
-    depends_on("mpark-variant@1.4.0:", when="@:0.14.99")  # pre C++17 releases
+    depends_on("mpark-variant@1.4.0:", when="@:0.14")  # pre C++17 releases
     depends_on("toml11@3.7.1:", when="@0.15.0:")
     with when("+hdf5"):
         depends_on("hdf5@1.8.13:")

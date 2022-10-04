@@ -91,11 +91,11 @@ class Draco(CMakePackage):
     patch("d710.patch", when="@7.1.0")
     patch("d730.patch", when="@7.3.0:7.3")
     patch("d740.patch", when="@7.4.0:7.4")
-    patch("d750-intel17.patch", when="@7.5.0:7.6.99%intel@17.0.0:18.0.0")
+    patch("d750-intel17.patch", when="@7.5.0:7.6%intel@17.0.0:18.0.0")
     patch("d760-cray.patch", when="@7.6.0")
     patch("d770-nocuda.patch", when="@7.7.0")
     patch("d770-query_craype.patch", when="@7.7.0")
-    patch("smpi.patch", when="@:7.6.99")
+    patch("smpi.patch", when="@:7.6")
     patch("CMAKE-add-option-to-not-use-QT.patch", when="@7.8.0")
 
     def url_for_version(self, version):

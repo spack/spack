@@ -123,7 +123,7 @@ class Eospac(Package):
 
     # GPU offload is only available for version 6.5+
     variant("offload", default=False, description="Build GPU offload library instead of standard")
-    conflicts("+offload", when="@:6.4.99")
+    conflicts("+offload", when="@:6.4")
 
     def install(self, spec, prefix):
         with working_dir("Source"):

@@ -125,7 +125,7 @@ class Arrow(CMakePackage, CudaPackage):
             args.append(self.define("BUILD_SHARED", "OFF"))
             args.append(self.define("BUILD_STATIC", "ON"))
 
-        if self.spec.satisfies("@:0.11.99"):
+        if self.spec.satisfies("@:0.11"):
             # ARROW_USE_SSE was removed in 0.12
             # see https://issues.apache.org/jira/browse/ARROW-3844
             args.append(self.define("ARROW_USE_SSE", "ON"))

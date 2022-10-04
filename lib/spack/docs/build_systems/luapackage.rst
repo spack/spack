@@ -72,7 +72,7 @@ avoid downloading extra Lua dependencies during build.  If the package needs
 Lua libraries outside the standard set, they should be added as dependencies.
 
 To specify a Lua version constraint but allow all lua implementations, prefer
-to use ``depends_on("lua-lang@5.1:5.1.99")`` to express any 5.1 compatible
+to use ``depends_on("lua-lang@5.1:5.1")`` to express any 5.1 compatible
 version. If the package requires LuaJit rather than Lua,
 a ``depends_on("luajit")`` should be used to ensure a LuaJit distribution is
 used instead of the Lua interpreter. Alternately, if only interpreted Lua will

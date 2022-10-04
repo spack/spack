@@ -135,7 +135,7 @@ class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     with when("+oneapi-level-zero"):
         depends_on("oneapi-level-zero")
         # LevelZero support isn't available until hwloc version 2.5.0
-        conflicts("@:2.4.99", msg="hwloc supports Intel OneAPI Level Zero only since 2.5.0")
+        conflicts("@:2.4", msg="hwloc supports Intel OneAPI Level Zero only since 2.5.0")
 
     @classmethod
     def determine_version(cls, exe):

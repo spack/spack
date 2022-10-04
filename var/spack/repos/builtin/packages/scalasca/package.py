@@ -37,7 +37,7 @@ class Scalasca(AutotoolsPackage):
     depends_on("otf2@2:", when="@2.3:")
 
     # version 2.3
-    depends_on("cube@4.3", when="@2.3:2.3.99")
+    depends_on("cube@4.3", when="@2.3:2.3")
 
     # version 2.1 - 2.2
     depends_on("cube@4.2", when="@2.1:2.2")

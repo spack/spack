@@ -34,7 +34,7 @@ class PyYtopt(PythonPackage):
     depends_on("py-dh-scikit-optimize", type=("build", "run"))
     depends_on("py-configspace", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-ytopt-autotune@1.0.0:1.0.999", type=("build", "run"))
+    depends_on("py-ytopt-autotune@1.0:1.0", type=("build", "run"))
     depends_on("py-joblib", type=("build", "run"))
     depends_on("py-deap", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))

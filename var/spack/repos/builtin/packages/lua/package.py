@@ -223,10 +223,10 @@ class Lua(LuaImplPackage):
     variant("pcfile", default=False, description="Add patch for lua.pc generation")
     variant("shared", default=True, description="Builds a shared version of the library")
 
-    provides("lua-lang@5.1", when="@5.1:5.1.99")
-    provides("lua-lang@5.2", when="@5.2:5.2.99")
-    provides("lua-lang@5.3", when="@5.3:5.3.99")
-    provides("lua-lang@5.4", when="@5.4:5.4.99")
+    provides("lua-lang@5.1", when="@5.1:5.1")
+    provides("lua-lang@5.2", when="@5.2:5.2")
+    provides("lua-lang@5.3", when="@5.3:5.3")
+    provides("lua-lang@5.4", when="@5.4:5.4")
 
     depends_on("ncurses+termlib")
     depends_on("readline")

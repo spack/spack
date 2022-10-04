@@ -75,7 +75,7 @@ class Serialbox(CMakePackage):
     )
     conflicts(
         "+ftg",
-        when="@:2.2.999",
+        when="@:2.2",
         msg="the FortranTestGenerator frontend is supported only " "starting version 2.3.0",
     )
     conflicts("+sdb", when="~python", msg="the stencil debugger requires the Python interface")

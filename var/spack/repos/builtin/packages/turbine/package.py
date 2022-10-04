@@ -25,7 +25,7 @@ class Turbine(AutotoolsPackage):
 
     depends_on("adlbx")
     depends_on("adlbx@master", when="@master")
-    depends_on("adlbx@:0.9.2", when="@1.2.3:1.2.99")
+    depends_on("adlbx@:0.9.2", when="@1.2.3:1.2")
     depends_on("tcl", type=("build", "run"))
     depends_on("zsh", type=("build", "run"))
     depends_on("swig", type="build")

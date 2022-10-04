@@ -128,7 +128,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     # Specify the correct versions of Hydrogen
     depends_on("hydrogen@:1.3.4", when="@0.95:0.100")
-    depends_on("hydrogen@1.4.0:1.4", when="@0.101:0.101.99")
+    depends_on("hydrogen@1.4.0:1.4", when="@0.101:0.101")
     depends_on("hydrogen@1.5.0:", when="@:0.90,0.102:")
 
     # Add Hydrogen variants
@@ -153,7 +153,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     # Specify the correct version of Aluminum
     depends_on("aluminum@:0.3", when="@0.95:0.100 +al")
-    depends_on("aluminum@0.4.0:0.4", when="@0.101:0.101.99 +al")
+    depends_on("aluminum@0.4.0:0.4", when="@0.101:0.101 +al")
     depends_on("aluminum@0.5.0:", when="@:0.90,0.102: +al")
 
     # Add Aluminum variants
@@ -175,7 +175,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("dihydrogen +nvshmem", when="+dihydrogen +nvshmem")
     depends_on("dihydrogen ~rocm", when="+dihydrogen ~rocm")
     depends_on("dihydrogen +rocm", when="+dihydrogen +rocm")
-    depends_on("dihydrogen@0.1", when="@0.101:0.101.99 +dihydrogen")
+    depends_on("dihydrogen@0.1", when="@0.101:0.101 +dihydrogen")
     depends_on("dihydrogen@:0.0,0.2:", when="@:0.90,0.102: +dihydrogen")
     conflicts("~dihydrogen", when="+distconv")
 
@@ -251,7 +251,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # using cereal@1.3.1 and above requires changing the
     # find_package call to lowercase, so stick with :1.3.0
     depends_on("cereal@:1.3.0")
-    depends_on("catch2@2.9.0:2.99.999", when="+unit_tests", type=("build", "test"))
+    depends_on("catch2@2.9.0:2", when="+unit_tests", type=("build", "test"))
     depends_on("clara")
 
     depends_on("llvm-openmp", when="%apple-clang")

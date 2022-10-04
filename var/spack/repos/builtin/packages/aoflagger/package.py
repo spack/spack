@@ -18,7 +18,7 @@ class Aoflagger(CMakePackage):
 
     depends_on("casacore+python~fftpack@1.10:")
     depends_on("fftw~mpi@3.0:")
-    depends_on("boost+python@:1.66.99")
+    depends_on("boost+python@:1.66")
 
     # TODO: replace this with an explicit list of components of Boost,
     # for instance depends_on('boost +filesystem')

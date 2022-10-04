@@ -41,10 +41,10 @@ class Dpcpp(CMakePackage):
     depends_on("cmake@3.16.2:", type="build")
     depends_on("ninja@1.10.0:", type="build")
 
-    depends_on("cuda@10.2.0:11.4.999", when="+cuda")
+    depends_on("cuda@10.2.0:11.4", when="+cuda")
 
     # NOTE: AMD HIP needs to be tested; it will be done in the next update
-    # depends_on('cuda@10.2.0:10.2.999', when='rocm-platform=NVIDIA', type='build')
+    # depends_on('cuda@10.2.0:10.2', when='rocm-platform=NVIDIA', type='build')
     # depends_on('hip@4.0.0:', when='+rocm', type='build')
 
     root_cmakelists_dir = "llvm"

@@ -58,11 +58,13 @@ class Clingo(CMakePackage):
     with when("+python"):
         extends("python")
         depends_on("python", type=("build", "link", "run"))
+
         # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
-        depends_on("python@3.6.0:", type=("build", "link", "run"), when="@5.5.0:")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
+        with when("@5.5.0:"):
+            depends_on("python@3.6:", type=("build", "link", "run"))
+            depends_on("py-cffi", type=("build", "run"), when="platform=darwin")
+            depends_on("py-cffi", type=("build", "run"), when="platform=linux")
+            depends_on("py-cffi", type=("build", "run"), when="platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
     patch("size-t.patch", when="%msvc")

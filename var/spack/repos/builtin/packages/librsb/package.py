@@ -25,7 +25,7 @@ class Librsb(AutotoolsPackage):
     depends_on("googletest", type="build", when="+googletest")
     conflicts("%apple-clang")
     # conflicts('%clang')
-    conflicts("%gcc@11.0.0:11.2.99", msg="gcc-11.0:gcc-11.3 can break librsb on x86_64")
+    conflicts("%gcc@11:11.2", msg="gcc-11.0:gcc-11.3 can break librsb on x86_64")
     conflicts("+asan", when="+native", msg="native must be disabled when asan is enabled")
 
     variant("asan", default=False, description="Use ASAN.")

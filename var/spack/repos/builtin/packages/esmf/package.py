@@ -51,10 +51,11 @@ class Esmf(MakefilePackage):
         description="Build with external parallelio library",
         when="@8.3.b09",
     )
-    variant("pio", default=True, description="Enable Internal ParallelIO support", when="@:8.2.99")
-    variant(
-        "pio", default=True, description="Enable Internal ParallelIO support", when="@8.3.0b09"
-    )
+
+    with when("@:8.2"):
+        variant("pio", default=True, description="Enable Internal ParallelIO support")
+    with when("@8.3.0b09"):
+        variant("pio", default=True, description="Enable Internal ParallelIO support")
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("shared", default=True, description="Build shared library")
     # 'esmf_comm' and 'esmf_os' variants allow override values for their corresponding

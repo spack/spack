@@ -96,6 +96,6 @@ class VotcaXtp(CMakePackage):
         depends_on("votca-tools@%s" % v, when="@%s:%s.0" % (v, v))
         depends_on("votca-csg@%s" % v, when="@%s:%s.0" % (v, v))
     depends_on("libxc", when="@stable,1.5:")
-    depends_on("ceres-solver", when="@1.5:1.5.9999")
+    depends_on("ceres-solver", when="@1.5:1.5")
     depends_on("hdf5+cxx~mpi")
     depends_on("libint@2.6.0:", when="@2021:")

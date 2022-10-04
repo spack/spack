@@ -229,7 +229,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--enable-cub")
         else:
             configure_args.extend(["--without-cuda", "--disable-curand", "--disable-cusparse"])
-            if "@:2.20.99" in spec:
+            if "@:2.20" in spec:
                 configure_args.append("--disable-cub")
 
         if "+rocm" in spec:

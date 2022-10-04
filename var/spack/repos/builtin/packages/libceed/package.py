@@ -36,7 +36,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="@:0.6")
 
     with when("+rocm"):
-        depends_on("hip@3.8.0", when="@0.7:0.7.99")
+        depends_on("hip@3.8.0", when="@0.7:0.7")
         depends_on("hip@3.8.0:", when="@0.8:")
         depends_on("hipblas@3.8.0:", when="@0.8:")
 
