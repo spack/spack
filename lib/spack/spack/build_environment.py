@@ -109,7 +109,14 @@ SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
 
 # Platform-specific library suffix.
-dso_suffix = "dylib" if sys.platform == "darwin" else "so"
+if sys.platform == "darwin":
+    dso_suffix = "dylib"
+elif sys.platform == "win32":
+    dso_suffix = "dll"
+else:
+    dso_suffix = "so"
+
+stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
 def should_set_parallel_jobs(jobserver_support=False):
@@ -1030,8 +1037,11 @@ def get_cmake_prefix_path(pkg):
                 spack_built.insert(0, dspec)
 
     ordered_build_link_deps = spack_built + externals
-    build_link_prefixes = filter_system_paths(x.prefix for x in ordered_build_link_deps)
-    return build_link_prefixes
+    cmake_prefix_path_entries = []
+    for spec in ordered_build_link_deps:
+        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
+
+    return filter_system_paths(cmake_prefix_path_entries)
 
 
 def _setup_pkg_and_run(

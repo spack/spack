@@ -13,6 +13,7 @@ class Nettle(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.lysator.liu.se/~nisse/nettle/"
     gnu_mirror_path = "nettle/nettle-3.3.tar.gz"
 
+    version("3.8.1", sha256="364f3e2b77cd7dcde83fd7c45219c834e54b0c75e428b6f894a23d12dd41cbfe")
     version("3.4.1", sha256="f941cf1535cd5d1819be5ccae5babef01f6db611f9b5a777bae9c7604b8a92ad")
     version("3.4", sha256="ae7a42df026550b85daca8389b6a60ba6313b0567f374392e54918588a411e94")
     version("3.3", sha256="46942627d5d0ca11720fec18d81fc38f7ef837ea4197c1f630e71ce0d470b11e")

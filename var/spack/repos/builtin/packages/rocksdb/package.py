@@ -33,6 +33,8 @@ class Rocksdb(MakefilePackage):
     variant("zlib", default=True, description="Enable zlib compression support")
     variant("zstd", default=False, description="Enable zstandard compression support")
     variant("tbb", default=False, description="Enable Intel TBB support")
+    variant("werror", default=False, description="Build with -Werror")
+    variant("rtti", default=False, description="Build with RTTI")
 
     depends_on("bzip2", when="+bz2")
     depends_on("gflags")
@@ -92,6 +94,12 @@ class Rocksdb(MakefilePackage):
 
         env["CFLAGS"] = " ".join(cflags)
         env["PLATFORM_FLAGS"] = " ".join(ldflags)
+
+        if "~werror" in self.spec:
+            env["DISABLE_WARNING_AS_ERROR"] = "1"
+
+        if "+rtti" in self.spec:
+            env["USE_RTTI"] = "1"
 
         if self.spec.satisfies("@6.13.2:"):
             env["PREFIX"] = self.spec.prefix

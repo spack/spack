@@ -478,14 +478,21 @@ them to the Environment.
    spack:
      include:
      - relative/path/to/config.yaml
+     - https://github.com/path/to/raw/config/compilers.yaml
      - /absolute/path/to/packages.yaml
 
-Environments can include files with either relative or absolute
-paths. Inline configurations take precedence over included
-configurations, so you don't have to change shared configuration files
-to make small changes to an individual Environment. Included configs
-listed earlier will have higher precedence, as the included configs are
-applied in reverse order.
+Environments can include files or URLs. File paths can be relative or
+absolute. URLs include the path to the text for individual files or
+can be the path to a directory containing configuration files.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration precedence
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inline configurations take precedence over included configurations, so
+you don't have to change shared configuration files to make small changes
+to an individual environment. Included configurations listed earlier will
+have higher precedence, as the included configs are applied in reverse order.
 
 -------------------------------
 Manually Editing the Specs List
@@ -615,31 +622,6 @@ The following two Environment manifests are identical:
 
 Spec matrices can be used to install swaths of software across various
 toolchains.
-
-The concretization logic for spec matrices differs slightly from the
-rest of Spack. If a variant or dependency constraint from a matrix is
-invalid, Spack will reject the constraint and try again without
-it. For example, the following two Environment manifests will produce
-the same specs:
-
-.. code-block:: yaml
-
-   spack:
-     specs:
-       - matrix:
-           - [zlib, libelf, hdf5+mpi]
-           - [^mvapich2@2.2, ^openmpi@3.1.0]
-
-   spack:
-     specs:
-       - zlib
-       - libelf
-       - hdf5+mpi ^mvapich2@2.2
-       - hdf5+mpi ^openmpi@3.1.0
-
-This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminately to packages,
-without regard for the applicability of the constraint.
 
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References

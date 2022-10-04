@@ -47,6 +47,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version
@@ -1210,10 +1211,11 @@ class SpackSolverSetup(object):
 
             self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
-            # not then "external(<pkg>)" is a fact.
+            # not then "external(<pkg>)" is a fact, unless we can
+            # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
             if not external_buildable:
-                self.gen.fact(fn.external_only(pkg_name))
+                self.gen.fact(fn.buildable_false(pkg_name))
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
@@ -1444,6 +1446,9 @@ class SpackSolverSetup(object):
 
         # dependencies
         if spec.concrete:
+            # older specs do not have package hashes, so we have to do this carefully
+            if getattr(spec, "_package_hash", None):
+                clauses.append(fn.package_hash(spec.name, spec._package_hash))
             clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
@@ -1515,8 +1520,10 @@ class SpackSolverSetup(object):
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
+                # v can be a string so force it into an actual version for comparisons
+                ver = spack.version.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
         for spec in specs:
@@ -2280,7 +2287,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
+    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (

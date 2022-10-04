@@ -17,6 +17,7 @@ class PyImageio(PythonPackage):
     homepage = "https://github.com/imageio/imageio"
     pypi = "imageio/imageio-2.3.0.tar.gz"
 
+    version("2.22.0", sha256="a332d127ec387b2d3dca967fd065a90f1c1a4ba2343570b03fe2cebb6ed064ea")
     version("2.16.0", sha256="7f7d8d8e1eb6f8bb1d15e0dd93bee3f72026a4c3b96e9c690e42f403f7bdea3e")
     version("2.10.3", sha256="469c59fe71c81cdc41c84f842d62dd2739a08fac8cb85f5a518a92a6227e2ed6")
     version("2.9.0", sha256="52ddbaeca2dccf53ba2d6dec5676ca7bc3b2403ef8b37f7da78b7654bb3e10f0")
@@ -26,12 +27,13 @@ class PyImageio(PythonPackage):
 
     # TODO: Add variants for plugins, and optional dependencies
 
-    # Fix for python 2 if needed.
+    depends_on("python@3.7:", when="@2.16.1:", type=("build", "run"))
     depends_on("python@3.5:", when="@2.9.0:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.4:", when="@:2.5.0", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-numpy@1.20:", when="@2.16:", type=("build", "run"))
+
     depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-numpy@1.20:", when="@2.16", type=("build", "run"))
     depends_on("pil@8.3.2:", when="@2.10:", type=("build", "run"))
     depends_on("pil", type=("build", "run"))
     depends_on("ffmpeg", type="run")
