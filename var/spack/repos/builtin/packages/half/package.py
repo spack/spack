@@ -28,3 +28,5 @@ class Half(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install_tree("include", prefix.include)
+        mkdirp(prefix.include.half)
+        install_tree("include", prefix.include.half)
