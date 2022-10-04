@@ -14,6 +14,7 @@ class LibuvJulia(AutotoolsPackage):
 
     # julia's libuv fork doesn't tag (all?) releases, so we fix commits.
     version("1.44.2", commit="e6f0e4900e195c8352f821abe2b3cffc3089547b")
+    version("1.44.1", commit="1b2d16477fe1142adea952168d828a066e03ee4c")
     version("1.42.0", commit="3a63bf71de62c64097989254e4f03212e3bf5fc8")
 
     @property
