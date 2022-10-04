@@ -22,7 +22,7 @@ class PyYt(PythonPackage):
 
     maintainers = ["qobilidop"]
 
-    version("develop", branch="main")
+    version("main", branch="main")
     version("develop", branch="master", deprecated=True)
     version("develop-4.0", branch="yt-4.0", deprecated=True)
 

@@ -12,12 +12,12 @@ class PyUnyt(PythonPackage):
 
     """
     homepage = "https://yt-project.org"
-    url      = "https://github.com/yt-project/unyt/archive/v2.8.0.tar.gz"
+   pypi = "unyt/unyt-2.8.0.tar.gz"
     git      = "https://github.com/yt-project/unyt.git"
 
     maintainers = ['qobilidop', 'charmoniumq']
 
-    version("develop", branch="main")
+    version("main", branch="main")
     version("2.8.0", sha256="4fc95704cba4527604f21724d0d9845aea07831a6a2a3d1be9b9d18395e0c345")
     version("2.7.2", sha256="9ad36f890549d18ecb9926019e96c4d27d380e909895a89ac7f1fb168a451edd")
 

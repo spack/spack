@@ -10,12 +10,12 @@ from spack import *
 class PyCmyt(PythonPackage):
     """Matplotlib colormaps from the yt project !"""
     homepage = "https://yt-project.org"
-    url      = "https://github.com/yt-project/cmyt/archive/v1.0.4.tar.gz"
+    pypi = "cmyt/cmyt-1.0.4.tar.gz"
     git      = "https://github.com/yt-project/cmyt.git"
 
     maintainers = ['qobilidop', 'charmoniumq']
 
-    version("develop", branch="main")
+    version("main", branch="main")
 
     version("1.0.4", "c833ed24eadca8c788e59ce27119d26b2e7d4c6af83293e69385412629294b2a")
     version("1.0.3", "7d071f86cd9e53ab4f2af9f1b6539d632f52c0d453caf93a80376105ac351556")
