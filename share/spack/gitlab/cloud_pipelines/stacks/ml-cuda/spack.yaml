@@ -15,9 +15,9 @@ spack:
 
   packages:
     all:
-      require:
-      - any_of: ["+cuda", "cuda_arch=80", "~rocm", "%gcc@11.2.0"]
+      compiler: [gcc@11.2.0]
       target: [x86_64_v4]
+      variants: ~rocm+cuda cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
       require: ~cuda
