@@ -232,10 +232,17 @@ class Acts(CMakePackage, CudaPackage):
         description="Build python bindings for the examples",
         when="@14: +examples",
     )
+    variant(
+        "svg",
+        default=False,
+        description="Build ActSVG display plugin",
+        when="@20.1:",
+    )
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
     # Build dependencies
     depends_on("acts-dd4hep", when="@19 +dd4hep")
+    depends_on("actsvg", when="@20.1: +svg")
     depends_on("autodiff @0.6:", when="@17: +autodiff")
     depends_on("autodiff @0.5.11:0.5.99", when="@1.2:16 +autodiff")
     depends_on("boost @1.62:1.69 +program_options +test", when="@:0.10.3")
@@ -325,6 +332,7 @@ class Acts(CMakePackage, CudaPackage):
             enable_cmake_variant("MEMORY_PROFILING", "profilemem"),
             example_cmake_variant("PYTHIA8", "pythia8"),
             example_cmake_variant("PYTHON_BINDINGS", "python"),
+            plugin_cmake_variant("ACTSVG", "svg"),
             plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
             cmake_variant(unit_tests_label, "unit_tests"),
@@ -356,6 +364,10 @@ class Acts(CMakePackage, CudaPackage):
 
         if spec.satisfies("@18: +python"):
             args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
+
+        if spec.satisfies("@20.1: +svg"):
+            args.append("-DACTS_SETUP_ACTSVG=ON")
+            args.append("-DACTS_USE_SYSTEM_ACTSVG=ON")
 
         if "root" in spec:
             cxxstd = spec["root"].variants["cxxstd"].value
