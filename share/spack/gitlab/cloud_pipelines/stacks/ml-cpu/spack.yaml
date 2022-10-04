@@ -15,9 +15,9 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
+      require:
+      - any_of: ["~cuda", "~rocm", "%gcc@11.2.0"]
       target: [x86_64_v4]
-      variants: ~cuda~rocm
 
   specs:
     # Horovod

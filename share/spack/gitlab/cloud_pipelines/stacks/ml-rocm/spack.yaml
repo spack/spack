@@ -15,14 +15,11 @@ spack:
 
   packages:
     all:
-      compiler: [gcc@11.2.0]
+      require:
+      - any_of: ["+rocm", "amdgpu_target=gfx90a", "~cuda", "%gcc@11.2.0"]
       target: [x86_64_v4]
-      providers:
-        gl: [osmesa]
-        glu: [mesa-glu]
-        libglx: [mesa]
-        libosmesa: [mesa]
-      variants: ~cuda+rocm amdgpu_target=gfx90a
+    gl:
+      require: "osmesa"
 
   specs:
     # Horovod
