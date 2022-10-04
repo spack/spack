@@ -1764,3 +1764,8 @@ def mock_spider_configs(mock_config_data, monkeypatch):
     monkeypatch.setattr(spack.util.web, "spider", _spider)
 
     yield
+
+
+@pytest.fixture(scope="function")
+def mock_tty_stdout(monkeypatch):
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)

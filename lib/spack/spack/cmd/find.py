@@ -203,7 +203,16 @@ def setup_env(env):
     return decorator, added, roots, removed
 
 
-def display_env(env, args, decorator):
+def display_env(env, args, decorator, results):
+    """Display extra find output when running in an environment.
+
+    Find in an environment outputs 2 or 3 sections:
+
+    1. Root specs
+    2. Concretized roots (if asked for with -c)
+    3. Installed specs
+
+    """
     tty.msg("In environment %s" % env.name)
 
     if not env.user_specs:
@@ -233,6 +242,12 @@ def display_env(env, args, decorator):
         tty.msg("Concretized roots")
         cmd.display_specs(env.specs_by_hash.values(), args, decorator=decorator)
         print()
+
+    # Display a header for the installed packages section IF there are installed
+    # packages. If there aren't any, we'll just end up printing "0 installed packages"
+    # later.
+    if results:
+        tty.msg("Installed packages")
 
 
 def find(parser, args):
@@ -286,10 +301,11 @@ def _find(parser, args):
     else:
         if not args.format:
             if env:
-                display_env(env, args, decorator)
+                display_env(env, args, decorator, results)
 
+        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
+
+        # print number of installed packages last (as the list may be long)
         if sys.stdout.isatty() and args.groups:
             pkg_type = "loaded" if args.loaded else "installed"
             spack.cmd.print_how_many_pkgs(results, pkg_type)
-
-        cmd.display_specs(results, args, decorator=decorator, all_headers=True)

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from textwrap import dedent
+
 from spack.main import SpackCommand
 
 list = SpackCommand("list")
@@ -12,6 +14,16 @@ def test_list():
     output = list()
     assert "cloverleaf3d" in output
     assert "hdf5" in output
+
+
+def test_list_cli_output_format(mock_tty_stdout):
+    out = list("mpileaks")
+    assert out == dedent(
+        """\
+    mpileaks
+    ==> 1 packages
+    """
+    )
 
 
 def test_list_filter(mock_packages):
