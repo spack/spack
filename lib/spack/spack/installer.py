@@ -1182,12 +1182,12 @@ class PackageInstaller(object):
         Args:
             task (BuildTask): the installation build task for a package"""
 
-        install_args = task.request.install_args
-        cache_only = install_args.get("cache_only")
         explicit = task.explicit
+        install_args = task.request.install_args
+        cache_only = task.cache_only
+        use_cache = task.use_cache
         tests = install_args.get("tests")
         unsigned = install_args.get("unsigned")
-        use_cache = install_args.get("use_cache")
 
         pkg, pkg_id = task.pkg, task.pkg_id
 
@@ -2220,7 +2220,29 @@ class BuildTask(object):
     @property
     def explicit(self):
         """The package was explicitly requested by the user."""
-        return self.pkg == self.request.pkg and self.request.install_args.get("explicit", True)
+        return self.is_root and self.request.install_args.get("explicit", True)
+
+    @property
+    def is_root(self):
+        """The package was requested directly, but may or may not be explicit
+        in an environment."""
+        return self.pkg == self.request.pkg
+
+    @property
+    def use_cache(self):
+        _use_cache = True
+        if self.is_root:
+            return self.request.install_args.get("package_use_cache", _use_cache)
+        else:
+            return self.request.install_args.get("dependencies_use_cache", _use_cache)
+
+    @property
+    def cache_only(self):
+        _cache_only = False
+        if self.is_root:
+            return self.request.install_args.get("package_cache_only", _cache_only)
+        else:
+            return self.request.install_args.get("dependencies_cache_only", _cache_only)
 
     @property
     def key(self):
@@ -2302,21 +2324,23 @@ class BuildRequest(object):
     def _add_default_args(self):
         """Ensure standard install options are set to at least the default."""
         for arg, default in [
-            ("cache_only", False),
             ("context", "build"),  # installs *always* build
+            ("dependencies_cache_only", False),
+            ("dependencies_use_cache", True),
             ("dirty", False),
             ("fail_fast", False),
             ("fake", False),
             ("install_deps", True),
             ("install_package", True),
             ("install_source", False),
+            ("package_cache_only", False),
+            ("package_use_cache", True),
             ("keep_prefix", False),
             ("keep_stage", False),
             ("restage", False),
             ("skip_patch", False),
             ("tests", False),
             ("unsigned", False),
-            ("use_cache", True),
             ("verbose", False),
         ]:
             _ = self.install_args.setdefault(arg, default)

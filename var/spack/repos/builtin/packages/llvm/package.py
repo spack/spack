@@ -360,6 +360,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     # add -lpthread to build OpenMP libraries
     patch("llvm13-14-thread.patch", when="@13:14")
+    patch("llvm15-thread.patch", when="@15")
 
     # avoid build failed with Fujitsu compiler
     patch("llvm13-fujitsu.patch", when="@13 %fj")
@@ -573,7 +574,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         from_variant = self.define_from_variant
 
         python = spec["python"]
@@ -750,7 +751,7 @@ class Llvm(CMakePackage, CudaPackage):
     @run_after("install")
     def post_install(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         # unnecessary if we build openmp via LLVM_ENABLE_RUNTIMES
         if "+cuda ~omp_as_runtime" in self.spec:
