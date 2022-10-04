@@ -45,13 +45,7 @@ class Vapor(CMakePackage):
             f.write("set (PYTHONPATH {0})\n".format(python.package.platlib))
             # install expects the share/images directory to install below this path
             f.write("set (THIRD_PARTY_DIR {0})\n".format(self.stage.source_path))
-            numpy_include = join_path(
-                self.spec["py-numpy"].prefix,
-                self.spec["python"].package.platlib,
-                "numpy",
-                "core",
-                "include",
-            )
+            numpy_include = self.spec["py-numpy"].headers.directories[0]
             f.write('set (THIRD_PARTY_INC_DIR "{0}")\n'.format(numpy_include))
 
         args = ["-DBUILD_OSP=OFF"]
