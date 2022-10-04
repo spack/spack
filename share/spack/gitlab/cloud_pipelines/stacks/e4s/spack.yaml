@@ -213,6 +213,7 @@ spack:
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
   - upcxx +rocm amdgpu_target=gfx90a
+  - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
   #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
