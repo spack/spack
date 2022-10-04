@@ -2324,20 +2324,34 @@ specific compiler flags:
    depends_on('libelf debug=True')
    depends_on('libelf cppflags="-fPIC"')
 
-Both users *and* package authors can use the same spec syntax to refer
-to different package configurations. Users use the spec syntax on the
-command line to find installed packages or to install packages with
-particular constraints, and package authors can use specs to describe
-relationships between packages.
+.. _uniform-spec-syntax:
 
-^^^^^^^^^^^^^^
-Version ranges
-^^^^^^^^^^^^^^
+.. note:: Both users *and* package authors can use the same spec syntax to refer
+   to different package configurations.
 
-Although some packages require a specific version for their dependencies,
-most can be built with a range of versions. For example, if you are
-writing a package for a legacy Python module that only works with Python
-2.4 through 2.6, this would look like:
+   Users use the spec syntax on the command line to find installed packages or
+   to install packages with particular constraints, and package authors can use
+   specs to describe relationships between packages.
+
+.. _version-constraints:
+
+^^^^^^^^^^^^^^^^^^^
+Version Constraints
+^^^^^^^^^^^^^^^^^^^
+
+Spack understands multiple types of version constraints:
+1. a **single version**, e.g. ``@1.0``, ``@3``, or ``@1.2a7``.
+2. a **version range with ``:``**, such as ``@1.0:1.5`` (all versions between ``1.0`` and ``1.5``, inclusive).
+
+   Version ranges can be open, e.g. ``:3`` means any version up to and including
+   ``3``.  This would include ``3.4`` and ``3.4.2``.  ``4.2:`` means any version
+   above and including ``4.2``. ``:``
+
+3. a **list of versions/ranges with ``,``**, such as ``@1.0,1.5,1.7`` (either ``1.0``, ``1.5``, or ``1.7``).
+
+For example, if you are writing a package for
+a legacy Python module that only works with Python 2.4 through 2.6, this would
+look like:
 
 .. code-block:: python
 
@@ -2352,40 +2366,107 @@ higher), this would look like:
 
    depends_on('python@3:')
 
-Here we leave out the upper bound. If you want to say that a package
-requires Python 2, you can similarly leave out the lower bound:
+We leave out the upper bound here to allow spack to try against python 4 or
+later versions.
+
+Similarly, if our package can only handle Python 2, we would instead leave out the lower bound:
 
 .. code-block:: python
 
    depends_on('python@:2')
 
-Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
-``@:3`` means "up to and including any 3.x version".
-
-What if a package can only be built with Python 2.7? You might be
-inclined to use:
-
-.. code-block:: python
-
-   depends_on('python@2.7')
-
-However, this would be wrong. Spack assumes that all version constraints
-are exact, so it would try to install Python not at ``2.7.18``, but
-exactly at ``2.7``, which is a non-existent version. The correct way to
-specify this would be:
-
-.. code-block:: python
-
-   depends_on('python@2.7.0:2.7')
-
-A spec can contain a version list of ranges and individual versions
+A spec may also contain a "version list" of ranges and/or individual versions
 separated by commas. For example, if you need Boost 1.59.0 or newer,
 but there are known issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
 .. code-block:: python
 
-   depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
+   depends_on('boost@1.59:1.63,1.65.1:1.65,1.66.1:1.66,1.67:')
 
+.. note::
+
+   What if a package can *only* be built with Python 2.7? You might be
+inclined to use:
+
+   .. code-block:: python
+
+      depends_on('python@2.7')
+
+   However, this might produce a confusing error depending on the package and your
+   version of spack, where spack interprets any non-range version constraints like
+   ``@2.7`` as *exact*. When a user of your package goes to install it, spack would then try to install Python not at something like version ``2.7.18``, but
+   exactly at ``2.7``, which does not match the first argument of any ``version()``
+   of the ``python`` package.
+
+   The correct way to specify this would be to explicitly use a version range.
+
+   .. code-block:: python
+
+      # preferred:
+      depends_on('python@2.7:2.7')
+
+      # works, but deprecated:
+      depends_on('python@2.7.0:2.7.99')
+
+.. warning:: You may see existing spack package recipes that append a ``.0`` or ``.99``
+   component to a version to mimic non-inclusive left or right bounds. This
+   convention is now deprecated, since those may collide with legitimate release
+   version strings.
+
+   To express a *non-inclusive* version range which contains any version ``v`` up
+   to but *not* including some right bound, decrement the final numeric component
+   of that right bound. Reverse this for non-inclusive left bounds. For example:
+   * ``1.2.3 <= v < 1.3`` is expressed as ``@1.2.3:1.2``.
+   * ``1.2.3 < v <= 1.4`` is expressed as ``@1.2.4:1.4``.
+   * ``1 < v`` is expressed as ``@2:``.
+   * ``v < 3`` is expressed as ``@:2``.
+
+.. _git-refs-as-versions:
+
+^^^^^^^^^^^^^^^^^^^^
+Git Refs as Versions
+^^^^^^^^^^^^^^^^^^^^
+
+Most of the time, spack only sees versions explicitly registered with
+a ``version()`` directive in a package recipe, as per
+:ref:`versions-and-fetching`. However, a package configured with a git
+repository may additionally refer to git
+references as versions.
+
+If a package recipe provides the ``git`` class-level property as per
+:ref:`vcs-fetch`, then ``git`` references such as branches, tags and commits may
+be specified for the package instead of a numerical version. Spack will fetch,
+stage, and build based off the ``git`` reference provided.
+
+Acceptable syntaxes for this are:
+
+.. code-block:: sh
+
+    # branches and tags
+   foo@git.develop # use the develop branch
+   foo@git.0.19 # use the 0.19 tag
+
+    # commit hashes
+   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
+
+Spack versions from git reference either have an associated version supplied by
+the user, or infer a relationship to known versions from the structure of the
+git repository. If an associated version is supplied by the user, Spack treats
+the git version as equivalent to that version for all version comparisons in the
+package logic (e.g. ``depends_on('foo', when='@1.5')``).
+
+The associated version can be assigned with ``[git ref]=[version]`` syntax, with
+the caveat that the specified version is known to Spack from either the package
+definition, or in the configuration preferences (i.e. ``packages.yaml``).
+
+.. code-block:: sh
+
+   foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
+
+If an associated version is not supplied then the tags in the git repo are used to determine
+the most recent previous version known to Spack.
 
 .. _dependency-types:
 

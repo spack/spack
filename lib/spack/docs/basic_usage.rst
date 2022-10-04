@@ -1103,56 +1103,55 @@ Below are more details about the specifiers that you can add to specs.
 Version specifier
 ^^^^^^^^^^^^^^^^^
 
-A version specifier comes somewhere after a package name and starts
-with ``@``.  It can be a single version, e.g. ``@1.0``, ``@3``, or
-``@1.2a7``.  Or, it can be a range of versions, such as ``@1.0:1.5``
-(all versions between ``1.0`` and ``1.5``, inclusive).  Version ranges
-can be open, e.g. ``:3`` means any version up to and including ``3``.
-This would include ``3.4`` and ``3.4.2``.  ``4.2:`` means any version
-above and including ``4.2``.  Finally, a version specifier can be a
-set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
-or ``1.7``).  When you supply such a specifier to ``spack install``,
-it constrains the set of versions that Spack will install.
+A *version specifier* starts with ``@``, comes somewhere after a package name,
+and constrains the set of versions available for that package. Specifiers may match a single **exact** version, a contiguous **range** of versions with ``:``, or a **list** of versions and ranges using ``,``.
 
-For packages with a ``git`` attribute, ``git`` references
-may be specified instead of a numerical version i.e. branches, tags
-and commits. Spack will stage and build based off the ``git``
-reference provided.  Acceptable syntaxes for this are:
+When you provide a package name with such a version specifier to ``spack
+install``, it constrains the set of versions of that package that Spack may
+install:
 
 .. code-block:: sh
 
-    # branches and tags
-   foo@git.develop # use the develop branch
-   foo@git.0.19 # use the 0.19 tag
+   # no version constraints, install any python
+   $ spack install python
 
-    # commit hashes
-   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
+   # require *exactly* version 2.7.18
+   # v == 2.7.18
+   $ spack install python@2.7.18
 
-Spack versions from git reference either have an associated version supplied by the user,
-or infer a relationship to known versions from the structure of the git repository. If an
-associated version is supplied by the user, Spack treats the git version as equivalent to that
-version for all version comparisons in the package logic (e.g. ``depends_on('foo', when='@1.5')``).
+   # contiguous range: only python 3 or later
+   # v <= 3
+   $ spack install python@3:
 
-The associated version can be assigned with ``[git ref]=[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
+   # use any python release in the 2.7 series
+   # 2.7 <= v <= 2.7
+   $ spack install python@2.7:2.7
 
-.. code-block:: sh
+   # list: choose either python 2.7 or python 3.5+
+   # 2.7 <= v <= 2.7 OR 3.5 <= v < 4
+   $ spack install python@2.7:2.7,3.5:3
 
-   foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
-   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
+See :ref:`version-constraints` for further details on how versions are compared,
+and see :ref:`git-refs-as-versions` for how to use git refs as package
+versions.
 
-If an associated version is not supplied then the tags in the git repo are used to determine
-the most recent previous version known to Spack. Details about how versions are compared
-and how Spack determines if one version is less than another are discussed in the developer guide.
+.. note:: Spack will assume when a single version is provided instead of a range
+   that the single version is *exact*. This may produce a confusing error upon
+   attempting to install e.g. ``python@2.7``:
 
-If the version spec is not provided, then Spack will choose one
-according to policies set for the particular spack installation.  If
-the spec is ambiguous, i.e. it could match multiple versions, Spack
-will choose a version within the spec's constraints according to
-policies set for the particular Spack installation.
+   .. code-block:: sh
 
-Details about how versions are compared and how Spack determines if
-one version is less than another are discussed in the developer guide.
+      $ spack install python@2.7
+      Warning: There is no checksum on file to fetch python@2.7 safely.
+         Fetch anyway? [y/N]
+
+   Instead, ``python@2.7:2.7`` can be used, to match a concrete release of
+   the ``python`` package such as ``2.7.18``:
+
+   .. code-block:: sh
+
+      # use any python release in the 2.7 series
+      $ spack install python@2.7:2.7
 
 ^^^^^^^^^^^^^^^^^^
 Compiler specifier
