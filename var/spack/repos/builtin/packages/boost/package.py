@@ -262,6 +262,10 @@ class Boost(Package):
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
     conflicts("%gcc", when="@:1.76 +system platform=darwin")
 
+    # Boost 1.80 does not build with the Intel oneapi compiler
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
+    conflicts("%oneapi", when="@1.80")
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
 
