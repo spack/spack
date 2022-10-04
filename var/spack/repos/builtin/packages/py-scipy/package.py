@@ -132,9 +132,6 @@ class PyScipy(PythonPackage):
         # https://github.com/scipy/scipy/issues/9080
         env.set("F90", spack_fc)
 
-        print(self.spec['py-numpy'].headers)
-        fdsafs
-
         # https://github.com/scipy/scipy/issues/11611
         if self.spec.satisfies("@:1.4 %gcc@10:"):
             env.set("FFLAGS", "-fallow-argument-mismatch")
