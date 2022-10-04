@@ -92,15 +92,3 @@ index 6933e06e..a75c36e7 100644
  
  ! create a communicator object, note that this may be different from an MPI_Comm in Fortran
 diff --git a/src/kernels/builtin/crsmat_module.F90 b/src/kernels/builtin/crsmat_module.F90
-index 76e923bc..a292c816 100644
---- a/src/kernels/builtin/crsmat_module.F90
-+++ b/src/kernels/builtin/crsmat_module.F90
-@@ -360,7 +360,7 @@ end do
-   !! these private subroutines need to be caleed before
-   !! an spMVM if nvec changes (not by the user, of course)
-   subroutine delete_buffers(B)
--  USE mpi
-+  USE mpi_f08
-   implicit none
-   TYPE(CrsCommBuff_t) :: B
-   integer :: i, j, ierr
