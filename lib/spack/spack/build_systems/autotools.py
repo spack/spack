@@ -266,7 +266,8 @@ To resolve this problem, please try the following:
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
-        flags for the Arm, Clang/Flang, Fujitsu and NVHPC compilers."""
+        flags for the Arm, Clang/Flang, Fujitsu and NVHPC compilers. Also
+        filter out spurious predep_objects for Intel dpcpp builds."""
 
         # Exit early if we are required not to patch libtool
         if not self.patch_libtool:
@@ -300,6 +301,13 @@ To resolve this problem, please try the following:
             ]
             for o in objfile:
                 fs.filter_file(rehead + o, "", libtool_path)
+        # Hack to filter out spurious predp_objects when building with
+        # Intel dpcpp; see issue #32863
+        if self.spec.satisfies("%dpcpp"):
+            fs.filter_file(
+                r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path
+            )
+            fs.filter_file(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
 
     @property
     def configure_directory(self):
