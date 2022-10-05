@@ -46,16 +46,16 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
 
-    # optimization flag
+    # release and debug flags
     variant(
-        "full_optimizations",
+        "release",
         default=False,
-        description="Enable/Disable optimizations and release type",
+        description="Enable release type for packages exago, hiop, raja, magma, camp",
     )
     variant(
         "debug",
         default=False,
-        description="Enable RelWithDebInfo",
+        description="Enable RelWithDebInfo for packages exago, hiop, raja, magma, camp",
     )
 
     # Dependencies
@@ -74,16 +74,16 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.18:", type="build")
 
-    # Profiling and optimizations
+    # Profiling
     depends_on("hiop+deepchecking build_type=RelWithDebInfo", when="+hiop+debug")
-    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop+full_optimizations")
+    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop+release")
 
-    # Control the package's build-type depending on the full_optimizations or debug flag
+    # Control the package's build-type depending on the release or debug flag
     for pkg in ["raja", "umpire", "magma", "camp"]:
-        depends_on("{0} build_type=Release".format(pkg), when="+full_optimizations")
+        depends_on("{0} build_type=Release".format(pkg), when="+release")
         depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")
 
-    # Force RelWithDebInfo when not using optimizations
+    # Force RelWithDebInfo when not using release
     conflicts(
         "build_type=Release",
         when="+debug",
@@ -103,15 +103,13 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     # Force Release mode when using optimizations
     conflicts(
         "build_type=RelWithDebInfo",
-        when="+full_optimizations",
+        when="+release",
         msg="Use Release when using optimizations",
     )
-    conflicts(
-        "build_type=Debug", when="+full_optimizations", msg="Use Release when using optimizations"
-    )
+    conflicts("build_type=Debug", when="+release", msg="Use Release when using optimizations")
     conflicts(
         "build_type=MinSizeRel",
-        when="+full_optimizations",
+        when="+release",
         msg="Use Release when using optimizations",
     )
 
