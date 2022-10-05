@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     maintainers = ["glennpj"]
 
+    version("4.2.1", sha256="4d52db486d27848e54613d4ee977ad952ec08ce17807e1b525b10cd4436c643f")
     version("4.2.0", sha256="38eab7719b7ad095388f06aa090c5a2b202791945de60d3e2bb0eab1f5097488")
     version("4.1.3", sha256="15ff5b333c61094060b2a52e9c1d8ec55cc42dd029e39ca22abdaa909526fed6")
     version("4.1.2", sha256="2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af")
@@ -79,6 +80,7 @@ class R(AutotoolsPackage):
     depends_on("xz")
     depends_on("which", type=("build", "run"))
     depends_on("zlib@1.2.5:")
+    depends_on("texinfo", type="build")
     depends_on("cairo+X+gobject+pdf", when="+X")
     depends_on("pango+X", when="+X")
     depends_on("harfbuzz+graphite2", when="+X")
