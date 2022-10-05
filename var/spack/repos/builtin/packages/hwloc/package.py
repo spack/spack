@@ -8,7 +8,7 @@ import sys
 from spack.package import *
 
 
-class Hwloc(AutotoolsPackage):
+class Hwloc(AutotoolsPackage, CudaPackage, ROCmPackage):
     """The Hardware Locality (hwloc) software project.
 
     The Portable Hardware Locality (hwloc) software package
@@ -64,7 +64,6 @@ class Hwloc(AutotoolsPackage):
 
     variant("nvml", default=False, description="Support NVML device discovery")
     variant("gl", default=False, description="Support GL device discovery")
-    variant("cuda", default=False, description="Support CUDA devices")
     variant("libxml2", default=True, description="Build with libxml2")
     variant("libudev", default=False, description="Build with libudev")
     variant(
@@ -167,8 +166,8 @@ class Hwloc(AutotoolsPackage):
             args.append("--disable-rsmi")
 
         if "+rocm" in self.spec:
-            args.append("--with-rocm={0}".format(self.spec["rocm"].prefix))
-            args.append("--with-rocm-version={0}".format(self.spec["rocm"].version))
+            args.append("--with-rocm={0}".format(self.spec["hip"].prefix))
+            args.append("--with-rocm-version={0}".format(self.spec["hip"].version))
 
         if "+netloc" in self.spec:
             args.append("--enable-netloc")
