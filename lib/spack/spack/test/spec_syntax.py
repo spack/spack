@@ -61,7 +61,7 @@ complex_dep1 = [
     Token(sp.DEP),
     Token(sp.ID, "_openmpi"),
     Token(sp.VER, "@"),
-    Token(sp.VAL, "1.2:1.4,1.6")
+    Token(sp.VAL, "1.2:1.4,1.6"),
 ]
 
 complex_dep1_space = [
@@ -142,7 +142,8 @@ class TestSpecSyntax(object):
         """Check that the provided spec parses to the provided token list."""
         spec = str(spec)
         lex_output = list(
-            tok for tok in sp.SpecLexer().lex(spec)
+            tok
+            for tok in sp.SpecLexer().lex(spec)
             if tok.type not in (sp.SINGLE_QUOTE, sp.DOUBLE_QUOTE)
         )
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
@@ -225,8 +226,10 @@ class TestSpecSyntax(object):
             "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'" " ^stackwalker@8.1_1e"
         )
         self.check_parse(
-            "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'" " ^stackwalker@8.1_1e",
-            "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2" " ^stackwalker@8.1_1e"
+            "mvapich_foo"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'"
+            " ^stackwalker@8.1_1e",
+            "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2" " ^stackwalker@8.1_1e",
         )
         self.check_parse(
             "mvapich_foo"
@@ -239,7 +242,7 @@ class TestSpecSyntax(object):
             " ^stackwalker@8.1_1e arch=test-redhat6-x86",
             "mvapich_foo"
             " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
-            " ^stackwalker@8.1_1e arch=test-redhat6-x86"
+            " ^stackwalker@8.1_1e arch=test-redhat6-x86",
         )
 
     def test_yaml_specs(self):
@@ -837,7 +840,7 @@ class TestSpecSyntax(object):
         self.check_parse(canonical, spacy_spec)
 
         canonical = (
-            'mvapich_foo debug=\'4\' '
+            "mvapich_foo debug='4' "
             "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
             "^stackwalker@8.1_1e"
         )
@@ -923,8 +926,11 @@ class TestSpecSyntax(object):
             ),
             (
                 [
-                    Token(sp.ID, "target"), Token(sp.EQ, "="),
-                    Token(sp.VAL, ":broadwell"), Token(sp.COMMA), Token(sp.VAL, "icelake"),
+                    Token(sp.ID, "target"),
+                    Token(sp.EQ, "="),
+                    Token(sp.VAL, ":broadwell"),
+                    Token(sp.COMMA),
+                    Token(sp.VAL, "icelake"),
                 ],
                 "target=:broadwell,icelake",
             ),

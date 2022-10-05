@@ -5014,13 +5014,9 @@ _windows_filename_re = _windows_filename_prefix + _filename_re_base
 filename_reg = _windows_filename_re if is_windows else _filename_re_base
 
 #: Regex for any type of version, including single versions, ranges, and lists.
-version_regex = (
-    r"(?:[:]\s*)?"
-    r"{0}"
-    r"(?:[,:]+{0}|\s*[,:]\s+{1})*"
-    r"(?:\s*[:])?"
-    r"|:"
-).format(vn.MATCH_VERSION, vn.NO_EQUAL_VERSION)
+version_regex = (r"(?:[:]\s*)?" r"{0}" r"(?:[,:]+{0}|\s*[,:]\s+{1})*" r"(?:\s*[:])?" r"|:").format(
+    vn.MATCH_VERSION, vn.NO_EQUAL_VERSION
+)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -5115,7 +5111,7 @@ class SpecLexer(spack.parse.Lexer):
                     "DOUBLE_QUOTE_EQUALS_PHASE",
                     [
                         (re.escape('"'), DOUBLE_QUOTE),
-                        ("[^\\s,\"]+", VAL),
+                        ('[^\\s,"]+', VAL),
                         (re.escape(","), COMMA),
                         (r"\s+", None),
                     ],
@@ -5125,7 +5121,7 @@ class SpecLexer(spack.parse.Lexer):
                     "DOUBLE_QUOTE_VALUE_PHASE",
                     [
                         (re.escape('"'), DOUBLE_QUOTE),
-                        ("[^\"]*", VAL),
+                        ('[^"]*', VAL),
                     ],
                     {"BEGIN_PHASE": [DOUBLE_QUOTE]},
                 ),
@@ -5151,7 +5147,7 @@ class SpecLexer(spack.parse.Lexer):
                         (spec_id_re, VAL),
                         (r"\s+", None),
                     ],
-                    {"BEGIN_PHASE": [VAL]}
+                    {"BEGIN_PHASE": [VAL]},
                 ),
                 (
                     "COMPILER_PHASE",

@@ -6,7 +6,6 @@
 import abc
 import itertools
 import re
-import shlex
 import sys
 from textwrap import dedent
 from typing import Any, Dict, Iterable, Iterator, List, Tuple
@@ -16,7 +15,6 @@ import six
 import llnl.util.tty as tty
 
 import spack.error
-import spack.util.path as sp
 
 
 class Token(object):
@@ -61,7 +59,7 @@ class Lexer(object):
         self.scanners = {}  # type: Dict[str, re.Scanner] # type: ignore[name-defined]
         self.switchbook = {}  # type: Dict[str, Dict[str, List[Any]]]
         self.original_mode = lexicon_and_mode_switches[0][0]  # type: str
-        self.mode = self.original_mode                        # type: str
+        self.mode = self.original_mode  # type: str
 
         # Convert the static description of the token id into a callback that executes
         # self.token(...) when the pattern is recognized. This particular construction is required
@@ -90,12 +88,12 @@ class Lexer(object):
         # type: (str) -> Iterable[Token]
         tty.debug(f"word: '{word}'")
         scanner = self.scanners[self.mode]
-        tty.debug(f'scanner: {[k for k, _ in scanner.lexicon]}')
+        tty.debug(f"scanner: {[k for k, _ in scanner.lexicon]}")
         mode_switches_dict = self.switchbook[self.mode]
-        tty.debug(f'mode_switches_dict: {mode_switches_dict}')
+        tty.debug(f"mode_switches_dict: {mode_switches_dict}")
 
         tokens, remainder = scanner.scan(word)
-        tty.debug(f'tokens1: {tokens}')
+        tty.debug(f"tokens1: {tokens}")
         tty.debug(f"remainder: '{remainder}'")
         remainder_was_consumed_by_next_mode = False
 
@@ -108,7 +106,7 @@ class Lexer(object):
                     tty.debug(f"other_mode: '{other_mode}'")
                     remainder_was_consumed_by_next_mode = True
                     already_matched = tokens[: i + 1]
-                    tty.debug(f'already_matched: {already_matched}')
+                    tty.debug(f"already_matched: {already_matched}")
                     input_for_next_recursion = word[word.index(t.value) + len(t.value) :]
                     tty.debug(f"input_for_next_recursion: '{input_for_next_recursion}'")
                     recursion_output = self._lex_word(input_for_next_recursion)
@@ -129,7 +127,7 @@ class Lexer(object):
 
     def lex(self, text):
         # type: (str) -> Iterator[Token]
-        tty.debug('LEX!!!!')
+        tty.debug("LEX!!!!")
         tty.debug(f"text: '{text}'")
         self.mode = self.original_mode
         try:
