@@ -26,3 +26,5 @@ class PyDistlib(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@44:", when="@0.3.6:", type="build")
+    depends_on("py-wheel@0.29.0:", when="@0.3.6:", type="build")
