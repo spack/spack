@@ -17,9 +17,7 @@ class H5bench(CMakePackage):
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 
-    version(
-        "1.3", commit="ec75a466a77c337b4252c0afe1055c7fbe841e16", submodules=True
-    )
+    version("1.3", commit="ec75a466a77c337b4252c0afe1055c7fbe841e16", submodules=True)
     version(
         "1.2", commit="866af6777573d20740d02acc47a9080de093e4ad", submodules=True, deprecated=True
     )
@@ -35,7 +33,7 @@ class H5bench(CMakePackage):
     variant("exerciser", default=False, when="@1.2:", description="Enables exerciser benchmark")
     variant("openpmd", default=False, when="@1.2:", description="Enables OpenPMD benchmark")
     variant("e3sm", default=False, when="@1.2:", description="Enables E3SM benchmark")
-    variant("async", default=False, when="@1.2:", description="Enables ASYNC VOL Connector support")
+    variant("async", default=False, when="@1.2:", description="Enables ASYNC VOL Connector")
     variant("all", default=False, when="@1.2:", description="Enables all h5bench benchmarks")
 
     depends_on("cmake@3.10:", type="build")
