@@ -559,6 +559,9 @@ class FastPackageChecker(Mapping):
     def last_mtime(self):
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
+    def modified_since(self, since):
+        return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
+
     def __getitem__(self, item):
         return self._packages_to_stats[item]
 
@@ -739,8 +742,7 @@ class RepoIndex(object):
         # Compute which packages needs to be updated in the cache
         misc_cache = spack.caches.misc_cache
         index_mtime = misc_cache.mtime(cache_filename)
-
-        needs_update = [x for x, sinfo in self.checker.items() if sinfo.st_mtime > index_mtime]
+        needs_update = self.checker.modified_since(index_mtime)
 
         index_existed = misc_cache.init_entry(cache_filename)
         if index_existed and not needs_update:
@@ -752,6 +754,12 @@ class RepoIndex(object):
             # Otherwise update it and rewrite the cache file
             with misc_cache.write_transaction(cache_filename) as (old, new):
                 indexer.read(old) if old else indexer.create()
+
+                # Compute which packages needs to be updated **again** in case someone updated them
+                # while we waited for the lock
+                new_index_mtime = misc_cache.mtime(cache_filename)
+                if new_index_mtime != index_mtime:
+                    needs_update = self.checker.modified_since(new_index_mtime)
 
                 for pkg_name in needs_update:
                     namespaced_name = "%s.%s" % (self.namespace, pkg_name)
