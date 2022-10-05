@@ -15,6 +15,8 @@ class Crtm(CMakePackage):
     homepage = "https://www.jcsda.org/jcsda-project-community-radiative-transfer-model"
     git = "https://github.com/JCSDA/crtm.git"
     url = "https://github.com/JCSDA/crtm/archive/refs/tags/v2.3.0.tar.gz"
+    # git = "https://github.com/JCSDA-internal/crtm.git"
+    # url = "https://github.com/JCSDA-internal/crtm/archive/refs/tags/v2.3.0.tar.gz"
 
     maintainers = ["BenjaminTJohnson", "edwardhartnett", "Hang-Lei-NOAA", "climbfuji"]
 
@@ -24,6 +26,7 @@ class Crtm(CMakePackage):
         description='Download CRTM coeffecient or "fix" files (several GBs).',
     )
 
+    depends_on("cmake@3.15:")
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
@@ -40,7 +43,10 @@ class Crtm(CMakePackage):
     # depends_on("ecbuild", when="@2.4.0:", type=("build"))
 
     # REL-2.4.0_emc (v2.4.0 ecbuild does not work)
+    # Use this hash with JCSDA (public)
     version("2.4.0", commit="5ddd0d6")
+    # Use this hash with JCSDA-internal
+    # version("2.4.0", commit="690da37")
     # Uses the tip of REL-2.3.0_emc branch
     version("2.3.0", commit="99760e6")
     # JEDI applications so far use these versions
