@@ -17,10 +17,18 @@ class H5bench(CMakePackage):
     version("latest", branch="master", submodules=True)
     version("develop", branch="develop", submodules=True)
 
-    version("1.3", commit="ec75a466a77c337b4252c0afe1055c7fbe841e16", submodules=True)
-    version("1.2", commit="866af6777573d20740d02acc47a9080de093e4ad", submodules=True, deprecated=True)
-    version("1.1", commit="1276530a128025b83a4d9e3814a98f92876bb5c4", submodules=True, deprecated=True)
-    version("1.0", commit="9d3438c1bc66c5976279ef203bd11a8d48ade724", submodules=True, deprecated=True)
+    version(
+        "1.3", commit="ec75a466a77c337b4252c0afe1055c7fbe841e16", submodules=True
+    )
+    version(
+        "1.2", commit="866af6777573d20740d02acc47a9080de093e4ad", submodules=True, deprecated=True
+    )
+    version(
+        "1.1", commit="1276530a128025b83a4d9e3814a98f92876bb5c4", submodules=True, deprecated=True
+    )
+    version(
+        "1.0", commit="9d3438c1bc66c5976279ef203bd11a8d48ade724", submodules=True, deprecated=True
+    )
 
     variant("metadata", default=False, when="@1.2:", description="Enables metadata benchmark")
     variant("amrex", default=False, when="@1.2:", description="Enables AMReX benchmark")
