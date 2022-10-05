@@ -80,7 +80,6 @@ class Pfunit(CMakePackage):
             self.define_from_variant("BUILD_SHARED", "shared"),
             "-DCMAKE_Fortran_MODULE_DIRECTORY=%s" % spec.prefix.include,
             self.define_from_variant("BUILD_DOCS", "docs"),
-            self.define_from_variant("OPENMP", "openmp"),
             "-DMAX_RANK=%s" % spec.variants["max_array_rank"].value,
         ]
 
@@ -89,8 +88,10 @@ class Pfunit(CMakePackage):
 
         if spec.satisfies("@4.0.0:"):
             args.append("-DSKIP_MPI=%s" % ("YES" if "~mpi" in spec else "NO"))
+            args.append("-DSKIP_OPENMP=%s" % ("YES" if "~openmp" in spec else "NO"))
         else:
             args.append(self.define_from_variant("MPI", "mpi"))
+            args.append(self.define_from_variant("OPENMP", "openmp"))
 
         if spec.satisfies("+mpi"):
             args.extend(
