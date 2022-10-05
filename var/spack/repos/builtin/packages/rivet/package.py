@@ -14,9 +14,12 @@ class Rivet(AutotoolsPackage):
 
     homepage = "https://rivet.hepforge.org/"
     url = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.4.tar.bz2"
+    git = "https://gitlab.com/hepcedar/rivet.git"
 
     tags = ["hep"]
 
+    version("3.1.7b", tag="rivet-3.1.7b")
+    version("3.1.7", sha256="27c7dbbcb5fd7ee81caf136daf4e960bca0ec255d9fa1abe602f4d430861b27a")
     version("3.1.6", sha256="1cf6ebb6a79d181c441d1d0c7c6d623c423817c61093f36f21adaae23e679090")
     version("3.1.4", sha256="37edc80a2968ce1031589e43ba6b492877ca7901bea38f8bb7536a5c8cf8100d")
     version("3.1.3", sha256="53ddce41705b9c22b2eaa90603f6659aa9bf46c466d8772ca9dbe4430972e021")
@@ -258,6 +261,7 @@ class Rivet(AutotoolsPackage):
     depends_on("yoda@1.8.3", when="@3.1.2")
     depends_on("yoda@1.8.5:", when="@3.1.3:")
     depends_on("yoda@1.9.5:", when="@3.1.6:")
+    depends_on("yoda@1.9.7:", when="@3.1.7:")
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
@@ -272,6 +276,7 @@ class Rivet(AutotoolsPackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants, when="@:2.5.0")
     depends_on("fastjet")
+    depends_on("fastjet@3.4.0:", when="@3.1.7:")
     depends_on("fjcontrib", when="@3.0.0:")
     depends_on("gsl", when="@:2.6.0,2.6.2:2")
     depends_on("python", type=("build", "run"))
@@ -280,6 +285,8 @@ class Rivet(AutotoolsPackage):
     depends_on("yaml-cpp", when="@2.0.0:2.1.2")
 
     depends_on("autoconf", type="build")
+    depends_on("autoconf@2.71:", when="@3.1.7", type="build")
+    depends_on("autoconf@2.68:", when="@3.1.7b:", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
