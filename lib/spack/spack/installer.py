@@ -34,8 +34,10 @@ import itertools
 import os
 import shutil
 import sys
+import tempfile
 import time
 from collections import defaultdict
+from contextlib import contextmanager
 
 import six
 
@@ -1872,14 +1874,15 @@ class BuildProcessInstaller(object):
             if self.fake:
                 _do_fake_install(self.pkg)
             else:
-                self._real_install()
-
                 # Run package's install() method before installing sources. This means package
                 # install scripts that don't expect <prefix>/share to exist yet won't fail. See
                 # https://github.com/spack/spack/pull/32953 for where installing sources first may
                 # cause breakages.
                 if self.install_source:
-                    self._install_source()
+                    with self._install_source():
+                        self._real_install()
+                else:
+                    self._real_install()
 
             # Stop the timer and save results
             self.timer.stop()
@@ -1904,16 +1907,26 @@ class BuildProcessInstaller(object):
         # preserve verbosity across runs
         return self.echo
 
+    @contextmanager
     def _install_source(self):
         """Install source code from stage into share/pkg/src if necessary."""
         pkg = self.pkg
         if not os.path.isdir(pkg.stage.source_path):
             return
 
-        src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
-        tty.debug("{0} Copying source to {1}".format(self.pre, src_target))
+        temp_source_dir = tempfile.mkdtemp()
 
-        fs.install_tree(pkg.stage.source_path, src_target)
+        try:
+            fs.install_tree(pkg.stage.source_path, temp_source_dir)
+
+            yield
+
+            src_target = os.path.join(pkg.spec.prefix, "share", pkg.name, "src")
+            tty.debug("{0} Copying source to {1}".format(self.pre, src_target))
+
+            fs.install_tree(temp_source_dir, src_target)
+        finally:
+            shutil.rmtree(temp_source_dir)
 
     def _real_install(self):
         pkg = self.pkg
