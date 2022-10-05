@@ -18,6 +18,37 @@ _os_map = {
 
 
 _versions = {
+    "22.1_gcc-11.2": {
+        "RHEL-7": ("9ce7858525109cca8f4e1d533113b6410d55f10cc4db16c4742562da87a32f2b"),
+        "RHEL-8": ("24f9f4496e41c2314d4ace25b6e3d63127bd586ff7bdd8a732471cbc65a8023e"),
+        "SLES-15": ("5b2a88148157c2a6ac5fd5698e9cb5b8717fb5f7afeab156de253f53cef5ab71"),
+        "Ubuntu-18.04": ("44315990a2bf9cca1f48cd873f97b4282c371b6894c96e58d890ba1ca9ed5b2a"),
+        "Ubuntu-20.04": ("00c051e0176ac4354d6cf181d38ef5a6d41f5b1f4db0109f3abc5d877d8e0a1f"),
+    },
+    "22.1_gcc-10.2": {
+        "RHEL-7": ("ca8bf196757b4755f817d97e289305893fbe9a195b6892c90f8414f438f42d83"),
+        "RHEL-8": ("8a1b65b1086b7b9e0ccd7080f9ed1d411f98a775b61c1e05c000e584877a1e66"),
+        "SLES-15": ("7d703d7a2954283f11b742e0bc8fee886135d5bc87fe3e700c05b8277de495c3"),
+        "Ubuntu-18.04": ("fde39a1bad9d904f2b18445252245f30f31848fd4470b58b3124f92c4c641710"),
+        "Ubuntu-20.04": ("f0dfde5e9f8ca29bb49ea4596cb56ca50c8fda51758a38281e191fb36def812a"),
+    },
+    "22.1_gcc-9.3": {
+        "RHEL-7": ("76c8ab3687d421153f91cacd33047b65b3650b21e2094d34341a91e94c766425"),
+        "RHEL-8": ("eebeedddab04a393f4afc499d8681dc531b6bba0312a583afde445efb29ab849"),
+        "SLES-15": ("e33cc89582a98866aa5e1cf6573a0bbe71b98c1585bbe665173deeb561d9afc5"),
+        "Ubuntu-18.04": ("453e524cb66c2525443ab09283baef1521c1389d9d967b24fa94539ceaa62088"),
+        "Ubuntu-20.04": ("521b106652fd50dc23fa056f208b788a1e3e6f4dd6e162b8cd5d835d755cb3af"),
+    },
+    "22.1_gcc-8.2": {
+        "RHEL-7": ("9a6caa9767367c16a5abc2a3c145f0fccd47052cd5e2b9e3fbf511009a85746c"),
+        "RHEL-8": ("90009f854ab597ab3f4d6745d90460e01bbbe922bf4bdfd30a3e58e62352f6be"),
+        "SLES-15": ("0b7a5a5631798cba794810983e6180dd57cb40d5e82a806fdbc8a00f50f01bd6"),
+        "Ubuntu-18.04": ("7dddedcaf7ce56b10da4a8d21d253f5c6eec928d238233049462b4ce5fece1ae"),
+    },
+    "22.1_gcc-7.5": {
+        "RHEL-7": ("33c66ed1aa78eec4a8bd9d9c77882e9275232f742dc7808789272dbded0032e0"),
+        "Ubuntu-18.04": ("523b926595565af96cf8c4109517c30e248bb2336bdf55f626be4e7356c97b98"),
+    },
     "22.0.2_gcc-11.2": {
         "RHEL-7": ("c8191f3a65762955714f020caf2a89e37ff7f9cb2326dc180c746acd8a018acd"),
         "RHEL-8": ("d69432a3148c9d2745c70859a0143285537e06920ecfdb4669ff364a9d24972c"),
@@ -91,12 +122,16 @@ def get_os():
 def get_package_url(version):
     os = get_os()
     os_no_dash = get_os().replace("-", "")
+    os_lower = os.split(".")[0].lower()
     base_url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/"
     armpl_version = version.split("_")[0]
     armpl_version_dashed = armpl_version.replace(".", "-")
     gcc_version = version.split("_")[1]
     filename = "arm-performance-libraries_" + armpl_version + "_" + os + "_" + gcc_version + ".tar"
-    return base_url + armpl_version_dashed + "/" + os_no_dash + "/" + filename
+    if armpl_version == "22.1":
+        return base_url + armpl_version_dashed + "/" + os_lower + "/" + filename
+    else:
+        return base_url + armpl_version_dashed + "/" + os_no_dash + "/" + filename
 
 
 def get_armpl_prefix(spec):
@@ -108,7 +143,7 @@ class ArmplGcc(Package):
     high-performance computing applications on Arm processors."""
 
     homepage = "https://developer.arm.com/tools-and-software/server-and-hpc/downloads/arm-performance-libraries"
-    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-0-2/RHEL7/arm-performance-libraries_22.0.2_RHEL-7_gcc-11.2.tar"
+    url = "https://developer.arm.com/-/media/Files/downloads/hpc/arm-performance-libraries/22-1/ubuntu-20/arm-performance-libraries_22.1_Ubuntu-20.04_gcc-11.2.tar"
 
     maintainers = ["annop-w"]
 
@@ -123,17 +158,23 @@ class ArmplGcc(Package):
     conflicts("target=ppc64:", msg="Only available on Aarch64")
     conflicts("target=ppc64le:", msg="Only available on Aarch64")
 
-    conflicts("%gcc@:11.0", when="@22.0.2_gcc-11.2")
-    conflicts("%gcc@:10.0", when="@22.0.2_gcc-10.2")
-    conflicts("%gcc@:9.0", when="@22.0.2_gcc-9.3")
-    conflicts("%gcc@:8.0", when="@22.0.2_gcc-8.2")
-    conflicts("%gcc@:7.0", when="@22.0.2_gcc-7.5")
+    conflicts("%gcc@:10", when="@22.1_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.1_gcc-7.5")
 
-    conflicts("%gcc@:11.0", when="@22.0.1_gcc-11.2")
-    conflicts("%gcc@:10.0", when="@22.0.1_gcc-10.2")
-    conflicts("%gcc@:9.0", when="@22.0.1_gcc-9.3")
-    conflicts("%gcc@:8.0", when="@22.0.1_gcc-8.2")
-    conflicts("%gcc@:7.0", when="@22.0.1_gcc-7.5")
+    conflicts("%gcc@:10", when="@22.0.2_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.0.2_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.0.2_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.0.2_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.0.2_gcc-7.5")
+
+    conflicts("%gcc@:10", when="@22.0.1_gcc-11.2")
+    conflicts("%gcc@:9", when="@22.0.1_gcc-10.2")
+    conflicts("%gcc@:8", when="@22.0.1_gcc-9.3")
+    conflicts("%gcc@:7", when="@22.0.1_gcc-8.2")
+    conflicts("%gcc@:6", when="@22.0.1_gcc-7.5")
 
     variant("ilp64", default=False, description="use ilp64 specific Armpl library")
     variant("shared", default=True, description="enable shared libs")
@@ -154,9 +195,8 @@ class ArmplGcc(Package):
         if self.compiler.name != "gcc":
             raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
-        exe = Executable(
-            "./arm-performance-libraries_{0}_{1}.sh".format(spec.version.up_to(3), get_os())
-        )
+        armpl_version = "{}".format(spec.version.up_to(3)).split("_")[0]
+        exe = Executable("./arm-performance-libraries_{0}_{1}.sh".format(armpl_version, get_os()))
         exe("--accept", "--force", "--install-to", prefix)
 
     @property
