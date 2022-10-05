@@ -1703,7 +1703,7 @@ class PackageInstaller(object):
                 raise
 
             except binary_distribution.NoChecksumException as exc:
-                if not task.request.install_args.get("cache_only"):
+                if not task.cache_only:
                     # Checking hash on downloaded binary failed.
                     err = "Failed to install {0} from binary cache due to {1}:"
                     err += " Requeueing to install from source."
