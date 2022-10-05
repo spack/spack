@@ -67,6 +67,7 @@ spack:
   - bricks
   - butterflypack
   - cabana
+  - caliper
   - chai ~benchmarks ~tests
   - conduit
   - darshan-runtime
@@ -218,7 +219,6 @@ spack:
   - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
-  #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
   #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
