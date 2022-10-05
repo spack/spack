@@ -165,6 +165,7 @@ spack:
   - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
+  - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
@@ -230,7 +231,6 @@ spack:
   #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
-  #- caliper +cuda cuda_arch=80               # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- parsec +cuda cuda_arch=80                # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   # ROCm failures
