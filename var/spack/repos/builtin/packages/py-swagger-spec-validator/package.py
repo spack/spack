@@ -7,7 +7,10 @@ from spack import *
 
 
 class PySwaggerSpecValidator(PythonPackage):
-    """A Python library that validates Swagger Specs against the Swagger 1.2 or Swagger 2.0 specification."""
+    """
+    A Python library that validates Swagger Specs against
+    the Swagger 1.2 or Swagger 2.0 specification.
+    """
 
     homepage = "https://github.com/Yelp/swagger_spec_validator"
     pypi     = "swagger-spec-validator/swagger-spec-validator-2.7.6.tar.gz"
@@ -19,6 +22,5 @@ class PySwaggerSpecValidator(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-jsonschema', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-six', type=('build','run'))
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-pyrsistent@:0.16.9', when='^python@:3.0', type='build')
-
