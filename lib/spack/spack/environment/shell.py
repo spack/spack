@@ -65,8 +65,8 @@ def deactivate_header(shell):
     if shell == "csh":
         cmds += "unsetenv SPACK_ENV;\n"
         cmds += "if ( $?SPACK_OLD_PROMPT ) "
-        cmds += 'set prompt="$SPACK_OLD_PROMPT" && '
-        cmds += "unsetenv SPACK_OLD_PROMPT;\n"
+        cmds += '    eval \'set prompt="$SPACK_OLD_PROMPT" &&'
+        cmds += "          unsetenv SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":
         cmds += "set -e SPACK_ENV;\n"

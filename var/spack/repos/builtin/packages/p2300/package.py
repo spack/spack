@@ -9,8 +9,8 @@ from spack.package import *
 class P2300(CMakePackage):
     """The proposed C++ framework for asynchronous and parallel programming."""
 
-    homepage = "https://github.com/brycelelbach/wg21_p2300_std_execution"
-    git = "https://github.com/brycelelbach/wg21_p2300_std_execution.git"
+    homepage = "https://github.com/NVIDIA/stdexec"
+    git = "https://github.com/NVIDIA/stdexec.git"
     maintainers = ["msimberg", "aurianer"]
 
     version("main", branch="main")
