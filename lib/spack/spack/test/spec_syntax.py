@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import itertools
 import os
-import shlex
 
 import pytest
 
@@ -14,7 +13,7 @@ import spack.hash_types as ht
 import spack.repo
 import spack.spec as sp
 import spack.store
-from spack.parse import Token
+from spack.parse import LexError, Token
 from spack.spec import (
     AmbiguousHashError,
     DuplicateArchitectureError,
@@ -49,57 +48,48 @@ complex_compiler = [
 ]
 
 complex_compiler_v = [
-    Token(sp.VER, "@12.1"),
-    Token(sp.COLON),
-    Token(sp.ID, "12.6"),
+    Token(sp.VER, "@"),
+    Token(sp.VAL, "12.1:12.6"),
 ]
 
 complex_compiler_v_space = [
     Token(sp.VER, "@"),
-    Token(sp.ID, "12.1"),
-    Token(sp.COLON),
-    Token(sp.ID, "12.6"),
+    Token(sp.VAL, "12.1:12.6"),
 ]
 
 complex_dep1 = [
     Token(sp.DEP),
     Token(sp.ID, "_openmpi"),
-    Token(sp.VER, "@1.2"),
-    Token(sp.COLON),
-    Token(sp.ID, "1.4"),
-    Token(sp.COMMA),
-    Token(sp.ID, "1.6"),
+    Token(sp.VER, "@"),
+    Token(sp.VAL, "1.2:1.4,1.6")
 ]
 
 complex_dep1_space = [
     Token(sp.DEP),
     Token(sp.ID, "_openmpi"),
     Token(sp.VER, "@"),
-    Token(sp.ID, "1.2"),
-    Token(sp.COLON),
-    Token(sp.ID, "1.4"),
-    Token(sp.COMMA),
-    Token(sp.ID, "1.6"),
+    Token(sp.VAL, "1.2:1.4,1.6"),
 ]
 
 complex_dep1_var = [
     Token(sp.ON),
-    Token(sp.ID, "debug"),
+    Token(sp.VAL, "debug"),
     Token(sp.OFF),
-    Token(sp.ID, "qt_4"),
+    Token(sp.VAL, "qt_4"),
 ]
 
 complex_dep2 = [
     Token(sp.DEP),
     Token(sp.ID, "stackwalker"),
-    Token(sp.VER, "@8.1_1e"),
+    Token(sp.VER, "@"),
+    Token(sp.VAL, "8.1_1e"),
 ]
 
 complex_dep2_space = [
     Token(sp.DEP),
     Token(sp.ID, "stackwalker"),
     Token(sp.VER, "@"),
-    Token(sp.ID, "8.1_1e"),
+    Token(sp.VAL, "8.1_1e"),
 ]
 
 # Sample output from complex lexing
@@ -150,11 +140,16 @@ class TestSpecSyntax(object):
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided token list."""
-        spec = shlex.split(str(spec))
-        lex_output = list(sp.SpecLexer().lex(spec))
+        spec = str(spec)
+        lex_output = list(
+            tok for tok in sp.SpecLexer().lex(spec)
+            if tok.type not in (sp.SINGLE_QUOTE, sp.DOUBLE_QUOTE)
+        )
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type in (sp.ID, sp.VAL, sp.VER):
+                spec_tok.normalize_whitespace()
+                spec_tok.drop_quotes()
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -289,8 +284,12 @@ class TestSpecSyntax(object):
 
         self.check_parse("x ^y", "x@: ^y@:")
 
-    def test_parse_errors(self):
+    def test_lex_errors(self):
         errors = ["x@@1.2", "x ^y@@1.2", "x@1.2::", "x::"]
+        self._check_raises(LexError, errors)
+
+    def test_parse_errors(self):
+        errors = ["a ^", "a +b.a", "a /"]
         self._check_raises(SpecParseError, errors)
 
     def _check_hash_parse(self, spec):

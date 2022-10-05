@@ -4994,14 +4994,17 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, VER, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
-#  0,   1,   2,     3,     4,  5,   6,   7,  8,  9,  10,   11
+HASH, DEP, VER, ON, OFF, PCT, EQ, ID, VAL, FILE, SINGLE_QUOTE, DOUBLE_QUOTE = range(12)
+#  0,   1,   2,  3,   4,   5,  6,  7,  8,     9,           10,           11
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
 
+#: Regexes for quoted strings.
+singly_quoted = r"'([^'\\]*|\\(\\\\)*')*'"
+doubly_quoted = r'"([^"\\]*|\\(\\\\)*")*"'
 
-_filename_re_base = r"[/\w.-]*/[/\w/-]+\.(yaml|json)[^\b]*"
+_filename_re_base = r"[/\w.-]*/[/\w/-]+\.(yaml|json)"
 _windows_filename_prefix = r"([A-Za-z]:)*?"
 # Spec strings require posix-style paths on Windows
 # because the result is later passed to shlex.
@@ -5009,6 +5012,15 @@ _windows_filename_re = _windows_filename_prefix + _filename_re_base
 
 #: Regex for literal filenames.
 filename_reg = _windows_filename_re if is_windows else _filename_re_base
+
+#: Regex for any type of version.
+version_regex = (
+    r"(?:[:]\s*)?"
+    r"{0}"
+    r"(?:[,:]+{0}|\s*[,:]\s+{1})*"
+    r"(?:\s*[:])?"
+    r"|:"
+).format(vn.MATCH_VERSION, vn.NO_EQUAL_VERSION)
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -5026,11 +5038,7 @@ class SpecLexer(spack.parse.Lexer):
                     "BEGIN_PHASE",
                     [
                         # '@': begin a Version, VersionRange, or VersionList:
-                        (r"@([\w.\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?", VER),
-                        # VersionRange syntax:
-                        (re.escape(":"), COLON),
-                        # VersionList syntax:
-                        (re.escape(","), COMMA),
+                        ("@", VER),
                         # '^': dependency, or "AND":
                         (re.escape("^"), DEP),
                         # variant syntax:
@@ -5041,6 +5049,8 @@ class SpecLexer(spack.parse.Lexer):
                         (re.escape("%"), PCT),
                         # This is *not* used in version string parsing.
                         (re.escape("="), EQ),
+                        (re.escape("'"), SINGLE_QUOTE),
+                        (re.escape('"'), DOUBLE_QUOTE),
                         # Filenames match before identifiers, so no initial filename
                         # component is parsed as a spec (e.g., in subdir/spec.yaml)
                         (filename_reg, FILE),
@@ -5052,12 +5062,116 @@ class SpecLexer(spack.parse.Lexer):
                         # Gobble up all remaining whitespace between tokens.
                         (r"\s+", None),
                     ],
-                    {"EQUALS_PHASE": [EQ]},
+                    {
+                        "EQUALS_PHASE": [EQ],
+                        "VERSION_PHASE": [VER],
+                        "SWITCH_PHASE": [ON, OFF],
+                        "COMPILER_PHASE": [PCT],
+                        "HASH_PHASE": [HASH],
+                        "SINGLE_QUOTE_PHASE": [SINGLE_QUOTE],
+                        "DOUBLE_QUOTE_PHASE": [DOUBLE_QUOTE],
+                    },
+                ),
+                (
+                    "SINGLE_QUOTE_PHASE",
+                    [
+                        # Identifiers match after filenames and hashes.
+                        (spec_id_re, ID),
+                        (r"\s+", None),
+                        (re.escape("="), EQ),
+                    ],
+                    {"SINGLE_QUOTE_EQUALS_PHASE": [EQ]},
+                ),
+                (
+                    "SINGLE_QUOTE_EQUALS_PHASE",
+                    [
+                        (r"[^\s']+", VAL),
+                        (r"\s+", None),
+                        (re.escape("'"), SINGLE_QUOTE),
+                    ],
+                    {"BEGIN_PHASE": [SINGLE_QUOTE]},
+                ),
+                (
+                    "DOUBLE_QUOTE_PHASE",
+                    [
+                        # Identifiers match after filenames and hashes.
+                        (spec_id_re, ID),
+                        (re.escape("="), EQ),
+                        (r"\s+", None),
+                    ],
+                    {"DOUBLE_QUOTE_EQUALS_PHASE": [EQ]},
+                ),
+                (
+                    "DOUBLE_QUOTE_EQUALS_PHASE",
+                    [
+                        (r'[^\s"]+', VAL),
+                        (r"\s+", None),
+                        (re.escape("'"), DOUBLE_QUOTE),
+                    ],
+                    {"BEGIN_PHASE": [DOUBLE_QUOTE]},
+                ),
+                (
+                    "VERSION_PHASE",
+                    [
+                        (version_regex, VAL),
+                        (r"\s+", None),
+                    ],
+                    {"BEGIN_PHASE": [VAL]},
+                ),
+                (
+                    "COMPILER_VERSION_PHASE",
+                    [
+                        (version_regex, VAL),
+                        (r"\s+", None),
+                    ],
+                    {"COMPILER_PHASE": [VAL]},
+                ),
+                (
+                    "SWITCH_PHASE",
+                    [
+                        (spec_id_re, VAL),
+                        (r"\s+", None),
+                    ],
+                    {"BEGIN_PHASE": [VAL]}
+                ),
+                (
+                    "COMPILER_PHASE",
+                    [
+                        (spec_id_re, ID),
+                        # '@': begin a Version, VersionRange, or VersionList:
+                        ("@", VER),
+                        # '^': dependency, or "AND":
+                        (re.escape("^"), DEP),
+                        # variant syntax:
+                        (re.escape("+"), ON),
+                        (re.escape("-"), OFF),
+                        (re.escape("~"), OFF),
+                        # This is *not* used in version string parsing.
+                        (re.escape("="), EQ),
+                        (re.escape("%"), PCT),
+                        (r"\s+", None),
+                    ],
+                    {
+                        "BEGIN_PHASE": [DEP],
+                        "EQUALS_PHASE": [EQ],
+                        "COMPILER_VERSION_PHASE": [VER],
+                        "SWITCH_PHASE": [ON, OFF],
+                    },
+                ),
+                (
+                    "HASH_PHASE",
+                    [
+                        (spec_id_re, VAL),
+                        (r"\s+", None),
+                    ],
+                    {"BEGIN_PHASE": [VAL]},
                 ),
                 (
                     "EQUALS_PHASE",
                     [
-                        (r"[\S].*", VAL),
+                        (singly_quoted, VAL),
+                        (doubly_quoted, VAL),
+                        (r"[\S]+", VAL),
                         (r"\s+", None),
                     ],
                     {"BEGIN_PHASE": [VAL]},
@@ -5092,6 +5206,9 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
+                if self.accept(SINGLE_QUOTE) or self.accept(DOUBLE_QUOTE):
+                    continue
+
                 # Try a file first, but if it doesn't succeed, keep parsing
                 # as from_file may backtrack and try an id.
                 if self.accept(FILE):
@@ -5131,6 +5248,10 @@ class SpecParser(spack.parse.Parser):
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
+                    if not self.next:
+                        self.next_token_error(
+                            "Another spec must be provided after the final '^' dependency marker!"
+                        )
                     if not specs:
                         # We're parsing an anonymous spec beginning with a
                         # dependency. Push the token to recover after creating
@@ -5166,6 +5287,7 @@ class SpecParser(spack.parse.Parser):
                             else:
                                 # anonymous dep
                                 dep_name = None
+                            tty.debug(f"dep_name: '{dep_name}'")
                             dep = self.spec(dep_name)
 
                         # Raise an error if the previous spec is already
@@ -5248,7 +5370,7 @@ class SpecParser(spack.parse.Parser):
         # TODO: Remove parser dependency on active environment and database.
         import spack.environment
 
-        self.expect(ID)
+        self.expect(VAL)
         dag_hash = self.token.value
         matches = []
         if spack.environment.active_environment():
@@ -5306,6 +5428,7 @@ class SpecParser(spack.parse.Parser):
                 self.previous = self.token
                 if self.accept(EQ):
                     self.expect(VAL)
+                    self.token.drop_quotes()
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
@@ -5335,56 +5458,16 @@ class SpecParser(spack.parse.Parser):
         if name:
             return name
         else:
-            self.expect(ID)
+            self.expect(VAL)
             self.check_identifier()
             return self.token.value
 
-    def version(self):
-
-        start = None
-        end = None
-
-        def str_translate(value):
-            # return None for empty strings since we can end up with `'@'.strip('@')`
-            if not (value and value.strip()):
-                return None
-            else:
-                return value
-
-        if self.token.type is COMMA:
-            # need to increment commas, could be ID or COLON
-            self.accept(ID)
-
-        if self.token.type in (VER, ID):
-            version_spec = self.token.value.lstrip("@")
-            start = str_translate(version_spec)
-
-        if self.accept(COLON):
-            if self.accept(ID):
-                if self.next and self.next.type is EQ:
-                    # This is a start: range followed by a key=value pair
-                    self.push_tokens([self.token])
-                else:
-                    end = self.token.value
-        elif start:
-            # No colon, but there was a version
-            return vn.Version(start)
-        else:
-            # No colon and no id: invalid version
-            self.next_token_error("Invalid version specifier")
-
-        if start:
-            start = vn.Version(start)
-        if end:
-            end = vn.Version(end)
-        return vn.VersionRange(start, end)
-
     def version_list(self):
-        vlist = []
-        vlist.append(self.version())
-        while self.accept(COMMA):
-            vlist.append(self.version())
-        return vlist
+        assert self.expect(VAL)
+        parsed_version = vn.ver(self.token.value)
+        if not isinstance(parsed_version, vn.VersionList):
+            parsed_version = vn.VersionList([parsed_version])
+        return parsed_version
 
     def compiler(self):
         self.expect(ID)

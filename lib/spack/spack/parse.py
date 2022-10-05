@@ -13,6 +13,8 @@ from typing import Any, Dict, Iterable, Iterator, List, Tuple
 
 import six
 
+import llnl.util.tty as tty
+
 import spack.error
 import spack.util.path as sp
 
@@ -42,6 +44,32 @@ class Token(object):
     def __eq__(self, other):
         return (self.type == other.type) and (self.value == other.value)
 
+    def _is_quoted(self):
+        # type: () -> bool
+        """Determine whether the value is a quoted string.
+
+        Raises a ValueError if the string does not have the same quotes on both sides."""
+        if self.value.startswith("'"):
+            assert self.value.endswith("'"), self.value
+            return True
+        if self.value.startswith('"'):
+            assert self.value.endswith('"'), self.value
+            return True
+        return False
+
+    def drop_quotes(self):
+        # type: () -> None
+        """???"""
+        if not self._is_quoted():
+            return
+        self.value = self.value[1:-1]
+
+    def normalize_whitespace(self):
+        # type: () -> None
+        """???"""
+        if not self._is_quoted():
+            self.value = self.value.replace(' ', '')
+
 
 _Lexicon = List["Tuple[str, Any]"]
 # FIXME: Generic types with more than one argument aren't yet accepted by our py2 mypy
@@ -52,19 +80,19 @@ _Lexicon = List["Tuple[str, Any]"]
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
 
-    __slots__ = "scanners", "mode", "switchbook"
+    __slots__ = "scanners", "original_mode", "mode", "switchbook"
 
     def __init__(self, lexicon_and_mode_switches):
         # type: (List[Tuple[str, _Lexicon, Dict[str, List[Any]]]]) -> None
         self.scanners = {}  # type: Dict[str, re.Scanner] # type: ignore[name-defined]
         self.switchbook = {}  # type: Dict[str, Dict[str, List[Any]]]
-        self.mode = lexicon_and_mode_switches[0][0]
-        for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
+        self.original_mode = lexicon_and_mode_switches[0][0]  # type: str
+        self.mode = self.original_mode                        # type: str
 
-            # Convert the static description of the token id into a callback that
-            # executes self.token(...) when the pattern is recognized. This particular construction
-            # is required by re.Scanner, which is considered "experimental" and not
-            # well documented.
+        # Convert the static description of the token id into a callback that executes
+        # self.token(...) when the pattern is recognized. This particular construction is required
+        # by re.Scanner, which is considered "experimental" and not well documented.
+        for mode_name, lexicon, mode_switches_dict in lexicon_and_mode_switches:
             transformed_lexicon = []
             for pattern, maybe_tok in lexicon:
                 callback = self._transform_token_callback(maybe_tok)
@@ -84,12 +112,17 @@ class Lexer(object):
         else:
             return lambda scanner, val: self.token(tok, val)
 
-    def lex_word(self, word):
+    def _lex_word(self, word):
         # type: (str) -> Iterable[Token]
+        tty.debug(f"word: '{word}'")
         scanner = self.scanners[self.mode]
+        tty.debug(f'scanner: {[k for k, _ in scanner.lexicon]}')
         mode_switches_dict = self.switchbook[self.mode]
+        tty.debug(f'mode_switches_dict: {mode_switches_dict}')
 
         tokens, remainder = scanner.scan(word)
+        tty.debug(f'tokens1: {tokens}')
+        tty.debug(f"remainder: '{remainder}'")
         remainder_was_consumed_by_next_mode = False
 
         for i, t in enumerate(tokens):
@@ -98,10 +131,13 @@ class Lexer(object):
                     # Combine post-switch tokens with remainder and
                     # scan in other mode
                     self.mode = other_mode  # swap 0/1
+                    tty.debug(f"other_mode: '{other_mode}'")
                     remainder_was_consumed_by_next_mode = True
                     already_matched = tokens[: i + 1]
+                    tty.debug(f'already_matched: {already_matched}')
                     input_for_next_recursion = word[word.index(t.value) + len(t.value) :]
-                    recursion_output = self.lex_word(input_for_next_recursion)
+                    tty.debug(f"input_for_next_recursion: '{input_for_next_recursion}'")
+                    recursion_output = self._lex_word(input_for_next_recursion)
                     tokens = already_matched + list(recursion_output)
                     break
             # We call `self.lex_word()` recursively when we switch modes. When we do this, the
@@ -119,10 +155,12 @@ class Lexer(object):
 
     def lex(self, text):
         # type: (str) -> Iterator[Token]
+        tty.debug('LEX!!!!')
+        tty.debug(f"text: '{text}'")
+        self.mode = self.original_mode
         try:
-            for word in text:
-                for tok in self.lex_word(word):
-                    yield tok
+            for tok in self._lex_word(text):
+                yield tok
         except LexWordError as e:
             raise six.raise_from(LexError(text, e), e)  # type: ignore[attr-defined]
 
@@ -186,13 +224,8 @@ class Parser(object):
             sys.exit(1)
 
     def setup(self, text):
-        if isinstance(text, six.string_types):
-            # shlex does not handle Windows path
-            # separators, so we must normalize to posix
-            text = sp.convert_to_posix_path(text)
-            text = shlex.split(str(text))
+        assert isinstance(text, six.string_types), text
         self.text = text
-
         self._push_token_stream(self.lexer.lex(text))
 
     @abc.abstractmethod
