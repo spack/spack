@@ -131,6 +131,8 @@ class NetcdfC(AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
+    filter_compiler_wrappers("nc-config", relative_root="bin")
+
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
