@@ -253,7 +253,7 @@ def test_install_times(install_mockery, mock_fetch, mutable_mock_repo):
     # The order should be maintained
     phases = [x["name"] for x in times["phases"]]
     total = sum([x["seconds"] for x in times["phases"]])
-    for name in ["install"]:
+    for name in ["one", "two", "three", "install"]:
         assert name in phases
 
     # Give a generous difference threshold
