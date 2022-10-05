@@ -196,6 +196,7 @@ class Phist(CMakePackage):
     # to include trailing string lengths arguments in functions that have
     # single-character strings as args. phist should be using the relevant
     # LAPACK_function(...) macro's instead.
+    # https://bitbucket.org/essex/phist/issues/245/does-not-compile-with-reference-lapack-391
     conflicts("^openblas@0.3.21:")
     conflicts("^netlib-lapack@3.9.1:")
 
