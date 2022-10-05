@@ -29,7 +29,7 @@ class PyUrllib3(PythonPackage):
 
     depends_on("python@2.7:2.8,3.4:", when="@:1.25", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", when="@1.26.6", type=("build", "run"))
-    depends_on("python@2.7:2.8,3.6:", when="@1.26.12:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.6:3", when="@1.26.12:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
 
