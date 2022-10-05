@@ -129,7 +129,7 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, specs=None, restrict=False, repository=None):
+    def __init__(self, repository, specs=None, restrict=False):
         """Provider index based on a single mapping of providers.
 
         Args:
@@ -143,14 +143,11 @@ class ProviderIndex(_IndexBase):
         TODO: as possible without overly restricting results, so it is
         TODO: not the best name.
         """
-        if specs is None:
-            specs = []
-
-        assert repository is not None, "a 'repository=' argument is required"
         self.repository = repository
         self.restrict = restrict
         self.providers = {}
 
+        specs = specs or []
         for spec in specs:
             if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)

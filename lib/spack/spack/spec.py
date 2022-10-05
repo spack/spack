@@ -2619,7 +2619,7 @@ class Spec(object):
         """
         # Make an index of stuff this spec already provides
         self_index = spack.provider_index.ProviderIndex(
-            self.traverse(), restrict=True, repository=spack.repo.path
+            repository=spack.repo.path, specs=self.traverse(), restrict=True
         )
         changed = False
         done = False
@@ -3216,7 +3216,7 @@ class Spec(object):
                 dep = provider
         else:
             index = spack.provider_index.ProviderIndex(
-                [dep], restrict=True, repository=spack.repo.path
+                repository=spack.repo.path, specs=[dep], restrict=True
             )
             items = list(spec_deps.items())
             for name, vspec in items:
@@ -3370,7 +3370,7 @@ class Spec(object):
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = spack.provider_index.ProviderIndex(
-            [s for s in all_spec_deps.values()], restrict=True, repository=spack.repo.path
+            repository=spack.repo.path, specs=[s for s in all_spec_deps.values()], restrict=True
         )
 
         # traverse the package DAG and fill out dependencies according
@@ -3749,10 +3749,10 @@ class Spec(object):
 
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.ProviderIndex(
-            self.traverse(), restrict=True, repository=spack.repo.path
+            repository=spack.repo.path, specs=self.traverse(), restrict=True
         )
         other_index = spack.provider_index.ProviderIndex(
-            other.traverse(), restrict=True, repository=spack.repo.path
+            repository=spack.repo.path, specs=other.traverse(), restrict=True
         )
 
         # This handles cases where there are already providers for both vpkgs
