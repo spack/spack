@@ -246,19 +246,20 @@ class Lua(LuaImplPackage):
         when="+pcfile",
     )
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         if spec.satisfies("platform=darwin"):
             target = "macosx"
         else:
             target = "linux"
         make(
-            "INSTALL_TOP=%s" % prefix,
             "MYLDFLAGS="
             + " ".join((spec["readline"].libs.search_flags, spec["ncurses"].libs.search_flags)),
             "MYLIBS=%s" % spec["ncurses"].libs.link_flags,
-            "CC=%s -std=gnu99 %s" % (spack_cc, self.compiler.cc_pic_flag),
+            "CC={0} {1} {2}".format(spack_cc, self.compiler.c99_flag, self.compiler.cc_pic_flag),
             target,
         )
+
+    def install(self, spec, prefix):
         make("INSTALL_TOP=%s" % prefix, "install")
 
         if "+shared" in spec:
