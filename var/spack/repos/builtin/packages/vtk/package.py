@@ -21,6 +21,7 @@ class Vtk(CMakePackage):
 
     maintainers = ["chuckatkins", "danlipsa"]
 
+    version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
     version(
         "9.0.3",
