@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyNeptuneClient(PythonPackage):
-    """Flexible metadata store for MLOps, built for research and production teams that run a lot of experiments."""
+    """
+    Flexible metadata store for MLOps, built for research and
+    production teams that run a lot of experiments.
+    """
 
     homepage = "https://neptune.ai/"
     pypi     = "neptune-client/neptune-client-0.16.7.tar.gz"
