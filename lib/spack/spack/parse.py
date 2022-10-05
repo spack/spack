@@ -44,32 +44,6 @@ class Token(object):
     def __eq__(self, other):
         return (self.type == other.type) and (self.value == other.value)
 
-    def _is_quoted(self):
-        # type: () -> bool
-        """Determine whether the value is a quoted string.
-
-        Raises a ValueError if the string does not have the same quotes on both sides."""
-        if self.value.startswith("'"):
-            assert self.value.endswith("'"), self.value
-            return True
-        if self.value.startswith('"'):
-            assert self.value.endswith('"'), self.value
-            return True
-        return False
-
-    def drop_quotes(self):
-        # type: () -> None
-        """???"""
-        if not self._is_quoted():
-            return
-        self.value = self.value[1:-1]
-
-    def normalize_whitespace(self):
-        # type: () -> None
-        """???"""
-        if not self._is_quoted():
-            self.value = self.value.replace(' ', '')
-
 
 _Lexicon = List["Tuple[str, Any]"]
 # FIXME: Generic types with more than one argument aren't yet accepted by our py2 mypy

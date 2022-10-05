@@ -401,7 +401,7 @@ class AbstractVariant(object):
         return "{0.__name__}({1}, {2})".format(cls, repr(self.name), repr(self._original_value))
 
     def __str__(self):
-        return "{0}={1}".format(self.name, ",".join(str(x) for x in self.value))
+        return "{0}={1}".format(self.name, ",".join(repr(x) for x in self.value))
 
 
 class MultiValuedVariant(AbstractVariant):
@@ -443,7 +443,7 @@ class MultiValuedVariant(AbstractVariant):
         if self.name == "patches":
             values_str = ",".join(x[:7] for x in self.value)
         else:
-            values_str = ",".join(str(x) for x in self.value)
+            values_str = ",".join(repr(x) for x in self.value)
         return "{0}={1}".format(self.name, values_str)
 
 
@@ -460,7 +460,7 @@ class SingleValuedVariant(AbstractVariant):
         self._value = str(self._value[0])
 
     def __str__(self):
-        return "{0}={1}".format(self.name, self.value)
+        return "{0}={1!r}".format(self.name, self.value)
 
     @implicit_variant_conversion
     def satisfies(self, other):

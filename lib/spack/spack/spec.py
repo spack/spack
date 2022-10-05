@@ -4994,18 +4994,18 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, VER, ON, OFF, PCT, EQ, ID, VAL, FILE, SINGLE_QUOTE, DOUBLE_QUOTE = range(12)
-#  0,   1,   2,  3,   4,   5,  6,  7,  8,     9,           10,           11
+HASH, DEP, VER, ON, OFF, PCT, EQ, ID, VAL, FILE, SINGLE_QUOTE, DOUBLE_QUOTE, COMMA = range(13)
+#  0,   1,   2,  3,   4,   5,  6,  7,  8,     9,           10,           11,    12
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r"\w[\w.-]*"
 
 #: Regexes for quoted strings.
-singly_quoted = r"'([^'\\]*|\\(\\\\)*')*'"
-doubly_quoted = r'"([^"\\]*|\\(\\\\)*")*"'
+# escaped_single_quote = r"\\(?:\\\\)*'"
+# escaped_double_quote = r'\\(?:\\\\)*"'
 
 _filename_re_base = r"[/\w.-]*/[/\w/-]+\.(yaml|json)"
-_windows_filename_prefix = r"([A-Za-z]:)*?"
+_windows_filename_prefix = r"(?:[A-Za-z]:)*?"
 # Spec strings require posix-style paths on Windows
 # because the result is later passed to shlex.
 _windows_filename_re = _windows_filename_prefix + _filename_re_base
@@ -5013,7 +5013,7 @@ _windows_filename_re = _windows_filename_prefix + _filename_re_base
 #: Regex for literal filenames.
 filename_reg = _windows_filename_re if is_windows else _filename_re_base
 
-#: Regex for any type of version.
+#: Regex for any type of version, including single versions, ranges, and lists.
 version_regex = (
     r"(?:[:]\s*)?"
     r"{0}"
@@ -5051,6 +5051,7 @@ class SpecLexer(spack.parse.Lexer):
                         (re.escape("="), EQ),
                         (re.escape("'"), SINGLE_QUOTE),
                         (re.escape('"'), DOUBLE_QUOTE),
+                        (re.escape(","), COMMA),
                         # Filenames match before identifiers, so no initial filename
                         # component is parsed as a spec (e.g., in subdir/spec.yaml)
                         (filename_reg, FILE),
@@ -5063,7 +5064,7 @@ class SpecLexer(spack.parse.Lexer):
                         (r"\s+", None),
                     ],
                     {
-                        "EQUALS_PHASE": [EQ],
+                        "EQUALS_PHASE": [EQ, COMMA],
                         "VERSION_PHASE": [VER],
                         "SWITCH_PHASE": [ON, OFF],
                         "COMPILER_PHASE": [PCT],
@@ -5085,9 +5086,18 @@ class SpecLexer(spack.parse.Lexer):
                 (
                     "SINGLE_QUOTE_EQUALS_PHASE",
                     [
-                        (r"[^\s']+", VAL),
-                        (r"\s+", None),
                         (re.escape("'"), SINGLE_QUOTE),
+                        ("[^\\s,']+", VAL),
+                        (re.escape(","), COMMA),
+                        (r"\s+", None),
+                    ],
+                    {"BEGIN_PHASE": [SINGLE_QUOTE]},
+                ),
+                (
+                    "SINGLE_QUOTE_VALUE_PHASE",
+                    [
+                        (re.escape("'"), SINGLE_QUOTE),
+                        ("[^']*", VAL),
                     ],
                     {"BEGIN_PHASE": [SINGLE_QUOTE]},
                 ),
@@ -5104,9 +5114,18 @@ class SpecLexer(spack.parse.Lexer):
                 (
                     "DOUBLE_QUOTE_EQUALS_PHASE",
                     [
-                        (r'[^\s"]+', VAL),
+                        (re.escape('"'), DOUBLE_QUOTE),
+                        ("[^\\s,\"]+", VAL),
+                        (re.escape(","), COMMA),
                         (r"\s+", None),
-                        (re.escape("'"), DOUBLE_QUOTE),
+                    ],
+                    {"BEGIN_PHASE": [DOUBLE_QUOTE]},
+                ),
+                (
+                    "DOUBLE_QUOTE_VALUE_PHASE",
+                    [
+                        (re.escape('"'), DOUBLE_QUOTE),
+                        ("[^\"]*", VAL),
                     ],
                     {"BEGIN_PHASE": [DOUBLE_QUOTE]},
                 ),
@@ -5169,12 +5188,16 @@ class SpecLexer(spack.parse.Lexer):
                 (
                     "EQUALS_PHASE",
                     [
-                        (singly_quoted, VAL),
-                        (doubly_quoted, VAL),
-                        (r"[\S]+", VAL),
+                        (re.escape("'"), SINGLE_QUOTE),
+                        (re.escape('"'), DOUBLE_QUOTE),
+                        ("[^\\s,\"']+", VAL),
                         (r"\s+", None),
                     ],
-                    {"BEGIN_PHASE": [VAL]},
+                    {
+                        "BEGIN_PHASE": [VAL],
+                        "SINGLE_QUOTE_VALUE_PHASE": [SINGLE_QUOTE],
+                        "DOUBLE_QUOTE_VALUE_PHASE": [DOUBLE_QUOTE],
+                    },
                 ),
             ]
         )
@@ -5206,8 +5229,40 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
-                if self.accept(SINGLE_QUOTE) or self.accept(DOUBLE_QUOTE):
-                    continue
+                if self.accept(SINGLE_QUOTE):
+                    if not specs:
+                        self.unexpected_token()
+                    self.expect(ID)
+                    self.previous = self.token
+                    self.expect(EQ)
+                    variant_name = self.previous.value
+                    values = []
+                    while True:
+                        self.expect(VAL)
+                        values.append(self.token.value)
+                        if not self.accept(COMMA):
+                            break
+                    if len(values) == 1:
+                        values = values[0]
+                    specs[-1]._add_flag(variant_name, values)
+                    self.expect(SINGLE_QUOTE)
+                if self.accept(DOUBLE_QUOTE):
+                    if not specs:
+                        self.unexpected_token()
+                    self.expect(ID)
+                    self.previous = self.token
+                    self.expect(EQ)
+                    variant_name = self.previous.value
+                    values = []
+                    while True:
+                        self.expect(VAL)
+                        values.append(self.token.value)
+                        if not self.accept(COMMA):
+                            break
+                    if len(values) == 1:
+                        values = values[0]
+                    specs[-1]._add_flag(variant_name, values)
+                    self.expect(DOUBLE_QUOTE)
 
                 # Try a file first, but if it doesn't succeed, keep parsing
                 # as from_file may backtrack and try an id.
@@ -5298,7 +5353,7 @@ class SpecParser(spack.parse.Parser):
                         # Real deptypes are assigned later per packages.
                         specs[-1]._add_dependency(dep, ())
 
-                else:
+                elif self.next:
                     # If the next token can be part of a valid anonymous spec,
                     # create the anonymous spec
                     if self.next.type in (VER, ON, OFF, PCT):
@@ -5427,9 +5482,20 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ID):
                 self.previous = self.token
                 if self.accept(EQ):
-                    self.expect(VAL)
-                    self.token.drop_quotes()
-                    spec._add_flag(self.previous.value, self.token.value)
+                    variant_name = self.previous.value
+                    values = []
+                    while True:
+                        if self.accept(SINGLE_QUOTE) or self.accept(DOUBLE_QUOTE):
+                            pass
+                        self.expect(VAL)
+                        values.append(self.token.value)
+                        if self.accept(SINGLE_QUOTE) or self.accept(DOUBLE_QUOTE):
+                            pass
+                        if not self.accept(COMMA):
+                            break
+                    if len(values) == 1:
+                        values = values[0]
+                    spec._add_flag(variant_name, values)
                     self.previous = None
                 else:
                     # We've found the start of a new spec. Go back to do_parse

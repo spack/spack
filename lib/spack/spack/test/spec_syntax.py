@@ -148,8 +148,6 @@ class TestSpecSyntax(object):
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type in (sp.ID, sp.VAL, sp.VER):
-                spec_tok.normalize_whitespace()
-                spec_tok.drop_quotes()
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -178,8 +176,9 @@ class TestSpecSyntax(object):
 
     def test_anonymous_specs_with_multiple_parts(self):
         # Parse anonymous spec with multiple tokens
-        self.check_parse("@4.2: languages=go", "languages=go @4.2:")
-        self.check_parse("@4.2: languages=go")
+        self.check_parse("@4.2: languages='go'", "languages=go @4.2:")
+        self.check_parse("@4.2: languages='go'")
+        self.check_parse("@4.2: languages='go'", "@4.2: languages=go")
 
     def test_simple_dependence(self):
         self.check_parse("openmpi ^hwloc")
@@ -223,6 +222,10 @@ class TestSpecSyntax(object):
             "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4" " ^stackwalker@8.1_1e"
         )
         self.check_parse(
+            "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'" " ^stackwalker@8.1_1e"
+        )
+        self.check_parse(
+            "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'" " ^stackwalker@8.1_1e",
             "mvapich_foo" " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2" " ^stackwalker@8.1_1e"
         )
         self.check_parse(
@@ -231,6 +234,9 @@ class TestSpecSyntax(object):
             " ^stackwalker@8.1_1e"
         )
         self.check_parse(
+            "mvapich_foo"
+            " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug='2'"
+            " ^stackwalker@8.1_1e arch=test-redhat6-x86",
             "mvapich_foo"
             " ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2"
             " ^stackwalker@8.1_1e arch=test-redhat6-x86"
@@ -779,82 +785,130 @@ class TestSpecSyntax(object):
         )
 
     def test_way_too_many_spaces(self):
-        lex_key = (
-            complex_root
-            + complex_dep1
-            + complex_compiler
-            + complex_compiler_v_space
-            + complex_dep1_var
-            + complex_dep2_space
+        # We no longer remove spaces during lexing, so this test now just verifies that those
+        # spaces are removed during canonicalization.
+        canonical = (
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
         )
-        self.check_lex(
-            lex_key,
+        spacy_spec = (
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
-        lex_key = (
-            complex_root
-            + complex_dep1
-            + complex_compiler
-            + complex_compiler_v_space
-            + complex_dep1_var
-            + complex_dep2_space
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
         )
-        self.check_lex(
-            lex_key,
+        spacy_spec = (
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
+        self.check_parse(canonical, spacy_spec)
 
     def test_kv_with_quotes(self):
-        self.check_lex(
-            kv_lex,
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo debug='4' "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
-        self.check_lex(
-            kv_lex,
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
+            "mvapich_foo debug='4' "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e"
+        )
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            'mvapich_foo debug=\'4\' '
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             'mvapich_foo debug="4" '
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
-        self.check_lex(
-            kv_lex,
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo 'debug = 4' "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
+        self.check_parse(canonical, spacy_spec)
 
     def test_kv_without_quotes(self):
-        self.check_lex(
-            kv_lex,
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo debug=4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
+        self.check_parse(canonical, spacy_spec)
 
     def test_kv_with_spaces(self):
-        self.check_lex(
-            kv_lex,
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo debug = 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
-        self.check_lex(
-            kv_lex,
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo debug =4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
-        self.check_lex(
-            kv_lex,
+        self.check_parse(canonical, spacy_spec)
+
+        canonical = (
+            "mvapich_foo debug='4' "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e"
+        )
+        spacy_spec = (
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
-            "^ stackwalker @ 8.1_1e",
+            "^ stackwalker @ 8.1_1e"
         )
+        self.check_parse(canonical, spacy_spec)
 
     @pytest.mark.parametrize(
         "expected_tokens,spec_string",
@@ -864,7 +918,10 @@ class TestSpecSyntax(object):
                 "target=broadwell",
             ),
             (
-                [Token(sp.ID, "target"), Token(sp.EQ, "="), Token(sp.VAL, ":broadwell,icelake")],
+                [
+                    Token(sp.ID, "target"), Token(sp.EQ, "="),
+                    Token(sp.VAL, ":broadwell"), Token(sp.COMMA), Token(sp.VAL, "icelake"),
+                ],
                 "target=:broadwell,icelake",
             ),
         ],
