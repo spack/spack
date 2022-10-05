@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyBravado(PythonPackage):
-    """Bravado is a Yelp maintained fork of digium/swagger-py for use with OpenAPI Specification version 2.0 (previously known as Swagger)."""
+    """
+    Bravado is a Yelp maintained fork of digium/swagger-py for use with
+    OpenAPI Specification version 2.0 (previously known as Swagger).
+    """
 
     homepage = "https://github.com/Yelp/bravado"
     pypi     = "bravado/bravado-11.0.3.tar.gz"
