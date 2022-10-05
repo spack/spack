@@ -192,6 +192,13 @@ class Phist(CMakePackage):
     # and actual argument at (2) (scalar and rank-1)
     conflicts("%gcc@10:", when="@:1.9.0")
 
+    # reference lapack 3.9.1 (included in openblas 0.3.21) changed their lapack.h API
+    # to include trailing string lengths arguments in functions that have
+    # single-character strings as args. phist should be using the relevant
+    # LAPACK_function(...) macro's instead.
+    conflicts("^openblas@0.21.3:")
+    conflicts("^netlib-lapack@3.9.1:")
+
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
     def patch(self):
