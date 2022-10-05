@@ -150,6 +150,7 @@ spack:
   - turbine
   - umap
   - umpire
+  - unifyfs
   - upcxx
   - veloc
   - vtk-m
@@ -225,7 +226,6 @@ spack:
   #- paraview +qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
   #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
-  #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
   #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
