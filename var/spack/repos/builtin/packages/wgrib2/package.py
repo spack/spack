@@ -163,8 +163,12 @@ class Wgrib2(MakefilePackage):
         # Get source files for netCDF4 builds
         if self.spec.satisfies("+netcdf4"):
             with working_dir(self.build_directory):
-                os.system("wget https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-c-4.8.1.tar.gz")
-                os.system("wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.1/src/hdf5-1.12.1.tar.gz")
+                os.system(
+                    "wget https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-c-4.8.1.tar.gz"
+                )
+                os.system(
+                    "wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.1/src/hdf5-1.12.1.tar.gz"
+                )
 
         make()
 
