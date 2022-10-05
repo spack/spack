@@ -330,7 +330,7 @@ class PatchCache(object):
 
     """
 
-    def __init__(self, data=None, repository=None):
+    def __init__(self, repository, data=None):
         if data is None:
             self.index = {}
         else:
@@ -338,12 +338,11 @@ class PatchCache(object):
                 raise IndexError("invalid patch index; try `spack clean -m`")
             self.index = data["patches"]
 
-        assert repository is not None, "a 'repository=' argument is required"
         self.repository = repository
 
     @classmethod
     def from_json(cls, stream, repository):
-        return PatchCache(sjson.load(stream), repository=repository)
+        return PatchCache(repository=repository, data=sjson.load(stream))
 
     def to_json(self, stream):
         sjson.dump({"patches": self.index}, stream)
