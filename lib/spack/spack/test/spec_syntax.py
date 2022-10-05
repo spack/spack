@@ -910,6 +910,10 @@ class TestSpecSyntax(object):
         )
         self.check_parse(canonical, spacy_spec)
 
+    def test_kv_roundtrip(self):
+        canonical = Spec("a b='c d'")
+        assert Spec(str(canonical)) == canonical
+
     @pytest.mark.parametrize(
         "expected_tokens,spec_string",
         [
