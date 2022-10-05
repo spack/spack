@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import os
 
 from spack.package import *
 
@@ -84,6 +85,8 @@ class Wgrib2(MakefilePackage):
     conflicts("+netcdf3", when="+netcdf4")
     conflicts("+openmp", when="%apple-clang")
 
+    depends_on("wget", type=("build"), when="+netcdf4")
+
     variant_map = {
         "netcdf3": "USE_NETCDF3",
         "netcdf4": "USE_NETCDF4",
@@ -156,6 +159,13 @@ class Wgrib2(MakefilePackage):
         env.set("COMP_SYS", comp_sys)
 
     def build(self, spec, prefix):
+
+        # Get source files for netCDF4 builds
+        if self.spec.satisfies("+netcdf4"):
+            with working_dir(self.build_directory):
+                os.system("wget https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-c-4.8.1.tar.gz")
+                os.system("wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-1.12.1/src/hdf5-1.12.1.tar.gz")
+
         make()
 
         # Move wgrib2 executable to a tempoary directory
