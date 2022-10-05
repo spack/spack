@@ -16,6 +16,7 @@ class Libfabric(AutotoolsPackage):
     maintainers = ["rajachan"]
 
     version("main", branch="main")
+    version("1.16.0", sha256="ac104b9d6e3ce8bda6116329e3f440b621d85602257b3015116ca590f65267d2")
     version("1.15.1", sha256="cafa3005a9dc86064de179b0af4798ad30b46b2f862fe0268db03d13943e10cd")
     version("1.15.0", sha256="70982c58eadeeb5b1ddb28413fd645e40b206618b56fbb2b18ab1e7f607c9bea")
     version("1.14.1", sha256="6cfabb94bca8e419d9015212506f5a367d077c5b11e94b9f57997ec6ca3d8aed")
