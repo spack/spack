@@ -768,7 +768,7 @@ class RepoIndex(object):
 
                 # Compute which packages needs to be updated **again** in case someone updated them
                 # while we waited for the lock
-                new_index_mtime = misc_cache.mtime(cache_filename)
+                new_index_mtime = self.cache.mtime(cache_filename)
                 if new_index_mtime != index_mtime:
                     needs_update = self.checker.modified_since(new_index_mtime)
 

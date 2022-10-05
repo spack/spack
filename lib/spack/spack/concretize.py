@@ -17,7 +17,6 @@ TODO: make this customizable and allow users to configure
 from __future__ import print_function
 
 import functools
-import os.path
 import platform
 import tempfile
 from contextlib import contextmanager
