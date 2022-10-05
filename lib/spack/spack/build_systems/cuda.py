@@ -41,6 +41,7 @@ class CudaPackage(PackageBase):
         "75",
         "80",
         "86",
+        "90",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -99,6 +100,8 @@ class CudaPackage(PackageBase):
 
     depends_on("cuda@11.0:", when="cuda_arch=80")
     depends_on("cuda@11.1:", when="cuda_arch=86")
+
+    depends_on("cuda@11.8:", when="cuda_arch=90")
 
     # From the NVIDIA install guide we know of conflicts for particular
     # platforms (linux, darwin), architectures (x86, powerpc) and compilers
