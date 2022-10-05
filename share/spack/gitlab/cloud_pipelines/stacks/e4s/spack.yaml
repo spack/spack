@@ -84,6 +84,7 @@ spack:
   - ginkgo
   - globalarrays
   - gmp
+  - gotcha
   - gptune
   - hdf5 +fortran +hl +shared
   - hdf5-vol-async
@@ -222,7 +223,6 @@ spack:
   # CPU failures
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
   #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
   #- paraview +qt   # llvm@14
