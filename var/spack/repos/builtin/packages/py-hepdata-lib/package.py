@@ -21,6 +21,7 @@ class PyHepdataLib(PythonPackage):
     depends_on("root+python", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-pyyaml@4:", type=("build", "run"))
+    depends_on("py-pyyaml@5:", when="@0.10.1:", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pytest-runner", type="build")
