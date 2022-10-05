@@ -7,7 +7,10 @@ from spack import *
 
 
 class PyBravadoCore(PythonPackage):
-    """bravado-core is a Python library that adds client-side and server-side support for the OpenAPI Specification v2.0."""
+    """
+    bravado-core is a Python library that adds client-side and server-side
+    support for the OpenAPI Specification v2.0.
+    """
 
     homepage = "https://github.com/Yelp/bravado-core"
     pypi     = "bravado-core/bravado-core-5.17.1.tar.gz"
