@@ -47,6 +47,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version
@@ -2286,7 +2287,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
+    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (

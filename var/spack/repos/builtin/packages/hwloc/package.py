@@ -26,8 +26,6 @@ class Hwloc(AutotoolsPackage):
 
     homepage = "https://www.open-mpi.org/projects/hwloc/"
     url = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
-    list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 2
     git = "https://github.com/open-mpi/hwloc.git"
 
     maintainers = ["bgoglin"]
@@ -146,10 +144,8 @@ class Hwloc(AutotoolsPackage):
         return match.group(1) if match else None
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (
-            version.up_to(2),
-            version,
-        )
+        url = "https://download.open-mpi.org/release/hwloc/v{0}/hwloc-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = []
