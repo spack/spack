@@ -29,6 +29,12 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.2.0",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18903/l_oneVPL_p_2022.2.0.8703_offline.sh",
+            sha256="cb8af222d194ebb4b1dafe12e0b70cbbdee204f9fcfe9eafb46b287ee33b3797",
+            expand=False,
+        )
+        version(
             "2022.1.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18750/l_oneVPL_p_2022.1.0.154_offline.sh",
             sha256="486cca918c9772a43f62da77e07cdf54dabb92ecebf494eb8c89c4492ab43447",

@@ -14,6 +14,7 @@ class PyCertifi(PythonPackage):
     homepage = "https://github.com/certifi/python-certifi"
     pypi = "certifi/certifi-2020.6.20.tar.gz"
 
+    version("2022.9.14", sha256="36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5")
     version("2021.10.8", sha256="78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872")
     version("2020.6.20", sha256="5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3")
     version(
@@ -25,4 +26,5 @@ class PyCertifi(PythonPackage):
     version("2017.4.17", sha256="f7527ebf7461582ce95f7a9e03dd141ce810d40590834f4ec20cddd54234c10a")
     version("2017.1.23", sha256="81877fb7ac126e9215dfb15bfef7115fdc30e798e0013065158eed0707fd99ce")
 
+    depends_on("python@3.6:", when="@2022.05.18.1:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
