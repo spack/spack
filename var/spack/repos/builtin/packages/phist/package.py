@@ -196,7 +196,7 @@ class Phist(CMakePackage):
     # to include trailing string lengths arguments in functions that have
     # single-character strings as args. phist should be using the relevant
     # LAPACK_function(...) macro's instead.
-    conflicts("^openblas@0.21.3:")
+    conflicts("^openblas@0.3.21:")
     conflicts("^netlib-lapack@3.9.1:")
 
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
