@@ -260,6 +260,13 @@ spack:
 
     mappings:
       - match:
+          - kokkos +rocm amdgpu_target=gfx90a
+        runner-attributes:
+          tags: [ "uo-gilgamesh-docker-rocm", "gfx90a" ]
+          variables:
+            CI_JOB_SIZE: large
+
+      - match:
           - hipblas
           - llvm
           - llvm-amdgpu
