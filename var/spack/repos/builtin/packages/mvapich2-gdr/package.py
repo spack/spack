@@ -23,6 +23,7 @@ class Mvapich2Gdr(AutotoolsPackage):
 
     maintainers = ["ndcontini", "natshineman", "harisubramoni"]
 
+    version('2.3.7', sha256='7bf748ed3750aa607382fc96229e256d888824aed758ce364b1ed9429da4779e')
     version("2.3.6", sha256="618408431348164c0824f3a72dc406763f169f7f5400f3cc15dfebf8d7166005")
     version("2.3.5", sha256="bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4")
     version("2.3.4", sha256="ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa")
