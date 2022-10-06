@@ -24,6 +24,7 @@ class Crtm(CMakePackage):
         description='Download CRTM coeffecient or "fix" files (several GBs).',
     )
 
+    depends_on("cmake@3.15:")
     depends_on("git-lfs")
     depends_on("netcdf-fortran", when="@2.4.0:")
     depends_on("netcdf-fortran", when="@v2.3-jedi.4")
