@@ -50,9 +50,6 @@ class NeurodamusModel(SimModel):
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
     variant('mvdtool',     default=True,  description="Enable MVDTool reader (for nodes)")
     variant('common_mods', default='default', description="Source of common mods. '': no change, other string: alternate path")
-    variant('ngv',         default=False, description="Include NGV mod files")
-
-    conflicts("+coreneuron", when="+ngv")
 
     resource(
         name='common_mods',
@@ -108,11 +105,6 @@ class NeurodamusModel(SimModel):
     def build_model(self, spec, prefix):
         """Build and install the bare model.
         """
-        # NGV must overwrite other mods, even from the specific
-        # models, e.g. ProbAMPANMDA
-        if spec.satisfies("+ngv"):
-            copy_all("common_latest/common/mod/ngv", "mod")
-
         SimModel._build_mods(self, 'mod', dependencies=[])  # No dependencies
         # Dont install intermediate src.
         SimModel.install(self, spec, prefix, install_src=False)

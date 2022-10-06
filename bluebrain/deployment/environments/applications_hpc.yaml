@@ -29,6 +29,7 @@ spack:
         ^coreneuron+knl: '{name}-knl/{version}'
         +common: '{name}/{version}-commonmods'
         +plasticity: '{name}-plasticity/{version}'
+        +ngv+metabolism: '{name}-multiscale_run/{version}'
   specs:
     - asciitoh5@1.0
     - coreneuron%intel+tests
@@ -45,6 +46,7 @@ spack:
     - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
     - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
     - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
+    - neurodamus-neocortex+ngv+metabolism%intel
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
     - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
     - neuron%intel+coreneuron+tests
