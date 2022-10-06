@@ -21,7 +21,7 @@ class PyBravadoCore(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-jsonref', type=('build', 'run'))
-    depends_on('py-jsonschema@2.5.1:', type='build')
+    depends_on('py-jsonschema@2.5.1:', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
