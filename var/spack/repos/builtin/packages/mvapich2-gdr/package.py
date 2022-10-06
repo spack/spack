@@ -35,7 +35,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         "process_managers",
         description="The process manager to activate.",
         default="mpirun",
-        values=("slurm", "mpirun", "pbs", "jsrun"),
+        values=("none", "slurm", "mpiexec", "mpirun", "pbs", "jsrun"),
         multi=False,
     )
 
@@ -53,7 +53,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         "Is ignored if set for mpirun or jsrun. "
         "jsrun uses pmix regardless of chosen option.",
         default="pmi1",
-        values=("pmi1", "pmi2", "pmix"),
+        values=("simple", "pmi1", "pmi2", "pmix"),
         multi=False,
     )
 
@@ -113,9 +113,33 @@ class Mvapich2Gdr(AutotoolsPackage):
             opts.append("--enable-hip=basic")
             opts.append("--enable-rocm")
 
+        if "process_managers=mpiexec" in spec:
+            opts.append("--with-pm=mpiexec")
+            if "pmi_version=simple" in spec:
+                opts.append("--with-pmi=simple")
+            if "pmi_version=pmi1" in spec:
+                opts.append("--with-pmi=pmi1")
+            if "pmi_version=pmi2" in spec:
+                opts.append("--with-pmi=pmi2")
+            if "pmi_version=pmix" in spec:
+                opts.append("--with-pmi=pmix")
+                opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
+        
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if "process_managers=slurm" in spec:
             opts.append("--with-pm=slurm")
+            if "pmi_version=pmi1" in spec:
+                opts.append("--with-pmi=pmi1")
+            if "pmi_version=pmi2" in spec:
+                opts.append("--with-pmi=pmi2")
+            if "pmi_version=pmix" in spec:
+                opts.append("--with-pmi=pmix")
+                opts.append("--with-pmix={0}".format(spec["pmix"].prefix))
+
+        if "process_managers=none" in spec:
+            opts.append("--with-pm=none")
+            if "pmi_version=simple" in spec:
+                opts.append("--with-pmi=simple")
             if "pmi_version=pmi1" in spec:
                 opts.append("--with-pmi=pmi1")
             if "pmi_version=pmi2" in spec:
