@@ -14,14 +14,18 @@ class Hipblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipBLAS"
     git = "https://github.com/ROCmSoftwarePlatform/hipBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipBLAS/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipblas"]
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.2.3", sha256="4d66db9b000b6207b5270d90556b724bfdb08ebbfcc675f014287e0be7ee6344")
+    version("5.2.1", sha256="ccae36b118b7a1eb4b2f7d65fb163f54ab9c5cf774dbe2ec60971d4f78ae8308")
+    version("5.2.0", sha256="5e9091dc4ef83896f5c3bc5ade1cb5db8e1a6afc451dbba4da19d8a7ec2b6f29")
     version("5.1.3", sha256="f0fdaa851971b41b48ec2e7d640746fbd6f9f433da2020c5fd95c91a7473d9e1")
     version("5.1.0", sha256="22faba3828e50a4c4e22f569a7d6441c797a11db1d472619c01d3515a3275e92")
     version("5.0.2", sha256="201772bfc422ecb2c50e898dccd7d3d376cf34a2b795360e34bf71326aa37646")
@@ -126,6 +130,9 @@ class Hipblas(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
@@ -145,7 +152,6 @@ class Hipblas(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
@@ -159,9 +165,10 @@ class Hipblas(CMakePackage):
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
-
-        if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
+        if self.spec.satisfies("@:5.1"):
+            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args
 

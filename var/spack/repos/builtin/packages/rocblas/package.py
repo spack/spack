@@ -13,14 +13,18 @@ class Rocblas(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
     git = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["cgmb", "srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["librocblas"]
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.2.3", sha256="36f74ce53b82331a756c42f95f3138498d6f4a66f2fd370cff9ab18281bb12d5")
+    version("5.2.1", sha256="6be804ba8d9e491a85063c220cd0ddbf3d13e3b481eee31041c35a938723f4c6")
+    version("5.2.0", sha256="b178b7db5f0af55b21b5f744b8825f5e002daec69b4688e50df2bca2fac155bd")
     version("5.1.3", sha256="915374431db8f0cecdc2bf318a0ad33c3a8eceedc461d7a06b92ccb02b07313c")
     version("5.1.0", sha256="efa0c424b5ada697314aa8a78c19c93ade15f1612c4bfc8c53d71d1c9719aaa3")
     version("5.0.2", sha256="358a0902fc279bfc80205659a90e96269cb7d83a80386b121e4e3dfe221fec23")
@@ -140,6 +144,9 @@ class Rocblas(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -175,6 +182,9 @@ class Rocblas(CMakePackage):
         ("@5.0.2", "75b9aefe5981d85d1df32ddcebf32dab52bfdabd"),
         ("@5.1.0", "ea38f8661281a37cd81c96cc07868e3f07d2c4da"),
         ("@5.1.3", "ea38f8661281a37cd81c96cc07868e3f07d2c4da"),
+        ("@5.2.0", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
+        ("@5.2.1", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
+        ("@5.2.3", "9ca08f38c4c3bfe6dfa02233637e7e3758c7b6db"),
     ]:
         resource(
             name="Tensile",
@@ -196,7 +206,8 @@ class Rocblas(CMakePackage):
     patch("0001-Fix-compilation-error-with-StringRef-to-basic-string.patch", when="@:3.8")
     patch("0002-Fix-rocblas-clients-blas.patch", when="@4.2.0:4.3.1")
     patch("0003-Fix-rocblas-gentest.patch", when="@4.2.0:5.1")
-    patch("0004-Find-python.patch", when="@master:")
+    # Finding Python package and set command python as python3
+    patch("0004-Find-python.patch", when="@5.2.0:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -247,6 +258,6 @@ class Rocblas(CMakePackage):
             args.append(self.define("__skip_rocmclang", "ON"))
 
         if self.spec.satisfies("@5.2.0:"):
-            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", "ON"))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args

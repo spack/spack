@@ -19,6 +19,7 @@ from contextlib import closing
 import ruamel.yaml as yaml
 from six.moves.urllib.error import HTTPError, URLError
 
+import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -26,7 +27,6 @@ from llnl.util.filesystem import mkdirp
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
-import spack.fetch_strategy as fs
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -654,7 +654,7 @@ def get_buildfile_manifest(spec):
 
         for filename in files:
             path_name = os.path.join(root, filename)
-            m_type, m_subtype = relocate.mime_type(path_name)
+            m_type, m_subtype = fsys.mime_type(path_name)
             rel_path_name = os.path.relpath(path_name, spec.prefix)
             added = False
 
@@ -1231,7 +1231,7 @@ def try_fetch(url_to_fetch):
 
     try:
         stage.fetch()
-    except fs.FetchError:
+    except web_util.FetchError:
         stage.destroy()
         return None
 
@@ -1670,7 +1670,7 @@ def extract_tarball(spec, download_result, allow_root=False, unsigned=False, for
     old_relative_prefix = buildinfo.get("relative_prefix", new_relative_prefix)
     rel = buildinfo.get("relative_rpaths")
     info = "old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s"
-    tty.debug(info % (old_relative_prefix, new_relative_prefix, rel))
+    tty.debug(info % (old_relative_prefix, new_relative_prefix, rel), level=2)
 
     # Extract the tarball into the store root, presumably on the same filesystem.
     # The directory created is the base directory name of the old prefix.
@@ -1756,10 +1756,12 @@ def install_root_node(spec, allow_root, unsigned=False, force=False, sha256=None
             raise spack.binary_distribution.NoChecksumException(msg)
         tty.debug("Verified SHA256 checksum of the build cache")
 
-    tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
-    extract_tarball(spec, download_result, allow_root, unsigned, force)
-    spack.hooks.post_install(spec)
-    spack.store.db.add(spec, spack.store.layout)
+    # don't print long padded paths while extracting/relocating binaries
+    with spack.util.path.filter_padding():
+        tty.msg('Installing "{0}" from a buildcache'.format(spec.format()))
+        extract_tarball(spec, download_result, allow_root, unsigned, force)
+        spack.hooks.post_install(spec)
+        spack.store.db.add(spec, spack.store.layout)
 
 
 def install_single_spec(spec, allow_root=False, unsigned=False, force=False):
@@ -1814,14 +1816,17 @@ def try_direct_fetch(spec, mirrors=None):
                             specfile_name, buildcache_fetch_url_signed_json
                         ),
                         url_err,
+                        level=2,
                     )
                     tty.debug(
                         "Did not find {0} on {1}".format(specfile_name, buildcache_fetch_url_json),
                         url_err_x,
+                        level=2,
                     )
                     tty.debug(
                         "Did not find {0} on {1}".format(specfile_name, buildcache_fetch_url_yaml),
                         url_err_y,
+                        level=2,
                     )
                     continue
         specfile_contents = codecs.getreader("utf-8")(fs).read()
@@ -1949,7 +1954,7 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
                 if not os.path.exists(stage.save_filename):
                     try:
                         stage.fetch()
-                    except fs.FetchError:
+                    except web_util.FetchError:
                         continue
 
             tty.debug("Found key {0}".format(fingerprint))
@@ -2101,7 +2106,7 @@ def _download_buildcache_entry(mirror_root, descriptions):
             try:
                 stage.fetch()
                 break
-            except fs.FetchError as e:
+            except web_util.FetchError as e:
                 tty.debug(e)
         else:
             if fail_if_missing:

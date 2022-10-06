@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
+from spack.build_environment import MakeExecutable, determine_number_of_jobs
 from spack.package import *
+from spack.util.executable import which_string
 
 
 class Ninja(Package):
@@ -69,3 +71,11 @@ class Ninja(Package):
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):
             symlink("ninja", "ninja-build")
+
+    def setup_dependent_package(self, module, dspec):
+        name = "ninja"
+
+        module.ninja = MakeExecutable(
+            which_string(name, path=[self.spec.prefix.bin], required=True),
+            determine_number_of_jobs(parallel=self.parallel),
+        )

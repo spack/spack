@@ -114,7 +114,7 @@ class Bazel(Package):
     version("0.3.2", sha256="ca5caf7b2b48c7639f45d815b32e76d69650f3199eb8caa541d402722e3f6c10")
     version("0.3.1", sha256="218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7")
     version("0.3.0", sha256="357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3")
-    version("0.2.0", sha256="54669662f7751d9fc9959207e13d9a171bda15be9087703d3dbd3968fed12b27")
+    version("0.2.0", sha256="e9ba2740d9727ae6d0f9b1ac0c5df331814fd03518fe4b511396ed10780d5272")
     version("0.1.4", sha256="f3c395f5cd78cfef96f4008fe842f327bc8b03b77f46999387bc0ad223b5d970")
     version("0.1.1", sha256="c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20")
 
@@ -144,7 +144,7 @@ class Bazel(Package):
     patch("unix_cc_configure-0.10.patch", when="@0.10:0.14")
     patch("unix_cc_configure-0.5.3.patch", when="@0.5.3:0.9")
     patch("cc_configure-0.5.0.patch", when="@0.5.0:0.5.2")
-    patch("cc_configure-0.3.0.patch", when="@:0.4")
+    patch("cc_configure-0.3.0.patch", when="@0.3:0.4")
 
     # Set CC and CXX
     patch("compile-0.29.patch", when="@0.29:")
@@ -154,7 +154,7 @@ class Bazel(Package):
     patch("compile-0.9.patch", when="@0.9:0.12")
     patch("compile-0.6.patch", when="@0.6:0.8")
     patch("compile-0.4.patch", when="@0.4:0.5")
-    patch("compile-0.3.patch", when="@:0.3")
+    patch("compile-0.3.patch", when="@0.2:0.3")
 
     # Disable dependency search
     patch("cppcompileaction-0.3.2.patch", when="@0.3.2:+nodepfail")
@@ -179,6 +179,19 @@ class Bazel(Package):
 
     # https://blog.bazel.build/2021/05/21/bazel-4-1.html
     conflicts("platform=darwin target=aarch64:", when="@:4.0")
+
+    # patches for compiling bazel-4.1:4 with gcc-11
+    # these are derived from
+    # https://gitlab.alpinelinux.org/alpine/aports/-/merge_requests/29084/
+    patch("gcc11_1.patch", when="@0.3.2:4%gcc@11:")
+    patch("gcc11_2.patch", when="@0.3.2:4%gcc@11:")
+    patch("gcc11_3.patch", when="@0.3:4%gcc@11:")
+    patch("gcc11_4.patch", when="@4.1:4%gcc@11:")
+
+    # bazel-4.0.0 does not compile with gcc-11
+    # newer versions of grpc and abseil dependencies are needed but are not in
+    # bazel-4.0.0
+    conflicts("@:0.2,4.0.0", when="%gcc@11:")
 
     executables = ["^bazel$"]
 

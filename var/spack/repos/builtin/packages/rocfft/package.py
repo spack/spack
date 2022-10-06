@@ -13,12 +13,15 @@ class Rocfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocFFT/"
     git = "https://github.com/ROCmSoftwarePlatform/rocFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocfft/archive/rocm-5.2.0.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["librocfft"]
 
+    version("5.2.3", sha256="0cee37886f01f1afb3ae5dad1164c819573c13c6675bff4eb668de334adbff27")
+    version("5.2.1", sha256="6302349b6cc610a9a939377e2c7ffba946656a8d43f2e438ff0b3088f0f963ad")
+    version("5.2.0", sha256="ebba280b7879fb4bc529a68072b98d4e815201f90d24144d672094bc241743d4")
     version("5.1.3", sha256="b4fcd03c1b07d465bb307ec33cc7fb50036dff688e497c5e52b2dec37f4cb618")
     version("5.1.0", sha256="dc11c9061753ae43a9d5db9c4674aa113a8adaf50818b2701cbb940894147f68")
     version("5.0.2", sha256="30d4bd5fa85185ddafc69fa6d284edd8033c9d77d1e351fa328267242995eb0a")
@@ -118,13 +121,17 @@ class Rocfft(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     patch("0001-Improve-compilation-by-using-sqlite-recipe-for-rocfft.patch", when="@5.0.0:5.0.2")
+    # Patch to add spack build test support. No longer required from 5.2
     patch("0002-Fix-clients-fftw3-include-dirs-rocm-4.2.patch", when="@4.2.0:4.3.1")
-    patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:")
+    patch("0003-Fix-clients-fftw3-include-dirs-rocm-4.5.patch", when="@4.5.0:5.1")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -171,4 +178,6 @@ class Rocfft(CMakePackage):
         if self.spec.satisfies("@5.0.0:"):
             args.append(self.define("SQLITE_USE_SYSTEM_PACKAGE", "ON"))
 
+        if self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         return args

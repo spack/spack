@@ -28,3 +28,4 @@ class Qtltools(MakefilePackage):
         makefile.filter("RMATH_LIB=.*", "RMATH_LIB=" + self.spec["r"].prefix.rlib)
         makefile.filter("HTSLD_INC=.*", "HTSLD_INC=" + self.spec["htslib"].prefix.include)
         makefile.filter("HTSLD_LIB=.*", "HTSLD_LIB=" + self.spec["htslib"].prefix.lib)
+        makefile.filter("prefix *=.*", "prefix = " + prefix)

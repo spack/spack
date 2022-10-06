@@ -16,11 +16,12 @@ class Adios2(CMakePackage, CudaPackage):
     url = "https://github.com/ornladios/ADIOS2/archive/v2.8.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
-    maintainers = ["ax3l", "chuckatkins", "williamfgc"]
+    maintainers = ["ax3l", "chuckatkins", "vicentebolea", "williamfgc"]
 
     tags = ["e4s"]
 
     version("master", branch="master")
+    version("2.8.3", sha256="4906ab1899721c41dd918dddb039ba2848a1fb0cf84f3a563a1179b9d6ee0d9f")
     version("2.8.2", sha256="9909f6409dc44b2c28c1fda0042dab4b711f25ec3277ef0cb6ffc40f5483910d")
     version("2.8.1", sha256="3f515b442bbd52e3189866b121613fe3b59edb8845692ea86fad83d1eba35d93")
     version("2.8.0", sha256="5af3d950e616989133955c2430bd09bcf6bad3a04cf62317b401eaf6e7c2d479")
@@ -105,7 +106,7 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("c-blosc", when="+blosc")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
-    depends_on("zfp@0.5.1:", when="+zfp")
+    depends_on("zfp@0.5.1:0.5", when="+zfp")
     depends_on("sz@2.0.2.0:", when="+sz")
 
     extends("python", when="+python")

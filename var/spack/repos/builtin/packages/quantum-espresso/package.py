@@ -73,12 +73,13 @@ class QuantumEspresso(CMakePackage):
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
 
-    # Add cuda support
+    # Add Cuda Fortran support
+    # depends on NVHPC compiler, not directly on CUDA toolkit
     with when("%nvhpc"):
         variant(
             "cuda",
             default=False,
-            description="Build with CUDA",
+            description="Build with CUDA Fortran",
         )
         with when("+cuda"):
             # GPUs are enabled since v6.6
@@ -94,7 +95,8 @@ class QuantumEspresso(CMakePackage):
             # only cmake is supported
             conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
 
-    # NVTX variant for profiling ; requires linking to CUDA library, handled by CMake
+    # NVTX variant for profiling
+    # requires linking to CUDA runtime APIs , handled by CMake
     variant("nvtx", default=False, description="Enables NVTX markers for profiling")
     with when("+nvtx~cuda"):
         depends_on("cuda")
@@ -231,6 +233,8 @@ class QuantumEspresso(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
+    depends_on("git@2.13:", type="build")
+    depends_on("m4", type="build")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug

@@ -16,13 +16,16 @@ class Hipfft(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipFFT"
     git = "https://github.com/ROCmSoftwarePlatform/hipFFT.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipfft/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["arjun-raj-kuppala", "srekolam"]
+    maintainers = ["renjithravindrankannath", "srekolam"]
 
     version("master", branch="master")
 
+    version("5.2.3", sha256="10be731fe91ede5e9f254f6eb3bc00b4dbeab449477f3cac03de358a7d0a6fa1")
+    version("5.2.1", sha256="6c8fbace2864ca992b2fca9dc8d0bb4488aef62045acdfcf249d53dd005ebd35")
+    version("5.2.0", sha256="ec37edcd61837281c403802ccc1cb01ec3fa3ba135b5ab16617961b66d4cc3e2")
     version("5.1.3", sha256="c26fa64499293b25d0686bed04feb61378c878a4bb4a6d559e6cb7be1f6bf2ec")
     version("5.1.0", sha256="1bac7761c055355216cd262cdc0450aabb383addcb739b56ba849b2e6e013fa5")
     version("5.0.2", sha256="9ef64694f5def0d6fb98dc89e46d7a3f7d005a61348ac0b52184a3b8e84c2383")
@@ -70,6 +73,9 @@ class Hipfft(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -81,11 +87,16 @@ class Hipfft(CMakePackage):
     def cmake_args(self):
         args = [
             # Make sure find_package(HIP) finds the module.
-            self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
         ]
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
+
+        if self.spec.satisfies("@3.7.0:5.1"):
+            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip))
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args

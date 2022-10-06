@@ -22,6 +22,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("1.8.1", sha256="2fc4c10f55e2e6bcdc6f6ff950e26c6d8e218e138fdbd885ee71ccf5c5549054")
     version("1.8.0", sha256="93f147ab7cf0ab4161f37680ea720d3baeb86540a95382f2fb591645b2a9b135")
     version("1.7.1", sha256="008a0335def3c551cba31452eda035d7e914e3e4f77eec679eea070ac71bd83b")
     version("1.7.0", sha256="05099b860410aa5d8a10d6915b1a8818733aa1aa2d5f2b9774730ca7e6de5fac")
@@ -122,6 +123,9 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("gperftools", when="instrumentation=google_perftools")
     depends_on("papi", when="instrumentation=papi")
     depends_on("valgrind", when="instrumentation=valgrind")
+
+    # Only ROCm or CUDA maybe be enabled at once
+    conflicts("+rocm", when="+cuda")
 
     # Restrictions for 1.8.X
     with when("@1.8:"):

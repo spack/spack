@@ -15,12 +15,16 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala", "haampie"]
+    maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
     version("master", branch="amd-stg-open")
+
+    version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
+    version("5.2.1", sha256="3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf")
+    version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
     version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
     version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
     version("5.0.2", sha256="99a14394b406263576ed3d8d10334de7c78d42b349109f375d178b11492eecaf")
@@ -130,6 +134,12 @@ class LlvmAmdgpu(CMakePackage):
     patch("fix-spack-detection-4.2.0.patch", when="@4.2.0:4.5.2")
 
     patch("remove-cyclades-inclusion-in-sanitizer.patch", when="@4.2.0:4.5.2")
+
+    # OpenMP clang toolchain looks for bitcode files in llvm/bin/../lib
+    # as per 5.2.0 llvm code. It used to be llvm/bin/../lib/libdevice.
+    # Below patch is to look in the old path.
+    patch("adjust-openmp-bitcode-directory-for-llvm-link.patch", when="@5.2.0:")
+
     conflicts("^cmake@3.19.0")
 
     root_cmakelists_dir = "llvm"
@@ -137,6 +147,9 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.2.3", "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a"),
+        ("5.2.1", "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225"),
+        ("5.2.0", "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c"),
         ("5.1.3", "c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e"),
         ("5.1.0", "47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f"),
         ("5.0.2", "49cfa8f8fc276ba27feef40546788a2aabe259a924a97af8bef24e295d19aa5e"),
@@ -242,7 +255,7 @@ class LlvmAmdgpu(CMakePackage):
         # bootstraping the libcxx with the just built clang
         if self.spec.satisfies("@4.5.0:"):
             spec = self.spec
-            define = CMakePackage.define
+            define = self.define
             libcxxdir = "build-bootstrapped-libcxx"
             with working_dir(libcxxdir, create=True):
                 cmake_args = [

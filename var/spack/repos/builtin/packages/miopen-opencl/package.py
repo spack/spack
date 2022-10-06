@@ -14,12 +14,15 @@ class MiopenOpencl(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/MIOpen"
     git = "https://github.com/ROCmSoftwarePlatform/MIOpen.git"
-    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/MIOpen/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["srekolam", "renjithravindrankannath"]
     libraries = ["libMIOpen"]
 
+    version("5.2.3", sha256="28747847446955b3bab24f7fc65c1a6b863a12f12ad3a35e0312072482d38122")
+    version("5.2.1", sha256="0977a8876d41bbd2fa268341c93892f35878d7efc1711194ad87582f877ff500")
+    version("5.2.0", sha256="5fda69426e81df9f8fb6658e579176b9c4fcce3516fc8488d3cfd2b6f6f2b3b4")
     version("5.1.3", sha256="510461f5c5bdbcf8dc889099d1e5960b9f84bd845a9fc9154588a9898c701c1d")
     version("5.1.0", sha256="bb50201334d68addf153b84b88ab803027c4913d71bdbda6f5ccde3f672f6fdd")
     version("5.0.2", sha256="e73c18c6e0791d6ca8958508d899072ce12fc6c27cf78792d0c2a5c7e34427be")
@@ -114,9 +117,11 @@ class MiopenOpencl(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocm-opencl@" + ver, when="@" + ver)
 
     for ver in [
@@ -135,10 +140,12 @@ class MiopenOpencl(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.3",
     ]:
         depends_on("miopengemm@" + ver, when="@" + ver)
 
-    for ver in ["5.1.0", "5.1.3"]:
+    for ver in ["5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3"]:
         depends_on("mlirmiopen@" + ver, when="@" + ver)
 
     @classmethod

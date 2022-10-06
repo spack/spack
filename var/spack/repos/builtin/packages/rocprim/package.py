@@ -11,11 +11,14 @@ class Rocprim(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocPRIM"
     git = "https://github.com/ROCmSoftwarePlatform/rocPRIM.git"
-    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.1.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/rocPRIM/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
-    maintainers = ["srekolam", "arjun-raj-kuppala"]
+    maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
 
+    version("5.2.3", sha256="502f49cf3190f4ac20d0a6b19eb2d0786bb3c5661329940378081f1678aa8e82")
+    version("5.2.1", sha256="47f09536b0afbb7be4d6fb71cca9f0a4fa58dde29c83aee247d4b167f6f3acae")
+    version("5.2.0", sha256="f99eb7d2f6b1445742fba631a0dc8bb0d464a767a9c4fb79ac865d9570fe747b")
     version("5.1.3", sha256="b5a08d2e76388bd1ffa6c946009928fe95de846ab6b65a6475998070c0cf6dc1")
     version("5.1.0", sha256="dfe106c01155e00ed816f0231d1576ff8c08750cc8278fa453926f388dc6fe48")
     version("5.0.2", sha256="a4280f15d470699a1c6a5f86bdd951c1387e0af227c6bee6f81cee658406f4b0")
@@ -104,6 +107,9 @@ class Rocprim(CMakePackage):
         "5.0.2",
         "5.1.0",
         "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
@@ -116,7 +122,6 @@ class Rocprim(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake),
             self.define("ONLY_INSTALL", "ON"),
             self.define("BUILD_TEST", "OFF"),
             self.define("BUILD_BENCHMARK", "OFF"),
@@ -128,5 +133,10 @@ class Rocprim(CMakePackage):
 
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
+
+        if self.spec.satisfies("@:5.1.3"):
+            args.append("-DCMAKE_MODULE_PATH={0}".format(self.spec["hip"].prefix.cmake))
+        elif self.spec.satisfies("@5.2.0:"):
+            args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         return args

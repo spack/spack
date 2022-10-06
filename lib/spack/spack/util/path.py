@@ -71,6 +71,15 @@ def win_exe_ext():
     return ".exe"
 
 
+def find_sourceforge_suffix(path):
+    """find and match sourceforge filepath components
+    Return match object"""
+    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
+    if match:
+        return match.groups()
+    return path, ""
+
+
 def path_to_os_path(*pths):
     """
     Takes an arbitrary number of positional parameters
@@ -305,8 +314,19 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path):
-    """Same as substitute_path_variables, but also take absolute path."""
+def canonicalize_path(path, default_wd=None):
+    """Same as substitute_path_variables, but also take absolute path.
+
+    If the string is a yaml object with file annotations, make absolute paths
+    relative to that file's directory.
+    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
+
+    Arguments:
+        path (str): path being converted as needed
+
+    Returns:
+        (str): An absolute path with path variable substitution
+    """
     # Get file in which path was written in case we need to make it absolute
     # relative to that path.
     filename = None
@@ -319,8 +339,9 @@ def canonicalize_path(path):
         if filename:
             path = os.path.join(filename, path)
         else:
-            path = os.path.abspath(path)
-            tty.debug("Using current working directory as base for abspath")
+            base = default_wd or os.getcwd()
+            path = os.path.join(base, path)
+            tty.debug("Using working directory %s as base for abspath" % base)
 
     return os.path.normpath(path)
 
@@ -371,6 +392,7 @@ def padding_filter(string):
     entirety at least one time. e.g., "/spack/" would not be filtered, but
     "/__spack_path_placeholder__/spack/" would be.
 
+    Note that only the first padded path in the string is filtered.
     """
     global _filter_re
 
@@ -408,3 +430,22 @@ def filter_padding():
             yield
     else:
         yield  # no-op: don't filter unless padding is actually enabled
+
+
+def debug_padded_filter(string, level=1):
+    """
+    Return string, path padding filtered if debug level and not windows
+
+    Args:
+        string (str): string containing path
+        level (int): maximum debug level value for filtering (e.g., 1
+            means filter path padding if the current debug level is 0 or 1
+            but return the original string if it is 2 or more)
+
+    Returns (str): filtered string if current debug level does not exceed
+        level and not windows; otherwise, unfiltered string
+    """
+    if is_windows:
+        return string
+
+    return padding_filter(string) if tty.debug_level() <= level else string

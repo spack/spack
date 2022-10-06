@@ -13,6 +13,7 @@ import spack.error
 import spack.spec
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
+from spack.util.web import FetchError
 
 pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
 
@@ -202,3 +203,21 @@ def test_env_aware_spec(mutable_mock_env_path):
         assert "libdwarf@20130729" in output
         assert "libelf@0.8.1" in output
         assert "mpich@3.0.4" in output
+
+
+@pytest.mark.parametrize(
+    "name, version, error",
+    [
+        ("develop-branch-version", "f3c7206350ac8ee364af687deaae5c574dcfca2c=develop", None),
+        ("develop-branch-version", "git." + "a" * 40 + "=develop", None),
+        ("callpath", "f3c7206350ac8ee364af687deaae5c574dcfca2c=1.0", FetchError),
+        ("develop-branch-version", "git.foo=0.2.15", None),
+    ],
+)
+def test_spec_version_assigned_git_ref_as_version(name, version, error):
+    if error:
+        with pytest.raises(error):
+            output = spec(name + "@" + version)
+    else:
+        output = spec(name + "@" + version)
+        assert version in output

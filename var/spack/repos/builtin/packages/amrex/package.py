@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -12,7 +14,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url = "https://github.com/AMReX-Codes/amrex/releases/download/22.08/amrex-22.08.tar.gz"
+    url = "https://github.com/AMReX-Codes/amrex/releases/download/22.10/amrex-22.10.tar.gz"
     git = "https://github.com/AMReX-Codes/amrex.git"
 
     test_requires_compiler = True
@@ -22,6 +24,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["WeiqunZhang", "asalmgren", "etpalmer63"]
 
     version("develop", branch="development")
+    version("22.10", sha256="458da410d7f43e428726bfc905123e85d05786080f892ebaa26f94c5f8e79b07")
+    version("22.09", sha256="24601fbb9d554f7b66d7db89b14ff95dadb18d51db893af7ee6c70d4b7dd4be6")
     version("22.08", sha256="d89167c4567fa246b06478a5b160010a0117dc58be9e879beb15be53cb08b6e9")
     version("22.07", sha256="7df433c780ab8429362df8d6d995c95d87a7c3f31ab81d5b0f416203dece086d")
     version("22.06", sha256="d8aa58e72c86a3da9a7be5a5947294fd3eaac6b233f563366f9e000d833726db")
@@ -61,7 +65,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     version("18.09.1", sha256="a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e")
 
     # Config options
-    variant("dimensions", default="3", description="Dimensionality", values=("2", "3"))
+    variant("dimensions", default="3", description="Dimensionality", values=("1", "2", "3"))
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=False, description="Build with OpenMP support")
@@ -83,6 +87,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     variant("petsc", default=False, description="Enable PETSc interfaces")
     variant("sundials", default=False, description="Enable SUNDIALS interfaces")
     variant("pic", default=False, description="Enable PIC")
+    variant("sycl", default=False, description="Enable SYCL backend")
 
     # Build dependencies
     depends_on("mpi", when="+mpi")
@@ -125,6 +130,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hypre@2.19.0:", type="link", when="@21.03: ~cuda +hypre")
     depends_on("hypre@2.20.0:", type="link", when="@21.03: +cuda +hypre")
     depends_on("petsc", type="link", when="+petsc")
+    depends_on("cmake@3.22:", type="build", when="+sycl")
+    depends_on("intel-oneapi-mkl", type=("build", "link"), when="+sycl")
 
     # these versions of gcc have lambda function issues
     # see https://github.com/spack/spack/issues/22310
@@ -184,7 +191,14 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         when="+rocm",
         msg="AMReX does not support rocm-4.2 due to a compiler bug",
     )
+    # GPU vendor support is mutually exclusive
     conflicts("+cuda", when="+rocm", msg="CUDA and HIP support are exclusive")
+    conflicts("+cuda", when="+sycl", msg="CUDA and SYCL support are exclusive")
+    conflicts("+rocm", when="+sycl", msg="HIP and SYCL support are exclusive")
+
+    conflicts(
+        "+sycl", when="@:21.05", msg="For SYCL support, AMReX version 21.06 and newer suggested."
+    )
 
     def url_for_version(self, version):
         if version >= Version("20.05"):
@@ -243,6 +257,16 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DAMReX_GPU_BACKEND=HIP")
             targets = self.spec.variants["amdgpu_target"].value
             args.append("-DAMReX_AMD_ARCH=" + ";".join(str(x) for x in targets))
+
+        if "+sycl" in self.spec:
+            args.append("-DAMReX_GPU_BACKEND=SYCL")
+            # SYCL GPU backend only supported with Intel's oneAPI or DPC++ compilers
+            sycl_compatible_compilers = ["dpcpp", "icpx"]
+            if not (os.path.basename(self.compiler.cxx) in sycl_compatible_compilers):
+                raise InstallError(
+                    "AMReX's SYCL GPU Backend requires DPC++ (dpcpp)"
+                    + " or the oneAPI CXX (icpx) compiler."
+                )
 
         return args
 

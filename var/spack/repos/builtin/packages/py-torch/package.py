@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTorch(PythonPackage, CudaPackage):
+class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ["torch", "torch.autograd", "torch.nn", "torch.utils"]
 
     version("master", branch="master", submodules=True)
+    version("1.12.1", tag="v1.12.1", submodules=True)
     version("1.12.0", tag="v1.12.0", submodules=True)
     version("1.11.0", tag="v1.11.0", submodules=True)
     version("1.10.2", tag="v1.10.2", submodules=True)
@@ -99,6 +100,7 @@ class PyTorch(PythonPackage, CudaPackage):
     )
 
     conflicts("+cuda+rocm")
+    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
@@ -176,14 +178,14 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on("cudnn@7:", when="@1.6:+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
-    depends_on("nccl", when="+nccl")
+    depends_on("nccl", when="+nccl+cuda")
     depends_on("numactl", when="+numa")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("valgrind", when="+valgrind")
     with when("+rocm"):
         depends_on("hsa-rocr-dev")
         depends_on("hip")
-        depends_on("rccl")
+        depends_on("rccl", when="+nccl")
         depends_on("rocprim")
         depends_on("hipcub")
         depends_on("rocthrust")
@@ -194,6 +196,7 @@ class PyTorch(PythonPackage, CudaPackage):
         depends_on("rocfft")
         depends_on("rocblas")
         depends_on("miopen-hip")
+        depends_on("rocminfo")
     # https://github.com/pytorch/pytorch/issues/60332
     # depends_on('xnnpack@2022-02-16', when='@1.12:+xnnpack')
     # depends_on('xnnpack@2021-06-21', when='@1.10:1.11+xnnpack')
@@ -421,21 +424,24 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable("rocm")
         if "+rocm" in self.spec:
+            env.set("PYTORCH_ROCM_ARCH", ";".join(self.spec.variants["amdgpu_target"].value))
             env.set("HSA_PATH", self.spec["hsa-rocr-dev"].prefix)
             env.set("ROCBLAS_PATH", self.spec["rocblas"].prefix)
             env.set("ROCFFT_PATH", self.spec["rocfft"].prefix)
             env.set("HIPFFT_PATH", self.spec["hipfft"].prefix)
             env.set("HIPSPARSE_PATH", self.spec["hipsparse"].prefix)
-            env.set("THRUST_PATH", self.spec["rocthrust"].prefix.include)
             env.set("HIP_PATH", self.spec["hip"].prefix)
             env.set("HIPRAND_PATH", self.spec["rocrand"].prefix)
             env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
-            env.set("RCCL_PATH", self.spec["rccl"].prefix)
+            if "+nccl" in self.spec:
+                env.set("RCCL_PATH", self.spec["rccl"].prefix)
             env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
             env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
             env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
+            if self.spec.satisfies("^hip@5.2.0:"):
+                env.set("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
 
         enable_or_disable("cudnn")
         if "+cudnn" in self.spec:
@@ -451,7 +457,7 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable("breakpad")
 
         enable_or_disable("nccl")
-        if "+nccl" in self.spec:
+        if "+cuda+nccl" in self.spec:
             env.set("NCCL_LIB_DIR", self.spec["nccl"].libs.directories[0])
             env.set("NCCL_INCLUDE_DIR", self.spec["nccl"].prefix.include)
 

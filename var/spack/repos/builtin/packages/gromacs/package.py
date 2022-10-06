@@ -9,16 +9,15 @@ from spack.package import *
 
 
 class Gromacs(CMakePackage):
-    """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
-    dynamics package primarily designed for simulations of proteins, lipids
-    and nucleic acids. It was originally developed in the Biophysical
-    Chemistry department of University of Groningen, and is now maintained
-    by contributors in universities and research centers across the world.
+    """GROMACS is a molecular dynamics package primarily designed for simulations
+    of proteins, lipids and nucleic acids. It was originally developed in
+    the Biophysical Chemistry department of University of Groningen, and is now
+    maintained by contributors in universities and research centers across the world.
 
     GROMACS is one of the fastest and most popular software packages
     available and can run on CPUs as well as GPUs. It is free, open source
-    released under the GNU General Public License. Starting from version 4.6,
-    GROMACS is released under the GNU Lesser General Public License.
+    released under the GNU Lesser General Public License. Before the version 4.6,
+    GROMACS was released under the GNU General Public License.
     """
 
     homepage = "https://www.gromacs.org"
@@ -29,6 +28,7 @@ class Gromacs(CMakePackage):
 
     version("main", branch="main")
     version("master", branch="main", deprecated=True)
+    version("2022.3", sha256="14cfb130ddaf8f759a3af643c04f5a0d0d32b09bc3448b16afa5b617f5e35dae")
     version("2022.2", sha256="656404f884d2fa2244c97d2a5b92af148d0dbea94ad13004724b3fcbf45e01bf")
     version("2022.1", sha256="85ddab5197d79524a702c4959c2c43be875e0fc471df3a35224939dce8512450")
     version("2022", sha256="fad60d606c02e6164018692c6c9f2c159a9130c2bf32e8c5f4f1b6ba2dda2b68")
@@ -124,6 +124,22 @@ class Gromacs(CMakePackage):
     variant("blas", default=False, description="Enables an external BLAS library")
     variant("cycle_subcounters", default=False, description="Enables cycle subcounters")
 
+    variant("cp2k", default=False, description="CP2K QM/MM interface integration")
+    conflicts(
+        "+cp2k", when="@:2021", msg="CP2K QM/MM support have been introduced in GROMACS 2022"
+    )
+    conflicts("+shared", when="+cp2k", msg="Enabling CP2K requires static build")
+    conflicts(
+        "~lapack",
+        when="+cp2k",
+        msg="GROMACS and CP2K should use the same lapack, please disable bundled lapack",
+    )
+    conflicts(
+        "~blas",
+        when="+cp2k",
+        msg="GROMACS and CP2K should use the same blas, please disable bundled blas",
+    )
+
     depends_on("mpi", when="+mpi")
 
     # Plumed 2.8.0 needs Gromacs 2021.4, 2020.6, 2019.6
@@ -187,8 +203,9 @@ class Gromacs(CMakePackage):
     depends_on("cmake@2.8.8:3", type="build")
     depends_on("cmake@3.4.3:3", type="build", when="@2018:")
     depends_on("cmake@3.9.6:3", type="build", when="@2020")
-    depends_on("cmake@3.13.0:3", type="build", when="@2021:")
-    depends_on("cmake@3.16.0:3", type="build", when="@master")
+    depends_on("cmake@3.13.0:3", type="build", when="@2021")
+    depends_on("cmake@3.16.3:3", type="build", when="@2022:")
+    depends_on("cmake@3.18.4:3", type="build", when="@main")
     depends_on("cmake@3.16.0:3", type="build", when="%fj")
     depends_on("cuda", when="+cuda")
     depends_on("sycl", when="+sycl")
@@ -197,6 +214,9 @@ class Gromacs(CMakePackage):
 
     depends_on("hwloc@1.0:1", when="+hwloc@2016:2018")
     depends_on("hwloc", when="+hwloc@2019:")
+
+    depends_on("cp2k@8.1:", when="+cp2k")
+    depends_on("dbcsr", when="+cp2k")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -349,14 +369,13 @@ class Gromacs(CMakePackage):
         else:
             if "+cuda" in self.spec or "+opencl" in self.spec:
                 options.append("-DGMX_GPU:BOOL=ON")
+                if "+opencl" in self.spec:
+                    options.append("-DGMX_USE_OPENCL=ON")
             else:
                 options.append("-DGMX_GPU:BOOL=OFF")
 
         if "+cuda" in self.spec:
             options.append("-DCUDA_TOOLKIT_ROOT_DIR:STRING=" + self.spec["cuda"].prefix)
-
-        if "+opencl" in self.spec:
-            options.append("-DGMX_USE_OPENCL=on")
 
         if "+lapack" in self.spec:
             options.append("-DGMX_EXTERNAL_LAPACK:BOOL=ON")
@@ -373,6 +392,10 @@ class Gromacs(CMakePackage):
                 options.append("-DGMX_BLAS_USER={0}".format(self.spec["blas"].libs.joined(";")))
         else:
             options.append("-DGMX_EXTERNAL_BLAS:BOOL=OFF")
+
+        if "+cp2k" in self.spec:
+            options.append("-DGMX_CP2K:BOOL=ON")
+            options.append("-DCP2K_DIR:STRING={0}".format(self.spec["cp2k"].prefix))
 
         # Activate SIMD based on properties of the target
         target = self.spec.target

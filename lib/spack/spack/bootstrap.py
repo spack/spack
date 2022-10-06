@@ -15,6 +15,7 @@ import platform
 import re
 import sys
 import sysconfig
+import uuid
 
 import six
 
@@ -40,9 +41,12 @@ import spack.util.executable
 import spack.util.path
 import spack.util.spack_yaml
 import spack.util.url
+import spack.version
 
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
+
+is_windows = sys.platform == "win32"
 
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
@@ -260,12 +264,11 @@ class _BootstrapperBase(object):
 class _BuildcacheBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from a buildcache."""
 
-    config_scope_name = "bootstrap_buildcache"
-
     def __init__(self, conf):
         super(_BuildcacheBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
         self.last_search = None
+        self.config_scope_name = "bootstrap_buildcache-{}".format(uuid.uuid4())
 
     @staticmethod
     def _spec_and_platform(abstract_spec_str):
@@ -378,13 +381,12 @@ class _BuildcacheBootstrapper(_BootstrapperBase):
 class _SourceBootstrapper(_BootstrapperBase):
     """Install the software needed during bootstrapping from sources."""
 
-    config_scope_name = "bootstrap_source"
-
     def __init__(self, conf):
         super(_SourceBootstrapper, self).__init__(conf)
         self.metadata_dir = spack.util.path.canonicalize_path(conf["metadata"])
         self.conf = conf
         self.last_search = None
+        self.config_scope_name = "bootstrap_source-{}".format(uuid.uuid4())
 
     def try_import(self, module, abstract_spec_str):
         info = {}
@@ -655,6 +657,8 @@ def _add_externals_if_missing():
         # GnuPG
         spack.repo.path.get_pkg_class("gawk"),
     ]
+    if is_windows:
+        search_list.append(spack.repo.path.get_pkg_class("winbison"))
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 
@@ -788,17 +792,46 @@ def ensure_gpg_in_path_or_raise():
 
 def patchelf_root_spec():
     """Return the root spec used to bootstrap patchelf"""
-    # TODO: patchelf is restricted to v0.13 since earlier versions have
-    # TODO: bugs that we don't to deal with, while v0.14 requires a C++17
-    # TODO: which may not be available on all platforms.
-    return _root_spec("patchelf@0.13.1:0.13.99")
+    # 0.13.1 is the last version not to require C++17.
+    return _root_spec("patchelf@0.13.1:")
+
+
+def verify_patchelf(patchelf):
+    """Older patchelf versions can produce broken binaries, so we
+    verify the version here.
+
+    Arguments:
+
+        patchelf (spack.util.executable.Executable): patchelf executable
+    """
+    out = patchelf("--version", output=str, error=os.devnull, fail_on_error=False).strip()
+    if patchelf.returncode != 0:
+        return False
+    parts = out.split(" ")
+    if len(parts) < 2:
+        return False
+    try:
+        version = spack.version.Version(parts[1])
+    except ValueError:
+        return False
+    return version >= spack.version.Version("0.13.1")
 
 
 def ensure_patchelf_in_path_or_raise():
     """Ensure patchelf is in the PATH or raise."""
-    return ensure_executables_in_path_or_raise(
-        executables=["patchelf"], abstract_spec=patchelf_root_spec()
-    )
+    # The old concretizer is not smart and we're doing its job: if the latest patchelf
+    # does not concretize because the compiler doesn't support C++17, we try to
+    # concretize again with an upperbound @:13.
+    try:
+        return ensure_executables_in_path_or_raise(
+            executables=["patchelf"], abstract_spec=patchelf_root_spec(), cmd_check=verify_patchelf
+        )
+    except RuntimeError:
+        return ensure_executables_in_path_or_raise(
+            executables=["patchelf"],
+            abstract_spec=_root_spec("patchelf@0.13.1:0.13"),
+            cmd_check=verify_patchelf,
+        )
 
 
 ###
