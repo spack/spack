@@ -244,8 +244,8 @@ To resolve this problem, please try the following:
         scripts to use file from path."""
 
         if self.spec.os.startswith("nixos"):
-            for configure_file in fs.find(".", files=["configure"], recursive=True):
-                fs.filter_file("/usr/bin/file", "file", configure_file, string=True)
+            x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
+            x.filter("/usr/bin/file", "file", string=True)
 
     @run_before("configure")
     def _set_autotools_environment_variables(self):
