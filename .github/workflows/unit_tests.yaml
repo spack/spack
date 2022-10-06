@@ -37,7 +37,7 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
@@ -93,7 +93,7 @@ jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
@@ -132,7 +132,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -150,7 +150,7 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
@@ -189,7 +189,7 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
     - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
