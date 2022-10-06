@@ -548,8 +548,10 @@ def setup_main_options(args):
     warnings.showwarning = send_warning_to_tty
 
     if sys.version_info[:2] == (2, 7):
-        msg = ("Running Spack using Python v2.7 is deprecated and support for it will be "
-               " removed after the Spack v0.19 release series.")
+        msg = (
+            "Running Spack using Python v2.7 is deprecated and support for it will be "
+            " removed after the Spack v0.19 release series."
+        )
         warnings.warn(msg)
 
     # Set up environment based on args.
