@@ -547,6 +547,12 @@ def setup_main_options(args):
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
+    if sys.version_info[:2] == (2, 7):
+        warnings.warn(
+            "Python 2.7 support is deprecated and will be removed in Spack v0.20.\n"
+            "    Please move to Python 3.6 or higher."
+        )
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
