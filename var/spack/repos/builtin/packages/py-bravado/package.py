@@ -28,4 +28,4 @@ class PyBravado(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-simplejson', type=('build', 'run'))
     depends_on('py-monotonic', type=('build', 'run'))
-    depends_on('py-typing-extensions', type='build')
+    depends_on('py-typing-extensions', type=('build', 'run'))
