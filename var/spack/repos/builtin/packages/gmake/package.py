@@ -76,17 +76,8 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         args = []
-
-        if "+guile" in self.spec:
-            args.append("--with-guile")
-        else:
-            args.append("--without-guile")
-
-        if "+nls" in self.spec:
-            args.append("--enable-nls")
-        else:
-            args.append("--disable-nls")
-
+        args.extend(self.with_or_without('guile'))
+        args.extend(self.with_or_without('nls'))
         return args
 
     @run_after("install")
