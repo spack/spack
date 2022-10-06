@@ -20,6 +20,9 @@ spack:
       variants: ~cuda+rocm amdgpu_target=gfx90a
     gl:
       require: "osmesa"
+    py-torch:
+      # Does not yet support Spack-installed ROCm
+      require: ~rocm
 
   specs:
     # Horovod
@@ -37,30 +40,31 @@ spack:
     - py-keras2onnx
 
     # PyTorch
-    - py-botorch
-    - py-efficientnet-pytorch
-    - py-gpytorch
-    - py-kornia
-    - py-pytorch-gradual-warmup-lr
-    - py-pytorch-lightning
-    - py-segmentation-models-pytorch
-    - py-timm
-    - py-torch
-    - py-torch-cluster
-    - py-torch-geometric
-    - py-torch-nvidia-apex
-    - py-torch-scatter
-    - py-torch-sparse
-    - py-torch-spline-conv
-    - py-torchaudio
-    - py-torchdata
-    - py-torchfile
-    - py-torchgeo
-    - py-torchmeta
-    - py-torchmetrics
-    - py-torchtext
-    - py-torchvision
-    - py-vector-quantize-pytorch
+    # Does not yet support Spack-install ROCm
+    # - py-botorch
+    # - py-efficientnet-pytorch
+    # - py-gpytorch
+    # - py-kornia
+    # - py-pytorch-gradual-warmup-lr
+    # - py-pytorch-lightning
+    # - py-segmentation-models-pytorch
+    # - py-timm
+    # - py-torch
+    # - py-torch-cluster
+    # - py-torch-geometric
+    # - py-torch-nvidia-apex
+    # - py-torch-scatter
+    # - py-torch-sparse
+    # - py-torch-spline-conv
+    # - py-torchaudio
+    # - py-torchdata
+    # - py-torchfile
+    # - py-torchgeo
+    # - py-torchmeta
+    # - py-torchmetrics
+    # - py-torchtext
+    # - py-torchvision
+    # - py-vector-quantize-pytorch
 
     # scikit-learn
     - py-scikit-learn
