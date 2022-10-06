@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyBravado(PythonPackage):
@@ -17,7 +17,7 @@ class PyBravado(PythonPackage):
 
     version('11.0.3', sha256='1bb6ef75d84140c851fffe6420baaee5037d840070cfe11d60913be6ab8e0530')
 
-    depends_on('python@:2.7,3.5.1:', type=('build', 'run'))
+    depends_on('python@:2,3.5.1:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-bravado-core@5.16.1:', type=('build', 'run'))
