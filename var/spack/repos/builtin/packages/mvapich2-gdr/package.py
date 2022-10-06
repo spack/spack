@@ -75,7 +75,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on("libxml2@2.9.10")
     depends_on("cuda@9.2.88:11.2.2", when="+cuda")
     depends_on("pmix@3.1.3", when="pmi_version=pmix")
-    depends_on("hip@3.9.0:4.1.0", when="+rocm")
+    depends_on("hip@3.9.0:5.2.0", when="+rocm")
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
