@@ -67,7 +67,9 @@ spack:
   - bricks
   - butterflypack
   - cabana
+  - caliper
   - chai ~benchmarks ~tests
+  - charliecloud
   - conduit
   - darshan-runtime
   - darshan-util
@@ -83,6 +85,7 @@ spack:
   - ginkgo
   - globalarrays
   - gmp
+  - gotcha
   - gptune
   - hdf5 +fortran +hl +shared
   - hdf5-vol-async
@@ -150,6 +153,7 @@ spack:
   - turbine
   - umap
   - umpire
+  - unifyfs
   - upcxx
   - veloc
   - vtk-m
@@ -163,6 +167,7 @@ spack:
   - ascent +cuda cuda_arch=80
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
+  - caliper +cuda cuda_arch=80
   - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
@@ -176,6 +181,7 @@ spack:
   - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
   - magma +cuda cuda_arch=80
   - mfem +cuda cuda_arch=80
+  - omega-h +cuda cuda_arch=80
   - papi +cuda
   - petsc +cuda cuda_arch=80
   - py-torch +cuda cuda_arch=80
@@ -213,22 +219,20 @@ spack:
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
   - upcxx +rocm amdgpu_target=gfx90a
+  - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
   #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- gotcha         # /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
   #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
   #- paraview +qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
   #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
-  #- unifyfs        # gotcha: /usr/bin/ld: ../../libgotcha.so.2.0.2: undefined reference to `_dl_sym' 
   #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
-  #- caliper +cuda cuda_arch=80               # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- parsec +cuda cuda_arch=80                # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   # ROCm failures

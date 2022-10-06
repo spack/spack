@@ -791,7 +791,7 @@ class Python(Package):
 
         if "+dbm" in spec:
             # Default order is ndbm:gdbm:bdb
-            config_args.append("--with-dbmliborder=gdbm:bdb:ndbm")
+            config_args.append("--with-dbmliborder=gdbm")
         else:
             config_args.append("--with-dbmliborder=")
 
