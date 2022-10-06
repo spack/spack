@@ -550,7 +550,7 @@ def setup_main_options(args):
     if sys.version_info[:2] == (2, 7):
         msg = (
             "Running Spack using Python v2.7 is deprecated and support for it will be "
-            " removed after the Spack v0.19 release series."
+            " removed in Spack v0.20."
         )
         warnings.warn(msg)
 
