@@ -69,6 +69,7 @@ class Xyce(CMakePackage):
         "pymi_static_tpls",
         default=True,
         sticky=True,
+        when="+pymi",
         description="Require static blas build for PyMi",
     )
 
@@ -102,7 +103,7 @@ class Xyce(CMakePackage):
     depends_on("trilinos~float~ifpack2~ml~muelu~zoltan2")
 
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
-    with when("+pymi+pymi_static_tpls"):
+    with when("+pymi_static_tpls"):
 
         # BLAS
         depends_on("openblas~shared", when="^openblas")
