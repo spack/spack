@@ -15,6 +15,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
+    maintainers = ['haampie']
 
     # Alpha releases
     version(
