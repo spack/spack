@@ -1,0 +1,94 @@
+diff --git a/fortran_bindings/test/core.F90 b/fortran_bindings/test/core.F90
+index cc413a0c..eeee8f5a 100644
+--- a/fortran_bindings/test/core.F90
++++ b/fortran_bindings/test/core.F90
+@@ -21,7 +21,7 @@ implicit none
+ integer(c_int) :: iflag
+ ! dummy args to phist_kernels_init
+ integer(c_int) :: argc
+-type(c_ptr), target :: argv
++type(c_ptr), target, dimension(1) :: argv
+ 
+ ! communicator and map handles
+ TYPE(comm_ptr) :: comm
+@@ -43,7 +43,7 @@ integer :: rank
+ logical :: verbose
+ 
+ argc=0
+-argv=C_NULL_PTR
++argv(1)=C_NULL_PTR
+ #ifdef PHIST_HAVE_MPI
+ call MPI_Init(iflag)
+ #endif
+@@ -54,7 +54,7 @@ call tests_init('core')
+ ! *as long as we already initialized MPI!*
+ ! Otherwise, the kernel lib may call the C variant
+ ! of mpi_init and pass in these pointers
+-call phist_kernels_init(argc,c_loc(argv), iflag)
++call phist_kernels_init(argc, argv, iflag)
+ ASSERT_EQ(0,iflag)
+ 
+ ! create a communicator object, note that this may be different from an MPI_Comm in Fortran
+diff --git a/fortran_bindings/test/jada.F90 b/fortran_bindings/test/jada.F90
+index 22e5d080..c08f57a3 100644
+--- a/fortran_bindings/test/jada.F90
++++ b/fortran_bindings/test/jada.F90
+@@ -23,7 +23,7 @@ implicit none
+ integer(c_int) :: iflag
+ ! dummy args to phist_kernels_init
+ integer(c_int) :: argc
+-type(c_ptr), target :: argv
++type(c_ptr), target, dimension(1) :: argv
+ 
+ ! communicator and map handles
+ TYPE(comm_ptr) :: comm
+@@ -59,7 +59,7 @@ integer :: rank
+ logical :: verbose
+ 
+ argc=0
+-argv=C_NULL_PTR
++argv(1)=C_NULL_PTR
+ #ifdef PHIST_HAVE_MPI
+ call MPI_Init(iflag)
+ #endif
+@@ -70,7 +70,7 @@ call tests_init('jada')
+ ! *as long as we already initialized MPI!*
+ ! Otherwise, the kernel lib may call the C variant
+ ! of mpi_init and pass in these pointers
+-call phist_kernels_init(argc,c_loc(argv), iflag)
++call phist_kernels_init(argc, argv, iflag)
+ ASSERT_EQ(0,iflag)
+ 
+ ! create a communicator object, note that this may be different from an MPI_Comm in Fortran
+diff --git a/fortran_bindings/test/kernels.F90 b/fortran_bindings/test/kernels.F90
+index 6933e06e..a75c36e7 100644
+--- a/fortran_bindings/test/kernels.F90
++++ b/fortran_bindings/test/kernels.F90
+@@ -22,7 +22,7 @@ implicit none
+ integer(c_int) :: iflag
+ ! dummy args to phist_kernels_init
+ integer(c_int) :: argc
+-type(c_ptr), target :: argv
++type(c_ptr), target, dimension(1) :: argv
+ 
+ ! indicate which types are available in the kernel library
+ logical :: haveS, haveC, haveD, haveZ
+@@ -48,7 +48,7 @@ integer :: rank
+ logical :: verbose
+ 
+ argc=0
+-argv=C_NULL_PTR
++argv(1)=C_NULL_PTR
+ 
+ #ifdef PHIST_HAVE_MPI
+ call MPI_Init(iflag)
+@@ -60,7 +60,7 @@ call tests_init('kernels')
+ ! *as long as we already initialized MPI!*
+ ! Otherwise, the kernel lib may call the C variant
+ ! of mpi_init and pass in these pointers
+-call phist_kernels_init(argc,c_loc(argv), iflag)
++call phist_kernels_init(argc,argv, iflag)
+ ASSERT_EQ(0,iflag)
+ 
+ ! create a communicator object, note that this may be different from an MPI_Comm in Fortran
+diff --git a/src/kernels/builtin/crsmat_module.F90 b/src/kernels/builtin/crsmat_module.F90
