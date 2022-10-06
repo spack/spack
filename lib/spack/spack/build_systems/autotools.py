@@ -17,6 +17,7 @@ from spack.build_environment import InstallError
 from spack.directives import conflicts, depends_on
 from spack.operating_systems.mac_os import macos_version
 from spack.package_base import PackageBase, run_after, run_before
+from spack.util.environment import is_system_path
 from spack.util.executable import Executable
 from spack.version import Version
 
@@ -541,6 +542,8 @@ To resolve this problem, please try the following:
 
         if activation_value == "prefix":
             activation_value = lambda x: spec[x].prefix
+        elif activation_value == "non_system_prefix":
+            activation_value = lambda x: None if is_system_path(spec[x].prefix) else spec[x].prefix
 
         variant = variant or name
 
