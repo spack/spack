@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyNeptuneClient(PythonPackage):
@@ -26,17 +26,17 @@ class PyNeptuneClient(PythonPackage):
     depends_on('py-future@0.17.1:', type=('build', 'run'))
     depends_on('py-oauthlib@2.1.0:', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-pillow@1.1.6:', type=('build', 'run'))
+    depends_on('pil@1.1.6:', type=('build', 'run'))
     depends_on('py-pyjwt', type=('build', 'run'))
     depends_on('py-requests@2.20.0:', type=('build', 'run'))
     depends_on('py-requests-oauthlib@1.0.0:', type=('build', 'run'))
     depends_on('py-six@1.12.0:', type=('build', 'run'))
-    depends_on('py-websocket-client@0.35.0:1.0,1.0.1:', type=('build', 'run'))
+    depends_on('py-websocket-client@0.35:0,1.0.1:', type=('build', 'run'))
     depends_on('py-gitpython@2.0.8:', type=('build', 'run'))
     depends_on('py-boto3@1.16.0:', type=('build', 'run'))
-    depends_on('py-jupyter-packaging', type=('build', 'run'))
+    depends_on('py-packaging', type=('build', 'run'))
     depends_on('py-urllib3', type=('build', 'run'))
-    depends_on('py-dataclasses', when='^python@:3.6', type=('build', 'run'))
-    depends_on('py-swagger-spec-validator', type=('build', 'run'))
+    depends_on('py-dataclasses@0.6:', when='^python@:3.6', type=('build', 'run'))
+    depends_on('py-swagger-spec-validator@2.7.4:', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
-    depends_on('py-jsonschema@:3.2.0', type=('build', 'run'))
+    depends_on('py-jsonschema@:3', type=('build', 'run'))
