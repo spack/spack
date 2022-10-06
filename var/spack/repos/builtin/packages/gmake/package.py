@@ -15,7 +15,7 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
-    maintainers = ['haampie']
+    maintainers = ["haampie"]
 
     # Alpha releases
     version(
@@ -76,8 +76,8 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         args = []
-        args.extend(self.with_or_without('guile'))
-        args.extend(self.with_or_without('nls'))
+        args.extend(self.with_or_without("guile"))
+        args.extend(self.with_or_without("nls"))
         return args
 
     @run_after("install")
