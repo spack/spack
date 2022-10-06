@@ -21,4 +21,4 @@ class PyDendropy(PythonPackage):
     version("3.12.0", sha256="38a0f36f2f7aae43ec5599408b0d0a4c80996b749589f025940d955a70fc82d4")
 
     depends_on("python@2.7:,3.4:")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))

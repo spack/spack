@@ -20,7 +20,6 @@ class PyMetaphlan(PythonPackage):
 
     depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-h5py", type=("build", "run"))
     depends_on("py-biom-format", type=("build", "run"))
