@@ -66,7 +66,7 @@ class Xyce(CMakePackage):
     # seen with blas symbols from numpy, and building blas static resolves
     # this issue.
     variant(
-        "pymi_static_blas",
+        "pymi_static_tpls",
         default=True,
         sticky=True,
         description="Require static blas build for PyMi",
@@ -102,7 +102,7 @@ class Xyce(CMakePackage):
     depends_on("trilinos~float~ifpack2~ml~muelu~zoltan2")
 
     # Issue #1712 forces explicitly enumerating blas packages to propagate variants
-    with when("+pymi+pymi_static_blas"):
+    with when("+pymi+pymi_static_tpls"):
 
         # BLAS
         depends_on("openblas~shared", when="^openblas")
@@ -117,10 +117,10 @@ class Xyce(CMakePackage):
         depends_on("intel-oneapi-mkl~shared", when="^intel-oneapi-mkl")
         depends_on("intel-parallel-studio~shared", when="^intel-parallel-studio+mkl")
         depends_on("veclibfort~shared", when="^veclibfort")
-        conflicts("^essl", msg="essl not supported with +pymi_static_blas")
-        conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_blas")
-        conflicts("^nvhpc", msg="nvhpc not supported with +pymi_static_blas")
-        conflicts("^cray-libsci", msg="cray-libsci not supported with +pymi_static_blas")
+        conflicts("^essl", msg="essl not supported with +pymi_static_tpls")
+        conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_tpls")
+        conflicts("^nvhpc", msg="nvhpc not supported with +pymi_static_tpls")
+        conflicts("^cray-libsci", msg="cray-libsci not supported with +pymi_static_tpls")
         # netlib-xblas+plain_blas is always static
 
         # HDF5
