@@ -69,6 +69,7 @@ spack:
   - cabana
   - caliper
   - chai ~benchmarks ~tests
+  - charliecloud
   - conduit
   - darshan-runtime
   - darshan-util
@@ -221,6 +222,7 @@ spack:
   - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
   # CPU failures
+  #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
   #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
