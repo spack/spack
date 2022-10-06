@@ -41,6 +41,9 @@ class CudaPackage(PackageBase):
         "75",
         "80",
         "86",
+        "87",
+        "89",
+        "90",
     )
 
     # FIXME: keep cuda and cuda_arch separate to make usage easier until
@@ -100,6 +103,11 @@ class CudaPackage(PackageBase):
     depends_on("cuda@11.0:", when="cuda_arch=80")
     depends_on("cuda@11.1:", when="cuda_arch=86")
 
+    depends_on("cuda@11.4:", when="cuda_arch=87")
+
+    depends_on("cuda@11.8:", when="cuda_arch=89")
+    depends_on("cuda@11.8:", when="cuda_arch=90")
+
     # From the NVIDIA install guide we know of conflicts for particular
     # platforms (linux, darwin), architectures (x86, powerpc) and compilers
     # (gcc, clang). We don't restrict %gcc and %clang conflicts to
@@ -128,10 +136,11 @@ class CudaPackage(PackageBase):
         conflicts("%gcc@10:", when="+cuda ^cuda@:11.0")
         conflicts("%gcc@11:", when="+cuda ^cuda@:11.4.0")
         conflicts("%gcc@11.2:", when="+cuda ^cuda@:11.5")
-        conflicts("%gcc@12:", when="+cuda ^cuda@:11.7")
+        conflicts("%gcc@12:", when="+cuda ^cuda@:11.8")
         conflicts("%clang@12:", when="+cuda ^cuda@:11.4.0")
         conflicts("%clang@13:", when="+cuda ^cuda@:11.5")
         conflicts("%clang@14:", when="+cuda ^cuda@:11.7")
+        conflicts("%clang@15:", when="+cuda ^cuda@:11.8")
 
         # https://gist.github.com/ax3l/9489132#gistcomment-3860114
         conflicts("%gcc@10", when="+cuda ^cuda@:11.4.0")
