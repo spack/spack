@@ -19,8 +19,21 @@ class Pegtl(CMakePackage):
     git = "https://github.com/taocpp/PEGTL.git"
 
     version("master", branch="master")
-    version("3.2.0", sha256="91aa6529ef9e6b57368e7b5b1f04a3bd26a39419d30e35a3c5c66ef073926b56")
-    version("2.8.3", sha256="370afd0fbe6d73c448a33c10fbe4a7254f92077f5a217317d0a32a9231293015")
+    version(
+        "3.2.0",
+        sha256="91aa6529ef9e6b57368e7b5b1f04a3bd26a39419d30e35a3c5c66ef073926b56",
+        preferred=True,
+    )
+    version(
+        "2.8.3",
+        sha256="370afd0fbe6d73c448a33c10fbe4a7254f92077f5a217317d0a32a9231293015",
+        preferred=True,
+    )
+    version(
+        "2.7.1",
+        sha256="98f61699a3a4b83a787e9176c6ef340500f5b1a8c930fb024ae49f8b9e1394b6",
+        preferred=True,
+    )
     version("2.1.4", sha256="d990dccc07b4d9ba548326d11c5c5e34fa88b34fe113cb5377da03dda29f23f2")
     version("2.0.0", sha256="5aae0505077e051cae4d855c38049cc6cf71103a6cc8d0ddef01a576e8a60cc0")
 
@@ -30,7 +43,7 @@ class Pegtl(CMakePackage):
     # Ref: https://bugs.gentoo.org/733678
     patch_url = "https://gitweb.gentoo.org/repo/gentoo.git/plain/dev-libs/pegtl/files/pegtl-2.8.3-gcc-10.patch"
     patch_checksum = "fc40b0c7390f8c0473f2cb4821bda7a5e107f93ca9d2fafeff2065445bb39981"
-    patch(patch_url, sha256=patch_checksum, level=0, when="@2.1.4:2.8.3")
+    patch(patch_url, sha256=patch_checksum, when="@2.1.4:2.8.3")
 
     def cmake_args(self):
         args = []
