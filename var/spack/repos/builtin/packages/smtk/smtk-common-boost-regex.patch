@@ -1,0 +1,12 @@
+diff --git a/smtk/attribute/FileItemDefinition.cxx b/smtk/attribute/FileItemDefinition.cxx
+index 32ca22a7d..ff0cd19b0 100644
+--- a/smtk/attribute/FileItemDefinition.cxx
++++ b/smtk/attribute/FileItemDefinition.cxx
+@@ -17,7 +17,6 @@
+ // We use either STL regex or Boost regex, depending on support. These flags
+ // correspond to the equivalent logic used to determine the inclusion of Boost's
+ // regex library.
+-#define USE_BOOST_REGEX
+ #if !defined(USE_BOOST_REGEX) &&                                                                   \
+   (defined(SMTK_CLANG) ||                                                                          \
+    (defined(SMTK_GCC) && __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9)) ||                \
