@@ -13,7 +13,6 @@ class Libfabric(AutotoolsPackage):
     homepage = "https://libfabric.org/"
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git = "https://github.com/ofiwg/libfabric.git"
-
     maintainers = ["rajachan"]
 
     version("main", branch="main")

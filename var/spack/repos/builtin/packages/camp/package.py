@@ -16,6 +16,16 @@ def hip_repair_options(options, spec):
     )
 
 
+def hip_repair_cache(options, spec):
+    # there is only one dir like this, but the version component is unknown
+    options.append(
+        cmake_cache_path(
+            "HIP_CLANG_INCLUDE_PATH",
+            glob.glob("{}/lib/clang/*/include".format(spec["llvm-amdgpu"].prefix))[0],
+        )
+    )
+
+
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,

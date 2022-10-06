@@ -30,18 +30,12 @@ spack:
     - ascent
     - blt
     - caliper
-    - caliper +cuda cuda_arch=70
     - camp
-    - camp +cuda
     - chai
-    - chai +cuda +raja
     - mfem
     - mfem +superlu-dist+petsc+sundials
-    - mfem +cuda cuda_arch=70 ^hypre+cuda
     - raja
-    - raja +cuda cuda_arch=70
     - umpire
-    - umpire +cuda
 
   - compiler:
     - '%gcc@7.3.1'
