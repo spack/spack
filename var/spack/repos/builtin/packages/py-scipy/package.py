@@ -61,7 +61,9 @@ class PyScipy(PythonPackage):
 
     depends_on("py-meson-python@0.8.1:", when="@1.9.1:", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
-    depends_on("py-meson@0.62.2", when="@1.9:", type="build")
+    # FIXME: should be pinned, fix after scipy 1.9.2 release
+    depends_on("py-meson@0.62.2:", when="@1.9:", type="build")
+    # depends_on("py-meson@0.62.2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
     depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:", type=("build", "run"))
