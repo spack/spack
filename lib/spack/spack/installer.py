@@ -1708,7 +1708,7 @@ class PackageInstaller(object):
                     err = "Failed to install {0} from binary cache due to {1}:"
                     err += " Requeueing to install from source."
                     tty.error(err.format(pkg.name, str(exc)))
-                    task.request.install_args["use_cache"] = False
+                    task.use_cache = False
                     self._requeue_task(task)
                     continue
 
