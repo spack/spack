@@ -262,35 +262,75 @@ To resolve this problem, please try the following:
         """
         os.environ["FORCE_UNSAFE_CONFIGURE"] = "1"
 
+    @run_before("configure")
+    def _do_patch_libtool_configure(self):
+        """Patch bugs that propagate from libtool macros into "configure" and
+        further into "libtool". Note that patches that can be fixed by patching
+        "libtool" directly should be implemented in the _do_patch_libtool method
+        below."""
+
+        # Exit early if we are required not to patch libtool-related problems:
+        if not self.patch_libtool:
+            return
+
+        x = fs.FileFilter(*fs.find(self.build_directory, "configure", recursive=True))
+
+        # Fix parsing of compiler output when collecting predeps and postdeps
+        # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
+        x.filter(r'^(\s*if test x-L = )("\$p" \|\|\s*)$', r"\1x\2")
+        x.filter(r'^(\s*test x-R = )("\$p")(; then\s*)$', r'\1x\2 || test x-l = x"$p"\3')
+        # Support Libtool 2.4.2 and older:
+        x.filter(r'^(\s*test \$p = "-R")(; then\s*)$', r'\1 || test x-l = x"$p"\2')
+
     @run_after("configure")
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
-        flags for the Arm, Clang/Flang, Fujitsu and NVHPC compilers. Also
-        filter out spurious predep_objects for Intel dpcpp builds."""
+        values for libtool variables."""
 
-        # Exit early if we are required not to patch libtool
+        # Exit early if we are required not to patch libtool:
         if not self.patch_libtool:
             return
 
-        for libtool_path in fs.find(self.build_directory, "libtool", recursive=True):
-            self._patch_libtool(libtool_path)
+        x = fs.FileFilter(*fs.find(self.build_directory, "libtool", recursive=True))
 
-    def _patch_libtool(self, libtool_path):
-        if (
-            self.spec.satisfies("%arm")
-            or self.spec.satisfies("%clang")
-            or self.spec.satisfies("%fj")
-            or self.spec.satisfies("%nvhpc")
-        ):
-            fs.filter_file('wl=""\n', 'wl="-Wl,"\n', libtool_path)
-            fs.filter_file(
-                'pic_flag=""\n', 'pic_flag="{0}"\n'.format(self.compiler.cc_pic_flag), libtool_path
+        # Exit early if there is nothing to patch:
+        if not x.filenames:
+            return
+
+        markers = {"cc": "LIBTOOL CONFIG"}
+        for tag in ["cxx", "fc", "f77"]:
+            markers[tag] = "LIBTOOL TAG CONFIG: {0}".format(tag.upper())
+
+        # Replace empty linker flag prefixes:
+        if self.compiler.name == "nag":
+            # Nag is mixed with gcc and g++, which are recognized correctly.
+            # Therefore, we change only Fortran values:
+            for tag in ["fc", "f77"]:
+                marker = markers[tag]
+                x.filter(
+                    '^wl=""$',
+                    'wl="{0}"'.format(self.compiler.linker_arg),
+                    start_at="# ### BEGIN {0}".format(marker),
+                    stop_at="# ### END {0}".format(marker),
+                )
+        else:
+            x.filter('^wl=""$', 'wl="{0}"'.format(self.compiler.linker_arg))
+
+        # Replace empty PIC flag values:
+        for cc, marker in markers.items():
+            x.filter(
+                '^pic_flag=""$',
+                'pic_flag="{0}"'.format(getattr(self.compiler, "{0}_pic_flag".format(cc))),
+                start_at="# ### BEGIN {0}".format(marker),
+                stop_at="# ### END {0}".format(marker),
             )
-        if self.spec.satisfies("%fj"):
-            fs.filter_file("-nostdlib", "", libtool_path)
+
+        # Other compiler-specific patches:
+        if self.compiler.name == "fj":
+            x.filter("-nostdlib", "")
             rehead = r"/\S*/"
-            objfile = [
+            for o in [
                 "fjhpctag.o",
                 "fjcrt0.o",
                 "fjlang08.o",
@@ -298,16 +338,84 @@ To resolve this problem, please try the following:
                 "crti.o",
                 "crtbeginS.o",
                 "crtendS.o",
-            ]
-            for o in objfile:
-                fs.filter_file(rehead + o, "", libtool_path)
-        # Hack to filter out spurious predp_objects when building with
-        # Intel dpcpp; see issue #32863
-        if self.spec.satisfies("%dpcpp"):
-            fs.filter_file(
-                r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1", libtool_path
+            ]:
+                x.filter(rehead + o, "")
+        elif self.compiler.name == "dpcpp":
+            # Hack to filter out spurious predep_objects when building with Intel dpcpp
+            # (see https://github.com/spack/spack/issues/32863):
+            x.filter(r"^(predep_objects=.*)/tmp/conftest-[0-9A-Fa-f]+\.o", r"\1")
+            x.filter(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1")
+        elif self.compiler.name == "nag":
+            for tag in ["fc", "f77"]:
+                marker = markers[tag]
+                start_at = "# ### BEGIN {0}".format(marker)
+                stop_at = "# ### END {0}".format(marker)
+                # Libtool 2.4.2 does not know the shared flag:
+                x.filter(
+                    r"\$CC -shared",
+                    r"\$CC -Wl,-shared",
+                    string=True,
+                    start_at=start_at,
+                    stop_at=stop_at,
+                )
+                # Libtool does not know how to inject whole archives
+                # (e.g. https://github.com/pmodels/mpich/issues/4358):
+                x.filter(
+                    r'^whole_archive_flag_spec="\\\$({?wl}?)--whole-archive'
+                    r'\\\$convenience \\\$\1--no-whole-archive"$',
+                    r'whole_archive_flag_spec="\$\1--whole-archive'
+                    r"\`for conv in \$convenience\\\\\"\\\\\"; do test -n \\\\\"\$conv\\\\\" && "
+                    r"new_convenience=\\\\\"\$new_convenience,\$conv\\\\\"; done; "
+                    r'func_echo_all \\\\\"\$new_convenience\\\\\"\` \$\1--no-whole-archive"',
+                    start_at=start_at,
+                    stop_at=stop_at,
+                )
+                # The compiler requires special treatment in certain cases:
+                x.filter(
+                    r"^(with_gcc=.*)$",
+                    "\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=yes",
+                    start_at=start_at,
+                    stop_at=stop_at,
+                )
+
+            # Disable the special treatment for gcc and g++:
+            for tag in ["cc", "cxx"]:
+                marker = markers[tag]
+                x.filter(
+                    r"^(with_gcc=.*)$",
+                    "\\1\n\n# Is the compiler the NAG compiler?\nwith_nag=no",
+                    start_at="# ### BEGIN {0}".format(marker),
+                    stop_at="# ### END {0}".format(marker),
+                )
+
+            # The compiler does not support -pthread flag, which might come
+            # from the inherited linker flags. We prepend the flag with -Wl,
+            # before using it:
+            x.filter(
+                r"^(\s*)(for tmp_inherited_linker_flag in \$tmp_inherited_linker_flags; do\s*)$",
+                '\\1if test "x$with_nag" = xyes; then\n'
+                "\\1  revert_nag_pthread=$tmp_inherited_linker_flags\n"
+                "\\1  tmp_inherited_linker_flags="
+                "`$ECHO \"$tmp_inherited_linker_flags\" | $SED 's% -pthread% -Wl,-pthread%g'`\n"
+                '\\1  test x"$revert_nag_pthread" = x"$tmp_inherited_linker_flags" && '
+                "revert_nag_pthread=no || revert_nag_pthread=yes\n"
+                "\\1fi\n\\1\\2",
+                start_at='if test -n "$inherited_linker_flags"; then',
+                stop_at='case " $new_inherited_linker_flags " in',
             )
-            fs.filter_file(r"^(predep_objects=.*)/tmp/a-[0-9A-Fa-f]+\.o", r"\1", libtool_path)
+            # And revert the modification to produce '*.la' files that can be
+            # used with gcc (normally, we do not install the files but they can
+            # still be used during the building):
+            start_at = '# Time to change all our "foo.ltframework" stuff back to "-framework foo"'
+            stop_at = "# installed libraries to the beginning of the library search list"
+            x.filter(
+                r"(\s*)(# move library search paths that coincide with paths to not yet\s*)$",
+                '\\1test x"$with_nag$revert_nag_pthread" = xyesyes &&\n'
+                '\\1  new_inherited_linker_flags=`$ECHO " $new_inherited_linker_flags" | '
+                "$SED 's% -Wl,-pthread% -pthread%g'`\n\\1\\2",
+                start_at=start_at,
+                stop_at=stop_at,
+            )
 
     @property
     def configure_directory(self):
