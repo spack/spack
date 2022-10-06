@@ -15,9 +15,9 @@ from spack.package import *
 # tar file contains the version number.
 def viewer_url(ver, mach):
     ver2 = ("-" + ver) if ver >= "2019.08" else ""
-    return (
-        "http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer{1}-linux.gtk.{2}.tgz"
-    ).format(ver, ver2, mach)
+    return ("http://hpctoolkit.org/download/hpcviewer/{0}/hpcviewer{1}-linux.gtk.{2}.tgz").format(
+        ver, ver2, mach
+    )
 
 
 def trace_url(ver, mach):
