@@ -346,7 +346,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DMPI_CXX_COMPILER=" + self.spec["mpi"].mpicxx)
 
         if "+cuda" in self.spec:
-            args.append("-DCMAKE_CUDA_COMPILER=" + self.spec["cuda"].prefix.bin + "/nvcc")
+            args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
 
         args.extend(self.cmake_args())
         self.run_test(cmake_bin, args, purpose="Configure with CMake")
