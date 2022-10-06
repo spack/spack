@@ -13,6 +13,7 @@ class PyAutopep8(PythonPackage):
     homepage = "https://github.com/hhatto/autopep8"
     pypi = "autopep8/autopep8-1.2.4.tar.gz"
 
+    version("1.7.0", sha256="ca9b1a83e53a7fad65d731dc7a2a2d50aa48f43850407c59f6a1a306c4201142")
     version("1.6.0", sha256="44f0932855039d2c15c4510d6df665e4730f2b8582704fa48f9c55bd3e17d979")
     version("1.5.7", sha256="276ced7e9e3cb22e5d7c14748384a5cf5d9002257c0ed50c0e075b68011bb6d0")
     version("1.4.4", sha256="4d8eec30cc81bc5617dbf1218201d770dc35629363547f17577c61683ccfb3ee")
@@ -23,12 +24,13 @@ class PyAutopep8(PythonPackage):
     extends("python", ignore="bin/pep8")
     depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
 
-    depends_on("py-pycodestyle@1.5.7:1.7.0", type=("build", "run"), when="@:1.2.4")
-    depends_on("py-pycodestyle@2.3.0:", type=("build", "run"), when="@1.3:")
-    depends_on("py-pycodestyle@2.4.0:", type=("build", "run"), when="@1.4:")
-    depends_on("py-pycodestyle@2.7.0:", type=("build", "run"), when="@1.5.6:")
-    depends_on("py-pycodestyle@2.8.0:", type=("build", "run"), when="@1.6.0:")
+    depends_on("py-pycodestyle@1.5.7:1.7.0", when="@:1.2.4", type=("build", "run"))
+    depends_on("py-pycodestyle@2.3.0:", when="@1.3:", type=("build", "run"))
+    depends_on("py-pycodestyle@2.4.0:", when="@1.4:", type=("build", "run"))
+    depends_on("py-pycodestyle@2.7.0:", when="@1.5.6:", type=("build", "run"))
+    depends_on("py-pycodestyle@2.8.0:", when="@1.6.0:", type=("build", "run"))
+    depends_on("py-pycodestyle@2.9.1:", when="@1.7.0:", type=("build", "run"))
 
-    depends_on("py-toml", type=("build", "run"), when="@1.5.3:")
+    depends_on("py-toml", when="@1.5.3:", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")

@@ -13,6 +13,7 @@ class PyPycodestyle(PythonPackage):
     homepage = "https://github.com/PyCQA/pycodestyle"
     pypi = "pycodestyle/pycodestyle-2.8.0.tar.gz"
 
+    version("2.9.1", sha256="2c9607871d58c76354b697b42f5d57e1ada7d261c261efac224b664affdc5785")
     version("2.9.0", sha256="beaba44501f89d785be791c9462553f06958a221d166c64e1f107320f839acc2")
     version("2.8.0", sha256="eddd5847ef438ea1c7870ca7eb78a9d47ce0cdb4851a5523949f2601d0cbbe7f")
     version("2.7.0", sha256="c389c1d06bf7904078ca03399a4816f974a1d590090fecea0c63ec26ebaf1cef")
