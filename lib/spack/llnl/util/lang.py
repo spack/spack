@@ -887,32 +887,28 @@ def load_module_from_file(module_name, module_path):
         ImportError: when the module can't be loaded
         FileNotFoundError: when module_path doesn't exist
     """
+    import importlib.util
+
     if module_name in sys.modules:
         return sys.modules[module_name]
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-        module = importlib.util.module_from_spec(spec)  # novm
-        # The module object needs to exist in sys.modules before the
-        # loader executes the module code.
-        #
-        # See https://docs.python.org/3/reference/import.html#loading
-        sys.modules[spec.name] = module
+    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
+    module = importlib.util.module_from_spec(spec)  # novm
+    # The module object needs to exist in sys.modules before the
+    # loader executes the module code.
+    #
+    # See https://docs.python.org/3/reference/import.html#loading
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
         try:
-            spec.loader.exec_module(module)
-        except BaseException:
-            try:
-                del sys.modules[spec.name]
-            except KeyError:
-                pass
-            raise
-    elif sys.version_info[0] == 2:
-        import imp
-
-        module = imp.load_source(module_name, module_path)
+            del sys.modules[spec.name]
+        except KeyError:
+            pass
+        raise
     return module
 
 

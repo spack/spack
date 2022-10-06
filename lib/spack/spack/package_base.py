@@ -66,13 +66,12 @@ from spack.util.prefix import Prefix
 from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
-if sys.version_info[0] >= 3:
-    FLAG_HANDLER_RETURN_TYPE = Tuple[
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-        Optional[Iterable[str]],
-    ]
-    FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
+FLAG_HANDLER_RETURN_TYPE = Tuple[
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+    Optional[Iterable[str]],
+]
+FLAG_HANDLER_TYPE = Callable[[str, Iterable[str]], FLAG_HANDLER_RETURN_TYPE]
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1661,10 +1660,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(sorted(hash_content))).digest()
         ).lower()
-
-        # convert from bytes if running python 3
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode("utf-8")
+        b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
 

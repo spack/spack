@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import hashlib
-import sys
 from typing import Any, Callable, Dict  # novm
 
 import llnl.util.tty as tty
@@ -137,11 +136,7 @@ class Checker(object):
 
 def prefix_bits(byte_array, bits):
     """Return the first <bits> bits of a byte array as an integer."""
-    if sys.version_info < (3,):
-        b2i = ord  # In Python 2, indexing byte_array gives str
-    else:
-        b2i = lambda b: b  # In Python 3, indexing byte_array gives int
-
+    b2i = lambda b: b  # In Python 3, indexing byte_array gives int
     result = 0
     n = 0
     for i, b in enumerate(byte_array):
