@@ -56,7 +56,7 @@ class Exodusii(CMakePackage):
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enables MPI parallelism.")
-    variant("fortran", default=False, description="Build exodus Fortran wrapper libraries.")
+    variant("fortran", default=False, description="Build Fortran wrapper libraries.")
 
     depends_on("cmake@2.8.11:", type="build")
     depends_on("mpi", when="+mpi")
@@ -96,7 +96,7 @@ class Exodusii(CMakePackage):
                     "-DSEACASProj_ENABLE_Fortran:BOOL=ON",
                     "-DCMAKE_Fortran_COMPILER={0}".format(fc_path),
                     "-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=ON",
-                    "-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=ON"
+                    "-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=ON",
                 ]
             )
         # Python #
