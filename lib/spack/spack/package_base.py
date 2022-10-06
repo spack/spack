@@ -679,6 +679,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         visited=None,
         missing=None,
         virtuals=None,
+        namespace_overrides=None,
     ):
         """Return dict of possible dependencies of this package.
 
@@ -693,6 +694,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             missing (dict or None): dict to populate with packages and their
                 *missing* dependencies.
             virtuals (set): if provided, populate with virtuals seen so far.
+            namespace_overrides (dict or None): full names of explicitly
+                mentioned specs. Here a namespace-override should be possible,
+                i.e. the "full"-name should be used as mapped herein!
 
         Returns:
             (dict): dictionary mapping dependency names to *their*
@@ -717,6 +721,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         visited = {} if visited is None else visited
         missing = {} if missing is None else missing
+        namespace_overrides = {} if namespace_overrides is None else namespace_overrides
 
         visited.setdefault(cls.name, set())
 
@@ -756,14 +761,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     continue
 
                 try:
-                    dep_cls = spack.repo.path.get_pkg_class(dep_name)
+                    dep_cls = spack.repo.path.get_pkg_class(
+                        namespace_overrides.get(dep_name, dep_name))
                 except spack.repo.UnknownPackageError:
                     # log unknown packages
                     missing.setdefault(cls.name, set()).add(dep_name)
                     continue
 
                 dep_cls.possible_dependencies(
-                    transitive, expand_virtuals, deptype, visited, missing, virtuals
+                    transitive, expand_virtuals, deptype, visited,
+                    missing, virtuals, namespace_overrides
                 )
 
         return visited

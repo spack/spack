@@ -2892,10 +2892,11 @@ class Spec(object):
 
         # take the best answer
         opt, i, answer = min(result.answers)
-        name = self.name
+        name = self.fullname
         # TODO: Consolidate this code with similar code in solve.py
         if self.virtual:
-            providers = [spec.name for spec in answer.values() if spec.package.provides(name)]
+            # use fullname to include namespaces when necessary. as we now put those in the final answer!
+            providers = [spec.fullname for spec in answer.values() if spec.package.provides(name)]
             name = providers[0]
 
         assert name in answer

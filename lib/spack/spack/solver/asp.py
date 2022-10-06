@@ -236,9 +236,11 @@ def listify(args):
     return list(args)
 
 
-def packagize(pkg):
+def packagize(pkg, namespace_overrides=None):
+    namespace_overrides = {} if namespace_overrides is None else namespace_overrides
     if isinstance(pkg, str):
-        return spack.repo.path.get_pkg_class(pkg)
+        return spack.repo.path.get_pkg_class(
+            namespace_overrides.get(pkg, pkg))
     else:
         return pkg
 
@@ -514,7 +516,7 @@ class Result(object):
         best = min(self.answers)
         opt, _, answer = best
         for input_spec in self.abstract_specs:
-            key = input_spec.name
+            key = input_spec.fullname
             if input_spec.virtual:
                 providers = [spec.name for spec in answer.values() if spec.package.provides(key)]
                 key = providers[0]
@@ -818,7 +820,9 @@ class PyclingoDriver(object):
 
             # build specs from spec attributes in the model
             spec_attrs = [(name, tuple(rest)) for name, *rest in extract_args(best_model, "attr")]
-            answers = builder.build_specs(spec_attrs)
+            answers = builder.build_specs(spec_attrs, setup.namespace_overrides)
+            #tuples = [(sym.name, [stringify(a) for a in sym.arguments]) for sym in best_model]
+            #answers = builder.build_specs(tuples, setup.namespace_overrides)
 
             # add best spec to the results
             result.answers.append((list(min_cost), 0, answers))
@@ -866,6 +870,7 @@ class SpackSolverSetup(object):
         self.deprecated_versions = collections.defaultdict(set)
 
         self.possible_virtuals = None
+        self.namespace_overrides = {}
         self.possible_compilers = []
         self.possible_oses = set()
         self.variant_values_from_specs = set()
@@ -908,7 +913,7 @@ class SpackSolverSetup(object):
             # Origins are sorted by "provenance" first, see the Provenance enumeration above
             return version.origin, version.idx
 
-        pkg = packagize(pkg)
+        pkg = packagize(pkg, self.namespace_overrides)
         declared_versions = self.declared_versions[pkg.name]
         partially_sorted_versions = sorted(set(declared_versions), key=key_fn)
 
@@ -1108,7 +1113,7 @@ class SpackSolverSetup(object):
         )
 
     def pkg_rules(self, pkg, tests):
-        pkg = packagize(pkg)
+        pkg = packagize(pkg, self.namespace_overrides)
 
         # versions
         self.pkg_version_rules(pkg)
@@ -1198,6 +1203,7 @@ class SpackSolverSetup(object):
             self.gen.newline()
 
         # conflicts
+        # TODO: should not care about names?!
         self.conflict_rules(pkg)
 
         # default compilers for this package
@@ -1599,7 +1605,8 @@ class SpackSolverSetup(object):
                 if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
-                        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+                        pkg_cls = spack.repo.path.get_pkg_class(
+                            self.namespace_overrides.get(spec.name, spec.name))
                         try:
                             variant_def, _ = pkg_cls.variants[vname]
                         except KeyError:
@@ -1607,7 +1614,8 @@ class SpackSolverSetup(object):
                             raise RuntimeError(msg.format(vname, spec.name))
                         else:
                             variant_def.validate_or_raise(
-                                variant, spack.repo.path.get_pkg_class(spec.name)
+                                variant, spack.repo.path.get_pkg_class(
+                            self.namespace_overrides.get(spec.name, spec.name))
                             )
 
                 clauses.append(f.variant_value(spec.name, vname, value))
@@ -1725,7 +1733,8 @@ class SpackSolverSetup(object):
         packages_yaml = spack.config.get("packages")
         packages_yaml = _normalize_packages_yaml(packages_yaml)
         for pkg_name in possible_pkgs:
-            pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+            pkg_cls = spack.repo.path.get_pkg_class(
+                self.namespace_overrides.get(pkg_name, pkg_name))
 
             # All the versions from the corresponding package.py file. Since concepts
             # like being a "develop" version or being preferred exist only at a
@@ -1812,6 +1821,7 @@ class SpackSolverSetup(object):
                 DeclaredVersion(version=version, idx=0, origin=origin)
             )
             self.possible_versions[s.name].add(version)
+
 
     def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
@@ -2192,9 +2202,23 @@ class SpackSolverSetup(object):
 
         # get list of all possible dependencies
         self.possible_virtuals = set(x.name for x in specs if x.virtual)
+        # get the full names of all explictly specified specs. similar to code in check_packages_exist to get all subspecs!
+        for spec in specs:
+            for s in spec.traverse():
+                if s.name not in self.namespace_overrides:
+                    self.namespace_overrides[s.name] = s.fullname
+                # TODO: exception on conflicting namespaces!
+        # USE THEM EVERYWHERE, WHERE WE GET A PACKAGE!
+        # spack.repo.path.get_pkg_class
+        # this seems the easiest way to have correct facts for the concretizer but keep "canonical" names
+        # it doesn't allow namespaced "depends_on" yet
         possible = spack.package_base.possible_dependencies(
-            *specs, virtuals=self.possible_virtuals, deptype=spack.dependency.all_deptypes
+            *specs,
+            virtuals=self.possible_virtuals,
+            deptype=spack.dependency.all_deptypes,
+            namespace_overrides=self.namespace_overrides
         )
+        # possible just lists names! that's a problem!?
 
         # Fail if we already know an unreachable node is requested
         for spec in specs:
@@ -2204,7 +2228,8 @@ class SpackSolverSetup(object):
             if missing_deps:
                 raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
 
-        self.pkgs = set(possible)
+        # get all packages to consider!
+        self.pkgs = set([self.namespace_overrides.get(s, s) for  s in possible])
 
         # driver is used by all the functions below to add facts and
         # rules to generate an ASP program.
@@ -2584,14 +2609,18 @@ class SpecBuilder(object):
         else:
             return (-1, 0)
 
-    def build_specs(self, function_tuples):
+    def build_specs(self, function_tuples, namespace_overrides):
         # Functions don't seem to be in particular order in output.  Sort
         # them here so that directives that build objects (like node and
         # node_compiler) are called in the right order.
         self.function_tuples = sorted(set(function_tuples), key=self.sort_fn)
 
         self._specs = {}
+
         for name, args in self.function_tuples:
+            # replace the package-names with namespaced names
+            args = [namespace_overrides.get(a, a) for a in args]
+
             if SpecBuilder.ignored_attributes.match(name):
                 continue
 
@@ -2629,6 +2658,7 @@ class SpecBuilder(object):
 
         # namespace assignment is done after the fact, as it is not
         # currently part of the solve
+        # also, we have to reiterate through all dependencies?
         for spec in self._specs.values():
             if spec.namespace:
                 continue
