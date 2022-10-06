@@ -1,0 +1,12 @@
+--- a/config/ymake
++++ b/config/ymake
+@@ -535,6 +535,9 @@ default:
+         breaksw
+ endsw
+ 
++# We want to have our own definitions for spack
++set sysincs = Spack
++
+ if ($?sysincs == 0) then
+         echo "$0 : Unknown System Type - No Config file" > /dev/tty
+         exit 1
