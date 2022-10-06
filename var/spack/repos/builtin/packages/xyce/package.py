@@ -131,20 +131,16 @@ class Xyce(CMakePackage):
 
         options = []
 
-        trilinos = spec["trilinos"]
-        options.append("-DTrilinos_DIR:PATH={0}".format(trilinos.prefix))
-
-        build_type = spec.variants["build_type"].value
-        options.extend(["-DCMAKE_BUILD_TYPE:STRING={0}".format(build_type)])
-
         if "+mpi" in spec:
-            options.append("-DCMAKE_CXX_COMPILER:STRING={0}".format(spec["mpi"].mpicxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
         else:
-            options.append("-DCMAKE_CXX_COMPILER:STRING={0}".format(self.compiler.cxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", self.compiler.cxx))
 
-        options.append(self.define_from_variant("Xyce_PLUGIN_SUPPORT", "plugin"))
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
+        options.append(self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"))
+        options.append(self.define_from_variant("Xyce_PLUGIN_SUPPORT", "plugin"))
+        options.append(self.define("Trilinos_DIR", spec["trilinos"].prefix))
 
         if "+pymi" in spec:
             pybind11 = spec["py-pybind11"]
