@@ -22,6 +22,8 @@ class RFpcompare(RPackage):
 
     maintainers = ["dorton21"]
 
+    version("0.2.4", sha256="7189842a123e67b2d5d4b1dd72901959b821ec086d61cabc1dad9eae23f52570")
     version("0.2.3", sha256="f89be3568544a3a44e4f01b5050ed03705805308ec1aa4add9a5e1b5b328dbdf")
 
     depends_on("r@3.3:", type=("build", "run"))
+    depends_on("r@3.4:", type=("build", "run"), when="@0.2.4:")
