@@ -46,18 +46,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
 
-    # release and debug flags
-    variant(
-        "release",
-        default=False,
-        description="Enable release type for packages exago, hiop, raja, magma, camp",
-    )
-    variant(
-        "debug",
-        default=False,
-        description="Enable RelWithDebInfo for packages exago, hiop, raja, magma, camp",
-    )
-
     # Dependencies
     depends_on("pkgconfig", type="build")
     depends_on("mpi", when="+mpi")
@@ -75,42 +63,48 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build")
 
     # Profiling
-    depends_on("hiop+deepchecking build_type=RelWithDebInfo", when="+hiop+debug")
-    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop+release")
+    depends_on(
+        "hiop+deepchecking build_type=RelWithDebInfo", when="+hiop build_type=RelWithDebInfo"
+    )
+    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop build_type=Release ")
 
     # Control the package's build-type depending on the release or debug flag
     for pkg in ["raja", "umpire", "magma", "camp"]:
-        depends_on("{0} build_type=Release".format(pkg), when="+release")
-        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+debug")
+        depends_on("{0} build_type=Release".format(pkg), when="build_type=Release")
+        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="build_type=RelWithDebInfo")
 
     # Force RelWithDebInfo when not using release
     conflicts(
         "build_type=Release",
-        when="+debug",
-        msg="Use RelWithDebInfo when not using optimizations",
+        when="build_type=RelWithDebInfo",
+        msg="Use RelWithDebInfo when not using release build type",
     )
     conflicts(
         "build_type=Debug",
-        when="+debug",
-        msg="Use RelWithDebInfo when not using optimizations",
+        when="build_type=RelWithDebInfo",
+        msg="Use RelWithDebInfo when not using release build type",
     )
     conflicts(
         "build_type=MinSizeRel",
-        when="+debug",
-        msg="Use RelWithDebInfo when not using optimizations",
+        when="build_type=RelWithDebInfo",
+        msg="Use RelWithDebInfo when not using release build type",
     )
 
     # Force Release mode when using optimizations
     conflicts(
         "build_type=RelWithDebInfo",
-        when="+release",
-        msg="Use Release when using optimizations",
+        when="build_type=Release",
+        msg="Use Release when using release build type",
     )
-    conflicts("build_type=Debug", when="+release", msg="Use Release when using optimizations")
+    conflicts(
+        "build_type=Debug",
+        when="build_type=Release",
+        msg="Use Release when using release build type",
+    )
     conflicts(
         "build_type=MinSizeRel",
-        when="+release",
-        msg="Use Release when using optimizations",
+        when="build_type=Release",
+        msg="Use Release when using release build type",
     )
 
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
