@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Tests for ``llnl/util/filesystem.py``"""
+import filecmp
 import os
 import shutil
 import stat
@@ -525,6 +526,29 @@ def test_filter_files_multiple(tmpdir):
         assert "<malloc.h>" not in f.read()
         assert "<string.h>" not in f.read()
         assert "<stdio.h>" not in f.read()
+
+
+def test_filter_files_start_stop(tmpdir):
+    original_file = os.path.join(spack.paths.test_path, "data", "filter_file", "start_stop.txt")
+    target_file = os.path.join(str(tmpdir), "start_stop.txt")
+    shutil.copy(original_file, target_file)
+    # None of the following should happen:
+    #   - filtering starts after A is found in the file:
+    fs.filter_file("A", "X", target_file, string=True, start_at="B")
+    #   - filtering starts exactly when B is found:
+    fs.filter_file("B", "X", target_file, string=True, start_at="B")
+    #   - filtering stops before D is found:
+    fs.filter_file("D", "X", target_file, string=True, stop_at="C")
+
+    assert filecmp.cmp(original_file, target_file)
+
+    # All of the following should happen:
+    fs.filter_file("A", "X", target_file, string=True)
+    fs.filter_file("B", "X", target_file, string=True, start_at="X", stop_at="C")
+    fs.filter_file(r"C|D", "X", target_file, start_at="X", stop_at="E")
+
+    with open(target_file, mode="r") as f:
+        assert all("X" == line.strip() for line in f.readlines())
 
 
 # Each test input is a tuple of entries which prescribe

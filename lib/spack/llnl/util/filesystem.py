@@ -233,9 +233,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
     Keyword Arguments:
         string (bool): Treat regex as a plain string. Default it False
-        backup (bool): Make backup file(s) suffixed with ``~``. Default is True
+        backup (bool): Make backup file(s) suffixed with ``~``. Default is False
         ignore_absent (bool): Ignore any files that don't exist.
             Default is False
+        start_at (str): Marker used to start applying the replacements. If a
+            text line matches this marker filtering is started at the next line.
+            All contents before the marker and the marker itself are copied
+            verbatim. Default is to start filtering from the first line of the
+            file.
         stop_at (str): Marker used to stop scanning the file further. If a text
             line matches this marker filtering is stopped and the rest of the
             file is copied verbatim. Default is to filter until the end of the
@@ -244,6 +249,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
     string = kwargs.get("string", False)
     backup = kwargs.get("backup", False)
     ignore_absent = kwargs.get("ignore_absent", False)
+    start_at = kwargs.get("start_at", None)
     stop_at = kwargs.get("stop_at", None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
@@ -292,6 +298,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # reached or we found a marker in the line if it was specified
             with open(tmp_filename, mode="r", **extra_kwargs) as input_file:
                 with open(filename, mode="w", **extra_kwargs) as output_file:
+                    do_filtering = start_at is None
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
                     # input_file.next() implicitly via the for loop
@@ -301,8 +308,12 @@ def filter_file(regex, repl, *filenames, **kwargs):
                             if stop_at == line.strip():
                                 output_file.write(line)
                                 break
-                        filtered_line = re.sub(regex, repl, line)
-                        output_file.write(filtered_line)
+                        if do_filtering:
+                            filtered_line = re.sub(regex, repl, line)
+                            output_file.write(filtered_line)
+                        else:
+                            do_filtering = start_at == line.strip()
+                            output_file.write(line)
                     else:
                         current_position = None
 
