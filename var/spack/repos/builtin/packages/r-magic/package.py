@@ -22,9 +22,10 @@ class RMagic(RPackage):
 
     cran = "magic"
 
-    version('1.5-9', sha256='fa1d5ef2d39e880f262d31b77006a2a7e76ea38e306aae4356e682b90d6cd56a')
-    version('1.5-8', sha256='7f8bc26e05003168e9d2dadf64eb9a34b51bc41beba482208874803dee7d6c20')
-    version('1.5-6', sha256='1b6c3f5bef0ddc28c4b68894051df5d9c0d4985d9e6ad81892369d0f7fe0298d')
+    version("1.6-0", sha256="4516d48c9618e3f395db873e886f5deb3b66b32ebe10d4c26c1420ac848acbbf")
+    version("1.5-9", sha256="fa1d5ef2d39e880f262d31b77006a2a7e76ea38e306aae4356e682b90d6cd56a")
+    version("1.5-8", sha256="7f8bc26e05003168e9d2dadf64eb9a34b51bc41beba482208874803dee7d6c20")
+    version("1.5-6", sha256="1b6c3f5bef0ddc28c4b68894051df5d9c0d4985d9e6ad81892369d0f7fe0298d")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-abind', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-abind", type=("build", "run"))

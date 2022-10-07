@@ -16,11 +16,12 @@ class RSp(RPackage):
 
     cran = "sp"
 
-    version('1.4-6', sha256='9aebb3ef2140e8984a67eb93d72f686b8707d48d82445db0c54ae895576ba226')
-    version('1.4-5', sha256='6beeb216d540475cdead5f2c72d6c7ee400fe2423c1882d72cf57f6df58f09da')
-    version('1.3-1', sha256='57988b53ba8acc35f3912d62feba4b929a0f757c6b54080c623c5d805e0cb59f')
-    version('1.2-7', sha256='6d60e03e1abd30a7d4afe547d157ce3dd7a8c166fc5e407fd6d62ae99ff30460')
-    version('1.2-3', sha256='58b3a9e395ca664ee61b20b480be4eb61576daca44c3d3f6f9a943bb0155879a')
+    version("1.4-7", sha256="01946953707363b78d3eb8dcf472ea8c6ea0097094aa0ca0b756ce5fac01b1ad")
+    version("1.4-6", sha256="9aebb3ef2140e8984a67eb93d72f686b8707d48d82445db0c54ae895576ba226")
+    version("1.4-5", sha256="6beeb216d540475cdead5f2c72d6c7ee400fe2423c1882d72cf57f6df58f09da")
+    version("1.3-1", sha256="57988b53ba8acc35f3912d62feba4b929a0f757c6b54080c623c5d805e0cb59f")
+    version("1.2-7", sha256="6d60e03e1abd30a7d4afe547d157ce3dd7a8c166fc5e407fd6d62ae99ff30460")
+    version("1.2-3", sha256="58b3a9e395ca664ee61b20b480be4eb61576daca44c3d3f6f9a943bb0155879a")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-lattice", type=("build", "run"))

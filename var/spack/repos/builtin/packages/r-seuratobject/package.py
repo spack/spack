@@ -20,10 +20,16 @@ class RSeuratobject(RPackage):
 
     cran = "SeuratObject"
 
-    version('4.0.4', sha256='585261b7d2045193accf817a29e2e3356e731f57c554bed37d232fa49784088c')
+    version("4.1.0", sha256="9ca406cb3bd95c588e1a81c5383e3173a446cc0667142b139ca32685b4b20a05")
+    version("4.0.4", sha256="585261b7d2045193accf817a29e2e3356e731f57c554bed37d232fa49784088c")
 
-    depends_on('r@4.0.0:', type=('build', 'run'))
-    depends_on('r-matrix@1.3-3:', type=('build', 'run'))
-    depends_on('r-rcpp@1.0.5:', type=('build', 'run'))
-    depends_on('r-rlang@0.4.7:', type=('build', 'run'))
-    depends_on('r-rcppeigen', type=('build', 'run'))
+    depends_on("r@4.0.0:", type=("build", "run"))
+    depends_on("r-future", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-future-apply", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-matrix@1.3-3:", type=("build", "run"))
+    depends_on("r-progressr", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-rcpp@1.0.5:", type=("build", "run"))
+    depends_on("r-sp", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-rgeos", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-rlang@0.4.7:", type=("build", "run"))
+    depends_on("r-rcppeigen", type=("build", "run"))

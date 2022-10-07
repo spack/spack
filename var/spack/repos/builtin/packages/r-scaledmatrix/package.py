@@ -16,8 +16,9 @@ class RScaledmatrix(RPackage):
 
     bioc = "ScaledMatrix"
 
-    version('1.2.0', commit='d0573e14ca537b40ade7dd1c9cf0cadae60d4349')
+    version("1.4.0", commit="32e6e918bc7bb64bbf75613d353ca268c7d04292")
+    version("1.2.0", commit="d0573e14ca537b40ade7dd1c9cf0cadae60d4349")
 
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-delayedarray', type=('build', 'run'))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-s4vectors", type=("build", "run"))
+    depends_on("r-delayedarray", type=("build", "run"))

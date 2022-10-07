@@ -17,12 +17,12 @@ class RGgthemes(RPackage):
 
     cran = "ggthemes"
 
-    version('4.2.4', sha256='7b35168cf5b68f6f52dd533a1b345ec87e09d1a85ca68e8dc5377cdf95718567')
-    version('4.2.0', sha256='5bb3fe94819fe2cce7865f07a6e6ea5c59d3996f78d1c0836ad406f69efb3367')
+    version("4.2.4", sha256="7b35168cf5b68f6f52dd533a1b345ec87e09d1a85ca68e8dc5377cdf95718567")
+    version("4.2.0", sha256="5bb3fe94819fe2cce7865f07a6e6ea5c59d3996f78d1c0836ad406f69efb3367")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
-    depends_on('r-purrr', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-ggplot2@3.0.0:", type=("build", "run"))
+    depends_on("r-purrr", type=("build", "run"))
+    depends_on("r-scales", type=("build", "run"))
+    depends_on("r-stringr", type=("build", "run"))
+    depends_on("r-tibble", type=("build", "run"))

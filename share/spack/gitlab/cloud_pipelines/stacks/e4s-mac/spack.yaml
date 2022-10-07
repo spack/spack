@@ -15,16 +15,21 @@ spack:
 
   packages:
     all:
-      compiler: [apple-clang@13.0.0]
+      compiler: [apple-clang@13.1.6]
       target: [m1]
 
   definitions:
   - easy_specs:
     - berkeley-db
     - ncurses
+    - gcc
+    - py-jupyterlab
+    - py-scipy
+    - py-matplotlib
+    - py-pandas
 
   - arch:
-    - '%apple-clang@13.0.0 target=m1'
+    - '%apple-clang@13.1.6 target=m1'
 
   specs:
 
@@ -50,16 +55,18 @@ spack:
       - match: ['os=monterey']
         runner-attributes:
           tags:
-          - omicron
+          - lambda
 
     broken-specs-url: "s3://spack-binaries/broken-specs"
 
     service-job-attributes:
       before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
+      - export SPACK_USER_CACHE_PATH=$(pwd)/.spack-user-cache
+      - export SPACK_USER_CONFIG_PATH=$(pwd)/.spack-user-config
+      - . "./share/spack/setup-env.sh"
+      - spack --version
       tags:
-      - omicron
+      - lambda
 
   cdash:
     build-group: E4S Mac

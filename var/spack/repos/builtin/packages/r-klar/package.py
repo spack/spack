@@ -20,9 +20,14 @@ class RKlar(RPackage):
 
     cran = "klaR"
 
-    version('0.6-15', sha256='5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae')
+    version("1.7-0", sha256="b4795250ef19fd1b5e1b9a59343fd01159a33dbdbb504a06258220e37a718198")
+    version("0.6-15", sha256="5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae")
 
-    depends_on('r@2.10.0:',    type=('build', 'run'))
-    depends_on('r-mass',       type=('build', 'run'))
-    depends_on('r-combinat',  type=('build', 'run'))
-    depends_on('r-questionr', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-combinat", type=("build", "run"))
+    depends_on("r-questionr", type=("build", "run"))
+
+    # NOTE: The svmlight interface is not built. The external svmlight package
+    # dates back to 2008, and does not build with modern compilers. In
+    # addition, the tarfile is unversioned and its distribution is restricted.

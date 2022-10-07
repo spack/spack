@@ -84,8 +84,8 @@ build ``hdf5`` with Intel oneAPI MPI do::
 
   spack install hdf5 +mpi ^intel-oneapi-mpi
 
-Using an Externally Installed oneAPI
-====================================
+Using Externally Installed oneAPI Tools
+=======================================
 
 Spack can also use oneAPI tools that are manually installed with
 `Intel Installers`_.  The procedures for configuring Spack to use
@@ -110,7 +110,7 @@ Another option is to manually add the configuration to
 Libraries
 ---------
 
-If you want Spack to use MKL that you have installed without Spack in
+If you want Spack to use oneMKL that you have installed without Spack in
 the default location, then add the following to
 ``~/.spack/packages.yaml``, adjusting the version as appropriate::
 
@@ -139,7 +139,7 @@ You can also use Spack-installed libraries. For example::
   spack load intel-oneapi-mkl
 
 Will update your environment CPATH, LIBRARY_PATH, and other
-environment variables for building an application with MKL.
+environment variables for building an application with oneMKL.
 
 More information
 ================

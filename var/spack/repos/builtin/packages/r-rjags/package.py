@@ -14,18 +14,20 @@ class RRjags(RPackage):
 
     cran = "rjags"
 
-    version('4-12', sha256='b91f34c3f9ebf78fa44bd661346fbb6f28a01693a7203ac133c98392dd273e10')
-    version('4-10', sha256='bd3e0bdf50b23b63061a0caa2428be585ccbf0b3f5d28eaa690e714e508d0ada')
-    version('4-8', sha256='1529827ab11493fb5f05552e239d700ae2f818995d86d3c9e4c92523f594b59f')
-    version('4-6', sha256='cf24bb1e7c8445bafb49097089ad33e5bd5d8efbccf16fc7e32ad230f05f89ad')
+    version("4-13", sha256="f85cc34c5127b828d8a3fa3613ef29f147c868bdaf55eb0f7406c10abbf92b32")
+    version("4-12", sha256="b91f34c3f9ebf78fa44bd661346fbb6f28a01693a7203ac133c98392dd273e10")
+    version("4-10", sha256="bd3e0bdf50b23b63061a0caa2428be585ccbf0b3f5d28eaa690e714e508d0ada")
+    version("4-8", sha256="1529827ab11493fb5f05552e239d700ae2f818995d86d3c9e4c92523f594b59f")
+    version("4-6", sha256="cf24bb1e7c8445bafb49097089ad33e5bd5d8efbccf16fc7e32ad230f05f89ad")
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-coda@0.13:', type=('build', 'run'))
-    depends_on('jags@4.0.0:4.999.999', type=('link'))
+    depends_on("r@2.14.0:", type=("build", "run"))
+    depends_on("r-coda@0.13:", type=("build", "run"))
+    depends_on("jags@4.0.0:4.999.999", type=("link"))
 
     def configure_args(self):
-        args = ['--with-jags-lib=%s' % self.spec['jags'].prefix.lib,
-                '--with-jags-include=%s' % self.spec['jags'].prefix.include,
-                '--with-jags-modules=%s/JAGS/modules-4'
-                % self.spec['jags'].prefix.lib]
+        args = [
+            "--with-jags-lib=%s" % self.spec["jags"].prefix.lib,
+            "--with-jags-include=%s" % self.spec["jags"].prefix.include,
+            "--with-jags-modules=%s/JAGS/modules-4" % self.spec["jags"].prefix.lib,
+        ]
         return args

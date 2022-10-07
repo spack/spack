@@ -15,9 +15,10 @@ class RGenerics(RPackage):
 
     cran = "generics"
 
-    version('0.1.1', sha256='a2478ebf1a0faa8855a152f4e747ad969a800597434196ed1f71975a9eb11912')
-    version('0.1.0', sha256='ab71d1bdbb66c782364c61cede3c1186d6a94c03635f9af70d926e2c1ac88763')
-    version('0.0.2', sha256='71b3d1b719ce89e71dd396ac8bc6aa5f1cd99bbbf03faff61dfbbee32fec6176')
+    version("0.1.2", sha256="63eab37a9148f820ce2d67bda3dab6dedb9db6890baa5284949c39ab1b4c5898")
+    version("0.1.1", sha256="a2478ebf1a0faa8855a152f4e747ad969a800597434196ed1f71975a9eb11912")
+    version("0.1.0", sha256="ab71d1bdbb66c782364c61cede3c1186d6a94c03635f9af70d926e2c1ac88763")
+    version("0.0.2", sha256="71b3d1b719ce89e71dd396ac8bc6aa5f1cd99bbbf03faff61dfbbee32fec6176")
 
-    depends_on('r@3.1:', type=('build', 'run'))
-    depends_on('r@3.2:', type=('build', 'run'), when='@0.1.1:')
+    depends_on("r@3.1:", type=("build", "run"))
+    depends_on("r@3.2:", type=("build", "run"), when="@0.1.1:")

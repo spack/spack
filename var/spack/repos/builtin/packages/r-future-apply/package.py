@@ -19,14 +19,16 @@ class RFutureApply(RPackage):
 
     cran = "future.apply"
 
-    version('1.8.1', sha256='0d5bc3cb0289665bb27ae4ccad51fcc5ebf6dca46872b0a4e57790b9dc0aa6c7')
-    version('1.7.0', sha256='2ffa6adb55f239918ce9679b7eac8dcc4bf2e6bed35c9cbedf4bf90d906345db')
-    version('1.3.0', sha256='6374eca49bb81e05c013509c8e324cf9c5d023f9f8217b29ce7b7e12025ca371')
+    version("1.9.0", sha256="6166c1c5ce30b9745059c3d30c8110f7c1d51871e58aa414f195cb1f91c467f5")
+    version("1.8.1", sha256="0d5bc3cb0289665bb27ae4ccad51fcc5ebf6dca46872b0a4e57790b9dc0aa6c7")
+    version("1.7.0", sha256="2ffa6adb55f239918ce9679b7eac8dcc4bf2e6bed35c9cbedf4bf90d906345db")
+    version("1.3.0", sha256="6374eca49bb81e05c013509c8e324cf9c5d023f9f8217b29ce7b7e12025ca371")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-future@1.13.0:', type=('build', 'run'))
-    depends_on('r-future@1.17.0:', type=('build', 'run'), when='@1.7.0:')
-    depends_on('r-future@1.21.0:', type=('build', 'run'), when='@1.8.1:')
-    depends_on('r-globals@0.12.4:', type=('build', 'run'))
-    depends_on('r-globals@0.12.5:', type=('build', 'run'), when='@1.7.0:')
-    depends_on('r-globals@0.14.0:', type=('build', 'run'), when='@1.8.1:')
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-future@1.13.0:", type=("build", "run"))
+    depends_on("r-future@1.17.0:", type=("build", "run"), when="@1.7.0:")
+    depends_on("r-future@1.21.0:", type=("build", "run"), when="@1.8.1:")
+    depends_on("r-future@1.22.1:", type=("build", "run"), when="@1.9.0:")
+    depends_on("r-globals@0.12.4:", type=("build", "run"))
+    depends_on("r-globals@0.12.5:", type=("build", "run"), when="@1.7.0:")
+    depends_on("r-globals@0.14.0:", type=("build", "run"), when="@1.8.1:")

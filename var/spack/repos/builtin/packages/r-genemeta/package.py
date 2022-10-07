@@ -9,19 +9,20 @@ from spack.package import *
 class RGenemeta(RPackage):
     """MetaAnalysis for High Throughput Experiments.
 
-       A collection of meta-analysis tools for analysing high throughput
-       experimental data"""
+    A collection of meta-analysis tools for analysing high throughput
+    experimental data"""
 
     bioc = "GeneMeta"
 
-    version('1.66.0', commit='c16eb09492f08f6cc0f253fafa3fa5dce35dcdba')
-    version('1.62.0', commit='eb4273ff5867e39592f50b97b454fa5e32b4a9bf')
-    version('1.56.0', commit='cb2c9e353d34ea9f3db06cb236c7a89674f2682d')
-    version('1.54.0', commit='932553cd8df82b7df804fccda9bfd4b0f36d79d7')
-    version('1.52.0', commit='1f21759984a5852c42a19e89ee53ffd72053d49c')
-    version('1.50.0', commit='0f8603653285698ed451fcbf536a4b3f90015f92')
-    version('1.48.0', commit='68c65304d37f5a4722cf4c25afb23214c3a2f4c8')
+    version("1.68.0", commit="4213c0205d477660195300a0aa9751972f86bf91")
+    version("1.66.0", commit="c16eb09492f08f6cc0f253fafa3fa5dce35dcdba")
+    version("1.62.0", commit="eb4273ff5867e39592f50b97b454fa5e32b4a9bf")
+    version("1.56.0", commit="cb2c9e353d34ea9f3db06cb236c7a89674f2682d")
+    version("1.54.0", commit="932553cd8df82b7df804fccda9bfd4b0f36d79d7")
+    version("1.52.0", commit="1f21759984a5852c42a19e89ee53ffd72053d49c")
+    version("1.50.0", commit="0f8603653285698ed451fcbf536a4b3f90015f92")
+    version("1.48.0", commit="68c65304d37f5a4722cf4c25afb23214c3a2f4c8")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-biobase@2.5.5:', type=('build', 'run'))
-    depends_on('r-genefilter', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-biobase@2.5.5:", type=("build", "run"))
+    depends_on("r-genefilter", type=("build", "run"))

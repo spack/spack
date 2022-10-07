@@ -14,8 +14,9 @@ class RMarray(RPackage):
 
     bioc = "marray"
 
-    version('1.72.0', commit='da35e8b8d2c9ef17e779013a5d252f38a1c66633')
-    version('1.68.0', commit='67b3080486abdba7dd19fccd7fb731b0e8b5b3f9')
+    version("1.74.0", commit="9130a936fffb7d2d445ff21d04520e78b62625ac")
+    version("1.72.0", commit="da35e8b8d2c9ef17e779013a5d252f38a1c66633")
+    version("1.68.0", commit="67b3080486abdba7dd19fccd7fb731b0e8b5b3f9")
 
-    depends_on('r@2.10.0:', type=('build', 'run'))
-    depends_on('r-limma', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-limma", type=("build", "run"))

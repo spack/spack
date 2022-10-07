@@ -18,40 +18,43 @@ class RRgl(RPackage):
 
     cran = "rgl"
 
-    version('0.108.3', sha256='89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b')
-    version('0.104.16', sha256='b82d2e2b965e76d6cc55bbd15ee0f79c36913ab09ce5436d2104551563462a99')
-    version('0.100.26', sha256='e1889c2723ad458b39fdf9366fdaf590d7657d3762748f8534a8491ef754e740')
-    version('0.100.24', sha256='1233a7bdc5a2b908fc64d5f56e92a0e123e8f7c0b9bac93dfd005608b78fa35a')
-    version('0.100.19', sha256='50630702554e422e0603f27d499aad3b6f822de5a73da7fdf70404ac50df7025')
-    version('0.99.16', sha256='692a545ed2ff0f5e15289338736f0e3c092667574c43ac358d8004901d7a1a61')
-    version('0.98.1', sha256='5f49bed9e092e672f73c8a1a5365cdffcda06db0315ac087e95ab9c9c71a6986')
+    version("0.108.3.2", sha256="033af3aceade6c21d0a602958fff1c25c21febc7d0e867cf88860cfa25fc3c65")
+    version("0.108.3", sha256="89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b")
+    version("0.104.16", sha256="b82d2e2b965e76d6cc55bbd15ee0f79c36913ab09ce5436d2104551563462a99")
+    version("0.100.26", sha256="e1889c2723ad458b39fdf9366fdaf590d7657d3762748f8534a8491ef754e740")
+    version("0.100.24", sha256="1233a7bdc5a2b908fc64d5f56e92a0e123e8f7c0b9bac93dfd005608b78fa35a")
+    version("0.100.19", sha256="50630702554e422e0603f27d499aad3b6f822de5a73da7fdf70404ac50df7025")
+    version("0.99.16", sha256="692a545ed2ff0f5e15289338736f0e3c092667574c43ac358d8004901d7a1a61")
+    version("0.98.1", sha256="5f49bed9e092e672f73c8a1a5365cdffcda06db0315ac087e95ab9c9c71a6986")
 
-    depends_on('r+X', type=('build', 'run'))
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r@3.3.0:', type=('build', 'run'), when='@0.108.3:')
-    depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-knitr@1.33:', type=('build', 'run'), when='@0.108.3:')
-    depends_on('r-jsonlite@0.9.20:', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'), when='@0.108.3:')
-    depends_on('libx11')
-    depends_on('gl')
-    depends_on('glu')
-    depends_on('zlib', type='link')
-    depends_on('libpng@1.2.9:', type='link')
-    depends_on('freetype', type='link')
-    depends_on('pandoc@1.14:', type='build')
+    depends_on("r+X", type=("build", "run"))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.108.3:")
+    depends_on("r-htmlwidgets", type=("build", "run"))
+    depends_on("r-htmltools", type=("build", "run"))
+    depends_on("r-knitr", type=("build", "run"))
+    depends_on("r-knitr@1.33:", type=("build", "run"), when="@0.108.3:")
+    depends_on("r-jsonlite@0.9.20:", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-r6", type=("build", "run"), when="@0.108.3:")
+    depends_on("libx11")
+    depends_on("gl")
+    depends_on("glu")
+    depends_on("zlib", type="link")
+    depends_on("libpng@1.2.9:", type="link")
+    depends_on("freetype", type="link")
+    depends_on("pandoc@1.14:", type="build")
 
-    depends_on('r-shiny', type=('build', 'run'), when='@:0.104.16')
-    depends_on('r-crosstalk', type=('build', 'run'), when='@0.99.16:0.104.16')
-    depends_on('r-manipulatewidget@0.9.0:', type=('build', 'run'), when='@0.99.16:0.104.16')
+    depends_on("r-shiny", type=("build", "run"), when="@:0.104.16")
+    depends_on("r-crosstalk", type=("build", "run"), when="@0.99.16:0.104.16")
+    depends_on("r-manipulatewidget@0.9.0:", type=("build", "run"), when="@0.99.16:0.104.16")
 
     def configure_args(self):
-        args = ['--x-includes=%s' % self.spec['libx11'].prefix.include,
-                '--x-libraries=%s' % self.spec['libx11'].prefix.lib,
-                '--with-gl-includes=%s' % self.spec['gl'].prefix.include,
-                '--with-gl-libraries=%s' % self.spec['gl'].prefix.lib,
-                '--with-gl-prefix=%s' % self.spec['gl'].prefix]
+        args = [
+            "--x-includes=%s" % self.spec["libx11"].prefix.include,
+            "--x-libraries=%s" % self.spec["libx11"].prefix.lib,
+            "--with-gl-includes=%s" % self.spec["gl"].headers.directories[0],
+            "--with-gl-libraries=%s" % self.spec["gl"].libs.directories[0],
+            "--with-gl-prefix=%s" % self.spec["gl"].home,
+        ]
         return args

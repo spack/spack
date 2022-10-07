@@ -21,24 +21,25 @@ class RXgboost(RPackage):
 
     cran = "xgboost"
 
-    version('1.5.0.2', sha256='4750b9a289d8cb685291939eed7c493bb42c5cc154ef98e13100abb1727eab13')
-    version('1.3.2.1', sha256='2ff462b81ad51a4810bd7860cb014b9b88831a8b1d45774249a808547147f884')
-    version('0.90.0.2', sha256='240584c1b4d54a95b4fef9074480752fae9a5b096e8f84747457d641decfc9bf')
-    version('0.81.0.1', sha256='3e7ada32e66881ea5c90aeafdab948927014c76cfff60a8e3d7f9e1f8a9ed7ce')
-    version('0.6-4', sha256='9fc51dd1b910c70930357f617d1ac7a74c5056e8847d4188175db27c09f9d1ed')
-    version('0.4-4', sha256='b955fc3352fcdc4894178c82fd62fbaf5e099c9d794f1e9daa2dd7b3494b61ff')
+    version("1.6.0.1", sha256="9ae99a20997e1b02ffd21cabada2a55e53f5754746238ee900de5eb6cd964ebd")
+    version("1.5.0.2", sha256="4750b9a289d8cb685291939eed7c493bb42c5cc154ef98e13100abb1727eab13")
+    version("1.3.2.1", sha256="2ff462b81ad51a4810bd7860cb014b9b88831a8b1d45774249a808547147f884")
+    version("0.90.0.2", sha256="240584c1b4d54a95b4fef9074480752fae9a5b096e8f84747457d641decfc9bf")
+    version("0.81.0.1", sha256="3e7ada32e66881ea5c90aeafdab948927014c76cfff60a8e3d7f9e1f8a9ed7ce")
+    version("0.6-4", sha256="9fc51dd1b910c70930357f617d1ac7a74c5056e8847d4188175db27c09f9d1ed")
+    version("0.4-4", sha256="b955fc3352fcdc4894178c82fd62fbaf5e099c9d794f1e9daa2dd7b3494b61ff")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r@2.15.1:', type=('build', 'run'), when='@0.6-0:')
-    depends_on('r@3.3.0:', type=('build', 'run'), when='@0.6-3:')
-    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
-    depends_on('r-data-table@1.9.6:', type=('build', 'run'))
-    depends_on('r-jsonlite@1.0:', type=('build', 'run'), when='@1.5.0.2:')
-    depends_on('gmake', type='build')
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r@2.15.1:", type=("build", "run"), when="@0.6-0:")
+    depends_on("r@3.3.0:", type=("build", "run"), when="@0.6-3:")
+    depends_on("r-matrix@1.1-0:", type=("build", "run"))
+    depends_on("r-data-table@1.9.6:", type=("build", "run"))
+    depends_on("r-jsonlite@1.0:", type=("build", "run"), when="@1.5.0.2:")
+    depends_on("gmake", type="build")
 
     # This is not listed as required, but installation fails without it
     # ERROR: dependency 'stringr' is not available for package 'xgboost'
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on("r-stringr", type=("build", "run"))
 
-    depends_on('r-stringi@0.5.2:', type=('build', 'run'), when='@:0.90.0.2')
-    depends_on('r-magrittr@1.5:', type=('build', 'run'), when='@:1.3.2.1')
+    depends_on("r-stringi@0.5.2:", type=("build", "run"), when="@:0.90.0.2")
+    depends_on("r-magrittr@1.5:", type=("build", "run"), when="@:1.3.2.1")

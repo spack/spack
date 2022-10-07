@@ -19,8 +19,9 @@ class RMatrixgenerics(RPackage):
 
     bioc = "MatrixGenerics"
 
-    version('1.6.0', commit='4588a60e5cc691424c17faa281bdd7d99d83ec34')
-    version('1.2.1', commit='abcc9ca0504e0b915cd7933a3169a8e9e5bd2fe9')
+    version("1.8.0", commit="e4cc34d53bcfb9a5914afd79fda31ecd5037a47a")
+    version("1.6.0", commit="4588a60e5cc691424c17faa281bdd7d99d83ec34")
+    version("1.2.1", commit="abcc9ca0504e0b915cd7933a3169a8e9e5bd2fe9")
 
-    depends_on('r-matrixstats@0.57.1:', type=('build', 'run'))
-    depends_on('r-matrixstats@0.60.1:', type=('build', 'run'), when='@1.6.0:')
+    depends_on("r-matrixstats@0.57.1:", type=("build", "run"))
+    depends_on("r-matrixstats@0.60.1:", type=("build", "run"), when="@1.6.0:")

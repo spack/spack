@@ -16,7 +16,8 @@ class RRbibutils(RPackage):
 
     cran = "rbibutils"
 
-    version('2.2.7', sha256='7c9e6719556b8caa9fb58743b717e89f45e8e7018371bf16f07dc3c1f96a55c5')
-    version('2.0', sha256='03d13abee321decb88bc4e7c9f27276d62a4a880fa72bb6b86be91885010cfed')
+    version("2.2.8", sha256="f1aecdeeba99042d34de19234238c5bbdc18a26f271f6adf9c9b7e349d50d152")
+    version("2.2.7", sha256="7c9e6719556b8caa9fb58743b717e89f45e8e7018371bf16f07dc3c1f96a55c5")
+    version("2.0", sha256="03d13abee321decb88bc4e7c9f27276d62a4a880fa72bb6b86be91885010cfed")
 
-    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))

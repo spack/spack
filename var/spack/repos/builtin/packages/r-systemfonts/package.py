@@ -19,10 +19,11 @@ class RSystemfonts(RPackage):
 
     cran = "systemfonts"
 
-    version('1.0.3', sha256='647c99d5ea6f90a49768ea7b10b39816af6be85168475273369fd973a20dbbba')
-    version('1.0.1', sha256='401db4d9e78e3a5e00b7a0b4fbad7fbb1c584734469b65fe5b7ebe1851c7a797')
+    version("1.0.4", sha256="ef766c75b942f147d382664a00d6a4930f1bfe0cce9d88943f571682a85a84c0")
+    version("1.0.3", sha256="647c99d5ea6f90a49768ea7b10b39816af6be85168475273369fd973a20dbbba")
+    version("1.0.1", sha256="401db4d9e78e3a5e00b7a0b4fbad7fbb1c584734469b65fe5b7ebe1851c7a797")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-cpp11@0.2.1:', type=('build', 'run'))
-    depends_on('fontconfig')
-    depends_on('freetype')
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-cpp11@0.2.1:", type=("build", "run"))
+    depends_on("fontconfig")
+    depends_on("freetype")

@@ -28,7 +28,8 @@ class RFastmatrix(RPackage):
 
     cran = "fastmatrix"
 
-    version('0.3-8196', sha256='72fae07c627b995a091ccc3e14b2b2167474e3b1f14d723e87252538cf978fb6')
-    version('0.3', sha256='d92e789454a129db5f6f5b23e0d2245f3d55ff34b167427af265b9a6331e7c21')
+    version("0.4-1", sha256="494a1aad38dcec28956eba8d095c964b20c5388dfb6dc2a23848ae37ea61cde5")
+    version("0.3-8196", sha256="72fae07c627b995a091ccc3e14b2b2167474e3b1f14d723e87252538cf978fb6")
+    version("0.3", sha256="d92e789454a129db5f6f5b23e0d2245f3d55ff34b167427af265b9a6331e7c21")
 
-    depends_on('r@3.5.0:', type=('build', 'run'))
+    depends_on("r@3.5.0:", type=("build", "run"))

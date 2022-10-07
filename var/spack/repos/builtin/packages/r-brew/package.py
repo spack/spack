@@ -15,4 +15,5 @@ class RBrew(RPackage):
 
     cran = "brew"
 
-    version('1.0-6', sha256='d70d1a9a01cf4a923b4f11e4374ffd887ad3ff964f35c6f9dc0f29c8d657f0ed')
+    version("1.0-7", sha256="38b859c1dca63479f6937c593da8f806f2b3279585bb6e20ecff1b898469e76e")
+    version("1.0-6", sha256="d70d1a9a01cf4a923b4f11e4374ffd887ad3ff964f35c6f9dc0f29c8d657f0ed")

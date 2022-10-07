@@ -12,12 +12,10 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'projections': {
-        'type': 'object',
-        'patternProperties': {
-            r'all|\w[\w-]*': {
-                'type': 'string'
-            },
+    "projections": {
+        "type": "object",
+        "patternProperties": {
+            r"all|\w[\w-]*": {"type": "string"},
         },
     },
 }
@@ -25,9 +23,9 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack view projection configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack view projection configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

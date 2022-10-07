@@ -22,6 +22,7 @@ class RParallelly(RPackage):
 
     cran = "parallelly"
 
-    version('1.30.0', sha256='aab080cb709bab232b2d808053efb2391eeb30a2de9497cbe474c99df89f9f3b')
-    version('1.28.1', sha256='f4ae883b18409adb83c561ed69427e740e1b50bf85ef57f48c3f2edf837cc663')
-    version('1.23.0', sha256='376ce2381587380a4da60f9563710d63084a605f93aa364e9349f2523e83bc08')
+    version("1.31.1", sha256="40c7fc3d842fa928448e574091a521bead2367bf97545c744ca78ea9af3117da")
+    version("1.30.0", sha256="aab080cb709bab232b2d808053efb2391eeb30a2de9497cbe474c99df89f9f3b")
+    version("1.28.1", sha256="f4ae883b18409adb83c561ed69427e740e1b50bf85ef57f48c3f2edf837cc663")
+    version("1.23.0", sha256="376ce2381587380a4da60f9563710d63084a605f93aa364e9349f2523e83bc08")

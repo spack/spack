@@ -43,7 +43,10 @@ class RGtools(RPackage):
 
     cran = "gtools"
 
-    version('3.9.2', sha256='03b1898bf581f6d12fa90e23ff700cfa7c834ac10c6654bdac42d7ec943fa953')
-    version('3.8.2', sha256='503ba60a41f3c61b8129c25de62c74dab29761d2e661d4addd106e2e02f1dcde')
-    version('3.8.1', sha256='051484459bd8ad1b03425b8843d24f6828fea18f7357cfa1c192198cc3f4ba38')
-    version('3.5.0', sha256='86b6a51a92ddb3c78095e0c5dc20414c67f6e28f915bf0ee11406adad3e476f6')
+    version("3.9.2.1", sha256="ec5febad7bb33812684b39679b0bce8a668361b87714f7388546e0f4ac02af5f")
+    version("3.9.2", sha256="03b1898bf581f6d12fa90e23ff700cfa7c834ac10c6654bdac42d7ec943fa953")
+    version("3.8.2", sha256="503ba60a41f3c61b8129c25de62c74dab29761d2e661d4addd106e2e02f1dcde")
+    version("3.8.1", sha256="051484459bd8ad1b03425b8843d24f6828fea18f7357cfa1c192198cc3f4ba38")
+    version("3.5.0", sha256="86b6a51a92ddb3c78095e0c5dc20414c67f6e28f915bf0ee11406adad3e476f6")
+
+    depends_on("r@2.10:", type=("build", "run"))

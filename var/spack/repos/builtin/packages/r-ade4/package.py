@@ -19,15 +19,16 @@ class RAde4(RPackage):
 
     cran = "ade4"
 
-    version('1.7-18', sha256='ecb6f4c42c60f39702aa96f454bb536a333049c9608ee2b6bdf8795e059cc525')
-    version('1.7-16', sha256='9bd7a25ff4fe30a32fd8f6b71909f4c638a0e2f002fc8303c0a4795423385590')
-    version('1.7-13', sha256='f5d0a7356ae63f82d3adb481a39007e7b0d70211b8724aa686af0c89c994e99b')
-    version('1.7-11', sha256='4ccd799ae99bd625840b866a697c4a48adb751660470bf0d6cf9207b1927a572')
-    version('1.7-6', sha256='80848e1650dcc0ec921c130efa6f7e9b307f0d107c63e49faa52296eda19cc52')
+    version("1.7-19", sha256="c85111881ff93a261ca34a5b5ef313d1c0ff9b84f0b23596bc56cfa696f165ef")
+    version("1.7-18", sha256="ecb6f4c42c60f39702aa96f454bb536a333049c9608ee2b6bdf8795e059cc525")
+    version("1.7-16", sha256="9bd7a25ff4fe30a32fd8f6b71909f4c638a0e2f002fc8303c0a4795423385590")
+    version("1.7-13", sha256="f5d0a7356ae63f82d3adb481a39007e7b0d70211b8724aa686af0c89c994e99b")
+    version("1.7-11", sha256="4ccd799ae99bd625840b866a697c4a48adb751660470bf0d6cf9207b1927a572")
+    version("1.7-6", sha256="80848e1650dcc0ec921c130efa6f7e9b307f0d107c63e49faa52296eda19cc52")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-pixmap', type=('build', 'run'), when='@1.7-16:')
-    depends_on('r-sp', type=('build', 'run'), when='@1.7-16:')
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-pixmap", type=("build", "run"), when="@1.7-16:")
+    depends_on("r-sp", type=("build", "run"), when="@1.7-16:")
 
-    depends_on('r-progress', type=('build', 'run'), when='@1.7-16')
+    depends_on("r-progress", type=("build", "run"), when="@1.7-16")

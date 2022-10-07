@@ -108,8 +108,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
     @property
     def cached_tests_work_dir(self):
         """The working directory for cached test sources."""
-        return join_path(self.test_suite.current_test_cache_dir,
-                         "tests")
+        return join_path(self.test_suite.current_test_cache_dir, "tests")
 
     @run_after("install")
     def cache_test_sources(self):
@@ -120,12 +119,10 @@ class Genesis(AutotoolsPackage, CudaPackage):
     def test(self):
         """Perform stand-alone/smoke tests using installed package."""
         if not self.spec.satisfies("@master"):
-            print('Skipping: Tests are only available for the master branch')
+            print("Skipping: Tests are only available for the master branch")
             return
 
-        test_name = join_path(
-            self.cached_tests_work_dir, "regression_test", "test.py"
-        )
+        test_name = join_path(self.cached_tests_work_dir, "regression_test", "test.py")
         bin_name = join_path(self.prefix.bin, "spdyn")
         opts = [
             test_name,
@@ -137,5 +134,5 @@ class Genesis(AutotoolsPackage, CudaPackage):
             options=opts,
             expected="Passed  53 / 53",
             purpose="test: running regression test",
-            work_dir=self.cached_tests_work_dir
+            work_dir=self.cached_tests_work_dir,
         )

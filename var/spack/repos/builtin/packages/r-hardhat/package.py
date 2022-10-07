@@ -19,10 +19,16 @@ class RHardhat(RPackage):
 
     cran = "hardhat"
 
-    version('0.2.0', sha256='9497ca0fe6206c54d1da79f248d44c5faffc7d375b630091ef45dfca46c29628')
+    version("1.0.0", sha256="2740dc243a440e7d32370a78f9258255faea6d900075901cf6009c651769e7bd")
+    version("0.2.0", sha256="9497ca0fe6206c54d1da79f248d44c5faffc7d375b630091ef45dfca46c29628")
 
-    depends_on('r@2.10:', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-rlang@0.4.2:', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-vctrs@0.3.0:', type=('build', 'run'))
+    depends_on("r@2.10:", type=("build", "run"))
+    depends_on("r@3.4.0:", type=("build", "run"), when="@1.0.0:")
+    depends_on("r-glue", type=("build", "run"))
+    depends_on("r-glue@1.6.2:", type=("build", "run"), when="@1.0.0:")
+    depends_on("r-rlang@0.4.2:", type=("build", "run"))
+    depends_on("r-rlang@1.0.2:", type=("build", "run"), when="@1.0.0:")
+    depends_on("r-tibble", type=("build", "run"))
+    depends_on("r-tibble@3.1.7:", type=("build", "run"), when="@1.0.0:")
+    depends_on("r-vctrs@0.3.0:", type=("build", "run"))
+    depends_on("r-vctrs@0.4.1:", type=("build", "run"), when="@1.0.0:")

@@ -17,11 +17,11 @@ class RTweenr(RPackage):
 
     cran = "tweenr"
 
-    version('1.0.2', sha256='1805f575da6705ca4e5ec1c4605222fc826ba806d9ff9af41770294fe08ff69f')
-    version('1.0.1', sha256='efd68162cd6d5a4f6d833dbf785a2bbce1cb7b9f90ba3fb060931a4bd705096b')
+    version("1.0.2", sha256="1805f575da6705ca4e5ec1c4605222fc826ba806d9ff9af41770294fe08ff69f")
+    version("1.0.1", sha256="efd68162cd6d5a4f6d833dbf785a2bbce1cb7b9f90ba3fb060931a4bd705096b")
 
-    depends_on('r@3.2.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.12.3:', type=('build', 'run'))
-    depends_on('r-farver', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'))
+    depends_on("r@3.2.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.12.3:", type=("build", "run"))
+    depends_on("r-farver", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"))
