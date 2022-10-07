@@ -13,6 +13,7 @@ class PyNetworkx(PythonPackage):
     homepage = "https://networkx.github.io/"
     pypi = "networkx/networkx-2.4.tar.gz"
 
+    version("2.8.6", sha256="bd2b7730300860cbd2dafe8e5af89ff5c9a65c3975b352799d87a6238b4301a6")
     version("2.7.1", sha256="d1194ba753e5eed07cdecd1d23c5cd7a3c772099bd8dbd2fea366788cf4de7ba")
     version("2.6.3", sha256="c0946ed31d71f1b732b5aaa6da5a0388a345019af232ce2f49c766e2d6795c51")
     version("2.5.1", sha256="109cd585cac41297f71103c3c42ac6ef7379f29788eb54cb751be5a663bb235a")
@@ -24,16 +25,32 @@ class PyNetworkx(PythonPackage):
     version("1.11", sha256="0d0e70e10dfb47601cbb3425a00e03e2a2e97477be6f80638fef91d54dd1e4b8")
     version("1.10", sha256="ced4095ab83b7451cec1172183eff419ed32e21397ea4e1971d92a5808ed6fb8")
 
+    variant(
+        "extra",
+        description="Optional requirements that may require extra steps to install",
+        default=False,
+    )
+
     depends_on("python@2.7:", type=("build", "run"))
-    depends_on("python@3.5:", type=("build", "run"), when="@2.3:")
-    depends_on("python@3.6:", type=("build", "run"), when="@2.5:")
-    depends_on("python@3.7:", type=("build", "run"), when="@2.6:")
-    depends_on("python@3.8:", type=("build", "run"), when="@2.7:")
+    depends_on("python@3.5:", when="@2.3:", type=("build", "run"))
+    depends_on("python@3.6:", when="@2.5:", type=("build", "run"))
+    depends_on("python@3.7:", when="@2.6:", type=("build", "run"))
+    depends_on("python@3.8:", when="@2.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-decorator@3.4.0:", type=("build", "run"), when="@:1")
-    depends_on("py-decorator@4.1.0:", type=("build", "run"), when="@2.0:2.1")
-    depends_on("py-decorator@4.3.0:", type=("build", "run"), when="@2.2:2.4")
-    depends_on("py-decorator@4.3.0:4", type=("build", "run"), when="@2.5.1:2.5")
+    depends_on("py-decorator@3.4.0:", when="@:1", type=("build", "run"))
+    depends_on("py-decorator@4.1.0:", when="@2.0:2.1", type=("build", "run"))
+    depends_on("py-decorator@4.3.0:", when="@2.2:2.4", type=("build", "run"))
+    depends_on("py-decorator@4.3.0:4", when="@2.5.1:2.5", type=("build", "run"))
+    # From requirements/default.txt
+    depends_on("py-numpy@1.19:", when="@2.8.6:", type=("build", "run"))
+    depends_on("py-scipy@1.8:", when="@2.8.6:", type=("build", "run"))
+    depends_on("py-matplotlib@3.4:", when="@2.8.6:", type=("build", "run"))
+    depends_on("py-pandas@1.3:", when="@2.8.6:", type=("build", "run"))
+    # From requirements/extra.txt
+    depends_on("py-lxml@4.6:", when="@2.8.6:+extra", type=("build", "run"))
+    depends_on("py-pygraphviz@1.9:", when="@2.8.6:+extra", type=("build", "run"))
+    depends_on("py-pydot@1.4.2:", when="@2.8.6:+extra", type=("build", "run"))
+    depends_on("py-sympy@1.10:", when="@2.8.6:+extra", type=("build", "run"))
 
     def url_for_version(self, version):
         ext = "tar.gz"
