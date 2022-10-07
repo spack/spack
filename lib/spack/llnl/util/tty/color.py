@@ -158,7 +158,7 @@ class match_to_ansi(object):
         """Returns a TTY escape sequence for a color"""
         if self.color:
             if self.enclose:
-                return "\[\033[%sm\]" % s
+                return r"\[\033[%sm\]" % s
             else:
                 return "\033[%sm" % s
         else:
