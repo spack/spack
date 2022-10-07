@@ -297,7 +297,19 @@ To resolve this problem, please try the following:
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
-        values for libtool variables."""
+        values for libtool variables.
+
+        The generated libtool script supports mixed compilers through tags:
+        ``libtool --tag=CC/CXX/FC/...```. For each tag there is a block with variables,
+        which defines what flags to pass to the compiler. The default variables (which
+        are used by the default tag CC) are set in a block enclosed by
+        ``# ### {BEGIN,END} LIBTOOL CONFIG``. For non-default tags, there are
+        corresponding blocks ``# ### {BEGIN,END} LIBTOOL TAG CONFIG: {CXX,FC,F77}`` at
+        the end of the file (after the exit command). libtool evals these blocks.
+        Whenever we need to update variables that the configure script got wrong
+        (for example cause it did not recognize the compiler), we should properly scope
+        those changes to these tags/blocks so they only apply to the compiler we care
+        about. Below, ``start_at`` and ``stop_at`` are used for that."""
 
         # Exit early if we are required not to patch libtool:
         if not self.patch_libtool:
