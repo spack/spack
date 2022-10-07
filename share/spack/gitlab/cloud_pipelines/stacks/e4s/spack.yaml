@@ -157,6 +157,7 @@ spack:
   - umpire
   - unifyfs
   - upcxx
+  - variorum
   - veloc
   - vtk-m
   - wannier90
@@ -231,7 +232,6 @@ spack:
   #- paraview +qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
   #- rempi          # rempi_message_manager.h:53:3: error: 'string' does not name a type
-  #- variorum       # /usr/bin/ld: Intel/CMakeFiles/variorum_intel.dir/Broadwell_4F.c.o:(.bss+0x0): multiple definition of `g_platform';
 
   # CUDA failures
   #- parsec +cuda cuda_arch=80                # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
