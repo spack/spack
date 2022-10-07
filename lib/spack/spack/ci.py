@@ -639,6 +639,9 @@ def generate_gitlab_ci_yaml(
     if prune_dag_override is not None:
         prune_dag = True if prune_dag_override.lower() == "true" else False
 
+    # If we are not doing any kind of pruning, we are rebuilding everything
+    rebuild_everything = not prune_dag and not prune_untouched_packages
+
     # Downstream jobs will "need" (depend on, for both scheduling and
     # artifacts, which include spack.lock file) this pipeline generation
     # job by both name and pipeline id.  If those environment variables
@@ -1292,6 +1295,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
+            "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
 
         if remote_mirror_override:
@@ -1567,6 +1571,19 @@ def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
             tty.msg(err_msg)
         else:
             raise inst
+
+
+def remove_other_mirrors(mirrors_to_keep, scope=None):
+    """Remove all mirrors from the given config scope, the exceptions being
+    any listed in in mirrors_to_keep, which is a list of mirror urls.
+    """
+    mirrors_to_remove = []
+    for name, mirror_url in spack.config.get("mirrors", scope=scope).items():
+        if mirror_url not in mirrors_to_keep:
+            mirrors_to_remove.append(name)
+
+    for mirror_name in mirrors_to_remove:
+        spack.mirror.remove(mirror_name, scope)
 
 
 def copy_files_to_artifacts(src, artifacts_dir):
