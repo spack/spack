@@ -116,6 +116,10 @@ class Podio(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
+        if "+sio" in self.spec and self.version >= Version("0.16"):
+            # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
+            # dynamicaly load the python bindings library
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("PYTHONPATH", self.prefix.python)
