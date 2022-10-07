@@ -17,4 +17,4 @@ class PyPkginfo(PythonPackage):
     version("1.5.0.1", sha256="7424f2c8511c186cd5424bbf31045b77435b37a8d604990b79d4e70d741148bb")
 
     depends_on("py-setuptools", type=("build", "run"))
-    depends_on("python@2.7:2,3.7:", when="@1.8.3:", type=("build", "run"))
+    depends_on("python@2.7:2,3.6:", when="@1.8.3:", type=("build", "run"))
