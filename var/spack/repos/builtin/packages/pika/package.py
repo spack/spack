@@ -94,7 +94,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="@0.8: +rocm")
     depends_on("hipblas", when="@:0.8 +rocm")
     depends_on("mpi", when="+mpi")
-    depends_on("p2300", when="+p2300")
+    depends_on("stdexec", when="+p2300")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")

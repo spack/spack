@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class P2300(CMakePackage):
+class Stdexec(CMakePackage):
     """The proposed C++ framework for asynchronous and parallel programming."""
 
     homepage = "https://github.com/NVIDIA/stdexec"
