@@ -5,24 +5,6 @@
 
 from spack.package import *
 
-# -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.We've put "FIXME"
-# next to all the things you 'll want to change. Once you' ve handled
-# them, you can save this file and test your package like this:
-#
-# spack install smtk
-#
-# You can edit this file again by typing:
-#
-# spack edit smtk
-#
-# See the Spack documentation for more information on packaging.
-# -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-from spack.package import *
-
 
 class Smtk(CMakePackage):
     """SMTK is an open-source, multi-platform Simulation Modeling
@@ -92,7 +74,9 @@ class Smtk(CMakePackage):
 
     depends_on("gdal@3.5.1", when="+gdal")
 
-    depends_on("paraview +smtk_extensions +visitbridge ~mpi build_edition=canonical", when="+paraview")
+    depends_on(
+        "paraview +smtk_extensions +visitbridge ~mpi build_edition=canonical", when="+paraview"
+    )
     depends_on("paraview +qt", when="+paraview +qt")
     depends_on("paraview ~qt", when="+paraview ~qt")
     depends_on("paraview +gdal", when="+paraview +gdal")
