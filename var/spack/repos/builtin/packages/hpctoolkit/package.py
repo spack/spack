@@ -65,18 +65,13 @@ class Hpctoolkit(AutotoolsPackage):
     )
 
     # Accelerator variants: cuda, rocm, etc.
-    variant(
-        "cuda",
-        default=False,
-        description="Support CUDA on NVIDIA GPUs.",
-        when="@2020.03:"
-    )
+    variant("cuda", default=False, description="Support CUDA on NVIDIA GPUs.", when="@2020.03:")
 
     variant(
         "level_zero",
         default=False,
         description="Support Level Zero on Intel GPUs.",
-        when="@2022.04:"
+        when="@2022.04:",
     )
 
     variant(
@@ -84,15 +79,12 @@ class Hpctoolkit(AutotoolsPackage):
         default=False,
         description="Support instrumenting Intel GPU kernels with Intel GT-Pin "
         "(requires level_zero).",
-        when="@2022.05:"
+        when="@2022.05:",
     )
 
     variant("opencl", default=False, description="Support offloading with OpenCL.")
 
-    variant("rocm",
-            default=False,
-            description="Support ROCM on AMD GPUs.",
-            when="@2022.04:")
+    variant("rocm", default=False, description="Support ROCM on AMD GPUs.", when="@2022.04:")
 
     # Other variants.
     variant("debug", default=False, description="Build in debug (develop) mode.")
