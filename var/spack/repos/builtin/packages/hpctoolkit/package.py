@@ -77,9 +77,8 @@ class Hpctoolkit(AutotoolsPackage):
     variant(
         "gtpin",
         default=False,
-        description="Support instrumenting Intel GPU kernels with Intel GT-Pin "
-        "(requires level_zero).",
-        when="@2022.05:",
+        description="Support instrumenting Intel GPU kernels with Intel GT-Pin",
+        when="@2022.05: +level_zero",
     )
 
     variant("opencl", default=False, description="Support offloading with OpenCL.")
@@ -141,8 +140,6 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts("%gcc@:7", when="@2022.10:", msg="hpctoolkit requires gnu gcc 8.x or later")
     conflicts("%gcc@:6", when="@2021.00:2022.06", msg="hpctoolkit requires gnu gcc 7.x or later")
     conflicts("%gcc@:4", when="@:2020", msg="hpctoolkit requires gnu gcc 5.x or later")
-
-    conflicts("+gtpin", when="~level_zero", msg="gtpin requires level_zero")
 
     conflicts("^binutils@2.35:2.35.1", msg="avoid binutils 2.35 and 2.35.1 (spews errors)")
 
