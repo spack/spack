@@ -56,7 +56,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws-rebuild-with-patched-libtool" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/radiuss-aws" }
 
   gitlab-ci:
 

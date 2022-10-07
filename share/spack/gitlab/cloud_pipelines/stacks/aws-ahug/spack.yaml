@@ -237,7 +237,7 @@ spack:
     - - $compiler
     - - $target
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug-rebuild-with-patched-libtool" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-ahug" }
 
   gitlab-ci:
 

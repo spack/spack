@@ -155,7 +155,7 @@ spack:
     - - $target
 
 
-  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc-rebuild-with-patched-libtool" }
+  mirrors: { "mirror": "s3://spack-binaries/develop/aws-isc" }
 
   gitlab-ci:
 

@@ -59,7 +59,7 @@ spack:
   - $gcc_spack_built_packages
 
   mirrors:
-    mirror: 's3://spack-binaries/develop/tutorial-rebuild-with-patched-libtool'
+    mirror: 's3://spack-binaries/develop/tutorial'
 
   gitlab-ci:
     script:
