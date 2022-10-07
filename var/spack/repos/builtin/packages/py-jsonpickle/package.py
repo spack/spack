@@ -13,6 +13,7 @@ class PyJsonpickle(PythonPackage):
     homepage = "https://github.com/jsonpickle/jsonpickle"
     pypi = "jsonpickle/jsonpickle-1.4.1.tar.gz"
 
+    version("2.2.0", sha256="7b272918b0554182e53dc340ddd62d9b7f902fec7e7b05620c04f3ccef479a0e")
     version("2.0.0", sha256="0be49cba80ea6f87a168aa8168d717d00c6ca07ba83df3cec32d3b30bfe6fb9a")
     version("1.4.1", sha256="e8d4b7cd0bd6826001a74377df1079a76ad8bae0f909282de2554164c837c8ba")
 
