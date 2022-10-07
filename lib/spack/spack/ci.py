@@ -1355,7 +1355,9 @@ def generate_gitlab_ci_yaml(
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
-        tty.die()
+
+        if not rebuild_everything:
+            tty.die()
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
