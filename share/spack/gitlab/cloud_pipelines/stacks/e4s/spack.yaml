@@ -132,6 +132,7 @@ spack:
   - py-warpx ^warpx dims=3
   - py-warpx ^warpx dims=rz
   - qthreads scheduler=distrib
+  - quantum-espresso
   - raja
   - scr
   - slate ~cuda
