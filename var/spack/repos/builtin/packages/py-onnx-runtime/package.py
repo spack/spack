@@ -29,7 +29,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     depends_on("python", type=("build", "run"))
     depends_on("protobuf")
     # https://github.com/microsoft/onnxruntime/pull/11639
-    depends_on("protobuf@:3.19", when="@:1.19.0")
+    depends_on("protobuf@:3.19", when="@:1.11")
     depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
