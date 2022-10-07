@@ -25,8 +25,11 @@ class PyNetworkx(PythonPackage):
     version("1.11", sha256="0d0e70e10dfb47601cbb3425a00e03e2a2e97477be6f80638fef91d54dd1e4b8")
     version("1.10", sha256="ced4095ab83b7451cec1172183eff419ed32e21397ea4e1971d92a5808ed6fb8")
 
-    variant("extra", description="Optional requirements that may require extra steps to install",
-            default=False)
+    variant(
+        "extra",
+        description="Optional requirements that may require extra steps to install",
+        default=False,
+    )
 
     depends_on("python@2.7:", type=("build", "run"))
     depends_on("python@3.5:", when="@2.3:", type=("build", "run"))
