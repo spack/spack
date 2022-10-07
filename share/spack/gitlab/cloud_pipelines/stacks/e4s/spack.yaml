@@ -87,6 +87,7 @@ spack:
   - gmp
   - gotcha
   - gptune
+  - h5bench
   - hdf5 +fortran +hl +shared
   - hdf5-vol-async
   - heffte +fftw
@@ -226,7 +227,6 @@ spack:
   #- caliper        # /usr/bin/ld: ../../libcaliper.so.2.7.0: undefined reference to `_dl_sym'
   #- charliecloud   # autogen.sh: 6: [[: not found
   #- geopm          # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
-  #- h5bench        # commons/h5bench_util.h:196: multiple definition of `has_vol_async';
   #- loki           # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
   #- paraview +qt   # llvm@14
   #- pruners-ninja  # test/ninja_test_util.c:34: multiple definition of `a';
