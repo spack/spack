@@ -129,6 +129,13 @@ class PyScipy(PythonPackage):
     patch("16969.patch", when="@1.9.1:")
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
+    @property
+    def archive_files(self):
+        files = []
+        if self.spec.satisfies("@1.9:"):
+            files.append(os.path.join(self.build_directory, "meson-logs", "meson-log.txt"))
+        return files
+
     @run_before("install")
     def set_blas_lapack(self):
         # Pick up BLAS/LAPACK from numpy
