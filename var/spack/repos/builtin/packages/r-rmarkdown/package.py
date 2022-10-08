@@ -14,6 +14,7 @@ class RRmarkdown(RPackage):
 
     cran = "rmarkdown"
 
+    version("2.17", sha256="aa576c458ec4c2e8468aaa4e3f60202d8d9c7ef54fa01d6b2d243bffee08c4be")
     version("2.16", sha256="d3d34e0419c419d3ab20eb60952a0f0f4c391d202277af55dcd673d25561fa71")
     version("2.14", sha256="e9ec17afa4d9d6e8cf555b56e0c00acc189d8ec0b4406680b14d71d62f0c3220")
     version("2.11", sha256="9371255300e7ea4cd936978ad2ca3d205d8605e09f4913cb0d4725005a7a9775")
