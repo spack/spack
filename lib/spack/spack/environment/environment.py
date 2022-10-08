@@ -1959,10 +1959,45 @@ class Environment(object):
 
         return data
 
+    def _check_spack_spec(self, d):
+        """Check the spack spec, where the commit hash, when present,
+        takes precedence over the version."""
+        if "spack" not in d:
+            return
+
+        # Determine if environment to use Spack commit (preferred) or version
+        section = d["spack"]
+        fetch = section.get("commit")
+        fmt = "Using current Spack {0}: {1}"
+        if fetch:
+            curr_commit = spack.main.get_spack_commit()
+            if curr_commit and curr_commit == fetch:
+                return
+
+        else:
+            fetch = section.get("version")
+            if fetch:
+                # Don't include anything beyond the version patch level
+                fetch = ".".join((fetch.split("."))[:3])
+                if fetch == spack.spack_version:
+                    return
+
+        # Environment depends on a different commit/version of Spack
+        spack_spec = Spec("spack@{0}".format(fetch)).concretized()
+        if spack_spec.installed:
+            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+            tty.msg("{0} installed at {1}".format(spack_spec, record.path))
+            # TODO/TLD: Tell them to try again using installation?
+        else:
+            # TODO/TLD: tell them to install it first
+            tty.msg("{0} installed is not installed".format(spack_spec))
+        sys.exit(1)
+
     def _read_lockfile(self, file_or_json):
         """Read a lockfile from a file or from a raw string."""
         lockfile_dict = sjson.load(file_or_json)
         self._read_lockfile_dict(lockfile_dict)
+        self._check_spack_spec(lockfile_dict)
         return lockfile_dict["_meta"]["lockfile-version"]
 
     def _read_lockfile_dict(self, d):
