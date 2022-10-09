@@ -230,7 +230,7 @@ class Hpctoolkit(AutotoolsPackage):
             args.append("--enable-mpi-search=cray")
             args.append("--enable-all-static")
 
-        elif "+mpi" in spec:
+        elif "+mpi" in spec and not spec.satisfies("@2022.10.01"):
             args.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
         if spec.satisfies("+debug"):
