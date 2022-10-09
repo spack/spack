@@ -233,6 +233,9 @@ class Hpctoolkit(AutotoolsPackage):
         elif "+mpi" in spec and not spec.satisfies("@2022.10.01"):
             args.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
+        else:
+            args.append("MPICXX=")
+
         if spec.satisfies("+debug"):
             args.append("--enable-develop")
 
