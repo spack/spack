@@ -34,8 +34,8 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
-   # updated lapack interface to work with openblas and netlib-lapack
-   version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
+    # updated lapack interface to work with openblas and netlib-lapack
+    version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
 
     # updated the Trilinos interface to work with trilinos@13:
     # without using deprecated interfaces in tpetra
