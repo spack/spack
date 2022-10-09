@@ -153,7 +153,9 @@ class Precice(CMakePackage):
         if "+python" in spec:
             python_library = spec["python"].libs[0]
             python_include = spec["python"].headers.directories[0]
-            numpy_include = spec["py-numpy"].headers.directories[0]
+            numpy_include = join_path(
+                spec["py-numpy"].prefix, spec["python"].package.platlib, "numpy", "core", "include"
+            )
             if xsdk_mode:
                 cmake_args.append("-DTPL_ENABLE_PYTHON:BOOL=ON")
             else:
