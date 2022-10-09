@@ -23,11 +23,11 @@ class PyEccodes(PythonPackage):
     depends_on("eccodes@2.21.0:+shared", type="run")
 
     def setup_build_environment(self, env):
-        eccodes_libs = self.spec["eccodes:c,shared"].libs
+        eccodes_spec = self.spec["eccodes:c,shared"]
         # ECCODES_HOME has the highest precedence when searching for the library with py-findlibs:
-        env.set("ECCODES_HOME", eccodes_libs.directories[0])
+        env.set("ECCODES_HOME", eccodes_spec.prefix)
         # but not if ecmwflibs (https://pypi.org/project/ecmwflibs/) is in the PYTHONPATH:
-        env.set("ECMWFLIBS_ECCODES", eccodes_libs.files[0])
+        env.set("ECMWFLIBS_ECCODES", eccodes_spec.libs.files[0])
 
     def setup_run_environment(self, env):
         self.setup_build_environment(env)
