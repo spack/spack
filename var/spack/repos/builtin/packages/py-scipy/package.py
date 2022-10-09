@@ -131,10 +131,7 @@ class PyScipy(PythonPackage):
 
     @property
     def archive_files(self):
-        files = []
-        if self.spec.satisfies("@1.9:"):
-            files.append(os.path.join(self.build_directory, "meson-logs", "meson-log.txt"))
-        return files
+        return [join_path(self.stage.source_path, "build", "meson-logs", "meson-log.txt")]
 
     @run_before("install")
     def set_blas_lapack(self):
