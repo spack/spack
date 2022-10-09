@@ -34,6 +34,9 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+   # updated lapack interface to work with openblas and netlib-lapack
+   version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
+
     # updated the Trilinos interface to work with trilinos@13:
     # without using deprecated interfaces in tpetra
     version("1.10.0", sha256="3ec660c85d37818ee219edc80e977140dfb062bdca1f38623c94a45d13634bd1")
@@ -146,6 +149,7 @@ class Phist(CMakePackage):
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
     patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
+    patch("lapack-fixes-pre-1.11.patch", when="@:1.10.0")
 
     # ###################### Dependencies ##########################
 
