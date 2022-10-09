@@ -21,6 +21,7 @@ class PyScipy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("master", branch="master")
+    version("1.9.2", sha256="99e7720caefb8bca6ebf05c7d96078ed202881f61e0c68bd9e0f3e8097d6f794")
     version("1.9.1", sha256="26d28c468900e6d5fdb37d2812ab46db0ccd22c63baa095057871faa3a498bc9")
     version("1.9.0", sha256="c0dfd7d2429452e7e94904c6a3af63cbaa3cf51b348bd9d35b42db7e9ad42791")
     version("1.8.1", sha256="9e3fb1b0e896f14a85aa9a28d5f755daaeeb54c897b746df7a55ccb02b340f33")
@@ -59,22 +60,23 @@ class PyScipy(PythonPackage):
     # https://github.com/FFY00/meson-python/pull/122
     depends_on("py-build", when="@1.9:", type="build")
 
-    depends_on("py-meson-python@0.8.1:", when="@1.9.1:", type="build")
+    depends_on("py-meson-python@0.9:", when="@1.9.2:", type="build")
+    depends_on("py-meson-python@0.8.1:", when="@1.9.1", type="build")
     depends_on("py-meson-python@0.7", when="@1.9.0", type="build")
-    # FIXME: should be pinned, fix after scipy 1.9.2 release
-    depends_on("meson@0.62.2:", when="@1.9:", type="build")
-    # depends_on("meson@0.62.2", when="@1.9:", type="build")
+    depends_on("meson@0.62.2", when="@1.9.0:1.9.1", type="build")
+    depends_on("py-cython@0.29.32:2", when="@1.9.2:", type="build")
     depends_on("py-cython@0.29.21:2", when="@1.9:", type="build")
     depends_on("py-cython@0.29.18:2", when="@1.7:", type="build")
-    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:", type=("build", "run"))
-    depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "run"))
+    depends_on("py-pybind11@2.4.3:2.10", when="@1.9.1:", type=("build", "link"))
+    depends_on("py-pybind11@2.4.3:2.9", when="@1.9.0", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.8", when="@1.8", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.7", when="@1.7.2:1.7", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:2.6", when="@1.6.2:1.7.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.3:", when="@1.5:1.6.1", type=("build", "link"))
     depends_on("py-pybind11@2.4.0:", when="@1.4.1:1.4", type=("build", "link"))
     depends_on("py-pybind11@2.2.4:", when="@1.4.0", type=("build", "link"))
-    depends_on("py-pythran@0.9.12:0.11", when="@1.9:", type=("build", "link"))
+    depends_on("py-pythran@0.9.12:0.12", when="@1.9.2:", type=("build", "link"))
+    depends_on("py-pythran@0.9.12:0.11", when="@1.9.0:1.9.1", type=("build", "link"))
     depends_on("py-pythran@0.10", when="@1.8", type=("build", "link"))
     depends_on("py-pythran@0.9.12:0.9", when="@1.7.2:1.7", type=("build", "link"))
     depends_on("py-pythran@0.9.11", when="@1.7.0:1.7.1", type=("build", "link"))
@@ -125,8 +127,6 @@ class PyScipy(PythonPackage):
         when="@1.2:1.5.3",
     )
 
-    # https://github.com/scipy/scipy/pull/16969
-    patch("16969.patch", when="@1.9.1:")
     patch("scipy-clang.patch", when="@1.5.0:1.6.3 %clang")
 
     @property
