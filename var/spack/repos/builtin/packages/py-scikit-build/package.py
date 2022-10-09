@@ -16,14 +16,17 @@ class PyScikitBuild(PythonPackage):
     the setuptools Python module and CMake."""
 
     homepage = "https://scikit-build.readthedocs.io/en/latest/"
-    url = "https://github.com/scikit-build/scikit-build/archive/0.10.0.tar.gz"
+    pypi = "scikit-build/scikit-build-0.15.0.tar.gz"
 
     maintainers = ["coreyjadams"]
 
-    version("0.12.0", sha256="c32a415d2e7920a4a966b037403c93b02c8a958d8badf3c60abd4b4493f7d988")
-    version("0.10.0", sha256="2beec252813b20327072c15e9d997f15972aedcc6a130d0154979ff0fdb1b010")
+    version("0.15.0", sha256="e723cd0f3489a042370b9ea988bbb9cfd7725e8b25b20ca1c7981821fcf65fb9")
+    version("0.12.0", sha256="f851382c469bcd9a8c98b1878bcfdd13b68556279d2fd9a329be41956ae5a7fe")
+    version("0.10.0", sha256="7342017cc82dd6178e3b19377389b8a8d1f8b429d9cdb315cfb1094e34a0f526")
 
     depends_on("py-setuptools@28.0.0:", type=("build", "run"))
+    depends_on("py-setuptools@42.0.0:", when="@0.15.0:", type=("build", "run"))
+    depends_on("py-setuptools-scm+toml", when="@0.15.0:", type="build")
     depends_on("py-packaging", type=("build", "run"))
     depends_on("py-wheel@0.29.0:", type=("build", "run"))
-    depends_on("py-distro", type=("build", "run"), when="@0.11:")
+    depends_on("py-distro", when="@0.11:", type=("build", "run"))
