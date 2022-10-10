@@ -32,10 +32,13 @@ class PyTables(PythonPackage):
     depends_on("python@2.6:", type=("build", "run"))
 
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools@42.0:", when="@3.7.0:", type=("build", "run"))
     depends_on("py-cython@0.21:", type="build")
+    depends_on("py-cython@0.29.21:", when="@3.7.0:", type="build")
     depends_on("py-numpy@1.9.3:", type=("build", "run"))
     depends_on("py-numexpr@2.6.2:", type=("build", "run"))
     depends_on("py-six@1.9.0:", when="@:3.5", type=("build", "run"))
+    depends_on("py-packaging", when="@3.7.0:", type="build")
     # tables/req_versions.py
     depends_on("hdf5@1.8.4:1.8", when="@:3.3")
     depends_on("hdf5@1.8.4:", when="@3.4.0:")
