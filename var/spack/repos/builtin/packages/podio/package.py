@@ -20,6 +20,7 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.16", sha256="4e149c2c9be9f9ca3a6d863498bb0f642dda1a43a19ac1afe7f99854ded5c510")
     version("0.15", sha256="6c1520877ba1bce250e35a2a56c0a3da89fae0916c5ed7d5548d658237e067d9")
     version("0.14.3", sha256="2a7a405dedc7f6980a0aad7df87b427a1f43bcf6d923a9bcce1698fd296359f7")
     version(
@@ -115,6 +116,10 @@ class Podio(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
+        if "+sio" in self.spec and self.version >= Version("0.16"):
+            # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
+            # dynamicaly load the python bindings library
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("PYTHONPATH", self.prefix.python)
