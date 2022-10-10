@@ -16,6 +16,7 @@ class Pilercr(Package):
     version("1.06", sha256="50175f7aa171674cda5ba255631f340f9cc7f80e8cc25135a4cb857147d91068")
 
     def edit(self, spec, prefix):
+        # use shared instead of static libs
         env['LDLIBS'] = "-lm"
 
     def install(self, spec, prefix):
