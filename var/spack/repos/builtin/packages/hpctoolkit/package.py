@@ -52,7 +52,12 @@ class Hpctoolkit(AutotoolsPackage):
         description="Build for Cray compute nodes, including hpcprof-mpi.",
     )
 
-    variant("mpi", default=False, description="Build hpcprof-mpi, the MPI version of hpcprof.")
+    variant(
+        "mpi",
+        default=False,
+        description="Build hpcprof-mpi, the MPI version of hpcprof "
+        "(not available for 2022.10.01).",
+    )
 
     # We can't build with both PAPI and perfmon for risk of segfault
     # from mismatched header files (unless PAPI installs the perfmon
@@ -230,9 +235,15 @@ class Hpctoolkit(AutotoolsPackage):
             args.append("--enable-mpi-search=cray")
             args.append("--enable-all-static")
 
-        elif "+mpi" in spec and not spec.satisfies("@2022.10.01"):
-            args.append("MPICXX=%s" % spec["mpi"].mpicxx)
+        elif "+mpi" in spec:
+            if spec.satisfies("@2022.10.01"):
+                # temporary hack to disable +mpi for one rev
+                tty.warn("hpcprof-mpi is not available in version 2022.10.01")
+                args.append("MPICXX=")
+            else:
+                args.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
+        # Make sure MPICXX is not picked up through the environment.
         else:
             args.append("MPICXX=")
 
