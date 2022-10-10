@@ -22,4 +22,5 @@ class PySkl2onnx(PythonPackage):
     depends_on("py-onnx@1.2.1:", type=("build", "run"))
     depends_on("py-scikit-learn@0.19:1.1.1", type=("build", "run"))
     depends_on("py-onnxconverter-common@1.7.0:", type=("build", "run"))
+    # Although this dep is undocumented, it's imported at run-time.
     depends_on("py-packaging", when="@1.12:", type=("build", "run"))
