@@ -445,17 +445,25 @@ while [ $# -ne 0 ]; do
             arg="${1#-isystem}"
             isystem_was_used=true
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append isystem_system_include_dirs_list "$arg"
+            if empty "SPACK_REORDER_PATHS"; then
+                if system_dir "$arg"; then
+                    append isystem_system_include_dirs_list "$arg"
+                else
+                    append isystem_include_dirs_list "$arg"
+                fi
             else
-                append isystem_include_dirs_list "$arg"
+                append include_dirs_list "$arg"
             fi
             ;;
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_include_dirs_list "$arg"
+            if empty "SPACK_REORDER_PATHS"; then
+                if system_dir "$arg"; then
+                    append system_include_dirs_list "$arg"
+                else
+                    append include_dirs_list "$arg"
+                fi
             else
                 append include_dirs_list "$arg"
             fi
@@ -463,8 +471,12 @@ while [ $# -ne 0 ]; do
         -L*)
             arg="${1#-L}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if system_dir "$arg"; then
-                append system_lib_dirs_list "$arg"
+            if empty "SPACK_REORDER_PATHS"; then
+                if system_dir "$arg"; then
+                    append system_lib_dirs_list "$arg"
+                else
+                    append lib_dirs_list "$arg"
+                fi
             else
                 append lib_dirs_list "$arg"
             fi

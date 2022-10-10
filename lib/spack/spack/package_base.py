@@ -911,6 +911,11 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         return "%s.%s" % (cls.namespace, cls.name)
 
     @classproperty
+    def reorder_paths(cls):
+        """Reorder -I and -L paths when using Spack compiler wrapper"""
+        return True
+
+    @classproperty
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
