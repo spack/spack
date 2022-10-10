@@ -34,7 +34,7 @@ A build matrix showing which packages are working on which systems is shown belo
       .. code-block:: console
 
          apt update
-         apt install build-essential ca-certificates coreutils curl environment-modules gcc gfortran g++ git gpg lsb-release python3 unzip zip
+         apt install build-essential ca-certificates coreutils curl environment-modules gfortran git gpg lsb-release python3 python3-distutils python3-venv unzip zip
 
    .. tab-item:: RHEL
 
