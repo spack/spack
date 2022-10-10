@@ -145,6 +145,7 @@ class Phist(CMakePackage):
     patch("ppc64_sse.patch", when="@1.9.4")
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
+    patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
 
     # ###################### Dependencies ##########################
 
@@ -200,7 +201,7 @@ class Phist(CMakePackage):
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
     def patch(self):
-        if self.spec.satisfies("@1.9.6:"):
+        if self.spec.satisfies("@1.9.6:1.10.0"):
             filter_file("USE mpi", "use mpi_f08", "src/kernels/builtin/crsmat_module.F90")
             # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
             #            'fortran_bindings/phist_testing.F90')
