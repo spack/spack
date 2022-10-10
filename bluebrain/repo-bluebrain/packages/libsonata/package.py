@@ -18,6 +18,7 @@ class Libsonata(CMakePackage):
     url = "https://pypi.io/packages/source/l/libsonata/libsonata-0.1.14.tar.gz"
 
     version('develop', branch='master')
+    version('0.1.15', tag='v0.1.15')
     version('0.1.14', tag='v0.1.14')
     version('0.1.13', tag='v0.1.13')
     version('0.1.12', tag='v0.1.12')
