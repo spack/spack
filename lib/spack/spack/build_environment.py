@@ -494,8 +494,8 @@ def set_wrapper_variables(pkg, env):
     env.set(SPACK_INCLUDE_DIRS, ":".join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ":".join(rpath_dirs))
 
-    if pkg.reorder_paths:
-        env.set("SPACK_REORDER_PATHS", "TRUE")
+    if not pkg.reorder_paths:
+        env.set("SPACK_REORDER_PATHS", "FALSE")
 
 
 def determine_number_of_jobs(
