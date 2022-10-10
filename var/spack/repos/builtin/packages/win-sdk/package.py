@@ -20,15 +20,20 @@ class WinSdk(Package):
     homepage = "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/"
     has_code = False
 
-    version("10.0.19041.0")
-    version("10.0.18362.0")
-    version("10.0.17763.0")
-    version("10.0.17134.0")
-    version("10.0.16299.0")
-    version("10.0.15063.0")
-    version("10.0.14393.0")
-    version("10.0.10586.0")
-    version("10.0.26639.0")
+    version("10.0.19041")
+    version("10.0.18362")
+    version("10.0.17763")
+    version("10.0.17134")
+    version("10.0.16299")
+    version("10.0.15063")
+    version("10.0.14393")
+    version("10.0.10586")
+    version("10.0.26639")
+
+    # For now we don't support Windows development env
+    # on other platforms
+    for plat in ["linux", "darwin", "cray"]:
+        conflicts("platform=%s" % plat)
 
     @classmethod
     def determine_version(cls, exe):

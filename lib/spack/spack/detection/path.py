@@ -25,7 +25,7 @@ from .common import (
     compute_windows_program_path_for_package,
     executable_prefix,
     find_win32_additional_install_paths,
-    find_windows_kit_paths,
+    find_windows_compiler_bundled_packages,
     is_executable,
     library_prefix,
 )
@@ -45,26 +45,12 @@ def executables_in_path(path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the PATH environment variable.
     """
-    # If we're on a Windows box, run vswhere,
-    # steal the installationPath using windows_os.py logic,
-    # construct paths to CMake and Ninja, add to PATH
+    # If we're on a Windows box, we've already run vswhere. Using that information
+    # we derive compiler vendored package locations
     path_hints = path_hints or spack.util.environment.get_path("PATH")
     if sys.platform == "win32":
-        msvc_paths = list(winOs.WindowsOs.vs_install_paths)
-        msvc_cmake_paths = [
-            os.path.join(
-                path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
-            )
-            for path in msvc_paths
-        ]
-        path_hints = msvc_cmake_paths + path_hints
-        msvc_ninja_paths = [
-            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
-            for path in msvc_paths
-        ]
-        path_hints = msvc_ninja_paths + path_hints
+        path_hints.extend(find_windows_compiler_bundled_packages())
         path_hints.extend(find_win32_additional_install_paths())
-        path_hints.extend(find_windows_kit_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)
 
     path_to_exe = {}
@@ -114,6 +100,11 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
             if llnl.util.filesystem.is_readable_file(lib_path):
                 path_to_lib[lib_path] = lib
     return path_to_lib
+
+
+def libraries_in_windows_system_paths(path_hints=None):
+    path_hints = path_hints or spack.util.environment.get_path("PATH")
+    search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
 
 def _group_by_prefix(paths):
