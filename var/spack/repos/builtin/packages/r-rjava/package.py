@@ -28,7 +28,7 @@ class RRjava(RPackage):
     depends_on("bzip2")
     depends_on("icu4c")
     depends_on("libiconv")
-    depends_on("pcre")
+    depends_on("pcre2")
     depends_on("xz")
 
     def setup_build_environment(self, env):
