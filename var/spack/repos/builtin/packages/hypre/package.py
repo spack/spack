@@ -93,7 +93,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
-
+    depends_on("rocsparse", when="+rocm")
+    depends_on("rocthrust", when="+rocm")
+    depends_on("rocrand", when="+rocm")
     depends_on("umpire", when="+umpire")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
@@ -235,11 +237,16 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--disable-cub")
 
         if "+rocm" in spec:
+            rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
+            rocm_inc = ""
+            for pkg in rocm_pkgs:
+                rocm_inc += spec[pkg].headers.include_flags + " "
             configure_args.extend(
                 [
                     "--with-hip",
                     "--enable-rocrand",
                     "--enable-rocsparse",
+                    "--with-extra-CUFLAGS={0}".format(rocm_inc),
                 ]
             )
             rocm_arch_vals = spec.variants["amdgpu_target"].value
