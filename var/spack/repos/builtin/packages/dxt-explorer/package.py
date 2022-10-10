@@ -21,19 +21,10 @@ class DxtExplorer(PythonPackage):
     version("0.3", sha256="fb73947b737c327154d03eeb0744c86774263878b893b365094ce4af8ac60b8b")
 
     version("develop", branch="develop")
-    version("tests", branch="index-file")
 
     depends_on("r", type=("run"))
 
     depends_on("darshan-util", type=("run"))
 
     depends_on("python@3.6:", type=("build", "run"))
-    depends_on("py-pandas", type="run")
-    depends_on("py-pytest", type=("test"))
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def install_test(self):
-        with working_dir(".", create=True):
-            pytest = which("pytest")
-            pytest()
+    depends_on("py-pandas", type=("build", "run"))
