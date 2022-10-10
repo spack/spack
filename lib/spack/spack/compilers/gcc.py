@@ -215,5 +215,5 @@ class Gcc(spack.compiler.Compiler):
                     return ancestor(gcc_prefix, 4)
 
             raise RuntimeError(
-                "could not find install prefix of GCC from output:\n\t".format(gcc_output)
+                "could not find install prefix of GCC from output:\n\t{}".format(gcc_output)
             )

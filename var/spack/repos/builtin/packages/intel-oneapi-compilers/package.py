@@ -5,9 +5,9 @@
 
 import platform
 
+import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
-import spack.compilers
 
 linux_versions = [
     {
@@ -119,7 +119,9 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     # instead.
     for __compiler in spack.compilers.supported_compilers():
         if __compiler != "gcc":
-            conflicts("%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc")
+            conflicts(
+                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
+            )
 
     if platform.system() == "Linux":
         for v in linux_versions:
