@@ -12,6 +12,7 @@ class PyDill(PythonPackage):
     homepage = "https://github.com/uqfoundation/dill"
     pypi = "dill/dill-0.2.7.tar.gz"
 
+    version("0.3.5.1", sha256="d75e41f3eff1eee599d738e76ba8f4ad98ea229db8b085318aa2b3333a208c86")
     version("0.3.4", sha256="9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675")
     version("0.3.1", sha256="d3ddddf2806a7bc9858b20c02dc174396795545e9d62f243b34481fd26eb3e2c")
     version("0.2.9", sha256="f6d6046f9f9195206063dd0415dff185ad593d6ee8b0e67f12597c0f4df4986f")
@@ -25,15 +26,17 @@ class PyDill(PythonPackage):
     version("0.2", sha256="aba8d4c81c4136310e6ce333bd6f4f3ea2d53bd367e2f69c864428f260c0308c")
 
     depends_on("python@2.5:2.8,3.1:", type=("build", "run"))
-    depends_on("python@2.6:2.8,3.1:", type=("build", "run"), when="@0.3.0:")
-    depends_on("python@2.7:2.8,3.6:", type=("build", "run"), when="@0.3.4:")
+    depends_on("python@2.6:2.8,3.1:", when="@0.3.0:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.6:", when="@0.3.4:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.7:", when="@0.3.5.1:", type=("build", "run"))
 
     depends_on("py-setuptools@0.6:", type="build")
+    depends_on("py-setuptools@42:", when="@0.3.5.1:", type="build")
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/d/dill/"
 
-        if Version("0.3.4") > version >= Version("0.2.7"):
+        if Version("0.3.4") > version >= Version("0.2.7") or version >= Version("0.3.5.1"):
             url += "dill-{0}.tar.gz"
         else:
             url += "dill-{0}.zip"
