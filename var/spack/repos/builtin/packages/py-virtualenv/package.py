@@ -30,8 +30,8 @@ class PyVirtualenv(PythonPackage):
     depends_on("py-setuptools@40.6.3:", type=("build", "run"))
     depends_on("py-setuptools@41.00.03:", when="@20.10.0:", type=("build", "run"))
     depends_on("py-setuptools@59.6:", when="@20.16.4:", type=("build", "run"))
-    depends_on("py-setuptools-scm@2:", when="@20.10.0:", type=("build", "run"))
-    depends_on("py-setuptools-scm@6.4.2:", when="@20.16.4:", type=("build", "run"))
+    depends_on("py-setuptools-scm@2:", when="@20.10.0:", type="build")
+    depends_on("py-setuptools-scm@6.4.2:", when="@20.16.4:", type="build")
 
     depends_on(
         "py-backports-entry-points-selectable @1.0.4:", type=("build", "run"), when="@20.10.0"
