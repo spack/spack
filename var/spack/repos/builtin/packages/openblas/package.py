@@ -381,7 +381,7 @@ class Openblas(MakefilePackage):
 
         # Flang/f18 does not provide ETIME as an intrinsic.
         # Do not set TIMER variable if fortran is disabled.
-        if self.spec.satisfies("%clang+fortran"):
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions
