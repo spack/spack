@@ -46,8 +46,7 @@ spack:
     - py-torch
     - py-torch-cluster
     - py-torch-geometric
-    # https://github.com/NVIDIA/apex/issues/1498
-    # - py-torch-nvidia-apex
+    - py-torch-nvidia-apex
     - py-torch-scatter
     - py-torch-sparse
     - py-torch-spline-conv
