@@ -64,6 +64,7 @@ import spack.store
 import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
+import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
@@ -109,7 +110,14 @@ SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
 
 # Platform-specific library suffix.
-dso_suffix = "dylib" if sys.platform == "darwin" else "so"
+if sys.platform == "darwin":
+    dso_suffix = "dylib"
+elif sys.platform == "win32":
+    dso_suffix = "dll"
+else:
+    dso_suffix = "so"
+
+stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
 def should_set_parallel_jobs(jobserver_support=False):
@@ -986,8 +994,24 @@ def modifications_from_dependencies(
             dpkg = dep.package
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
+
             # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(spec.package.module, spec)
+            # Get list of modules that may need updating
+            modules = []
+            for cls in inspect.getmro(type(spec.package)):
+                module = cls.module
+                if module == spack.package_base:
+                    break
+                modules.append(module)
+
+            # Execute changes as if on a single module
+            # copy dict to ensure prior changes are available
+            changes = spack.util.pattern.Bunch()
+            dpkg.setup_dependent_package(changes, spec)
+
+            for module in modules:
+                module.__dict__.update(changes.__dict__)
+
             if context == "build":
                 dpkg.setup_dependent_build_environment(env, spec)
             else:
@@ -1030,8 +1054,11 @@ def get_cmake_prefix_path(pkg):
                 spack_built.insert(0, dspec)
 
     ordered_build_link_deps = spack_built + externals
-    build_link_prefixes = filter_system_paths(x.prefix for x in ordered_build_link_deps)
-    return build_link_prefixes
+    cmake_prefix_path_entries = []
+    for spec in ordered_build_link_deps:
+        cmake_prefix_path_entries.extend(spec.package.cmake_prefix_paths)
+
+    return filter_system_paths(cmake_prefix_path_entries)
 
 
 def _setup_pkg_and_run(

@@ -18,6 +18,11 @@ class PyTensorboard(PythonPackage):
     maintainers = ["aweits"]
 
     version(
+        "2.10.0",
+        sha256="76c91a5e8959cd2208cc32cb17a0cb002badabb66a06ac2af02a7810f49a59e3",
+        expand=False,
+    )
+    version(
         "2.9.1",
         sha256="baa727f791776f9e5841d347127720ceed4bbd59c36b40604b95fb2ae6029276",
         expand=False,

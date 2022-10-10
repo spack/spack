@@ -11,7 +11,7 @@ on:
       - releases/**
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_number }}
+  group: ci-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
   cancel-in-progress: true
 
 jobs:
@@ -19,7 +19,19 @@ jobs:
     needs: [ changes ]
     uses: ./.github/workflows/valid-style.yml
     with:
-      with_coverage: ${{ needs.changes.outputs.with_coverage }}
+      with_coverage: ${{ needs.changes.outputs.core }}
+  audit-ancient-python:
+    uses: ./.github/workflows/audit.yaml
+    needs: [ changes ]
+    with:
+      with_coverage: ${{ needs.changes.outputs.core }}
+      python_version: 2.7
+  all-prechecks:
+    needs: [ prechecks ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Success
+      run: "true"
   # Check which files have been updated by the PR
   changes:
     runs-on: ubuntu-latest
@@ -28,9 +40,8 @@ jobs:
       bootstrap: ${{ steps.filter.outputs.bootstrap }}
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
-      with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
         if: ${{ github.event_name == 'push' }}
         with:
           fetch-depth: 0
@@ -43,15 +54,14 @@ jobs:
           # built-in repository or documentation
           filters: |
             bootstrap:
-            - '!var/spack/repos/builtin/**'
             - 'var/spack/repos/builtin/packages/clingo-bootstrap/**'
             - 'var/spack/repos/builtin/packages/clingo/**'
             - 'var/spack/repos/builtin/packages/python/**'
             - 'var/spack/repos/builtin/packages/re2c/**'
-            - '!lib/spack/docs/**'
             - 'lib/spack/**'
             - 'share/spack/**'
             - '.github/workflows/bootstrap.yml'
+            - '.github/workflows/ci.yaml'
             core:
             - './!(var/**)/**'
             packages:
@@ -62,32 +72,21 @@ jobs:
       # job outputs: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
       # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
       #
-      - id: coverage
-        # Run the subsequent jobs with coverage if core has been modified,
-        # regardless of whether this is a pull request or a push to a branch
-        run: |
-          echo Core changes: ${{ steps.filter.outputs.core }}
-          echo Event name: ${{ github.event_name }}
-          if [ "${{ steps.filter.outputs.core }}" == "true" ]
-          then
-            echo "::set-output name=with_coverage::true"
-          else
-            echo "::set-output name=with_coverage::false"
-          fi
   bootstrap:
     if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.bootstrap == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/bootstrap.yml
   unit-tests:
-    if: ${{ github.repository == 'spack/spack' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks, changes ]
     uses: ./.github/workflows/unit_tests.yaml
-    with:
-      core: ${{ needs.changes.outputs.core }}
-      packages: ${{ needs.changes.outputs.packages }}
-      with_coverage: ${{ needs.changes.outputs.with_coverage }}
   windows:
-    if: ${{ github.repository == 'spack/spack' }}
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
     needs: [ prechecks ]
     uses: ./.github/workflows/windows_python.yml
-
+  all:
+    needs: [ windows, unit-tests, bootstrap, audit-ancient-python ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Success
+      run: "true"

@@ -30,7 +30,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://trilinos.org/"
-    url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
+    url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-12-12-1.tar.gz"
     git = "https://github.com/trilinos/Trilinos.git"
 
     maintainers = ["keitat", "sethrj", "kuberry"]
@@ -418,10 +418,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hwloc+cuda", when="@13: +kokkos+cuda")
     depends_on("hypre@develop", when="@master: +hypre")
     depends_on("netcdf-c+mpi+parallel-netcdf", when="+exodus+mpi@12.12.1:")
+    depends_on("superlu-dist@:4.3", when="@11.14.1:12.6.1+superlu-dist")
     depends_on("superlu-dist@4.4:5.3", when="@12.6.2:12.12.1+superlu-dist")
     depends_on("superlu-dist@5.4:6.2.0", when="@12.12.2:13.0.0+superlu-dist")
-    depends_on("superlu-dist@6.3.0:", when="@13.0.1:99 +superlu-dist")
-    depends_on("superlu-dist@:4.3", when="@11.14.1:12.6.1+superlu-dist")
+    depends_on("superlu-dist@6.3.0:7", when="@13.0.1:13 +superlu-dist")
     depends_on("superlu-dist@develop", when="@master: +superlu-dist")
 
     # ###################### Patches ##########################
@@ -450,8 +450,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     def flag_handler(self, name, flags):
-        is_cce = self.spec.satisfies("%cce")
         spec = self.spec
+        is_cce = spec.satisfies("%cce")
 
         if name == "cxxflags":
             if "+mumps" in spec:
@@ -476,12 +476,26 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             elif spec.satisfies("+stk +shared platform=darwin"):
                 flags.append("-Wl,-undefined,dynamic_lookup")
 
+            # Fortran lib (assumes clang is built with gfortran!)
+            if "+fortran" in spec and spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+                fc = Executable(self.compiler.fc)
+                libgfortran = fc(
+                    "--print-file-name", "libgfortran." + dso_suffix, output=str
+                ).strip()
+                # if libgfortran is equal to "libgfortran.<dso_suffix>" then
+                # print-file-name failed, use static library instead
+                if libgfortran == "libgfortran." + dso_suffix:
+                    libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+                # -L<libdir> -lgfortran required for OSX
+                # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+                flags.append("-L{0} -lgfortran".format(os.path.dirname(libgfortran)))
+
         if is_cce:
             return (None, None, flags)
         return (flags, None, None)
 
     def url_for_version(self, version):
-        url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
+        url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
@@ -522,7 +536,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         options = []
 
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         define_from_variant = self.define_from_variant
 
         def _make_definer(prefix):
@@ -908,22 +922,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                         options.append(define("Kokkos_ARCH_" + arch.upper(), True))
 
         # ################# System-specific ######################
-
-        # Fortran lib (assumes clang is built with gfortran!)
-        if "+fortran" in spec and spec.compiler.name in ["gcc", "clang", "apple-clang"]:
-            fc = Executable(spec["mpi"].mpifc) if ("+mpi" in spec) else Executable(spack_fc)
-            libgfortran = fc("--print-file-name", "libgfortran." + dso_suffix, output=str).strip()
-            # if libgfortran is equal to "libgfortran.<dso_suffix>" then
-            # print-file-name failed, use static library instead
-            if libgfortran == "libgfortran." + dso_suffix:
-                libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
-            # -L<libdir> -lgfortran required for OSX
-            # https://github.com/spack/spack/pull/25823#issuecomment-917231118
-            options.append(
-                define(
-                    "Trilinos_EXTRA_LINK_FLAGS", "-L%s/ -lgfortran" % os.path.dirname(libgfortran)
-                )
-            )
 
         if sys.platform == "darwin" and macos_version() >= Version("10.12"):
             # use @rpath on Sierra due to limit of dynamic loader

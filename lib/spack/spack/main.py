@@ -18,6 +18,7 @@ import os.path
 import pstats
 import re
 import signal
+import subprocess as sp
 import sys
 import traceback
 import warnings
@@ -546,6 +547,12 @@ def setup_main_options(args):
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
+    if sys.version_info[:2] == (2, 7):
+        warnings.warn(
+            "Python 2.7 support is deprecated and will be removed in Spack v0.20.\n"
+            "    Please move to Python 3.6 or higher."
+        )
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -623,15 +630,19 @@ class SpackCommand(object):
     their output.
     """
 
-    def __init__(self, command_name):
+    def __init__(self, command_name, subprocess=False):
         """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
             command_name (str): name of the command to invoke
+            subprocess (bool): whether to fork a subprocess or not. Currently not supported on
+                Windows, where it is always False.
         """
         self.parser = make_argument_parser()
         self.command = self.parser.add_command(command_name)
         self.command_name = command_name
+        # TODO: figure out how to support this on windows
+        self.subprocess = subprocess if sys.platform != "win32" else False
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -656,25 +667,36 @@ class SpackCommand(object):
         self.error = None
 
         prepend = kwargs["global_args"] if "global_args" in kwargs else []
-
-        args, unknown = self.parser.parse_known_args(prepend + [self.command_name] + list(argv))
-
         fail_on_error = kwargs.get("fail_on_error", True)
 
-        out = StringIO()
-        try:
-            with log_output(out):
-                self.returncode = _invoke_command(self.command, self.parser, args, unknown)
+        if self.subprocess:
+            p = sp.Popen(
+                [spack.paths.spack_script, self.command_name] + prepend + list(argv),
+                stdout=sp.PIPE,
+                stderr=sp.STDOUT,
+            )
+            out, self.returncode = p.communicate()
+            out = out.decode()
+        else:
+            args, unknown = self.parser.parse_known_args(
+                prepend + [self.command_name] + list(argv)
+            )
 
-        except SystemExit as e:
-            self.returncode = e.code
+            out = StringIO()
+            try:
+                with log_output(out):
+                    self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
-        except BaseException as e:
-            tty.debug(e)
-            self.error = e
-            if fail_on_error:
-                self._log_command_output(out)
-                raise
+            except SystemExit as e:
+                self.returncode = e.code
+
+            except BaseException as e:
+                tty.debug(e)
+                self.error = e
+                if fail_on_error:
+                    self._log_command_output(out)
+                    raise
+            out = out.getvalue()
 
         if fail_on_error and self.returncode not in (None, 0):
             self._log_command_output(out)
@@ -683,7 +705,7 @@ class SpackCommand(object):
                 % (self.returncode, self.command_name, ", ".join("'%s'" % a for a in argv))
             )
 
-        return out.getvalue()
+        return out
 
     def _log_command_output(self, out):
         if tty.is_verbose():
