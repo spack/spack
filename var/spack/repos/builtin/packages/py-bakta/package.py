@@ -25,7 +25,7 @@ class PyBakta(PythonPackage):
     depends_on("trnascan-se@2.0.8:", type=("build", "run"))
     depends_on("aragorn@1.2.38:", type=("build", "run"))
     depends_on("infernal@1.1.4:", type=("build", "run"))
-    depends_on("piler-cr", type=("build", "run"))
+    depends_on("pilercr", type=("build", "run"))
     depends_on("prodigal@2.6.3:", type=("build", "run"))
     depends_on("hmmer@3.3.2:", type=("build", "run"))
     depends_on("diamond@2.0.14:", type=("build", "run"))
