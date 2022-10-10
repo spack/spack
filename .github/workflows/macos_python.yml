@@ -24,7 +24,7 @@ jobs:
     name: gcc with clang
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
     - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
       with:
         python-version: 3.9
@@ -39,7 +39,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 700
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
     - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
       with:
         python-version: 3.9
@@ -52,7 +52,7 @@ jobs:
     name: scipy, mpl, pd
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
     - uses: actions/setup-python@d09bd5e6005b175076f227b13d9730d56e9dcfcb # @v2
       with:
         python-version: 3.9
