@@ -29,7 +29,9 @@ class PyVirtualenv(PythonPackage):
     # not just build-time, requires pkg_resources
     depends_on("py-setuptools@40.6.3:", type=("build", "run"))
     depends_on("py-setuptools@41.00.03:", when="@20.10.0:", type=("build", "run"))
+    depends_on("py-setuptools@59.6:", when="@20.16.4:", type=("build", "run"))
     depends_on("py-setuptools-scm@2:", when="@20.10.0:", type=("build", "run"))
+    depends_on("py-setuptools-scm@6.4.2:", when="@20.16.4:", type=("build", "run"))
 
     depends_on(
         "py-backports-entry-points-selectable @1.0.4:", type=("build", "run"), when="@20.10.0"
@@ -44,7 +46,7 @@ class PyVirtualenv(PythonPackage):
     depends_on("py-importlib-metadata@0.12:", when="@20.10.0: ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-resources@1:", when="@20.10.0: ^python@:3.6", type=("build", "run"))
     depends_on(
-        "py-importlib-metadata@4.8.3:", when="@20.10.0: ^python@:3.7", type=("build", "run")
+        "py-importlib-metadata@4.8.3:", when="@20.16.4: ^python@:3.7", type=("build", "run")
     )
-    depends_on("py-importlib-resources@5.4:", when="@20.10.0: ^python@:3.6", type=("build", "run"))
+    depends_on("py-importlib-resources@5.4:", when="@20.16.4: ^python@:3.6", type=("build", "run"))
     depends_on("py-pathlib2", when="@20.10.0 ^python@:3.3", type=("build", "run"))
