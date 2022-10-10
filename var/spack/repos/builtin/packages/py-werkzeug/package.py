@@ -9,7 +9,7 @@ from spack.package import *
 class PyWerkzeug(PythonPackage):
     """The Swiss Army knife of Python web development"""
 
-    homepage = "https://werkzeug.palletsprojects.com/en/2.2.x/"
+    homepage = "https://werkzeug.palletsprojects.com"
     pypi = "Werkzeug/Werkzeug-0.16.0.tar.gz"
 
     version("2.2.2", sha256="7ea2d48322cc7c0f8b3a215ed73eabd7b5d75d0b50e31ab006286ccff9e00b8f")
