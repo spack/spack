@@ -29,7 +29,7 @@ spack:
         ^coreneuron+knl: '{name}-knl/{version}'
         +common: '{name}/{version}-commonmods'
         +plasticity: '{name}-plasticity/{version}'
-        +ngv+metabolism: '{name}-multiscale_run/{version}'
+        +ngv+metabolism: '{name}-multiscale/{version}'
   specs:
     - asciitoh5@1.0
     - coreneuron%intel+tests
