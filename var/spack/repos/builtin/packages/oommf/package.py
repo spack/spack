@@ -42,6 +42,16 @@ class Oommf(Package):
     maintainers = ["fangohr"]
 
     version(
+        "20b0_20220930", sha256="764f1983d858fbad4bae34c720b217940ce56f745647ba94ec74de4b185f1328"
+    )
+
+    version(
+        "20b0_20220930-vanilla",
+        url="https://math.nist.gov/oommf/dist/oommf20b0_20220930.tar.gz",
+        sha256="141826208d638ded65704d0964d9c56e94a35d198e310454f6173e02601378fd",
+    )
+
+    version(
         "20a3_20210930",
         sha256="880242afdf4c84de7f2a3c42ab0ad8c354028a7d2d3c3160980cf3e08e285691",
     )

@@ -54,7 +54,7 @@ import spack.util.pattern as pattern
 import spack.util.url as url_util
 import spack.util.web as web_util
 import spack.version
-from spack.util.compression import decompressor_for, extension
+from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -338,6 +338,7 @@ class URLFetchStrategy(FetchStrategy):
         errors = []
         for url in self.candidate_urls:
             if not web_util.url_exists(url, self.curl):
+                tty.debug("URL does not exist: " + url)
                 continue
 
             try:
@@ -612,7 +613,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert extension(destination) == "tar.gz"
+        assert extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
 
         tar = which("tar", required=True)

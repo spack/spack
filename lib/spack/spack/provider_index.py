@@ -129,7 +129,7 @@ class _IndexBase(object):
 
 
 class ProviderIndex(_IndexBase):
-    def __init__(self, specs=None, restrict=False):
+    def __init__(self, repository, specs=None, restrict=False):
         """Provider index based on a single mapping of providers.
 
         Args:
@@ -143,17 +143,16 @@ class ProviderIndex(_IndexBase):
         TODO: as possible without overly restricting results, so it is
         TODO: not the best name.
         """
-        if specs is None:
-            specs = []
-
+        self.repository = repository
         self.restrict = restrict
         self.providers = {}
 
+        specs = specs or []
         for spec in specs:
             if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)
 
-            if spec.virtual:
+            if self.repository.is_virtual_safe(spec.name):
                 continue
 
             self.update(spec)
@@ -171,9 +170,10 @@ class ProviderIndex(_IndexBase):
             # Empty specs do not have a package
             return
 
-        assert not spec.virtual, "cannot update an index using a virtual spec"
+        msg = "cannot update an index passing the virtual spec '{}'".format(spec.name)
+        assert not self.repository.is_virtual_safe(spec.name), msg
 
-        pkg_provided = spec.package_class.provided
+        pkg_provided = self.repository.get_pkg_class(spec.name).provided
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
@@ -262,12 +262,12 @@ class ProviderIndex(_IndexBase):
 
     def copy(self):
         """Return a deep copy of this index."""
-        clone = ProviderIndex()
+        clone = ProviderIndex(repository=self.repository)
         clone.providers = self._transform(lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
         return clone
 
     @staticmethod
-    def from_json(stream):
+    def from_json(stream, repository):
         """Construct a provider index from its JSON representation.
 
         Args:
@@ -281,7 +281,7 @@ class ProviderIndex(_IndexBase):
         if "provider_index" not in data:
             raise ProviderIndexError("YAML ProviderIndex does not start with 'provider_index'")
 
-        index = ProviderIndex()
+        index = ProviderIndex(repository=repository)
         providers = data["provider_index"]["providers"]
         index.providers = _transform(
             providers,

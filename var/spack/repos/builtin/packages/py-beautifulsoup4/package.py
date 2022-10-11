@@ -26,8 +26,8 @@ class PyBeautifulsoup4(PythonPackage):
     variant("lxml", default=False, description="Enable lxml parser")
     variant("html5lib", default=False, description="Enable html5lib parser")
 
-    depends_on("python@3.6:", type=("build", "run"), when="@4.11.0:")
-    depends_on("python@3:", type=("build", "run"), when="@4.10.0:")
+    depends_on("python@3.6:", when="@4.11.0:", type=("build", "run"))
+    depends_on("python@3:", when="@4.10.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-soupsieve@1.3:", when="@4.9.0: ^python@3:", type=("build", "run"))
     depends_on("py-soupsieve@1.3:1", when="@4.9.0: ^python@:2.8", type=("build", "run"))
