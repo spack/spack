@@ -16,7 +16,6 @@ extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 def create_projection_file(tmpdir, projection):
