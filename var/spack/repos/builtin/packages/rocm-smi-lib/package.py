@@ -96,7 +96,7 @@ class RocmSmiLib(CMakePackage):
     depends_on("python@3:", type=("build", "run"), when="@3.9.0:")
 
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@4.5.2:")
-    
+
     def cmake_args(self):
         return [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
 
@@ -156,10 +156,9 @@ class RocmSmiLib(CMakePackage):
                 ]
             )
             cc_options = [
-            "-DCMAKE_PREFIX_PATH=" + prefixes,
-            "-DRSMI_LIB_DIR=" +rocm_smi_lib_path,
-            "."
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DRSMI_LIB_DIR=" + rocm_smi_lib_path,
+                "."
             ]
             self.run_test(cmake_bin, cc_options)
             make("clean")
-

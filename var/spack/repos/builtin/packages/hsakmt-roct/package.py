@@ -116,7 +116,7 @@ class HsakmtRoct(CMakePackage):
         install test subdirectory for use during `spack test run`."""
         if self.spec.satisfies("@:5.1.0"):
             return
-        self.cache_extra_test_sources([self.test_src_dir,"include"])
+        self.cache_extra_test_sources([self.test_src_dir, "include"])
 
     def test(self):
         if self.spec.satisfies("@:5.1.0"):
@@ -138,9 +138,9 @@ class HsakmtRoct(CMakePackage):
                 ]
             )
             cc_options = [
-            "-DCMAKE_PREFIX_PATH=" + prefixes,
-            "-DLIBHSAKMT_PATH=" +hsakmt_path,
-            "."
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DLIBHSAKMT_PATH=" + hsakmt_path,
+                "."
             ]
-            self.run_test(cmake_bin,cc_options)
+            self.run_test(cmake_bin, cc_options)
             make("clean")
