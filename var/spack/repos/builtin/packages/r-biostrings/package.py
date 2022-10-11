@@ -15,7 +15,7 @@ class RBiostrings(RPackage):
 
     bioc = "Biostrings"
 
-    version('2.64.1', commit='ffe263e958463bd1edb5d5d9316cfd89905be53c')
+    version("2.64.1", commit="ffe263e958463bd1edb5d5d9316cfd89905be53c")
     version("2.64.0", commit="c7ad3c7af607bc8fe4a5e1c37f09e6c9bf70b4f6")
     version("2.62.0", commit="53ed287e03d16fa523789af3131c60375ccf587f")
     version("2.58.0", commit="0ec1a5455d5e9eebd14b26228906bb04e2abb197")
