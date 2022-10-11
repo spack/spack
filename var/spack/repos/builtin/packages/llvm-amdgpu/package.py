@@ -234,18 +234,7 @@ class LlvmAmdgpu(CMakePackage):
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
-            compiler = Executable(self.compiler.cc)
-            gcc_output = compiler("-print-search-dirs", output=str, error=str)
-
-            gcc_prefix = ""
-            for line in gcc_output.splitlines():
-                if line.startswith("install:"):
-                    # Get path and strip any whitespace
-                    # (causes oddity with ancestor)
-                    gcc_prefix = line.split(":")[1].strip()
-                    gcc_prefix = ancestor(gcc_prefix, 4)
-                    break
-            args.append(self.define("GCC_INSTALL_PREFIX", gcc_prefix))
+            args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         return args
 
