@@ -34,6 +34,9 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    # updated lapack interface to work with openblas and netlib-lapack
+    version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
+
     # updated the Trilinos interface to work with trilinos@13:
     # without using deprecated interfaces in tpetra
     version("1.10.0", sha256="3ec660c85d37818ee219edc80e977140dfb062bdca1f38623c94a45d13634bd1")
@@ -146,6 +149,7 @@ class Phist(CMakePackage):
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
     patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
+    patch("lapack-fixes-pre-1.11.patch", when="@:1.10.0")
 
     # ###################### Dependencies ##########################
 
@@ -189,14 +193,6 @@ class Phist(CMakePackage):
     # gcc@10: Error: Rank mismatch between actual argument at (1)
     # and actual argument at (2) (scalar and rank-1)
     conflicts("%gcc@10:", when="@:1.9.0")
-
-    # reference lapack 3.9.1 (included in openblas 0.3.21) changed their lapack.h API
-    # to include trailing string lengths arguments in functions that have
-    # single-character strings as args. phist should be using the relevant
-    # LAPACK_function(...) macro's instead.
-    # https://bitbucket.org/essex/phist/issues/245/does-not-compile-with-reference-lapack-391
-    conflicts("^openblas@0.3.21:")
-    conflicts("^netlib-lapack@3.9.1:")
 
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.

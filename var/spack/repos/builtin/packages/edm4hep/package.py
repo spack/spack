@@ -19,6 +19,7 @@ class Edm4hep(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.7", sha256="0cef3f06d86c13e87e3343ac9d5db0b3087c421e8bda4bd2623858acb1af60c9")
     version("0.6", sha256="625a5a939cb8d7a0a6ab5874a3e076d7dd5338446be3921b0cbc09de4d96b315")
     version("0.5", sha256="aae4f001412d57585751d858999fe78e004755aa0303a503d503a325ef97d7e0")
     version(
