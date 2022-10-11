@@ -120,9 +120,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
             deps = "blaspp lapackpp mpi"
             if self.spec.satisfies("+rocm"):
                 deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
-            prefixes = ";".join(
-                [self.spec[x].prefix for x in deps.split()]
-            )
+            prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
