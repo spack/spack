@@ -40,10 +40,10 @@ class GpiSpace(CMakePackage):
     )
     variant(
         "iml",
-		default=True,
-		description="""
-					Enables IML support
-					"""
+        default=True,
+        description="""
+                    Enables IML support
+                    """
     )
     variant(
         "network",
