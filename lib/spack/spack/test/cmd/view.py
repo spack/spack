@@ -11,6 +11,8 @@ import pytest
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
 
+import llnl.util.symlink as symlink
+
 activate = SpackCommand("activate")
 extensions = SpackCommand("extensions")
 install = SpackCommand("install")
@@ -39,7 +41,7 @@ def test_view_link_type(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_link_cmd = cmd in ("symlink", "add")
-    assert os.path.islink(package_prefix) == is_link_cmd
+    assert symlink.islink(package_prefix) == is_link_cmd
 
 
 @pytest.mark.parametrize("add_cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
@@ -72,7 +74,7 @@ def test_view_projections(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_symlink_cmd = cmd in ("symlink", "add")
-    assert os.path.islink(package_prefix) == is_symlink_cmd
+    assert symlink.islink(package_prefix) == is_symlink_cmd
 
 
 def test_view_multiple_projections(
