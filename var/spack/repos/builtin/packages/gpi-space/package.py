@@ -36,21 +36,21 @@ class GpiSpace(CMakePackage):
         default=True,
         description="""
                     Enables the gspc-monitor application for execution monitoring.
-                    """
+                    """,
     )
     variant(
         "iml",
         default=True,
         description="""
                     Enables IML support
-                    """
+                    """,
     )
     variant(
         "network",
         default="ethernet",
         values=("infiniband", "ethernet"),
         description="GPI-2 fabric to enable",
-        when="+iml"
+        when="+iml",
     )
     variant(
         "build_type",
@@ -81,7 +81,7 @@ class GpiSpace(CMakePackage):
             self.define("INSTALL_DO_NOT_BUNDLE", True),
             self.define("BUILD_TESTING", False),
             self.define_from_variant("GSPC_WITH_MONITOR_APP", "monitor"),
-            self.define_from_variant("GSPC_WITH_IML", "iml")
+            self.define_from_variant("GSPC_WITH_IML", "iml"),
         ]
 
         return args
