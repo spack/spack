@@ -14,7 +14,14 @@ class PyAsyncLru(PythonPackage):
 
     maintainers = ["iarspider"]
 
+    version("1.0.3", sha256="c2cb9b2915eb14e6cf3e717154b40f715bf90e596d73623677affd0d1fbcd32a")
     version("1.0.2", sha256="baa898027619f5cc31b7966f96f00e4fc0df43ba206a8940a5d1af5336a477cb")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+
+    def url_for_version(self, version):
+        if version >= Version("1.0.3"):
+            return "https://files.pythonhosted.org/packages/source/a/async-lru/async-lru-{0}.tar.gz".format(version)
+        else:
+            return "https://files.pythonhosted.org/packages/source/a/async_lru/async_lru-{0}.tar.gz".format(version)
