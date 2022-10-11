@@ -204,6 +204,7 @@ spack:
   # ROCm
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
+  - cabana +rocm
   - caliper +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
