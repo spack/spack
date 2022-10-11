@@ -22,6 +22,10 @@ class PyAsyncLru(PythonPackage):
 
     def url_for_version(self, version):
         if version >= Version("1.0.3"):
-            return "https://files.pythonhosted.org/packages/source/a/async-lru/async-lru-{0}.tar.gz".format(version)
+            return "https://files.pythonhosted.org/packages/source/a/async-lru/async-lru-{0}.tar.gz".format(
+                version
+            )
         else:
-            return "https://files.pythonhosted.org/packages/source/a/async_lru/async_lru-{0}.tar.gz".format(version)
+            return "https://files.pythonhosted.org/packages/source/a/async_lru/async_lru-{0}.tar.gz".format(
+                version
+            )
