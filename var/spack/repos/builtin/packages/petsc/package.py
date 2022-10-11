@@ -220,6 +220,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    depends_on("hipsolver", when="+rocm")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocsolver", when="+rocm")
     depends_on("rocblas", when="+rocm")
@@ -546,7 +547,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if not spec.satisfies("amdgpu_target=none"):
                 hip_arch = spec.variants["amdgpu_target"].value
                 options.append("--with-hip-arch={0}".format(hip_arch[0]))
-            hip_pkgs = ["hipsparse", "hipblas", "rocsparse", "rocsolver", "rocblas"]
+            hip_pkgs = ["hipsparse", "hipblas", "hipsolver", "rocsparse", "rocsolver", "rocblas"]
             hip_ipkgs = hip_pkgs + ["rocthrust", "rocprim"]
             hip_lpkgs = hip_pkgs
             if spec.satisfies("^rocrand@5.1:"):
