@@ -72,7 +72,11 @@ def test_view_projections(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_symlink_cmd = cmd in ("symlink", "add")
+<<<<<<< HEAD
     assert symlink.path.islink(package_prefix) == is_symlink_cmd
+=======
+    assert symlink.islink(package_prefix) == is_symlink_cmd
+>>>>>>> 44cd312d32... Updating symlink so that view tests can pass on windows
 
 
 def test_view_multiple_projections(
