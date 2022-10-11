@@ -48,7 +48,6 @@ class BlastPlus(AutotoolsPackage):
 
     depends_on('cpio', type='build')
 
-
     variant("static", default=False, description="Build with static linkage")
     variant("jpeg", default=True, description="Build with jpeg support")
     variant("png", default=True, description="Build with png support")
