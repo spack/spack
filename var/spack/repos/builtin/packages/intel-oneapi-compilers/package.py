@@ -197,6 +197,16 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         #  _ld_library_path because it looks like the only rpath that needs to be
         #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
         flags_list = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+
+        # Older versions trigger -Wunused-command-line-argument warnings whenever
+        # linker flags are passed in preprocessor (-E) or compilation mode (-c).
+        # The cfg flags are treated as command line flags apparently. Newer versions
+        # do not trigger these warnings. In some build systems these warnings can
+        # cause feature detection to fail, so we silence them with -Wno-unused-...
+        if self.spec.version < Version("2022.1.0"):
+            flags_list.append("-Wno-unused-command-line-argument")
+
+        # Make sure that underlying clang gets the right GCC toolchain by default
         flags_list.append("--gcc-toolchain={}".format(self.compiler.prefix))
         flags = " ".join(flags_list)
         for cmp in [
