@@ -150,7 +150,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
                 args += [self.define("__skip_rocmclang", True)]
         if self.spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
-            rocm_archs = ";".join(rocm_archs)
-            args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
+            if "none" not in rocm_archs:
+                rocm_archs = ";".join(rocm_archs)
+                args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
 
         return args
