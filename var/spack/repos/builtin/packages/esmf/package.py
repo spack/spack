@@ -116,7 +116,8 @@ class Esmf(MakefilePackage):
     patch("mvapich2.patch", when="@:7.0")
 
     # explicit type cast of variables from long to int
-    patch("cce.patch", when="@:8.3.2 %cce@14:")
+    patch("longtoint.patch", when="@:8.3.2 %cce@14:")
+    patch("longtoint.patch", when="@:8.3.2 %oneapi@2022:")
 
     # Allow different directories for creation and
     # installation of dynamic libraries on OSX:
