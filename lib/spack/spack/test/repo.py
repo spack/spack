@@ -141,3 +141,16 @@ def test_get_all_mock_packages(mock_packages):
     """Get the mock packages once each too."""
     for name in mock_packages.all_package_names():
         mock_packages.get_pkg_class(name)
+
+
+def test_repo_path_handles_package_removal(tmpdir, mock_packages):
+    builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
+    builder.add_package("c")
+    with spack.repo.use_repositories(builder.root, override=False) as repos:
+        r = repos.repo_for_pkg("c")
+        assert r.namespace == "removal"
+
+    builder.remove("c")
+    with spack.repo.use_repositories(builder.root, override=False) as repos:
+        r = repos.repo_for_pkg("c")
+        assert r.namespace == "builtin.mock"

@@ -55,6 +55,16 @@ from spack.util.web import FetchError
 is_windows = sys.platform == "win32"
 
 
+def ensure_configuration_fixture_run_before(request):
+    """Ensure that fixture mutating the configuration run before the one where
+    the function is called.
+    """
+    if "config" in request.fixturenames:
+        request.getfixturevalue("config")
+    if "mutable_config" in request.fixturenames:
+        request.getfixturevalue("mutable_config")
+
+
 #
 # Return list of shas for latest two git commits in local spack repo
 #
@@ -536,18 +546,28 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install):
+def mock_packages(mock_repo_path, mock_pkg_install, request):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
+    ensure_configuration_fixture_run_before(request)
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path):
+def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
+    ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
+
+
+@pytest.fixture()
+def mock_custom_repository(tmpdir, mutable_mock_repo):
+    """Create a custom repository with a single package "c" and return its path."""
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder.add_package("c")
+    return builder.root
 
 
 @pytest.fixture(scope="session")

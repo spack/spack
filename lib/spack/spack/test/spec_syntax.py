@@ -535,6 +535,7 @@ class TestSpecSyntax(object):
     @pytest.mark.usefixtures("config")
     def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
         """Ensure that libelf.yaml parses as a spec, NOT a file."""
+        # TODO: This test is brittle, as it should cover also the JSON case now.
         s = Spec("libelf")
         s.concretize()
 
@@ -559,7 +560,7 @@ class TestSpecSyntax(object):
 
         # check that if we concretize this spec, we get a good error
         # message that mentions we might've meant a file.
-        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        with pytest.raises(spack.repo.UnknownEntityError) as exc_info:
             spec.concretize()
         assert exc_info.value.long_message
         assert (
