@@ -132,15 +132,11 @@ class HsakmtRoct(CMakePackage):
                     self.spec["numactl"].prefix,
                 ]
             )
-            hsakmt_path = ";".join(
-                [
-                    self.spec["hsakmt-roct"].prefix
-                ]
-            )
+            hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,
-                "."
+                ".",
             ]
             self.run_test(cmake_bin, cc_options)
             make("clean")

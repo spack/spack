@@ -119,6 +119,7 @@ class RocmSmiLib(CMakePackage):
         else:
             ver = None
         return ver
+
     test_src_dir = "tests/rocm_smi_test"
 
     @run_after("install")
@@ -150,15 +151,11 @@ class RocmSmiLib(CMakePackage):
                     self.spec["rocm-smi-lib"].prefix,
                 ]
             )
-            rocm_smi_lib_path = ";".join(
-                [
-                    self.spec["rocm-smi-lib"].prefix.lib
-                ]
-            )
+            rocm_smi_lib_path = ";".join([self.spec["rocm-smi-lib"].prefix.lib])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DRSMI_LIB_DIR=" + rocm_smi_lib_path,
-                "."
+                ".",
             ]
             self.run_test(cmake_bin, cc_options)
             make("clean")
