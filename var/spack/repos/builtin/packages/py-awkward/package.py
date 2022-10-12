@@ -16,6 +16,7 @@ class PyAwkward(PythonPackage):
     maintainers = ["vvolkl"]
 
     version("master", branch="master")
+    version("1.9.0", sha256="cad799237e4370b50f77e716e78dd3565a7b3fd82fcd5a41a76aa1512d51075d")
     version("1.8.0", sha256="6655fa22d1b1d1dcb9ccee0d502350ab90c53467a10b540b7624422b594d2e72")
     version("1.7.0", sha256="e4e642dfe496d2acb245c90e37dc18028e25d5e936421e7371ea6ba0fde6435a")
     version("1.5.1", sha256="c0357c62223fefcfc7a7565389dbd4db900623bf10eccf2bc8e87586ec59b38d")
@@ -28,15 +29,20 @@ class PyAwkward(PythonPackage):
     version("1.0.2", sha256="3468cb80cab51252a1936e5e593c7df4588ea0e18dcb6fb31e3d2913ba883928")
 
     patch("pybind11.patch", when="@:1.2.2")
-    patch("pybind11_02.patch", when="@1.2.3:")
+    patch("pybind11_02.patch", when="@1.2.3:1.8.0")
 
     depends_on("py-setuptools@42.0:", type=("build", "run"))
     depends_on("py-pyyaml", type="build")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("python@3.6:", when="@1.9.0:", type=("build", "run"))
     depends_on("py-numpy@1.13.1:", type=("build", "run"))
     depends_on("py-pybind11", type=("build", "link"))
     depends_on("dlpack", when="@1.0.0:")
     depends_on("rapidjson")
     depends_on("cmake@3.13:", type="build")
-    depends_on("py-wheel@0.36.0:", type="build", when="@:1.7.0")
+    depends_on("py-wheel@0.36.0:", when="@:1.7.0", type="build")
+
+    @when("@1.9.0:")
+    def setup_build_environment(self, env):
+        env.set("CMAKE_ARGS", "-DAWKWARD_EXTERNAL_PYBIND11=TRUE")
