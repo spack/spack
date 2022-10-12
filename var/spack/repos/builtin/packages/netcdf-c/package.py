@@ -131,6 +131,8 @@ class NetcdfC(AutotoolsPackage):
     conflicts("+parallel-netcdf", when="@:4.0")
     conflicts("+hdf4", when="@:4.0")
 
+    filter_compiler_wrappers("nc-config", relative_root="bin")
+
     @property
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
@@ -245,6 +247,22 @@ class NetcdfC(AutotoolsPackage):
 
         return config_args
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
+        # differs from the path to the compiler that the package should be built with. Therefore,
+        # we have to shadow nc-config from self.prefix.bin, which references the real compiler,
+        # with a backed up version, which references Spack compiler wrapper.
+        if os.path.exists(self._nc_config_backup_dir):
+            env.prepend_path("PATH", self._nc_config_backup_dir)
+
+    @run_after("install")
+    def backup_nc_config(self):
+        # We expect this to be run before filter_compiler_wrappers:
+        nc_config_file = self.prefix.bin.join("nc-config")
+        if os.path.exists(nc_config_file):
+            mkdirp(self._nc_config_backup_dir)
+            install(nc_config_file, self._nc_config_backup_dir)
+
     def check(self):
         # h5_test fails when run in parallel
         make("check", parallel=False)
@@ -253,3 +271,7 @@ class NetcdfC(AutotoolsPackage):
     def libs(self):
         shared = "+shared" in self.spec
         return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
+
+    @property
+    def _nc_config_backup_dir(self):
+        return join_path(self.metadata_dir, "spack-nc-config")
