@@ -17,7 +17,7 @@ class Pilercr(Package):
 
     def edit(self, spec, prefix):
         # use shared instead of static libs
-        env['LDLIBS'] = "-lm"
+        env["LDLIBS"] = "-lm"
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
