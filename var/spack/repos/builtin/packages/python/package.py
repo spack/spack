@@ -719,7 +719,6 @@ class Python(Package):
         for lib in static_libraries:
             copy(lib, prefix.libs)
 
-
     def configure_args(self):
         spec = self.spec
         config_args = []
