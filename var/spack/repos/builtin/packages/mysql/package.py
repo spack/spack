@@ -16,38 +16,40 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
-    version("8.0.29", sha256="512170fa6f78a694d6f18d197e999d2716ee68dc541d7644dd922a3663407266")
-    version("8.0.19", sha256="a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834")
-    version("8.0.18", sha256="4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8")
-    version("8.0.17", sha256="c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6")
-    version("8.0.16", sha256="8d9fe89920dc8bbbde2857b7b877ad2fa5ec2f231c68e941d484f3b72735eaea")
-    version("8.0.15", sha256="bb1bca2dc2f23ee9dd395cc4db93b64561d4ac20b53be5d1dae563f7be64825e")
-    version("8.0.14", sha256="bc53f4c914fb39650289700d144529121d71f38399d2d24a0f5c76e5a8abd204")
-    version("8.0.13", sha256="d85eb7f98b6aa3e2c6fe38263bf40b22acb444a4ce1f4668473e9e59fb98d62e")
-    version("8.0.12", sha256="69f16e20834dbc60cb28d6df7351deda323330b9de685d22415f135bcedd1b20")
-    version("8.0.11", sha256="3bde3e30d5d4afcedfc6db9eed5c984237ac7db9480a9cc3bddc026d50700bf9")
-    version("5.7.27", sha256="f8b65872a358d6f5957de86715c0a3ef733b60451dad8d64a8fd1a92bf091bba")
-    version("5.7.26", sha256="5f01d579a20199e06fcbc28f0801c3cb545a54a2863ed8634f17fe526480b9f1")
-    version("5.7.25", sha256="53751c6243806103114567c1a8b6a3ec27f23c0e132f377a13ce1eb56c63723f")
-    version("5.7.24", sha256="05bf0c92c6a97cf85b67fff1ac83ca7b3467aea2bf306374d727fa4f18431f87")
-    version("5.7.23", sha256="0730f2d5520bfac359e9272da6c989d0006682eacfdc086a139886c0741f6c65")
-    version("5.7.22", sha256="4eb8405b0a9acb0381eae94c1741b2850dfc6467742b24b676e62b566409cff2")
-    version("5.7.21", sha256="fa205079c27a39c24f3485e7498dd0906a6e0b379b4f99ebc0ec38a9ec5b09b7")
-    version("5.7.20", sha256="5397549bb7c238f396c123db2df4cad2191b11adf8986de7fe63bff8e2786487")
-    version("5.7.19", sha256="3e51e76f93179ca7b165a7008a6cc14d56195b3aef35d26d3ac194333d291eb1")
-    version("5.7.18", sha256="0b5d71ed608656cd8181d3bb0434d3e36bac192899038dbdddf5a7594aaea1a2")
-    version("5.7.17", sha256="cebf23e858aee11e354c57d30de7a079754bdc2ef85eb684782458332a4b9651")
-    version("5.7.16", sha256="4935b59974edb275629f6724a0fcf72265a5845faf1e30eeb50ed4b6528318a5")
-    version("5.7.15", sha256="9085353143bfda59c90aa959e79a35622a22aa592e710993416e193b37eb9956")
-    version("5.7.14", sha256="f7415bdac2ca8bbccd77d4f22d8a0bdd7280b065bd646a71a506b77c7a8bd169")
-    version("5.7.13", sha256="50bf1a1635a61235fc43fd4876df2f77163de109372679e29c1ff8dbc38a0b87")
-    version("5.7.12", sha256="32843cb6d22ab22cd2340262b53c0d6009b5bd41b1fa4102beda19635a5c1c87")
-    version("5.7.11", sha256="54f8c7af87d3d8084419bde2b9f0d8970b3dada0757b015981b02f35a3681f0e")
-    version("5.7.10", sha256="1ea1644884d086a23eafd8ccb04d517fbd43da3a6a06036f23c5c3a111e25c74")
-    version("5.7.9", sha256="315342f5bee1179548cecad2d776cd7758092fd2854024e60a3a5007feba34e0")
-    version("5.6.44", sha256="c031c92c3f226856b09bf929d8a26b0cd8600036cb9db4e0fdf6b6f032ced336")
-    version("5.6.43", sha256="1c95800bf0e1b7a19a37d37fbc5023af85c6bc0b41532433b3a886263a1673ef")
-    version("5.5.62", sha256="b1e7853bc1f04aabf6771e0ad947f35ac8d237f4b35d0706d1095c9526ff99d7")
+
+    version("8.0.29", sha256="fc02246f39764b7b2b7815bb260d52983296919ba13246f3de8873b3e86dc579")
+
+    version("8.0.19", sha256="323b11dc35e25f13ed55d5b1c2f8f511fbead3c02675472f1f00c88e3a878a1d")
+    version("8.0.18", sha256="e60f1e1e008ae7fb1114f50c3b7e58aedea169e694528e9222a11013dbb2516b")
+    version("8.0.17", sha256="c1a3e0a502abbb7b3863033c721d4e4d853c072f8d472737407245043a2eab39")
+    version("8.0.16", sha256="03e1632236b6d4fd72351c414a07287d78a39ad5ec5807772ec751d2fdc6351a")
+    version("8.0.15", sha256="2eb8b4c8f475558d7e0084f253519eb8164e278f7706c6b5393a65f5ae7ae52f")
+    version("8.0.14", sha256="e8dd08b83b856ae350f93a8a52c38e619197c735f27d76e7e317dd461932323a")
+    version("8.0.13", sha256="5a90ab5d98fc05caacea1a9799324460efcd69d869d376ceecee0ec72301b53d")
+    version("8.0.12", sha256="758c744c15d2d82345e2059815db3b99a605106afa0a5e9e307fa20df81799d3")
+    version("8.0.11", sha256="62e11ca424e7199884083cd137687bf667e7aa229aff767844b09d768385482b")
+    version("5.7.27", sha256="f7fe9b0ac3f880f8a836e833cddc97ca15f6589cbbfd8799dad83ba0e7e7a171")
+    version("5.7.26", sha256="44826b185c5cd0a0a4175ce46ec9aa7af0c313b78225d0e1253c54abecb81051")
+    version("5.7.25", sha256="0e836c0d99b330287d9a2083d3b33bebef497e893671c27096de4f94c3c13eaf")
+    version("5.7.24", sha256="555895c0754f9624af81c0717fd37937167bcdcd53f955cc368f237ecb4a0e20")
+    version("5.7.23", sha256="bc2c017b77d97e0cb564b0027c6c3a16a38e5b40f2b072ddfd1bb8bdba321eb6")
+    version("5.7.22", sha256="f27d7172c39af6bc6ca1645d659d252670626385ca3d1440a5c930f830e1252e")
+    version("5.7.21", sha256="ef9720a4793d101a17b81dc11056716aca8a4db0e20c2af7cd62d51f3ef13aa0")
+    version("5.7.20", sha256="5a1359488991fac8f14274d2f697101b4e6f53b7923fa3b21777c17fc3f720c6")
+    version("5.7.19", sha256="91df9c2f90bd2dc439b2dd67ef6e783ea07bf8c98f9b4ba7b1ef5d44e2d849bd")
+    version("5.7.18", sha256="1532cbee65d64766ae546ad8ab00f761ad9655a4ecf90d40ae1aef8d31462f46")
+    version("5.7.17", sha256="878ac3c4f00aac2e71aa596a3ee55d88ddc535470f0da6487aae5c82209d0e6f")
+    version("5.7.16", sha256="33483ae61846ba441eef9bdd49e055cbf1e2f22e822932b9c435aeef6ee7fec6")
+    version("5.7.15", sha256="0366322a45ea9c016532f09c51a654817c6c87436e2d01295c7cd7a271362156")
+    version("5.7.14", sha256="15effb24fb9c80075ad94e71e54d9c2888bc81439ebbb99928dd4e3eb0b25b50")
+    version("5.7.13", sha256="938b72871c02ef8563921e4b364fdf9b95692b0dcaf199c12e9965cb5798e2e0")
+    version("5.7.12", sha256="ec9bcdb4be9e28566a585c266029464eb0d8f7582d68f4ff749f5954fde31203")
+    version("5.7.11", sha256="706c04e1e9c3f95f54418fa72d347d3b8abff6d17b46832d380ddcdb1e764f2f")
+    version("5.7.10", sha256="d3cc318e91e1546e0a2a5ff63301b1d85887eb6e44f3100d27668a21f051a144")
+    version("5.7.9", sha256="bb890b1e6f34b41d1a1bc2266f960d1d5890d5dd4bc4b7dfdafdbe5d85936232")
+    version("5.6.44", sha256="5c8d2996d4cad09316ea177438fc325b2a795dc8d42622ed8c919c8588ca2841")
+    version("5.6.43", sha256="524d6adb0651c5a62d17405a802cb346b969311ebb48508f7c477f9d986ca63a")
+    version("5.5.62", sha256="38c1038324e3146db5ecb1f5a218b039dd16b32391966bcf6361cf66746db7d2")
 
     variant("client_only", default=False, description="Build and install client only.")
     variant(
@@ -135,6 +137,7 @@ class Mysql(CMakePackage):
     depends_on("cyrus-sasl", when="@:5.7")
 
     patch("fix-no-server-5.5.patch", level=1, when="@5.5.0:5.5")
+    patch("old_ssl_fix.patch", when="@8.0.29")
 
     @property
     def command(self):
@@ -145,8 +148,9 @@ class Mysql(CMakePackage):
         return find_libraries("libmysqlclient", root=self.prefix, recursive=True)
 
     def url_for_version(self, version):
-        url = "https://dev.mysql.com/get/Downloads/MySQL-{0}/mysql-{1}.tar.gz"
-        return url.format(version.up_to(2), version)
+        #url = "https://dev.mysql.com/get/Downloads/MySQL-{0}/mysql-{1}.tar.gz"
+        url = "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-{0}.tar.gz"
+        return url.format(version)
 
     def cmake_args(self):
         spec = self.spec
@@ -191,5 +195,5 @@ class Mysql(CMakePackage):
             if int(cxxstd) > 14:
                 env.append_flags("CXXFLAGS", "-Wno-error=register")
 
-        if "python" in self.spec.flat_dependencies() and self.spec.satisfies("@:7"):
+        if self.spec.satisfies("@:7") and "python" in self.spec.flat_dependencies():
             self._fix_dtrace_shebang(env)
