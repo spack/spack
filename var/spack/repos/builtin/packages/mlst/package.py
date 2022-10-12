@@ -19,10 +19,18 @@ class Mlst(Package):
     depends_on("perl-moo", type="run")
     depends_on("perl-list-moreutils", type="run")
     depends_on("perl-json", type="run")
+    depends_on("perl-file-which", type="run")
     depends_on("blast-plus@2.9.0:", type="run")
     depends_on("any2fasta", type="run")
+    # dependencies for scripts
+    depends_on("parallel", type="run")
+    depends_on("curl", type="run")
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make("install")
+        mkdirp(prefix.bin)
+        mkdirp(prefix.db)
+        mkdirp(prefix.perl5)
+        install_tree("bin", prefix.bin)
+        install_tree("scripts", prefix.bin)
+        install_tree("db", prefix.db)
+        install_tree("perl5", prefix.perl5)
