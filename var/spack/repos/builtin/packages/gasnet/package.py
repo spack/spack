@@ -31,7 +31,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
 
     maintainers = ["PHHargrove", "bonachea"]
 
-    tags = ["e4s"]
+    tags = ["e4s", "ecp"]
 
     version("develop", branch="develop")
     version("main", branch="stable")
@@ -54,9 +54,9 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         description="The hardware-dependent network backends to enable.\n"
         + "(smp) = SMP conduit for single-node operation ;\n"
         + "(ibv) = Native InfiniBand verbs conduit ;\n"
+        + "(ofi) = OFI conduit over libfabric, for HPE Cray Slingshot and Intel Omni-Path ;\n"
         + "(udp) = Portable UDP conduit, for Ethernet networks ;\n"
         + "(mpi) = Low-performance/portable MPI conduit ;\n"
-        + "(ofi) = EXPERIMENTAL Portable OFI conduit over libfabric ;\n"
         + "(ucx) = EXPERIMENTAL UCX conduit for Mellanox IB/RoCE ConnectX-5+ ;\n"
         + "For detailed recommendations, consult https://gasnet.lbl.gov",
     )
@@ -165,6 +165,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         }
 
         os.environ["GASNET_VERBOSEENV"] = "1"  # include diagnostic info
+        os.environ["GASNET_SPAWN_VERBOSE"] = "1"  # include spawning diagnostics
         if "GASNET_SSH_SERVERS" not in os.environ:
             os.environ["GASNET_SSH_SERVERS"] = "localhost " * 4
 
