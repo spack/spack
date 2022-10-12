@@ -19,6 +19,7 @@ class RDtw(RPackage):
 
     cran = "dtw"
 
+    version("1.23-1", sha256="6ed6a3b52be673ce2617b8d48723c7c488c95aab88fe2912d7e00507838e826d")
     version("1.22-3", sha256="df7cf9adf613422ddb22a160597eb5f5475ab6c67c0d790092edb7f72ba98f00")
     version("1.20-1", sha256="43ca1a47a7c81a2b5d5054da1be8b8af79a85d6f9ce7b4512e9ed91f790f60f0")
     version("1.18-1", sha256="d9dab25bdf61705f9f28dc5ca1c96a7465b269233e878516c52c01b5a0da21ad")

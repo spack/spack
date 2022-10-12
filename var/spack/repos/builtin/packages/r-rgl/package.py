@@ -18,6 +18,7 @@ class RRgl(RPackage):
 
     cran = "rgl"
 
+    version("0.110.2", sha256="da1118c1990ae161a5787960fb22009601d2ee7d39ca9c97c31c70589bce346d")
     version("0.108.3.2", sha256="033af3aceade6c21d0a602958fff1c25c21febc7d0e867cf88860cfa25fc3c65")
     version("0.108.3", sha256="89f96eb462cacfcc796ad351d7dac0480a7eb9f80e9bd75e58c5a79f0ee8133b")
     version("0.104.16", sha256="b82d2e2b965e76d6cc55bbd15ee0f79c36913ab09ce5436d2104551563462a99")
@@ -37,6 +38,8 @@ class RRgl(RPackage):
     depends_on("r-jsonlite@0.9.20:", type=("build", "run"))
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-r6", type=("build", "run"), when="@0.108.3:")
+    depends_on("r-mime", type=("build", "run"), when="@0.110.2:")
+    depends_on("r-base64enc", type=("build", "run"), when="@0.110.2:")
     depends_on("libx11")
     depends_on("gl")
     depends_on("glu")

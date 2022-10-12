@@ -18,6 +18,7 @@ class RCli(RPackage):
 
     cran = "cli"
 
+    version("3.4.1", sha256="1c585efbfd8b8685c66fac34bcb60f28c351691bb4b9931df214e6e47fd9744e")
     version("3.3.0", sha256="c3a9ebbcb9017fb9aeda4f7df5ca981e42b169cbd7ce13e592cda2cd74250d63")
     version("3.2.0", sha256="cd5a1b754d09de33f088f25ecdb0494100f9a42bc0a66622bfd7d8ec5498e862")
     version("3.1.1", sha256="c8b3e6014ad60593ba21897255acfe90c0e3f98bd4f7e22c1f3acb2644cf54cf")
@@ -31,9 +32,10 @@ class RCli(RPackage):
 
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r@3,4:", type=("build", "run"), when="@3.3.0:")
-    depends_on("r-glue", type=("build", "run"), when="@2:")
-    depends_on("r-glue@1.6.0:", type=("build", "run"), when="@3.3.0:")
 
     depends_on("r-assertthat", type=("build", "run"), when="@:2.3")
     depends_on("r-crayon@1.3.4:", type=("build", "run"), when="@:2.2")
     depends_on("r-fansi", type=("build", "run"), when="@2:2.2")
+    depends_on("r-glue", type=("build", "run"), when="@2:")
+    depends_on("r-glue@1.6.0:", type=("build", "run"), when="@3.3.0:")
+    depends_on("r-glue", when="@:3.3.0")

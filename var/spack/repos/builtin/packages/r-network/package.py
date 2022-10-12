@@ -15,6 +15,7 @@ class RNetwork(RPackage):
 
     cran = "network"
 
+    version("1.18.0", sha256="59f4b10174c87c8742c6b3c93c5e47833042375f5f872fdd23155b4a5244ce5b")
     version("1.17.2", sha256="9588a198807c8c68da147f479ca9af5bcb4468cf91b6a90b8044d313d9fa30f7")
     version("1.17.1", sha256="fc3c3a0014f8895a11c33994c9b44c6ef6cc49c7d026cd41ae6bba5ef63005a7")
     version("1.16.1", sha256="eb6435794cacc81abe1664391e8dcf1c10112bbb76fff9016dd6dbb8e83efeb1")

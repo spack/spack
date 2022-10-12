@@ -20,6 +20,7 @@ class RKlar(RPackage):
 
     cran = "klaR"
 
+    version("1.7-1", sha256="0354bafb1a202bc439660ecfcfe78359bc2881a69d15ff64afa049e4eb171d25")
     version("1.7-0", sha256="b4795250ef19fd1b5e1b9a59343fd01159a33dbdbb504a06258220e37a718198")
     version("0.6-15", sha256="5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae")
 

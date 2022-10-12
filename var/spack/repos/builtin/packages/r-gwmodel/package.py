@@ -24,6 +24,7 @@ class RGwmodel(RPackage):
 
     cran = "GWmodel"
 
+    version("2.2-9", sha256="3696e0f24994df4f393dbcb2e74bc0808704b80e1203247be3911fc3bcdb5f18")
     version("2.2-8", sha256="5b1890dbf75502e89b651efd9158be77b3cfa764a5717f9889f438ed2b0a4da2")
     version("2.2-2", sha256="4e2b221b85fbc828ffc4f057c137ded849afcaac2a75c27d2d6d0a6db17f8a06")
     version("2.1-3", sha256="3e1a36fddf8e64f61d548067bb043216f8d12069d814a4cbf07a9cae0b310af6")

@@ -14,6 +14,7 @@ class RLavaan(RPackage):
 
     cran = "lavaan"
 
+    version("0.6-12", sha256="8048273e4102f8355ba123c8aff94a9e5a8e9ac9e02a73e986b106ceed4d079e")
     version("0.6-11", sha256="2cc193b82463a865cd8dadb7332409fdebf47e4035d5fe8dbf3414a7ae18d308")
     version("0.6-10", sha256="4d6944eb6d5743e7a2a2c7b56aec5d5de78585a52789be235839fb9f5f468c37")
     version("0.6-9", sha256="d404c4eb40686534f9c05f24f908cd954041f66d1072caea4a3adfa83a5f108a")

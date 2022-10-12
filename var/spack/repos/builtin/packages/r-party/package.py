@@ -28,6 +28,7 @@ class RParty(RPackage):
 
     cran = "party"
 
+    version("1.3-11", sha256="3ea41a1775d40bc6d0bdf657b98d939d99f98925ac985a31c969735c56618c9c")
     version("1.3-10", sha256="e5892955f6ce662ade568e646d1d672c3ecbf5d4e74b4a887a353e6160f7b56a")
     version("1.3-9", sha256="29a1fefdb86369285ebf5d48ab51268a83e2011fb9d9f609a2250b5f0b169089")
     version("1.3-5", sha256="1c3a35d3fe56498361542b3782de2326561c14a8fa1b76f3c9f13beb1fd51364")

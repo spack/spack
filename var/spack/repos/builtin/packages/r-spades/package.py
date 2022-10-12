@@ -26,6 +26,7 @@ class RSpades(RPackage):
 
     maintainers = ["dorton21"]
 
+    version("2.0.9", sha256="f68080318bc922c6d8c495e6d963acdbb24dc90a3e8013e3e2f894b40a584c85")
     version("2.0.8", sha256="2230704f700d07bda25a23ab5c6630a093c9ed2fe3c47ab6294eebaf1d86f03f")
     version("2.0.7", sha256="5b62e9d701aa178be57f22369a5d043c9793a1bd3dcd4acac18c5a6b906ed8a0")
     version("2.0.6", sha256="0fa59d1737c67abeb04eae894939bc4700f92d6c2cc2ec3489b4650720ede5a3")
@@ -34,6 +35,7 @@ class RSpades(RPackage):
     depends_on("r@4.0:", type=("build", "run"), when="@2.0.8:")
     depends_on("r-quickplot", type=("build", "run"))
     depends_on("r-reproducible@1.2.1.9007:", type=("build", "run"))
+    depends_on("r-reproducible@1.2.2:", type=("build", "run"), when="@2.0.9:")
     depends_on("r-spades-core@1.0.4:", type=("build", "run"))
     depends_on("r-spades-tools", type=("build", "run"))
 

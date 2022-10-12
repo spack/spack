@@ -14,6 +14,7 @@ class RPs(RPackage):
 
     cran = "ps"
 
+    version("1.7.1", sha256="9c458a377d47cc972d3cd0b2a17d0b7ad3cf3b62226410803072089a57a55ef1")
     version("1.7.0", sha256="8220cf32c6a12c908b6b7669f96b57445d3147a1aa484b9b5209e0f3fd4b52e1")
     version("1.6.0", sha256="89ad7ddc5e0818bccacfd0673ddf2da0892ac2a3b4d3a821e40884ab1e96bf31")
     version("1.5.0", sha256="7461a196f55557feda569a9791ad851c884f9a2dd71671655ed17cb048fafe96")

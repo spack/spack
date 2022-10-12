@@ -17,6 +17,7 @@ class RPhangorn(RPackage):
 
     cran = "phangorn"
 
+    version("2.10.0", sha256="d153f87053a1e6eebf46be98fad3f118349008c559a6797b55613629cab85dce")
     version("2.8.1", sha256="6d471410ae29775104a94746936e8c1c54c7273dd289333973ec06dad489dc75")
     version("2.5.5", sha256="c58dc1ace26cb4358619a15da3ea4765dbdde1557acccc5103c85589a7571346")
     version("2.5.3", sha256="a306585a0aabe7360a2adaf9116ae2993fb5ceff641b198f2e01e4329d3768af")
@@ -24,9 +25,12 @@ class RPhangorn(RPackage):
 
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r@4.1.0:", type=("build", "run"), when="@2.8.1:")
+    depends_on("r-digest", type=("build", "run"), when="@2.10.0:")
     depends_on("r-ape@5.0:", type=("build", "run"))
     depends_on("r-ape@5.5:", type=("build", "run"), when="@2.8.1:")
+    depends_on("r-ape@5.6:", type=("build", "run"), when="@2.10.0:")
     depends_on("r-fastmatch", type=("build", "run"))
+    depends_on("r-generics", type=("build", "run"), when="@2.10.0:")
     depends_on("r-igraph@1.0:", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-quadprog", type=("build", "run"))

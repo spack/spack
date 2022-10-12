@@ -19,6 +19,7 @@ class RAls(RPackage):
 
     cran = "ALS"
 
+    version("0.0.7", sha256="57a195e8c5a3d856cd543c99ae532cc25c83b3b444f513b74447bf4a72378da0")
     version("0.0.6", sha256="ca90d27115ae9e476967f521bf6935723e410a3bf92477e7570e14bfd3b099eb")
 
     depends_on("r@2.10:", type=("build", "run"))

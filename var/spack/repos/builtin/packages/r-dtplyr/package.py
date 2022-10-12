@@ -15,6 +15,7 @@ class RDtplyr(RPackage):
 
     cran = "dtplyr"
 
+    version("1.2.2", sha256="f85928fe63701bc3a0cadf705ba660834a2aaeab37cf20addab406430e53e2d4")
     version("1.2.1", sha256="2640e9cde4eaa06f02cff29e3f2b99fdd08488df07ea2e6629b2ed6a8285d0f3")
     version("1.2.0", sha256="a6dedfb6dd80dfc1d29d005ab634c060b7bfda8cb49835ece84d3b7d12077414")
     version("1.1.0", sha256="99681b7285d7d5086e5595ca6bbeebf7f4e2ee358a32b694cd9d35916cdfc732")

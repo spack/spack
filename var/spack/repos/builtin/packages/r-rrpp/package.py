@@ -25,6 +25,7 @@ class RRrpp(RPackage):
 
     cran = "RRPP"
 
+    version("1.3.1", sha256="50c7d4b20fb84088b0440c2f55ed146bcb35b0d9dda8581dca28e30b2fecbcd5")
     version("1.2.3", sha256="6eee638af94d69d4dd471a5e01243622dedef3c0c95b3363e21e8e11f0ea564c")
     version("1.1.2", sha256="2b563f3db9e349abe481444f48a1a3e6bc1154de8259b7a7060ab588287e80c0")
     version("0.6.2", sha256="f8ffa318d806184c0e65929ea1b8b6a88bb9e45f77db2da5a83c6fe550b084dc")

@@ -17,6 +17,7 @@ class RSf(RPackage):
 
     cran = "sf"
 
+    version("1.0-8", sha256="3ddc7090e79d6b5e3fad69e01254677ab5ec86a0b25e7e73493c8eac0ea98732")
     version("1.0-7", sha256="d0731fab9438d73a55af7232f0474b36f4b2a4e6d66adaa141632f4a60265453")
     version("1.0-5", sha256="290c28fa5ea777d555e70962c59079c134f02f7bdf60259a72eea79a064a1ac4")
     version("0.9-7", sha256="4acac2f78badf9d252da5bf377975f984927c14a56a72d9f83d285c0adadae9c")
@@ -40,3 +41,4 @@ class RSf(RPackage):
     depends_on("sqlite", when="@0.9-7")
 
     depends_on("r-units@0.6-0:", type=("build", "run"), when="@:9.9-7")
+    depends_on("r-units@0.7-0:", type=("build", "run"), when="@1.0-8:")

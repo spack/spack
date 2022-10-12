@@ -25,6 +25,7 @@ class RMlrmbo(RPackage):
 
     cran = "mlrMBO"
 
+    version("1.1.5.1", sha256="0cf26e5e9b180d15b932541cf081a552703a60edf762aafca9933c24ea91dc99")
     version("1.1.5", sha256="7ab9d108ad06f6c5c480fa4beca69e09ac89bb162ae6c85fe7d6d25c41f359b8")
     version("1.1.2", sha256="8e84caaa5d5d443d7019128f88ebb212fb095870b3a128697c9b64fe988f3efe")
     version("1.1.1", sha256="e87d9912a9b4a968364584205b8ef6f7fea0b5aa043c8d31331a7b7be02dd7e4")

@@ -21,6 +21,7 @@ class RGamlssDist(RPackage):
 
     cran = "gamlss.dist"
 
+    version("6.0-5", sha256="0f88afdfb148de79d3ece66bf4631ea0dc3ecf1188680802abffd6bc7139a20e")
     version("6.0-3", sha256="ec90ea83cd81b894c73f987f69814077697be33abf0708e0f3e2a39d02c912bf")
     version("6.0-1", sha256="b563b4de6bcedcfa4f8d29198a47004e38fd2de6e0509c788015d4e3feb18154")
     version("5.1-7", sha256="9871c38c893a8df7874c533351858dfe4e7587c71021dbbf88c0c76ff3c0ef5b")

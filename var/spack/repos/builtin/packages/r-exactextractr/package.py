@@ -14,6 +14,7 @@ class RExactextractr(RPackage):
 
     cran = "exactextractr"
 
+    version("0.9.0", sha256="705a355534f427dc832af2a294aaf928c10c72d6335d38aed86da64d814eb18d")
     version("0.8.2", sha256="cc32ab3af8d881a7e7836c296ea42f3fdabf3373ec1de0b154dbfe9870ee8a74")
     version("0.7.2", sha256="2eb2b5eb2156cca875e7004b80687589217abd6fce5ebb7d8acb7fa71f6e6958")
     version("0.5.1", sha256="47ddfb4b9e42e86957e03b1c745d657978d7c4bed12ed3aa053e1bc89f20616d")

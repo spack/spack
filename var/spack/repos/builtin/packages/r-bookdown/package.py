@@ -14,6 +14,7 @@ class RBookdown(RPackage):
 
     cran = "bookdown"
 
+    version("0.29", sha256="5b4e3dc44a5c6574e3d9e19ebe7897d3ddcf6eaffe8214e1d272b545929ff723")
     version("0.26", sha256="c6207288cb72ea7c555cbad449c61278e94b742cac1f610879fb3f2d60b2b185")
     version("0.24", sha256="8bead2a20542d05f643fe77a949689a17b0ae9ff23efbb918ddab47597db1be3")
     version("0.21", sha256="47c0fa7a65da83753c2f445e0e972913f9203460f1daae3ab255d0d4b30eba76")
@@ -24,10 +25,12 @@ class RBookdown(RPackage):
     depends_on("r-htmltools@0.3.6:", type=("build", "run"))
     depends_on("r-knitr@1.22:", type=("build", "run"))
     depends_on("r-knitr@1.31:", type=("build", "run"), when="@0.24:")
+    depends_on("r-knitr@1.38:", type=("build", "run"), when="@0.29:")
     depends_on("r-rmarkdown@1.12:", type=("build", "run"))
     depends_on("r-rmarkdown@2.4:", type=("build", "run"), when="@0.21:")
     depends_on("r-rmarkdown@2.9:", type=("build", "run"), when="@0.24:")
     depends_on("r-rmarkdown@2.13:", type=("build", "run"), when="@0.26:")
+    depends_on("r-rmarkdown@2.14:", type=("build", "run"), when="@0.29:")
     depends_on("r-jquerylib", type=("build", "run"), when="@0.24:")
     depends_on("r-xfun@0.6:", type=("build", "run"))
     depends_on("r-xfun@0.13:", type=("build", "run"), when="@0.21:")

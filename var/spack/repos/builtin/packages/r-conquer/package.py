@@ -16,6 +16,7 @@ class RConquer(RPackage):
 
     cran = "conquer"
 
+    version("1.3.1", sha256="14c28ab47b60c39696f34ee6fdd737bdcd2d28d05b3641c0e89960ab14a8bcd5")
     version("1.3.0", sha256="ac354e18c9ad6f41ed5200fad1c99fa5b124fc6fa5bba8f3434be2478f53d5fa")
     version("1.2.1", sha256="1354f90f962a2124e155227cdc0ed2c6e54682f1e08934c49a827e51dc112f45")
     version("1.0.2", sha256="542f6154ce1ffec0c1b4dd4e1f5b86545015f4b378c4c66a0840c65c57d674ff")

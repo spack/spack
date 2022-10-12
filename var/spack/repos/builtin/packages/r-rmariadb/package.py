@@ -15,6 +15,7 @@ class RRmariadb(RPackage):
 
     cran = "RMariaDB"
 
+    version("1.2.2", sha256="c97c61ace584f9ad9929d3e3f366556e0eecad12bc98ea2979563a01475f468e")
     version("1.2.1", sha256="c9176a096854ce33a98ce0faef0065c50b5d356174f90cea742c70e130cf5f0c")
     version("1.1.0", sha256="9ffa63a15052876a51a7996ca4e6a5b7b937f594b5cc7ca5a86f43789e22a956")
     version("1.0.8", sha256="3c8aedc519dc063ceb068535a3700bc5caf26f867078cc5a228aa8961e2d99f5")
@@ -23,6 +24,7 @@ class RRmariadb(RPackage):
     depends_on("r-bit64", type=("build", "run"))
     depends_on("r-blob", type=("build", "run"), when="@1.2.1:")
     depends_on("r-dbi@1.1.0:", type=("build", "run"))
+    depends_on("r-dbi@1.1.3:", type=("build", "run"), when="@1.2.2:")
     depends_on("r-hms@0.5.0:", type=("build", "run"))
     depends_on("r-lubridate", type=("build", "run"), when="@1.1.0:")
     depends_on("r-rcpp@0.12.4:", type=("build", "run"))

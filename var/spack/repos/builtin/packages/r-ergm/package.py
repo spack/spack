@@ -17,6 +17,7 @@ class RErgm(RPackage):
 
     cran = "ergm"
 
+    version("4.2.3", sha256="35d15373d4a8445872eb3713c81c6c6ac34b72096e0cdb04292a468e65ae9288")
     version("4.2.2", sha256="ced92b0a32c78c85546d665c32fb3993fe77a3809aa88f43c3eee39e2577f2f0")
     version("4.2.1", sha256="484769eb69d127a9e9adf5c1c8c88106d5fbaf4aaf2f915621d7f043c7cab0f5")
     version("4.1.2", sha256="1abc6ef53376a4132530c376ce477ae7a2590e95fe8feb011c0da9cfb4d49ba0")
@@ -29,6 +30,7 @@ class RErgm(RPackage):
     depends_on("r@4.0:", type=("build", "run"), when="@4.2.1:")
     depends_on("r-network@1.15:", type=("build", "run"))
     depends_on("r-network@1.17:", type=("build", "run"), when="@4.1.2:")
+    depends_on("r-network@1.17.0:", type=("build", "run"), when="@4.2.3:")
     depends_on("r-robustbase@0.93-5:", type=("build", "run"))
     depends_on("r-robustbase@0.93-7:", type=("build", "run"), when="@4.1.2:")
     depends_on("r-coda@0.19-2:", type=("build", "run"))
@@ -55,11 +57,12 @@ class RErgm(RPackage):
     depends_on("r-tibble@3.1.0:", type=("build", "run"), when="@4.1.2:")
     depends_on("r-magrittr@2.0.1:", type=("build", "run"), when="@4.2.1:")
     depends_on("r-knitr", type=("build", "run"), when="@4.2.1:")
-    depends_on("r-digest", type=("build", "run"), when="@4.2.1:")
     depends_on("r-stringr", type=("build", "run"), when="@4.2.1:")
 
     depends_on("r-dplyr@0.8.0.1:", type=("build", "run"), when="@3.10.0:3.10.4")
     depends_on("r-lpsolve@5.6.13:", type=("build", "run"), when="@:3.11.0")
+    depends_on("r-digest", type=("build", "run"), when="@4.2.1:")
+    depends_on("r-digest", when="@:4.2.2")
 
     # The CRAN page list OpenMPI as a dependency but this is not a dependency
     # for using the package. If one wishes to use MPI, simply load an MPI
