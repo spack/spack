@@ -24,6 +24,7 @@ import spack.config
 import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
+import spack.tengine
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -641,6 +642,9 @@ def env_depfile(args):
     def get_install_target(name):
         return os.path.join(target_prefix, ".install", name)
 
+    def get_install_deps_target(name):
+        return os.path.join(target_prefix, ".install-deps", name)
+
     for _, spec in env.concretized_specs():
         for s in spec.traverse(root=True):
             hash_to_spec[s.dag_hash()] = s
@@ -655,76 +659,38 @@ def env_depfile(args):
 
     # All package install targets, not just roots.
     all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
+    all_install_deps_targets = [get_install_deps_target(h) for h, _ in hash_to_prereqs.items()]
 
     buf = six.StringIO()
 
-    buf.write(
-        """SPACK ?= spack
+    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
 
-.PHONY: {} {}
-
-{}: {}
-
-{}: {}
-\t@touch $@
-
-{}:
-\t@mkdir -p {}
-
-{}: | {}
-\t$(info Installing $(SPEC))
-\t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
---no-add /$(notdir $@) && touch $@
-
-""".format(
-            get_target("all"),
-            get_target("clean"),
-            get_target("all"),
-            get_target("env"),
-            get_target("env"),
-            " ".join(root_install_targets),
-            get_target("dirs"),
-            get_target(".install"),
-            get_target(".install/%"),
-            get_target("dirs"),
-            "+" if args.jobserver else "",
-            env.path,
-        )
-    )
-
-    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
-    # The prefix can be an empty string, in that case we don't add the `/`.
-    # The name is currently the dag hash of the spec. In principle it
-    # could be the package name in case of `concretization: together` so
-    # it can be more easily referred to, but for now we don't special case
-    # this.
     fmt = "{name}{@version}{%compiler}{variants}{arch=architecture}"
+    hash_with_name = [(h, hash_to_spec[h].format(fmt)) for h in hash_to_prereqs.keys()]
+    targets_to_prereqs = [
+        (get_install_deps_target(h), " ".join(prereqs)) for h, prereqs in hash_to_prereqs.items()
+    ]
 
-    # Set SPEC for each hash
-    buf.write("# Set the human-readable spec for each target\n")
-    for dag_hash in hash_to_prereqs.keys():
-        formatted_spec = hash_to_spec[dag_hash].format(fmt)
-        buf.write("{}: SPEC = {}\n".format(get_target("%/" + dag_hash), formatted_spec))
-    buf.write("\n")
-
-    # Set install dependencies
-    buf.write("# Install dependencies\n")
-    for parent, children in hash_to_prereqs.items():
-        if not children:
-            continue
-        buf.write("{}: {}\n".format(get_install_target(parent), " ".join(children)))
-    buf.write("\n")
-
-    # Clean target: remove target files but not their folders, cause
-    # --make-target-prefix can be any existing directory we do not control,
-    # including empty string (which means deleting the containing folder
-    # would delete the folder with the Makefile)
-    buf.write(
-        "{}:\n\trm -f -- {} {}\n".format(
-            get_target("clean"), get_target("env"), " ".join(all_install_targets)
-        )
+    rendered = template.render(
+        {
+            "all_target": get_target("all"),
+            "env_target": get_target("env"),
+            "clean_target": get_target("clean"),
+            "all_install_targets": " ".join(all_install_targets),
+            "all_install_deps_targets": " ".join(all_install_deps_targets),
+            "root_install_targets": " ".join(root_install_targets),
+            "dirs_target": get_target("dirs"),
+            "environment": env.path,
+            "install_target": get_target(".install"),
+            "install_deps_target": get_target(".install-deps"),
+            "any_hash_target": get_target("%"),
+            "hash_with_name": hash_with_name,
+            "jobserver_support": "+" if args.jobserver else "",
+            "targets_to_prereqs": targets_to_prereqs,
+        }
     )
 
+    buf.write(rendered)
     makefile = buf.getvalue()
 
     # Finally write to stdout/file.
