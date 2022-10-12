@@ -16,9 +16,9 @@ class Coreneuron(CMakePackage):
     and optimal performance."""
 
     homepage = "https://github.com/BlueBrain/CoreNeuron"
-    url      = "https://github.com/BlueBrain/CoreNeuron"
+    url = "https://github.com/BlueBrain/CoreNeuron"
     # This simplifies testing the gitlab-pipelines repository:
-    git      = "ssh://git@bbpgitlab.epfl.ch/hpc/coreneuron.git"
+    git = "ssh://git@bbpgitlab.epfl.ch/hpc/coreneuron.git"
 
     version('develop', branch='master')
     version('8.2.1', tag='8.2.1')
@@ -44,7 +44,6 @@ class Coreneuron(CMakePackage):
     variant('codegenopt', default=False, description="Use NMODL with codedgen ionvar copies optimizations")
     variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
     variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
-    variant('ispc', default=False, description="Enable ISPC backend")
     variant("legacy-unit", default=True, description="Enable legacy units")
 
     # Build with `ninja` instead of `make`
@@ -74,7 +73,6 @@ class Coreneuron(CMakePackage):
     depends_on('nmodl@0.4.0:', when='@8.2:+nmodl')
     depends_on('nmodl@0.3.0:', when='@1.0:+nmodl')
     depends_on('nmodl@0.3b', when='@:0.22+nmodl')
-    depends_on('ispc', when='+ispc')
 
     # Old versions. Required by previous neurodamus package.
     version('master',      git=url, submodules=True)
@@ -86,11 +84,10 @@ class Coreneuron(CMakePackage):
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
 
-    # sympy, codegen and ispc options are only usable with nmodl
+    # sympy and codegen options are only usable with nmodl
     conflicts('+sympyopt', when='~sympy')
     conflicts('+sympy', when='~nmodl')
     conflicts('+codegenopt', when='~nmodl')
-    conflicts('+ispc', when='~nmodl')
 
     # Cannot enabled Unified Memory without GPU build
     conflicts('+unified', when='~gpu')
@@ -150,11 +147,11 @@ class Coreneuron(CMakePackage):
         return ' '.join(flags)
 
     def get_cmake_args(self):
-        spec   = self.spec
+        spec = self.spec
         flags = self.get_flags()
 
         if spec.satisfies('+profile'):
-            env['CC']  = 'tau_cc'
+            env['CC'] = 'tau_cc'
             env['CXX'] = 'tau_cxx'
 
         options =\
@@ -192,15 +189,6 @@ class Coreneuron(CMakePackage):
 
         if spec.satisfies('+codegenopt'):
             nmodl_options += ' --opt-ionvar-copy=TRUE'
-
-        if spec.satisfies('+ispc'):
-            options.append('-DCORENRN_ENABLE_ISPC=ON')
-            if '+knl' in spec:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
-                               '--target=avx512knl-i32x16')
-            else:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
-                               '--target=host')
 
         if spec.satisfies('+sympy'):
             nmodl_options += ' sympy --analytic'
