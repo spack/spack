@@ -224,7 +224,7 @@ spack:
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
   - upcxx +rocm amdgpu_target=gfx90a
-  - vtk-m ~openmp +rocm amdgpu_target=gfx90a
+  - vtk-m +rocm amdgpu_target=gfx90a
 
   # CPU failures
   #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
