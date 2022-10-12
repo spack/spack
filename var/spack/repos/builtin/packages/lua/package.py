@@ -243,7 +243,7 @@ class Lua(LuaImplPackage):
     patch(
         "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
         sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
-        when="+pcfile",
+        when="+pcfile @:5.3.9999",
     )
 
     def build(self, spec, prefix):
@@ -255,7 +255,7 @@ class Lua(LuaImplPackage):
             "MYLDFLAGS="
             + " ".join((spec["readline"].libs.search_flags, spec["ncurses"].libs.search_flags)),
             "MYLIBS=%s" % spec["ncurses"].libs.link_flags,
-            "CC={0} {1} {2}".format(spack_cc, self.compiler.c99_flag, self.compiler.cc_pic_flag),
+            "CC={0} -std=gnu99 {1}".format(spack_cc, self.compiler.cc_pic_flag),
             target,
         )
 
