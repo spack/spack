@@ -133,6 +133,16 @@ class Dftbplus(CMakePackage):
             self.define_from_variant("WITH_TBLITE", "tblite"),
             self.define_from_variant("WITH_TRANSPORT", "transport"),
         ]
+        # SCALAPACK
+        if "+mpi" in self.spec:
+            args.extend(
+                [
+                    self.define("SCALAPACK_FOUND", "true"),
+                    self.define("SCALAPACK_INCLUDE_DIRS", self.spec["scalapack"].prefix.include),
+                    self.define("SCALAPACK_LIBRARIES", self.spec["scalapack"].libs.joined(";")),
+                    self.define("SCALAPACK_LIBRARY", self.spec["scalapack"].libs.joined(";")),
+                ]
+            )
         if self.run_tests:
             args.append("-DWITH_UNIT_TESTS=ON")
         else:
