@@ -31,4 +31,4 @@ class PyBakta(PythonPackage):
     depends_on("diamond@2.0.14:", type=("build", "run"))
     depends_on("blast-plus@2.12.0:", type=("build", "run"))
     depends_on("amrfinder@3.10.23:", type=("build", "run"))
-    depends_on("deepsig-biocomp@1.2.5:", type=("build", "run"))
+    depends_on("py-deepsig-biocomp@1.2.5:", type=("build", "run"))

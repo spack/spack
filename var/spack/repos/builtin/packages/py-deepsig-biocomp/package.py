@@ -20,5 +20,4 @@ class PyDeepsigBiocomp(PythonPackage):
     depends_on("python@3.8", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-biopython@1.78:", type=("build", "run"))
-    depends_on("py-keras@2.4.3:", type=("build", "run"))
-    depends_on("py-tensorflow", type=("build", "run"))
+    depends_on("py-tensorflow@2.2.0", type=("build", "run"))
