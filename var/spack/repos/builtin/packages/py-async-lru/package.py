@@ -21,11 +21,9 @@ class PyAsyncLru(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/a/{0}/{0}-{1}.tar.gz"
         if version >= Version("1.0.3"):
-            return "https://files.pythonhosted.org/packages/source/a/async-lru/async-lru-{0}.tar.gz".format(
-                version
-            )
+            name = "async-lru"
         else:
-            return "https://files.pythonhosted.org/packages/source/a/async_lru/async_lru-{0}.tar.gz".format(
-                version
-            )
+            name = "async_lru"
+        return url.format(name, version)
