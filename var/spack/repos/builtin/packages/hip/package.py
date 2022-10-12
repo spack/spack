@@ -288,9 +288,8 @@ class Hip(CMakePackage):
         if self.spec.external:
             # For external packages we only assume the `hip` prefix is known,
             # because spack does not set prefixes of dependencies of externals.
-            # We assume self.spec.prefix is /opt/rocm-x.y.z/hip and rocm has a
-            # default installation with everything installed under
-            # /opt/rocm-x.y.z
+            # We assume self.spec.prefix is  /opt/rocm-x.y.z for rocm-5.2.0 and newer
+            # and /opt/rocm-x.y.z/hip for older versions
             if self.spec.satisfies("@5.2.0:"):
                 rocm_prefix = Prefix(self.spec.prefix)
             else:
