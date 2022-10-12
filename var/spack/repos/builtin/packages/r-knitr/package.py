@@ -15,6 +15,7 @@ class RKnitr(RPackage):
 
     cran = "knitr"
 
+    version("1.40", sha256="9b8f95ff367a0e52f024bda30315ec7cdd6a5b82371a1aaed95ab4eea78535bc")
     version("1.39", sha256="c91a65edebdca779af7f7480fa6636667497c9291ad55d6efd982db0bb91ac72")
     version("1.37", sha256="39cd2a4848baebbe7fa0c0ab8200179690fb5b9190f0c1688d987c38363ad763")
     version("1.33", sha256="2f83332b0a880de6eae522271bda7f862c97693fba45c23ab1f772028f6c0909")

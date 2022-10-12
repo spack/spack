@@ -102,8 +102,8 @@ class TestState(object):
 
     def restore(self):
         if _serialize:
-            spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
+            spack.repo.path = spack.repo._path(self.config)
             spack.platforms.host = self.platform
 
             new_store = spack.store.Store.deserialize(self.store_token)
