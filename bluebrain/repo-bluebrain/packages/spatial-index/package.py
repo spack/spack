@@ -15,6 +15,8 @@ class SpatialIndex(PythonPackage):
     submodules = True
 
     version('develop', branch='main')
+    version('0.9.0', tag="0.9.0")
+    version('0.8.3', tag="0.8.3")
     version('0.8.2', tag="0.8.2")
     version('0.8.1', tag="0.8.1")
     version('0.8.0', tag="0.8.0")
@@ -34,7 +36,7 @@ class SpatialIndex(PythonPackage):
     depends_on("py-libsonata", type=("build", "run"), when="@0.2.2:")
     depends_on("py-morphio", type=("build", "run"))
     depends_on("py-morpho-kit", type=("build", "run"))
-    depends_on("py-mvdtool~mpi", type=("build", "run"))
+    depends_on("py-mvdtool~mpi", type=("build", "run"), when="@:0.8.3")
     depends_on("py-numpy-quaternion", type=("build", "run"), when="@0.2.1:")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"), when="@0.5.3:")
