@@ -42,7 +42,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
     url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-2021.3.0.tar.gz"
     git = "https://bitbucket.org/berkeleylab/upcxx.git"
 
-    tags = ["e4s"]
+    tags = ["e4s", "ecp"]
 
     version("develop", branch="develop")
     version("master", branch="master")
@@ -90,7 +90,8 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
 
     # UPC++ always relies on GASNet-EX.
     # The default (and recommendation) is to use the implicit, embedded version.
-    # This variant allows overriding with a particular version of GASNet-EX sources.
+    # This variant allows overriding with a particular version of GASNet-EX sources,
+    # although this is not officially supported and some combinations might be rejected.
     variant("gasnet", default=False, description="Override embedded GASNet-EX version")
     depends_on("gasnet conduits=none", when="+gasnet")
 
@@ -149,6 +150,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             real_cc = join_path(env["CRAYPE_DIR"], "bin", "cc")
             real_cxx = join_path(env["CRAYPE_DIR"], "bin", "CC")
             # workaround a bug in the UPC++ installer: (issue #346)
+            # this can be removed once the floor version reaches 2020.10.0
             env["GASNET_CONFIGURE_ARGS"] += " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
             if "+mpi" in spec:
                 env["GASNET_CONFIGURE_ARGS"] += " --with-mpicc=" + real_cc
@@ -170,6 +172,7 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
                 provider = "verbs;ofi_rxm"
 
             # Append the recommended options for Cray Shasta
+            # This list can be pruned once the floor version reaches 2022.9.0
             options.append("--with-pmi-version=cray")
             options.append("--with-pmi-runcmd='srun -n %N -- %C'")
             options.append("--disable-ibv")
