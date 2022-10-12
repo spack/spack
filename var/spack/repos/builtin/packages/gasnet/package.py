@@ -37,6 +37,7 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     version("main", branch="stable")
     version("master", branch="master")
 
+    version("2022.9.0", sha256="6873ff4ad8ebee49da4378f2d78095a6ccc31333d6ae4cd739b9f772af11f936")
     version("2022.3.0", sha256="91b59aa84c0680c807e00d3d1d8fa7c33c1aed50b86d1616f93e499620a9ba09")
     version("2021.9.0", sha256="1b6ff6cdad5ecf76b92032ef9507e8a0876c9fc3ee0ab008de847c1fad0359ee")
     version("2021.3.0", sha256="8a40fb3fa8bacc3922cd4d45217816fcb60100357ab97fb622a245567ea31747")
