@@ -21,7 +21,7 @@ SPACK ?= spack
 
 # Targets of the form {{ install_deps_target }}/<hash> install dependencies only
 {{ install_deps_target }}/%: | {{ dirs_target }}
-	touch $@
+	@touch $@
 
 # Set a human-readable SPEC variable for each target that has a hash
 {% for (hash, name) in hash_with_name -%} 
