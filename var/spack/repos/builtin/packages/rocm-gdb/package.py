@@ -131,6 +131,7 @@ class RocmGdb(AutotoolsPackage):
             "--disable-sim",
             "--enable-tui",
             "--disable-gdbtk",
+            "--disable-shared",
             "--with-expat",
             "--with-system-zlib" "--without-guile",
             "--with-babeltrace",
@@ -138,4 +139,6 @@ class RocmGdb(AutotoolsPackage):
             "--with-python",
             "--with-rocm-dbgapi={0}".format(self.spec["rocm-dbgapi"].prefix),
         ]
+        if self.spec.satisfies("@5.2.0:"):
+            options.append("--disable-gprofing")
         return options
