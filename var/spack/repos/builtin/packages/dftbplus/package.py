@@ -30,8 +30,8 @@ class Dftbplus(CMakePackage):
     depends_on("cmake@3.16:", type="build")
     depends_on("ninja", type="build")
 
-    depends_on("blas")
-    depends_on("lapack")
+    depends_on("blas", when="-mpi")
+    depends_on("lapack", when="-mpi")
 
     depends_on("arpack-ng", when="+arpack")
     depends_on("simple-dftd3", when="+sdftd3")
@@ -59,9 +59,11 @@ class Dftbplus(CMakePackage):
         default=False,
         description="Whether the ARPACK library should be included (needed for TD-DFTB).",
     )
-    # variant("chimes", default=False,
-    # description="Whether repulsive corrections"
-    # "via the ChIMES library should be enabled.")
+    variant(
+        "chimes",
+        default=False,
+        description="Whether repulsive corrections" "via the ChIMES library should be enabled.",
+    )
     variant(
         "elsi",
         default=False,
@@ -116,11 +118,9 @@ class Dftbplus(CMakePackage):
 
     def cmake_args(self):
         args = [
-            "-DWITH_CHIMES=OFF",  # Chimes isn't present yet
-            "-DWITH_TBLITE=OFF",  # tblite isn't present yet
             self.define_from_variant("WITH_API", "api"),
             self.define_from_variant("WITH_ARPACK", "arpack"),
-            # self.define_from_variant("WITH_CHIMES", "chimes"),
+            self.define_from_variant("WITH_CHIMES", "chimes"),
             self.define_from_variant("WITH_ELSI", "elsi"),
             self.define_from_variant("WITH_GPU", "gpu"),
             self.define_from_variant("WITH_MBD", "mbd"),
@@ -130,7 +130,7 @@ class Dftbplus(CMakePackage):
             self.define_from_variant("WITH_PYTHON", "python"),
             self.define_from_variant("WITH_SDFTD3", "sdftd3"),
             self.define_from_variant("WITH_SOCKETS", "sockets"),
-            # self.define_from_variant("WITH_TBLITE", "tblite"),
+            self.define_from_variant("WITH_TBLITE", "tblite"),
             self.define_from_variant("WITH_TRANSPORT", "transport"),
         ]
         if self.run_tests:
