@@ -17,7 +17,6 @@ class PyJupyterServerMathjax(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-wheel", type="build")
     depends_on("py-jupyter-packaging", type="build")
     depends_on("py-jupyter-packaging11@:1", when="@0.2.6:", type="build")
     depends_on("py-jupyter-server@1.1:1", when="@0.2.3", type=("build", "run"))
