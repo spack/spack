@@ -27,21 +27,6 @@ class Dftbplus(CMakePackage):
     version("20.1", sha256="a155ca927c804234587c61c4938d154f31578c816b0ce20eaee3b5d7e39d91dc")
     version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
 
-    depends_on("cmake@3.16:", type="build")
-    depends_on("ninja", type="build")
-
-    depends_on("blas", when="-mpi")
-    depends_on("lapack", when="-mpi")
-
-    depends_on("arpack-ng", when="+arpack")
-    depends_on("simple-dftd3", when="+sdftd3")
-    depends_on("elsi", when="+elsi")
-    depends_on("magma", when="+gpu")
-    depends_on("mpi", when="+mpi")
-    depends_on("plumed", when="+plumed")
-    depends_on("scalapack", when="+mpi")
-    depends_on("python", when="+python")
-
     variant(
         "build_type",
         default="Release",
@@ -115,6 +100,21 @@ class Dftbplus(CMakePackage):
     variant(
         "tblite", default=False, description="Whether xTB support should be included via tblite."
     )
+
+    depends_on("cmake@3.16:", type="build")
+    depends_on("ninja", type="build")
+
+    depends_on("blas", when="-mpi")
+    depends_on("lapack", when="-mpi")
+
+    depends_on("arpack-ng", when="+arpack")
+    depends_on("simple-dftd3", when="+sdftd3")
+    depends_on("elsi", when="+elsi")
+    depends_on("magma", when="+gpu")
+    depends_on("mpi", when="+mpi")
+    depends_on("plumed", when="+plumed")
+    depends_on("scalapack", when="+mpi")
+    depends_on("python", when="+python")
 
     def cmake_args(self):
         args = [
