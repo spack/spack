@@ -38,7 +38,7 @@ A build matrix showing which packages are working on which systems is shown belo
 
    .. tab-item:: RHEL
 
-      .. note::
+      .. code-block:: console
 
          yum update -y
          yum install -y epel-release

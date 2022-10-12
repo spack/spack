@@ -30,6 +30,7 @@ class RPhytools(RPackage):
 
     cran = "phytools"
 
+    version("1.2-0", sha256="ba3c684118c0eaab4601b21988c553ce7ee019df1714d2ac8d4451075f843b86")
     version("1.0-3", sha256="bfe2aec6aae8235264c1494eee42be494fed81a676c6de9e39c57a6e3682b37d")
     version("1.0-1", sha256="b7bf5d35ec4205115112481f6761de3e276e6b086a3e5249621ad63aa23a1ac8")
     version("0.7-70", sha256="e3432c3b006e5cc6f1292bebd81ebc20044edf1f56c3d27a3497f738eb99f0d3")
@@ -48,6 +49,7 @@ class RPhytools(RPackage):
     depends_on("r-mnormt", type=("build", "run"))
     depends_on("r-nlme", type=("build", "run"))
     depends_on("r-numderiv", type=("build", "run"))
+    depends_on("r-optimparallel", type=("build", "run"), when="@1.2-0:")
     depends_on("r-phangorn@2.3.1:", type=("build", "run"))
     depends_on("r-plotrix", type=("build", "run"))
     depends_on("r-scatterplot3d", type=("build", "run"))

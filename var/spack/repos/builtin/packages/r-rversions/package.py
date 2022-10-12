@@ -15,6 +15,7 @@ class RRversions(RPackage):
 
     cran = "rversions"
 
+    version("2.1.2", sha256="de5818233e8271132fe8ea70145618950b35786e0d2f270e39bf3338f3b8b160")
     version("2.1.1", sha256="79aaacf5a1258d91ac0ddedf3c8c16a2d10d39010993dcc7b0a2638afee27cb1")
     version("2.0.2", sha256="3523f4b7393365341d429500b01ba3a224056e89d134635b81dfb4918ba2173e")
     version("2.0.1", sha256="51ec1f64e7d628e88d716a020d5d521eba71d472e3c9ae7b694428ef6dd786c5")

@@ -18,6 +18,7 @@ class RZoo(RPackage):
 
     cran = "zoo"
 
+    version("1.8-11", sha256="848e50f875afe06f13422e32160082b0725159a8be98234ef358480e57029ca5")
     version("1.8-10", sha256="c9a282d8004c22651c4fa1d657d3cad946c5ec55c4dc068569d860ee9b31ed47")
     version("1.8-9", sha256="b7be259067a8b9d4a8f5d387e0946a5ba1eb43474baa67ccf4f8bf4b15f772a3")
     version("1.8-8", sha256="4e8cc4065047ba12e103b9664f3b607c770673096e9c2b694fad2b2ec3203ce7")

@@ -17,6 +17,7 @@ class RSnowfall(RPackage):
 
     cran = "snowfall"
 
+    version("1.84-6.2", sha256="9b467ab2b992455c6e1aeabe375c5694761fa1cf8aaf4f003ca47102b656353b")
     version("1.84-6.1", sha256="5c446df3a931e522a8b138cf1fb7ca5815cc82fcf486dbac964dcbc0690e248d")
 
     depends_on("r@2.10:", type=("build", "run"))
