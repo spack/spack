@@ -27,3 +27,10 @@ class PyPoetryCore(PythonPackage):
     depends_on("py-typing@3.7.4.1:3", when="^python@2.7", type=("build", "run"))
     depends_on("py-enum34@1.1.10:1", when="^python@2.7", type=("build", "run"))
     depends_on("py-functools32@3.2.3-2:3", when="^python@2.7", type=("build", "run"))
+
+    # https://github.com/python-poetry/poetry/issues/5547
+    def setup_build_environment(self, env):
+        env.set("GIT_DIR", self.stage.source_path)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set("GIT_DIR", dependent_spec.package.stage.source_path)
