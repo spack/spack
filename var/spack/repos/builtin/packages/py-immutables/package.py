@@ -13,6 +13,7 @@ class PyImmutables(PythonPackage):
     homepage = "https://github.com/MagicStack/immutables"
     pypi = "immutables/immutables-0.14.tar.gz"
 
+    version("0.18", sha256="5336c7974084cce62f7e29aaff81a3c3f75e0fd0a23a2faeb986ae0ea08d8cf4")
     version("0.16", sha256="d67e86859598eed0d926562da33325dac7767b7b1eff84e232c22abea19f4360")
     version("0.14", sha256="a0a1cc238b678455145bae291d8426f732f5255537ed6a5b7645949704c70a78")
 
