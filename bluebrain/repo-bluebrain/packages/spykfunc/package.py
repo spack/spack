@@ -53,7 +53,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-h5py', type=('build', 'run'), when='@:0.15.1,0.16.99:')
     depends_on('py-hdfs', type=('build', 'run'))
     depends_on('py-jprops', type=('build', 'run'))
-    depends_on('py-libsonata@:0.1.14,0.1.16:', type='run', when='@0.15.3:')
+    depends_on('py-libsonata@:0.1.14,0.1.17:', type='run', when='@0.15.3:')
     depends_on('py-lxml', type=('build', 'run'))
     depends_on('py-morphio', type=('build', 'run'), when='@0.17.2:')
     depends_on('py-morpho-kit', type=('build', 'run'), when='@0.14.4:')
