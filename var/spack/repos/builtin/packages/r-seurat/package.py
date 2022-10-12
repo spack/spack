@@ -19,6 +19,7 @@ class RSeurat(RPackage):
 
     cran = "Seurat"
 
+    version("4.2.0", sha256="22a3d22a9ba255c4db5b37339b183fdfb91e2d37a8b8d58a9ff45b1bc414ebef")
     version("4.1.1", sha256="201aa96919b32378fc4cb67557188214c1242dcbae50cadd7d12c86666af8ace")
     version("4.1.0", sha256="2505829a2763e449684dd1b107ee6982e019ee9fecb093adca7b283cad1b315d")
     version("3.2.3", sha256="83aa48f75c3756bee23e108a8b01028366e24f237fe990cb441f3525e0613f87")
@@ -51,6 +52,7 @@ class RSeurat(RPackage):
     depends_on("r-lmtest", type=("build", "run"), when="@2.3.0:")
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-matrix@1.2-14:", type=("build", "run"))
+    depends_on("r-matrix@1.5.0:", type=("build", "run"), when="@4.2.0:")
     depends_on("r-matrixstats", type=("build", "run"), when="@3.2.3:")
     depends_on("r-miniui", type=("build", "run"), when="@3.2.3:")
     depends_on("r-patchwork", type=("build", "run"), when="@3.2.3:")
@@ -73,14 +75,17 @@ class RSeurat(RPackage):
     depends_on("r-sctransform@0.2.0:", type=("build", "run"), when="@3.0.0:")
     depends_on("r-sctransform@0.3.1:", type=("build", "run"), when="@3.2.3:")
     depends_on("r-sctransform@0.3.3:", type=("build", "run"), when="@4.1.0:")
+    depends_on("r-sctransform@0.3.4:", type=("build", "run"), when="@4.2.0:")
     depends_on("r-seuratobject@4.0.4:", type=("build", "run"), when="@4.1.0:")
     depends_on("r-seuratobject@4.1.0:", type=("build", "run"), when="@4.1.1:")
+    depends_on("r-seuratobject@4.1.2:", type=("build", "run"), when="@4.2.0:")
     depends_on("r-shiny", type=("build", "run"), when="@3.2.3:")
     depends_on("r-spatstat-core", type=("build", "run"), when="@4.1.0:")
     depends_on("r-spatstat-geom", type=("build", "run"), when="@4.1.0:")
     depends_on("r-tibble", type=("build", "run"), when="@3.2.3:")
     depends_on("r-uwot", type=("build", "run"), when="@3.1.0:")
     depends_on("r-uwot@0.1.9:", type=("build", "run"), when="@3.2.3:")
+    depends_on("r-uwot@0.1.14:", type=("build", "run"), when="@4.2.0:")
     depends_on("r-rcppeigen", type=("build", "run"))
     depends_on("r-rcppprogress", type=("build", "run"))
 
