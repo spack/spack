@@ -9,13 +9,14 @@ from spack.package import *
 class LibpressioSperr(CMakePackage):
     """A LibPressio plugin for Sperr"""
 
-    homepage = "https://github.com/robertu94"
+    homepage = "https://github.com/robertu94/libpressio-sperr"
     url = "https://github.com/robertu94/libpressio-sperr/archive/refs/tags/0.0.1.tar.gz"
-    git = url
+    git = homepage
 
     maintainers = ["robertu94"]
 
-    depends_on("libpressio")
+    depends_on("libpressio@0.88.0:", when="@0.0.3:")
+    depends_on("libpressio@:0.88.0", when="@:0.0.2")
     depends_on("sperr")
     depends_on("pkgconfig", type="build")
 

@@ -13,10 +13,9 @@ class Libpressio(CMakePackage, CudaPackage):
     url = "https://github.com/robertu94/libpressio/archive/0.31.1.tar.gz"
     git = "https://github.com/robertu94/libpressio"
 
-    maintainers = ["robertu94"]
-
     version("master", branch="master")
     version("develop", branch="develop")
+    version("0.88.0", sha256="4358441f0d10559d571327162a216617d16d09569a80e13ad286e3b7c41c5b9b")
     version("0.87.0", sha256="2bea685e5ed3a1528ea68ba4a281902ff77c0bebd38ff212b6e8edbfa263b572")
     version("0.86.7", sha256="2a6319640a018c39aa93aaf0f027fd496d7ea7dc5ac95509313cf1b4b6b1fb00")
     version("0.86.6", sha256="31ac77137c31a524c2086e1fe4d9b1d3c1bc6d8594662cd4b67878ba8887cabb")

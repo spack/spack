@@ -16,6 +16,7 @@ class LibpressioTools(CMakePackage):
     maintainers = ["robertu94"]
 
     version("master", branch="master")
+    version("0.1.6", sha256="a67a364f46dea29ff1b3e5c52c0a5abf2d9d53412fb8d424f6bd71252bfa7792")
     version("0.1.5", sha256="b35f495fae53df87dd2abf58c0c51ed17710b16aaa2d0842a543fddd3b2a8035")
     version("0.1.4", sha256="39adc4b09a63548a416ee4b1dcc87ec8578b15a176a11a2845c276c6c211f2d0")
     version("0.1.3", sha256="4e6c39061d6d829936dfeb569ea997854694ef1a46f112e306672ee1cc1567a0")
@@ -34,14 +35,16 @@ class LibpressioTools(CMakePackage):
     version("0.0.15", sha256="bcdf865d77969a34e2d747034ceeccf5cb766a4c11bcc856630d837f442ee33e")
 
     depends_on("mpi", when="+mpi")
-    depends_on("libpressio+hdf5")
     depends_on("libpressio+libdistributed+mpi", when="+mpi")
+    depends_on("libpressio", when="~mpi")
+    depends_on("libpressio+hdf5", when="+hdf5")
 
     depends_on("boost")
 
     # 0.1.0 changed a bunch of things in the build system, make sure everything is up to date
-    depends_on("libpressio@0.85.0:", when="@0.1.0:")
-    depends_on("libpressio-opt@0.13.3", when="@0.1.0:+opt")
+    depends_on("libpressio@0.88.0:", when="@0.1.6:")
+    depends_on("libpressio@0.85.0:", when="@0.1.0:0.1.5")
+    depends_on("libpressio-opt@0.13.3:", when="@0.1.0:+opt")
     depends_on("libpressio-errorinjector@0.7.0:", when="@0.1.0:+error_injector")
     depends_on("libpressio-tthresh@0.0.5:", when="@0.1.0:+tthresh")
     depends_on("libpressio-rmetric@0.0.4:", when="@0.1.0:+rcpp")
@@ -54,6 +57,7 @@ class LibpressioTools(CMakePackage):
     depends_on("libpressio-adios2", when="+adios2")
     depends_on("libpressio-sperr", when="+sperr")
 
+    variant("hdf5", default=True, description="support the hdf5 package")
     variant("opt", default=False, description="support the libpressio-opt package")
     variant(
         "error_injector", default=False, description="support the libpressio-errorinjector package"

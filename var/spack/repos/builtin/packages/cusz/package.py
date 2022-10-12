@@ -10,7 +10,8 @@ class Cusz(CMakePackage, CudaPackage):
     """A GPU accelerated error-bounded lossy compression for scientific data"""
 
     homepage = "https://szcompressor.org/"
-    git = "https://github.com/robertu94/cusz"
+    git = "https://github.com/szcompressor/cusz"
+    url = "https://github.com/szcompressor/cuSZ/archive/refs/tags/v0.3.tar.gz"
 
     maintainers = ["jtian0", "dingwentao"]
 
@@ -18,6 +19,7 @@ class Cusz(CMakePackage, CudaPackage):
     conflicts("cuda_arch=none", when="+cuda")
 
     version("develop", branch="develop")
+    version("0.3", sha256="0feb4f7fd64879fe147624dd5ad164adf3983f79b2e0383d35724f8d185dcb11")
 
     depends_on("cub", when="^ cuda@:10.2.89")
 
