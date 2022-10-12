@@ -315,8 +315,12 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path, allow_env=True):
+def canonicalize_path(path, default_wd=None, allow_env=True):
     """Same as substitute_path_variables, but also take absolute path.
+
+    If the string is a yaml object with file annotations, make absolute paths
+    relative to that file's directory.
+    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
 
     Arguments:
         path (str): path being converted as needed
@@ -336,8 +340,9 @@ def canonicalize_path(path, allow_env=True):
         if filename:
             path = os.path.join(filename, path)
         else:
-            path = os.path.abspath(path)
-            tty.debug("Using current working directory as base for abspath")
+            base = default_wd or os.getcwd()
+            path = os.path.join(base, path)
+            tty.debug("Using working directory %s as base for abspath" % base)
 
     return os.path.normpath(path)
 

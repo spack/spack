@@ -122,9 +122,9 @@ def filter_by_name(pkgs, args):
 @formatter
 def name_only(pkgs, out):
     indent = 0
-    if out.isatty():
-        tty.msg("%d packages." % len(pkgs))
     colify(pkgs, indent=indent, output=out)
+    if out.isatty():
+        tty.msg("%d packages" % len(pkgs))
 
 
 def github_url(pkg):

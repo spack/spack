@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import shutil
 import sys
 
 import jinja2
@@ -177,70 +176,47 @@ class Changing(Package):
 {% endif %}
 """
 
-    class _ChangingPackage(object):
-        default_context = [
-            ("delete_version", True),
-            ("delete_variant", False),
-            ("add_variant", False),
-        ]
+    with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
 
-        def __init__(self, repo_directory):
-            self.repo_dir = repo_directory
-            self.repo = spack.repo.Repo(str(repo_directory))
-            mutable_mock_repo.put_first(self.repo)
+        class _ChangingPackage(object):
+            default_context = [
+                ("delete_version", True),
+                ("delete_variant", False),
+                ("add_variant", False),
+            ]
 
-        def change(self, changes=None):
-            changes = changes or {}
-            context = dict(self.default_context)
-            context.update(changes)
-            # Remove the repo object and delete Python modules
-            mutable_mock_repo.remove(self.repo)
-            # TODO: this mocks a change in the recipe that should happen in a
-            # TODO: different process space. Leaving this comment as a hint
-            # TODO: in case tests using this fixture start failing.
-            if sys.modules.get("spack.pkg.changing.changing"):
-                del sys.modules["spack.pkg.changing.changing"]
-                del sys.modules["spack.pkg.changing.root"]
-                del sys.modules["spack.pkg.changing"]
+            def __init__(self, repo_directory):
+                self.repo_dir = repo_directory
+                self.repo = spack.repo.Repo(str(repo_directory))
 
-            # Change the recipe
-            t = jinja2.Template(changing_template)
-            changing_pkg_str = t.render(**context)
-            packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
+            def change(self, changes=None):
+                changes = changes or {}
+                context = dict(self.default_context)
+                context.update(changes)
+                # Remove the repo object and delete Python modules
+                repository.remove(self.repo)
+                # TODO: this mocks a change in the recipe that should happen in a
+                # TODO: different process space. Leaving this comment as a hint
+                # TODO: in case tests using this fixture start failing.
+                if sys.modules.get("spack.pkg.changing.changing"):
+                    del sys.modules["spack.pkg.changing.changing"]
+                    del sys.modules["spack.pkg.changing.root"]
+                    del sys.modules["spack.pkg.changing"]
 
-            # Re-add the repository
-            self.repo = spack.repo.Repo(str(self.repo_dir))
-            mutable_mock_repo.put_first(self.repo)
+                # Change the recipe
+                t = jinja2.Template(changing_template)
+                changing_pkg_str = t.render(**context)
+                packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
 
-    _changing_pkg = _ChangingPackage(repo_dir)
-    _changing_pkg.change({"delete_version": False, "delete_variant": False, "add_variant": False})
+                # Re-add the repository
+                self.repo = spack.repo.Repo(str(self.repo_dir))
+                repository.put_first(self.repo)
 
-    return _changing_pkg
-
-
-@pytest.fixture()
-def additional_repo_with_c(tmpdir_factory, mutable_mock_repo):
-    """Add a repository with a simple package"""
-    repo_dir = tmpdir_factory.mktemp("myrepo")
-    repo_dir.join("repo.yaml").write(
-        """
-repo:
-  namespace: myrepo
-""",
-        ensure=True,
-    )
-    packages_dir = repo_dir.ensure("packages", dir=True)
-    package_py = """
-class C(Package):
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/root-1.0.tar.gz"
-
-    version(1.0, sha256='abcde')
-"""
-    packages_dir.join("c", "package.py").write(package_py, ensure=True)
-    repo = spack.repo.Repo(str(repo_dir))
-    mutable_mock_repo.put_first(repo)
-    return repo
+        _changing_pkg = _ChangingPackage(repo_dir)
+        _changing_pkg.change(
+            {"delete_version": False, "delete_variant": False, "add_variant": False}
+        )
+        yield _changing_pkg
 
 
 # This must use the mutable_config fixture because the test
@@ -1558,39 +1534,34 @@ class TestConcretize(object):
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(
-        self, additional_repo_with_c, mutable_mock_repo
-    ):
-        s = Spec("c").concretized()
-        assert s.namespace == "myrepo"
-        s.package.do_install(fake=True, explicit=True)
-
-        # TODO: To mock repo removal we need to recreate the RepoPath
-        mutable_mock_repo.remove(additional_repo_with_c)
-        spack.repo.path = spack.repo.RepoPath(*spack.repo.path.repos)
+    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+        with spack.repo.use_repositories(mock_custom_repository, override=False):
+            s = Spec("c").concretized()
+            assert s.namespace != "builtin.mock"
+            s.package.do_install(fake=True, explicit=True)
 
         with spack.config.override("concretizer:reuse", True):
             s = Spec("c").concretized()
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(
-        self, additional_repo_with_c, mutable_mock_repo, monkeypatch
-    ):
-        s = Spec("c").concretized()
-        assert s.namespace == "myrepo"
-        s.package.do_install(fake=True, explicit=True)
-
-        # Here we delete the package.py instead of removing the repo and we
-        # make it such that "c" doesn't exist in myrepo
-        del sys.modules["spack.pkg.myrepo.c"]
-        c_dir = os.path.join(additional_repo_with_c.root, "packages", "c")
-        shutil.rmtree(c_dir)
-        monkeypatch.setattr(additional_repo_with_c, "exists", lambda x: False)
-
-        with spack.config.override("concretizer:reuse", True):
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
+        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+        builder.add_package("c")
+        with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
-        assert s.namespace == "builtin.mock"
+            assert s.namespace == "myrepo"
+            s.package.do_install(fake=True, explicit=True)
+
+        del sys.modules["spack.pkg.myrepo.c"]
+        del sys.modules["spack.pkg.myrepo"]
+        builder.remove("c")
+        with spack.repo.use_repositories(builder.root, override=False) as repos:
+            # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
+            repos.repos[0]._pkg_checker.invalidate()
+            with spack.config.override("concretizer:reuse", True):
+                s = Spec("c").concretized()
+            assert s.namespace == "builtin.mock"
 
     @pytest.mark.parametrize(
         "specs,expected",
