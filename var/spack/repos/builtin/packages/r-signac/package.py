@@ -18,6 +18,7 @@ class RSignac(RPackage):
 
     cran = "Signac"
 
+    version("1.8.0", sha256="9c4b123f4d077111c7e6dd1659483ada984300c8e923672ca924e46fb6a1dd06")
     version("1.7.0", sha256="5e4456eeab29fa2df7f6236b050dec8cb9c073d7652a89ee5030a27f94e5e4bf")
 
     depends_on("r@4.0.0:", type=("build", "run"))

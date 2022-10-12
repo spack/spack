@@ -32,7 +32,6 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.executable import which
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.pattern import Bunch
 
 ci_cmd = spack.main.SpackCommand("ci")
@@ -92,7 +91,7 @@ testjob:
         yield repo_path
 
 
-def test_specs_staging(config):
+def test_specs_staging(config, tmpdir):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
 
@@ -108,20 +107,17 @@ In this case, we would expect 'c', 'e', 'f', and 'g' to be in the first stage,
 and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 """
-    default = ("build", "link")
+    builder = repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("g")
+    builder.add_package("f")
+    builder.add_package("e")
+    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
+    builder.add_package("c")
+    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
+    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    g = mock_repo.add_package("g", [], [])
-    f = mock_repo.add_package("f", [], [])
-    e = mock_repo.add_package("e", [], [])
-    d = mock_repo.add_package("d", [f, g], [default, default])
-    c = mock_repo.add_package("c", [], [])
-    b = mock_repo.add_package("b", [d, e], [default, default])
-    mock_repo.add_package("a", [b, c], [default, default])
-
-    with repo.use_repositories(mock_repo):
-        spec_a = Spec("a")
-        spec_a.concretize()
+    with repo.use_repositories(builder.root):
+        spec_a = Spec("a").concretized()
 
         spec_a_label = ci._spec_deps_key(spec_a)
         spec_b_label = ci._spec_deps_key(spec_a["b"])
