@@ -117,13 +117,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            prefixes = ";".join(
-                [
-                    self.spec["blaspp"].prefix,
-                    self.spec["lapackpp"].prefix,
-                    self.spec["mpi"].prefix,
-                ]
-            )
+            deps = "blaspp lapackpp mpi"
+            if self.spec.satisfies("+rocm"):
+                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
+            prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
