@@ -12,6 +12,7 @@ class PyPysqlite3(PythonPackage):
     homepage = "https://github.com/coleifer/pysqlite3"
     pypi = "pysqlite3/pysqlite3-0.4.6.tar.gz"
 
+    version("0.4.7", sha256="0352864898aa406beb762f4a620594c950a9a4430caab679bce574065698c8ac")
     version("0.4.6", sha256="7ec4d4c477fa96609c1517afbc33bf02747588e528e79c695de95907cea7bf30")
 
     depends_on("py-setuptools", type="build")
