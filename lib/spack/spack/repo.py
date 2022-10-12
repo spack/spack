@@ -1362,6 +1362,11 @@ class Repo(object):
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
+        # packages.yaml config can override package attributes
+        settings = spack.config.get("packages").get(pkg_name, {}).get("set", {})
+        for key, val in settings.items():
+            setattr(cls, key, val)
+
         return cls
 
     def __str__(self):

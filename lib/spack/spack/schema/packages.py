@@ -82,6 +82,23 @@ properties = {
                             },
                         },
                     },
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "set": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "git": {
+                                "type": "string",
+                            },
+                            "url": {
+                                "type": "string",
+                            },
+                            "submodules": {
+                                "type": "boolean",
+                            },
+                        },
+                    },
                     "providers": {
                         "type": "object",
                         "default": {},
