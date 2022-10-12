@@ -22,3 +22,15 @@ class PyDeepsigBiocomp(PythonPackage):
     depends_on("py-biopython@1.78:", type=("build", "run"))
     depends_on("py-keras@2.4.3", type=("build", "run"))
     depends_on("py-tensorflow@2.2.0", type=("build", "run"))
+    depends_on("py-tensorboard", type=("build", "run"))
+
+    @run_after("install")
+    def create_share_folder(self):
+        share_dir = join_path(self.prefix, "share", "deepsig")
+        mkdirp(share_dir)
+        mv = which("mv")
+        for d in ("models", "tools"):
+            mv(d, share_dir)
+
+    def setup_run_environment(self, env):
+        env.set("DEEPSIG_ROOT", self.prefix.share.deepsig)
