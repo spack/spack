@@ -91,6 +91,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="global ordinal type for Tpetra",
     )
+    variant('ninja', default=False, description='Enable Ninja makefile generator')
     variant("openmp", default=False, description="Enable OpenMP")
     variant("python", default=False, description="Build PyTrilinos wrappers")
     variant("shared", default=True, description="Enables the build of shared libraries")
@@ -139,6 +140,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("rythmos", default=False, description="Compile with Rythmos")
     variant("sacado", default=True, description="Compile with Sacado")
     variant("stk", default=False, description="Compile with STK")
+    variant('stk_unit_tests', default=False, description='Enable STK unit tests')
+    variant('stk_simd', default=False, description='Enable SIMD in STK')
     variant("shards", default=False, description="Compile with Shards")
     variant("shylu", default=False, description="Compile with ShyLU")
     variant("stokhos", default=False, description="Compile with Stokhos")
@@ -382,6 +385,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("metis", when="+zoltan")
     depends_on("mpi", when="+mpi")
     depends_on("netcdf-c", when="+exodus")
+    depends_on("ninja", type="build", when='+ninja')
     depends_on("parallel-netcdf", when="+exodus+mpi")
     depends_on("parmetis", when="+mpi +zoltan")
     depends_on("parmetis", when="+scorec")
@@ -449,6 +453,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         when="@13.0.0:13.0.1 +teko gotype=long",
     )
 
+    @property
+    def generator(self):
+          if '+ninja' in self.spec:
+              return "Ninja"
+          else:
+              return "Unix Makefiles"
+
     def flag_handler(self, name, flags):
         spec = self.spec
         is_cce = spec.satisfies("%cce")
@@ -514,6 +525,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     def setup_build_environment(self, env):
         spec = self.spec
         if "+cuda" in spec and "+wrapper" in spec:
+            # Add more debug options for CUDA
+            if spec.variants['build_type'].value == 'RelWithDebInfo' or spec.variants['build_type'].value == 'Debug':
+                env.append_flags('CXXFLAGS', '-Xcompiler -rdynamic -lineinfo')
             if "+mpi" in spec:
                 env.set("OMPI_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
                 env.set("MPICH_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
@@ -531,6 +545,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             if "+stk" in spec:
                 # Using CXXFLAGS for hipcc which doesn't use flags in the spack wrappers
                 env.set("CXXFLAGS", "-DSTK_NO_BOOST_STACKTRACE")
+                if '~stk_simd' in spec:
+                    env.append_flags('CXXFLAGS', '-DUSE_STK_SIMD_NONE')
 
     def cmake_args(self):
         options = []
@@ -705,6 +721,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(
                 define_trilinos_enable("Thyra" + pkg + "Adapters", pkg.lower())
                 for pkg in ["Epetra", "EpetraExt", "Tpetra"]
+            )
+
+        if "+stk" in spec:
+            options.extend(
+                self.define_from_variant('STK_ENABLE_TESTS', 'stk_unit_tests')
             )
 
         # ######################### TPLs #############################
@@ -910,10 +931,16 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                         define_kok_enable("HIP_RELOCATABLE_DEVICE_CODE", "rocm_rdc"),
                     ]
                 )
+                # The following is an optimization to compile only for the specified
+                # archs since all archs are done by default
+                amd_targets = self.spec.variants['amdgpu_target'].value
+                options.append('-DCMAKE_HIP_ARCHITECTURES=' + ';'.join(str(x) for x in targets))
+                options.append('-DAMDGPU_TARGETS=' + ';'.join(str(x) for x in targets))
+                options.append('-DGPU_TARGETS=' + ';'.join(str(x) for x in targets))
                 if "+tpetra" in spec:
                     options.append(define("Tpetra_INST_HIP", True))
                 amdgpu_arch_map = Kokkos.amdgpu_arch_map
-                for amd_target in spec.variants["amdgpu_target"].value:
+                for amd_target in amd_targets:
                     try:
                         arch = amdgpu_arch_map[amd_target]
                     except KeyError:
