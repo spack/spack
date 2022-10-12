@@ -98,7 +98,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    depends_on("whip", when="@0.9:")
+    depends_on("whip+rocm", when="@0.9: +rocm")
+    depends_on("whip+cuda", when="@0.9: +cuda")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
