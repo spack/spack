@@ -5,6 +5,7 @@
 
 import os.path
 import sys
+import time
 from datetime import datetime, timedelta
 from textwrap import dedent
 
@@ -306,16 +307,87 @@ def test_grouped_exception():
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 290, in test_grouped_exception
+line 291, in test_grouped_exception
         inner()
       File "{0}", \
-line 287, in inner
+line 288, in inner
         raise ValueError("wow!")
 
     top-level raised TypeError: ok
       File "{0}", \
-line 293, in test_grouped_exception
+line 294, in test_grouped_exception
         raise TypeError("ok")
     """
         ).format(__file__)
     )
+
+
+@pytest.mark.parametrize(
+    "timeout_contextmanager,seconds_timeout,seconds_sleep,expected",
+    [
+        pytest.param(
+            llnl.util.lang.timeout_with_signal,
+            1,
+            3,
+            False,
+            marks=pytest.mark.skipif(
+                sys.platform == "win32", reason="signal is not supported on Windows"
+            ),
+        ),
+        pytest.param(
+            llnl.util.lang.timeout_with_signal,
+            4,
+            1,
+            True,
+            marks=pytest.mark.skipif(
+                sys.platform == "win32", reason="signal is not supported on Windows"
+            ),
+        ),
+        pytest.param(
+            llnl.util.lang.timeout_with_signal,
+            0,
+            1,
+            True,
+            marks=pytest.mark.skipif(
+                sys.platform == "win32", reason="signal is not supported on Windows"
+            ),
+        ),
+        (llnl.util.lang.timeout_with_threading, 1, 3, False),
+        (llnl.util.lang.timeout_with_threading, 4, 1, True),
+        (llnl.util.lang.timeout_with_threading, 0, 1, True),
+        (llnl.util.lang.timeout, 1, 3, False),
+        (llnl.util.lang.timeout, 4, 1, True),
+        (llnl.util.lang.timeout, 0, 1, True),
+    ],
+)
+def test_timeout_block_execution(timeout_contextmanager, seconds_timeout, seconds_sleep, expected):
+    """Check that the block is executed if we sleep less than the timeout,
+    and not executed otherwise.
+    """
+    block_executed = False
+    with timeout_contextmanager(seconds=seconds_timeout, error_on_timeout=False):
+        time.sleep(seconds_sleep)
+        block_executed = True
+    assert block_executed is expected
+
+
+@pytest.mark.parametrize(
+    "timeout_contextmanager",
+    [
+        pytest.param(
+            llnl.util.lang.timeout_with_signal,
+            marks=pytest.mark.skipif(
+                sys.platform == "win32", reason="signal is not supported on Windows"
+            ),
+        ),
+        llnl.util.lang.timeout_with_threading,
+        llnl.util.lang.timeout,
+    ],
+)
+def test_timeout_exception(timeout_contextmanager):
+    """Check that we raise a ContextTimeout exception if the context manager
+    is set to error on timeout.
+    """
+    with pytest.raises(llnl.util.lang.ContextTimeout):
+        with timeout_contextmanager(seconds=1):
+            time.sleep(3)
