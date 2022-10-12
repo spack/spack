@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Dftbplus(CMakePackage):
+class Dftbplus(CMakePackage, MakefilePackage):
     """DFTB+ is an implementation of the
     Density Functional based Tight Binding (DFTB) method,
     containing many extensions to the original method."""
@@ -25,7 +25,11 @@ class Dftbplus(CMakePackage):
     version("20.2.1", sha256="6b1827a45b20d1757119a75abcb851cd4362e7abc58601094d029ed5922d6da7")
     version("20.2", sha256="6b1f10c7efbdaf59acf64d8fb8afc80460c0fbc6c4dbe256b760223cbd28ed2c")
     version("20.1", sha256="a155ca927c804234587c61c4938d154f31578c816b0ce20eaee3b5d7e39d91dc")
-    version("19.1", sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8")
+    version(
+        "19.1",
+        sha256="4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8",
+        deprecated=True,
+    )
 
     variant(
         "build_type",
@@ -101,6 +105,13 @@ class Dftbplus(CMakePackage):
         "tblite", default=False, description="Whether xTB support should be included via tblite."
     )
 
+    # ONLY for version 19.1
+    variant(
+        "dftd3",
+        default=False,
+        description="Use DftD3 dispersion library " "(if you need this dispersion model)",
+    )
+
     depends_on("cmake@3.16:", type="build")
     depends_on("ninja", type="build")
 
@@ -115,6 +126,95 @@ class Dftbplus(CMakePackage):
     depends_on("plumed", when="+plumed")
     depends_on("scalapack", when="+mpi")
     depends_on("python", when="+python")
+    # Only for 19.1
+    depends_on("dftd3-lib@0.9.2", when="+dftd3")
+
+    @when("@19.1")  # Only version without CMake
+    def edit(self, spec, prefix):
+        """
+        First, change the ROOT variable, because, for some reason,
+        the Makefile and the spack install script run in different directories
+        Then, if using GCC, rename the file 'sys/make.x86_64-linux-gnu'
+        to make.arch.
+        After that, edit the make.arch to point to the dependencies
+        And the last thing we do here is to set the installdir
+        """
+        dircwd = os.getcwd()
+        makefile = FileFilter("makefile")
+        makefile.filter("ROOT := .*", "ROOT := {0}".format(dircwd))
+
+        archmake = join_path(".", "sys", "make.x86_64-linux-gnu")
+        copy(archmake, join_path(dircwd, "make.arch"))
+
+        march = FileFilter(join_path(dircwd, "make.arch"))
+
+        mconfig = FileFilter(join_path(dircwd, "make.config"))
+
+        mconfig.filter("INSTALLDIR := .*", "INSTALLDIR := {0}".format(prefix))
+
+        if "+gpu" in self.spec:
+            march.filter("MAGMADIR = .*", "MAGMADIR = {0}".format(spec["magma"].prefix))
+
+            mconfig.filter("WITH_GPU := .*", "WITH_GPU := 1")
+
+        if "+mpi" in self.spec:
+            march.filter(
+                "SCALAPACKDIR = .*", "SCALAPACKDIR = {0}".format(spec["scalapack"].prefix)
+            )
+
+            march.filter(
+                "LIB_LAPACK = -l.*", "LIB_LAPACK = {0}".format(spec["blas"].libs.ld_flags)
+            )
+
+            march.filter("mpifort", "{0}".format(spec["mpi"].mpifc))
+
+            mconfig.filter("WITH_MPI := .*", "WITH_MPI := 1")
+
+            if "+elsi" in self.spec:
+                mconfig.filter("WITH_ELSI := .*", "WITH_ELSI := 1")
+
+                has_pexsi = "+enable_pexsi" in spec["elsi"]
+
+                mconfig.filter(
+                    "WITH_PEXSI := .*",
+                    "WITH_PEXSI := {0}".format("1" if has_pexsi is True else "0"),
+                )
+
+                march.filter(
+                    "ELSIINCDIR .*", "ELSIINCDIR = {0}".format(spec["elsi"].prefix.include)
+                )
+
+                march.filter("ELSIDIR .*", "ELSIDIR = {0}".format(spec["elsi"].prefix))
+
+        else:
+            march.filter(
+                "LIB_LAPACK += -l.*", "LIB_LAPACK += {0}".format(spec["blas"].libs.ld_flags)
+            )
+
+        if "+sockets" in self.spec:
+            mconfig.filter("WITH_SOCKETS := .*", "WITH_SOCKETS := 1")
+
+        if "+transport" in self.spec:
+            mconfig.filter("WITH_TRANSPORT := .*", "WITH_TRANSPORT := 1")
+
+        if "+arpack" in self.spec:
+            march.filter(
+                "ARPACK_LIBS = .*", "ARPACK_LIBS = {0}".format(spec["arpack-ng"].libs.ld_flags)
+            )
+
+            mconfig.filter("WITH_ARPACK := .*", "WITH_ARPACK := 1")
+
+        if "+dftd3" in self.spec:
+            march.filter("COMPILE_DFTD3 = .*", "COMPILE_DFTD3 = 0")
+            march.filter(
+                "DFTD3_INCS = .*", "DFTD3_INCS = -I{0}".format(spec["dftd3-lib"].prefix.include)
+            )
+
+            march.filter(
+                "DFTD3_LIBS = .*", "DFTD3_LIBS = -L{0} -ldftd3".format(spec["dftd3-lib"].prefix)
+            )
+
+            mconfig.filter("WITH_DFTD3 := .*", "WITH_DFTD3 := 1")
 
     def cmake_args(self):
         args = [
