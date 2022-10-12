@@ -10,7 +10,7 @@ class PyAsyncLru(PythonPackage):
     """Simple lru_cache for asyncio"""
 
     homepage = "https://github.com/wikibusiness/async_lru"
-    pypi = "async_lru/async_lru-1.0.2.tar.gz"
+    pypi = "async-lru/async-lru-1.0.2.tar.gz"
 
     maintainers = ["iarspider"]
 
