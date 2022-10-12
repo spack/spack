@@ -17,6 +17,7 @@ class Dock(Package):
 
     homepage = "http://dock.compbio.ucsf.edu/DOCK_6/index.htm"
     url = "file://{0}/dock.6.9_source.tar.gz".format(os.getcwd())
+    maintainers = ["snehring"]
     manual_download = True
 
     version("6.9", sha256="c2caef9b4bb47bb0cb437f6dc21f4c605fd3d0d9cc817fa13748c050dc87a5a8")
@@ -24,6 +25,7 @@ class Dock(Package):
     variant("mpi", default=True, description="Enable mpi")
 
     depends_on("bison", type="build")
+    depends_on("flex", type="build")
     depends_on("mpi", when="+mpi")
 
     def setup_build_environment(self, env):
@@ -49,9 +51,18 @@ class Dock(Package):
 
         with working_dir("install"):
             sh_args = ["./configure", compiler_targets[self.compiler.name]]
+            config_source = compiler_targets[self.compiler.name]
 
             if "+mpi" in spec:
                 sh_args.append("parallel")
+                config_source = config_source + ".parallel"
+
+            if self.spec.satisfies("@6.9%gcc@10:"):
+                # Versions of gcc before 10 treat mismatched arguments as a warning
+                # 10+ makes it an error. This makes it a warning again
+                filter_file(
+                    r"(-fno-second-underscore)", r"\1 -fallow-argument-mismatch", config_source
+                )
 
             which("sh")(*sh_args)
             which("make")("YACC=bison -o y.tab.c")
