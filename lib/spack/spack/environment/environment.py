@@ -67,7 +67,8 @@ default_env_path = os.path.join(spack.paths.var_path, "environments")
 
 # ensure that this base directory exists since we require the root directory to be created
 # in our checks
-os.makedirs(default_env_path, exist_ok = True)
+if not os.path.isdir(default_env_path):
+    os.mkdir(default_env_path)
 
 
 #: Name of the input yaml file for an environment
