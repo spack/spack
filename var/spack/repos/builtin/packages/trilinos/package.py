@@ -91,7 +91,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="global ordinal type for Tpetra",
     )
-    variant('ninja', default=False, description="Enable Ninja makefile generator")
+    variant("ninja", default=False, description="Enable Ninja makefile generator")
     variant("openmp", default=False, description="Enable OpenMP")
     variant("python", default=False, description="Build PyTrilinos wrappers")
     variant("shared", default=True, description="Enables the build of shared libraries")
@@ -140,8 +140,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("rythmos", default=False, description="Compile with Rythmos")
     variant("sacado", default=True, description="Compile with Sacado")
     variant("stk", default=False, description="Compile with STK")
-    variant('stk_unit_tests', default=False, description="Enable STK unit tests")
-    variant('stk_simd', default=False, description="Enable SIMD in STK")
+    variant("stk_unit_tests", default=False, description="Enable STK unit tests")
+    variant("stk_simd", default=False, description="Enable SIMD in STK")
     variant("shards", default=False, description="Compile with Shards")
     variant("shylu", default=False, description="Compile with ShyLU")
     variant("stokhos", default=False, description="Compile with Stokhos")
