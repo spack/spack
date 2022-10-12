@@ -14,6 +14,7 @@ class PyJupyterServer(PythonPackage):
     homepage = "https://github.com/jupyter-server/jupyter_server"
     pypi = "jupyter_server/jupyter_server-1.9.0.tar.gz"
 
+    version("1.18.1", sha256="2b72fc595bccae292260aad8157a0ead8da2c703ec6ae1bb7b36dbad0e267ea7")
     version("1.17.0", sha256="7b3aa524790ab0da64f06dfe0b2af149d0a3f59aad71fdedcf1d8bae6508018c")
     version("1.13.5", sha256="9e3e9717eea3bffab8cfb2ff330011be6c8bbd9cdae5b71cef169fcece2f19d3")
     version("1.11.2", sha256="c1f32e0c1807ab2de37bf70af97a36b4436db0bc8af3124632b1f4441038bf95")
