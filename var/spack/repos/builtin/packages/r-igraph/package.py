@@ -15,6 +15,7 @@ class RIgraph(RPackage):
 
     cran = "igraph"
 
+    version("1.3.5", sha256="9e615d67b6b5b57dfa54ec2bbc8c29da8f7c3fe82af1e35ab27273b1035b9bd4")
     version("1.3.1", sha256="505a2ba7c417ceaf869240cc1c9a5f3fbd75f8d9dfcfe048df1326c6ec41144e")
     version("1.2.11", sha256="1c8b715eb61e6e7d9082858673929f8e84dc832c0a2a7aba7811511bbd2000de")
     version("1.2.6", sha256="640da72166fda84bea2c0e5eee374f1ed80cd9439c1171d056b1b1737ae6c76d")
@@ -26,6 +27,7 @@ class RIgraph(RPackage):
     depends_on("r-magrittr", type=("build", "run"))
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-pkgconfig@2.0.0:", type=("build", "run"))
+    depends_on("r-rlang", type=("build", "run"), when="@1.3.5:")
     depends_on("gmp")
     depends_on("gmp@4.38:", when="@1.2.11:")
     depends_on("libxml2")

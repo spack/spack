@@ -25,6 +25,7 @@ class RHh(RPackage):
 
     cran = "HH"
 
+    version("3.1-49", sha256="12cef0cb0a07c745026d925aee2970913e1f3f0705a58bc2741bf4940c80b87b")
     version("3.1-47", sha256="50910ac7de49122df56c6e42413535601c74bbef9240ad8977e3267273d087c0")
     version("3.1-43", sha256="2ed35c8fc97092e9d2ce3439a2ec342d5d7bd93ad8f5266995cc80d88cd2235b")
     version("3.1-40", sha256="795924d900a98ae367e6697b2c951c3b4910a54931aebcad5024eda083d4a8a2")
