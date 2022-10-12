@@ -72,7 +72,7 @@ class Libarchive(AutotoolsPackage):
     depends_on("libxml2", when="xar=libxml2")
     depends_on("expat", when="xar=expat")
 
-    depends_on("libiconv", when="+iconv")
+    depends_on("iconv", when="+iconv")
 
     conflicts(
         "crypto=mbedtls", when="@:3.4.1", msg="mbed TLS is only supported from libarchive 3.4.2"

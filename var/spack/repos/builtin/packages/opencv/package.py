@@ -662,7 +662,7 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+wechat_qrcode"):
         conflicts("~dnn")
         conflicts("~imgproc")
-        depends_on("libiconv")
+        depends_on("iconv")
 
     with when("+xfeatures2d"):
         with when("+cuda"):

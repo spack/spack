@@ -71,7 +71,7 @@ class Ffmpeg(AutotoolsPackage):
     variant("libx264", default=False, description="H.264 encoding")
 
     depends_on("alsa-lib", when="platform=linux")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("yasm@1.2.0:")
     depends_on("zlib")
 

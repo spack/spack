@@ -19,7 +19,7 @@ class Bind9(AutotoolsPackage):
     depends_on("libuv", type="link")
     depends_on("pkgconfig", type="build")
     depends_on("openssl", type="link")
-    depends_on("libiconv", type="link")
+    depends_on("iconv", type="link")
 
     def configure_args(self):
         args = [

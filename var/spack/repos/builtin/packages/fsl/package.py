@@ -31,7 +31,7 @@ class Fsl(Package, CudaPackage):
     depends_on("expat")
     depends_on("libx11")
     depends_on("glu")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("openblas", when="@6:")
     depends_on("vtk@:8")
 

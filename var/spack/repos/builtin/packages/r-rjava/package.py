@@ -27,7 +27,7 @@ class RRjava(RPackage):
     # these are not listed as dependencies but are needed
     depends_on("bzip2")
     depends_on("icu4c")
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("pcre2")
     depends_on("xz")
 

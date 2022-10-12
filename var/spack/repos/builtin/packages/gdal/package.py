@@ -589,7 +589,6 @@ class Gdal(CMakePackage):
             self.with_or_without("hdf4", package="hdf"),
             self.with_or_without("hdf5", package="hdf5"),
             self.with_or_without("hdfs", package="hadoop"),
-            self.with_or_without("libiconv-prefix", variant="iconv", package="iconv"),
             self.with_or_without("idb", package="idb"),
             self.with_or_without("ingres", package="ingres"),
             self.with_or_without("jasper", package="jasper"),
@@ -643,6 +642,11 @@ class Gdal(CMakePackage):
             self.with_or_without("perl"),
             self.with_or_without("php"),
         ]
+        if "+iconv" in self.spec:
+            if self.spec["iconv"] == "libc":
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
+            else:
+                args.append("--without-libiconv-prefix")
 
         # Renamed or modified flags
         if self.spec.satisfies("@3:"):

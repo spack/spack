@@ -220,7 +220,7 @@ class Glib(Package):
             args.append(
                 "--with-python={0}".format(os.path.basename(self.spec["python"].command.path))
             )
-        if "libc" in self.spec:
+        if self.spec["iconv"].name == "libc":
             args.append("--with-libiconv=maybe")
         else:
             args.append("--with-libiconv=gnu")
