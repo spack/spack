@@ -17,7 +17,6 @@ class PerlExtutilsCbuilder(PerlPackage):
     version("0.28.23.6", sha256="abc21827eb8a513171bf7fdecefce9945132cb76db945036518291f607b1491f")
     version("0.28.23.5", sha256="a0f454d84eb599bf0c11b976ab2ce39ada49bf84c323c7a53fe9f8941ee9378a")
 
-
     provides("perl-extutils-cbuilder-base")  # AUTO-CPAN2Spack
     provides("perl-extutils-cbuilder-platform-unix")  # AUTO-CPAN2Spack
     provides("perl-extutils-cbuilder-platform-vms")  # AUTO-CPAN2Spack
