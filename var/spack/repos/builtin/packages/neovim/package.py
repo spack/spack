@@ -118,7 +118,7 @@ class Neovim(CMakePackage):
         depends_on("libvterm@0.1:")
         depends_on("unibilium@2.0:")
         depends_on("msgpack-c@1.0.0:")
-    with when("@0.5:,stable,master"):
+    with when("@0.5:"):
         depends_on("libuv@1.42:")
         depends_on("tree-sitter")
     with when("@0.6:"):
@@ -128,7 +128,7 @@ class Neovim(CMakePackage):
         depends_on("libtermkey@0.22:")
         depends_on("libvterm@0.1.4:")
         depends_on("msgpack-c@3.0.0:")
-    with when("@0.6:,master"):
+    with when("@0.7:"):
         depends_on("gettext@0.20.1:")
         depends_on("libluv@1.43.0:")
         depends_on("libuv@1.44.1:")
