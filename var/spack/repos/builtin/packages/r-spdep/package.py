@@ -21,6 +21,7 @@ class RSpdep(RPackage):
 
     cran = "spdep"
 
+    version("1.2-7", sha256="9dac594825bf2d0aa31e845bfec05d8ce206327840fe455391741dbbdf9c9eea")
     version("1.2-4", sha256="a9f4d5af56efb1a2bcd3e85fe4d0e8a42896a2c30a790b2487e1ebadf398a677")
     version("1.2-2", sha256="94f46f98be3bedde1655f8768b7ef2a977c399b5ca8977c68007e9e3b7515e23")
     version("1.2-1", sha256="e8cc788d4e6fbb962f4e1fb45dff166cd9dd0935a9fd502699f9a95fdf4a43f9")

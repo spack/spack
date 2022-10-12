@@ -15,6 +15,7 @@ class RMcmcglmm(RPackage):
 
     cran = "MCMCglmm"
 
+    version("2.34", sha256="829151cca93b05979ece98157e7789d5e5c1c0b4942d69aa9886de03d16091f1")
     version("2.33", sha256="b56d72e799f8ed5fa2a05ecc743e5b8051f9cc2de57ad3e6de2dcb1c1715d4fc")
     version("2.32", sha256="a9156e1e0d0f912f2f239476dc8765dc61c480f903381be7ec5db05bd6d3f0b3")
     version("2.30", sha256="714250fe6ebdd1bd3dc284f7fcb92326de1273b0c34d31e71dc825312527e042")
