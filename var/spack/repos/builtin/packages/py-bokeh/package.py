@@ -49,4 +49,3 @@ class PyBokeh(PythonPackage):
 
     depends_on("py-typing-extensions@3.7.4:", type=("build", "run"), when="@2.3.3:")
     depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="@2.4.0:")
-
