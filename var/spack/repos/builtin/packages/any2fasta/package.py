@@ -19,3 +19,7 @@ class Any2fasta(Package):
     version('0.1.2', sha256='ef035595756df7dca1f8a503ee26f8479393953bc67d8870c9965b6d5ade2674')
 
     depends_on('perl@5.1:', type=('build', 'run'))
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install("any2fasta", prefix.bin)
