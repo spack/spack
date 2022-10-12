@@ -24,4 +24,4 @@ class PyPyopenssl(PythonPackage):
     depends_on("py-cryptography@2.3:", type=("build", "run"))
     depends_on("py-cryptography@38", when="@22:", type=("build", "run"))
     depends_on("python@3.6:", when="@22:", type=("build", "run"))
-    depends_on("py-six@1.5.2:", type=("build", "run"))
+    depends_on("py-six@1.5.2:", when="@:19", type=("build", "run"))
