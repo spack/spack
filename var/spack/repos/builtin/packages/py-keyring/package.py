@@ -40,8 +40,8 @@ class PyKeyring(PythonPackage):
     )
     depends_on("py-secretstorage", when="platform=linux", type=("build", "run"))
     depends_on("py-jeepney@0.4.2:", when="@21: platform=linux", type=("build", "run"))
-    depends_on("py-importlib-metadata@3.6:", when="@23:", type=("build", "run"))
-    depends_on("py-importlib-metadata@1:", when="@21:", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", when="@23: ^python@:3.9", type=("build", "run"))
+    depends_on("py-importlib-metadata@1:", when="@21:22", type=("build", "run"))
     depends_on("py-importlib-metadata", when="@20:", type=("build", "run"))
     depends_on("py-jaraco-classes", when="@23.9.1:", type=("build", "run"))
 
