@@ -526,10 +526,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         if "+cuda" in spec and "+wrapper" in spec:
             # Add more debug options for CUDA
-            if (
-                spec.variants["build_type"].value == "RelWithDebInfo"
-                or spec.variants["build_type"].value == "Debug"
-            ):
+            if spec.variants["build_type"].value in ["RelWithDebInfo", "Debug"]:
                 env.append_flags("CXXFLAGS", "-Xcompiler -rdynamic -lineinfo")
             if "+mpi" in spec:
                 env.set("OMPI_CXX", spec["kokkos-nvcc-wrapper"].kokkos_cxx)
