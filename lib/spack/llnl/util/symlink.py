@@ -38,7 +38,7 @@ def symlink(real_path, link_path):
     letter) only. Every file (file's data) has at least 1
     hard link (file's name). But when this method creates
     a new hard link there will be 2. Deleting all hard
-    links effectively deletes the file. Don’t need System
+    links effectively deletes the file. Don't need System
     Administrator privileges.
 
     Junction (sometimes called soft link): A link to a
