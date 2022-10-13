@@ -1,0 +1,149 @@
+From 4e87a15b7abec2d1bc3922f3f6cf2a8dca91b2c0 Mon Sep 17 00:00:00 2001
+From: Robert Cohn <robert.s.cohn@intel.com>
+Date: Sun, 9 Oct 2022 09:14:52 -0400
+Subject: [PATCH] basic support for oneapi linux compilers
+
+---
+ docs/markdown/Reference-tables.md          |  1 +
+ docs/markdown/snippets/oneapi_compilers.md |  8 ++++++++
+ mesonbuild/compilers/c.py                  |  7 +++++++
+ mesonbuild/compilers/cpp.py                |  7 +++++++
+ mesonbuild/compilers/detect.py             | 16 ++++++++++++++++
+ mesonbuild/compilers/fortran.py            |  6 ++++++
+ 6 files changed, 45 insertions(+)
+ create mode 100644 docs/markdown/snippets/oneapi_compilers.md
+
+diff --git a/docs/markdown/Reference-tables.md b/docs/markdown/Reference-tables.md
+index 60303dad633..421b33c079f 100644
+--- a/docs/markdown/Reference-tables.md
++++ b/docs/markdown/Reference-tables.md
+@@ -20,6 +20,7 @@ These are return values of the `get_id` (Compiler family) and
+ | gcc       | The GNU Compiler Collection      | gcc             |
+ | intel     | Intel compiler (Linux and Mac)   | gcc             |
+ | intel-cl  | Intel compiler (Windows)         | msvc            |
++| intel-llvm| Intel oneAPI LLVM-based compiler |                 |
+ | lcc       | Elbrus C/C++/Fortran Compiler    |                 |
+ | llvm      | LLVM-based compiler (Swift, D)   |                 |
+ | mono      | Xamarin C# compiler              |                 |
+diff --git a/docs/markdown/snippets/oneapi_compilers.md b/docs/markdown/snippets/oneapi_compilers.md
+new file mode 100644
+index 00000000000..a982da22a99
+--- /dev/null
++++ b/docs/markdown/snippets/oneapi_compilers.md
+@@ -0,0 +1,8 @@
++## Basic support for oneAPI compilers on Linux
++
++To use:
++
++```
++source /opt/intel/oneapi/setvars.sh
++CC=icx CXX=icpx FC=ifx meson setup builddir
++```
+diff --git a/mesonbuild/compilers/c.py b/mesonbuild/compilers/c.py
+index b1b4a7c9295..9490ee688a8 100644
+--- a/mesonbuild/compilers/c.py
++++ b/mesonbuild/compilers/c.py
+@@ -406,6 +406,13 @@ def get_option_compile_args(self, options: 'KeyedOptionDictType') -> T.List[str]
+         return args
+ 
+ 
++class IntelLLVMCCompiler(ClangCCompiler):
++
++
++    id = 'intel-llvm'
++
++
++
+ class VisualStudioLikeCCompilerMixin(CompilerMixinBase):
+ 
+     """Shared methods that apply to MSVC-like C compilers."""
+diff --git a/mesonbuild/compilers/cpp.py b/mesonbuild/compilers/cpp.py
+index ac65df9a101..80dc6bc5731 100644
+--- a/mesonbuild/compilers/cpp.py
++++ b/mesonbuild/compilers/cpp.py
+@@ -593,6 +593,13 @@ def get_option_link_args(self, options: 'KeyedOptionDictType') -> T.List[str]:
+         return []
+ 
+ 
++class IntelLLVMCPPCompiler(ClangCPPCompiler):
++
++
++    id = 'intel-llvm'
++
++
++
+ class VisualStudioLikeCPPCompilerMixin(CompilerMixinBase):
+ 
+     """Mixin for C++ specific method overrides in MSVC-like compilers."""
+diff --git a/mesonbuild/compilers/detect.py b/mesonbuild/compilers/detect.py
+index f4afa777d4d..5bd303df0bd 100644
+--- a/mesonbuild/compilers/detect.py
++++ b/mesonbuild/compilers/detect.py
+@@ -62,6 +62,7 @@
+     EmscriptenCCompiler,
+     IntelCCompiler,
+     IntelClCCompiler,
++    IntelLLVMCCompiler,
+     NvidiaHPC_CCompiler,
+     PGICCompiler,
+     CcrxCCompiler,
+@@ -83,6 +84,7 @@
+     EmscriptenCPPCompiler,
+     IntelCPPCompiler,
+     IntelClCPPCompiler,
++    IntelLLVMCPPCompiler,
+     NvidiaHPC_CPPCompiler,
+     PGICPPCompiler,
+     CcrxCPPCompiler,
+@@ -106,6 +108,7 @@
+     FlangFortranCompiler,
+     IntelFortranCompiler,
+     IntelClFortranCompiler,
++    IntelLLVMFortranCompiler,
+     NAGFortranCompiler,
+     Open64FortranCompiler,
+     PathScaleFortranCompiler,
+@@ -617,6 +620,12 @@ def sanitize(p: str) -> str:
+             return cls(
+                 ccache + compiler, version, for_machine, is_cross, info,
+                 exe_wrap, full_version=full_version, linker=l)
++        if 'Intel(R) oneAPI' in out:
++            cls = IntelLLVMCCompiler if lang == 'c' else IntelLLVMCPPCompiler
++            l = guess_nix_linker(env, compiler, cls, version, for_machine)
++            return cls(
++                ccache + compiler, version, for_machine, is_cross, info,
++                exe_wrap, full_version=full_version, linker=l)
+         if 'TMS320C2000 C/C++' in out or 'MSP430 C/C++' in out or 'TI ARM C/C++ Compiler' in out:
+             lnk: T.Union[T.Type[C2000DynamicLinker], T.Type[TIDynamicLinker]]
+             if 'TMS320C2000 C/C++' in out:
+@@ -789,6 +798,13 @@ def detect_fortran_compiler(env: 'Environment', for_machine: MachineChoice) -> C
+                     compiler, version, for_machine, is_cross, info,
+                     exe_wrap, full_version=full_version, linker=linker)
+ 
++            if 'ifx (IFORT)' in out:
++                cls = IntelLLVMFortranCompiler
++                linker = guess_nix_linker(env, compiler, cls, version, for_machine)
++                return cls(
++                    compiler, version, for_machine, is_cross, info,
++                    exe_wrap, full_version=full_version, linker=linker)
++
+             if 'PathScale EKOPath(tm)' in err:
+                 return PathScaleFortranCompiler(
+                     compiler, version, for_machine, is_cross, info,
+diff --git a/mesonbuild/compilers/fortran.py b/mesonbuild/compilers/fortran.py
+index 0a0c3ec86d7..e7154fe876c 100644
+--- a/mesonbuild/compilers/fortran.py
++++ b/mesonbuild/compilers/fortran.py
+@@ -352,6 +352,12 @@ def get_dependency_gen_args(self, outtarget: str, outfile: str) -> T.List[str]:
+         return ['-gen-dep=' + outtarget, '-gen-depformat=make']
+ 
+ 
++class IntelLLVMFortranCompiler(IntelFortranCompiler):
++
++
++    id = 'intel-llvm'
++
++
+ class IntelClFortranCompiler(IntelVisualStudioLikeCompiler, FortranCompiler):
+ 
+     file_suffixes = ('f90', 'f', 'for', 'ftn', 'fpp', )
