@@ -30,6 +30,7 @@ from .common import (
     library_prefix,
 )
 
+is_windows = sys.platform == "win32"
 
 def executables_in_path(path_hints=None):
     """Get the paths of all executables available from the current PATH.
@@ -48,7 +49,7 @@ def executables_in_path(path_hints=None):
     # If we're on a Windows box, we've already run vswhere. Using that information
     # we derive compiler vendored package locations
     path_hints = path_hints or spack.util.environment.get_path("PATH")
-    if sys.platform == "win32":
+    if is_windows:
         path_hints.extend(find_windows_compiler_bundled_packages())
         path_hints.extend(find_win32_additional_install_paths())
     search_paths = llnl.util.filesystem.search_paths_for_executables(*path_hints)

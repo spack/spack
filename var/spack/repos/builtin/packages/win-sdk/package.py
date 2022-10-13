@@ -30,6 +30,11 @@ class WinSdk(Package):
     version("10.0.10586")
     version("10.0.26639")
 
+    # WinSDK versions depend on compatible compilers
+    # WDK versions do as well, but due to their one to one dep on the SDK
+    # we can ensure that requirment here
+    depends_on("%msvc:", when="@10.")
+
     # For now we don't support Windows development env
     # on other platforms
     for plat in ["linux", "darwin", "cray"]:

@@ -279,9 +279,9 @@ def find_windows_kit_roots():
     if not is_windows:
         return []
     program_files = os.environ['HOMEDRIVE'] + '\\' + 'Program Files*'
-    plat_ver = str(winOs.windows_version())
-    wdk_base = os.path.join(program_files, 'Windows Kits', plat_ver)
-    return wdk_base
+    plat_major_ver = str(winOs.windows_version()[0])
+    kit_base = os.path.join(program_files, 'Windows Kits', plat_major_ver)
+    return kit_base
 
 
 def find_windows_driver_development_kit_paths():
