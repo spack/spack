@@ -140,5 +140,5 @@ class RocmGdb(AutotoolsPackage):
             "--with-rocm-dbgapi={0}".format(self.spec["rocm-dbgapi"].prefix),
         ]
         if self.spec.satisfies("@5.2.0:"):
-            options.append("--disable-gprofing")
+            options.append("--disable-gprofng")
         return options

@@ -1,0 +1,24 @@
+From 7430f37400fc76b2fbc956f6e41237c9bab5a807 Mon Sep 17 00:00:00 2001
+From: Renjith Ravindran <Renjith.RavindranKannath@amd.com>
+Date: Thu, 6 Oct 2022 16:41:47 -0700
+Subject: [PATCH] New patch for 5.3
+
+---
+ hipamd/hip-config.cmake.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/hipamd/hip-config.cmake.in b/hipamd/hip-config.cmake.in
+index 89d1224..8c4f9b7 100755
+--- a/hipamd/hip-config.cmake.in
++++ b/hipamd/hip-config.cmake.in
+@@ -306,7 +306,6 @@ if(HIP_COMPILER STREQUAL "clang")
+   if(NOT CLANGRT_BUILTINS)
+     message(FATAL_ERROR "clangrt builtins lib not found")
+   else()
+-    set_property(TARGET hip::host APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
+     set_property(TARGET hip::device APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CLANGRT_BUILTINS}")
+   endif()
+ endif()
+-- 
+2.25.1
+
