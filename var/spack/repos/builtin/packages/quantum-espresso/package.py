@@ -367,7 +367,7 @@ class QuantumEspresso(CMakePackage, Package):
     )
 
     # Configure updated to work with AOCC compilers
-    patch("configure_aocc.patch", when="@6.7:6.8 %aocc")
+    patch("configure_aocc.patch", when="@6.7:7.0 %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
@@ -589,6 +589,12 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
                 make_inc = join_path(self.pkg.stage.source_path, "make.inc")
                 zlib_libs = spec["zlib"].prefix.lib + " -lz"
                 filter_file(zlib_libs, format(spec["zlib"].libs.ld_flags), make_inc)
+
+        # Filer file must be applied for AOCC due to incorrect make.inc generation
+        if spec.satisfies("%aocc") and spec.satisfies("@6.8:"):
+            make_inc = join_path(self.stage.source_path, "make.inc")
+            filter_file("FOX_FLAGS = -D__PGI", "FOX_FLAGS = -D__PGI -cpp", make_inc)
+
 
         # QE 6.8 and later has parallel builds fixed
         if spec.satisfies("@:6.7"):
