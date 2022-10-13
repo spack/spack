@@ -18,12 +18,10 @@ import spack.package_base
 import spack.spec
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
-from spack.repo import RepoPath
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
-    reason="Python activation not \
-                                    currently supported on Windows",
+    reason="Python activation not currently supported on Windows",
 )
 
 
@@ -60,9 +58,7 @@ def builtin_and_mock_packages():
     # precedence than the builtin repo, so we test builtin.perl against
     # builtin.mock.perl-extension.
     repo_dirs = [spack.paths.packages_path, spack.paths.mock_packages_path]
-    path = RepoPath(*repo_dirs)
-
-    with spack.repo.use_repositories(path):
+    with spack.repo.use_repositories(*repo_dirs):
         yield
 
 

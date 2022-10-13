@@ -12,6 +12,7 @@ class PyOnnxmltools(PythonPackage):
     homepage = "https://github.com/onnx/onnxmltools"
     pypi = "onnxmltools/onnxmltools-1.10.0.tar.gz"
 
+    version("1.11.0", sha256="174b857edcc2e4c56adbc7aed5234fff6a0f51a45956eb4c05c9f842c98bfa1f")
     version("1.10.0", sha256="4eb4605f18ed66553fc17438ac8cf5406d66dcc624bedd76d8067e1b08e6c75d")
 
     depends_on("py-setuptools", type="build")
