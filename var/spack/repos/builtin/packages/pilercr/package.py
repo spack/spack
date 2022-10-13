@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class Pilercr(Package):
+class Pilercr(MakefilePackage):
     """Identification and analysis of CRISPR repeats."""
 
     homepage = "http://www.drive5.com/pilercr/"
@@ -15,9 +15,13 @@ class Pilercr(Package):
 
     version("1.06", sha256="50175f7aa171674cda5ba255631f340f9cc7f80e8cc25135a4cb857147d91068")
 
-    def edit(self, spec, prefix):
-        # use shared instead of static libs
-        env["LDLIBS"] = "-lm"
+    @property
+    def build_targets(self):
+        targets = []
+        targets.append("GPP = {0}".format(spack_cxx))
+        targets.append("CFLAGS = -O3 -DNDEBUG=1")
+        targets.append("LDLIBS = -lm")
+        return targets
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
