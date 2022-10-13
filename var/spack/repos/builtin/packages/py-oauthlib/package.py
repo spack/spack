@@ -39,7 +39,7 @@ class PyOauthlib(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-pyjwt@1.0.0:", type=("build", "run"), when="+extras")
     depends_on("py-pyjwt@2.0.0:2", type=("build", "run"), when="+extras @3.1.1:")
-    depends_on("py-pyjwt@2.0.0:2", type=("build", "run"), when="+signedtokens @3.2.1:")
+    depends_on("py-pyjwt@2.0.0:2", type=("build", "run"), when="+signedtoken @3.2.1:")
     depends_on("py-blinker", type=("build", "run"), when="+extras")
     depends_on("py-blinker", type=("build", "run"), when="+signals")
     depends_on("py-blinker@1.4:", type=("build", "run"), when="+extras @3.1.1:")
