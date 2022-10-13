@@ -11,11 +11,13 @@ class Nvcomp(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/NVIDIA/nvcomp"
     url = "https://github.com/NVIDIA/nvcomp/archive/refs/tags/v2.0.2.tar.gz"
-    git = homepage
+
+    # pinned to the last open source release+a few minor patches
+    git = "https://github.com/robertu94/nvcomp"
 
     maintainers = ["robertu94"]
 
-    version("robertu94", git="https://github.com/robertu94/nvcomp", branch="main", preferred=True)
+    version("2.2.0", commit="3737f6e5028ed1887b0023ad0fc033e139d57574")
     version("2.0.2", sha256="e75c746084e5100a4eecb8c31d546f70fe698e6f927d4fdb8326058712204f16")
 
     depends_on("cuda")

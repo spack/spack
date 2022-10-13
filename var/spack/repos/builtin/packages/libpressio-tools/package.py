@@ -56,6 +56,7 @@ class LibpressioTools(CMakePackage):
     depends_on("libpressio-rmetric", when="+rcpp")
     depends_on("libpressio-adios2", when="+adios2")
     depends_on("libpressio-sperr", when="+sperr")
+    depends_on("libpressio-nvcomp", when="+nvcomp")
 
     variant("hdf5", default=True, description="support the hdf5 package")
     variant("opt", default=False, description="support the libpressio-opt package")
@@ -67,6 +68,7 @@ class LibpressioTools(CMakePackage):
     variant("mpi", default=False, description="depend on MPI for distributed parallelism")
     variant("adios2", default=False, description="depend on ADIOS2 for IO modules")
     variant("sperr", default=False, description="depend on sperr", when="@0.1.2:")
+    variant("nvcomp", default=False, description="depend on nvcomp", when="@0.1.0:")
     conflicts("+opt", "~mpi")
 
     def cmake_args(self):
@@ -83,6 +85,8 @@ class LibpressioTools(CMakePackage):
             args.append("-DLIBPRESSIO_TOOLS_HAS_RMETRIC=YES")
         if "+sperr" in self.spec:
             args.append("-DLIBPRESSIO_TOOLS_HAS_SPERR=YES")
+        if "+nvcomp" in self.spec:
+            args.append("-DLIBPRESSIO_TOOLS_HAS_NVCOMP=YES")
         if self.run_tests:
             args.append("-DBUILD_TESTING=ON")
         else:
