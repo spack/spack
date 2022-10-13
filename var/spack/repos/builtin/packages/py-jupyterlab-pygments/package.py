@@ -20,5 +20,8 @@ class PyJupyterlabPygments(PythonPackage):
     depends_on("python@3.7:", when="@0.2.2:", type=("build", "run"))
     depends_on("py-setuptools", when="@:0.1.2", type="build")
     depends_on("py-jupyter-packaging11", when="@0.2.2:", type="build")
-    depends_on("py-jupyterlab@3.1:3", when="@0.2.2:", type="build")
+    # Causes cyclic dependency between py-nbconvert and py-jupyter-server
+    # py-nbconvert -> py-jupyterlab-pygments -> py-jupyterlab -> 
+    # -> py-jupyter-server -> py-nbconvert
+    # depends_on("py-jupyterlab@3.1:3", when="@0.2.2:", type="build")
     depends_on("py-pygments@2.4.1:2", type=("build", "run"))
