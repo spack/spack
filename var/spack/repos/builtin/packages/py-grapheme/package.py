@@ -18,5 +18,4 @@ class PyGrapheme(PythonPackage):
 
     version("0.6.0", sha256="44c2b9f21bbe77cfb05835fec230bd435954275267fea1858013b102f8603cca")
 
-    depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
