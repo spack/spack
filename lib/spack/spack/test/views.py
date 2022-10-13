@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
-
-import pytest
 
 from spack.directory_layout import DirectoryLayout
 from spack.filesystem_view import YamlFilesystemView

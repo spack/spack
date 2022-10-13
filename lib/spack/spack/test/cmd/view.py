@@ -4,20 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import sys
 
 import pytest
 
+import llnl.util.symlink as symlink
+
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
-
-import llnl.util.symlink as symlink
 
 activate = SpackCommand("activate")
 extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
-
 
 
 def create_projection_file(tmpdir, projection):

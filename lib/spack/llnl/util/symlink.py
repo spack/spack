@@ -14,8 +14,9 @@ from llnl.util import lang
 is_windows = _platform == "win32"
 
 if is_windows:
-    from win32file import CreateHardLink
     import subprocess
+
+    from win32file import CreateHardLink
 
 
 def symlink(real_path, link_path):
@@ -55,8 +56,7 @@ def symlink(real_path, link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
         if exists(link_path):
-            raise OSError(errno.EEXIST, "Link exists: %s"
-                % (link_path))
+            raise OSError(errno.EEXIST, "Link exists: %s" % (link_path))
         else:
             mkNonsymbolicLink(real_path, link_path)
             if not os.path.exists(link_path):
@@ -72,12 +72,11 @@ def mkNonsymbolicLink(path, link):
     if os.path.isdir(path):
         print("[symlink] Making a junction for directory")
         try:
-            cmd = ['cmd','/C','mklink','/J',link,path]
+            cmd = ["cmd", "/C", "mklink", "/J", link, path]
             result = subprocess.check_output(cmd).decode()
             print("[symlink] Result: " + result)
             if "Junction created" not in result:
-                raise OSError(errno.EEXIST, "Link exists: %s"
-                % (link))
+                raise OSError(errno.EEXIST, "Link exists: %s" % (link))
         except subprocess.CalledProcessError as e:
             print("Junction failed with error: " + str(e))
     if os.path.isfile(path):
@@ -128,9 +127,9 @@ def ishardlink(path):
         return False
 
     try:
-        cmd=['fsutil','hardlink','list',path]
-        ret=subprocess.check_output(cmd)
-        lines=ret.decode().splitlines()
+        cmd = ["fsutil", "hardlink", "list", path]
+        ret = subprocess.check_output(cmd)
+        lines = ret.decode().splitlines()
         # We expect output of fsutil call to have at least two lines
         # if the path is a hardlink
         if len(lines) == 1:
@@ -167,4 +166,3 @@ def isjunction(path):
     FILE_ATTRIBUTE_REPARSE_POINT = 0x400
     res = GetFileAttributes(path)
     return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
-
