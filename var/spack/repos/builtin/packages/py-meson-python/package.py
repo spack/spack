@@ -17,7 +17,7 @@ class PyMesonPython(PythonPackage):
     version("0.7.0", sha256="9fcfa350f44ca80dd4f5f9c3d251725434acf9a07d9618f382e6cc4629dcbe84")
 
     depends_on("python@3.7:", type=("build", "run"))
-    depends_on("py-meson@0.62:", type=("build", "run"))
+    depends_on("meson@0.62:", type=("build", "run"))
     depends_on("py-ninja", type=("build", "run"))
     depends_on("py-pyproject-metadata@0.5:", type=("build", "run"))
     depends_on("py-tomli@1:", type=("build", "run"))
