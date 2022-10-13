@@ -50,7 +50,7 @@ class PyGitpython(PythonPackage):
         "py-typing-extensions@3.7.4.0:", type=("build", "run"), when="@3.1.16: ^python@:3.7"
     )
     depends_on(
-        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.19:2.1.26 ^python@:3.10"
+        "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.19:3.1.26 ^python@:3.10"
     )
     depends_on(
         "py-typing-extensions@3.7.4.3:", type=("build", "run"), when="@3.1.27: ^python@:3.7"
