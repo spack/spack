@@ -25,6 +25,7 @@ class RSandwich(RPackage):
 
     cran = "sandwich"
 
+    version("3.0-2", sha256="6e30b6b554eb19430a60c45a8132fb7918ddb0013577bf6a62caeb163bdfe2b4")
     version("3.0-1", sha256="f6584b7084f3223bbc0c4722f53280496be73849747819b0cb4e8f3910284a89")
     version("3.0-0", sha256="828fe53b5e09db5015efd529b2db4dcd40251bce110fea7b0b219fa9ac36d529")
     version("2.5-1", sha256="dbef6f4d12b83e166f9a2508b7c732b04493641685d6758d29f3609e564166d6")

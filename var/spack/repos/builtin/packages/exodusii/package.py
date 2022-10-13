@@ -56,6 +56,7 @@ class Exodusii(CMakePackage):
     version("master", branch="master")
 
     variant("mpi", default=True, description="Enables MPI parallelism.")
+    variant("fortran", default=False, description="Build Fortran wrapper libraries.")
 
     depends_on("cmake@2.8.11:", type="build")
     depends_on("mpi", when="+mpi")
@@ -88,6 +89,16 @@ class Exodusii(CMakePackage):
             "-DCMAKE_C_COMPILER={0}".format(cc_path),
             "-DCMAKE_CXX_COMPILER={0}".format(cxx_path),
         ]
+        if "+fortran" in spec:
+            fc_path = spec["mpi"].mpifc if "+mpi" in spec else self.compiler.f90
+            options.extend(
+                [
+                    "-DSEACASProj_ENABLE_Fortran:BOOL=ON",
+                    "-DCMAKE_Fortran_COMPILER={0}".format(fc_path),
+                    "-DSEACASProj_ENABLE_SEACASExodus_for:BOOL=ON",
+                    "-DSEACASProj_ENABLE_SEACASExoIIv2for32:BOOL=ON",
+                ]
+            )
         # Python #
         # Handle v2016 separately because of older tribits
         if spec.satisfies("@:2016-08-09"):
