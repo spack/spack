@@ -12,6 +12,7 @@ class PyBokeh(PythonPackage):
     homepage = "https://github.com/bokeh/bokeh"
     pypi = "bokeh/bokeh-0.12.2.tar.gz"
 
+    version("2.4.3", sha256="ef33801161af379665ab7a34684f2209861e3aefd5c803a21fbbb99d94874b03")
     version("2.4.1", sha256="d0410717d743a0ac251e62480e2ea860a7341bdcd1dbe01499a904f233c90512")
     version("2.4.0", sha256="6fa00ed8baab5cca33f4175792c309fa2536eaae7e90abee884501ba8c90fddb")
     version("2.3.3", sha256="a5fdcc181835561447fcc5a371300973fce4114692d5853addec284d1cdeb677")
@@ -26,21 +27,22 @@ class PyBokeh(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"), when="@2.4.0:")
 
     depends_on("py-requests@1.2.3:", type=("build", "run"), when="@0.12.2")
-
-    depends_on("py-packaging@16.8:", type=("build", "run"), when="@1.3.4:")
     depends_on("py-six@1.5.2:", type=("build", "run"), when="@:1.3.4")
-    depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-python-dateutil@2.1:", type=("build", "run"), when="@:2.3.3")
     depends_on("py-futures@3.0.3:", type=("build", "run"), when="@:1.3.4 ^python@2.7:2.8")
-
-    depends_on("pil@4.0:", type=("build", "run"), when="@1.3.4:")
-    depends_on("pil@7.1.0:", type=("build", "run"), when="@2.3.3:")
 
     depends_on("py-jinja2@2.7:", type=("build", "run"))
     depends_on("py-jinja2@2.9:", type=("build", "run"), when="@2.3.3:")
 
     depends_on("py-numpy@1.7.1:", type=("build", "run"))
     depends_on("py-numpy@1.11.3:", type=("build", "run"), when="@2.3.3:")
+
+    depends_on("py-packaging@16.8:", type=("build", "run"), when="@1.3.4:")
+
+    depends_on("pil@4.0:", type=("build", "run"), when="@1.3.4:")
+    depends_on("pil@7.1.0:", type=("build", "run"), when="@2.3.3:")
+
+    depends_on("py-pyyaml@3.10:", type=("build", "run"))
 
     depends_on("py-tornado@4.3:", type=("build", "run"))
     depends_on("py-tornado@5.1:", type=("build", "run"), when="@2.3.3:")
