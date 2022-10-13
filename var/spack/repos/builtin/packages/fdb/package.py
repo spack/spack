@@ -16,7 +16,7 @@ class Fdb(CMakePackage):
     maintainers = ["skosukhin"]
 
     # master version of fdb is subject to frequent changes and is to be used experimentally.
-    version("master", git='https://github.com/ecmwf/fdb.git', branch='master')
+    version("master", git="https://github.com/ecmwf/fdb.git", branch="master")
     version("5.10.8", sha256="6a0db8f98e13c035098dd6ea2d7559f883664cbf9cba8143749539122ac46099")
     version("5.7.8", sha256="6adac23c0d1de54aafb3c663d077b85d0f804724596623b381ff15ea4a835f60")
 
