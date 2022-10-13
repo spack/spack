@@ -34,10 +34,12 @@ class Procps(AutotoolsPackage):
         sh("autogen.sh")
 
     def configure_args(self):
-        return [
-            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
+        args = [
             "--with-libintl-prefix={0}".format(self.spec["gettext"].prefix),
             "--with-ncurses",
             # Required to avoid libintl linking errors
             "--disable-nls",
         ]
+        if self.spec["iconv"].name != "libc":
+            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
+        return args

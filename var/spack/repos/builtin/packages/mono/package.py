@@ -74,6 +74,6 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec["iconv"].prefix
-        args.append("--with-libiconv-prefix={p}".format(p=li))
+        if self.spec["iconv"].name != "libc":
+            args.append("--with-libiconv-prefix={p}".format(p=self.spec["iconv"].prefix))
         return args

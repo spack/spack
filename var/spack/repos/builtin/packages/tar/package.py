@@ -65,11 +65,13 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
         # Note: compression programs are passed by abs path,
         # so that tar can locate them when invoked without spack load.
         args = [
-            "--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix),
             "--with-xz={0}".format(self.spec["xz"].prefix.bin.xz),
             "--with-lzma={0}".format(self.spec["xz"].prefix.bin.lzma),
             "--with-bzip2={0}".format(self.spec["bzip2"].prefix.bin.bzip2),
         ]
+
+        if self.spec["iconv"].name != "libc":
+            args.append("--with-libiconv-prefix={0}".format(self.spec["iconv"].prefix))
 
         if "^zstd" in self.spec:
             args.append("--with-zstd={0}".format(self.spec["zstd"].prefix.bin.zstd))

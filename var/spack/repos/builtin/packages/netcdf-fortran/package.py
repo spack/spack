@@ -62,6 +62,8 @@ class NetcdfFortran(AutotoolsPackage):
     # derived from https://github.com/Unidata/netcdf-fortran/pull/211
     patch("no_parallel_build.patch", when="@4.5.2")
 
+    filter_compiler_wrappers("nf-config", relative_root="bin")
+
     def flag_handler(self, name, flags):
         if name == "cflags":
             if "+pic" in self.spec:

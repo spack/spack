@@ -138,7 +138,6 @@ class Gnupg(AutotoolsPackage):
             "--disable-regex",
             "--with-zlib=" + self.spec["zlib"].prefix,
             "--without-tar",
-            "--without-libiconv-prefix",
             "--without-readline",
         ]
 
@@ -154,9 +153,12 @@ class Gnupg(AutotoolsPackage):
                     "--with-libassuan-prefix=" + self.spec["libassuan"].prefix,
                     "--with-ksba-prefix=" + self.spec["libksba"].prefix,
                     "--with-npth-prefix=" + self.spec["npth"].prefix,
-                    "--with-libiconv-prefix=" + self.spec["iconv"].prefix,
                 ]
             )
+            if self.spec["iconv"].name == "libc":
+                args.append("--without-libiconv-prefix")
+            else:
+                args.append("--with-libiconv-prefix=" + self.spec["iconv"].prefix)
 
         if self.spec.satisfies("@:1"):
             args.extend(

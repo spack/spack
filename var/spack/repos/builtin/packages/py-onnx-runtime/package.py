@@ -53,9 +53,6 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     patch("cms.patch", level=1, when="@1.7.2")
     # https://github.com/cms-externals/onnxruntime/compare/0d9030e...7a6355a
     patch("cms_1_10.patch", when="@1.10")
-    # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
-    patch("libiconv.patch", level=0, when="@1.7.2")
-    patch("libiconv-1.10.patch", level=0, when="@1.10.0")
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
     patch("gcc11.patch", level=1, when="@1.7.2")
 
@@ -72,6 +69,20 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     generator = "Ninja"
     root_cmakelists_dir = "cmake"
     build_directory = "."
+
+    #####################################################################
+    # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
+    @when("@1.7.2")
+    def patch(self):
+        if self.spec["iconv"].name == "libiconv":
+            patch("libiconv.patch", level=0)
+
+    @when("@1.10.0")
+    def patch(self):
+        if self.spec["iconv"].name == "libiconv":
+            patch("libiconv-1.10.patch", level=0)
+
+    ####################################################################
 
     def setup_build_environment(self, env):
         value = self.spec.variants["dynamic_cpu_arch"].value

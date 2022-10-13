@@ -18,6 +18,7 @@ class RRanger(RPackage):
 
     cran = "ranger"
 
+    version("0.14.1", sha256="5d99401d555da1cfb11c70e59d1bb545ce48720073a06a2a32eb396f622dee1b")
     version("0.13.1", sha256="60934f0accc21edeefddbb4ddebfdd7cd10a3d3e90b31aa2e6e4b7f50d632d0a")
     version("0.12.1", sha256="fc308e0ac06718272799928e1a19612de16b05bde481d8f38e11a101df5425ef")
     version("0.11.2", sha256="13ac8a9433fdd92f62f66de44abc52477dcbb436b2045c1947951a266bffbeeb")

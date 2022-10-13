@@ -20,6 +20,7 @@ class RPkgdepends(RPackage):
 
     cran = "pkgdepends"
 
+    version("0.3.2", sha256="61db529965f973847b4d1337c6556527a89953cad09d231a6e6ca2145a426a21")
     version("0.3.1", sha256="8e4263a1792871ee9629b0d6a8caeb53b77012db3b5be91b432f3553cd2a80be")
     version("0.2.0", sha256="59afdbe0e59663088ba4facac5cd011a0a05b0b9c540103fb8b9f0a673bf4d94")
 
