@@ -21,6 +21,7 @@ class RRstan(RPackage):
 
     cran = "rstan"
 
+    version("2.21.7", sha256="4495221310d390925b665c32e05ffabd3ae8857225bda65131a7ed2be41d6d45")
     version("2.21.5", sha256="86e4fe562d8ddcd0b02336f35a420fa8786dd21de7ca2bebb4ed6e9c252bb9ea")
     version("2.21.3", sha256="76bcbf1cb246a202e5680ea6e91bb4142ce19156e8960a9850f6ea0e206f92b1")
     version("2.21.2", sha256="e30e04d38a612e2cb3ac69b53eaa19f7ede8b3548bf82f7892a2e9991d46054a")
