@@ -14,6 +14,7 @@ class RRstudioapi(RPackage):
 
     cran = "rstudioapi"
 
+    version("0.14", sha256="469d0987b1ad728a96c363a422fba712a5cebc8b11a5f7e953b4a671044dafc4")
     version("0.13", sha256="aac35bbdcb4a8e8caba943bc8a2b98120e8940b80cd1020224bb1a26ff776d8b")
     version("0.11", sha256="13e07fb7e2eba8cf1d885db2721901d676d219a1042d7ef5d166125e4905306b")
     version("0.10", sha256="80c5aa3063bcab649904cb92f0b164edffa2f6b0e6a8f7ea28ae317b80e1ab96")

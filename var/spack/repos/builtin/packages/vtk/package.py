@@ -21,6 +21,7 @@ class Vtk(CMakePackage):
 
     maintainers = ["chuckatkins", "danlipsa"]
 
+    version("9.2.2", sha256="1c5b0a2be71fac96ff4831af69e350f7a0ea3168981f790c000709dcf9121075")
     version("9.1.0", sha256="8fed42f4f8f1eb8083107b68eaa9ad71da07110161a3116ad807f43e5ca5ce96")
     version(
         "9.0.3",
@@ -61,14 +62,15 @@ class Vtk(CMakePackage):
     # We cannot build with both osmesa and qt in spack
     conflicts("+osmesa", when="+qt")
 
-    extends("python", when="+python")
-
-    # Acceptable python versions depend on vtk version
-    # We need vtk at least 8.0.1 for python@3,
-    # and at least 9.0 for python@3.8
-    depends_on("python@2.7:2.9", when="@:8.0 +python", type=("build", "run"))
-    depends_on("python@2.7:3.7", when="@8.0.1:8.9 +python", type=("build", "run"))
-    depends_on("python@2.7:", when="@9.0: +python", type=("build", "run"))
+    with when("+python"):
+        # Depend on any Python, add bounds below.
+        extends("python@2.7:", type=("build", "run"))
+        # Python 3 support from vtk 8
+        depends_on("python@:2", when="@:7", type=("build", "run"))
+        # Python 3.8 support from vtk 9
+        depends_on("python@:3.7", when="@:8", type=("build", "run"))
+        # Python 3.10 support from vtk 9.2
+        depends_on("python@:3.9", when="@:9.1", type=("build", "run"))
 
     # We need mpi4py if buidling python wrappers and using MPI
     depends_on("py-mpi4py", when="+python+mpi", type="run")

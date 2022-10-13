@@ -34,6 +34,9 @@ class Phist(CMakePackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
+    # updated lapack interface to work with openblas and netlib-lapack
+    version("1.11.0", sha256="36e6cc41a13884ba0a26f7be03e3f1882b1a2d14ca04353a609c0eec0cfb7a77")
+
     # updated the Trilinos interface to work with trilinos@13:
     # without using deprecated interfaces in tpetra
     version("1.10.0", sha256="3ec660c85d37818ee219edc80e977140dfb062bdca1f38623c94a45d13634bd1")
@@ -145,6 +148,8 @@ class Phist(CMakePackage):
     patch("ppc64_sse.patch", when="@1.9.4")
     patch("update_tpetra_gotypes.patch", when="@1.6:1.8")
     patch("sbang.patch", when="+fortran")
+    patch("fortran-fixes-pre-1.11.patch", when="+fortran @1.7.0:1.10.0")
+    patch("lapack-fixes-pre-1.11.patch", when="@:1.10.0")
 
     # ###################### Dependencies ##########################
 
@@ -192,7 +197,7 @@ class Phist(CMakePackage):
     # the phist repo came with it's own FindMPI.cmake before, which may cause some other
     # MPI installation to be used than the one spack wants.
     def patch(self):
-        if self.spec.satisfies("@1.9.6:"):
+        if self.spec.satisfies("@1.9.6:1.10.0"):
             filter_file("USE mpi", "use mpi_f08", "src/kernels/builtin/crsmat_module.F90")
             # filter_file('use mpi', 'use mpi_f08', -> Needs more fixes
             #            'fortran_bindings/phist_testing.F90')
@@ -218,7 +223,7 @@ class Phist(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
 
         if spec.satisfies("kernel_lib=builtin") and spec.satisfies("~mpi"):
             raise InstallError("~mpi not possible with kernel_lib=builtin!")

@@ -16,6 +16,7 @@ class RTidytree(RPackage):
 
     cran = "tidytree"
 
+    version("0.4.1", sha256="fbc4364d17e1b1c26ed06af0cdf36c88a5bc562fdbd4731ab179e30bba4009eb")
     version("0.3.9", sha256="12435d4f4c4d734b2a758cb13eb3b44bdfa8fdfa79a6e81fb99f7ce3a5d82edf")
     version("0.3.7", sha256="7816f2d48ec94ca0c1bef15ec3d536adf44a969ea3c3cfc203ceebe16808e4f2")
 
