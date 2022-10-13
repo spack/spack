@@ -47,6 +47,6 @@ class PyOauthlib(PythonPackage):
     depends_on("py-cryptography", type=("build", "run"), when="+extras")
     depends_on("py-cryptography@3.0.0:3", type=("build", "run"), when="+extras @3.1.1")
     depends_on("py-cryptography@3.0.0:", type=("build", "run"), when="+rsa @3.2.1:")
-    depends_on("py-cryptography@3.0.0:", type=("build", "run"), when="+signedtokens @3.2.1:")
+    depends_on("py-cryptography@3.0.0:", type=("build", "run"), when="+signedtoken @3.2.1:")
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@3.1.1:")
