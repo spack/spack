@@ -21,9 +21,19 @@ class PyOauthlib(PythonPackage):
     version("3.0.1", sha256="0ce32c5d989a1827e3f1148f98b9085ed2370fc939bf524c9c851d8714797298")
     version("2.0.2", sha256="b3b9b47f2a263fe249b5b48c4e25a5bce882ff20a0ac34d553ce43cff55b53ac")
 
-    variant("extras", when="@:3.1.1", default=True, description="Build with pyjwt, blinker, cryptography")
+    variant(
+        "extras",
+        when="@:3.1.1",
+        default=True,
+        description="Build with pyjwt, blinker, cryptography",
+    )
     variant("rsa", when="@3.2.1:", default=False, description="Build with cryptography")
-    variant("signedtoken", when="@3.2.1:", default=False, description="Build with cryptography and pyjwt")
+    variant(
+        "signedtoken",
+        when="@3.2.1:",
+        default=False,
+        description="Build with cryptography and pyjwt",
+    )
     variant("signals", when="@3.2.1:", default=False, description="Build with blinker")
 
     depends_on("py-setuptools", type="build")
