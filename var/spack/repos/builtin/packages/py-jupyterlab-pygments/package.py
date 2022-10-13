@@ -11,9 +11,12 @@ class PyJupyterlabPygments(PythonPackage):
     """Pygments theme using JupyterLab CSS variables."""
 
     homepage = "https://jupyter.org/"
-    url = "https://files.pythonhosted.org/packages/py2.py3/j/jupyterlab-pygments/" +
-          "jupyterlab_pygments-0.2.2-py2.py3-none-any.whl"
-    # We use wheels because in @0.2.2: there is a cyclic dependency between py-nbconvert and py-jupyter-server
+    url = (
+        "https://files.pythonhosted.org/packages/py2.py3/j/jupyterlab-pygments/"
+        "jupyterlab_pygments-0.2.2-py2.py3-none-any.whl"
+    )
+    # We use wheels because in @0.2.2: there is a cyclic dependency between
+    # py-nbconvert and py-jupyter-server:
     # py-nbconvert -> py-jupyterlab-pygments -> py-jupyterlab ->
     # -> py-jupyter-server -> py-nbconvert
     # Reported here: https://github.com/jupyterlab/jupyterlab_pygments/issues/23
