@@ -97,6 +97,8 @@ class Rccl(CMakePackage):
     patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:")
 
     depends_on("cmake@3.5:", type="build")
+    depends_on("chrpath")
+    depends_on("googletest@1.11.0:")
     for ver in [
         "3.5.0",
         "3.7.0",
@@ -175,3 +177,39 @@ class Rccl(CMakePackage):
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("ROCM_SMI_DIR", self.spec["rocm-smi-lib"].prefix))
         return args
+    test_src_dir = "test"
+
+    @run_after("install")
+    def cache_test_sources(self):
+        """Copy the tests source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        if self.spec.satisfies("@:5.1.0"):
+            return
+        self.cache_extra_test_sources([self.test_src_dir])
+
+    def test(self):
+        if self.spec.satisfies("@:5.1.0"):
+            print("Skipping: stand-alone tests")
+            return
+        test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
+        with working_dir(test_dir, create=True):
+            cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+            prefixes = ";".join(
+                [
+                    #self.spec["hsakmt-roct"].prefix,
+                    #self.spec["numactl"].prefix,
+                    #self.spec["hip"].prefix,
+                    #self.spec["comgr"].prefix,
+                    self.spec["hsa-rocr-dev"].prefix,
+                    #self.spec["rocm-smi-lib"].prefix,
+                    self.spec["chrpath"].prefix,
+                    self.spec["rocm-cmake"].prefix,
+                ]
+            )
+            cc_options = [
+                "-DCMAKE_PREFIX_PATH=" + prefixes,
+                "-DBUILD_TESTS=ON",
+                ".",
+            ]
+            self.run_test(cmake_bin, cc_options)
+            make("clean")
