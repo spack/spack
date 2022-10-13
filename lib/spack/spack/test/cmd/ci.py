@@ -1358,8 +1358,15 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     assert expect_msg in std_out
 
 
+@pytest.mark.parametrize("match_behavior", ["first", "merge"])
 def test_ci_generate_override_runner_attrs(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    match_behavior,
 ):
     """Test that we get the behavior we want with respect to the provision
     of runner attributes like tags, variables, and scripts, both when we
@@ -1378,6 +1385,7 @@ spack:
   gitlab-ci:
     tags:
       - toplevel
+      - toplevel2
     variables:
       ONE: toplevelvarone
       TWO: toplevelvartwo
@@ -1388,6 +1396,7 @@ spack:
       - main step
     after_script:
       - post step one
+    match_behavior: {0}
     mappings:
       - match:
           - flatten-deps
@@ -1400,10 +1409,12 @@ spack:
           - dependency-install
       - match:
           - a
+        remove-attributes:
+          tags:
+            - toplevel2
         runner-attributes:
           tags:
             - specific-a
-            - toplevel
           variables:
             ONE: specificvarone
             TWO: specificvartwo
@@ -1413,10 +1424,17 @@ spack:
             - custom main step
           after_script:
             - custom post step one
+      - match:
+          - a
+        runner-attributes:
+          tags:
+            - specific-a-2
     service-job-attributes:
       image: donotcare
       tags: [donotcare]
-"""
+""".format(
+                match_behavior
+            )
         )
 
     with tmpdir.as_cwd():
@@ -1449,9 +1467,12 @@ spack:
                     assert the_elt["variables"]["ONE"] == "specificvarone"
                     assert the_elt["variables"]["TWO"] == "specificvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == (2 if match_behavior == "first" else 3)
                     assert "specific-a" in the_elt["tags"]
+                    if match_behavior == "merge":
+                        assert "specific-a-2" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" not in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 1
                     assert the_elt["before_script"][0] == "custom pre step one"
                     assert len(the_elt["script"]) == 1
@@ -1466,8 +1487,9 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 1
-                    assert the_elt["tags"][0] == "toplevel"
+                    assert len(the_elt["tags"]) == 2
+                    assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
@@ -1484,9 +1506,10 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert the_elt["variables"]["THREE"] == "specificvarthree"
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == 3
                     assert "specific-one" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
