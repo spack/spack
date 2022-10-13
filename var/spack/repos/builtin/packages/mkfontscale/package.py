@@ -13,6 +13,7 @@ class Mkfontscale(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/mkfontscale"
     xorg_mirror_path = "app/mkfontscale-1.1.2.tar.gz"
 
+    version("1.1.3", sha256="449b8ccd44133e260eafab55f18937c09fd4846b87f288f1c9611e4810e13bb2")
     version("1.1.2", sha256="8bba59e60fbc4cb082092cf6b67e810b47b4fe64fbc77dbea1d7e7d55312b2e4")
 
     depends_on("libfontenc")

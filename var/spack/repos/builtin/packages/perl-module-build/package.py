@@ -54,6 +54,7 @@ class PerlModuleBuild(PerlPackage):
     depends_on("perl-perl-ostype@1:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-mkbootstrap", type="run")  # AUTO-CPAN2Spack
     depends_on("perl@5.6.1:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-cbuilder@0.27:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-extutils-manifest@1.54:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-module-metadata@1.0.2:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-cpan-meta-yaml@0.3:", type=("build", "test"))  # AUTO-CPAN2Spack
