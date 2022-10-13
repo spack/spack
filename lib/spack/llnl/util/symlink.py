@@ -19,9 +19,30 @@ if is_windows:
 
 def symlink(real_path, link_path):
     """
-    Create a symbolic link.
+    Try to create a symbolic link.
 
-    On Windows, use junctions if os.symlink fails.
+    On non-Windows and Windows with System Administrator
+    privleges this will be a symbolic link. On Windows
+    without privledges the link will be a junction for a
+    directory and a hardlink for a file. On Windows the
+    definitions are:
+
+    Symbolic Link: A link to a file or directory on the
+    same or different volume (drive letter) or even to
+    a remote file or directory (using UNC in its path).
+    Need System Administrator privileges to make these.
+
+    Hard Link: A link to a file on the same volume (drive
+    letter) only. Every file (file's data) has at least 1
+    hard link (file's name). But when this method creates
+    a new hard link there will be 2. Deleting all hard
+    links effectively deletes the file. Don't need System
+    Administrator privileges.
+
+    Junction (sometimes called soft link): A link to a
+    directory on the same or different volume (drive
+    letter) but not to a remote directory. Don't need
+    System Administrator privileges.
     """
     if not is_windows or _win32_can_symlink():
         os.symlink(real_path, link_path)
