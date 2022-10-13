@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
-import sys
 
 import pytest
+
+import llnl.util.symlink as symlink
 
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
@@ -15,8 +16,6 @@ from spack.spec import Spec
 extensions = SpackCommand("extensions")
 install = SpackCommand("install")
 view = SpackCommand("view")
-
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
 def create_projection_file(tmpdir, projection):
@@ -40,7 +39,7 @@ def test_view_link_type(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_link_cmd = cmd in ("symlink", "add")
-    assert os.path.islink(package_prefix) == is_link_cmd
+    assert symlink.path.islink(package_prefix) == is_link_cmd
 
 
 @pytest.mark.parametrize("add_cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
@@ -73,7 +72,7 @@ def test_view_projections(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_symlink_cmd = cmd in ("symlink", "add")
-    assert os.path.islink(package_prefix) == is_symlink_cmd
+    assert symlink.path.islink(package_prefix) == is_symlink_cmd
 
 
 def test_view_multiple_projections(
