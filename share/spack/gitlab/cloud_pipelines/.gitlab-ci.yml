@@ -869,3 +869,123 @@ ml-rocm-protected-build:
   needs:
     - artifacts: True
       job: ml-rocm-protected-generate
+
+########################################
+# Machine Learning (ppc64le)
+########################################
+.ml-ppc64le:
+  variables:
+    SPACK_CI_STACK_NAME: ml-ppc64le
+
+.ml-ppc64le-generate:
+  extends: .ml-ppc64le
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "ppc64le"]
+
+ml-ppc64le-pr-generate:
+  extends: [ ".ml-ppc64le-generate", ".pr-generate"]
+
+ml-ppc64le-protected-generate:
+  extends: [ ".ml-ppc64le-generate", ".protected-generate"]
+
+ml-ppc64le-pr-build:
+  extends: [ ".ml-ppc64le", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-pr-generate
+
+ml-ppc64le-protected-build:
+  extends: [ ".ml-ppc64le", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-protected-generate
+
+########################################
+# Machine Learning (ppc64le + CUDA)
+########################################
+.ml-ppc64le-cuda:
+  variables:
+    SPACK_CI_STACK_NAME: ml-ppc64le-cuda
+
+.ml-ppc64le-cuda-generate:
+  extends: .ml-cuda
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "ppc64le"]
+
+ml-ppc64le-cuda-pr-generate:
+  extends: [ ".ml-ppc64le-cuda-generate", ".pr-generate"]
+
+ml-ppc64le-cuda-protected-generate:
+  extends: [ ".ml-ppc64le-cuda-generate", ".protected-generate"]
+
+ml-ppc64le-cuda-pr-build:
+  extends: [ ".ml-ppc64le-cuda", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-cuda-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-cuda-pr-generate
+
+ml-ppc64le-cuda-protected-build:
+  extends: [ ".ml-ppc64le-cuda", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-cuda-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-cuda-protected-generate
+
+########################################
+# Machine Learning (ROCm)
+########################################
+.ml-ppc64le-rocm:
+  variables:
+    SPACK_CI_STACK_NAME: ml-ppc64le-rocm
+
+.ml-ppc64le-rocm-generate:
+  extends: .ml-ppc64le-rocm
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "ppc64le"]
+
+ml-ppc64le-rocm-pr-generate:
+  extends: [ ".ml-ppc64le-rocm-generate", ".pr-generate"]
+
+ml-ppc64le-rocm-protected-generate:
+  extends: [ ".ml-ppc64le-rocm-generate", ".protected-generate"]
+
+ml-ppc64le-rocm-pr-build:
+  extends: [ ".ml-ppc64le-rocm", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-rocm-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-rocm-pr-generate
+
+ml-ppc64le-rocm-protected-build:
+  extends: [ ".ml-ppc64le-rocm", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-ppc64le-rocm-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-ppc64le-rocm-protected-generate
