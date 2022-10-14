@@ -37,6 +37,8 @@ class Gptl(AutotoolsPackage):
             args.append("CC=" + self.spec["mpi"].mpicc)
             args.append("CXX=" + self.spec["mpi"].mpicxx)
             args.append("FC=" + self.spec["mpi"].mpifc)
+            args.append("F90=" + self.spec["mpi"].mpifc)
+            args.append("F77=" + self.spec["mpi"].mpif77)
 
         if "+papi" in self.spec:
             args.append("--enable-papi")
