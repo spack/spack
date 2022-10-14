@@ -105,6 +105,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
         "tblite", default=False, description="Whether xTB support should be included via tblite."
     )
 
+    variant("shared", default=False, description="Most often for the Python wrappers.")
+
     # ONLY for version 19.1
     variant(
         "dftd3",
@@ -232,6 +234,7 @@ class Dftbplus(CMakePackage, MakefilePackage):
             self.define_from_variant("WITH_SOCKETS", "sockets"),
             self.define_from_variant("WITH_TBLITE", "tblite"),
             self.define_from_variant("WITH_TRANSPORT", "transport"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
         # SCALAPACK
         if "+mpi" in self.spec:
@@ -243,6 +246,8 @@ class Dftbplus(CMakePackage, MakefilePackage):
                     self.define("SCALAPACK_LIBRARY", self.spec["scalapack"].libs.joined(";")),
                 ]
             )
+        if "+python" in self.spec:
+            args.append(self.define("BUILD_SHARED_LIBS", True))
         if self.run_tests:
             args.append("-DWITH_UNIT_TESTS=ON")
         else:
