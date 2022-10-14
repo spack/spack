@@ -126,7 +126,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     depends_on("py-fsspec@2021.07:", type=("build", "run"), when="frameworks=spark @0.24.2:")
     depends_on("py-ray", type=("build", "run"), when="frameworks=ray")
     depends_on("py-aioredis@:1", type=("build", "run"), when="frameworks=ray @0.23:")
-    depends_on("py-google-api-core@:2.8", type=("build", "run"), when="framework=ray @0.26:")
+    depends_on("py-google-api-core@:2.8", type=("build", "run"), when="frameworks=ray @0.26:")
 
     # Controller dependencies
     depends_on("mpi", when="controllers=mpi")
