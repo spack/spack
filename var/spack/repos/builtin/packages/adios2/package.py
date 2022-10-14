@@ -61,7 +61,7 @@ class Adios2(CMakePackage, CudaPackage):
 
     # Compression libraries
     variant(
-        "libpressio", default=True, when="@2.8:", description="Enable LibPressio for compression"
+        "libpressio", default=False, when="@2.8:", description="Enable LibPressio for compression"
     )
     variant("blosc", default=True, when="@2.4:", description="Enable Blosc compression")
     variant("bzip2", default=True, when="@2.4:", description="Enable BZip2 compression")
