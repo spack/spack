@@ -17,6 +17,7 @@ class RDendextend(RPackage):
 
     cran = "dendextend"
 
+    version("1.16.0", sha256="ec2fd09c31a2a93292d87a9bd5bfc261840de941dfded79d6c2fe87116708466")
     version("1.15.2", sha256="4ba3885b66694589d455ffef31c218fe653fa25aff3efb7e8db6c25008d2921b")
     version("1.14.0", sha256="3789461bc474e146b077ad26566b1fa05be32fc7e57ab1fb5e78bdabcc797858")
     version("1.12.0", sha256="b487fed8c1878a23b9e28394ee11f16a1831b76c90793eb486e6963c7162fa55")

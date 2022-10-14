@@ -721,17 +721,7 @@ class Llvm(CMakePackage, CudaPackage):
         cmake_args.append(from_variant("LIBOMP_TSAN_SUPPORT", "omp_tsan"))
 
         if self.compiler.name == "gcc":
-            compiler = Executable(self.compiler.cc)
-            gcc_output = compiler("-print-search-dirs", output=str, error=str)
-
-            for line in gcc_output.splitlines():
-                if line.startswith("install:"):
-                    # Get path and strip any whitespace
-                    # (causes oddity with ancestor)
-                    gcc_prefix = line.split(":")[1].strip()
-                    gcc_prefix = ancestor(gcc_prefix, 4)
-                    break
-            cmake_args.append(define("GCC_INSTALL_PREFIX", gcc_prefix))
+            cmake_args.append(define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         if self.spec.satisfies("~code_signing platform=darwin"):
             cmake_args.append(define("LLDB_USE_SYSTEM_DEBUGSERVER", True))

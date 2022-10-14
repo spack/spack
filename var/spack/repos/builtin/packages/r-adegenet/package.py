@@ -21,6 +21,7 @@ class RAdegenet(RPackage):
 
     cran = "adegenet"
 
+    version("2.1.8", sha256="80d72c3eefe077723dec91c98b7d46815b9659ab7196581d18b6e9d6c27f5025")
     version("2.1.6", sha256="7823de4933634cb887481fe4b12cf2faacbaa1b4b66939584d10fcb7ce2da26b")
     version("2.1.5", sha256="e4eee8c41dae6cb0841db74ec6f9adb2580873f3e313471f37df58324c1857f2")
     version("2.1.3", sha256="0790114ecb22642683b5be1f4b3a6a49856e06dc2f9e21b9cba4390c2257f6c6")

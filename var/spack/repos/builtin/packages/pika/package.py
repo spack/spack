@@ -94,11 +94,12 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hip@5.2:", when="@0.8: +rocm")
     depends_on("hipblas", when="@:0.8 +rocm")
     depends_on("mpi", when="+mpi")
-    depends_on("p2300", when="+p2300")
+    depends_on("stdexec", when="+p2300")
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
-    depends_on("whip", when="@0.9:")
+    depends_on("whip+rocm", when="@0.9: +rocm")
+    depends_on("whip+cuda", when="@0.9: +cuda")
 
     for cxxstd in cxxstds:
         depends_on("boost cxxstd={0}".format(map_cxxstd(cxxstd)), when="cxxstd={0}".format(cxxstd))
@@ -150,7 +151,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
                 args += [self.define("__skip_rocmclang", True)]
         if self.spec.satisfies("@0.8: +rocm"):
             rocm_archs = spec.variants["amdgpu_target"].value
-            rocm_archs = ";".join(rocm_archs)
-            args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
+            if "none" not in rocm_archs:
+                rocm_archs = ";".join(rocm_archs)
+                args.append(self.define("CMAKE_HIP_ARCHITECTURES", rocm_archs))
 
         return args
