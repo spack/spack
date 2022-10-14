@@ -17,6 +17,7 @@ class PyJupyterlab(PythonPackage):
     # Skip 'jupyterlab.tests' packages
     import_modules = ["jupyterlab", "jupyterlab.handlers"]
 
+    version("3.4.8", sha256="1fafb8b657005d91603f3c3adfd6d9e8eaf33fdc601537fef09283332efe67cb")
     version("3.4.2", sha256="38abd3a4f83a8f97e3f15bebbcc0825903c15519809eedfaa41340d260be2160")
     version("3.2.9", sha256="65ddc34e5da1a764606e38c4f70cf9d4ac1c05182813cf0ab2dfea312c701124")
     version("3.2.1", sha256="54466941bcd9b52f23373a32038fbb4e50fd652d4536df6179b53e1ffb8ef431")
@@ -39,10 +40,7 @@ class PyJupyterlab(PythonPackage):
     # depends_on('py-jupyter-packaging@0.9:0', when='@3.0.15:', type='build')
     # depends_on('py-jupyter-packaging@0.7.3:0.7', when='@3.0.0:3.0.14',
     #            type=('build', 'run'))
-    depends_on("py-pre-commit", when="@3.4:", type="build")
-    # dependency on py-jinja2@2.1 seems to be a migration issue from the switch
-    # to setup.cfg in 3.0.15, leave it a 2.10
-    depends_on("py-jinja2@2.10:", type=("build", "run"))
+    depends_on("py-pre-commit", when="@3.4:3.4.3", type="build")
 
     # @3:
     depends_on("py-ipython", when="@3:", type=("build", "run"))
@@ -56,7 +54,13 @@ class PyJupyterlab(PythonPackage):
     depends_on("py-jupyter-server@1.4:1", when="@3.0.9:3.3", type=("build", "run"))
     depends_on("py-jupyter-server@1.2:1", when="@3.0.3:3.0.8", type=("build", "run"))
     depends_on("py-jupyter-server@1.1:1", when="@3.0.0:3.0.2", type=("build", "run"))
-    depends_on("py-nbclassic@0.2.0:0", when="@3:", type=("build", "run"))
+    depends_on("py-nbclassic", when="@3.4.4:", type=("build", "run"))
+    depends_on("py-nbclassic@0.2.0:0", when="@3:3.4.3", type=("build", "run"))
+    depends_on("py-notebook@:6", when="@3.4.8:", type=("build", "run"))
+    # dependency on py-jinja2@2.1 seems to be a migration issue from the switch
+    # to setup.cfg in 3.0.15, leave it a 2.10
+    depends_on("py-jinja2@2.10:", type=("build", "run"))
+    depends_on("py-tomli", when="@3.4.7:", type=("build", "run"))
 
     # @:2
     depends_on("py-notebook@4.3.1:", when="@:2", type=("build", "run"))
