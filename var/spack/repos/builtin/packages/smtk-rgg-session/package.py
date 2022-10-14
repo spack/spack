@@ -7,9 +7,8 @@ from spack.package import *
 
 
 class SmtkRggSession(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """SMTK Plugin for working with RGG Reactor Models"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.computationalmodelbuilder.org/"
     url = "https://gitlab.kitware.com/cmb/plugins/rgg-session"
     git = "https://gitlab.kitware.com/cmb/plugins/rgg-session.git"
@@ -27,7 +26,7 @@ class SmtkRggSession(CMakePackage):
 
     # Dependencies
     depends_on("smtk +paraview +qt")
-    depends_on("boost@1.64.0 +filesystem")
+    depends_on("boost@1.64: +filesystem")
     depends_on("qt +gui")
 
     extends("python", when="+python")
