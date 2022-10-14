@@ -7,7 +7,12 @@ from spack.package import *
 
 
 class Ndzip(CMakePackage, CudaPackage):
-    """A High-Throughput Parallel Lossless Compressor for Scientific Data"""
+    """A High-Throughput Parallel Lossless Compressor for Scientific Data
+
+    forked from: https://github.com/fknorr/ndzip
+    """
+
+    # the upstream developer graduated and moved on to other tasks
 
     url = "https://github.com/celerity/ndzip"
     homepage = "https://github.com/fknorr/ndzip"

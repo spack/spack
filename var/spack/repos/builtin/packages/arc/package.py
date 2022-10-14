@@ -8,7 +8,11 @@ from spack.package import *
 
 class Arc(CMakePackage):
     """ARC is an automatic resiliency library designed to provide security
-    to lossy compressed data or other uint8_t data arrays"""
+    to lossy compressed data or other uint8_t data arrays
+
+    forked from: https://github.com/FTHPC/ARC to support Spack after developer
+    left grad school
+    """
 
     homepage = "https://github.com/FTHPC/ARC"
     url = "https://github.com/FTHPC/ARC"

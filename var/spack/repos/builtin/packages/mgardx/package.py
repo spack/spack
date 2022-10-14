@@ -7,7 +7,12 @@ from spack.package import *
 
 
 class Mgardx(CMakePackage):
-    """MGARD implementation for research purposes"""
+    """MGARD implementation for research purposes
+    forked from: https://github.com/lxAltria/MGARDx"""
+
+    # Some of the functionality of this compressor were moved to `MGARD` proper
+    # effectively retiring this package.  This package lives on to access some of
+    # this functionality.  Includes minor patches to support spack.
 
     homepage = "https://github.com/lxAltria/MGARDx"
     git = "https://github.com/robertu94/MGARDx"

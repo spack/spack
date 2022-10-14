@@ -7,7 +7,11 @@ from spack.package import *
 
 
 class Mgard(CMakePackage, CudaPackage):
-    """MGARD error bounded lossy compressor"""
+    """MGARD error bounded lossy compressor
+    forked from https://github.com/CODARcode/MGARD with patches to support Spack"""
+
+    # This is a research compressor with a fast evolving API.  The fork is updated
+    # when releases are made with minimal changes to support spack
 
     homepage = "https://github.com/CODARcode/MGARD"
     git = "https://github.com/robertu94/MGARD"
@@ -19,9 +23,9 @@ class Mgard(CMakePackage, CudaPackage):
 
     depends_on("zlib")
     depends_on("zstd")
-    depends_on("libarchive", when="@robertu94:")
-    depends_on("tclap", when="@robertu94:")
-    depends_on("yaml-cpp", when="@robertu94:")
+    depends_on("libarchive", when="@2021-11-12:")
+    depends_on("tclap", when="@2021-11-12:")
+    depends_on("yaml-cpp", when="@2021-11-12:")
     depends_on("cmake@3.19:")
     depends_on("nvcomp@2.0.2", when="+cuda")
     conflicts("cuda_arch=none", when="+cuda")

@@ -7,7 +7,11 @@ from spack.package import *
 
 
 class Nvcomp(CMakePackage, CudaPackage):
-    """A library for fast lossless compression/decompression on NVIDIA GPUs"""
+    """Last open source release of A library for fast lossless compression
+    /decompression on NVIDIA GPUs
+
+    forked from: https://github.com/NVIDIA/nvcomp after NVIDIA made this closed source
+    """
 
     homepage = "https://github.com/NVIDIA/nvcomp"
     url = "https://github.com/NVIDIA/nvcomp/archive/refs/tags/v2.0.2.tar.gz"

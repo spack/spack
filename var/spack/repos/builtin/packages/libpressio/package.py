@@ -9,6 +9,7 @@ from spack.package import *
 class Libpressio(CMakePackage, CudaPackage):
     """A generic abstraction for the compression of dense tensors"""
 
+    # codarcode gets "stable" releases ~1/yr; robertu94 contains development versions
     homepage = "https://github.com/codarcode/libpressio"
     url = "https://github.com/robertu94/libpressio/archive/0.31.1.tar.gz"
     git = "https://github.com/robertu94/libpressio"
