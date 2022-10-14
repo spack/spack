@@ -1438,7 +1438,7 @@ built.
 You can see what virtual packages a particular package provides by
 getting info on it:
 
-.. command-output:: spack info mpich
+.. command-output:: spack info --virtuals mpich
 
 Spack is unique in that its virtual packages can be versioned, just
 like regular packages.  A particular version of a package may provide
