@@ -47,10 +47,10 @@ class PySeaborn(PythonPackage):
     depends_on("py-matplotlib", type=("build", "run"))
 
     depends_on("py-scipy@1:", when="@0.12: +stats", type=("build", "run"))
-    depends_on("py-scipy@1:", when="@0.11:", type=("build", "run"))
-    depends_on("py-scipy@1.0.1:", when="@0.10:", type=("build", "run"))
-    depends_on("py-scipy@0.14:", when="@0.9.0:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
+    depends_on("py-scipy@1:", when="@0.11", type=("build", "run"))
+    depends_on("py-scipy@1.0.1:", when="@0.10:0.11", type=("build", "run"))
+    depends_on("py-scipy@0.14:", when="@0.9.0:0.11", type=("build", "run"))
+    depends_on("py-scipy", when="@:0.11", type=("build", "run"))
 
     depends_on("py-statsmodel@0.10:", when="@0.12: +stats", type=("build", "run"))
 
