@@ -23,8 +23,7 @@ class PySeaborn(PythonPackage):
     version("0.9.0", sha256="76c83f794ca320fb6b23a7c6192d5e185a5fcf4758966a0c0a54baee46d41e2f")
     version("0.7.1", sha256="fa274344b1ee72f723bab751c40a5c671801d47a29ee9b5e69fcf63a18ce5c5d")
 
-    variant("stats", default=False, description="Optional statistical dependencies",
-            when="@0.12:")
+    variant("stats", default=False, description="Optional statistical dependencies", when="@0.12:")
 
     depends_on("python@3.6:", when="@0.10:", type="build")
     depends_on("python@3.7:", when="@0.12:", type="build")
