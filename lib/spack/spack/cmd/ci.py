@@ -7,7 +7,6 @@ import json
 import os
 import shutil
 import sys
-import tempfile
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -19,7 +18,6 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
-import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -285,6 +283,7 @@ def ci_rebuild(args):
     spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
+    spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
@@ -547,34 +546,14 @@ def ci_rebuild(args):
             dev_fail_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
             tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
-            tmpdir = tempfile.mkdtemp()
-            empty_file_path = os.path.join(tmpdir, "empty.txt")
-
-            broken_spec_details = {
-                "broken-spec": {
-                    "job-url": get_env_var("CI_JOB_URL"),
-                    "pipeline-url": get_env_var("CI_PIPELINE_URL"),
-                    "concrete-spec-dict": job_spec.to_dict(hash=ht.dag_hash),
-                }
-            }
-
-            try:
-                with open(empty_file_path, "w") as efd:
-                    efd.write(syaml.dump(broken_spec_details))
-                web_util.push_to_url(
-                    empty_file_path,
-                    broken_spec_path,
-                    keep_original=False,
-                    extra_args={"ContentType": "text/plain"},
-                )
-            except Exception as err:
-                # If there is an S3 error (e.g., access denied or connection
-                # error), the first non boto-specific class in the exception
-                # hierarchy is Exception.  Just print a warning and return
-                msg = "Error writing to broken specs list {0}: {1}".format(broken_spec_path, err)
-                tty.warn(msg)
-            finally:
-                shutil.rmtree(tmpdir)
+            spack_ci.write_broken_spec(
+                broken_spec_path,
+                job_spec_pkg_name,
+                spack_ci_stack_name,
+                get_env_var("CI_JOB_URL"),
+                get_env_var("CI_PIPELINE_URL"),
+                job_spec.to_dict(hash=ht.dag_hash),
+            )
 
     # We generated the "spack install ..." command to "--keep-stage", copy
     # any logs from the staging directory to artifacts now
