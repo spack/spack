@@ -319,7 +319,7 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     _print_timer(
         pre=_log_prefix(pkg.name),
         pkg_id=pkg_id,
-        fetch=timer.phases.get("fetch", 0),
+        fetch=timer.phases.get("search", 0) + timer.phases.get("fetch", 0),
         build=timer.phases.get("install", 0),
         total=timer.total,
     )
@@ -389,18 +389,16 @@ def _process_binary_cache_tarball(
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
-    if timer:
-        timer.phase("fetch")
     download_result = binary_distribution.download_tarball(
         binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
     )
+    if timer:
+        timer.phase("fetch")
     # see #10063 : install from source if tarball doesn't exist
     if download_result is None:
         tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
         return False
 
-    if timer:
-        timer.phase("install")
     pkg_id = package_id(pkg)
     tty.msg("Extracting {0} from binary cache".format(pkg_id))
 
@@ -412,6 +410,8 @@ def _process_binary_cache_tarball(
 
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+    if timer:
+        timer.phase("install")
     return True
 
 
@@ -426,11 +426,12 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=None):
             otherwise, ``False``
         timer (Timer):
     """
-    if timer:
-        timer.phase("search")
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
     matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
+
+    if timer:
+        timer.phase("search")
 
     if not matches:
         return False
