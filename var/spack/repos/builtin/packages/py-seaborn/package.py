@@ -51,6 +51,6 @@ class PySeaborn(PythonPackage):
     depends_on("py-scipy@0.14:", when="@0.9.0:0.11", type=("build", "run"))
     depends_on("py-scipy", when="@:0.11", type=("build", "run"))
 
-    depends_on("py-statsmodel@0.10:", when="@0.12: +stats", type=("build", "run"))
+    depends_on("py-statsmodels@0.10:", when="@0.12: +stats", type=("build", "run"))
 
     depends_on("py-typing-extensions", when="@0.12: ^python@:3.7", type=("build", "run"))
