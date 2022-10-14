@@ -54,13 +54,13 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "ofi_libfabric_plugin",
         default=True,
-        when='+rccl platform=cray',
+        when="+rccl platform=cray",
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
     variant(
         "ofi_libfabric_plugin",
         default=True,
-        when='+nccl platform=cray',
+        when="+nccl platform=cray",
         description="Builds with support for OFI libfabric enhanced RCCL/NCCL communication lib",
     )
 
