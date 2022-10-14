@@ -14,12 +14,13 @@ class Hipsparse(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSPARSE"
     git = "https://github.com/ROCmSoftwarePlatform/hipSPARSE.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSPARSE/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath", "haampie"]
     libraries = ["libhipsparse"]
 
+    version("5.3.0", sha256="691b32b916952ed9af008aa29f60cc190322b73cfc098bb2eda3ff68c89c7b35")
     version("5.2.3", sha256="f70d3deff13188adc4105ef3ead53510e4b54075b9ffcfe3d3355d90d4b6eadd")
     version("5.2.1", sha256="7b8e4ff264285ae5aabb3c5c2b38bf28f90b2af44efb0398fcf13ffc24bc000a")
     version("5.2.0", sha256="4fdab6ec953c6d2d000687c5979077deafd37208cd722554b5a6ede1e5ba170c")
@@ -110,6 +111,7 @@ class Hipsparse(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
@@ -132,6 +134,7 @@ class Hipsparse(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocprim@" + ver, when="@" + ver)
 
