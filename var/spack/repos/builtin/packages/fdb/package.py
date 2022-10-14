@@ -50,7 +50,7 @@ class Fdb(CMakePackage):
 
     # Starting version 1.7.0, metkit installs GribHandle.h to another directory.
     # That is accounted for only starting version 5.8.0:
-    patch("metkit_1.7.0.patch", when="fdb@:5.7.10+tools^metkit@1.7.0:")
+    patch("metkit_1.7.0.patch", when="@:5.7.10+tools^metkit@1.7.0:")
 
     # Download test data before running a test:
     patch(
