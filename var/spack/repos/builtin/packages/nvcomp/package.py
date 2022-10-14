@@ -18,7 +18,7 @@ class Nvcomp(CMakePackage, CudaPackage):
     maintainers = ["robertu94"]
 
     version("2.2.0", commit="3737f6e5028ed1887b0023ad0fc033e139d57574")
-    version("2.0.2", sha256="e75c746084e5100a4eecb8c31d546f70fe698e6f927d4fdb8326058712204f16")
+    version("2.0.2", commit="5d5c194f3449486d989057f632d10954b8d11d75")
 
     depends_on("cuda")
     conflicts("~cuda")

@@ -10,8 +10,7 @@ class Sz3(CMakePackage):
     """SZ3 is the next generation of the SZ compressor framework"""
 
     homepage = "https://github.com/szcompressor/SZ3"
-    url = "https://github.com/robertu94/SZ3"
-    git = "https://github.com/robertu94/SZ3"
+    git = "https://github.com/szcompressor/SZ3"
 
     maintainers = ["disheng222"]
 

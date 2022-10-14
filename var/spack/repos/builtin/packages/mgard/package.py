@@ -10,12 +10,11 @@ class Mgard(CMakePackage, CudaPackage):
     """MGARD error bounded lossy compressor"""
 
     homepage = "https://github.com/CODARcode/MGARD"
-    git = "https://github.com/CODARcode/MGARD"
+    git = "https://github.com/robertu94/MGARD"
 
     maintainers = ["robertu94"]
 
-    version("master", branch="master")
-    version("robertu94", git="https://github.com/robertu94/MGARD", branch="master", prefered=True)
+    version("2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
     version("2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
 
     depends_on("zlib")
@@ -24,8 +23,9 @@ class Mgard(CMakePackage, CudaPackage):
     depends_on("tclap", when="@robertu94:")
     depends_on("yaml-cpp", when="@robertu94:")
     depends_on("cmake@3.19:")
-    depends_on("nvcomp@robertu", when="+cuda")
+    depends_on("nvcomp@2.0.2", when="+cuda")
     conflicts("cuda_arch=none", when="+cuda")
+    conflicts("~cuda", when="@2021-11-12")
 
     def cmake_args(self):
         args = ["-DBUILD_TESTING=OFF"]
