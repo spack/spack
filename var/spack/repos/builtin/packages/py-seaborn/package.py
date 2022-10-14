@@ -23,7 +23,11 @@ class PySeaborn(PythonPackage):
     version("0.9.0", sha256="76c83f794ca320fb6b23a7c6192d5e185a5fcf4758966a0c0a54baee46d41e2f")
     version("0.7.1", sha256="fa274344b1ee72f723bab751c40a5c671801d47a29ee9b5e69fcf63a18ce5c5d")
 
+    variant("stats", default=False, description="Optional statistical dependencies",
+            when="@0.12:")
+
     depends_on("python@3.6:", when="@0.10:", type="build")
+    depends_on("python@3.7:", when="@0.12:", type="build")
     depends_on("py-setuptools", when="@:0.11.2", type="build")
     depends_on("py-flit-core@3.2:3", when="@0.12.0:", type="build")
 
@@ -31,10 +35,6 @@ class PySeaborn(PythonPackage):
     depends_on("py-numpy@1.15:", when="@0.11:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", when="@0.9:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy@1:", when="@0.11:", type=("build", "run"))
-    depends_on("py-scipy@1.0.1:", when="@0.10:", type=("build", "run"))
-    depends_on("py-scipy@0.14:", when="@0.9.0:", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
     depends_on("py-pandas@0.25:", when="@0.12:", type=("build", "run"))
     depends_on("py-pandas@0.23:", when="@0.11:", type=("build", "run"))
     depends_on("py-pandas@0.22:", when="@0.10:", type=("build", "run"))
@@ -45,4 +45,13 @@ class PySeaborn(PythonPackage):
     depends_on("py-matplotlib@2.1.2:", when="@0.10:", type=("build", "run"))
     depends_on("py-matplotlib@1.4.3:", when="@0.9:", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
+
+    depends_on("py-scipy@1:", when="@0.12: +stats", type=("build", "run"))
+    depends_on("py-scipy@1:", when="@0.11:", type=("build", "run"))
+    depends_on("py-scipy@1.0.1:", when="@0.10:", type=("build", "run"))
+    depends_on("py-scipy@0.14:", when="@0.9.0:", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
+
+    depends_on("py-statsmodel@0.10:", when="@0.12: +stats", type=("build", "run"))
+
     depends_on("py-typing-extensions", when="@0.12: ^python@:3.7", type=("build", "run"))
