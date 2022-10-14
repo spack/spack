@@ -72,6 +72,7 @@ class QuantumEspresso(CMakePackage):
         depends_on("amdfftw+openmp", when="^amdfftw")
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
+        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -111,6 +112,8 @@ class QuantumEspresso(CMakePackage):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
+        # provide Scalapack, Cluster FFT and Cluster Sparse Solver
+        depends_on("intel-oneapi-mkl+cluster", when="^intel-oneapi-mkl")
         with when("%nvhpc+cuda"):
             # add mpi_gpu_aware variant, False by default
             variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
