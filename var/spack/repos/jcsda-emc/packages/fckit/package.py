@@ -37,11 +37,13 @@ class Fckit(CMakePackage):
     variant('eckit', default=True)
     depends_on('eckit+mpi', when='+eckit')
 
+    variant('openmp', default=True, description='Use OpenMP?')
     variant('shared', default=True)
 
     def cmake_args(self):
         res = [
             self.define_from_variant('ENABLE_ECKIT', 'eckit'),
+            self.define_from_variant('ENABLE_OMP', 'openmp'),
             "-DPYTHON_EXECUTABLE:FILEPATH=" + self.spec['python'].command.path,
             '-DFYPP_NO_LINE_NUMBERING=ON'
         ]

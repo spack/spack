@@ -31,6 +31,7 @@ class Eckit(CMakePackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("tools", default=True, description="Build the command line tools")
     variant("mpi", default=True, description="Enable MPI support")
+    variant("openmp", default=True, description="Enable OpenMP support")
     variant("admin", default=True, description="Build utilities for administration tools")
     variant("sql", default=True, description="Build SQL engine")
     variant(
@@ -110,6 +111,7 @@ class Eckit(CMakePackage):
             # currently prefer to avoid since ecBuild does the job in all known
             # cases.
             self.define_from_variant("ENABLE_MPI", "mpi"),
+            self.define_from_variant("ENABLE_OMP", "openmp"),
             self.define_from_variant("ENABLE_ECKIT_CMD", "admin"),
             self.define_from_variant("ENABLE_ECKIT_SQL", "sql"),
             self.define("ENABLE_EIGEN", "linalg=eigen" in self.spec),
