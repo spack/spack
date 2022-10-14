@@ -289,7 +289,6 @@ class Hip(CMakePackage):
             # For external packages we only assume the `hip` prefix is known,
             # because spack does not set prefixes of dependencies of externals.
             hip_libs_at_top = "hip" not in self.spec.prefix
-            print(f'I thin k that hip libas at top is {hip_libs_at_top}')
             # We assume self.spec.prefix is  /opt/rocm-x.y.z for rocm-5.2.0 and newer
             # and /opt/rocm-x.y.z/hip for older versions
             if self.spec.satisfies("@5.2.0:"):
