@@ -12,6 +12,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -1357,7 +1358,7 @@ def generate_gitlab_ci_yaml(
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
 
         if not rebuild_everything:
-            tty.die()
+            sys.exit(1)
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
