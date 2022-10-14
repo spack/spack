@@ -1959,12 +1959,15 @@ def test_ci_generate_read_broken_specs_url(
     spec_flattendeps.concretize()
     flattendeps_dag_hash = spec_flattendeps.dag_hash()
 
-    # Mark 'a' as broken (but not 'flatten-deps')
-    broken_spec_a_path = str(tmpdir.join(a_dag_hash))
-    with open(broken_spec_a_path, "w") as bsf:
-        bsf.write("")
-
     broken_specs_url = "file://{0}".format(tmpdir.strpath)
+
+    # Mark 'a' as broken (but not 'flatten-deps')
+    broken_spec_a_url = "{0}/{1}".format(broken_specs_url, a_dag_hash)
+    job_stack = "job_stack"
+    a_job_url = "a_job_url"
+    ci.write_broken_spec(
+        broken_spec_a_url, spec_a.name, job_stack, a_job_url, "pipeline_url", spec_a.to_dict()
+    )
 
     # Test that `spack ci generate` notices this broken spec and fails.
     filename = str(tmpdir.join("spack.yaml"))
@@ -2001,11 +2004,13 @@ spack:
             output = ci_cmd("generate", output=str, fail_on_error=False)
             assert "known to be broken" in output
 
-            ex = "({0})".format(a_dag_hash)
-            assert ex in output
+            expected = "{0}/{1} (in stack {2}) was reported broken here: {3}".format(
+                spec_a.name, a_dag_hash[:7], job_stack, a_job_url
+            )
+            assert expected in output
 
-            ex = "({0})".format(flattendeps_dag_hash)
-            assert ex not in output
+            not_expected = "flatten-deps/{0} (in stack".format(flattendeps_dag_hash[:7])
+            assert not_expected not in output
 
 
 def test_ci_generate_external_signing_job(
