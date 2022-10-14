@@ -75,7 +75,7 @@ class MesonPackage(PackageBase):
     @property
     def archive_files(self):
         """Files to archive for packages based on Meson"""
-        return [os.path.join(self.build_directory, "meson-logs/meson-log.txt")]
+        return [os.path.join(self.build_directory, "meson-logs", "meson-log.txt")]
 
     @property
     def root_mesonlists_dir(self):
