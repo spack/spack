@@ -47,44 +47,41 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Maintenance releases (even numbers, recommended)
     version(
+        "5.36.0",
+        sha256="e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a",
+        preferred=True,
+    )
+    version(
         "5.34.1",
         sha256="357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1",
-        preferred=True,
     )
     version(
         "5.34.0",
         sha256="551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a",
-        preferred=True,
     )
     version(
         "5.32.1",
         sha256="03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c",
-        preferred=True,
     )
     version(
         "5.32.0",
         sha256="efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4",
-        preferred=True,
     )
     version(
         "5.30.3",
         sha256="32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f",
-        preferred=True,
     )
     version(
         "5.30.2",
         sha256="66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689",
-        preferred=True,
     )
     version(
         "5.30.1",
         sha256="bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964",
-        preferred=True,
     )
     version(
         "5.30.0",
         sha256="851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2",
-        preferred=True,
     )
 
     # End of life releases
@@ -103,8 +100,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     if not is_windows:
+        depends_on("gdbm@:1.23")
         # Bind us below gdbm-1.20 due to API change: https://github.com/Perl/perl5/issues/18915
-        depends_on("gdbm@:1.19")
+        depends_on("gdbm@:1.19", when="@:5.35")
         # :5.28 needs gdbm@:1:14.1: https://rt-archive.perl.org/perl5/Ticket/Display.html?id=133295
         depends_on("gdbm@:1.14.1", when="@:5.28.0")
         depends_on("berkeley-db")
