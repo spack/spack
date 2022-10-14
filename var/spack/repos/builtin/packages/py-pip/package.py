@@ -81,6 +81,8 @@ class PyPip(Package):
     depends_on("python@2.7:2.8,3.3:", when="@10:", type=("build", "run"))
     depends_on("python@2.6:2.8,3.3:", type=("build", "run"))
 
+    conflicts("platform=windows", when="@22:")
+
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/{0}/p/pip/pip-{1}-{0}-none-any.whl"
         if version >= Version("21"):
