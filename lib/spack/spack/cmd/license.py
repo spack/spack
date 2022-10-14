@@ -54,7 +54,6 @@ licensed_files = [
     r"^share/spack/.*\.fish$",
     r"^share/spack/qa/run-[^/]*$",
     r"^share/spack/bash/spack-completion.in$",
-    r"^share/spack/templates/misc/coconcretization.pyt$",
     # action workflows
     r"^.github/actions/.*\.py$",
     # all packages

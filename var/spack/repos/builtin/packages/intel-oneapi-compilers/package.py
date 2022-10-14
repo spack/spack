@@ -5,6 +5,7 @@
 
 import platform
 
+import spack.compilers
 from spack.build_environment import dso_suffix
 from spack.package import *
 
@@ -113,6 +114,15 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     depends_on("patchelf", type="build")
 
+    # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
+    # cannot express that properly. For now, add conflicts for non-gcc compilers
+    # instead.
+    for __compiler in spack.compilers.supported_compilers():
+        if __compiler != "gcc":
+            conflicts(
+                "%{0}".format(__compiler), msg="intel-oneapi-compilers must be installed with %gcc"
+            )
+
     if platform.system() == "Linux":
         for v in linux_versions:
             version(v["version"], expand=False, **v["cpp"])
@@ -186,7 +196,19 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # TODO: it is unclear whether we should really use all elements of
         #  _ld_library_path because it looks like the only rpath that needs to be
         #  injected is self.component_prefix.linux.compiler.lib.intel64_lin.
-        flags = " ".join(["-Wl,-rpath,{0}".format(d) for d in self._ld_library_path()])
+        flags_list = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
+
+        # Older versions trigger -Wunused-command-line-argument warnings whenever
+        # linker flags are passed in preprocessor (-E) or compilation mode (-c).
+        # The cfg flags are treated as command line flags apparently. Newer versions
+        # do not trigger these warnings. In some build systems these warnings can
+        # cause feature detection to fail, so we silence them with -Wno-unused-...
+        if self.spec.version < Version("2022.1.0"):
+            flags_list.append("-Wno-unused-command-line-argument")
+
+        # Make sure that underlying clang gets the right GCC toolchain by default
+        flags_list.append("--gcc-toolchain={}".format(self.compiler.prefix))
+        flags = " ".join(flags_list)
         for cmp in [
             "icx",
             "icpx",

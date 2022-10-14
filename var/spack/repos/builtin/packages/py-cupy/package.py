@@ -16,12 +16,19 @@ class PyCupy(PythonPackage):
     homepage = "https://cupy.dev/"
     pypi = "cupy/cupy-8.0.0.tar.gz"
 
-    version("8.0.0", sha256="d1dcba5070dfa754445d010cdc952ff6b646d5f9bdcd7a63e8246e2472c3ddb8")
+    version("11.2.0", sha256="c33361f117a347a63f6996ea97446d17f1c038f1a1f533e502464235076923e2")
+    version(
+        "8.0.0",
+        sha256="d1dcba5070dfa754445d010cdc952ff6b646d5f9bdcd7a63e8246e2472c3ddb8",
+        deprecated=True,
+    )
 
-    depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-fastrlock@0.3:", type=("build", "run"))
-    depends_on("py-numpy@1.15:", type=("build", "run"))
+    depends_on("py-cython@0.29.22:2", type="build")
+    depends_on("py-fastrlock@0.5:", type=("build", "run"))
+    depends_on("py-numpy@1.20:1.25", type=("build", "run"))
     depends_on("cuda")
     depends_on("nccl")
     depends_on("cudnn")
+    depends_on("cutensor")

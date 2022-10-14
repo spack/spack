@@ -14,6 +14,7 @@ class RScales(RPackage):
 
     cran = "scales"
 
+    version("1.2.1", sha256="59453e6dbdafee93dfb101e4d86048a62a12898134259d3ef02d65aeec57ed08")
     version("1.2.0", sha256="185d50240e6b3e84d36ec7fbca6aef7a85db7c8c1b0dde51d4af28d363ce02df")
     version("1.1.1", sha256="40b2b66522f1f314a20fd09426011b0cdc9d16b23ee2e765fe1930292dd03705")
     version("1.0.0", sha256="0c1f4a14edd336a404da34a3cc71a6a9d0ca2040ba19360c41a79f36e06ca30c")

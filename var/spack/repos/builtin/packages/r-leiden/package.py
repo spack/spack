@@ -17,6 +17,7 @@ class RLeiden(RPackage):
 
     cran = "leiden"
 
+    version("0.4.3", sha256="6a464b4b860e621749b3b701bb7ceb07e23c1a36be241c3e13b18105eb980938")
     version("0.4.2", sha256="cace86748c4aa1720508210658ee2f63f7875be5bac215084001fdc59d22e2bd")
     version("0.3.9", sha256="81754276e026a9a8436476365bbadf0f15a403a525a349cb56418da5d8edea0d")
     version("0.3.6", sha256="a7096e38c4010b1f0baf6a7e1139362520b44c0e548b0b79584cb827172822cc")
