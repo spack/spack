@@ -39,6 +39,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@3.7.00", when="@3.7.00")
+    depends_on("kokkos@3.6.01", when="@3.6.01")
     depends_on("kokkos@3.6.00", when="@3.6.00")
     depends_on("kokkos@3.5.00", when="@3.5.00")
     depends_on("kokkos@3.4.01", when="@3.4.01")
