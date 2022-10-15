@@ -23,7 +23,6 @@ class Sdl2(CMakePackage):
 
     depends_on("cmake@2.8.5:", type="build")
     depends_on("libxext", type="link")
-    depends_on("dbus", when="platform=linux")
 
     def cmake_args(self):
         return ["-DSSEMATH={0}".format("OFF" if self.spec.target.family == "aarch64" else "ON")]
