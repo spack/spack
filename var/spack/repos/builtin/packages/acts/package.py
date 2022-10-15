@@ -381,7 +381,6 @@ class Acts(CMakePackage, CudaPackage):
             args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
 
         if spec.satisfies("@20.1: +svg"):
-            args.append("-DACTS_SETUP_ACTSVG=ON")
             args.append("-DACTS_USE_SYSTEM_ACTSVG=ON")
 
         if "root" in spec:
