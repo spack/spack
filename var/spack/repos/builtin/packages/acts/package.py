@@ -201,6 +201,18 @@ class Acts(CMakePackage, CudaPackage):
         description="Build the SyCL plugin",
         when="@1:",
     )
+    variant(
+        "tbb",
+        default=True,
+        description="Build the examples with Threading Building Blocks library",
+        when="@19.8:19 +examples",
+    )
+    variant(
+        "tbb",
+        default=True,
+        description="Build the examples with Threading Building Blocks library",
+        when="@20.1: +examples",
+    )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -262,7 +274,7 @@ class Acts(CMakePackage, CudaPackage):
     depends_on("gperftools", when="+profilemem")
     depends_on("hepmc3 @3.2.1:", when="+hepmc3")
     depends_on("heppdt", when="+hepmc3 @:4.0")
-    depends_on("intel-tbb @2020.1:", when="+examples")
+    depends_on("intel-tbb @2020.1:", when="+examples +tbb")
     depends_on("nlohmann-json @3.9.1:", when="@0.14: +json")
     depends_on("pythia8", when="+pythia8")
     depends_on("python", when="+python")
