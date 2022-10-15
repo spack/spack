@@ -201,18 +201,6 @@ class Acts(CMakePackage, CudaPackage):
         description="Build the SyCL plugin",
         when="@1:",
     )
-    variant(
-        "tbb",
-        default=True,
-        description="Build the examples with Threading Building Blocks library",
-        when="@19.8:19 +examples",
-    )
-    variant(
-        "tbb",
-        default=True,
-        description="Build the examples with Threading Building Blocks library",
-        when="@20.1: +examples",
-    )
     variant("tgeo", default=False, description="Build the TGeo plugin", when="+identification")
 
     # Variants that only affect Acts examples for now
@@ -251,6 +239,18 @@ class Acts(CMakePackage, CudaPackage):
         default=False,
         description="Build ActSVG display plugin",
         when="@20.1:",
+    )
+    variant(
+        "tbb",
+        default=True,
+        description="Build the examples with Threading Building Blocks library",
+        when="@19.8:19 +examples",
+    )
+    variant(
+        "tbb",
+        default=True,
+        description="Build the examples with Threading Building Blocks library",
+        when="@20.1: +examples",
     )
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
