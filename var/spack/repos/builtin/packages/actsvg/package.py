@@ -30,6 +30,10 @@ class Actsvg(CMakePackage):
         default=True,
         description="Build the meta level interface",
     )
+    
+    depends_on("boost +program_options", type="test")
+    depends_on("boost +program_options", when="+examples")
+    depends_on("googletest", when="+examples")
 
     def cmake_args(self):
         args = [
