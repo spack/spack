@@ -18,7 +18,7 @@ class Actsvg(CMakePackage):
 
     maintainers = ["HadrienG2", "wdconinc"]
 
-    version("0.4.22", sha256="a535dc80b309033c45a8521c01b5ea6cd82c1fc8c89661d112de8879d68be790")
+    version("0.4.26", sha256="a1dfad15b616cac8191a355c1a87544571c36349400e3de56b9e5be6fa73714c")
 
     variant(
         "examples",
@@ -30,7 +30,7 @@ class Actsvg(CMakePackage):
         default=True,
         description="Build the meta level interface",
     )
-    
+
     depends_on("boost +program_options", type="test")
     depends_on("boost +program_options", when="+examples")
     depends_on("googletest", when="+examples")
