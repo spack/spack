@@ -330,6 +330,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("CUDA", "cuda"),
             plugin_cmake_variant("DD4HEP", "dd4hep"),
             example_cmake_variant("DD4HEP", "dd4hep"),
+            plugin_cmake_variant("DIGITIZATION", "digitization"),
             example_cmake_variant("EDM4HEP", "edm4hep"),
             cmake_variant("EXAMPLES", "examples"),
             cmake_variant("FATRAS", "fatras"),
@@ -358,30 +359,34 @@ class Acts(CMakePackage, CudaPackage):
         if spec.satisfies("@19.4.0:"):
             args.append("-DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON")
 
-        if spec.satisfies("+autodiff"):
-            args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+        # Use dependencies provided by spack
+        if spec.satisfies("@20.3:"):
+            args.append("-DACTS_USE_SYSTEM_LIBS=ON")
+        else:
+            if spec.satisfies("+autodiff"):
+                args.append("-DACTS_USE_SYSTEM_AUTODIFF=ON")
+
+            if spec.satisfies("@19:20.2 +dd4hep"):
+                args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
+
+            if spec.satisfies("@0.33: +json"):
+                args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
+            elif spec.satisfies("@0.14.0:0.32 +json"):
+                args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
+
+            if spec.satisfies("@18: +python"):
+                args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
+
+            if spec.satisfies("@20.1: +svg"):
+                args.append("-DACTS_USE_SYSTEM_ACTSVG=ON")
+
+            if spec.satisfies("@14: +vecmem"):
+                args.append("-DACTS_USE_SYSTEM_VECMEM=ON")
 
         if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
-
-        if spec.satisfies("@19:20.2 +dd4hep"):
-            args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
-
-        if spec.satisfies("@:16"):
-            args.append(plugin_cmake_variant("DIGITIZATION", "digitization"))
-
-        if spec.satisfies("@0.33: +json"):
-            args.append("-DACTS_USE_SYSTEM_NLOHMANN_JSON=ON")
-        elif spec.satisfies("@0.14.0: +json"):
-            args.append("-DACTS_USE_BUNDLED_NLOHMANN_JSON=OFF")
-
-        if spec.satisfies("@18: +python"):
-            args.append("-DACTS_USE_SYSTEM_PYBIND11=ON")
-
-        if spec.satisfies("@20.1: +svg"):
-            args.append("-DACTS_USE_SYSTEM_ACTSVG=ON")
 
         if "root" in spec:
             cxxstd = spec["root"].variants["cxxstd"].value
