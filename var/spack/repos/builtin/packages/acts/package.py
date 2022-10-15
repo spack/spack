@@ -300,9 +300,9 @@ class Acts(CMakePackage, CudaPackage):
             enabled = spec.satisfies(spack_variant)
             return "-DACTS_ENABLE_{0}={1}".format(cmake_label, enabled)
 
-        def example_cmake_variant(cmake_label, spack_variant):
+        def example_cmake_variant(cmake_label, spack_variant, type="BUILD"):
             enabled = spec.satisfies("+examples +" + spack_variant)
-            return "-DACTS_BUILD_EXAMPLES_{0}={1}".format(cmake_label, enabled)
+            return "-DACTS_{0}_EXAMPLES_{1}={2}".format(type, cmake_label, enabled)
 
         def plugin_label(plugin_name):
             if spec.satisfies("@0.33:"):
@@ -349,6 +349,7 @@ class Acts(CMakePackage, CudaPackage):
             plugin_cmake_variant("ACTSVG", "svg"),
             plugin_cmake_variant("SYCL", "sycl"),
             plugin_cmake_variant("TGEO", "tgeo"),
+            example_cmake_variant("TBB", "tbb", "USE"),
             cmake_variant(unit_tests_label, "unit_tests"),
         ]
 
