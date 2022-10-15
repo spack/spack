@@ -366,7 +366,7 @@ class Acts(CMakePackage, CudaPackage):
             if cuda_arch != "none":
                 args.append("-DCUDA_FLAGS=-arch=sm_{0}".format(cuda_arch[0]))
 
-        if spec.satisfies("@19 +dd4hep"):
+        if spec.satisfies("@19:20.2 +dd4hep"):
             args.append("-DACTS_USE_SYSTEM_ACTSDD4HEP=ON")
 
         if spec.satisfies("@:16"):
