@@ -74,6 +74,7 @@ spack:
       - spack -d ci rebuild
 
     image: { "name": "ghcr.io/spack/tutorial-ubuntu-18.04:v2021-11-02", "entrypoint": [""] }
+    match_behavior: first
     mappings:
       - match:
           - cmake

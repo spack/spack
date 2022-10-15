@@ -397,6 +397,14 @@ def _spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
 
+def _remove_attributes(src_dict, dest_dict):
+    if "tags" in src_dict and "tags" in dest_dict:
+        # For 'tags', we remove any tags that are listed for removal
+        for tag in src_dict["tags"]:
+            while tag in dest_dict["tags"]:
+                dest_dict["tags"].remove(tag)
+
+
 def _copy_attributes(attrs_list, src_dict, dest_dict):
     for runner_attr in attrs_list:
         if runner_attr in src_dict:
@@ -430,19 +438,23 @@ def _find_matching_config(spec, gitlab_ci):
 
     _copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
 
-    ci_mappings = gitlab_ci["mappings"]
-    for ci_mapping in ci_mappings:
+    matched = False
+    only_first = gitlab_ci.get("match_behavior", "first") == "first"
+    for ci_mapping in gitlab_ci["mappings"]:
         for match_string in ci_mapping["match"]:
             if _spec_matches(spec, match_string):
+                matched = True
+                if "remove-attributes" in ci_mapping:
+                    _remove_attributes(ci_mapping["remove-attributes"], runner_attributes)
                 if "runner-attributes" in ci_mapping:
                     _copy_attributes(
                         overridable_attrs, ci_mapping["runner-attributes"], runner_attributes
                     )
-                return runner_attributes
-    else:
-        return None
+                break
+        if matched and only_first:
+            break
 
-    return runner_attributes
+    return runner_attributes if matched else None
 
 
 def _pkg_name_from_spec_label(spec_label):

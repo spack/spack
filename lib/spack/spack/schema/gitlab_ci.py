@@ -52,6 +52,15 @@ runner_selector_schema = {
     "properties": runner_attributes_schema_items,
 }
 
+remove_attributes_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["tags"],
+    "properties": {
+        "tags": {"type": "array", "items": {"type": "string"}},
+    },
+}
+
 
 core_shared_properties = union_dicts(
     runner_attributes_schema_items,
@@ -80,6 +89,7 @@ core_shared_properties = union_dicts(
                 ],
             },
         },
+        "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
         "mappings": {
             "type": "array",
             "items": {
@@ -93,6 +103,7 @@ core_shared_properties = union_dicts(
                             "type": "string",
                         },
                     },
+                    "remove-attributes": remove_attributes_schema,
                     "runner-attributes": runner_selector_schema,
                 },
             },
