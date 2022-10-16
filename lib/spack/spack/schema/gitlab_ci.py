@@ -45,6 +45,7 @@ runner_attributes_schema_items = {
     "after_script": {"type": "array", "items": {"type": "string"}},
 }
 
+# Legacy pipeline configuration style
 runner_selector_schema = {
     "type": "object",
     "additionalProperties": False,
@@ -105,11 +106,21 @@ core_shared_properties = union_dicts(
                     },
                     "remove-attributes": remove_attributes_schema,
                     "runner-attributes": runner_selector_schema,
+                    "job-attributes": {
+                        "type": "object",
+                        "additionalProperties": True,
+                        "default": {},
+                    },
                 },
             },
         },
+        "pipeline-attributes": {"type": "object", "additionalProperties": True, "default": {}},
         "service-job-attributes": runner_selector_schema,
+        "build-job-attributes": {"type": "object", "additionalProperties": True, "default": {}},
+        "reindex-job-attributes": {"type": "object", "additionalProperties": True, "default": {}},
         "signing-job-attributes": runner_selector_schema,
+        "noop-job-attributes": {"type": "object", "additionalProperties": True, "default": {}},
+        "cleanup-job-attributes": {"type": "object", "additionalProperties": True, "default": {}},
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {
