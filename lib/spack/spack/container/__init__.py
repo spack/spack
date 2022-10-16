@@ -46,7 +46,7 @@ def validate(configuration_file):
 
     # Remove attributes that are not needed / allowed in the
     # container recipe
-    for subsection in ("cdash", "gitlab_ci", "modules"):
+    for subsection in ("cdash", "ci", "modules"):
         if subsection in env_dict:
             msg = (
                 'the subsection "{0}" in "{1}" is not used when generating'

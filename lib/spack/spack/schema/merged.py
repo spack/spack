@@ -11,12 +11,11 @@
 from llnl.util.lang import union_dicts
 
 import spack.schema.bootstrap
-import spack.schema.cdash
 import spack.schema.compilers
 import spack.schema.concretizer
 import spack.schema.config
 import spack.schema.container
-import spack.schema.gitlab_ci
+import spack.schema.ci
 import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
@@ -26,12 +25,11 @@ import spack.schema.upstreams
 #: Properties for inclusion in other schemas
 properties = union_dicts(
     spack.schema.bootstrap.properties,
-    spack.schema.cdash.properties,
     spack.schema.compilers.properties,
     spack.schema.concretizer.properties,
     spack.schema.config.properties,
     spack.schema.container.properties,
-    spack.schema.gitlab_ci.properties,
+    spack.schema.ci.properties,
     spack.schema.mirrors.properties,
     spack.schema.modules.properties,
     spack.schema.packages.properties,

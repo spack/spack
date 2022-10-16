@@ -452,7 +452,7 @@ and site are used to specify the CDash instance to which build results should
 be reported.
 
 Take a look at the
-`schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/gitlab_ci.py>`_
+`schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/ci.py>`_
 for the gitlab-ci section of the spack environment file, to see precisely what
 syntax is allowed there.
 

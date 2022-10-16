@@ -77,6 +77,7 @@ section_schemas = {
     "config": spack.schema.config.schema,
     "upstreams": spack.schema.upstreams.schema,
     "bootstrap": spack.schema.bootstrap.schema,
+    "ci": spack.schema.ci.schema,
 }
 
 # Same as above, but including keys for environments

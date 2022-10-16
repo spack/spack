@@ -5,52 +5,14 @@
 
 """Schema for gitlab-ci.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/gitlab_ci.py
+.. literalinclude:: ../spack/schema/ci.py
    :lines: 13-
 """
 
 from llnl.util.lang import union_dicts
 
-image_schema = {
-    "oneOf": [
-        {"type": "string"},
-        {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "entrypoint": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                    },
-                },
-            },
-        },
-    ],
-}
+import spack.schema.cdash
 
-runner_attributes_schema_items = {
-    "image": image_schema,
-    "tags": {"type": "array", "items": {"type": "string"}},
-    "variables": {
-        "type": "object",
-        "patternProperties": {
-            r"[\w\d\-_\.]+": {
-                "type": "string",
-            },
-        },
-    },
-    "before_script": {"type": "array", "items": {"type": "string"}},
-    "script": {"type": "array", "items": {"type": "string"}},
-    "after_script": {"type": "array", "items": {"type": "string"}},
-}
-
-runner_selector_schema = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["tags"],
-    "properties": runner_attributes_schema_items,
-}
 
 remove_attributes_schema = {
     "type": "object",
@@ -62,8 +24,44 @@ remove_attributes_schema = {
 }
 
 
+attributes_schema = {
+    "type": "object",
+}
+
+jobconfig_schema = { "anyOf": [
+    # Global generated job attributes, apply to all jobs
+    {"type": "object", "additionalProperties": False, "required": ["any-job"], "properties": {
+        "any-job": attributes_schema,
+    }},
+    attributes_schema,
+    # Attributes applied to jobs based on type
+    { "type": "object", "additionalProperties": False, "properties": {
+        "build-job": attributes_schema,
+        "reindex-job": attributes_schema,
+        "noop-job": attributes_schema,
+        "cleanup-job": attributes_schema,
+        "signing-job": attributes_schema,
+    }},
+    # Attributes applied to spec-specific jobs based on spec matching
+    { "type": "object", "additionalProperties": False, "properties": {
+        "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
+        "submapping": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["match"],
+                "additionalProperties": False,
+                "properties": {
+                    "match": {"anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
+                    "build-job-remove": remove_attributes_schema,
+                    "build-job": attributes_schema,
+                },
+            },
+        },
+    }},
+]}
+
 core_shared_properties = union_dicts(
-    runner_attributes_schema_items,
     {
         "bootstrap": {
             "type": "array",
@@ -89,27 +87,9 @@ core_shared_properties = union_dicts(
                 ],
             },
         },
-        "match_behavior": {"type": "string", "enum": ["first", "merge"], "default": "first"},
-        "mappings": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "required": ["match"],
-                "properties": {
-                    "match": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                        },
-                    },
-                    "remove-attributes": remove_attributes_schema,
-                    "runner-attributes": runner_selector_schema,
-                },
-            },
-        },
-        "service-job-attributes": runner_selector_schema,
-        "signing-job-attributes": runner_selector_schema,
+        "pipeline-attributes": {"type": "object"},
+        "build-if-matches": {"anyOf": [{"type": "null"}, {"type": "array", "items": {"type": "string"}}]},
+        "job-configuration": { "type": "array", "items": jobconfig_schema },
         "rebuild-index": {"type": "boolean"},
         "broken-specs-url": {"type": "string"},
         "broken-tests-packages": {
@@ -118,15 +98,15 @@ core_shared_properties = union_dicts(
                 "type": "string",
             },
         },
+        "cdash": spack.schema.cdash.properties,
     },
 )
 
-gitlab_ci_properties = {
+ci_properties = {
     "anyOf": [
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["mappings"],
             "properties": union_dicts(
                 core_shared_properties,
                 {
@@ -139,7 +119,6 @@ gitlab_ci_properties = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["mappings"],
             "properties": union_dicts(
                 core_shared_properties,
                 {
@@ -154,13 +133,13 @@ gitlab_ci_properties = {
 
 #: Properties for inclusion in other schemas
 properties = {
-    "gitlab-ci": gitlab_ci_properties,
+    "ci": ci_properties,
 }
 
 #: Full schema with metadata
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Spack gitlab-ci configuration file schema",
+    "title": "Spack CI configuration file schema",
     "type": "object",
     "additionalProperties": False,
     "properties": properties,
