@@ -440,8 +440,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
-    # TODO: why is this needed?
+    # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
+    # old downloads are removed from that site immediately after a new release.
+    # If the tf mirrors don't work, make sure the fallback is to something existing.
     patch("url-zlib.patch", when="@0.10.0")
+    # bump to zlib 1.2.13
+    patch(
+        "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
+        sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
+        when="@2.9:2.10.0",
+    )
     # TODO: why is this needed?
     patch("crosstool.patch", when="@0.10.0+cuda")
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
