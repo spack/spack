@@ -244,13 +244,7 @@ class Acts(CMakePackage, CudaPackage):
         "tbb",
         default=True,
         description="Build the examples with Threading Building Blocks library",
-        when="@19.8:19 +examples",
-    )
-    variant(
-        "tbb",
-        default=True,
-        description="Build the examples with Threading Building Blocks library",
-        when="@20.1: +examples",
+        when="@19.8:19,20.1: +examples",
     )
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
