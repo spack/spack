@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dnstracer(MakefilePackage):
@@ -15,8 +15,8 @@ class Dnstracer(MakefilePackage):
     homepage = "https://github.com/Orc/dnstracer"
     git = "https://github.com/Orc/dnstracer.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def edit(self, spec, prefix):
-        configure = Executable('./configure.sh')
-        configure('--prefix={0}'.format(prefix))
+        configure = Executable("./configure.sh")
+        configure("--prefix={0}".format(prefix))

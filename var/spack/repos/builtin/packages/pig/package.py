@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pig(Package):
@@ -15,9 +15,9 @@ class Pig(Package):
     """
 
     homepage = "https://archive.apache.org"
-    url      = "https://archive.apache.org/dist/hadoop/pig/stable/pig-0.7.0.tar.gz"
+    url = "https://archive.apache.org/dist/hadoop/pig/stable/pig-0.7.0.tar.gz"
 
-    version('0.7.0', sha256='fa7211fb339f547f679a3dd90055f1ddc45d5754d88463e4cc39c380ddf8b02a')
+    version("0.7.0", sha256="fa7211fb339f547f679a3dd90055f1ddc45d5754d88463e4cc39c380ddf8b02a")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

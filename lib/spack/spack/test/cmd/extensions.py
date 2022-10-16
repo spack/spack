@@ -10,16 +10,19 @@ import pytest
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
 
-extensions = SpackCommand('extensions')
+extensions = SpackCommand("extensions")
 
 
 @pytest.fixture
 def python_database(mock_packages, mutable_database):
-    specs = [Spec(s).concretized() for s in [
-        'python',
-        'py-extension1',
-        'py-extension2',
-    ]]
+    specs = [
+        Spec(s).concretized()
+        for s in [
+            "python",
+            "py-extension1",
+            "py-extension2",
+        ]
+    ]
 
     for spec in specs:
         spec.package.do_install(fake=True, explicit=True)
@@ -27,10 +30,10 @@ def python_database(mock_packages, mutable_database):
     yield
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="All Fetchers Failed")
+@pytest.mark.skipif(sys.platform == "win32", reason="All Fetchers Failed")
 @pytest.mark.db
 def test_extensions(mock_packages, python_database, config, capsys):
-    ext2   = Spec("py-extension2").concretized()
+    ext2 = Spec("py-extension2").concretized()
 
     def check_output(ni, na):
         with capsys.disabled():
@@ -39,13 +42,11 @@ def test_extensions(mock_packages, python_database, config, capsys):
             installed = extensions("-s", "installed", "python")
             activated = extensions("-s", "activated", "python")
         assert "==> python@2.7.11" in output
-        assert "==> 3 extensions" in output
-        assert "flake8" in output
+        assert "==> 2 extensions" in output
         assert "py-extension1" in output
         assert "py-extension2" in output
 
-        assert "==> 3 extensions" in packages
-        assert "flake8" in packages
+        assert "==> 2 extensions" in packages
         assert "py-extension1" in packages
         assert "py-extension2" in packages
         assert "installed" not in packages
@@ -73,7 +74,7 @@ def test_extensions(mock_packages, python_database, config, capsys):
 
 def test_extensions_no_arguments(mock_packages):
     out = extensions()
-    assert 'python' in out
+    assert "python" in out
 
 
 def test_extensions_raises_if_not_extendable(mock_packages):

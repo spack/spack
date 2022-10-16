@@ -6,10 +6,10 @@ from .common import DetectedPackage, executable_prefix, update_configuration
 from .path import by_executable, by_library, executables_in_path
 
 __all__ = [
-    'DetectedPackage',
-    'by_library',
-    'by_executable',
-    'executables_in_path',
-    'executable_prefix',
-    'update_configuration'
+    "DetectedPackage",
+    "by_library",
+    "by_executable",
+    "executables_in_path",
+    "executable_prefix",
+    "update_configuration",
 ]

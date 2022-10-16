@@ -3,20 +3,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class SpliceZ(Package):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/splice-z-1.0.tar.gz"
+    url = "http://www.example.com/splice-z-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    variant('foo', default=False, description='nope')
-    variant('bar', default=False, description='nope')
+    variant("foo", default=False, description="nope")
+    variant("bar", default=False, description="nope")
 
     def install(self, spec, prefix):
-        with open(prefix.join('splice-z'), 'w') as f:
-            f.write('splice-z: {0}'.format(prefix))
+        with open(prefix.join("splice-z"), "w") as f:
+            f.write("splice-z: {0}".format(prefix))

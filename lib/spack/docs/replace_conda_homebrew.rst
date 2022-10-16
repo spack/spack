@@ -61,7 +61,7 @@ You can see the packages we added earlier in the ``specs:`` section. If you
 ever want to add more packages, you can either use ``spack add`` or manually
 edit this file.
 
-We also need to change the ``concretization:`` option. By default, Spack
+We also need to change the ``concretizer:unify`` option. By default, Spack
 concretizes each spec *separately*, allowing multiple versions of the same
 package to coexist. Since we want a single consistent environment, we want to
 concretize all of the specs *together*.
@@ -78,7 +78,8 @@ Here is what your ``spack.yaml`` looks like with this new setting:
      # add package specs to the `specs` list
      specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
      view: true
-     concretization: together
+     concretizer:
+       unify: true
 
 ^^^^^^^^^^^^^^^^
 Symlink location

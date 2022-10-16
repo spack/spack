@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RS2(RPackage):
@@ -18,11 +18,13 @@ class RS2(RPackage):
 
     cran = "s2"
 
-    version('1.0.7', sha256='2010c1c6ae29938ec9cd153a8b2c06a333ea4d647932369b2fc7d0c68d6d9e3f')
-    version('1.0.4', sha256='3c274ebae33aa5473f94afb3066c6f388aced17ff3b5f6add9edcc9af22b985e')
+    version("1.1.0", sha256="e3aae968538fe80db5b3325474dd9d8ff7f0452b6c606d049a3cac72732ac416")
+    version("1.0.7", sha256="2010c1c6ae29938ec9cd153a8b2c06a333ea4d647932369b2fc7d0c68d6d9e3f")
+    version("1.0.4", sha256="3c274ebae33aa5473f94afb3066c6f388aced17ff3b5f6add9edcc9af22b985e")
 
-    depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-wk', type=('build', 'run'))
-    depends_on('r-wk@0.5.0:', type=('build', 'run'), when='@1.0.7:')
-    depends_on('openssl@1.0.1:', when='@1.0.7:')
+    depends_on("r@3.0.0:", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))
+    depends_on("r-wk", type=("build", "run"))
+    depends_on("r-wk@0.5.0:", type=("build", "run"), when="@1.0.7:")
+    depends_on("r-wk@0.6.0:", type=("build", "run"), when="@1.1.0:")
+    depends_on("openssl@1.0.1:", when="@1.0.7:")

@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Dttop(Package):
@@ -12,8 +12,8 @@ class Dttop(Package):
     homepage = "http://www.example.com"
     url = "http://www.example.com/dttop-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
-    depends_on('dtbuild1', type='build')
-    depends_on('dtlink1')
-    depends_on('dtrun1', type='run')
+    depends_on("dtbuild1", type="build")
+    depends_on("dtlink1")
+    depends_on("dtrun1", type="run")

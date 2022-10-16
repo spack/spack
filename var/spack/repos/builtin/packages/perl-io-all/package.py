@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PerlIoAll(PerlPackage):
@@ -25,6 +25,6 @@ class PerlIoAll(PerlPackage):
     <>, getc, print, printf, syswrite, sysread, close."""
 
     homepage = "https://metacpan.org/pod/distribution/IO-All/lib/IO/All.pod"
-    url      = "https://cpan.metacpan.org/authors/id/F/FR/FREW/IO-All-0.87.tar.gz"
+    url = "https://cpan.metacpan.org/authors/id/F/FR/FREW/IO-All-0.87.tar.gz"
 
-    version('0.87', sha256='54e21d250c0229127e30b77a3461e10077854ec244f26fb670f1b445ed4c4d5b')
+    version("0.87", sha256="54e21d250c0229127e30b77a3461e10077854ec244f26fb670f1b445ed4c4d5b")
