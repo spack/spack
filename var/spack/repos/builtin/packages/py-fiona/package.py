@@ -29,7 +29,7 @@ class PyFiona(PythonPackage):
     depends_on("gdal@1.11:", type=("build", "link", "run"), when="@1.9:")
     depends_on("gdal@1.8:", type=("build", "link", "run"))
 
-    depends_on("py-cython", type="build", when="@master")
+    depends_on("py-cython@0.29.29:", type="build", when="@master")
     depends_on("py-attrs@17:", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"), when="@1.8.18:")
     depends_on("py-click@4:", type=("build", "run"))
