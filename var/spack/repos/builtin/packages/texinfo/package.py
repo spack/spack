@@ -19,7 +19,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/texinfo/"
     gnu_mirror_path = "texinfo/texinfo-6.0.tar.gz"
 
-    executables = ["^info$"]
+    executables = ["^info$", "^makeinfo$"]
 
     tags = ["build-tools"]
 
