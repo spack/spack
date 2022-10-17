@@ -9,7 +9,7 @@ import spack.util.web
 from spack.package import *
 
 
-class Protobuf(Package):
+class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
@@ -66,11 +66,6 @@ class Protobuf(Package):
     version("3.2.0", sha256="a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f")
     version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
     version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
-    version(
-        "2.5.0",
-        sha256="c2665a7aa2ac1a206e61b28e014486e3de59009ea2be2bde9182e0847f38b62f",
-        deprecated=True,
-    )
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(
@@ -80,12 +75,7 @@ class Protobuf(Package):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    depends_on("cmake", when="@3.0.2:", type="build")
     depends_on("zlib")
-    depends_on("autoconf", type="build", when="@2.5.0")
-    depends_on("automake", type="build", when="@2.5.0")
-    depends_on("libtool", type="build", when="@2.5.0")
-    depends_on("m4", type="build", when="@2.5.0")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -97,12 +87,6 @@ class Protobuf(Package):
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
     patch("intel-v2.patch", when="@3.7:3.11.4 %intel")
-
-    patch(
-        "protoc2.5.0_aarch64.patch",
-        sha256="7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451",
-        when="@2.5.0 target=aarch64:",
-    )
 
     # See https://github.com/protocolbuffers/protobuf/issues/9916
     patch(
@@ -134,6 +118,13 @@ class Protobuf(Package):
             args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
         return args
 
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:3.20"):
+            return join_path(self.stage.source_path, "cmake")
+        else:
+            return self.stage.source_path
+
     @when("@3.0.2:")
     def install(self, spec, prefix):
         args = self.cmake_args()
@@ -149,16 +140,3 @@ class Protobuf(Package):
             cmake(source_directory, *args)
             make()
             make("install")
-
-    def configure_args(self):
-        args = []
-        args.append("--prefix=%s" % self.prefix)
-        return args
-
-    @when("@2.5.0")
-    def install(self, spec, prefix):
-        args = self.configure_args()
-        autoreconf("-ifv")
-        configure(*args)
-        make()
-        make("install")
