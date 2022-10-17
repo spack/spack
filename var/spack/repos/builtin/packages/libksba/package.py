@@ -17,6 +17,7 @@ class Libksba(AutotoolsPackage):
 
     maintainers = ["alalazo"]
 
+    version("1.6.2", sha256="fce01ccac59812bddadffacff017dac2e4762bdb6ebc6ffe06f6ed4f6192c971")
     version("1.6.0", sha256="dad683e6f2d915d880aa4bed5cea9a115690b8935b78a1bbe01669189307a48b")
     version("1.5.1", sha256="b0f4c65e4e447d9a2349f6b8c0e77a28be9531e4548ba02c545d1f46dc7bf921")
     version("1.5.0", sha256="ae4af129216b2d7fdea0b5bf2a788cd458a79c983bb09a43f4d525cc87aba0ba")
