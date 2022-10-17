@@ -12,6 +12,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -626,11 +627,11 @@ def generate_gitlab_ci_yaml(
     cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
     build_group = cdash_handler.build_group if cdash_handler else None
 
-    prune_untouched_packages = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    if prune_untouched_packages:
+    prune_untouched_packages = False
+    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
+    if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
         # Requested to prune untouched packages, but assume we won't do that
         # unless we're actually in a git repo.
-        prune_untouched_packages = False
         rev1, rev2 = get_change_revisions()
         tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
         if rev1 and rev2:
@@ -645,6 +646,14 @@ def generate_gitlab_ci_yaml(
                 tty.debug("all affected specs:")
                 for s in affected_specs:
                     tty.debug("  {0}".format(s.name))
+
+    # Allow overriding --prune-dag cli opt with environment variable
+    prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
+    if prune_dag_override is not None:
+        prune_dag = True if prune_dag_override.lower() == "true" else False
+
+    # If we are not doing any kind of pruning, we are rebuilding everything
+    rebuild_everything = not prune_dag and not prune_untouched_packages
 
     # Downstream jobs will "need" (depend on, for both scheduling and
     # artifacts, which include spack.lock file) this pipeline generation
@@ -1298,6 +1307,8 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
+            "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
 
         if remote_mirror_override:
@@ -1357,7 +1368,9 @@ def generate_gitlab_ci_yaml(
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
-        tty.die()
+
+        if not rebuild_everything:
+            sys.exit(1)
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
@@ -1573,6 +1586,19 @@ def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
             tty.msg(err_msg)
         else:
             raise inst
+
+
+def remove_other_mirrors(mirrors_to_keep, scope=None):
+    """Remove all mirrors from the given config scope, the exceptions being
+    any listed in in mirrors_to_keep, which is a list of mirror urls.
+    """
+    mirrors_to_remove = []
+    for name, mirror_url in spack.config.get("mirrors", scope=scope).items():
+        if mirror_url not in mirrors_to_keep:
+            mirrors_to_remove.append(name)
+
+    for mirror_name in mirrors_to_remove:
+        spack.mirror.remove(mirror_name, scope)
 
 
 def copy_files_to_artifacts(src, artifacts_dir):
