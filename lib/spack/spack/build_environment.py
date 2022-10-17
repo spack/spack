@@ -201,6 +201,8 @@ def clean_environment():
 
     env.unset("CMAKE_PREFIX_PATH")
     env.unset("PYTHONPATH")
+    env.unset("R_HOME")
+    env.unset("R_ENVIRON")
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     # env.unset('MAKEFLAGS')
