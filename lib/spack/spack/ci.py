@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import base64
+import codecs
 import copy
 import json
 import os
@@ -396,6 +397,14 @@ def _spec_matches(spec, match_string):
     return spec.satisfies(match_string)
 
 
+def _remove_attributes(src_dict, dest_dict):
+    if "tags" in src_dict and "tags" in dest_dict:
+        # For 'tags', we remove any tags that are listed for removal
+        for tag in src_dict["tags"]:
+            while tag in dest_dict["tags"]:
+                dest_dict["tags"].remove(tag)
+
+
 def _copy_attributes(attrs_list, src_dict, dest_dict):
     for runner_attr in attrs_list:
         if runner_attr in src_dict:
@@ -429,19 +438,23 @@ def _find_matching_config(spec, gitlab_ci):
 
     _copy_attributes(overridable_attrs, gitlab_ci, runner_attributes)
 
-    ci_mappings = gitlab_ci["mappings"]
-    for ci_mapping in ci_mappings:
+    matched = False
+    only_first = gitlab_ci.get("match_behavior", "first") == "first"
+    for ci_mapping in gitlab_ci["mappings"]:
         for match_string in ci_mapping["match"]:
             if _spec_matches(spec, match_string):
+                matched = True
+                if "remove-attributes" in ci_mapping:
+                    _remove_attributes(ci_mapping["remove-attributes"], runner_attributes)
                 if "runner-attributes" in ci_mapping:
                     _copy_attributes(
                         overridable_attrs, ci_mapping["runner-attributes"], runner_attributes
                     )
-                return runner_attributes
-    else:
-        return None
+                break
+        if matched and only_first:
+            break
 
-    return runner_attributes
+    return runner_attributes if matched else None
 
 
 def _pkg_name_from_spec_label(spec_label):
@@ -1021,9 +1034,7 @@ def generate_gitlab_ci_yaml(
                     continue
 
                 if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
-                    known_broken_specs_encountered.append(
-                        "{0} ({1})".format(release_spec, release_spec_dag_hash)
-                    )
+                    known_broken_specs_encountered.append(release_spec_dag_hash)
 
                 # Only keep track of these if we are copying rebuilt cache entries
                 if spack_buildcache_copy:
@@ -1286,6 +1297,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_JOB_TEST_DIR": rel_job_test_dir,
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
+            "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
         }
 
         if remote_mirror_override:
@@ -1343,13 +1355,9 @@ def generate_gitlab_ci_yaml(
         sorted_output = {"no-specs-to-rebuild": noop_job}
 
     if known_broken_specs_encountered:
-        error_msg = (
-            "Pipeline generation failed due to the presence of the "
-            "following specs that are known to be broken in develop:\n"
-        )
-        for broken_spec in known_broken_specs_encountered:
-            error_msg += "* {0}\n".format(broken_spec)
-        tty.die(error_msg)
+        tty.error("This pipeline generated hashes known to be broken on develop:")
+        display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
+        tty.die()
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
@@ -2058,6 +2066,75 @@ def create_buildcache(**kwargs):
     # prefix is set)
     if pipeline_mirror_url:
         push_mirror_contents(env, json_path, pipeline_mirror_url, sign_binaries)
+
+
+def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dict):
+    """Given a url to write to and the details of the failed job, write an entry
+    in the broken specs list.
+    """
+    tmpdir = tempfile.mkdtemp()
+    file_path = os.path.join(tmpdir, "broken.txt")
+
+    broken_spec_details = {
+        "broken-spec": {
+            "job-name": pkg_name,
+            "job-stack": stack_name,
+            "job-url": job_url,
+            "pipeline-url": pipeline_url,
+            "concrete-spec-dict": spec_dict,
+        }
+    }
+
+    try:
+        with open(file_path, "w") as fd:
+            fd.write(syaml.dump(broken_spec_details))
+        web_util.push_to_url(
+            file_path,
+            url,
+            keep_original=False,
+            extra_args={"ContentType": "text/plain"},
+        )
+    except Exception as err:
+        # If there is an S3 error (e.g., access denied or connection
+        # error), the first non boto-specific class in the exception
+        # hierarchy is Exception.  Just print a warning and return
+        msg = "Error writing to broken specs list {0}: {1}".format(url, err)
+        tty.warn(msg)
+    finally:
+        shutil.rmtree(tmpdir)
+
+
+def read_broken_spec(broken_spec_url):
+    """Read data from broken specs file located at the url, return as a yaml
+    object.
+    """
+    try:
+        _, _, fs = web_util.read_from_url(broken_spec_url)
+    except (URLError, web_util.SpackWebError, HTTPError):
+        tty.warn("Unable to read broken spec from {0}".format(broken_spec_url))
+        return None
+
+    broken_spec_contents = codecs.getreader("utf-8")(fs).read()
+    return syaml.load(broken_spec_contents)
+
+
+def display_broken_spec_messages(base_url, hashes):
+    """Fetch the broken spec file for each of the hashes under the base_url and
+    print a message with some details about each one.
+    """
+    broken_specs = [(h, read_broken_spec(url_util.join(base_url, h))) for h in hashes]
+    for spec_hash, broken_spec in [tup for tup in broken_specs if tup[1]]:
+        details = broken_spec["broken-spec"]
+        if "job-name" in details:
+            item_name = "{0}/{1}".format(details["job-name"], spec_hash[:7])
+        else:
+            item_name = spec_hash
+
+        if "job-stack" in details:
+            item_name = "{0} (in stack {1})".format(item_name, details["job-stack"])
+
+        msg = "  {0} was reported broken here: {1}".format(item_name, details["job-url"])
+        tty.msg(msg)
 
 
 def run_standalone_tests(**kwargs):
