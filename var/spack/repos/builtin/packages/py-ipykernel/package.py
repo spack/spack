@@ -14,6 +14,7 @@ class PyIpykernel(PythonPackage):
     pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
     version("6.16.0", sha256="7fe42c0d58435e971dc15fd42189f20d66bf35f3056bda4f6554271bc1fa3d0d")
+    version("6.15.2", sha256="e7481083b438609c9c8a22d6362e8e1bc6ec94ba0741b666941e634f2d61bdf3")
     version("6.9.1", sha256="f95070a2dfd3147f8ab19f18ee46733310813758593745e07ec18fb08b409f1d")
     version("6.4.1", sha256="df3355e5eec23126bc89767a676c5f0abfc7f4c3497d118c592b83b316e8c0cd")
     version("6.2.0", sha256="4439459f171d77f35b7f7e72dace5d7c2dd10a5c9e2c22b173ad9048fbfe7656")
