@@ -37,6 +37,7 @@ class PyPromptToolkit(PythonPackage):
         "prompt_toolkit.clipboard",
     ]
 
+    version("3.0.31", sha256="9ada952c9d1787f52ff6d5f3484d0b4df8952787c087edf6a1f7c2cb1ea88148")
     version("3.0.29", sha256="bd640f60e8cecd74f0dc249713d433ace2ddc62b65ee07f96d358e0b152b6ea7")
     version("3.0.24", sha256="1bb05628c7d87b645974a1bad3f17612be0c29fa39af9f7688030163f680bad6")
     version("3.0.17", sha256="9397a7162cf45449147ad6042fa37983a081b8a73363a5253dd4072666333137")
