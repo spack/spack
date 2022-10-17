@@ -48,7 +48,10 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.directory_layout import DirectoryLayoutError
+from spack.directory_layout import (
+    DirectoryLayoutError,
+    InconsistentInstallDirectoryError,
+)
 from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
 from spack.util.crypto import bit_length
@@ -1063,7 +1066,14 @@ class Database(object):
         elif self.is_upstream:
             tty.warn("upstream not found: {0}".format(self._index_path))
 
-    def _add(self, spec, directory_layout=None, explicit=False, installation_time=None):
+    def _add(
+        self,
+        spec,
+        directory_layout=None,
+        explicit=False,
+        installation_time=None,
+        allow_missing=False,
+    ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
@@ -1074,19 +1084,18 @@ class Database(object):
         Args:
             spec: spec to be added
             directory_layout: layout of the spec installation
-            **kwargs:
+            explicit:
+                Possible values: True, False, any
 
-                explicit
-                    Possible values: True, False, any
+                A spec that was installed following a specific user
+                request is marked as explicit. If instead it was
+                pulled-in as a dependency of a user requested spec
+                it's considered implicit.
 
-                    A spec that was installed following a specific user
-                    request is marked as explicit. If instead it was
-                    pulled-in as a dependency of a user requested spec
-                    it's considered implicit.
-
-                installation_time
-                    Date and time of installation
-
+            installation_time:
+                Date and time of installation
+            allow_missing: if True, don't warn when installation is not found on on disk
+                This is useful when installing specs without build deps.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1100,11 +1109,22 @@ class Database(object):
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for dep in spec.dependencies(deptype=_tracked_deps):
-            dkey = dep.dag_hash()
-            if dkey not in self._data:
-                extra_args = {"explicit": False, "installation_time": installation_time}
-                self._add(dep, directory_layout, **extra_args)
+        for edge in spec.edges_to_dependencies(deptype=_tracked_deps):
+            if edge.spec.dag_hash() in self._data:
+                continue
+            # allow missing build-only deps. This prevents excessive
+            # warnings when a spec is installed, and its build dep
+            # is missing a build dep; there's no need to install the
+            # build dep's build dep first, and there's no need to warn
+            # about it missing.
+            dep_allow_missing = allow_missing or edge.deptypes == ("build",)
+            self._add(
+                edge.spec,
+                directory_layout,
+                explicit=False,
+                installation_time=installation_time,
+                allow_missing=dep_allow_missing,
+            )
 
         # Make sure the directory layout agrees whether the spec is installed
         if not spec.external and directory_layout:
@@ -1115,13 +1135,14 @@ class Database(object):
                 installed = True
                 self._installed_prefixes.add(path)
             except DirectoryLayoutError as e:
-                msg = (
-                    "{0} is being {1} in the database with prefix {2}, "
-                    "but this directory does not contain an installation of "
-                    "the spec, due to: {3}"
-                )
-                action = "updated" if key in self._data else "registered"
-                tty.warn(msg.format(spec.short_spec, action, path, str(e)))
+                if not (allow_missing and isinstance(e, InconsistentInstallDirectoryError)):
+                    msg = (
+                        "{0} is being {1} in the database with prefix {2}, "
+                        "but this directory does not contain an installation of "
+                        "the spec, due to: {3}"
+                    )
+                    action = "updated" if key in self._data else "registered"
+                    tty.warn(msg.format(spec.short_spec, action, path, str(e)))
         elif spec.external_path:
             path = spec.external_path
             installed = True
