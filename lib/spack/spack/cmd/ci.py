@@ -284,6 +284,7 @@ def ci_rebuild(args):
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
     spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
+    rebuild_everything = get_env_var("SPACK_REBUILD_EVERYTHING")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
@@ -324,6 +325,8 @@ def ci_rebuild(args):
             spack_is_pr_pipeline, spack_is_develop_pipeline
         )
     )
+
+    full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
     # If no override url exists, then just push binary package to the
     # normal remote mirror url.
@@ -448,6 +451,8 @@ def ci_rebuild(args):
         fd.write(spack_info.encode("utf8"))
         fd.write(b"\n")
 
+    pipeline_mirrors = []
+
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a hash match already
     # built for this spec.
@@ -455,22 +460,29 @@ def ci_rebuild(args):
         spack.mirror.add(
             spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url, cfg.default_modify_scope()
         )
+        pipeline_mirrors.append(pipeline_mirror_url)
 
     # Check configured mirrors for a built spec with a matching hash
     mirrors_to_check = None
-    if remote_mirror_override and spack_pipeline_type == "spack_protected_branch":
-        # Passing "mirrors_to_check" below means we *only* look in the override
-        # mirror to see if we should skip building, which is what we want.
-        mirrors_to_check = {"override": remote_mirror_override}
+    if remote_mirror_override:
+        if spack_pipeline_type == "spack_protected_branch":
+            # Passing "mirrors_to_check" below means we *only* look in the override
+            # mirror to see if we should skip building, which is what we want.
+            mirrors_to_check = {"override": remote_mirror_override}
 
-        # Adding this mirror to the list of configured mirrors means dependencies
-        # could be installed from either the override mirror or any other configured
-        # mirror (e.g. remote_mirror_url which is defined in the environment or
-        # pipeline_mirror_url), which is also what we want.
-        spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
+            # Adding this mirror to the list of configured mirrors means dependencies
+            # could be installed from either the override mirror or any other configured
+            # mirror (e.g. remote_mirror_url which is defined in the environment or
+            # pipeline_mirror_url), which is also what we want.
+            spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
+        pipeline_mirrors.append(remote_mirror_override)
 
-    matches = bindist.get_mirrors_for_spec(
-        job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+    matches = (
+        None
+        if full_rebuild
+        else bindist.get_mirrors_for_spec(
+            job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+        )
     )
 
     if matches:
@@ -493,6 +505,13 @@ def ci_rebuild(args):
         # Now we are done and successful
         sys.exit(0)
 
+    # Before beginning the install, if this is a "rebuild everything" pipeline, we
+    # only want to keep the mirror being used by the current pipeline as it's binary
+    # package destination.  This ensures that the when we rebuild everything, we only
+    # consume binary dependencies built in this pipeline.
+    if full_rebuild:
+        spack_ci.remove_other_mirrors(pipeline_mirrors, cfg.default_modify_scope())
+
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
@@ -507,6 +526,8 @@ def ci_rebuild(args):
             "install",
             "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
+            "--use-buildcache",
+            "dependencies:only,package:never",
         ]
     )
 
@@ -525,10 +546,8 @@ def ci_rebuild(args):
     if compiler_action != "FIND_ANY":
         install_args.append("--no-add")
 
-    # TODO: once we have the concrete spec registry, use the DAG hash
-    # to identify the spec to install, rather than the concrete spec
-    # json file.
-    install_args.extend(["-f", job_spec_json_path])
+    # Identify spec to install by hash
+    install_args.append("/{0}".format(job_spec.dag_hash()))
 
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", install_args, repro_dir)
