@@ -87,7 +87,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     depends_on("mpi", when="+cluster")
 
     provides("fftw-api@3")
-    provides("scalapack", when="+cluster")
+    provides("scalapack")
     provides("mkl")
     provides("lapack")
     provides("blas")
