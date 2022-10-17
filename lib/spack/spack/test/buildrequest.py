@@ -62,3 +62,36 @@ def test_build_request_strings(install_mockery):
     istr = str(request)
     assert "package=dependent-install" in istr
     assert "install_args=" in istr
+
+
+@pytest.mark.parametrize(
+    "package_cache_only,dependencies_cache_only,package_deptypes,dependencies_deptypes",
+    [
+        (False, False, ["build", "link", "run"], ["build", "link", "run"]),
+        (True, False, ["link", "run"], ["build", "link", "run"]),
+        (False, True, ["build", "link", "run"], ["link", "run"]),
+        (True, True, ["link", "run"], ["link", "run"]),
+    ],
+)
+def test_build_request_deptypes(
+    install_mockery,
+    package_cache_only,
+    dependencies_cache_only,
+    package_deptypes,
+    dependencies_deptypes,
+):
+    s = spack.spec.Spec("dependent-install").concretized()
+
+    build_request = inst.BuildRequest(
+        s.package,
+        {
+            "package_cache_only": package_cache_only,
+            "dependencies_cache_only": dependencies_cache_only,
+        },
+    )
+
+    actual_package_deptypes = build_request.get_deptypes(s.package)
+    actual_dependency_deptypes = build_request.get_deptypes(s["dependency-install"].package)
+
+    assert sorted(actual_package_deptypes) == package_deptypes
+    assert sorted(actual_dependency_deptypes) == dependencies_deptypes
