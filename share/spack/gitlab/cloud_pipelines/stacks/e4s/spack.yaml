@@ -261,6 +261,7 @@ spack:
     broken-tests-packages:
       - gptune
 
+    match_behavior: first
     mappings:
       - match:
           - hipblas
