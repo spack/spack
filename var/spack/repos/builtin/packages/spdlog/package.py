@@ -44,13 +44,18 @@ class Spdlog(CMakePackage):
     version("0.9.0", sha256="bbbe5a855c8b309621352921d650449eb2f741d35d55ec50fb4d8122ddfb8f01")
 
     variant("shared", default=True, description="Build shared libraries (v1.4.0+)")
+    variant(
+        "bundled_fmt",
+        default=True,
+        description="Build using external fmt libraries instead of bundled one",
+    )
 
     depends_on("cmake@3.2:", when="@:1.7.0", type="build")
     depends_on("cmake@3.10:", when="@1.8.0:", type="build")
 
-    depends_on("fmt@5.3:")
-    depends_on("fmt@7:", when="@1.7:")
-    depends_on("fmt@8:", when="@1.9:")
+    depends_on("fmt@5.3:", when="~bundled_fmt")
+    depends_on("fmt@7:", when="@1.7: ~bundled_fmt")
+    depends_on("fmt@8:", when="@1.9: ~bundled_fmt")
 
     def cmake_args(self):
         args = []
@@ -59,7 +64,7 @@ class Spdlog(CMakePackage):
             args.extend(
                 [
                     self.define_from_variant("SPDLOG_BUILD_SHARED", "shared"),
-                    self.define("SPDLOG_FMT_EXTERNAL", "ON"),
+                    self.define("SPDLOG_FMT_EXTERNAL", ("~bundled_fmt" in self.spec)),
                     # tests and examples
                     self.define("SPDLOG_BUILD_TESTS", self.run_tests),
                     self.define("SPDLOG_BUILD_EXAMPLE", self.run_tests),
