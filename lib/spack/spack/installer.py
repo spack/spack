@@ -2426,21 +2426,31 @@ class BuildRequest(object):
         """The specification associated with the package."""
         return self.pkg.spec
 
-    def traverse_dependencies(self):
+    def traverse_dependencies(self, spec=None, visited=None):
         """
         Yield any dependencies of the appropriate type(s)
 
         Yields:
             (Spec) The next child spec in the DAG
         """
-        get_spec = lambda s: s.spec
+        # notice: deptype is not constant across nodes, so we cannot use
+        # spec.traverse_edges(deptype=...).
 
-        deptypes = self.get_deptypes(self.pkg)
-        tty.debug("Processing dependencies for {0}: {1}".format(self.pkg_id, deptypes))
-        for dspec in self.spec.traverse_edges(
-            deptype=deptypes, order="post", root=False, direction="children"
-        ):
-            yield get_spec(dspec)
+        if spec is None:
+            spec = self.spec
+        if visited is None:
+            visited = set()
+        deptype = self.get_deptypes(spec.package)
+
+        for dep in spec.dependencies(deptype=deptype):
+            hash = dep.dag_hash()
+            if hash in visited:
+                continue
+            visited.add(hash)
+            # In Python 3: yield from self.traverse_dependencies(dep, visited)
+            for s in self.traverse_dependencies(dep, visited):
+                yield s
+            yield dep
 
 
 class InstallError(spack.error.SpackError):
