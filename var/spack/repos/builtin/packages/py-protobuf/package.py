@@ -90,13 +90,6 @@ class PyProtobuf(PythonPackage):
     for ver in list(range(1, 8)) + list(range(9, 21)):
         depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
 
-    # Handle the 2.x series releases
-    for ver in list(range(3, 7)):
-        if ver == 5:
-            depends_on("protobuf@2." + str(ver), when="+cpp @2." + str(ver))
-        else:
-            conflicts("+cpp", when="@2." + str(ver))
-
     @property
     def build_directory(self):
         if self.spec.satisfies("@3.1.0"):
