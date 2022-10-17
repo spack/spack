@@ -22,6 +22,13 @@ class PyTensorflowMetadata(PythonPackage):
     version("1.10.0", sha256="e7aa81aa01433e2a75c11425affd55125b64f384baf96b71eeb3a88dca8cf2ae")
     version("1.5.0", sha256="f0ec8aaf62fd772ef908efe4ee5ea3bc0d67dcbf10ae118415b7b206a1d61745")
 
+    # Fix non-existing zlib URL
+    patch(
+        "https://github.com/tensorflow/metadata/commit/8df679e782f5bf2d163d63e550d8752c3812d566.patch?full_index=1",
+        sha256="a6b294d5e6099979192fcdb4d5b7b0388dc30b48671944d22e51a9e6bd5e1490",
+        when="@1.10.0",
+    )
+
     depends_on("bazel@0.24.1:", type="build")
     depends_on("python@3.7:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
