@@ -12,6 +12,7 @@ class PySecretstorage(PythonPackage):
     homepage = "https://github.com/mitya57/secretstorage"
     pypi = "SecretStorage/SecretStorage-3.1.2.tar.gz"
 
+    version("3.3.3", sha256="2403533ef369eca6d2ba81718576c5e0f564d5cca1b58f73a8b23e7d4eeebd77")
     version("3.3.1", sha256="fd666c51a6bf200643495a04abb261f83229dcb6fd8472ec393df7ffc8b6f195")
     version("3.1.2", sha256="15da8a989b65498e29be338b3b279965f1b8f09b9668bd8010da183024c8bff6")
     version("2.3.1", sha256="3af65c87765323e6f64c83575b05393f9e003431959c9395d1791d51497f29b6")
