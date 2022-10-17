@@ -12,7 +12,7 @@ class PyXopen(PythonPackage):
     compression formats are gzip, bzip2 and xz. They are automatically
     recognized by their file extensions .gz, .bz2 or .xz."""
 
-    homepage = "https://github.com/marcelm/xopen"
+    homepage = "https://github.com/pycompression/xopen"
     pypi = "xopen/xopen-0.1.1.tar.gz"
 
     version("1.6.0", sha256="72219a4d690e9c90ad445c45d2119ae2a6d5d38912255631e227aceac6294353")
@@ -32,4 +32,5 @@ class PyXopen(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools-scm@6.2:", type="build", when="@1.2.0:")
     depends_on("py-setuptools-scm", type="build")
+    depends_on("py-isal@1.0.0:", type=("build", "run"), when="@1.6.0: target=x86_64:")
     depends_on("py-bz2file", type=("build", "run"), when="@0.5: ^python@:2.8")
