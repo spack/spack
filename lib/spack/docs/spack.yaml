@@ -20,6 +20,8 @@ spack:
   - py-docutils@:0.16
   - py-sphinx-design
   - py-sphinx-rtd-theme
+  - py-pygments@:2.12
+
   # VCS
   - git
   - mercurial
