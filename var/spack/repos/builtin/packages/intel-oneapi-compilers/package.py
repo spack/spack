@@ -214,17 +214,24 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                     f.write(flags)
                 set_install_permissions(cfg_file)
 
+        # Make sure that icc gets the right GCC C+ support
         write_cfg(
             [
                 join_path("intel64", "icc"),
-                join_path("intel64", "icpc"),
-                join_path("intel64", "ifort"),
             ],
-            flags_list,
+            flags_list + ["-gcc-name={}".format(self.compiler.cc)],
+        )
+        write_cfg(
+            [
+                join_path("intel64", "icpc"),
+            ],
+            flags_list + ["-gxx-name={}".format(self.compiler.cxx)],
         )
         # Make sure that underlying clang gets the right GCC toolchain by default
-        flags_list.append("--gcc-toolchain={}".format(self.compiler.prefix))
-        write_cfg(["icx", "icpx", "ifx"], flags_list)
+        write_cfg(
+            ["icx", "icpx", "ifx"],
+            flags_list + ["--gcc-toolchain={}".format(self.compiler.prefix)],
+        )
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries
