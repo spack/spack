@@ -139,6 +139,7 @@ class Oneapi(Compiler):
         if self.cxx:
             env.prepend_path("PATH", dirname(self.cxx))
 
+    # See lib/spack/spack/compiler.py for details
     @property
     def prefix(self):
         # icx reports its install prefix when running ``-v``
