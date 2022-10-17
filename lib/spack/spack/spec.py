@@ -2961,6 +2961,21 @@ class Spec(object):
         else:
             self._old_concretize(tests)
 
+        self.link_externals_extensions_to_extendees()
+
+    def link_externals_extensions_to_extendees(self):
+        import spack.build_systems.python
+
+        python_spec = None
+        for spec in self.traverse():
+            if spec.name == "python":
+                python_spec = spec
+                break
+
+        for spec in self.traverse():
+            if isinstance(spec, spack.build_systems.python.PythonPackage):
+                spec.add_dependency_edge(python_spec, ("build", "link", "run"))
+
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
         if (not value) and self.concrete and self.installed:
