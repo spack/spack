@@ -2391,7 +2391,13 @@ class BuildRequest(object):
         """
         deptypes = ["link", "run"]
         include_build_deps = self.install_args.get("include_build_deps")
-        if not self.install_args.get("cache_only") or include_build_deps:
+
+        if self.pkg_id == package_id(pkg):
+            cache_only = self.install_args.get("package_cache_only")
+        else:
+            cache_only = self.install_args.get("dependencies_cache_only")
+
+        if not cache_only or include_build_deps:
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")
