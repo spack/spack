@@ -878,7 +878,7 @@ def generate_gitlab_ci_yaml(
                     # For spack pipelines "public" and "protected" are reserved tags
                     tags = _remove_reserved_tags(tags)
                     if spack_pipeline_type == "spack_protected_branch":
-                        tags.extend(["aws", "protected"])
+                        tags.extend(["protected"])
                     elif spack_pipeline_type == "spack_pull_request":
                         tags.extend(["public"])
 
