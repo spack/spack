@@ -124,19 +124,3 @@ class Protobuf(CMakePackage):
             return join_path(self.stage.source_path, "cmake")
         else:
             return self.stage.source_path
-
-    @when("@3.0.2:")
-    def install(self, spec, prefix):
-        args = self.cmake_args()
-        args.extend(std_cmake_args)
-
-        if self.spec.satisfies("@:3.20"):
-            source_directory = join_path(self.stage.source_path, "cmake")
-        else:
-            source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, "build")
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *args)
-            make()
-            make("install")
