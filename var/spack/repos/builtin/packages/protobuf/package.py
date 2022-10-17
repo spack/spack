@@ -139,7 +139,7 @@ class Protobuf(Package):
         args = self.cmake_args()
         args.extend(std_cmake_args)
 
-        if self.spec.satisfies("@:3"):
+        if self.spec.satisfies("@:3.20"):
             source_directory = join_path(self.stage.source_path, "cmake")
         else:
             source_directory = self.stage.source_path
