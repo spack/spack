@@ -376,32 +376,14 @@ e4s-oneapi-protected-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-power
 
-# Redefine what it means to be pr vs protected in this stack, mostly to omit
-# "SPACK_PIPELINE_TYPE" which triggers addition of tags during pipeline
-# generation which have the effect of picking special aws runners for protected
-# build jobs.  This allows running protected build jobs on UO runners, where
-# they won't have access to the baked-in signing credentials, and thus need to
-# use the less trusted signing approach of supplying the "SPACK_SIGNING_KEY"
-# environment variable.
-.e4s-power-pr:
-  extends: [ ".pr-refs" ]
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries-prs/${CI_COMMIT_REF_NAME}"
-    SPACK_PRUNE_UNTOUCHED: "True"
-
-.e4s-power-protected:
-  extends: [ ".protected-refs" ]
-  variables:
-    SPACK_BUILDCACHE_DESTINATION: "s3://spack-binaries/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}"
-
 e4s-power-pr-generate:
-  extends: [ ".e4s-power", ".e4s-power-pr", ".generate-base", ".e4s-power-generate-tags-and-image"]
+  extends: [ ".e4s-power", ".pr-generate", ".e4s-power-generate-tags-and-image"]
 
 e4s-power-protected-generate:
-  extends: [ ".e4s-power", ".e4s-power-protected", ".generate-base", ".e4s-power-generate-tags-and-image"]
+  extends: [ ".e4s-power", ".protected-generate", ".e4s-power-generate-tags-and-image"]
 
 e4s-power-pr-build:
-  extends: [ ".e4s-power", ".e4s-power-pr", ".build", ".aws-pr-creds" ]
+  extends: [ ".e4s-power", ".pr-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
@@ -412,7 +394,7 @@ e4s-power-pr-build:
       job: e4s-power-pr-generate
 
 e4s-power-protected-build:
-  extends: [ ".e4s-power", ".e4s-power-protected", ".build", ".aws-protected-creds" ]
+  extends: [ ".e4s-power", ".protected-build" ]
   variables:
     SPACK_SIGNING_KEY: ${PACKAGE_SIGNING_KEY}
   trigger:
