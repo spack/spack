@@ -2396,8 +2396,10 @@ class BuildRequest(object):
         # notice: deptype is not constant across nodes, so we cannot use
         # spec.traverse_edges(deptype=...).
 
-        spec = spec or self.spec
-        visited = visited or set()
+        if spec is None:
+            spec = self.spec
+        if visited is None:
+            visited = set()
         deptype = self.get_deptypes(spec.package)
 
         for dep in spec.dependencies(deptype=deptype):
@@ -2405,7 +2407,9 @@ class BuildRequest(object):
             if hash in visited:
                 continue
             visited.add(hash)
-            self.traverse_dependencies(dep, visited)
+            # In Python 3: yield from self.traverse_dependencies(dep, visited)
+            for s in self.traverse_dependencies(dep, visited):
+                yield s
             yield dep
 
 
