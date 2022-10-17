@@ -62,6 +62,7 @@ Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
   To get an invitation, visit [slack.spack.io](https://slack.spack.io).
+* [**Github Discussions**](https://github.com/spack/spack/discussions): not just for discussions, also Q&A.
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!
