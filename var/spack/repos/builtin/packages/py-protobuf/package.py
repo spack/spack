@@ -64,6 +64,16 @@ class PyProtobuf(PythonPackage):
         deprecated=True,
     )
     version("3.0.0", sha256="ecc40bc30f1183b418fe0ec0c90bc3b53fa1707c4205ee278c6b90479e5b6ff5")
+    version(
+        "3.0.0b2",
+        sha256="d5b560bbc4b7d97cc2455c05cad9299d9db02d7bd11193b05684e3a86303c229",
+        deprecated=True,
+    )
+    version(
+        "3.0.0a3",
+        sha256="b61622de5048415bfd3f2d812ad64606438ac9e25009ae84191405fe58e522c1",
+        deprecated=True,
+    )
 
     depends_on("python@3.5:", when="@3.18:", type=("build", "run"))
     depends_on("python@3.7:", when="@3.20:", type=("build", "run"))
@@ -79,6 +89,13 @@ class PyProtobuf(PythonPackage):
     # Handle the 3.x series releases
     for ver in list(range(1, 8)) + list(range(9, 21)):
         depends_on("protobuf@3." + str(ver), when="+cpp @3." + str(ver))
+
+    # Handle the 2.x series releases
+    for ver in list(range(3, 7)):
+        if ver == 5:
+            depends_on("protobuf@2." + str(ver), when="+cpp @2." + str(ver))
+        else:
+            conflicts("+cpp", when="@2." + str(ver))
 
     @property
     def build_directory(self):
