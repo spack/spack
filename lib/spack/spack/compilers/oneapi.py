@@ -6,6 +6,9 @@
 import os
 from os.path import dirname
 
+from llnl.util.filesystem import ancestor
+
+import spack.util.executable
 from spack.compiler import Compiler
 
 
@@ -135,3 +138,22 @@ class Oneapi(Compiler):
         #   Executable "sycl-post-link" doesn't exist!
         if self.cxx:
             env.prepend_path("PATH", dirname(self.cxx))
+
+    @property
+    def prefix(self):
+        # icx reports its install prefix when running ``-v``
+        # on the 4th line ``InstalledDir: <prefix>``.
+        cc = spack.util.executable.Executable(self.cc)
+        with self.compiler_environment():
+            output = cc("-v", output=str, error=str)
+
+            for line in output.splitlines():
+                if line.startswith("InstalledDir:"):
+                    prefix = line.split(":")[1].strip()
+                    # Go from <prefix>/compiler/<version>/linux/bin-llvm
+                    # to <prefix>/compiler/<version>
+                    return ancestor(prefix, 2)
+
+            raise RuntimeError(
+                "could not find install prefix of icx from output:\n\t{}".format(output)
+            )
