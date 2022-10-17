@@ -131,7 +131,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 placement="fortran-installer",
                 when="@{0}".format(v["version"]),
                 expand=False,
-                **v["ftn"]
+                **v["ftn"],
             )
 
     @property
@@ -206,21 +206,32 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         if self.spec.version < Version("2022.1.0"):
             flags_list.append("-Wno-unused-command-line-argument")
 
+        def write_cfg(cmp_list, flags_list):
+            flags = " ".join(flags_list)
+            for cmp in cmp_list:
+                cfg_file = self.component_prefix.linux.bin.join(cmp + ".cfg")
+                with open(cfg_file, "w") as f:
+                    f.write(flags)
+                set_install_permissions(cfg_file)
+
+        # Make sure that icc gets the right GCC C+ support
+        write_cfg(
+            [
+                join_path("intel64", "icc"),
+            ],
+            flags_list + ["-gcc-name={}".format(self.compiler.cc)],
+        )
+        write_cfg(
+            [
+                join_path("intel64", "icpc"),
+            ],
+            flags_list + ["-gxx-name={}".format(self.compiler.cxx)],
+        )
         # Make sure that underlying clang gets the right GCC toolchain by default
-        flags_list.append("--gcc-toolchain={}".format(self.compiler.prefix))
-        flags = " ".join(flags_list)
-        for cmp in [
-            "icx",
-            "icpx",
-            "ifx",
-            join_path("intel64", "icc"),
-            join_path("intel64", "icpc"),
-            join_path("intel64", "ifort"),
-        ]:
-            cfg_file = self.component_prefix.linux.bin.join(cmp + ".cfg")
-            with open(cfg_file, "w") as f:
-                f.write(flags)
-            set_install_permissions(cfg_file)
+        write_cfg(
+            ["icx", "icpx", "ifx"],
+            flags_list + ["--gcc-toolchain={}".format(self.compiler.prefix)],
+        )
 
     def _ld_library_path(self):
         # Returns an iterable of directories that might contain shared runtime libraries
