@@ -31,7 +31,6 @@ jobs:
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         cd spack
-        dir
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
         coverage combine -a
         coverage xml
