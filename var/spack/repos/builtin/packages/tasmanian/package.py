@@ -44,8 +44,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("xsdkflags", default=False, description="enable XSDK defaults for Tasmanian")
 
-    variant("openmp", default=True, description="add OpenMP support to Tasmanian")
-    # tested with OpenMP 3.1 (clang4) through 4.0-4.5 (gcc 5 - 8)
+    variant("openmp", default=False, description="add OpenMP support to Tasmanian")
 
     variant("blas", default=False, description="add BLAS support to Tasmanian")
 
