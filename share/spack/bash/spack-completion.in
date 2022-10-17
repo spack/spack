@@ -134,7 +134,7 @@ _bash_completion_spack() {
     # Make sure function exists before calling it
     local rgx #this dance is necessary to cover bash and zsh regex
     rgx="$subfunction.*function.* "
-    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
+    if [[ "$(LC_ALL=C type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
@@ -208,10 +208,10 @@ _repos() {
     SPACK_COMPREPLY="$SPACK_REPOS"
 }
 
-_tests() {
+_unit_tests() {
     if [[ -z "${SPACK_TESTS:-}" ]]
     then
-        SPACK_TESTS="$(spack test -l)"
+        SPACK_TESTS="$(spack unit-test -l)"
     fi
     SPACK_COMPREPLY="$SPACK_TESTS"
 }

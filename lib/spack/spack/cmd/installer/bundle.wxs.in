@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+	 xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+  <Bundle Version="1.0.0.0" UpgradeCode="63C4E213-0297-4CFE-BB7B-7A77EB68E966"
+          IconSourceFile="@CPACK_WIX_PRODUCT_ICON@"
+		  Name="Spack Package Manager"
+		  Manufacturer="Lawrence Livermore National Laboratory">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+		<bal:WixStandardBootstrapperApplication LicenseFile="@CPACK_RESOURCE_FILE_LICENSE@"/>
+    </BootstrapperApplicationRef>
+    <Chain>
+        <MsiPackage 
+          SourceFile="Spack.msi"
+          DisplayInternalUI="yes"/>
+        <ExePackage 
+          SourceFile="Git-2.31.1-64-bit.exe"
+          DetectCondition="ExeDetectedVariable"
+          InstallCommand="@SPACK_GIT_VERBOSITY@ /SUPPRESSMSGBOXES"
+          RepairCommand="/VERYSILENT"
+          UninstallCommand="/VERYSILENT" />
+    </Chain>
+  </Bundle>
+</Wix>

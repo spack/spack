@@ -1,0 +1,13 @@
+diff --git a/make/gluegen-cpptasks-base.xml b/make/gluegen-cpptasks-base.xml
+index a3b231e..98190a9 100755
+--- a/make/gluegen-cpptasks-base.xml
++++ b/make/gluegen-cpptasks-base.xml
+@@ -1460,7 +1460,7 @@
+       <echo message="Linux.aarch64" />
+       <property name="compiler.cfg.id.base"          value="compiler.cfg.linux.aarch64" /> 
+       <property name="linker.cfg.id.base"            value="linker.cfg.linux.aarch64" /> 
+-      <property name="java.lib.dir.platform"         value="${java.home.dir}/jre/lib/aarch64" />
++      <property name="java.lib.dir.platform"         value="${java.home.dir}/lib" />
+     </target>
+ 
+     <target name="gluegen.cpptasks.declare.compiler.linux.ia64" if="isLinuxIA64">

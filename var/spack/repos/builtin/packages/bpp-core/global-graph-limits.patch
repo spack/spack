@@ -1,0 +1,21 @@
+diff --git a/src/Bpp/Graph/GlobalGraph.cpp b/src/Bpp/Graph/GlobalGraph.cpp
+index ca2d18f..d681314 100644
+--- a/src/Bpp/Graph/GlobalGraph.cpp
++++ b/src/Bpp/Graph/GlobalGraph.cpp
+@@ -42,6 +42,7 @@
+ #include <sstream>
+ #include <string>
+ #include <vector>
++#include <limits>
+ 
+ #include "../Exceptions.h"
+ #include "../Text/TextTools.h"
+@@ -751,7 +752,7 @@ void GlobalGraph::orientate()
+     // if none, look for node wih minimum number of fathers
+     if (it == nextNodes.end())
+     {
+-      size_t nbF = numeric_limits<size_t>::infinity();
++      size_t nbF = std::numeric_limits<size_t>::infinity();
+       it = nextNodes.begin();
+ 
+       for ( ; it != nextNodes.end(); it++)

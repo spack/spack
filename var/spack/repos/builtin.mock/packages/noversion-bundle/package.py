@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class NoversionBundle(BundlePackage):
@@ -15,4 +15,4 @@ class NoversionBundle(BundlePackage):
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
-    depends_on('dependency-install')
+    depends_on("dependency-install")

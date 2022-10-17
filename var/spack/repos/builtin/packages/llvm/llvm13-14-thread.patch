@@ -1,0 +1,19 @@
+--- spack-src/openmp/libomptarget/cmake/Modules/LibomptargetGetDependencies.cmake.org	2022-02-08 14:58:13.000000000 +0900
++++ spack-src/openmp/libomptarget/cmake/Modules/LibomptargetGetDependencies.cmake	2022-02-08 13:58:53.000000000 +0900
+@@ -276,4 +276,5 @@
+   endif()
+ endif()
+
+-set(OPENMP_PTHREAD_LIB ${LLVM_PTHREAD_LIB})
++find_package(Threads REQUIRED)
++set(OPENMP_PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
+--- spack-src/openmp/libomptarget/src/CMakeLists.txt.org	2022-02-09 08:49:35.000000000 +0900
++++ spack-src/openmp/libomptarget/src/CMakeLists.txt	2022-02-09 08:50:18.000000000 +0900
+@@ -36,6 +36,7 @@
+ endif()
+ target_link_libraries(omptarget PRIVATE
+   ${CMAKE_DL_LIBS}
++  ${OPENMP_PTHREAD_LIB}
+   "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/exports")
+ 
+ # Install libomptarget under the lib destination folder.

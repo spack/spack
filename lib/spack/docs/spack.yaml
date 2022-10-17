@@ -18,11 +18,15 @@ spack:
   - "py-sphinx@3.4:4.1.1,4.1.3:"
   - py-sphinxcontrib-programoutput
   - py-docutils@:0.16
+  - py-sphinx-design
   - py-sphinx-rtd-theme
+  - py-pygments@:2.12
+
   # VCS
   - git
   - mercurial
   - subversion
   # Plotting
   - graphviz
-  concretization: together
+  concretizer:
+    unify: true

@@ -1,0 +1,13 @@
+diff --git a/cmake/pika_setup_allocator.cmake b/cmake/pika_setup_allocator.cmake
+index fdd75fa1..5e358edc 100644
+--- a/cmake/pika_setup_allocator.cmake
++++ b/cmake/pika_setup_allocator.cmake
+@@ -78,7 +78,7 @@ if(NOT TARGET pika_dependencies_allocator)
+     # ##########################################################################
+     # MIMALLOC
+     if("${PIKA_WITH_MALLOC_UPPER}" STREQUAL "MIMALLOC")
+-      find_package(mimalloc 1.0)
++      find_package(mimalloc)
+       if(NOT mimalloc_FOUND)
+         pika_error(${allocator_error})
+       endif()

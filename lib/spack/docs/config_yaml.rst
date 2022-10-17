@@ -5,9 +5,9 @@
 
 .. _config-yaml:
 
-==============
-Basic Settings
-==============
+============================
+Spack Settings (config.yaml)
+============================
 
 Spack's basic configuration options are set in ``config.yaml``.  You can
 see the default settings by looking at
@@ -19,9 +19,9 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
---------------------
-``install_tree``
---------------------
+---------------------
+``install_tree:root``
+---------------------
 
 The location where Spack will install packages and their dependencies.
 Default is ``$spack/opt/spack``.
@@ -71,21 +71,6 @@ used to configure module names.
 .. warning:: Modifying the installation hash length or path scheme after
    packages have been installed will prevent Spack from being
    able to find the old installation directories.
-
---------------------
-``module_roots``
---------------------
-
-Controls where Spack installs generated module files.  You can customize
-the location for each type of module.  e.g.:
-
-.. code-block:: yaml
-
-   module_roots:
-     tcl:    $spack/share/spack/modules
-     lmod:   $spack/share/spack/lmod
-
-See :ref:`modules` for details.
 
 --------------------
 ``build_stage``

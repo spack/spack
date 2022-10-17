@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyMachotools(PythonPackage):
@@ -11,7 +11,7 @@ class PyMachotools(PythonPackage):
 
     pypi = "machotools/machotools-0.2.0.tar.gz"
 
-    version('0.2.0', sha256='e3950fa263169087d44a3d0521a3267d5128efd1b85252670c7171955939ab58')
+    version("0.2.0", sha256="e3950fa263169087d44a3d0521a3267d5128efd1b85252670c7171955939ab58")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-macholib', type=('build', 'run'))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-macholib", type=("build", "run"))

@@ -4,15 +4,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.package import *
+
+
 class Sse2neon(Package):
     """A C/C++ header file that converts Intel SSE intrinsics to Arm/Aarch64
     NEON intrinsics."""
 
     homepage = "https://github.com/DLTcollab/sse2neon"
-    git      = "https://github.com/DLTcollab/sse2neon.git"
+    git = "https://github.com/DLTcollab/sse2neon.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
-        install('*.h', prefix.include)
+        install("*.h", prefix.include)

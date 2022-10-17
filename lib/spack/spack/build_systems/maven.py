@@ -7,7 +7,7 @@
 from llnl.util.filesystem import install_tree, working_dir
 
 from spack.directives import depends_on
-from spack.package import PackageBase, run_after
+from spack.package_base import PackageBase, run_after
 from spack.util.executable import which
 
 
@@ -21,15 +21,16 @@ class MavenPackage(PackageBase):
     * build
     * install
     """
+
     # Default phases
-    phases = ['build', 'install']
+    phases = ["build", "install"]
 
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'MavenPackage'
+    build_system_class = "MavenPackage"
 
-    depends_on('java', type=('build', 'run'))
-    depends_on('maven', type='build')
+    depends_on("java", type=("build", "run"))
+    depends_on("maven", type="build")
 
     @property
     def build_directory(self):
@@ -44,17 +45,17 @@ class MavenPackage(PackageBase):
         """Compile code and package into a JAR file."""
 
         with working_dir(self.build_directory):
-            mvn = which('mvn')
+            mvn = which("mvn")
             if self.run_tests:
-                mvn('verify', *self.build_args())
+                mvn("verify", *self.build_args())
             else:
-                mvn('package', '-DskipTests', *self.build_args())
+                mvn("package", "-DskipTests", *self.build_args())
 
     def install(self, spec, prefix):
         """Copy to installation prefix."""
 
         with working_dir(self.build_directory):
-            install_tree('.', prefix)
+            install_tree(".", prefix)
 
     # Check that self.prefix is there after installation
-    run_after('install')(PackageBase.sanity_check_prefix)
+    run_after("install")(PackageBase.sanity_check_prefix)

@@ -200,3 +200,6 @@ despacktivate
 echo "Correct error exit codes for activate and deactivate"
 fails spack env activate nonexisiting_environment
 fails spack env deactivate
+
+echo "Correct error exit codes for unit-test when it fails"
+fails spack unit-test fail

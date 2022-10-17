@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyAenum(PythonPackage):
@@ -13,6 +13,6 @@ class PyAenum(PythonPackage):
     homepage = "https://github.com/ethanfurman/aenum"
     pypi = "aenum/aenum-2.1.2.tar.gz"
 
-    version('2.1.2', sha256='a3208e4b28db3a7b232ff69b934aef2ea1bf27286d9978e1e597d46f490e4687')
+    version("2.1.2", sha256="a3208e4b28db3a7b232ff69b934aef2ea1bf27286d9978e1e597d46f490e4687")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

@@ -192,29 +192,32 @@ you can use them to customize an installation in :ref:`sec-specs`.
 Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
+By default, when you run ``spack install``, Spack tries hard to reuse existing installations
+as dependencies, either from a local store or from remote buildcaches if configured.
+This minimizes unwanted rebuilds of common dependencies, in particular if
+you update Spack frequently.
 
-   The ``--reuse`` option described here is experimental, and it will
-   likely be replaced with a different option and configuration settings
-   in the next Spack release.
-
-By default, when you run ``spack install``, Spack tries to build a new
-version of the package you asked for, along with updated versions of
-its dependencies.  This gets you the latest versions and configurations,
-but it can result in unwanted rebuilds if you update Spack frequently.
-
-If you want Spack to try hard to reuse existing installations as dependencies,
-you can add the ``--reuse`` option:
+In case you want the latest versions and configurations to be installed instead,
+you can add the ``--fresh`` option:
 
 .. code-block:: console
 
-   $ spack install --reuse mpich
+   $ spack install --fresh mpich
 
-This will not do anything if ``mpich`` is already installed.  If ``mpich``
-is not installed, but dependencies like ``hwloc`` and ``libfabric`` are,
-the ``mpich`` will be build with the installed versions, if possible.
-You can use the :ref:`spack spec -I <cmd-spack-spec>` command to see what
+Reusing installations in this mode is "accidental", and happening only if
+there's a match between existing installations and what Spack would have installed
+anyhow.
+
+You can use the ``spack spec -I mpich`` command to see what
 will be reused and what will be built before you install.
+
+You can configure Spack to use the ``--fresh`` behavior by default in
+``concretizer.yaml``:
+
+.. code-block:: yaml
+
+   concretizer:
+     reuse: false
 
 .. _cmd-spack-uninstall:
 
@@ -893,8 +896,8 @@ your path:
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
-These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
+These commands will add appropriate directories to your ``PATH``
+and ``MANPATH`` according to the
 :ref:`prefix inspections <customize-env-modifications>` defined in your
 modules configuration.
 When you no longer want to use a package, you can type unload or
@@ -1090,6 +1093,8 @@ could depend on ``mpich@1.2:`` if it can only build with version
 
 Below are more details about the specifiers that you can add to specs.
 
+.. _version-specifier:
+
 ^^^^^^^^^^^^^^^^^
 Version specifier
 ^^^^^^^^^^^^^^^^^
@@ -1104,6 +1109,37 @@ above and including ``4.2``.  Finally, a version specifier can be a
 set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
 or ``1.7``).  When you supply such a specifier to ``spack install``,
 it constrains the set of versions that Spack will install.
+
+For packages with a ``git`` attribute, ``git`` references 
+may be specified instead of a numerical version i.e. branches, tags 
+and commits. Spack will stage and build based off the ``git`` 
+reference provided.  Acceptable syntaxes for this are:
+
+.. code-block:: sh
+   
+    # branches and tags
+   foo@git.develop # use the develop branch
+   foo@git.0.19 # use the 0.19 tag
+   
+    # commit hashes
+   foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
+   
+Spack versions from git reference either have an associated version supplied by the user,
+or infer a relationship to known versions from the structure of the git repository. If an
+associated version is supplied by the user, Spack treats the git version as equivalent to that
+version for all version comparisons in the package logic (e.g. ``depends_on('foo', when='@1.5')``).
+
+The associated version can be assigned with ``[git ref]=[version]`` syntax, with the caveat that the specified version is known to Spack from either the package definition, or in the configuration preferences (i.e. ``packages.yaml``).
+
+.. code-block:: sh
+
+   foo@git.my_ref=3.2 # use the my_ref tag or branch, but treat it as version 3.2 for version comparisons
+   foo@git.abcdef1234abcdef1234abcdef1234abcdef1234=develop # use the given commit, but treat it as develop for version comparisons
+
+If an associated version is not supplied then the tags in the git repo are used to determine
+the most recent previous version known to Spack. Details about how versions are compared
+and how Spack determines if one version is less than another are discussed in the developer guide.
 
 If the version spec is not provided, then Spack will choose one
 according to policies set for the particular spack installation.  If
@@ -1280,7 +1316,7 @@ Normally users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
 values will be detected automatically.  If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
-target), see :ref:`concretization-preferences`.
+target), see :ref:`package-preferences`.
 
 .. admonition:: Cray machines
 
@@ -1720,8 +1756,8 @@ Activating Extensions in a View
 
 Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
-See :ref:`filesystem-views` for a more in-depth description of views and
-:ref:`cmd-spack-view` for usage of the ``spack view`` command.
+See :ref:`configuring_environment_views` for a more in-depth description
+of views.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions Globally

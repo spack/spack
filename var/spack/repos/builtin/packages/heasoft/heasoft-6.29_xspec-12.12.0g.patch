@@ -1,0 +1,12 @@
+--- a/Xspec/src/XSModel/Data/SpectralData.cxx	2021-02-19 10:47:01.000000000 -0600
++++ b/Xspec/src/XSModel/Data/SpectralData.cxx	2022-02-16 10:55:16.813201027 -0600
+@@ -1232,9 +1232,6 @@
+       throw YellowAlert(msg.str()); 
+    }
+ 
+-   // multiply in the areaScale for this spectrum
+-   m_effectiveAreas *= m_areaScale;
+-
+ }
+ 
+ void SpectralData::clearEffectiveAreas ()
