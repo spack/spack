@@ -10,7 +10,7 @@ concurrency:
 defaults:
   run:
     shell:
-     powershell Invoke-Expression -Command ".\share\spack\qa\windows_test_setup.ps1"; {0}
+     powershell Invoke-Expression -Command "./share/spack/qa/windows_test_setup.ps1"; {0}
 jobs:
   unit-tests:
     runs-on: windows-latest
@@ -26,11 +26,11 @@ jobs:
           python -m pip install --upgrade pip six pywin32 setuptools codecov pytest-cov clingo
     - name: Create local develop
       run: |
-        .\spack\.github\workflows\setup_git.ps1
+        ./.github/workflows/setup_git.ps1
     - name: Unit Test
       run: |
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
-        share/spack/qa/validate_last_exit.ps1
+        ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
@@ -50,11 +50,11 @@ jobs:
           python -m pip install --upgrade pip six pywin32 setuptools codecov coverage pytest-cov clingo
     - name: Create local develop
       run: |
-        .\spack\.github\workflows\setup_git.ps1
+        ./.github/workflows/setup_git.ps1
     - name: Command Unit Test
       run: |
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
-        share/spack/qa/validate_last_exit.ps1
+        ./share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
@@ -100,7 +100,7 @@ jobs:
         $env:WIX >> $GITHUB_PATH
     - name: Run Installer
       run: |
-        .\spack\share\spack\qa\setup_spack_installer.ps1
+        ./share/spack/qa/setup_spack_installer.ps1
         spack make-installer -s spack -g SILENT pkg
         echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       env:
