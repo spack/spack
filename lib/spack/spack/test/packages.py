@@ -321,3 +321,11 @@ def test_has_test_method_fails(capsys):
 
     captured = capsys.readouterr()[1]
     assert "is not a class" in captured
+
+
+def test_package_deprecated_version(mock_packages, mock_fetch, mock_stage):
+    spec = Spec("deprecated-versions")
+    pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+
+    assert spack.package_base.deprecated_version(pkg_cls, "1.1.0")
+    assert not spack.package_base.deprecated_version(pkg_cls, "1.0.0")
