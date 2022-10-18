@@ -15,7 +15,7 @@ import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.crypto
-from spack.package_base import preferred_version
+from spack.package_base import deprecated_version, preferred_version
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import VersionBase, ver
 
@@ -81,6 +81,9 @@ def checksum(parser, args):
     if versions:
         remote_versions = None
         for version in versions:
+            if deprecated_version(pkg, version):
+                tty.warn("Version {0} is deprecated".format(version))
+
             version = ver(version)
             if not isinstance(version, VersionBase):
                 tty.die(
@@ -101,7 +104,7 @@ def checksum(parser, args):
         url_dict = pkg.fetch_remote_versions()
 
     if not url_dict:
-        tty.die("Could not find any versions for {0}".format(pkg.name))
+        tty.die("Could not find any remote versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
         url_dict,
