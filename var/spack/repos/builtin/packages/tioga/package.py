@@ -15,10 +15,12 @@ class Tioga(CMakePackage):
 
     maintainers = ["jrood-nrel"]
 
+    # The original TIOGA repo has possibly been abandoned,
+    # so work on TIOGA has continued in the Exawind project
     version("develop", git="https://github.com/Exawind/tioga.git", branch="exawind")
     version("master", branch="master")
 
-    variant("shared", default=True, description="Build shared libraries")
+    variant("shared", default=sys.platform != "darwin", description="Build shared libraries")
     variant("pic", default=True, description="Position independent code")
     variant("nodegid", default=True, description="Enable support for global Node IDs")
     variant("timers", default=False, description="Enable timers")
