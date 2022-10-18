@@ -29,8 +29,6 @@ class Tioga(CMakePackage):
     depends_on("mpi")
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
