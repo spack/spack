@@ -131,7 +131,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 placement="fortran-installer",
                 when="@{0}".format(v["version"]),
                 expand=False,
-                **v["ftn"],
+                **v["ftn"]
             )
 
     @property
@@ -214,7 +214,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                     f.write(flags)
                 set_install_permissions(cfg_file)
 
-        # Make sure that icc gets the right GCC C+ support
+        # Make sure that icc gets the right GCC C++ support
         write_cfg(
             [
                 join_path("intel64", "icc"),
