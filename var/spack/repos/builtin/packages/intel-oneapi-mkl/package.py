@@ -133,12 +133,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     def _find_mkl_libs(self, shared):
         libs = []
 
-        if "^mpi" in self.spec.root:
+        if "+cluster" in self.spec:
             libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
 
         libs.extend([self._xlp64_lib("libmkl_intel"), "libmkl_sequential", "libmkl_core"])
 
-        if "^mpi" in self.spec.root:
+        if "+cluster" in self.spec:
             libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
 
         return find_libraries(libs, self.component_prefix.lib.intel64, shared=shared)
