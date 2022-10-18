@@ -17,67 +17,63 @@ spack:
     # list as needed.
     all:
       compiler: [gcc@11.1.0]
-      providers:
-        # Note: Providers will likely need to be updated
-        # for optimal performance on some systems.
-        blas: [openblas]
-        mpi: [mpich]
       target: [x86_64]
       variants: +mpi
     tbb:
       require: "intel-tbb"
     binutils:
-      variants: +ld +gold +headers +libiberty ~nls
+      require: +ld +gold +headers +libiberty ~nls
+    blas:
+      require: openblas
     cuda:
       version: [11.7.0]
     chai:
-      variants: ~benchmarks ~tests
+      require: ~benchmarks ~tests
     ecp-data-vis-sdk:
-      variants: +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf
+      require: +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf
         +sensei +sz +unifyfs +veloc +visit +vtkm +zfp
     elfutils:
-      variants: +bzip2 ~nls +xz
+      require: +bzip2 ~nls +xz
+    glew:
+      require: gl=osmesa
     hdf5:
-      variants: +fortran +hl +shared
+      require: +fortran +hl +shared
     hpx:
-      variants: networking=mpi
+      require: networking=mpi
     libfabric:
-      variants: fabrics=sockets,tcp,udp,rxm
+      require: fabrics=sockets,tcp,udp,rxm
+    libosmesa:
+      require: mesa +osmesa
+    libglx:
+      require: mesa +glx
     libunwind:
-      variants: +pic +xz
+      require: +pic +xz
     mesa:
       version: [22.1.2, 21.3.8]
-      variants: +llvm
+      require: +llvm +osmesa +glx
     mpich:
-      variants: ~wrapperrpath
+      require: ~wrapperrpath
+    mpi:
+      require: mpich
     ncurses:
-      variants: +termlib
+      require: +termlib
     openblas:
-      variants: threads=openmp
+      require: threads=openmp
     paraview:
-      variants: ~qt +osmesa use_vtkm=on
+      # Require ParaView without frontend and canonical features
+      require: ~qt +osmesa use_vtkm=on build_edition=canonical
     python:
       version: [3.8.13]
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+      require: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
         +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
         +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     warpx:
-      variants: +ascent +sensei +shared
+      require: +ascent +sensei +shared
     xz:
-      variants: +pic
+      require: +pic
   specs:
-
-  # Preferred providers required in spec or implicit
-  # dependencies will be used that are not desired.
-  - openblas # do not use nvhpc
-  - mpich    # do not use openmpi
-
-  # Use osmesa in container backend unless using HIP
-  - mesa +osmesa +glx
-  - glew gl=osmesa
-
   # CPU
   - adios
   - alquimia
@@ -92,7 +88,7 @@ spack:
   - butterflypack
   - cabana ~cuda
   - caliper
-  - chai ~benchmarks ~tests
+  - chai
   - charliecloud
   - datatransferkit
   - dyninst
@@ -183,7 +179,7 @@ spack:
   - bricks +cuda
   - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
   - caliper +cuda cuda_arch=80
-  - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - chai +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
   - ecp-data-vis-sdk +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
@@ -221,7 +217,6 @@ spack:
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm
   - caliper +rocm amdgpu_target=gfx90a
-  - chai ~benchmarks +rocm amdgpu_target=gfx90a
   - gasnet +rocm amdgpu_target=gfx90a
   - ginkgo +rocm amdgpu_target=gfx90a
   - heffte +rocm amdgpu_target=gfx90a
@@ -263,6 +258,7 @@ spack:
   #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
 
   # ROCm failures
+  #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
   #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 

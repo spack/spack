@@ -10,11 +10,13 @@ from spack.package import *
 def dav_sdk_depends_on(spec, when=None, propagate=None):
     # Do the basic depends_on
     depends_on(spec, when=when)
+    print(f"depends_on({spec}, when={when})")
 
     # Strip spec string to just the base spec name
     # ie. A +c ~b -> A
     spec = Spec(spec).name
 
+<<<<<<< HEAD
     # If the package is in the spec tree then it must be enabled in the SDK.
     if "+" in when:
         _when_variants = when.strip("+").split("+")
@@ -23,6 +25,14 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
 
         for variant in _when_variants:
             conflicts("~" + variant, when="^" + spec)
+=======
+    if "+" in when and len(when.split()) == 1:
+        when_not = when.replace("+", "~")
+        # If the package is in the spec tree then it must
+        # be enabled in the SDK.
+        print(f"conflicts({when_not}, ^{spec}")
+        conflicts(when_not, when="^" + spec)
+>>>>>>> 8665b3f52c (WIP: Fixups for packages and e4s pipeline)
 
     # Skip if there is nothing to propagate
     if not propagate:
@@ -112,7 +122,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
 
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
-    dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
+    dav_sdk_depends_on("hdf5@1.12: +shared+mpi+threadsafe api=default", when="+hdf5", propagate=["fortran"])
     dav_sdk_depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5", propagate=cuda_arch_variants)
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
