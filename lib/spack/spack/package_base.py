@@ -101,14 +101,11 @@ is_windows = sys.platform == "win32"
 
 
 def deprecated_version(pkg, version):
-    """
-    Returns a list of the deprecated versions of the package.
+    """Return True if the version is deprecated, False otherwise.
 
     Arguments:
         pkg (Package): The package whose version is to be checked.
         version (str or spack.version.VersionBase): The version being checked
-
-    Returns: (bool) True if version is deprecated, False otherwise
     """
     if not isinstance(version, VersionBase):
         version = Version(version)
