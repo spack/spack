@@ -105,6 +105,11 @@ class Papi(AutotoolsPackage, ROCmPackage):
             env.set("HSA_TOOLS_LIB", "unset")
         if "+rocm_smi" in spec:
             env.append_flags("CFLAGS", "-I%s/rocm_smi" % spec["rocm-smi-lib"].prefix.include)
+        #
+        # Intel OneAPI LLVM cannot compile papi unless the DBG enviroment variable is cleared
+        #
+        if spec.satisfies("%oneapi"):
+            env.set("DBG", "")
 
     setup_run_environment = setup_build_environment
 
