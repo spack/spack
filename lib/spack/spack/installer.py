@@ -32,6 +32,7 @@ import heapq
 import io
 import itertools
 import os
+import random
 import shutil
 import sys
 import time
@@ -261,6 +262,10 @@ def _hms(seconds):
     if s:
         parts.append("%.2fs" % s)
     return " ".join(parts)
+
+
+def install_priority(priority):
+    return priority < 1
 
 
 def _log_prefix(pkg_name):
@@ -1070,9 +1075,8 @@ class PackageInstaller(object):
 
         if lock_type == "read":
             # Wait until the other process finishes if there are no more
-            # build tasks with priority 0 (i.e., with no uninstalled
-            # dependencies).
-            no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
+            # build tasks with no uninstalled dependencies.
+            no_p0 = len(self.build_tasks) == 0 or not self._next_has_install_priority()
             timeout = None if no_p0 else 3
         else:
             timeout = 1e-9  # Near 0 to iterate through install specs quickly
@@ -1290,9 +1294,10 @@ class PackageInstaller(object):
             tty.debug("{0}{1}".format(pid, str(e)))
             tty.debug("Package stage directory: {0}".format(pkg.stage.source_path))
 
-    def _next_is_pri0(self):
+    def _next_has_install_priority(self):
         """
-        Determine if the next build task has priority 0
+        Determine if the next build task has has no remaining uninstalled
+        dependencies.
 
         Return:
             True if it does, False otherwise
@@ -1300,7 +1305,7 @@ class PackageInstaller(object):
         # Leverage the fact that the first entry in the queue is the next
         # one that will be processed
         task = self.build_pq[0][1]
-        return task.priority == 0
+        return install_priority(task.priority)
 
     def _pop_task(self):
         """
@@ -1604,9 +1609,9 @@ class PackageInstaller(object):
             # If the spec has uninstalled dependencies, then there must be
             # a bug in the code (e.g., priority queue or uninstalled
             # dependencies handling).  So terminate under the assumption that
-            # all subsequent tasks will have non-zero priorities or may be
+            # all subsequent tasks will have priorities of one or more or may be
             # dependencies of this task.
-            if task.priority != 0:
+            if not install_priority(task.priority):
                 term_status.clear()
                 tty.error(
                     "Detected uninstalled dependencies for {0}: {1}".format(
@@ -2313,7 +2318,13 @@ class BuildTask(object):
     @property
     def priority(self):
         """The priority is based on the remaining uninstalled dependencies."""
-        return len(self.uninstalled_deps)
+        priority = len(self.uninstalled_deps)
+
+        # If there are no uninstalled dependencies then the priority should
+        # be a random number in [0, 1) to allow parallel installs a chance
+        # of more quickly finding the next package to install; otherwise,
+        # the priority will remain the number of uninstalled dependencies.
+        return random.random() if priority == 0 else priority
 
 
 class BuildRequest(object):

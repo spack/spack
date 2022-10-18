@@ -1058,22 +1058,19 @@ def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
     const_arg = installer_args(["b"], {"fail_fast": False})
     const_arg.extend(installer_args(["c"], {"fail_fast": True}))
     installer = create_installer(const_arg)
-    pkg_ids = [inst.package_id(spec.package) for spec, _ in const_arg]
 
     # Make sure all packages are identified as failed
     #
-    # This will prevent b from installing, which will cause the build of a
-    # to be skipped.
+    # This will prevent the first package queued from installing, which will
+    # cause the build of the rest to be skipped.
     monkeypatch.setattr(spack.database.Database, "prefix_failed", _true)
 
     with pytest.raises(inst.InstallError, match="after first install failure"):
         installer.install()
-
-    assert pkg_ids[0] in installer.failed, "Expected b to be marked as failed"
-    assert pkg_ids[1] not in installer.failed, "Expected no attempt to install c"
-
     out = capsys.readouterr()[1]
-    assert "{0} failed to install".format(pkg_ids[0]) in out
+
+    assert len(installer.failed) == 1, "Expected one fail-fast install failure"
+    assert "failed to install" in out
 
 
 def _test_install_fail_fast_on_except_patch(installer, **kwargs):

@@ -46,7 +46,7 @@ def test_build_task_basics(install_mockery):
     assert task.dependencies == task.uninstalled_deps
     task.flag_installed(task.dependencies)
     assert len(task.uninstalled_deps) == 0
-    assert task.priority == 0
+    assert inst.install_priority(task.priority)
 
 
 def test_build_task_strings(install_mockery):
