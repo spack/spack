@@ -29,9 +29,8 @@ jobs:
         .\spack\.github\workflows\setup_git.ps1
     - name: Unit Test
       run: |
-        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        cd spack
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
+        share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
@@ -54,9 +53,8 @@ jobs:
         .\spack\.github\workflows\setup_git.ps1
     - name: Command Unit Test
       run: |
-        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
-        cd spack
         spack unit-test -x --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
+        share/spack/qa/validate_last_exit.ps1
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
@@ -77,7 +75,6 @@ jobs:
     - name: Build Test
       run: |
         spack compiler find
-        echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack external find cmake
         spack external find ninja
         spack -d install abseil-cpp
@@ -103,7 +100,7 @@ jobs:
         $env:WIX >> $GITHUB_PATH
     - name: Run Installer
       run: |
-        .\spack\share\spack\qa\setup_spack.ps1
+        .\spack\share\spack\qa\setup_spack_installer.ps1
         spack make-installer -s spack -g SILENT pkg
         echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       env:
