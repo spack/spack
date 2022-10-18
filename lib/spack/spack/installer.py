@@ -1562,8 +1562,10 @@ class PackageInstaller(object):
 
         Args:
             pkg (spack.package_base.Package): the package to be built and installed"""
-
-        self._init_queue()
+        # This hits the database quite a few times querying install status,
+        # so wrap it in a read transaction.
+        with spack.store.db.read_transaction():
+            self._init_queue()
         fail_fast_err = "Terminating after first install failure"
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
