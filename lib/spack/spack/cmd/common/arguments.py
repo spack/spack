@@ -441,16 +441,27 @@ def add_s3_connection_args(subparser, add_help):
     )
 
 
-def use_buildcache(opt):
-    """Argument type that accepts comma-separated subargs:
-    1. auto|only|never
-    2. package:auto|only|never
-    3. dependencies:auto|only|never"""
+def use_buildcache(cli_arg_value):
+    """Translate buildcache related command line arguments into a pair of strings,
+    representing whether the root or its dependencies can use buildcaches.
+
+    Argument type that accepts comma-separated subargs:
+
+        1. auto|only|never
+        2. package:auto|only|never
+        3. dependencies:auto|only|never
+
+    Args:
+        cli_arg_value (str): command line argument value to be translated
+
+    Return:
+        Tuple of two strings
+    """
     valid_keys = frozenset(["package", "dependencies"])
     valid_values = frozenset(["only", "never", "auto"])
 
     # Split in args, split in key/value, and trim whitespace
-    args = [tuple(map(lambda x: x.strip(), part.split(":"))) for part in opt.split(",")]
+    args = [tuple(map(lambda x: x.strip(), part.split(":"))) for part in cli_arg_value.split(",")]
 
     # Verify keys and values
     def is_valid(arg):
