@@ -112,8 +112,6 @@ class QuantumEspresso(CMakePackage):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
-        # provide Scalapack, Cluster FFT and Cluster Sparse Solver
-        depends_on("intel-oneapi-mkl+cluster", when="^intel-oneapi-mkl")
         with when("%nvhpc+cuda"):
             # add mpi_gpu_aware variant, False by default
             variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
