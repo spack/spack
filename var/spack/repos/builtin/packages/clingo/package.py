@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import os
+
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
 
@@ -118,3 +120,6 @@ class Clingo(CMakePackage):
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 
         return args
+
+    def win_setup_rpath(self):
+        self.add_internal_links(os.path.join(self.prefix.Lib, "site-packages"))

@@ -211,11 +211,21 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def add_search_paths(self, *path):
+    def add_search_paths(self, *paths):
         """Add additional rpaths that are not implicitly included in the search
         scheme
         """
-        self.win_rpath.include_additional_link_paths(*path)
+        self.win_rpath.include_additional_link_paths(*paths)
+
+    def add_internal_links(self, *paths):
+        """Add additional rpaths internal to a package, i.e.
+        linking pkg.prefix.bin to pkg.prefix.lib.site-packages"""
+        self.win_rpath.add_internal_links(*paths)
+
+    def win_setup_rpath(self):
+        """This method should be overridden by packages needing bespoke RPATH
+        support. No-op otherwise"""
+        pass
 
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
@@ -223,6 +233,7 @@ class WindowsRPathMeta(object):
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
+            self.win_setup_rpath()
             self.win_rpath.establish_link()
 
 

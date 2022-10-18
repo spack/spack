@@ -2224,9 +2224,9 @@ class WindowsSimulatedRPath(object):
                 root
         """
         self.pkg = package
-        self._addl_rpaths = set()
+        self._addl_rpaths = []
         self.link_install_prefix = link_install_prefix
-        self._internal_links = set()
+        self._internal_links = []
 
     @property
     def link_dest(self):
@@ -2237,29 +2237,30 @@ class WindowsSimulatedRPath(object):
             pkg_libs = set(self.pkg.libs.directories)
         else:
             pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
-
-        return pkg_libs | set([self.pkg.prefix.bin]) | self.internal_links
-
-    @property
-    def internal_links(self):
-        """
-        linking that would need to be established within the package itself. Useful for links
-        against extension modules/build time executables/internal linkage
-        """
-        return self._internal_links
+        pkg_libs.add(self.pkg.prefix.bin)
+        return pkg_libs
 
     def add_internal_links(self, *dest):
         """
         Incorporate additional paths into the rpath (sym)linking scheme.
 
-        Paths provided to this method are linked against by a package's libraries
-        and libraries found at these paths are linked against a package's binaries.
-        (i.e. /site-packages -> /bin and /bin -> /site-packages)
+        Paths provided to this method are linked against a packages libraries/binaries
+        i.e. ./bin -> ./site-packages
 
         Specified paths should be outside of a package's lib, lib64, and bin
         directories.
         """
-        self._internal_links = self._internal_links | set(*dest)
+        self._internal_links.extend(dest)
+
+    @property
+    def internal_link_targets(self):
+        return set(
+            [
+                x
+                for internal_path in self.link_dest
+                for x in find_all_shared_libraries(internal_path, recursive=True)
+            ]
+        )
 
     @property
     def link_targets(self):
@@ -2280,12 +2281,36 @@ class WindowsSimulatedRPath(object):
         Add libraries found at the root of provided paths to runtime linking
 
         These are libraries found outside of the typical scope of rpath linking
-        that require manual inclusion in a runtime linking scheme
+        that require manual inclusion in a runtime linking scheme.
+        These links are unidirectional, and are only
+        intended to bring outside dependencies into this package
 
         Args:
             *paths (str): arbitrary number of paths to be added to runtime linking
         """
-        self._addl_rpaths = self._addl_rpaths | set(paths)
+        self._addl_rpaths.extend(paths)
+
+    def _link(self, path, dest):
+        file_name = os.path.basename(path)
+        dest_file = os.path.join(dest, file_name)
+        if os.path.exists(dest):
+            try:
+                symlink(path, dest_file)
+            # For py2 compatibility, we have to catch the specific Windows error code
+            # associate with trying to create a file that already exists (winerror 183)
+            except OSError as e:
+                if e.winerror == 183:
+                    # We have either already symlinked or we are encoutering a naming clash
+                    # either way, we don't want to overwrite existing libraries
+                    already_linked = islink(dest_file)
+                    tty.debug(
+                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
+                        if already_linked
+                        else "library with name %s already exists." % file_name
+                    )
+                    pass
+                else:
+                    raise e
 
     def establish_link(self):
         """
@@ -2299,28 +2324,11 @@ class WindowsSimulatedRPath(object):
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
         for library, lib_dir in itertools.product(self.link_targets, self.link_dest):
-            if not path_contains_subdirectory(library, lib_dir):
-                file_name = os.path.basename(library)
-                dest_file = os.path.join(lib_dir, file_name)
-                if os.path.exists(lib_dir):
-                    try:
-                        symlink(library, dest_file)
-                    # For py2 compatibility, we have to catch the specific Windows error code
-                    # associate with trying to create a file that already exists (winerror 183)
-                    except OSError as e:
-                        if e.winerror == 183:
-                            # We have either already symlinked or we are encoutering a naming clash
-                            # either way, we don't want to overwrite existing libraries
-                            already_linked = islink(dest_file)
-                            tty.debug(
-                                "Linking library %s to %s failed, " % (library, dest_file)
-                                + "already linked."
-                                if already_linked
-                                else "library with name %s already exists." % file_name
-                            )
-                            pass
-                        else:
-                            raise e
+            self._link(library, lib_dir)
+        for library, internal_dir in itertools.product(
+            self.internal_link_targets, self._internal_links
+        ):
+            self._link(library, internal_dir)
 
 
 @system_path_filter
