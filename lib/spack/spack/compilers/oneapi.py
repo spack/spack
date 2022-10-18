@@ -6,9 +6,6 @@
 import os
 from os.path import dirname
 
-from llnl.util.filesystem import ancestor
-
-import spack.util.executable
 from spack.compiler import Compiler
 
 
