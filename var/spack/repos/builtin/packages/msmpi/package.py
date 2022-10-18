@@ -18,6 +18,7 @@ class Msmpi(Package):
         "10.0",
         sha256="7dae13797627726f67fab9c1d251aec2df9ecd25939984645ec05748bdffd396",
         extension="exe",
+        expand=False
     )
 
     provides("mpi")
