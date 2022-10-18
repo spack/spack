@@ -15,12 +15,12 @@ class Shortbred(Package):
 
     version("0.9.4", sha256="a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba")
 
-    depends_on("blast-plus@2.2.28:")
-    depends_on("cdhit@4.6:")
-    depends_on("muscle@3.8.31:")
-    depends_on("python@2.7.9:")
-    depends_on("py-biopython")
-    depends_on("usearch@6.0.307:")
+    depends_on("python@2.7.9", type="run")
+    depends_on("py-biopython@1.65", type="run")
+    depends_on("blast-plus@2.2.28:", type="run")
+    depends_on("usearch@6.0.307:", type="run")
+    depends_on("muscle@3.8.31", type="run")
+    depends_on("cdhit@4.6", type="run")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
