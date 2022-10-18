@@ -26,4 +26,4 @@ class Drishti(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-rich", type=("build", "run"))
+    depends_on("py-rich@12.5.1", type=("build", "run"))
