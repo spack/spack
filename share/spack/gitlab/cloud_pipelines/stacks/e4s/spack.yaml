@@ -223,6 +223,11 @@ spack:
   - superlu-dist +rocm amdgpu_target=gfx90a
   - tasmanian ~openmp +rocm amdgpu_target=gfx90a
   - tau +mpi +rocm
+  - trilinos@13.4.0 +amesos +amesos2 +anasazi +aztec ~belos +boost +epetra +epetraext
+    +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
+    +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    +rocm amdgpu_target=gfx90a
   - upcxx +rocm amdgpu_target=gfx90a
   - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
