@@ -37,8 +37,6 @@ class Tioga(CMakePackage):
             self.define_from_variant("TIOGA_HAS_NODEGID", "nodegid"),
             self.define_from_variant("TIOGA_ENABLE_TIMERS", "timers"),
             self.define_from_variant("TIOGA_OUTPUT_STATS", "stats"),
-            self.define_from_variant("TIOGA_ENABLE_CUDA", "cuda"),
-            define('MPI_ROOT', spec['mpi'].prefix)
         ]
 
         return args
