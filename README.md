@@ -6,7 +6,7 @@
 [![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-1.4-4baaaa.svg)](code_of_conduct.md)
 [![Slack](https://slack.spack.io/badge.svg)](https://slack.spack.io)
 
 Spack is a multi-platform package manager that builds and installs
@@ -108,7 +108,7 @@ for more details.
 Code of Conduct
 ------------------------
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-1.4-4baaaa.svg)](code_of_conduct.md)
 
 Please note that Spack has a
 [**Code of Conduct**](.github/CODE_OF_CONDUCT.md). By participating in
