@@ -32,7 +32,6 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.executable import which
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.pattern import Bunch
 
 ci_cmd = spack.main.SpackCommand("ci")
@@ -92,7 +91,7 @@ testjob:
         yield repo_path
 
 
-def test_specs_staging(config):
+def test_specs_staging(config, tmpdir):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
 
@@ -108,20 +107,17 @@ In this case, we would expect 'c', 'e', 'f', and 'g' to be in the first stage,
 and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 """
-    default = ("build", "link")
+    builder = repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("g")
+    builder.add_package("f")
+    builder.add_package("e")
+    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
+    builder.add_package("c")
+    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
+    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    g = mock_repo.add_package("g", [], [])
-    f = mock_repo.add_package("f", [], [])
-    e = mock_repo.add_package("e", [], [])
-    d = mock_repo.add_package("d", [f, g], [default, default])
-    c = mock_repo.add_package("c", [], [])
-    b = mock_repo.add_package("b", [d, e], [default, default])
-    mock_repo.add_package("a", [b, c], [default, default])
-
-    with repo.use_repositories(mock_repo):
-        spec_a = Spec("a")
-        spec_a.concretize()
+    with repo.use_repositories(builder.root):
+        spec_a = Spec("a").concretized()
 
         spec_a_label = ci._spec_deps_key(spec_a)
         spec_b_label = ci._spec_deps_key(spec_a["b"])
@@ -1362,8 +1358,15 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     assert expect_msg in std_out
 
 
+@pytest.mark.parametrize("match_behavior", ["first", "merge"])
 def test_ci_generate_override_runner_attrs(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    match_behavior,
 ):
     """Test that we get the behavior we want with respect to the provision
     of runner attributes like tags, variables, and scripts, both when we
@@ -1382,6 +1385,7 @@ spack:
   gitlab-ci:
     tags:
       - toplevel
+      - toplevel2
     variables:
       ONE: toplevelvarone
       TWO: toplevelvartwo
@@ -1392,6 +1396,7 @@ spack:
       - main step
     after_script:
       - post step one
+    match_behavior: {0}
     mappings:
       - match:
           - flatten-deps
@@ -1404,10 +1409,12 @@ spack:
           - dependency-install
       - match:
           - a
+        remove-attributes:
+          tags:
+            - toplevel2
         runner-attributes:
           tags:
             - specific-a
-            - toplevel
           variables:
             ONE: specificvarone
             TWO: specificvartwo
@@ -1417,10 +1424,17 @@ spack:
             - custom main step
           after_script:
             - custom post step one
+      - match:
+          - a
+        runner-attributes:
+          tags:
+            - specific-a-2
     service-job-attributes:
       image: donotcare
       tags: [donotcare]
-"""
+""".format(
+                match_behavior
+            )
         )
 
     with tmpdir.as_cwd():
@@ -1453,9 +1467,12 @@ spack:
                     assert the_elt["variables"]["ONE"] == "specificvarone"
                     assert the_elt["variables"]["TWO"] == "specificvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == (2 if match_behavior == "first" else 3)
                     assert "specific-a" in the_elt["tags"]
+                    if match_behavior == "merge":
+                        assert "specific-a-2" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" not in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 1
                     assert the_elt["before_script"][0] == "custom pre step one"
                     assert len(the_elt["script"]) == 1
@@ -1470,8 +1487,9 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 1
-                    assert the_elt["tags"][0] == "toplevel"
+                    assert len(the_elt["tags"]) == 2
+                    assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
@@ -1488,9 +1506,10 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert the_elt["variables"]["THREE"] == "specificvarthree"
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == 3
                     assert "specific-one" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
@@ -1963,12 +1982,15 @@ def test_ci_generate_read_broken_specs_url(
     spec_flattendeps.concretize()
     flattendeps_dag_hash = spec_flattendeps.dag_hash()
 
-    # Mark 'a' as broken (but not 'flatten-deps')
-    broken_spec_a_path = str(tmpdir.join(a_dag_hash))
-    with open(broken_spec_a_path, "w") as bsf:
-        bsf.write("")
-
     broken_specs_url = "file://{0}".format(tmpdir.strpath)
+
+    # Mark 'a' as broken (but not 'flatten-deps')
+    broken_spec_a_url = "{0}/{1}".format(broken_specs_url, a_dag_hash)
+    job_stack = "job_stack"
+    a_job_url = "a_job_url"
+    ci.write_broken_spec(
+        broken_spec_a_url, spec_a.name, job_stack, a_job_url, "pipeline_url", spec_a.to_dict()
+    )
 
     # Test that `spack ci generate` notices this broken spec and fails.
     filename = str(tmpdir.join("spack.yaml"))
@@ -2005,11 +2027,13 @@ spack:
             output = ci_cmd("generate", output=str, fail_on_error=False)
             assert "known to be broken" in output
 
-            ex = "({0})".format(a_dag_hash)
-            assert ex in output
+            expected = "{0}/{1} (in stack {2}) was reported broken here: {3}".format(
+                spec_a.name, a_dag_hash[:7], job_stack, a_job_url
+            )
+            assert expected in output
 
-            ex = "({0})".format(flattendeps_dag_hash)
-            assert ex not in output
+            not_expected = "flatten-deps/{0} (in stack".format(flattendeps_dag_hash[:7])
+            assert not_expected not in output
 
 
 def test_ci_generate_external_signing_job(
