@@ -509,5 +509,7 @@ class Hip(CMakePackage):
             args.append(self.define("HIP_CATCH_TEST", "OFF"))
             args.append(self.define("ROCCLR_PATH", self.stage.source_path + "/rocclr"))
             args.append(self.define("AMD_OPENCL_PATH", self.stage.source_path + "/opencl"))
+        if "@5.3.0:" in self.spec:
+            args.append("-DCMAKE_INSTALL_LIBDIR=lib")
 
         return args
