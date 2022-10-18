@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import re
 import shutil
 import sys
 import textwrap
@@ -32,33 +31,6 @@ section = "build"
 level = "short"
 
 
-# Pass in the value string passed to use-buildcache and get back
-# the package and dependencies values.
-def parse_use_buildcache(opt):
-    bc_keys = ["package:", "dependencies:", ""]
-    bc_values = ["only", "never", "auto"]
-    kv_list = re.findall("([a-z]+:)?([a-z]+)", opt)
-
-    # Verify keys and values
-    bc_map = {k: v for k, v in kv_list if k in bc_keys and v in bc_values}
-    if not len(kv_list) == len(bc_map):
-        tty.error("Unrecognized arguments passed to use-buildcache")
-        tty.error(
-            "Expected: --use-buildcache "
-            "[[auto|only|never],[package:[auto|only|never]],[dependencies:[auto|only|never]]]"
-        )
-        exit(1)
-
-    for _group in ["package:", "dependencies:"]:
-        if _group not in bc_map:
-            if "" in bc_map:
-                bc_map[_group] = bc_map[""]
-            else:
-                bc_map[_group] = "auto"
-
-    return bc_map["package:"], bc_map["dependencies:"]
-
-
 # Determine value of cache flag
 def cache_opt(default_opt, use_buildcache):
     if use_buildcache == "auto":
@@ -73,8 +45,7 @@ def install_kwargs_from_args(args):
     """Translate command line arguments into a dictionary that will be passed
     to the package installer.
     """
-
-    pkg_use_bc, dep_use_bc = parse_use_buildcache(args.use_buildcache)
+    pkg_use_bc, dep_use_bc = args.use_buildcache
 
     return {
         "fail_fast": args.fail_fast,
@@ -169,6 +140,7 @@ the dependencies""",
     cache_group.add_argument(
         "--use-buildcache",
         dest="use_buildcache",
+        type=arguments.use_buildcache,
         default="package:auto,dependencies:auto",
         metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
         help="""select the mode of buildcache for the 'package' and 'dependencies'.
