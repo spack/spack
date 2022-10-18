@@ -6,6 +6,8 @@
 
 import argparse
 
+from llnl.util.lang import stable_partition
+
 import spack.cmd
 import spack.config
 import spack.dependency as dep
@@ -437,3 +439,46 @@ def add_s3_connection_args(subparser, add_help):
     subparser.add_argument(
         "--s3-endpoint-url", help="Endpoint URL to use to connect to this S3 mirror"
     )
+
+
+def use_buildcache(opt):
+    """Argument type that accepts comma-separated subargs:
+    1. auto|only|never
+    2. package:auto|only|never
+    3. dependencies:auto|only|never"""
+    valid_keys = frozenset(["package", "dependencies"])
+    valid_values = frozenset(["only", "never", "auto"])
+
+    # Split in args, split in key/value, and trim whitespace
+    args = [tuple(map(lambda x: x.strip(), part.split(":"))) for part in opt.split(",")]
+
+    # Verify keys and values
+    def is_valid(arg):
+        if len(arg) == 1:
+            return arg[0] in valid_values
+        if len(arg) == 2:
+            return arg[0] in valid_keys and arg[1] in valid_values
+        return False
+
+    valid, invalid = stable_partition(args, is_valid)
+
+    # print first error
+    if invalid:
+        raise argparse.ArgumentTypeError("invalid argument `{}`".format(":".join(invalid[0])))
+
+    # Default values
+    package = "auto"
+    dependencies = "auto"
+
+    # Override in order.
+    for arg in valid:
+        if len(arg) == 1:
+            package = dependencies = arg[0]
+            continue
+        key, val = arg
+        if key == "package":
+            package = val
+        else:
+            dependencies = val
+
+    return package, dependencies
