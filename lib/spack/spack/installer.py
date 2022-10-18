@@ -262,6 +262,30 @@ def _hms(seconds):
     return " ".join(parts)
 
 
+def _log_prefix(pkg_name):
+    """Prefix of the form "[pid]: [pkg name]: ..." when printing a status update during
+    the build."""
+    pid = "{0}: ".format(os.getpid()) if tty.show_pid() else ""
+    return "{0}{1}:".format(pid, pkg_name)
+
+
+def _print_installed_pkg(message):
+    """
+    Output a message with a package icon.
+
+    Args:
+        message (str): message to be output
+    """
+    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
+
+
+def _print_timer(pre, pkg_id, fetch, build, total):
+    tty.msg(
+        "{0} Successfully installed {1}".format(pre, pkg_id),
+        "Fetch: {0}.  Build: {1}.  Total: {2}.".format(_hms(fetch), _hms(build), _hms(total)),
+    )
+
+
 def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
     Extract the package from binary cache
@@ -278,7 +302,10 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
         bool: ``True`` if the package was extract from binary cache,
             ``False`` otherwise
     """
-    installed_from_cache = _try_install_from_binary_cache(pkg, explicit, unsigned=unsigned)
+    timer = Timer()
+    installed_from_cache = _try_install_from_binary_cache(
+        pkg, explicit, unsigned=unsigned, timer=timer
+    )
     pkg_id = package_id(pkg)
     if not installed_from_cache:
         pre = "No binary for {0} found".format(pkg_id)
@@ -287,21 +314,18 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
 
         tty.msg("{0}: installing from source".format(pre))
         return False
-
+    timer.stop()
     tty.debug("Successfully extracted {0} from binary cache".format(pkg_id))
+    _print_timer(
+        pre=_log_prefix(pkg.name),
+        pkg_id=pkg_id,
+        fetch=timer.phases.get("search", 0) + timer.phases.get("fetch", 0),
+        build=timer.phases.get("install", 0),
+        total=timer.total,
+    )
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
     return True
-
-
-def _print_installed_pkg(message):
-    """
-    Output a message with a package icon.
-
-    Args:
-        message (str): message to be output
-    """
-    print(colorize("@*g{[+]} ") + spack.util.path.debug_padded_filter(message))
 
 
 def _process_external_package(pkg, explicit):
@@ -345,7 +369,9 @@ def _process_external_package(pkg, explicit):
         spack.store.db.add(spec, None, explicit=explicit)
 
 
-def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_for_spec=None):
+def _process_binary_cache_tarball(
+    pkg, binary_spec, explicit, unsigned, mirrors_for_spec=None, timer=None
+):
     """
     Process the binary cache tarball.
 
@@ -357,6 +383,7 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_
             otherwise, ``False``
         mirrors_for_spec (list): Optional list of concrete specs and mirrors
         obtained by calling binary_distribution.get_mirrors_for_spec().
+        timer (Timer): timer to keep track of binary install phases.
 
     Return:
         bool: ``True`` if the package was extracted from binary cache,
@@ -365,6 +392,8 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_
     download_result = binary_distribution.download_tarball(
         binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
     )
+    if timer:
+        timer.phase("fetch")
     # see #10063 : install from source if tarball doesn't exist
     if download_result is None:
         tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
@@ -381,10 +410,12 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned, mirrors_
 
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+    if timer:
+        timer.phase("install")
     return True
 
 
-def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
+def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=None):
     """
     Try to extract the package from binary cache.
 
@@ -393,16 +424,20 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
         explicit (bool): the package was explicitly requested by the user
         unsigned (bool): ``True`` if binary package signatures to be checked,
             otherwise, ``False``
+        timer (Timer):
     """
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
     matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
 
+    if timer:
+        timer.phase("search")
+
     if not matches:
         return False
 
     return _process_binary_cache_tarball(
-        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches
+        pkg, pkg.spec, explicit, unsigned, mirrors_for_spec=matches, timer=timer
     )
 
 
@@ -1841,8 +1876,7 @@ class BuildProcessInstaller(object):
         self.filter_fn = spack.util.path.padding_filter if padding else None
 
         # info/debug information
-        pid = "{0}: ".format(os.getpid()) if tty.show_pid() else ""
-        self.pre = "{0}{1}:".format(pid, pkg.name)
+        self.pre = _log_prefix(pkg.name)
         self.pkg_id = package_id(pkg)
 
     def run(self):
@@ -1885,12 +1919,12 @@ class BuildProcessInstaller(object):
             # Run post install hooks before build stage is removed.
             spack.hooks.post_install(self.pkg.spec)
 
-        build_time = self.timer.total - self.pkg._fetch_time
-        tty.msg(
-            "{0} Successfully installed {1}".format(self.pre, self.pkg_id),
-            "Fetch: {0}.  Build: {1}.  Total: {2}.".format(
-                _hms(self.pkg._fetch_time), _hms(build_time), _hms(self.timer.total)
-            ),
+        _print_timer(
+            pre=self.pre,
+            pkg_id=self.pkg_id,
+            fetch=self.pkg._fetch_time,
+            build=self.timer.total - self.pkg._fetch_time,
+            total=self.timer.total,
         )
         _print_installed_pkg(self.pkg.prefix)
 
@@ -2357,7 +2391,13 @@ class BuildRequest(object):
         """
         deptypes = ["link", "run"]
         include_build_deps = self.install_args.get("include_build_deps")
-        if not self.install_args.get("cache_only") or include_build_deps:
+
+        if self.pkg_id == package_id(pkg):
+            cache_only = self.install_args.get("package_cache_only")
+        else:
+            cache_only = self.install_args.get("dependencies_cache_only")
+
+        if not cache_only or include_build_deps:
             deptypes.append("build")
         if self.run_tests(pkg):
             deptypes.append("test")
@@ -2386,21 +2426,31 @@ class BuildRequest(object):
         """The specification associated with the package."""
         return self.pkg.spec
 
-    def traverse_dependencies(self):
+    def traverse_dependencies(self, spec=None, visited=None):
         """
         Yield any dependencies of the appropriate type(s)
 
         Yields:
             (Spec) The next child spec in the DAG
         """
-        get_spec = lambda s: s.spec
+        # notice: deptype is not constant across nodes, so we cannot use
+        # spec.traverse_edges(deptype=...).
 
-        deptypes = self.get_deptypes(self.pkg)
-        tty.debug("Processing dependencies for {0}: {1}".format(self.pkg_id, deptypes))
-        for dspec in self.spec.traverse_edges(
-            deptype=deptypes, order="post", root=False, direction="children"
-        ):
-            yield get_spec(dspec)
+        if spec is None:
+            spec = self.spec
+        if visited is None:
+            visited = set()
+        deptype = self.get_deptypes(spec.package)
+
+        for dep in spec.dependencies(deptype=deptype):
+            hash = dep.dag_hash()
+            if hash in visited:
+                continue
+            visited.add(hash)
+            # In Python 3: yield from self.traverse_dependencies(dep, visited)
+            for s in self.traverse_dependencies(dep, visited):
+                yield s
+            yield dep
 
 
 class InstallError(spack.error.SpackError):
