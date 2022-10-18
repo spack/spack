@@ -259,7 +259,7 @@ class BinaryCacheIndex(object):
         """
         if find_hash not in self._mirrors_for_spec:
             # Not found in the cached index, pull the latest from the server.
-            self.update()
+            self.update(with_cooldown=True)
         if find_hash not in self._mirrors_for_spec:
             return None
         results = self._mirrors_for_spec[find_hash]
@@ -290,7 +290,7 @@ class BinaryCacheIndex(object):
                         "spec": new_entry["spec"],
                     }
 
-    def update(self):
+    def update(self, with_cooldown=False):
         """Make sure local cache of buildcache index files is up to date.
         If the same mirrors are configured as the last time this was called
         and none of the remote buildcache indices have changed, calling this
@@ -342,7 +342,8 @@ class BinaryCacheIndex(object):
             if cached_mirror_url in configured_mirror_urls:
                 # Only do a fetch if the last fetch was longer than TTL ago
                 if (
-                    ttl > 0
+                    with_cooldown
+                    and ttl > 0
                     and cached_mirror_url in self._last_fetch_times
                     and now - self._last_fetch_times[cached_mirror_url] < ttl
                 ):
