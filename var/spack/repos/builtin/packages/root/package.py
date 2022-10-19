@@ -10,6 +10,19 @@ from spack.package import *
 from spack.util.environment import is_system_path
 
 
+def sanitize_environments(*args):
+    for env in args:
+        for var in (
+                "PATH",
+                "LD_LIBRARY_PATH",
+                "DYLD_LIBRARY_PATH",
+                "LIBRARY_PATH",
+                "CMAKE_PREFIX_PATH",
+                "ROOT_INCLUDE_PATH"
+        ):
+            env.prune_duplicate_paths(var)
+            env.deprioritize_system_paths(var)
+
 class Root(CMakePackage):
     """ROOT is a data analysis framework."""
 
@@ -216,8 +229,10 @@ class Root(CMakePackage):
     depends_on("libxft", when="+x")
     depends_on("libxpm", when="+x")
     depends_on("libsm", when="+x")
-    depends_on("fontconfig", when="+x")
-
+    depends_on("fontconfig", when="+x", type="build")
+    depends_on("xproto", when="+x", type="build")
+    depends_on("xextproto", when="+x", type="build")
+    
     # OpenGL
     depends_on("ftgl@2.4.0:", when="+opengl")
     depends_on("glew", when="+opengl")
@@ -410,7 +425,7 @@ class Root(CMakePackage):
         spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
-        options = []
+        options = ["--debug-find-pkg=OpenGL", "--trace-expand"]
 
         # ###################### Boolean Options ######################
         # For option list format see _process_opts(), below.
@@ -625,6 +640,8 @@ class Root(CMakePackage):
             # override with an empty value even though it may lead to link
             # warnings when building against ROOT
             env.unset("MACOSX_DEPLOYMENT_TARGET")
+        # Cleanup.
+        sanitize_environments(env)
 
     def setup_run_environment(self, env):
         env.set("ROOTSYS", self.prefix)
@@ -633,6 +650,8 @@ class Root(CMakePackage):
         # the following vars are copied from thisroot.sh; silence a cppyy warning
         env.set("CLING_STANDARD_PCH", "none")
         env.set("CPPYY_API_PATH", "none")
+        # Cleanup.
+        sanitize_environments(env)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
@@ -646,6 +665,8 @@ class Root(CMakePackage):
         if "platform=darwin" in self.spec:
             # Newer deployment targets cause fatal errors in rootcling
             env.unset("MACOSX_DEPLOYMENT_TARGET")
+        # Cleanup.
+        sanitize_environments(env)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set("ROOTSYS", self.prefix)
@@ -655,3 +676,5 @@ class Root(CMakePackage):
         env.prepend_path("ROOT_INCLUDE_PATH", dependent_spec.prefix.include)
         if "+rpath" not in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib.root)
+        # Cleanup.
+        sanitize_environments(env)

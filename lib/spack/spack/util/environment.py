@@ -80,7 +80,9 @@ def deprioritize_system_paths(paths):
     """Put system paths at the end of paths, otherwise preserving order."""
     filtered_paths = filter_system_paths(paths)
     fp = set(filtered_paths)
-    return filtered_paths + [p for p in paths if p not in fp]
+    return filtered_paths \
+        + [p for p in paths if p not in fp and p.endswith("64")] \
+        + [p for p in paths if p not in fp and not p.endswith("64")]
 
 
 def prune_duplicate_paths(paths):
