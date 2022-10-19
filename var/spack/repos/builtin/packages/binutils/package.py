@@ -2,7 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import os
 import re
+
+from llnl.util.filesystem import force_remove, working_dir
 
 from spack.package import *
 
@@ -19,6 +22,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ["^nm$", "^readelf$"]
 
+    version("2.39", sha256="da24a84fef220102dd24042df06fdea851c2614a5377f86effa28f33b7b16148")
     version("2.38", sha256="070ec71cf077a6a58e0b959f05a09a35015378c2d8a51e90f3aeabfe30590ef8")
     version("2.37", sha256="67fc1a4030d08ee877a4867d3dcab35828148f87e1fd05da6db585ed5a166bd4")
     version("2.36.1", sha256="5b4bd2e79e30ce8db0abd76dd2c2eae14a94ce212cfc59d3c37d23e24bc6d7a3")
@@ -63,6 +67,14 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
 
+    # 2.39 has an issue with acting on failed makeinfo version
+    # requirements, see:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=29476
+    patch("makeinfo-detect-2.36.patch", when="@2.39")
+    depends_on("autoconf", when="@2.39")
+    depends_on("automake", when="@2.39")
+    depends_on("libtool", when="@2.39")
+
     depends_on("zlib")
     depends_on("diffutils", type="build")
     depends_on("gettext", when="+nls")
@@ -92,6 +104,12 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
     conflicts("~ld", "+gold")
+
+    @when("@2.39")
+    @run_before("autoreconf")
+    def force_autoreconf_gprofng(self):
+        with working_dir(os.path.join(self.configure_directory, "gprofng")):
+            force_remove("configure")
 
     @classmethod
     def determine_version(cls, exe):

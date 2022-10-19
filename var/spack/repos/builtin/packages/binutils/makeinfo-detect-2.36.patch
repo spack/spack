@@ -1,0 +1,38 @@
+diff --git a/gprofng/Makefile.am b/gprofng/Makefile.am
+index 2fcd695140c..96f80157008 100644
+--- a/gprofng/Makefile.am
++++ b/gprofng/Makefile.am
+@@ -23,11 +23,14 @@ AUTOMAKE_OPTIONS = dejagnu foreign
+ if BUILD_COLLECTOR
+     COLLECTOR_SUBDIRS = libcollector
+ endif
++if BUILD_MAN
++    DOC_SUBDIR = doc
++endif
+ if BUILD_SRC
+-    SRC_SUBDIRS = src gp-display-html doc
++    SRC_SUBDIRS = src gp-display-html $(DOC_SUBDIR)
+ endif
+ SUBDIRS = $(COLLECTOR_SUBDIRS) $(SRC_SUBDIRS)
+-DIST_SUBDIRS = libcollector src gp-display-html doc
++DIST_SUBDIRS = libcollector src gp-display-html $(DOC_SUBDIR)
+ 
+ # Setup the testing framework, if you have one
+ EXPECT = expect
+diff --git a/gprofng/Makefile.in b/gprofng/Makefile.in
+index fd5279b4df1..d660f99233f 100644
+--- a/gprofng/Makefile.in
++++ b/gprofng/Makefile.in
+@@ -381,9 +381,10 @@ zlibinc = @zlibinc@
+ ACLOCAL_AMFLAGS = -I . -I .. 
+ AUTOMAKE_OPTIONS = dejagnu foreign
+ @BUILD_COLLECTOR_TRUE@COLLECTOR_SUBDIRS = libcollector
+-@BUILD_SRC_TRUE@SRC_SUBDIRS = src gp-display-html doc
++@BUILD_MAN_TRUE@DOC_SUBDIR = doc
++@BUILD_SRC_TRUE@SRC_SUBDIRS = src gp-display-html $(DOC_SUBDIR)
+ SUBDIRS = $(COLLECTOR_SUBDIRS) $(SRC_SUBDIRS)
+-DIST_SUBDIRS = libcollector src gp-display-html doc
++DIST_SUBDIRS = libcollector src gp-display-html $(DOC_SUBDIR)
+ RUNTEST = runtest
+ RUNTESTFLAGS = 
+ BASEDIR = $(srcdir)/..
