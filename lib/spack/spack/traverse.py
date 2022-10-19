@@ -57,38 +57,46 @@ class ReverseVisitor(object):
         )
 
 
-class PruneVisitor(object):
-    """A visitor that prunes edges and nodes in the DAG. Allows to accept
-    all nodes or all edges exactly once."""
+class CoverNodesVisitor(object):
+    """A visitor that traverses each node once."""
 
-    def __init__(self, visitor, cover="nodes"):
-        self.cover = cover
+    def __init__(self, visitor):
         self.visitor = visitor
         self.visited = set()
 
     def accept(self, node):
-        spec = node.edge.spec
-
         # Covering nodes means: visit nodes once and only once.
-        if self.cover == "nodes" and spec.dag_hash() in self.visited:
+        dag_hash = node.edge.spec.dag_hash()
+
+        if dag_hash in self.visited:
             return False
 
         accept = self.visitor.accept(node)
-
-        if self.cover == "nodes":
-            self.visited.add(spec.dag_hash())
-
+        self.visited.add(dag_hash)
         return accept
 
     def neighbors(self, node):
-        spec = node.edge.spec
+        return self.visitor.neighbors(node)
 
+
+class CoverEdgesVisitor(object):
+    """A visitor that traverses all edges once."""
+
+    def __init__(self, visitor):
+        self.visitor = visitor
+        self.visited = set()
+
+    def accept(self, node):
+        return self.visitor.accept(node)
+
+    def neighbors(self, node):
         # Covering edges means: drop dependencies of visited nodes.
-        if self.cover == "edges":
-            if spec.dag_hash() in self.visited:
-                return []
-            self.visited.add(spec.dag_hash())
+        dag_hash = node.edge.spec.dag_hash()
 
+        if dag_hash in self.visited:
+            return []
+
+        self.visited.add(dag_hash)
         return self.visitor.neighbors(node)
 
 
@@ -116,8 +124,10 @@ def get_visitor_from_args(cover, direction, deptype, visitor=None):
         A visitor
     """
     visitor = visitor or BaseVisitor(deptype)
-    if not cover == "paths":
-        visitor = PruneVisitor(visitor, cover)
+    if cover == "nodes":
+        visitor = CoverNodesVisitor(visitor)
+    elif cover == "edges":
+        visitor = CoverEdgesVisitor(visitor)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
     return visitor
