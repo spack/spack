@@ -700,6 +700,8 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         settings = spack.config.get("packages").get(spec.name, {}).get("package_attributes", {})
         for key, val in settings.items():
             setattr(self, key, val)
+        # Note: the potential issue with setting these attributes here vs.
+        # in Repo.get is that subclasses could override these properties
 
     @classmethod
     def possible_dependencies(
