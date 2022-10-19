@@ -721,7 +721,7 @@ def write_buildinfo_file(spec, workdir, rel=False):
     prefix_to_hash = dict()
     prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
     deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps:
+    for d in deps + spec.dependencies(deptype="run"):
         prefix_to_hash[str(d.prefix)] = d.dag_hash()
 
     # Create buildinfo data and write it to disk
@@ -1474,7 +1474,7 @@ def relocate_package(spec, allow_root):
     hash_to_prefix = dict()
     hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps:
+    for d in new_deps + spec.dependencies(deptype="run"):
         hash_to_prefix[d.format("{hash}")] = str(d.prefix)
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
