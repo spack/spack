@@ -359,10 +359,11 @@ def ci_rebuild(args):
             mirror_msg = "artifact buildcache enabled, mirror url: {0}".format(pipeline_mirror_url)
             tty.debug(mirror_msg)
 
-    # Get the concrete spec to be built by this job.  We're using all 32 chars
-    # of the hash, so the list will just have one entry, unless there are hash
-    # collisions.
-    job_spec = env.get_by_hash(job_spec_dag_hash)[0]
+    # Get the concrete spec to be built by this job.
+    try:
+        job_spec = env.get_one_by_hash(job_spec_dag_hash)
+    except AssertionError:
+        tty.die("Could not find environment spec with hash {0}".format(job_spec_dag_hash))
 
     job_spec_json_file = "{0}.json".format(job_spec_pkg_name)
     job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
