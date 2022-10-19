@@ -6,7 +6,6 @@
 import glob
 import json
 import os
-import pathlib
 import platform
 import re
 import subprocess
@@ -1012,10 +1011,10 @@ config.update(get_paths())
             # but doesn't have the correct filename suffix. This confuses several
             # packages (e.g. met) that use python.libs.ld_flags. Repair this by
             # pointing back to the symbolic link .../libs/libpython3.9.dylib
-            file_extension_shared = pathlib.Path(config['LDLIBRARY']).suffix
+            file_extension_shared = os.path.splitext(config['LDLIBRARY'])[-1]
             if file_extension_shared=='':
                 config['LDLIBRARY'] = "libpython{}.{}".format(version, dso_suffix)
-            file_extension_static = pathlib.Path(config['LIBRARY']).suffix
+            file_extension_static = os.path.splitext(config['LIBRARY'])[-1]
             if file_extension_static=='':
                 config['LIBRARY'] = "libpython{}.a".format(version)
             self._config_vars[dag_hash] = config
