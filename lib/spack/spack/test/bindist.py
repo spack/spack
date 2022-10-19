@@ -453,10 +453,11 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     # Update index
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
 
-    # Check dependency not in buildcache
-    cache_list = buildcache_cmd("list", "--allarch")
-    assert "libdwarf" in cache_list
-    assert "libelf" not in cache_list
+    with spack.config.override("config:binary_index_ttl", 0):
+        # Check dependency not in buildcache
+        cache_list = buildcache_cmd("list", "--allarch")
+        assert "libdwarf" in cache_list
+        assert "libelf" not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):
