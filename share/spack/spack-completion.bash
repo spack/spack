@@ -412,8 +412,12 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="status enable disable reset root list trust untrust add remove mirror"
+        SPACK_COMPREPLY="now status enable disable reset root list trust untrust add remove mirror"
     fi
+}
+
+_spack_bootstrap_now() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_bootstrap_status() {
