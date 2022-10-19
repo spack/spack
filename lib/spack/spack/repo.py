@@ -1169,7 +1169,7 @@ class Repo(object):
 
         package_class = self.get_pkg_class(spec.name)
         try:
-            package_instance = package_class(spec)
+            return package_class(spec)
         except spack.error.SpackError:
             # pass these through as their error messages will be fine.
             raise
@@ -1181,15 +1181,6 @@ class Repo(object):
             if spack.config.get("config:debug"):
                 sys.excepthook(*sys.exc_info())
             raise FailedConstructorError(spec.fullname, *sys.exc_info())
-
-        # packages.yaml config can override package attributes. This is set
-        # on the instance rather than the class since the configuration can
-        # change between calls to repo.get for the same package.
-        settings = spack.config.get("packages").get(spec.name, {}).get("set", {})
-        for key, val in settings.items():
-            setattr(package_instance, key, val)
-
-        return package_instance
 
     @autospec
     def dump_provenance(self, spec, path):

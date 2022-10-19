@@ -694,6 +694,13 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
 
         super(PackageBase, self).__init__()
 
+        # packages.yaml config can override package attributes. This is set
+        # on the instance rather than the class since the configuration can
+        # change between calls to repo.get for the same package.
+        settings = spack.config.get("packages").get(spec.name, {}).get("set", {})
+        for key, val in settings.items():
+            setattr(self, key, val)
+
     @classmethod
     def possible_dependencies(
         cls,
