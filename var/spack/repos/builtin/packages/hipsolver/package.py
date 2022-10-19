@@ -54,8 +54,18 @@ class Hipsolver(CMakePackage):
     for ver in ["master", "develop"]:
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
-
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3", "5.3.0"]:
+    for ver in [
+        "4.5.0",
+        "4.5.2",
+        "5.0.0",
+        "5.0.2",
+        "5.1.0",
+        "5.1.3",
+        "5.2.0",
+        "5.2.1",
+        "5.2.3",
+        "5.3.0",
+    ]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
