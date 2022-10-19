@@ -1,0 +1,29 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class PyMystParser(PythonPackage):
+    """A Sphinx and Docutils extension to parse MyST, a rich and
+    extensible flavour of Markdown for authoring technical and
+    scientific documentation."""
+
+    homepage = "https://github.com/executablebooks/MyST-Parser"
+    pypi = "myst-parser/myst-parser-0.18.1.tar.gz"
+
+    version("0.18.1", sha256="79317f4bb2c13053dd6e64f9da1ba1da6cd9c40c8a430c447a7b146a594c246d")
+
+    depends_on("py-setuptools", type="build")
+    depends_on("py-sphinx@4.0.0:", type=("build", "run"))
+
+    # grabbing depencencies from
+    # https://github.com/executablebooks/MyST-Parser/blob/master/pyproject.toml
+    depends_on("py-docutils@0.15:", type=("build", "run"))
+    #depends_on("py-jinja2", type=("build", "run")) # let sphinx decide version
+    depends_on("py-markdown-it-py@1.0.0:", type=("build", "run"))
+    depends_on("py-mdit-py-plugins@0.3.1:", type=("build", "run"))
+    depends_on("py-pyyaml@5.0:", type=("build", "run"))
+    depends_on("py-typing-extensions@4.0:", type=("build", "run"))
