@@ -135,7 +135,7 @@ def init_queue(specs):
 
 
 def traverse_breadth_first_edges(
-    specs, cover="nodes", direction="children", deptype="all", depth=False
+    specs, root=True, cover="nodes", direction="children", deptype="all", depth=False
 ):
     """
     Generator that yields edges from the DAG in breadth-first order, starting
@@ -144,6 +144,7 @@ def traverse_breadth_first_edges(
     Arguments:
 
         specs (list): List of root specs (considered to be depth 0)
+        root (bool): Yield the root nodes themselves
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
@@ -176,17 +177,18 @@ def traverse_breadth_first_edges(
         if not visitor.accept(node):
             continue
 
-        if depth:
-            yield node.depth, node.edge
-        else:
-            yield node.edge
+        if root or node.depth > 0:
+            if depth:
+                yield node.depth, node.edge
+            else:
+                yield node.edge
 
         for edge in visitor.neighbors(node):
             queue.append(EdgeAndDepth(edge, node.depth + 1))
 
 
 def traverse_breadth_first_nodes(
-    specs, cover="nodes", direction="children", deptype="all", depth=False
+    specs, root=True, cover="nodes", direction="children", deptype="all", depth=False
 ):
     """
     Generator that yields specs from the DAG in breadth-first order, starting
@@ -194,6 +196,7 @@ def traverse_breadth_first_nodes(
 
     Arguments:
         specs (list): List of root specs (considered to be depth 0)
+        root (bool): Yield the root nodes themselves
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
@@ -213,7 +216,7 @@ def traverse_breadth_first_nodes(
     Yields:
         By default Spec, or a tuple of depth and Spec if depth was set to ``True``.
     """
-    for item in traverse_breadth_first_edges(specs, cover, direction, deptype, depth):
+    for item in traverse_breadth_first_edges(specs, root, cover, direction, deptype, depth):
         if depth:
             yield item[0], item[1].spec
         else:
