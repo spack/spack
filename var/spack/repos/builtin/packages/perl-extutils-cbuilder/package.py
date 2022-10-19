@@ -14,8 +14,14 @@ class PerlExtutilsCbuilder(PerlPackage):
 
     maintainers = ["chissg", "gartung", "marcmengel", "vitodb"]  # AUTO-CPAN2Spack
 
-    version("0.28.23.6", sha256="abc21827eb8a513171bf7fdecefce9945132cb76db945036518291f607b1491f")
-    version("0.28.23.5", sha256="a0f454d84eb599bf0c11b976ab2ce39ada49bf84c323c7a53fe9f8941ee9378a")
+    version("0.28.2.36",
+            url="https://cpan.metacpan.org/authors/id/A/AM/AMBS/ExtUtils-CBuilder-0.280236.tar.gz",
+            sha256="abc21827eb8a513171bf7fdecefce9945132cb76db945036518291f607b1491f",
+            )
+    version("0.28.2.35",
+            url="https://cpan.metacpan.org/authors/id/A/AM/AMBS/ExtUtils-CBuilder-0.280235.tar.gz",
+            sha256="a0f454d84eb599bf0c11b976ab2ce39ada49bf84c323c7a53fe9f8941ee9378a",
+            )
 
     provides("perl-extutils-cbuilder-base")  # AUTO-CPAN2Spack
     provides("perl-extutils-cbuilder-platform-unix")  # AUTO-CPAN2Spack
