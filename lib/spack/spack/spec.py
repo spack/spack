@@ -107,6 +107,7 @@ import spack.repo
 import spack.solver
 import spack.store
 import spack.target
+import spack.traverse
 import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
@@ -4614,12 +4615,19 @@ class Spec(object):
         show_types = kwargs.pop("show_types", False)
         deptypes = kwargs.pop("deptypes", "all")
         recurse_dependencies = kwargs.pop("recurse_dependencies", True)
+        breadth_first = kwargs.pop("breadth_first", False)
         lang.check_kwargs(kwargs, self.tree)
 
         out = ""
-        for d, dep_spec in self.traverse_edges(
-            order="pre", cover=cover, depth=True, deptype=deptypes
-        ):
+
+        if breadth_first and cover in ("nodes", "edges"):
+            generator = spack.traverse.traverse_breadth_first_tree(
+                [self], cover=cover, deptype=deptypes
+            )
+        else:
+            generator = self.traverse_edges(order="pre", cover=cover, depth=True, deptype=deptypes)
+
+        for d, dep_spec in generator:
             node = dep_spec.spec
 
             if prefix is not None:
