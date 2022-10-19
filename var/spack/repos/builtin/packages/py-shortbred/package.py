@@ -16,6 +16,7 @@ class PyShortbred(PythonPackage):
 
     version("0.9.5", sha256="a6ac09b858f14e2c0b8622b122ec91e5d02d32c12429cad66626d7ef26df10d5")
 
+    depends_on("python@2.7.9:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-biopython@1.65:", type="run")
     depends_on("blast-plus@2.2.28:", type="run")

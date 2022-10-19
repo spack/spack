@@ -15,7 +15,7 @@ class Shortbred(Package):
 
     version(
         "0.9.4",
-        sha256="a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba", 
+        sha256="a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba",
         deprecated=True
     )
 
