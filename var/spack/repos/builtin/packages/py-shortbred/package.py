@@ -8,21 +8,18 @@ from spack.package import *
 
 
 class PyShortbred(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """ShortBRED is a system for profiling protein families of interest at
+    very high specificity in shotgun meta'omic sequencing data."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://huttenhower.sph.harvard.edu/shortbred/"
     pypi = "shortbred/shortbred-0.9.5.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ["github_user1", "github_user2"]
 
     version("0.9.5", sha256="a6ac09b858f14e2c0b8622b122ec91e5d02d32c12429cad66626d7ef26df10d5")
 
-    depends_on("python@3.4:", type=("build", "run"))
+    depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-
-    # FIXME: Add additional dependencies if required.
-    # depends_on("py-foo", type=("build", "run"))
-
+    depends_on("py-biopython", type="run")
+    depends_on("blast-plus@2.2.28:", type="run")
+    depends_on("usearch@6.0.307:", type="run")
+    depends_on("muscle@3.8.31:", type="run")
+    depends_on("cdhit@4.6:", type="run")
