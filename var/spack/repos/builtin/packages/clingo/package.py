@@ -121,5 +121,8 @@ class Clingo(CMakePackage):
 
         return args
 
-    def win_setup_rpath(self):
-        self.add_internal_links(os.path.join(self.prefix.Lib, "site-packages"))
+    def win_add_linked_library(self):
+        if "+python" in self.spec:
+            return [self.spec["python"].platlib]
+        else:
+            return []

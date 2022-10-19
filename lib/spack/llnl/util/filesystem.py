@@ -2224,9 +2224,9 @@ class WindowsSimulatedRPath(object):
                 root
         """
         self.pkg = package
-        self._addl_rpaths = []
+        self._addl_rpaths = set()
         self.link_install_prefix = link_install_prefix
-        self._internal_links = []
+        self._internal_links = set()
 
     @property
     def link_dest(self):
@@ -2236,21 +2236,17 @@ class WindowsSimulatedRPath(object):
         if hasattr(self.pkg, "libs") and self.pkg.libs:
             pkg_libs = set(self.pkg.libs.directories)
         else:
-            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
-        pkg_libs.add(self.pkg.prefix.bin)
+            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64, self.pkg.prefix.bin))
         return pkg_libs
 
-    def add_internal_links(self, *dest):
+    def add_library_dependent(self, *dest):
         """
-        Incorporate additional paths into the rpath (sym)linking scheme.
+        Add paths to set of common paths that need to link against other libraries
 
-        Paths provided to this method are linked against a packages libraries/binaries
-        i.e. ./bin -> ./site-packages
-
-        Specified paths should be outside of a package's lib, lib64, and bin
+        Specified paths should be outside of a package's common link paths, i.e. the lib, lib64, and bin
         directories.
         """
-        self._internal_links.extend(dest)
+        self._internal_links = self._internal_links | set(dest)
 
     @property
     def internal_link_targets(self):
@@ -2276,7 +2272,7 @@ class WindowsSimulatedRPath(object):
             dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
         return set(dependent_libs)
 
-    def include_additional_link_paths(self, *paths):
+    def add_rpath(self, *paths):
         """
         Add libraries found at the root of provided paths to runtime linking
 
@@ -2288,7 +2284,7 @@ class WindowsSimulatedRPath(object):
         Args:
             *paths (str): arbitrary number of paths to be added to runtime linking
         """
-        self._addl_rpaths.extend(paths)
+        self._addl_rpaths = self._addl_rpaths | set(paths)
 
     def _link(self, path, dest):
         file_name = os.path.basename(path)

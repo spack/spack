@@ -211,21 +211,30 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def add_search_paths(self, *paths):
-        """Add additional rpaths that are not implicitly included in the search
-        scheme
+    def win_add_linked_library(self):
+        """Return extra set of directories that require linking for package
+
+        This method should be overridden by packages that produce
+        binaries/libraries/python extension modules/etc that are installed into
+        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        but still require linking against one of the packages dependencies, or
+        other components of the package itself. No-op otherwise.
+
+        Returns:
+            List of additional directories that require linking
         """
-        self.win_rpath.include_additional_link_paths(*paths)
+        return []
 
-    def add_internal_links(self, *paths):
-        """Add additional rpaths internal to a package, i.e.
-        linking pkg.prefix.bin to pkg.prefix.lib.site-packages"""
-        self.win_rpath.add_internal_links(*paths)
+    def win_add_rpath(self):
+        """Return extra set of rpaths for package
 
-    def win_setup_rpath(self):
-        """This method should be overridden by packages needing bespoke RPATH
-        support. No-op otherwise"""
-        pass
+        This method should be overridden by packages needing to
+        include additional paths to be searched by rpath. No-op otherwise
+
+        Returns:
+            List of additional rpaths
+        """
+        return []
 
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
@@ -233,7 +242,8 @@ class WindowsRPathMeta(object):
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
-            self.win_setup_rpath()
+            self.win_rpath.add_library_dependent(*self.win_add_linked_library())
+            self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
 
 
@@ -2808,6 +2818,8 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
+        if is_windows:
+            rpaths.append(self.prefix.bin)
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
