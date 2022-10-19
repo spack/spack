@@ -19,6 +19,7 @@ from contextlib import closing
 import ruamel.yaml as yaml
 from six.moves.urllib.error import HTTPError, URLError
 
+import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -653,7 +654,7 @@ def get_buildfile_manifest(spec):
 
         for filename in files:
             path_name = os.path.join(root, filename)
-            m_type, m_subtype = relocate.mime_type(path_name)
+            m_type, m_subtype = fsys.mime_type(path_name)
             rel_path_name = os.path.relpath(path_name, spec.prefix)
             added = False
 

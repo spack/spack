@@ -57,10 +57,10 @@ def exclude_variants(variants, exclude):
 class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     """ECP Data & Vis SDK"""
 
-    homepage = "https://github.com/chuckatkins/ecp-data-viz-sdk"
+    homepage = "https://ecp-data-vis-sdk.github.io/"
 
     tags = ["ecp"]
-    maintainers = ["chuckatkins", "kwryankrattiger"]
+    maintainers = ["kwryankrattiger", "svenevs"]
 
     version("1.0")
 
@@ -99,7 +99,7 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on(
         "adios2+shared+mpi+python+blosc+sst+ssc+dataman",
         when="+adios2",
-        propagate=["hdf5", "sz", "zfp", "fortran"],
+        propagate=["cuda", "hdf5", "sz", "zfp", "fortran"] + cuda_arch_variants,
     )
 
     dav_sdk_depends_on("darshan-runtime+mpi", when="+darshan", propagate=["hdf5"])

@@ -623,31 +623,6 @@ The following two Environment manifests are identical:
 Spec matrices can be used to install swaths of software across various
 toolchains.
 
-The concretization logic for spec matrices differs slightly from the
-rest of Spack. If a variant or dependency constraint from a matrix is
-invalid, Spack will reject the constraint and try again without
-it. For example, the following two Environment manifests will produce
-the same specs:
-
-.. code-block:: yaml
-
-   spack:
-     specs:
-       - matrix:
-           - [zlib, libelf, hdf5+mpi]
-           - [^mvapich2@2.2, ^openmpi@3.1.0]
-
-   spack:
-     specs:
-       - zlib
-       - libelf
-       - hdf5+mpi ^mvapich2@2.2
-       - hdf5+mpi ^openmpi@3.1.0
-
-This allows one to create toolchains out of combinations of
-constraints and apply them somewhat indiscriminately to packages,
-without regard for the applicability of the constraint.
-
 ^^^^^^^^^^^^^^^^^^^^
 Spec List References
 ^^^^^^^^^^^^^^^^^^^^
@@ -1011,7 +986,7 @@ A typical workflow is as follows:
    spack env create -d .
    spack -e . add perl
    spack -e . concretize
-   spack -e . env depfile > Makefile
+   spack -e . env depfile -o Makefile
    make -j64
 
 This generates a ``Makefile`` from a concretized environment in the
@@ -1024,7 +999,6 @@ load, even when packages are built in parallel.
 By default the following phony convenience targets are available:
 
 - ``make all``: installs the environment (default target);
-- ``make fetch-all``: only fetch sources of all packages;
 - ``make clean``: cleans files used by make, but does not uninstall packages.
 
 .. tip::
@@ -1034,8 +1008,17 @@ By default the following phony convenience targets are available:
    printed orderly per package install. To get synchronized output with colors,
    use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
 
-The following advanced example shows how generated targets can be used in a
-``Makefile``:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Specifying dependencies on generated ``make`` targets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An interesting question is how to include generated ``Makefile``\s in your own
+``Makefile``\s. This comes up when you want to install an environment that provides
+executables required in a command for a make target of your own.
+
+The example below shows how to accomplish this: the ``env`` target specifies
+the generated ``spack/env`` target as a prerequisite, meaning that the environment
+gets installed and is available for use in the ``env`` target.
 
 .. code:: Makefile
 
@@ -1061,11 +1044,10 @@ The following advanced example shows how generated targets can be used in a
    include env.mk
    endif
 
-When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
-from its rule, which triggers concretization. When done, the generated target
-``spack/env`` is available. In the above example, the ``env`` target uses this generated
-target as a prerequisite, meaning that it can make use of the installed packages in
-its commands.
+This works as follows: when ``make`` is invoked, it first "remakes" the missing
+include ``env.mk`` as there is a target for it. This triggers concretization of
+the environment and makes spack output ``env.mk``. At that point the
+generated target ``spack/env`` becomes available through ``include env.mk``.
 
 As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
 the include is conditional.
@@ -1076,3 +1058,24 @@ the include is conditional.
    the ``--make-target-prefix`` flag and use the non-phony target
    ``<target-prefix>/env`` as prerequisite, instead of the phony target
    ``<target-prefix>/all``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building a subset of the environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The generated ``Makefile``\s contain install targets for each spec. Given the hash
+of a particular spec, you can use the ``.install/<hash>`` target to install the
+spec with its dependencies. There is also ``.install-deps/<hash>`` to *only* install
+its dependencies. This can be useful when certain flags should only apply to
+dependencies. Below we show a use case where a spec is installed with verbose
+output (``spack install --verbose``) while its dependencies are installed silently:
+
+.. code:: console
+
+   $ spack env depfile -o Makefile --make-target-prefix my_env
+
+   # Install dependencies in parallel, only show a log on error.
+   $ make -j16 my_env/.install-deps/<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
+
+   # Install the root spec with verbose output.
+   $ make -j16 my_env/.install/<hash> SPACK_INSTALL_FLAGS=--verbose

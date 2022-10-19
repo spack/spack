@@ -17,6 +17,7 @@ class Parallelio(CMakePackage):
 
     maintainers = ["jedwards4b"]
 
+    version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
     version("2_5_8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
     version("2_5_7", sha256="af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd")
     version("2_5_4", sha256="e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65")

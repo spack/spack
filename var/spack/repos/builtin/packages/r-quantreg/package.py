@@ -19,6 +19,7 @@ class RQuantreg(RPackage):
 
     cran = "quantreg"
 
+    version("5.94", sha256="52d585ccb972ed7726b7d083f5635d3e42915847398e00fd6e0f69a5fe1b17c1")
     version("5.93", sha256="d4a94984a500bf4c92dec21013441f001a4aa0541c4c651384e257a4b4e9e539")
     version("5.88", sha256="1940e553711ed50655b2692ba29432d1083ed83c2db06e31a031ce8f82823a3f")
     version("5.87", sha256="9ad7ef09e5f53b89ef09dea3a1aa25cfda9f3f2528994f874ec1cd9ca7fda38e")

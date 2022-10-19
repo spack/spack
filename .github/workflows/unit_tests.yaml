@@ -37,10 +37,10 @@ jobs:
           on_develop: false
 
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install System packages
@@ -86,17 +86,17 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine -a
           coverage xml
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
   # Test shell integration
   shell:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
         python-version: '3.10'
     - name: Install System packages
@@ -117,7 +117,7 @@ jobs:
           COVERAGE: true
       run: |
           share/spack/qa/run-shell-tests
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: shelltests,linux
 
@@ -132,7 +132,7 @@ jobs:
           dnf install -y \
               bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
               make patch tcl unzip which xz
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
     - name: Setup repo and non-root user
       run: |
           git --version
@@ -150,10 +150,10 @@ jobs:
   clingo-cffi:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
         python-version: '3.10'
     - name: Install System packages
@@ -179,7 +179,7 @@ jobs:
           share/spack/qa/run-unit-tests
           coverage combine -a
           coverage xml
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # @v2.1.0
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
       with:
         flags: unittests,linux,clingo
   # Run unit tests on MacOS
@@ -189,10 +189,10 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@b55428b1882923874294fa556849718a1d7f2ca5 # @v2
+    - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
@@ -219,6 +219,6 @@ jobs:
         # Delete the symlink going from ./lib/spack/docs/_spack_root back to
         # the initial directory, since it causes ELOOP errors with codecov/actions@2
         rm lib/spack/docs/_spack_root
-    - uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+    - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos

@@ -291,7 +291,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("rocfft")
         depends_on("hipfft")
-        depends_on("rccl")
+        depends_on("rccl", when="+nccl")
         depends_on("hipsparse")
         depends_on("hipcub")
         depends_on("rocsolver")
@@ -348,7 +348,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("cudnn@:6", when="@0.5:0.6 +cuda")
     depends_on("cudnn@:7", when="@0.7:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
-    depends_on("nccl", when="+nccl")
+    depends_on("nccl", when="+nccl+cuda")
     depends_on("mpi", when="+mpi")
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
@@ -418,7 +418,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         msg="Currently TensorRT is only supported on Linux platform",
     )
     conflicts("+nccl", when="@:1.7")
-    conflicts("+nccl", when="~cuda")
+    conflicts("+nccl", when="~cuda~rocm")
     conflicts(
         "+nccl", when="platform=darwin", msg="Currently NCCL is only supported on Linux platform"
     )
@@ -440,8 +440,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
-    # TODO: why is this needed?
+    # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
+    # old downloads are removed from that site immediately after a new release.
+    # If the tf mirrors don't work, make sure the fallback is to something existing.
     patch("url-zlib.patch", when="@0.10.0")
+    # bump to zlib 1.2.13
+    patch(
+        "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
+        sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
+        when="@2.9:2.10.0",
+    )
     # TODO: why is this needed?
     patch("crosstool.patch", when="@0.10.0+cuda")
     # Avoid build error: "no such package '@io_bazel_rules_docker..."

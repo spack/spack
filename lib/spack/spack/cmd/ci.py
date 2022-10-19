@@ -7,7 +7,6 @@ import json
 import os
 import shutil
 import sys
-import tempfile
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -19,7 +18,6 @@ import spack.config as cfg
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
-import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -285,6 +283,8 @@ def ci_rebuild(args):
     spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
+    spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
+    rebuild_everything = get_env_var("SPACK_REBUILD_EVERYTHING")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
     ci_project_dir = get_env_var("CI_PROJECT_DIR")
@@ -325,6 +325,8 @@ def ci_rebuild(args):
             spack_is_pr_pipeline, spack_is_develop_pipeline
         )
     )
+
+    full_rebuild = True if rebuild_everything and rebuild_everything.lower() == "true" else False
 
     # If no override url exists, then just push binary package to the
     # normal remote mirror url.
@@ -449,6 +451,8 @@ def ci_rebuild(args):
         fd.write(spack_info.encode("utf8"))
         fd.write(b"\n")
 
+    pipeline_mirrors = []
+
     # If we decided there should be a temporary storage mechanism, add that
     # mirror now so it's used when we check for a hash match already
     # built for this spec.
@@ -456,22 +460,29 @@ def ci_rebuild(args):
         spack.mirror.add(
             spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url, cfg.default_modify_scope()
         )
+        pipeline_mirrors.append(pipeline_mirror_url)
 
     # Check configured mirrors for a built spec with a matching hash
     mirrors_to_check = None
-    if remote_mirror_override and spack_pipeline_type == "spack_protected_branch":
-        # Passing "mirrors_to_check" below means we *only* look in the override
-        # mirror to see if we should skip building, which is what we want.
-        mirrors_to_check = {"override": remote_mirror_override}
+    if remote_mirror_override:
+        if spack_pipeline_type == "spack_protected_branch":
+            # Passing "mirrors_to_check" below means we *only* look in the override
+            # mirror to see if we should skip building, which is what we want.
+            mirrors_to_check = {"override": remote_mirror_override}
 
-        # Adding this mirror to the list of configured mirrors means dependencies
-        # could be installed from either the override mirror or any other configured
-        # mirror (e.g. remote_mirror_url which is defined in the environment or
-        # pipeline_mirror_url), which is also what we want.
-        spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
+            # Adding this mirror to the list of configured mirrors means dependencies
+            # could be installed from either the override mirror or any other configured
+            # mirror (e.g. remote_mirror_url which is defined in the environment or
+            # pipeline_mirror_url), which is also what we want.
+            spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
+        pipeline_mirrors.append(remote_mirror_override)
 
-    matches = bindist.get_mirrors_for_spec(
-        job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+    matches = (
+        None
+        if full_rebuild
+        else bindist.get_mirrors_for_spec(
+            job_spec, mirrors_to_check=mirrors_to_check, index_only=False
+        )
     )
 
     if matches:
@@ -494,6 +505,13 @@ def ci_rebuild(args):
         # Now we are done and successful
         sys.exit(0)
 
+    # Before beginning the install, if this is a "rebuild everything" pipeline, we
+    # only want to keep the mirror being used by the current pipeline as it's binary
+    # package destination.  This ensures that the when we rebuild everything, we only
+    # consume binary dependencies built in this pipeline.
+    if full_rebuild:
+        spack_ci.remove_other_mirrors(pipeline_mirrors, cfg.default_modify_scope())
+
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
@@ -508,6 +526,8 @@ def ci_rebuild(args):
             "install",
             "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
+            "--use-buildcache",
+            "dependencies:only,package:never",
         ]
     )
 
@@ -526,10 +546,8 @@ def ci_rebuild(args):
     if compiler_action != "FIND_ANY":
         install_args.append("--no-add")
 
-    # TODO: once we have the concrete spec registry, use the DAG hash
-    # to identify the spec to install, rather than the concrete spec
-    # json file.
-    install_args.extend(["-f", job_spec_json_path])
+    # Identify spec to install by hash
+    install_args.append("/{0}".format(job_spec.dag_hash()))
 
     tty.debug("Installing {0} from source".format(job_spec.name))
     install_exit_code = spack_ci.process_command("install", install_args, repro_dir)
@@ -547,34 +565,14 @@ def ci_rebuild(args):
             dev_fail_hash = job_spec.dag_hash()
             broken_spec_path = url_util.join(broken_specs_url, dev_fail_hash)
             tty.msg("Reporting broken develop build as: {0}".format(broken_spec_path))
-            tmpdir = tempfile.mkdtemp()
-            empty_file_path = os.path.join(tmpdir, "empty.txt")
-
-            broken_spec_details = {
-                "broken-spec": {
-                    "job-url": get_env_var("CI_JOB_URL"),
-                    "pipeline-url": get_env_var("CI_PIPELINE_URL"),
-                    "concrete-spec-dict": job_spec.to_dict(hash=ht.dag_hash),
-                }
-            }
-
-            try:
-                with open(empty_file_path, "w") as efd:
-                    efd.write(syaml.dump(broken_spec_details))
-                web_util.push_to_url(
-                    empty_file_path,
-                    broken_spec_path,
-                    keep_original=False,
-                    extra_args={"ContentType": "text/plain"},
-                )
-            except Exception as err:
-                # If there is an S3 error (e.g., access denied or connection
-                # error), the first non boto-specific class in the exception
-                # hierarchy is Exception.  Just print a warning and return
-                msg = "Error writing to broken specs list {0}: {1}".format(broken_spec_path, err)
-                tty.warn(msg)
-            finally:
-                shutil.rmtree(tmpdir)
+            spack_ci.write_broken_spec(
+                broken_spec_path,
+                job_spec_pkg_name,
+                spack_ci_stack_name,
+                get_env_var("CI_JOB_URL"),
+                get_env_var("CI_PIPELINE_URL"),
+                job_spec.to_dict(hash=ht.dag_hash),
+            )
 
     # We generated the "spack install ..." command to "--keep-stage", copy
     # any logs from the staging directory to artifacts now

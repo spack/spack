@@ -504,7 +504,7 @@ class GitVersion(VersionBase):
     1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
     2) GitVersions requiring commit lookups
 
-    Git ref versions that are not paried with a known version
+    Git ref versions that are not paired with a known version
     are handled separately from all other version comparisons.
     When Spack identifies a git ref version, it associates a
     ``CommitLookup`` object with the version. This object
@@ -600,7 +600,7 @@ class GitVersion(VersionBase):
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler. In the case of two GitVersions we require the ref_versions
-        to satisify one another and the versions to be an exact match.
+        to satisfy one another and the versions to be an exact match.
         """
 
         self_cmp = self._cmp(other.ref_lookup)
