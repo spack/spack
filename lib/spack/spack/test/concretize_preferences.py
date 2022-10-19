@@ -184,7 +184,9 @@ class TestConcretizePreferences(object):
         applied correctly
         """
         update_packages(
-            "mpileaks", "package_attributes", {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"}
+            "mpileaks",
+            "package_attributes",
+            {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
         )
         spec = concretize("mpileaks")
         assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
