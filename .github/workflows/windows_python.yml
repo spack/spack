@@ -101,7 +101,7 @@ jobs:
     - name: Run Installer
       run: |
         ./share/spack/qa/setup_spack_installer.ps1
-        spack make-installer -g SILENT pkg
+        spack make-installer -s . -g SILENT pkg
         echo "installer_root=$((pwd).Path)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       env:
         ProgressPreference: SilentlyContinue
