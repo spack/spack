@@ -1362,6 +1362,16 @@ class Repo(object):
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
+        new_cfg_settings = spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
+        overidden_attrs = getattr(cls, 'overidden_attrs', {})
+        for key, val in overidden_attrs.items():
+            setattr(cls, key, val)
+        new_overidden_attrs = {}
+        for key, val in new_cfg_settings.items():
+            new_overidden_attrs[key] = getattr(cls, key)
+            setattr(cls, key, val)
+        setattr(cls, 'overidden_attrs', dict(new_overidden_attrs))
+
         return cls
 
     def __str__(self):
