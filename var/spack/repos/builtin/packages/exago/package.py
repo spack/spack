@@ -73,40 +73,6 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("{0} build_type=Release".format(pkg), when="build_type=Release")
         depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="build_type=RelWithDebInfo")
 
-    # Force RelWithDebInfo when not using release
-    conflicts(
-        "build_type=Release",
-        when="build_type=RelWithDebInfo",
-        msg="Use RelWithDebInfo when not using release build type",
-    )
-    conflicts(
-        "build_type=Debug",
-        when="build_type=RelWithDebInfo",
-        msg="Use RelWithDebInfo when not using release build type",
-    )
-    conflicts(
-        "build_type=MinSizeRel",
-        when="build_type=RelWithDebInfo",
-        msg="Use RelWithDebInfo when not using release build type",
-    )
-
-    # Force Release mode when using optimizations
-    conflicts(
-        "build_type=RelWithDebInfo",
-        when="build_type=Release",
-        msg="Use Release when using release build type",
-    )
-    conflicts(
-        "build_type=Debug",
-        when="build_type=Release",
-        msg="Use Release when using release build type",
-    )
-    conflicts(
-        "build_type=MinSizeRel",
-        when="build_type=Release",
-        msg="Use Release when using release build type",
-    )
-
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
     # ^ need to depend when both hpctoolkit and tau
