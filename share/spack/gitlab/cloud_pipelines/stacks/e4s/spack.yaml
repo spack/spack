@@ -228,6 +228,7 @@ spack:
     +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
     +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     +rocm amdgpu_target=gfx90a
+  - umpire +rocm amdgpu_target=gfx90a
   - upcxx +rocm amdgpu_target=gfx90a
   - vtk-m ~openmp +rocm amdgpu_target=gfx90a
 
@@ -244,7 +245,6 @@ spack:
   # ROCm failures
   #- chai ~benchmarks +rocm amdgpu_target=gfx90a  # umpire: Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
-  #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
   mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
