@@ -50,7 +50,12 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
-    variant("debuginfod", default=False, description="Enable libdebuginfod support.", when="@0.179:")
+    variant(
+        "debuginfod",
+        default=False,
+        description="Enable libdebuginfod support.",
+        when="@0.179:",
+    )
 
     # elfutils-0.185-static-inline.patch
     # elflint.c (buffer_left): Mark as 'inline' to avoid external linkage failure.
