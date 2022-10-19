@@ -610,7 +610,7 @@ class CompilerSpec(object):
             # Note: This may be impossible to reach by the current parser
             # Keeping it in case the implementation changes.
             raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+                "A spec ({0}) cannot contain multiple version signifiers. Use a version list instead.".format(self)
             )
         self.versions = vn.VersionList()
         for version in version_list:
@@ -1396,7 +1396,7 @@ class Spec(object):
         # If it already has a non-trivial version list, this is an error
         if self.versions and self.versions != vn.VersionList(":"):
             raise MultipleVersionError(
-                "A spec cannot contain multiple version signifiers." " Use a version list instead."
+                "A spec ({0}) cannot contain multiple version signifiers. Use a version list instead.".format(self)
             )
         self.versions = vn.VersionList()
         for version in version_list:
