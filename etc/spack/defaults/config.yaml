@@ -201,3 +201,7 @@ config:
   # building and installing packages. This gives information about Spack's
   # current progress as well as the current and total number of packages.
   terminal_title: false
+
+  # Number of seconds a buildcache's index.json is cached locally before probing
+  # for updates, within a single Spack invocation. Defaults to 10 minutes.
+  binary_index_ttl: 600
