@@ -4,7 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.spec import Spec
-from spack.traverse import traverse_breadth_first_nodes, traverse_breadth_first_tree
+from spack.traverse import (
+    traverse_breadth_first_nodes,
+    traverse_breadth_first_tree,
+    traverse_breadth_first_edges,
+)
 
 
 def test_bf_traversal_is_breadth_first(config, mock_packages):
@@ -68,6 +72,30 @@ def test_deptype_traversal_run(config, mock_packages):
     names = ["dttop", "dtrun1", "dtrun3"]
     traversal = traverse_breadth_first_nodes([s], deptype="run")
     assert [x.name for x in traversal] == names
+
+
+def test_breadth_first_reverse(config, mock_packages):
+    s = Spec("dt-diamond").concretized()
+    gen = traverse_breadth_first_nodes([s["dt-diamond-bottom"]], direction="parents", depth=True)
+    assert [(depth, spec.name) for (depth, spec) in gen] == [
+        (0, "dt-diamond-bottom"),
+        (1, "dt-diamond-left"),
+        (1, "dt-diamond-right"),
+        (2, "dt-diamond"),
+    ]
+
+
+def test_multiple_roots(config, mock_packages):
+    # With DFS, the branch dt-diamond -> dt-diamond-left -> dt-diamond-bottom
+    # is followed, with BFS, dt-diamond-bottom should be traced through the second
+    # root dt-diamond-right at depth 1 instead.
+    s = Spec("dt-diamond").concretized()
+    roots = [s["dt-diamond"], s["dt-diamond-right"]]
+    gen = traverse_breadth_first_edges(roots, depth=True, root=False)
+    assert [(depth, edge.parent.name, edge.spec.name) for (depth, edge) in gen] == [
+        (1, "dt-diamond", "dt-diamond-left"),  # edge from first root "to" depth 1
+        (1, "dt-diamond-right", "dt-diamond-bottom"),  # edge from second root "to" depth 1
+    ]
 
 
 def test_breadth_first_versus_depth_first_tree(config, mock_packages):
