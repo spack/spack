@@ -277,8 +277,8 @@ def ci_rebuild(args):
     ci_pipeline_id = get_env_var("CI_PIPELINE_ID")
     ci_job_name = get_env_var("CI_JOB_NAME")
     signing_key = get_env_var("SPACK_SIGNING_KEY")
-    root_spec = get_env_var("SPACK_ROOT_SPEC")
     job_spec_pkg_name = get_env_var("SPACK_JOB_SPEC_PKG_NAME")
+    job_spec_dag_hash = get_env_var("SPACK_JOB_SPEC_DAG_HASH")
     compiler_action = get_env_var("SPACK_COMPILER_ACTION")
     spack_pipeline_type = get_env_var("SPACK_PIPELINE_TYPE")
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
@@ -297,7 +297,6 @@ def ci_rebuild(args):
 
     # Debug print some of the key environment variables we should have received
     tty.debug("pipeline_artifacts_dir = {0}".format(pipeline_artifacts_dir))
-    tty.debug("root_spec = {0}".format(root_spec))
     tty.debug("remote_mirror_url = {0}".format(remote_mirror_url))
     tty.debug("job_spec_pkg_name = {0}".format(job_spec_pkg_name))
     tty.debug("compiler_action = {0}".format(compiler_action))
@@ -360,10 +359,11 @@ def ci_rebuild(args):
             mirror_msg = "artifact buildcache enabled, mirror url: {0}".format(pipeline_mirror_url)
             tty.debug(mirror_msg)
 
-    # Whatever form of root_spec we got, use it to get a map giving us concrete
-    # specs for this job and all of its dependencies.
-    spec_map = spack_ci.get_concrete_specs(env, root_spec, job_spec_pkg_name, compiler_action)
-    job_spec = spec_map[job_spec_pkg_name]
+    # Get the concrete spec to be built by this job.
+    try:
+        job_spec = env.get_one_by_hash(job_spec_dag_hash)
+    except AssertionError:
+        tty.die("Could not find environment spec with hash {0}".format(job_spec_dag_hash))
 
     job_spec_json_file = "{0}.json".format(job_spec_pkg_name)
     job_spec_json_path = os.path.join(repro_dir, job_spec_json_file)
@@ -427,17 +427,11 @@ def ci_rebuild(args):
     with open(job_spec_json_path, "w") as fd:
         fd.write(job_spec.to_json(hash=ht.dag_hash))
 
-    # Write the concrete root spec json into the reproduction directory
-    root_spec_json_path = os.path.join(repro_dir, "root.json")
-    with open(root_spec_json_path, "w") as fd:
-        fd.write(spec_map["root"].to_json(hash=ht.dag_hash))
-
     # Write some other details to aid in reproduction into an artifact
     repro_file = os.path.join(repro_dir, "repro.json")
     repro_details = {
         "job_name": ci_job_name,
         "job_spec_json": job_spec_json_file,
-        "root_spec_json": "root.json",
         "ci_project_dir": ci_project_dir,
     }
     with open(repro_file, "w") as fd:

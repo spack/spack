@@ -885,7 +885,6 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
             "SPACK_CONCRETE_ENV_DIR": rebuild_env.env_dir.strpath,
             "CI_PIPELINE_ID": "7192",
             "SPACK_SIGNING_KEY": _signing_key(),
-            "SPACK_ROOT_SPEC": rebuild_env.root_spec_dag_hash,
             "SPACK_JOB_SPEC_DAG_HASH": rebuild_env.root_spec_dag_hash,
             "SPACK_JOB_SPEC_PKG_NAME": pkg_name,
             "SPACK_COMPILER_ACTION": "NONE",
@@ -1084,7 +1083,6 @@ spack:
                     "SPACK_JOB_TEST_DIR": "test_dir",
                     "SPACK_LOCAL_MIRROR_DIR": mirror_dir.strpath,
                     "SPACK_CONCRETE_ENV_DIR": tmpdir.strpath,
-                    "SPACK_ROOT_SPEC": root_spec_dag_hash,
                     "SPACK_JOB_SPEC_DAG_HASH": root_spec_dag_hash,
                     "SPACK_JOB_SPEC_PKG_NAME": "archive-files",
                     "SPACK_COMPILER_ACTION": "NONE",
@@ -1243,8 +1241,7 @@ spack:
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as env:
-            spec_map = ci.get_concrete_specs(env, "patchelf", "patchelf", "FIND_ANY")
-            concrete_spec = spec_map["patchelf"]
+            concrete_spec = Spec("patchelf").concretized()
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join("spec.json"))
             with open(json_path, "w") as ypfd:
@@ -1605,9 +1602,8 @@ spack:
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
-        with ev.read("test") as env:
-            spec_map = ci.get_concrete_specs(env, "callpath", "callpath", "FIND_ANY")
-            concrete_spec = spec_map["callpath"]
+        with ev.read("test"):
+            concrete_spec = Spec("callpath").concretized()
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join("spec.json"))
             with open(json_path, "w") as ypfd:
@@ -2143,21 +2139,15 @@ spack:
             shutil.copyfile(env.manifest_path, os.path.join(working_dir.strpath, "spack.yaml"))
             shutil.copyfile(env.lock_path, os.path.join(working_dir.strpath, "spack.lock"))
 
-            root_spec = None
             job_spec = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == "archive-files":
-                    root_spec = s
                     job_spec = s
 
             job_spec_json_path = os.path.join(working_dir.strpath, "archivefiles.json")
             with open(job_spec_json_path, "w") as fd:
                 fd.write(job_spec.to_json(hash=ht.dag_hash))
-
-            root_spec_json_path = os.path.join(working_dir.strpath, "root.json")
-            with open(root_spec_json_path, "w") as fd:
-                fd.write(root_spec.to_json(hash=ht.dag_hash))
 
             artifacts_root = os.path.join(working_dir.strpath, "scratch_dir")
             pipeline_path = os.path.join(artifacts_root, "pipeline.yml")
@@ -2170,7 +2160,6 @@ spack:
             repro_details = {
                 "job_name": job_name,
                 "job_spec_json": "archivefiles.json",
-                "root_spec_json": "root.json",
                 "ci_project_dir": working_dir.strpath,
             }
             with open(repro_file, "w") as fd:
