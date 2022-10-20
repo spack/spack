@@ -13,15 +13,16 @@ from spack.util.environment import is_system_path
 def sanitize_environments(*args):
     for env in args:
         for var in (
-                "PATH",
-                "LD_LIBRARY_PATH",
-                "DYLD_LIBRARY_PATH",
-                "LIBRARY_PATH",
-                "CMAKE_PREFIX_PATH",
-                "ROOT_INCLUDE_PATH"
+            "PATH",
+            "LD_LIBRARY_PATH",
+            "DYLD_LIBRARY_PATH",
+            "LIBRARY_PATH",
+            "CMAKE_PREFIX_PATH",
+            "ROOT_INCLUDE_PATH",
         ):
             env.prune_duplicate_paths(var)
             env.deprioritize_system_paths(var)
+
 
 class Root(CMakePackage):
     """ROOT is a data analysis framework."""
@@ -232,7 +233,7 @@ class Root(CMakePackage):
     depends_on("fontconfig", when="+x", type="build")
     depends_on("xproto", when="+x", type="build")
     depends_on("xextproto", when="+x", type="build")
-    
+
     # OpenGL
     depends_on("ftgl@2.4.0:", when="+opengl")
     depends_on("glew", when="+opengl")
