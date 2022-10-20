@@ -17,8 +17,10 @@ class PyDarshan(PythonPackage):
     version("3.4.0.1", sha256="0142fc7c0b12a9e5c22358aa26cca7083d28af42aeea7dfcc5698c56b6aee6b7")
 
     depends_on("python@3.6:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-importlib-resources", when="^python@3.6", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
