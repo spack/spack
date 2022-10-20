@@ -212,9 +212,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                 "SCALAPACK_LDFLAGS={0}".format(spec["scalapack"].libs.joined()),
             ]
 
-        options += [
-            "CPP=cpp"
-        ]
+        options += ["CPP=cpp"]
 
         if "+autotune" in self.spec:
             options.append("--enable-autotune-redistribute-matrix")
