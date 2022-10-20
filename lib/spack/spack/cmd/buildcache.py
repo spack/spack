@@ -8,7 +8,6 @@ import os
 import shutil
 import sys
 import tempfile
-import warnings
 
 import llnl.util.tty as tty
 
