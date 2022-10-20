@@ -2095,7 +2095,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2116,6 +2116,10 @@ def find_libraries(libraries, root, shared=True, recursive=False):
             otherwise for static. Defaults to True.
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        runtime (bool): Windows only option, no-op elsewhere. If true,
+            search for runtime shared libs (.DLL), otherwise, search
+            for .Lib files. If shared is false, this has no meaning.
+            Defaults to True.
 
     Returns:
         LibraryList: The libraries that have been found
@@ -2130,7 +2134,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
 
     if is_windows:
         static_ext = "lib"
-        shared_ext = "dll"
+        shared_ext = "dll" if runtime else "lib"
     else:
         # Used on both Linux and macOS
         static_ext = "a"
@@ -2174,13 +2178,13 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     return LibraryList(found_libs)
 
 
-def find_all_shared_libraries(root, recursive=False):
+def find_all_shared_libraries(root, recursive=False, runtime=True):
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
     See documentation for `llnl.util.filesystem.find_libraries` for more information
     """
-    return find_libraries("*", root=root, shared=True, recursive=recursive)
+    return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
 
 
 def find_all_static_libraries(root, recursive=False):
@@ -2189,7 +2193,7 @@ def find_all_static_libraries(root, recursive=False):
 
     See documentation for `llnl.util.filesystem.find_libraries` for more information
     """
-    return find_libraries("*", root=root, shared=False, recursive=recursive)
+    return find_libraries("*", root=root, shared=False, recursive=recursive, runtime=False)
 
 
 def find_all_libraries(root, recursive=False):
