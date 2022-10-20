@@ -1378,6 +1378,8 @@ class Repo(object):
             setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
+        else:
+            delattr(cls, "overidden_attrs")
 
         return cls
 
