@@ -1362,21 +1362,7 @@ class Repo(object):
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
-        new_cfg_settings = (
-            spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
-        )
-        overidden_attrs = getattr(cls, "overidden_attrs", {})
-        for key, val in overidden_attrs.items():
-            setattr(cls, key, val)
-        # Keep track of every class attribute that is overidden by the config:
-        # if the config changes between calls to this method, we make sure to
-        # restore the original config values (in case the new config no longer
-        # sets attributes that it used to)
-        new_overidden_attrs = {}
-        for key, val in new_cfg_settings.items():
-            new_overidden_attrs[key] = getattr(cls, key)
-            setattr(cls, key, val)
-        setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
+        # TODO: restore logic here
 
         return cls
 
