@@ -87,6 +87,10 @@ class Openfast(CMakePackage):
                     define("HDF5_ROOT", spec["hdf5"].prefix),
                     define("YAML_ROOT", spec["yaml"].prefix),
                     define("NETCDF_ROOT", spec["netcdf-c"].prefix),
+                    # The following xpects that HDF5 was built with CMake.
+                    # Solves issue with OpenFAST trying to link
+                    # to HDF5 libraries with a "-shared" prefix
+                    # that do not exist.
                     define("HDF5_NO_FIND_PACKAGE_CONFIG_FILE", True),
                 ]
             )
