@@ -27,6 +27,7 @@ class Boost(Package):
     maintainers = ["hainest"]
 
     version("develop", branch="develop", submodules=True)
+    version("1.80.0", sha256="1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0")
     version("1.79.0", sha256="475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39")
     version("1.78.0", sha256="8681f175d4bdb26c52222665793eef08490d7758529330f98d3b29dd0735bccc")
     version("1.77.0", sha256="fc9f85fc030e233142908241af7a846e60630aa7388de9a5fafb1f3a26840854")
@@ -260,6 +261,10 @@ class Boost(Package):
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878889166
     # https://github.com/STEllAR-GROUP/hpx/issues/5442#issuecomment-878913339
     conflicts("%gcc", when="@:1.76 +system platform=darwin")
+
+    # Boost 1.80 does not build with the Intel oneapi compiler
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
+    conflicts("%oneapi", when="@1.80")
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch("boost_11856.patch", when="@1.60.0%gcc@4.4.7")
