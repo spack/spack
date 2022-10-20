@@ -179,6 +179,22 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert "zmpi" in spec
 
+    def test_config_set_url_for_package(self, mutable_mock_repo):
+        """Test preferred providers of virtual packages are
+        applied correctly
+        """
+        update_packages(
+            "mpileaks",
+            "package_attributes",
+            {"url": "http://www.somewhereelse.com/mpileaks-1.0.tar.gz"},
+        )
+        spec = concretize("mpileaks")
+        assert spec.package.fetcher[0].url == "http://www.somewhereelse.com/mpileaks-2.3.tar.gz"
+
+        update_packages("mpileaks", "package_attributes", {})
+        spec = concretize("mpileaks")
+        assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
+
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
         spec = Spec("python")
