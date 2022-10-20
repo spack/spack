@@ -26,7 +26,7 @@ class Anicalculator(Package):
     depends_on("perl@5:")
 
     def url_for_version(self, version):
-        return "file://{0}/ANIcalculator_v{1}_tgz".format(os.getcwd(), version)
+        return "file://{0}/ANIcalculator_v{1}.tgz".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
