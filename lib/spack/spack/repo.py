@@ -1378,7 +1378,7 @@ class Repo(object):
             setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
-        else:
+        elif hasattr(cls, "overidden_attrs"):
             delattr(cls, "overidden_attrs")
 
         return cls
