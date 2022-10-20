@@ -508,7 +508,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
-        elif spec.satisfies("@:3.3,3.4.4:"):
+        elif not spec.satisfies("@3.4:3.4.3"):
             # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
             # (see https://github.com/pmodels/mpich/pull/5060):
             config_args.append("--without-cuda")
