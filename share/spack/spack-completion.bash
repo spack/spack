@@ -412,8 +412,12 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="status enable disable reset root list trust untrust add remove mirror"
+        SPACK_COMPREPLY="now status enable disable reset root list trust untrust add remove mirror"
     fi
+}
+
+_spack_bootstrap_now() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_bootstrap_status() {
@@ -1018,7 +1022,12 @@ _spack_env_revert() {
 }
 
 _spack_env_depfile() {
-    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
+    else
+        _all_packages
+    fi
 }
 
 _spack_extensions() {
