@@ -2226,10 +2226,10 @@ class WindowsSimulatedRPath(object):
         self.pkg = package
         self._addl_rpaths = set()
         self.link_install_prefix = link_install_prefix
-        self._internal_links = set()
+        self._additional_library_dependents = set()
 
     @property
-    def link_dest(self):
+    def library_dependents(self):
         """
         Set of directories where package binaries/libraries are located.
         """
@@ -2237,29 +2237,26 @@ class WindowsSimulatedRPath(object):
             pkg_libs = set(self.pkg.libs.directories)
         else:
             pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64, self.pkg.prefix.bin))
-        return pkg_libs
+
+        return pkg_libs | self._additional_library_dependents
 
     def add_library_dependent(self, *dest):
         """
-        Add paths to set of common paths that need to link against other libraries
+        Add paths to directories or libraries/binaries to set of
+        common paths that need to link against other libraries
 
-        Specified paths should be outside of a package's common link paths, i.e. the lib, lib64, and bin
+        Specified paths should fall outside of a package's common
+        link paths, i.e. the lib, lib64, and bin
         directories.
         """
-        self._internal_links = self._internal_links | set(dest)
+        for pth in dest:
+            if os.path.isfile(pth):
+                self._additional_library_dependents.add(os.path.dirname)
+            else:
+                self._additional_library_dependents.add(pth)
 
     @property
-    def internal_link_targets(self):
-        return set(
-            [
-                x
-                for internal_path in self.link_dest
-                for x in find_all_shared_libraries(internal_path, recursive=True)
-            ]
-        )
-
-    @property
-    def link_targets(self):
+    def rpaths(self):
         """
         Set of libraries this package needs to link against during runtime
         These packages will each be symlinked into the packages lib and binary dir
@@ -2319,12 +2316,8 @@ class WindowsSimulatedRPath(object):
 
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
-        for library, lib_dir in itertools.product(self.link_targets, self.link_dest):
+        for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
             self._link(library, lib_dir)
-        for library, internal_dir in itertools.product(
-            self.internal_link_targets, self._internal_links
-        ):
-            self._link(library, internal_dir)
 
 
 @system_path_filter

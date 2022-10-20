@@ -211,7 +211,7 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def win_add_linked_library(self):
+    def win_add_library_dependent(self):
         """Return extra set of directories that require linking for package
 
         This method should be overridden by packages that produce
