@@ -66,6 +66,12 @@ for further documentation regarding the spec syntax, see:
         help="how extensively to traverse the DAG (default: nodes)",
     )
     subparser.add_argument(
+        "--breadth-first",
+        action="store_true",
+        default=False,
+        help="traverse the DAG in breadth-first order"
+    )
+    subparser.add_argument(
         "-N",
         "--namespaces",
         action="store_true",
@@ -86,6 +92,7 @@ def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
     tree_kwargs = {
         "cover": args.cover,
+        "breadth_first": args.breadth_first,
         "format": name_fmt + fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,
