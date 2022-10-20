@@ -72,7 +72,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop+mpi", when="+hiop+mpi")
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
-    depends_on("petsc@3.16.0:3.16", when="@1.3.0:")
+    depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4.1")
+    depends_on("petsc@3.18.0", when="@develop")
     depends_on("petsc~mpi", when="~mpi")
 
     depends_on("py-pytest", type=("build", "run"), when="@1.4.1:+python")
