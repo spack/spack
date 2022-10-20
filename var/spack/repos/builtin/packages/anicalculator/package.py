@@ -12,7 +12,7 @@ class Anicalculator(Package):
     """This tool will calculate the bidirectional average nucleotide identity
     (gANI) and Alignment Fraction (AF) between two genomes.
 
-    Note: A manual download is required for ANIcalculatorH.
+    Note: A manual download is required for ANIcalculator.
     Spack will search your current directory for the download file.
     Alternatively, add this file to a mirror so that Spack can find it.
     For instructions on how to set up a mirror, see
@@ -24,6 +24,8 @@ class Anicalculator(Package):
     version("1", sha256="236596a9a204cbcad162fc66be3506b2530b1f48f4f84d9647ccec3ca7483a43")
 
     depends_on("perl@5:")
+
+    conflicts('platform=darwin', msg='ANIcalculator requires Linux')
 
     def url_for_version(self, version):
         return "file://{0}/ANIcalculator_v{1}.tgz".format(os.getcwd(), version)
