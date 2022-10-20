@@ -5,9 +5,9 @@
 
 from spack.spec import Spec
 from spack.traverse import (
+    traverse_breadth_first_edges,
     traverse_breadth_first_nodes,
     traverse_breadth_first_tree,
-    traverse_breadth_first_edges,
 )
 
 
