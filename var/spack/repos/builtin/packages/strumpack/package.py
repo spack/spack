@@ -29,6 +29,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("master", branch="master")
+    version("7.0.1", sha256="ddbf9c0509eaf0f8a4c70f59508787336a05eeacc8322f156117d8ce59a70a60")
+    version("7.0.0", sha256="18f7a0d75cc5cfdb7bbb6112a2bdda7a50fbcaefa2d8bab001f902bdf62e69e3")
     version("6.3.1", sha256="3f1de435aeb850c06d841655c3bc426565eb0cc0a7314b76586c2c709b03fb61")
     version("6.3.0", sha256="47dec831684894b7ed77c66b8a23e172b388c83580cfaf91f921564fa0b46d41")
     version("6.2.1", sha256="52d63ab8f565266a9b1b5f3596afd00fc3b70296179b53a1e5b99405defeca22")
