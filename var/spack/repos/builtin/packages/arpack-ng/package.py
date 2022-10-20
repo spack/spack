@@ -87,6 +87,11 @@ class ArpackNg(Package):
         if name == "cflags":
             if spec.satisfies("%oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
+
+        if name == "fflags":
+            if self.spec.satisfies("%cce"):
+                iflags.append("-hnopattern")
+
         return (iflags, None, None)
 
     @property
