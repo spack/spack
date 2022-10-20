@@ -2233,12 +2233,7 @@ class WindowsSimulatedRPath(object):
         """
         Set of directories where package binaries/libraries are located.
         """
-        if hasattr(self.pkg, "libs") and self.pkg.libs:
-            pkg_libs = set(self.pkg.libs.directories)
-        else:
-            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64, self.pkg.prefix.bin))
-
-        return pkg_libs | self._additional_library_dependents
+        return set(self.pkg.prefix.bin) | self._additional_library_dependents
 
     def add_library_dependent(self, *dest):
         """
@@ -2246,7 +2241,7 @@ class WindowsSimulatedRPath(object):
         common paths that need to link against other libraries
 
         Specified paths should fall outside of a package's common
-        link paths, i.e. the lib, lib64, and bin
+        link paths, i.e. the bin
         directories.
         """
         for pth in dest:
@@ -2261,7 +2256,6 @@ class WindowsSimulatedRPath(object):
         Set of libraries this package needs to link against during runtime
         These packages will each be symlinked into the packages lib and binary dir
         """
-
         dependent_libs = []
         for path in self.pkg.rpath:
             dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
