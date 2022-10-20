@@ -21,3 +21,4 @@ class PerlListMoreutilsXs(PerlPackage):
     version("0.428", sha256="9d9fe621429dfe7cf2eb1299c192699ddebf060953e5ebdc1b4e293c6d6dd62d")
     depends_on("perl-test-leaktrace", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
+    depends_on("perl-extutils-cbuilder", type="build")
