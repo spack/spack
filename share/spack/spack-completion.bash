@@ -1022,7 +1022,12 @@ _spack_env_revert() {
 }
 
 _spack_env_depfile() {
-    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
+    else
+        _all_packages
+    fi
 }
 
 _spack_extensions() {
