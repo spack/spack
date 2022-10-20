@@ -1376,7 +1376,8 @@ class Repo(object):
         for key, val in new_cfg_settings.items():
             new_overidden_attrs[key] = getattr(cls, key)
             setattr(cls, key, val)
-        setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
+        if new_overidden_attrs:
+            setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
 
         return cls
 
