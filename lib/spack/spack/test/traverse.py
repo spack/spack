@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.spec import Spec
-from spack.traverse import traverse_breadth_first_nodes
+from spack.traverse import traverse_breadth_first_nodes, traverse_breadth_first_tree
 
 
 def test_bf_traversal_is_breadth_first(config, mock_packages):
@@ -68,3 +68,103 @@ def test_deptype_traversal_run(config, mock_packages):
     names = ["dttop", "dtrun1", "dtrun3"]
     traversal = traverse_breadth_first_nodes([s], deptype="run")
     assert [x.name for x in traversal] == names
+
+
+def test_breadth_first_versus_depth_first_tree(config, mock_packages):
+    """
+    The packages chain-a, chain-b, chain-c, chain-d have the following DAG:
+    a --> b --> c --> d # a chain
+    a --> c # and "skip" connections
+    a --> d
+    Here we test at what depth the nodes are discovered when using BFS vs DFS.
+    """
+    s = Spec("chain-a").concretized()
+
+    # BFS should find all nodes as direct deps
+    assert [
+        (depth, edge.spec.name)
+        for (depth, edge) in traverse_breadth_first_tree([s], cover="nodes")
+    ] == [
+        (0, "chain-a"),
+        (1, "chain-b"),
+        (1, "chain-c"),
+        (1, "chain-d"),
+    ]
+
+    # DFS will disover all nodes along the chain a -> b -> c -> d.
+    assert [
+        (depth, edge.spec.name) for (depth, edge) in s.traverse_edges(depth=True, cover="nodes")
+    ] == [
+        (0, "chain-a"),
+        (1, "chain-b"),
+        (2, "chain-c"),
+        (3, "chain-d"),
+    ]
+
+    # When covering all edges, we should never exceed depth 2 in BFS.
+    assert [
+        (depth, edge.spec.name)
+        for (depth, edge) in traverse_breadth_first_tree([s], cover="edges")
+    ] == [
+        (0, "chain-a"),
+        (1, "chain-b"),
+        (2, "chain-c"),
+        (1, "chain-c"),
+        (2, "chain-d"),
+        (1, "chain-d"),
+    ]
+
+    # In DFS we see the chain again.
+    assert [
+        (depth, edge.spec.name) for (depth, edge) in s.traverse_edges(depth=True, cover="edges")
+    ] == [
+        (0, "chain-a"),
+        (1, "chain-b"),
+        (2, "chain-c"),
+        (3, "chain-d"),
+        (1, "chain-c"),
+        (1, "chain-d"),
+    ]
+
+
+def test_breadth_first_versus_depth_first_printing(config, mock_packages):
+    """Test breadth-first versus depth-first tree printing."""
+    s = Spec("chain-a").concretized()
+
+    args = {"format": "{name}", "color": False}
+
+    dfs_tree_nodes = """\
+chain-a
+    ^chain-b
+        ^chain-c
+            ^chain-d
+"""
+    assert s.tree(breadth_first=False, **args) == dfs_tree_nodes
+
+    bfs_tree_nodes = """\
+chain-a
+    ^chain-b
+    ^chain-c
+    ^chain-d
+"""
+    assert s.tree(breadth_first=True, **args) == bfs_tree_nodes
+
+    dfs_tree_edges = """\
+chain-a
+    ^chain-b
+        ^chain-c
+            ^chain-d
+    ^chain-c
+    ^chain-d
+"""
+    assert s.tree(breadth_first=False, cover="edges", **args) == dfs_tree_edges
+
+    bfs_tree_edges = """\
+chain-a
+    ^chain-b
+        ^chain-c
+    ^chain-c
+        ^chain-d
+    ^chain-d
+"""
+    assert s.tree(breadth_first=True, cover="edges", **args) == bfs_tree_edges

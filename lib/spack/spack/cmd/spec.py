@@ -69,7 +69,7 @@ for further documentation regarding the spec syntax, see:
         "--breadth-first",
         action="store_true",
         default=False,
-        help="traverse the DAG in breadth-first order"
+        help="traverse the DAG in breadth-first order",
     )
     subparser.add_argument(
         "-N",
