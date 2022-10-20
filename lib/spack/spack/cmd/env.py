@@ -28,8 +28,12 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.tengine
-from spack.traverse import CoverNodesVisitor, traverse_breadth_first_with_visitor, sort_edges
 import spack.util.string as string
+from spack.traverse import (
+    CoverNodesVisitor,
+    sort_edges,
+    traverse_breadth_first_with_visitor,
+)
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
