@@ -18,13 +18,14 @@ class Zfp(CMakePackage, CudaPackage):
 
     # Package info
     homepage = "https://zfp.llnl.gov"
-    url = "https://github.com/LLNL/zfp/releases/download/0.5.5/zfp-0.5.5.tar.gz"
+    url = "https://github.com/LLNL/zfp/releases/download/1.0.0/zfp-1.0.0.tar.gz"
     git = "https://github.com/LLNL/zfp.git"
     maintainers = ["lindstro", "GarrettDMorrison"]
     tags = ["radiuss", "e4s"]
 
     # Versions
     version("develop", branch="develop")
+    version("1.0.0", sha256="0ea08ae3e50e3c92f8b8cf41ba5b6e2de8892bc4a4ca0c59b8945b6c2ab617c4")
     version("0.5.5", sha256="fdf7b948bab1f4e5dccfe2c2048fd98c24e417ad8fb8a51ed3463d04147393c5")
     version("0.5.4", sha256="746e17aaa401c67dcffd273d6e6f95c76adfbbd5cf523dcad56d09e9d3b71196")
     version("0.5.3", sha256="a5d2f8e5b47a7c92e2a5775b82cbfb3a76c87d0ac83d25abb4ac10ea75a2856e")
