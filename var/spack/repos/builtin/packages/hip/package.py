@@ -288,12 +288,22 @@ class Hip(CMakePackage):
         if self.spec.external:
             # For external packages we only assume the `hip` prefix is known,
             # because spack does not set prefixes of dependencies of externals.
+            hip_libs_at_top = os.path.basename(self.spec.prefix) != "hip"
             # We assume self.spec.prefix is  /opt/rocm-x.y.z for rocm-5.2.0 and newer
             # and /opt/rocm-x.y.z/hip for older versions
             if self.spec.satisfies("@5.2.0:"):
                 rocm_prefix = Prefix(self.spec.prefix)
             else:
-                rocm_prefix = Prefix(os.path.dirname(self.spec.prefix))
+                # We assume self.spec.prefix is /opt/rocm-x.y.z/hip and rocm has a
+                # default installation with everything installed under
+                # /opt/rocm-x.y.z
+                # Note that since the key hip library can also exist at the top of the
+                # /opt/rocm-x.y.z/lib tree, it is possible that the package is detected
+                # without the correct prefix.  Work around it.
+                if hip_libs_at_top:
+                    rocm_prefix = Prefix(self.spec.prefix)
+                else:
+                    rocm_prefix = Prefix(os.path.dirname(self.spec.prefix))
 
             if not os.path.isdir(rocm_prefix):
                 msg = "Could not determine prefix for other rocm components\n"
@@ -302,7 +312,13 @@ class Hip(CMakePackage):
                 msg += "a workaround."
                 raise RuntimeError(msg)
 
+            if hip_libs_at_top:
+                hip_path = "{0}/hip".format(self.spec.prefix)
+            else:
+                hip_path = self.spec.prefix
+
             paths = {
+                "hip-path": hip_path,
                 "rocm-path": rocm_prefix,
                 "llvm-amdgpu": rocm_prefix.llvm,
                 "hsa-rocr-dev": rocm_prefix.hsa,
@@ -311,6 +327,7 @@ class Hip(CMakePackage):
             }
         else:
             paths = {
+                "hip-path": self.spec.prefix,
                 "rocm-path": self.spec.prefix,
                 "llvm-amdgpu": self.spec["llvm-amdgpu"].prefix,
                 "hsa-rocr-dev": self.spec["hsa-rocr-dev"].prefix,
@@ -374,7 +391,7 @@ class Hip(CMakePackage):
         env.set("HIP_DEVICE_LIB_PATH", paths["bitcode"])
 
         # Just the prefix of hip (used in hipcc)
-        env.set("HIP_PATH", paths["rocm-path"])
+        env.set("HIP_PATH", paths["hip-path"])
 
         # Used in comgr and seems necessary when using the JIT compiler, e.g.
         # hiprtcCreateProgram:
