@@ -20,10 +20,20 @@ class PyDarshan(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-importlib-resources", when="^python@3.6", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
+    depends_on("py-scipy", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-matplotlib@3.4", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
+    depends_on("py-pytest", type=("build", "run"))
+    depends_on("py-lxml", type=("test"))
 
     depends_on("darshan-util", type=("build", "run"))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        with working_dir('./darshan/tests', create=True):
+            pytest = which('pytest')
+            pytest()
