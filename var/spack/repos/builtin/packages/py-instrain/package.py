@@ -37,6 +37,9 @@ class PyInstrain(PythonPackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-lmfit", type=("build", "run"))
     depends_on("py-numba", type=("build", "run"))
+    # non-python dependencies
+    # https://instrain.readthedocs.io/en/latest/installation.html#dependencies
+    # Essential dependencies
     depends_on("samtools", type=("build", "run"))
     # Optional dependencies
     depends_on("prodigal", type=("build", "run"), when="+prodigal")
