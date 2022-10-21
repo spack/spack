@@ -92,8 +92,8 @@ class Zfp(CMakePackage, CudaPackage):
 
     variant(
         "round",
-        default="ZFP_ROUND_NEVER",
-        values=("ZFP_ROUND_NEVER", "ZFP_ROUND_FIRST", "ZFP_ROUND_LAST"),
+        default="never",
+        values=("never", "first", "last"),
         multi=False,
         description="EXPERIMENTAL: Set coefficient rounding method",
     )
@@ -103,28 +103,32 @@ class Zfp(CMakePackage, CudaPackage):
     )
 
     variant(
-        "tight_error",
+        "tight-error",
         default=False,
-        description="EXPERIMENTAL: Enable rounding-based error reduction",
+        description="EXPERIMENTAL: Use tighter error bound when rounding is enabled",
     )
 
     variant("twoway", default=False, description="Use two-way skew-associative cache")
 
     # Conflicts
     conflicts("+c", when="@:0.5.3", msg="+c requires zfp 0.5.4 or later")
-    conflicts("+daz", when="@:0.5.5", msg="+daz required zfp 1.0.0 or later")
-    conflicts("+python", when="@:0.5.4", msg="+c requires zfp 0.5.4 or later")
-    conflicts("+fortran", when="@:0.5.4", msg="+c requires zfp 0.5.4 or later")
-    conflicts("+openmp", when="@:0.5.2", msg="+c requires zfp 0.5.4 or later")
-    conflicts("+cuda", when="@:0.5.3", msg="+c requires zfp 0.5.4 or later")
+    conflicts("+daz", when="@:0.5.5", msg="+daz requires zfp 1.0.0 or later")
+    conflicts("+python", when="@:0.5.4", msg="+python requires zfp 0.5.4 or later")
+    conflicts("+fortran", when="@:0.5.4", msg="+fortran requires zfp 0.5.4 or later")
+    conflicts("+openmp", when="@:0.5.2", msg="+openmp requires zfp 0.5.4 or later")
+    conflicts("+cuda", when="@:0.5.3", msg="+cuda requires zfp 0.5.4 or later")
     conflicts("+fasthash", when="@:0.5.1", msg="+fasthash requires zfp 0.5.2 or later")
     conflicts("+profile", when="@:0.5.1", msg="+profile requires zfp 0.5.2 or later")
-    conflicts("round", when="@:0.5.5", msg="+round requires zfp 1.0.0 or later")
-    conflicts("+tight_error", when="@:0.5.5", msg="+tight_error requires zfp 1.0.0 or later")
+
+    conflicts("round=never", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
+    conflicts("round=first", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
+    conflicts("round=last", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
+
+    conflicts("+tight-error", when="@:0.5.5", msg="+tight-error requires zfp 1.0.0 or later")
     conflicts(
-        "+tight_error",
-        when="round=ZFP_ROUND_NEVER",
-        msg="Using zfp with tight error requires a rounding mode other than ZFP_ROUND_NEVER",
+        "+tight-error",
+        when="round=never",
+        msg="Using zfp with tight error requires a rounding mode other than never",
     )
 
     # CMake options
@@ -145,9 +149,9 @@ class Zfp(CMakePackage, CudaPackage):
             self.define_from_variant("ZFP_WITH_DAZ", "daz"),
             self.define_from_variant("ZFP_WITH_CACHE_FAST_HASH", "fasthash"),
             self.define_from_variant("ZFP_WITH_CACHE_PROFILE", "profile"),
-            self.define("ZFP_ROUNDING_MODE", spec.variants["round"].value),
+            self.define("ZFP_ROUNDING_MODE", "ZFP_ROUND_" + spec.variants["round"].value.upper()),
             self.define_from_variant("ZFP_WITH_BIT_STREAM_STRIDED", "strided"),
-            self.define_from_variant("ZFP_WITH_TIGHT_ERROR", "tight_error"),
+            self.define_from_variant("ZFP_WITH_TIGHT_ERROR", "tight-error"),
             self.define_from_variant("ZFP_WITH_CACHE_TWOWAY", "twoway"),
         ]
 
