@@ -56,8 +56,8 @@ class Openfast(CMakePackage):
 
         options.extend(
             [
-                define("BUILD_DOCUMENTATION", False),
-                define("BUILD_TESTING", False),
+                self.define("BUILD_DOCUMENTATION", False),
+                self.define("BUILD_TESTING", False),
                 self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
                 self.define_from_variant("DOUBLE_PRECISION", "double-precision"),
                 self.define_from_variant("USE_DLL_INTERFACE", "dll-interface"),
@@ -70,42 +70,42 @@ class Openfast(CMakePackage):
         blas_libs = spec["lapack"].libs + spec["blas"].libs
         options.extend(
             [
-                define("BLAS_LIBRARIES", blas_libs.joined(";")),
-                define("LAPACK_LIBRARIES", blas_libs.joined(";")),
+                self.define("BLAS_LIBRARIES", blas_libs.joined(";")),
+                self.define("LAPACK_LIBRARIES", blas_libs.joined(";")),
             ]
         )
 
         if "+cxx" in spec:
             options.extend(
                 [
-                    define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
-                    define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
-                    define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
-                    define("MPI_C_COMPILER", spec["mpi"].mpicc),
-                    define("MPI_Fortran_COMPILER", spec["mpi"].mpifc),
-                    define("HDF5_ROOT", spec["hdf5"].prefix),
-                    define("YAML_ROOT", spec["yaml"].prefix),
-                    define("NETCDF_ROOT", spec["netcdf-c"].prefix),
+                    self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx),
+                    self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc),
+                    self.define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc),
+                    self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx),
+                    self.define("MPI_C_COMPILER", spec["mpi"].mpicc),
+                    self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc),
+                    self.define("HDF5_ROOT", spec["hdf5"].prefix),
+                    self.define("YAML_ROOT", spec["yaml-cpp"].prefix),
+                    self.define("NETCDF_ROOT", spec["netcdf-c"].prefix),
                     # The following xpects that HDF5 was built with CMake.
                     # Solves issue with OpenFAST trying to link
                     # to HDF5 libraries with a "-shared" prefix
                     # that do not exist.
-                    define("HDF5_NO_FIND_PACKAGE_CONFIG_FILE", True),
+                    self.define("HDF5_NO_FIND_PACKAGE_CONFIG_FILE", True),
                 ]
             )
 
             if "~shared" in spec:
                 options.extend(
                     [
-                        define("HDF5_USE_STATIC_LIBRARIES", True),
+                        self.define("HDF5_USE_STATIC_LIBRARIES", True),
                     ]
                 )
 
         if "+openmp" in spec:
             options.extend(
                 [
-                    define("OPENMP", True),
+                    self.define("OPENMP", True),
                 ]
             )
 
