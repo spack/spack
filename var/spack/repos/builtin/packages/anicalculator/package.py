@@ -25,7 +25,7 @@ class Anicalculator(Package):
 
     depends_on("perl@5:")
 
-    conflicts('platform=darwin', msg='ANIcalculator requires Linux')
+    conflicts("platform=darwin", msg="ANIcalculator requires Linux")
 
     def url_for_version(self, version):
         return "file://{0}/ANIcalculator_v{1}.tgz".format(os.getcwd(), version)

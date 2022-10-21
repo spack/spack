@@ -32,6 +32,9 @@ class PyDrep(PythonPackage):
     depends_on("py-scikit-learn", type=("build", "run"))
     depends_on("py-tqdm", type=("build", "run"))
     depends_on("py-pytest", type=("build", "run"))
+    # Non-python dependencies
+    # https://drep.readthedocs.io/en/latest/installation.html#dependencies
+    # essential dependencies
     depends_on("mash@1.1.1:", type="run")
     depends_on("mummer@3.23:", type="run")
     # recommended dependencies
