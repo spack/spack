@@ -508,7 +508,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy sync update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile sync update-index"
     fi
 }
 
@@ -566,10 +566,6 @@ _spack_buildcache_get_buildcache_name() {
 
 _spack_buildcache_save_specfile() {
     SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
-}
-
-_spack_buildcache_copy() {
-    SPACK_COMPREPLY="-h --help --base-dir --spec-file --destination-url"
 }
 
 _spack_buildcache_sync() {
