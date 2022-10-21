@@ -1,10 +1,8 @@
-{ pkgs ? (import <nixpkgs> {}),
-  stdenv ? pkgs.stdenv
-}:
+{ pkgs ? (import <nixpkgs> {}) }:
 
-stdenv.mkDerivation {
+with pkgs; stdenv.mkDerivation {
 
-  buildInputs = with pkgs; [
+  buildInputs = [
     python3
     gnupg
 
