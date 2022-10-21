@@ -98,6 +98,21 @@ properties = {
                                 "type": "boolean",
                             },
                         },
+                        "patternProperties": {
+                            r"\w[\w-]*": {
+                                "type": "object",
+                                "additionalProperties": False,
+                                "properties": {
+                                    "value": {
+                                        "type": "string",
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": ["int", "float", "boolean"],
+                                    },
+                                },
+                            },
+                        },
                     },
                     "providers": {
                         "type": "object",

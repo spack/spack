@@ -33,6 +33,8 @@ import llnl.util.tty as tty
 from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
+import spack.util.spack_yaml as syaml
+import ruamel.yaml as ryaml
 import spack.caches
 import spack.config
 import spack.error
@@ -1374,8 +1376,20 @@ class Repo(object):
         # sets attributes that it used to)
         new_overidden_attrs = {}
         for key, val in new_cfg_settings.items():
-            new_overidden_attrs[key] = getattr(cls, key)
-            setattr(cls, key, val)
+            if hasattr(cls, key):
+                new_overidden_attrs[key] = getattr(cls, key)
+            if isinstance(val, dict):
+                t = val.get("type", "string")
+                v = val["value"]
+                if t == "int":
+                    v = int(v)
+                elif t == "float":
+                    v = float(v)
+                elif t == "boolean":
+                    v = ryaml.load(v)
+                setattr(cls, key, v)
+            else:
+                setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
         elif hasattr(cls, "overidden_attrs"):

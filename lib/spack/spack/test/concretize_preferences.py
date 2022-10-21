@@ -195,6 +195,27 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
+    def test_config_set_package_property(self, mutable_mock_repo):
+        """Test preferred providers of virtual packages are
+        applied correctly
+        """
+        update_packages(
+            "mpileaks",
+            "package_attributes",
+            {"x": {
+                "value": "1",
+                "type": "int",
+             },
+             "y": {
+                "value": "true",
+                "type": "boolean",
+             }
+            },
+        )
+        spec = concretize("mpileaks")
+        assert spec.package.x == 1
+        assert spec.package.y == True
+
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
         spec = Spec("python")
