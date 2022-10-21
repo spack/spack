@@ -26,9 +26,9 @@ class Liggghts(MakefilePackage):
     variant('profile', default=False,
             description='Generate profiling code')
 
-    variant('libs', default='SHARED',
-            values=('ALL', 'SHARED', 'STATIC', 'NONE'),
-            description='Whether to build libraries of LIGGGHTS')
+    variant('libs', default='shared, static',
+            description='Build shared or/and static libs',
+            values=('shared', 'static'), multi=True)
 
     depends_on('vtk@6.1.0:8.2.0 +xdmf+mpi')
     depends_on('mpi', when='+mpi')
@@ -93,9 +93,17 @@ class Liggghts(MakefilePackage):
         if '+profile' in spec:
             makefile.filter(r'^(USE_PROFILE = ).*', r'\1"ON"')
 
-        if spec.variants['libs'].value != "NONE":
+        # Determine how to build libs in LIGGGHTS way
+        libs_in_spec = spec.variants['libs'].value
+        if libs_in_spec != None:
+            if 'shared' in libs_in_spec and 'static' in libs_in_spec:
+                libs_in_makefile = 'ALL'
+            elif 'shared' in libs_in_spec:
+                libs_in_makefile = 'SHARED'
+            elif 'static' in libs_in_spec:
+                libs_in_makefile = 'STATIC'
             makefile.filter(r'^(BUILD_LIBRARIES = ).*',
-                            r'\1"{0}"'.format(spec.variants['libs'].value))
+                            r'\1"{0}"'.format(libs_in_makefile))
 
         # Enable debug output of Makefile.auto in the log file
         # src/Obj_auto/make_auto.log to quickly troubleshoot if
@@ -106,18 +114,13 @@ class Liggghts(MakefilePackage):
         mkdir(prefix.bin)
         install(os.path.join('src', 'lmp_auto'), prefix.bin.liggghts)
 
-        if spec.variants['libs'].value != "NONE":
+        # Install libs
+        libs_in_spec = spec.variants['libs'].value
+        if libs_in_spec != None:
             mkdir(prefix.lib)
-   
-        if spec.variants['libs'].value == "SHARED":
-            install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
-        elif spec.variants['libs'].value == "STATIC":
-            install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
-        elif spec.variants['libs'].value == "ALL":
-            install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
-            install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
-        else:
-            pass
+            if 'shared' in libs_in_spec:
+                install(os.path.join('src', 'liblmp_auto.so'), prefix.lib)
+            if 'static' in libs_in_spec:
+                install(os.path.join('src', 'liblmp_auto.a'), prefix.lib)
 
         install_tree('src', prefix.src, symlinks=True)
-
