@@ -34,6 +34,6 @@ class PyDarshan(PythonPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        with working_dir('./darshan/tests', create=True):
+        with working_dir('./darshan/tests'):
             pytest = which('pytest')
             pytest()
