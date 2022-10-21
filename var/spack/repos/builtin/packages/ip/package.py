@@ -14,7 +14,12 @@ class Ip(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-ip"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-ip/archive/refs/tags/v3.3.3.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "edwardhartnett", "Hang-Lei-NOAA"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "edwardhartnett",
+        "Hang-Lei-NOAA",
+    ]
 
     version("4.0.0", sha256="a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8")
     version(

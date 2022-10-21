@@ -14,7 +14,12 @@ class G2tmpl(CMakePackage):
     homepage = "https://github.com/NOAA-EMC/NCEPLIBS-g2tmpl"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-g2tmpl/archive/refs/tags/v1.10.0.tar.gz"
 
-    maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = [
+        "t-brown",
+        "edwardhartnett",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+    ]
 
     version("1.10.2", sha256="4063361369f3691f75288c801fa9d1a2414908b7d6c07bbf69d4165802e2a7fc")
     version("1.10.1", sha256="0be425e5128fabb89915a92261aa75c27a46a3e115e00c686fc311321e5d1e2a")

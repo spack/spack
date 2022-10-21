@@ -15,7 +15,12 @@ class W3emc(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-w3emc/"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-w3emc/archive/refs/tags/v2.9.0.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+    ]
 
     version("2.9.2", sha256="eace811a1365f69b85fdf2bcd93a9d963ba72de5a7111e6fa7c0e6578b69bfbc")
     version("2.9.1", sha256="d3e705615bdd0b76a40751337d943d5a1ea415636f4e5368aed058f074b85df4")
