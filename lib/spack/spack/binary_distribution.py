@@ -672,9 +672,9 @@ class BuildManifestVistor(BaseDirectoryVisitor):
         self.files.append(rel_path)
 
     def visit_symlinked_file(self, root, rel_path, depth):
-        # Note: symlinks *can* be hardlinked, but it's seems unclear if
-        # symlinks can be rewritten modified in-place, preserving inode.
-        # So, we do *not* de-dupe hardlinked symlinks.
+        # Note: symlinks *can* be hardlinked, but it is unclear if
+        # symlinks can be relinked in-place (preserving inode).
+        # Therefore, we do *not* de-dupe hardlinked symlinks.
         self.symlinks.append(rel_path)
 
     def before_visit_dir(self, root, rel_path, depth):
@@ -704,8 +704,6 @@ def get_buildfile_manifest(spec):
         "binary_to_relocate_fullpath": [],
         "hardlinks_deduped": True,
     }
-
-    # TODO: man in nested dir?
 
     # Guard against filesystem footguns of hardlinks and symlinks by using
     # a visitor to retrieve a list of files and symlinks, so we don't have
@@ -1500,8 +1498,8 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
     visited = set()
 
     # Note: we do *not* dedupe hardlinked symlinks, since
-    # it seems difficult / impossible (?) to update symlinks
-    # in-place.
+    # it seems difficult or even impossible to relink
+    # symlinks while preserving inode.
     for key in ("relocate_textfiles", "relocate_binaries"):
         if key not in buildinfo:
             continue
