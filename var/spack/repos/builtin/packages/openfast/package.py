@@ -47,7 +47,7 @@ class Openfast(CMakePackage):
     depends_on("hdf5+mpi+cxx+hl", when="+cxx")
     depends_on("zlib", when="+cxx")
     depends_on("libxml2", when="+cxx")
-    depends_on("netcdf-c", when="+netcdf")
+    depends_on("netcdf-c", when="+cxx+netcdf")
 
     def cmake_args(self):
         spec = self.spec
@@ -86,7 +86,6 @@ class Openfast(CMakePackage):
                     self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc),
                     self.define("HDF5_ROOT", spec["hdf5"].prefix),
                     self.define("YAML_ROOT", spec["yaml-cpp"].prefix),
-                    self.define("NETCDF_ROOT", spec["netcdf-c"].prefix),
                     # The following xpects that HDF5 was built with CMake.
                     # Solves issue with OpenFAST trying to link
                     # to HDF5 libraries with a "-shared" prefix
@@ -95,12 +94,19 @@ class Openfast(CMakePackage):
                 ]
             )
 
-            if "~shared" in spec:
+            if "+netcdf" in spec:
                 options.extend(
                     [
-                        self.define("HDF5_USE_STATIC_LIBRARIES", True),
+                        self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)
                     ]
                 )
+
+        if "~shared" in spec:
+            options.extend(
+                [
+                    self.define("HDF5_USE_STATIC_LIBRARIES", True),
+                ]
+            )
 
         if "+openmp" in spec:
             options.extend(
