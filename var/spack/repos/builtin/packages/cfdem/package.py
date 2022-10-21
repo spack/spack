@@ -10,10 +10,10 @@ import llnl.util.tty as tty
 
 
 class Cfdem(Package):
-    """CFDEM®coupling provides an open source parallel coupled CFD-DEM framework 
-    combining the strengths of LIGGGHTS® DEM code and the Open Source CFD package OpenFOAM®(*).
-    The CFDEM®coupling toolbox allows to expand standard CFD solvers of OpenFOAM®(*) 
-    to include a coupling to the DEM code LIGGGHTS®. 
+    """CFDEMcoupling provides an open source parallel coupled CFD-DEM framework 
+    combining the strengths of LIGGGHTS DEM code and the Open Source CFD package OpenFOAM.
+    The CFDEMcoupling toolbox allows to expand standard CFD solvers of OpenFOAM 
+    to include a coupling to the DEM code LIGGGHTS. 
     """
 
     homepage = "https://www.cfdem.com/"
