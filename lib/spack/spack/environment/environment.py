@@ -1376,7 +1376,7 @@ class Environment(object):
                 arguments.append((uspec_constraints, tests))
 
         # Ensure we don't try to bootstrap clingo in parallel
-        if spack.config.get("config:concretizer") == "clingo":
+        if spack.config.get("config:concretizer", "clingo") == "clingo":
             with spack.bootstrap.ensure_bootstrap_configuration():
                 spack.bootstrap.ensure_clingo_importable_or_raise()
 
