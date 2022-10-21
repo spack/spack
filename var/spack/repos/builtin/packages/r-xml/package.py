@@ -15,6 +15,7 @@ class RXml(RPackage):
 
     cran = "XML"
 
+    version("3.99-0.11", sha256="c523bd8e6419d44a477038396e9c3b3ec70a67ed85a0c9bfa8b9445f91647fc8")
     version("3.99-0.9", sha256="9c15dedf3157efc59e0db31506631dfe770a4d397ce52f972434bed60e206a09")
     version("3.99-0.8", sha256="081f691c2ee8ad39c7c95281e7d9153ec04cee79ca2d41f5d82c2ec2f1d36b50")
     version("3.99-0.5", sha256="60529b7360f162eba07da455eeb9b94a732b2dd623c49e0f04328a2e97bd53a6")

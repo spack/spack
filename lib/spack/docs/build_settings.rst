@@ -392,7 +392,7 @@ The following is an example of how to enforce package properties in
        require: "@1.13.2"
      openmpi:
        require:
-       - any_of: ["~cuda", "gcc"]
+       - any_of: ["~cuda", "%gcc"]
      mpich:
       require:
       - one_of: ["+cuda", "+rocm"]

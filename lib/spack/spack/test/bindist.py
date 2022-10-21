@@ -97,12 +97,12 @@ def config_directory(tmpdir_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmpdir_factory, config_directory, monkeypatch, install_mockery_mutable_config):
+def default_config(tmpdir, config_directory, monkeypatch, install_mockery_mutable_config):
     # This fixture depends on install_mockery_mutable_config to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
     # install_mockery_mutable_config
-    mutable_dir = tmpdir_factory.mktemp("mutable_config").join("tmp")
+    mutable_dir = tmpdir.mkdir("mutable_config").join("tmp")
     config_directory.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
@@ -113,7 +113,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch, install_mocker
     )
 
     spack.config.config, old_config = cfg, spack.config.config
-
+    spack.config.config.set("repos", [spack.paths.mock_packages_path])
     # This is essential, otherwise the cache will create weird side effects
     # that will compromise subsequent tests if compilers.yaml is modified
     monkeypatch.setattr(spack.compilers, "_cache_config_file", [])
@@ -453,10 +453,11 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     # Update index
     buildcache_cmd("update-index", "-d", mirror_dir.strpath)
 
-    # Check dependency not in buildcache
-    cache_list = buildcache_cmd("list", "--allarch")
-    assert "libdwarf" in cache_list
-    assert "libelf" not in cache_list
+    with spack.config.override("config:binary_index_ttl", 0):
+        # Check dependency not in buildcache
+        cache_list = buildcache_cmd("list", "--allarch")
+        assert "libdwarf" in cache_list
+        assert "libelf" not in cache_list
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):

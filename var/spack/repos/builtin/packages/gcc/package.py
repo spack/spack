@@ -206,9 +206,24 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         provides("golang@:1.4", when="@5:")
         provides("golang@:1.6.1", when="@6:")
         provides("golang@:1.8", when="@7:")
+        provides("golang@:1.10", when="@8:")
+        provides("golang@:1.12", when="@9:")
+        provides("golang@:1.14", when="@10:")
+        provides("golang@:1.16", when="@11:")
+        provides("golang@:1.18", when="@11:")
         # GCC 4.6 added support for the Go programming language.
         # See https://gcc.gnu.org/gcc-4.6/changes.html
         conflicts("@:4.5", msg="support for Go has been added in GCC 4.6")
+        # aarch64 machines (including Macs with Apple silicon) can't use
+        # go-bootstrap because it pre-dates aarch64 support in Go. When not
+        # using an external go bootstrap go, These machines have to rely on
+        # Go support in gcc (which may require compiling a version of gcc
+        # with Go support just to satisfy this requirement).  However,
+        # there's also a bug in some versions of GCC's Go front-end that prevents
+        # these versions from properly bootstrapping Go.  (See issue #47771
+        # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
+        # at least 10.4.  On the 11.x branch, we need at least 11.3:
+        provides("go-external-or-gccgo-bootstrap", when="gcc@10.4.0:10,11.3.0:target=aarch64:")
         # Go is not supported on macOS
         conflicts("platform=darwin", msg="Go not supported on MacOS")
 
@@ -332,7 +347,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts("%gcc@:4.7", when="@11:")
 
     # https://github.com/iains/gcc-12-branch/issues/6
-    conflicts("%apple-clang@14:")
+    conflicts("%apple-clang@14.0")
 
     if sys.platform == "darwin":
         # Fix parallel build on APFS filesystem
@@ -442,7 +457,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     @classproperty
     def executables(cls):
-        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc"]
+        names = [r"gcc", r"[^\w]?g\+\+", r"gfortran", r"gdc", r"gccgo"]
         suffixes = [r"", r"-mp-\d+\.\d", r"-\d+\.\d", r"-\d+", r"\d\d"]
         return [r"".join(x) for x in itertools.product(names, suffixes)]
 
@@ -520,6 +535,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             elif "gcc" in basename:
                 languages.add("c")
                 compilers["c"] = exe
+            elif "gccgo" in basename:
+                languages.add("go")
+                compilers["go"] = exe
             elif "gdc" in basename:
                 languages.add("d")
                 compilers["d"] = exe

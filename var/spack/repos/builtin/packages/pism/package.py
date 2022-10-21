@@ -47,6 +47,8 @@ class Pism(CMakePackage):
     description = "Report errors through Everytrace (requires Everytrace)"
     variant("everytrace", default=False, description=description)
 
+    patch("pism-petsc-3.18.diff", when="@1.1.4 ^petsc@3.18:")
+
     # CMake build options not transferred to Spack variants
     # (except from CMakeLists.txt)
     #
