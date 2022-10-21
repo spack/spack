@@ -81,7 +81,7 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         spack external find cmake
         spack external find ninja
-        spack install abseil-cpp
+        spack -d install abseil-cpp
   make-installer:
     runs-on: windows-latest
     steps:
