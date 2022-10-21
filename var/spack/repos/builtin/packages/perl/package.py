@@ -181,11 +181,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
-        pwd_full_path = subprocess.check_output(['which', 'pwd']).decode('ascii').rstrip()
 
         # there is probably a spack utility which does this
         # it can't be done with a patch since the script in question
         # explicitly prevents using tools like which to find paths
+        pwd_full_path = subprocess.check_output(['which', 'pwd']).decode('ascii').rstrip()
         script_to_patch = "dist/PathTools/Cwd.pm"
         os.chmod(script_to_patch, 0o777)
 
