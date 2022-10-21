@@ -406,7 +406,7 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
     new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
 
-    spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
+    spack.relocate.unsafe_relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
@@ -421,7 +421,7 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     with open(fpath, "w") as f:
         f.write("/short")
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
-        spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
+        spack.relocate.unsafe_relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
