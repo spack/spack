@@ -1374,20 +1374,10 @@ class Repo(object):
         # sets attributes that it used to)
         new_overidden_attrs = {}
         for key, val in new_cfg_settings.items():
-            if hasattr(cls, key):
-                new_overidden_attrs[key] = getattr(cls, key)
-            if isinstance(val, dict):
-                t = val.get("type", "string")
-                v = val["value"]
-                if t == "int":
-                    v = int(v)
-                elif t == "float":
-                    v = float(v)
-                elif t == "boolean":
-                    v = yaml.load(v)
-                setattr(cls, key, v)
-            else:
-                setattr(cls, key, val)
+            if key not in ["git", "url", "submodules"]:
+                # Infer type
+                val = yaml.load(val)
+            setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
         elif hasattr(cls, "overidden_attrs"):

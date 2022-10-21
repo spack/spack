@@ -202,16 +202,7 @@ class TestConcretizePreferences(object):
         update_packages(
             "mpileaks",
             "package_attributes",
-            {
-                "x": {
-                    "value": "1",
-                    "type": "int",
-                },
-                "y": {
-                    "value": "true",
-                    "type": "boolean",
-                },
-            },
+            {"x": "1", "y": "true"},
         )
         spec = concretize("mpileaks")
         assert spec.package.x == 1
