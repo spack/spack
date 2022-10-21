@@ -33,8 +33,6 @@ import llnl.util.tty as tty
 from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
-import spack.util.spack_yaml as syaml
-import ruamel.yaml as ryaml
 import spack.caches
 import spack.config
 import spack.error
@@ -1386,7 +1384,7 @@ class Repo(object):
                 elif t == "float":
                     v = float(v)
                 elif t == "boolean":
-                    v = ryaml.load(v)
+                    v = yaml.load(v)
                 setattr(cls, key, v)
             else:
                 setattr(cls, key, val)
