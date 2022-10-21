@@ -95,7 +95,10 @@ class RocmValidationSuite(CMakePackage):
     patch("004-remove-git-download-yaml-cpp-use-yaml-cpp-recipe.patch", when="@4.3.0:4.3.2")
     patch("005-cleanup-path-reference-donot-download-googletest-yaml.patch", when="@4.5.0:5.2")
     patch("006-library-path.patch", when="@4.5.0:5.2")
-    patch("007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch", when="@5.3.0:")
+    patch(
+        "007-cleanup-path-reference-donot-download-googletest-yaml-library-path_5.3.patch",
+        when="@5.3.0:",
+    )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib", type="link")

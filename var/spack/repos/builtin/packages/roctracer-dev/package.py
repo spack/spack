@@ -137,7 +137,7 @@ class RoctracerDev(CMakePackage):
         "5.3.0",
     ]:
         depends_on("rocprofiler-dev@" + ver, when="@" + ver)
-    
+
     patch("0001-include-rocprofiler-dev-path.patch", when="@5.3.0")
 
     @classmethod
