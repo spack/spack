@@ -642,8 +642,8 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-class BuildManifestVistor(BaseDirectoryVisitor):
-    """Visitior that collects a list of files and symlinks
+class BuildManifestVisitor(BaseDirectoryVisitor):
+    """Visitor that collects a list of files and symlinks
     that can be checked for need of relocation. It knows how
     to dedupe hardlinks and deal with symlinks to files and
     directories."""
@@ -708,7 +708,7 @@ def get_buildfile_manifest(spec):
     # Guard against filesystem footguns of hardlinks and symlinks by using
     # a visitor to retrieve a list of files and symlinks, so we don't have
     # to worry about hardlinks of symlinked dirs and what not.
-    visitor = BuildManifestVistor()
+    visitor = BuildManifestVisitor()
     root = spec.prefix
     visit_directory_tree(root, visitor)
 

@@ -664,7 +664,7 @@ def test_build_manifest_visitor(tmpdir):
         if sys.platform.startswith("linux"):
             os.link("symlink_to_directory", "hardlink_of_symlink_to_directory")
 
-    visitor = bindist.BuildManifestVistor()
+    visitor = bindist.BuildManifestVisitor()
     visit_directory_tree(str(tmpdir), visitor)
 
     # We de-dupe hardlinks of files, so there should really be just one file
