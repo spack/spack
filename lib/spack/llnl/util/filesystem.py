@@ -2134,6 +2134,8 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
 
     if is_windows:
         static_ext = "lib"
+        # For linking (runtime=False) you need the .lib files regardless of
+        # whether you are doing a shared or static link
         shared_ext = "dll" if runtime else "lib"
     else:
         # Used on both Linux and macOS
@@ -2193,7 +2195,7 @@ def find_all_static_libraries(root, recursive=False):
 
     See documentation for `llnl.util.filesystem.find_libraries` for more information
     """
-    return find_libraries("*", root=root, shared=False, recursive=recursive, runtime=False)
+    return find_libraries("*", root=root, shared=False, recursive=recursive)
 
 
 def find_all_libraries(root, recursive=False):

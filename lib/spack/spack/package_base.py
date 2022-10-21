@@ -2818,8 +2818,10 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
+        # on Windows, libraries of runtime interest are typically
+        # stored in the bin directory
         if is_windows:
-            rpaths.append(self.prefix.bin)
+            rpaths = [self.prefix.bin]
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
