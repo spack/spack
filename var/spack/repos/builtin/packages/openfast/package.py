@@ -95,11 +95,7 @@ class Openfast(CMakePackage):
             )
 
             if "+netcdf" in spec:
-                options.extend(
-                    [
-                        self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)
-                    ]
-                )
+                options.extend([self.define("NETCDF_ROOT", spec["netcdf-c"].prefix)])
 
         if "~shared" in spec:
             options.extend(
