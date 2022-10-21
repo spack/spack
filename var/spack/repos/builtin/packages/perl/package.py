@@ -23,6 +23,7 @@ from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
+from spack.util.replace_string import replace_string
 
 is_windows = sys.platform == "win32"
 
@@ -187,14 +188,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # explicitly prevents using tools like which to find paths
         pwd_full_path = subprocess.check_output(['which', 'pwd']).decode('ascii').rstrip()
         script_to_patch = "dist/PathTools/Cwd.pm"
-        os.chmod(script_to_patch, 0o777)
-
-        with open(script_to_patch) as f:
-            patched_script = f.read().replace("/QOpenSys/bin/pwd", pwd_full_path)
-
-        with open(script_to_patch, "w") as f:
-            f.write(patched_script)
-
+        replace_string(script_to_patch, "/QOpenSys/bin/pwd", pwd_full_path)
 
     @classmethod
     def determine_version(cls, exe):
