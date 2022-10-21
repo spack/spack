@@ -155,13 +155,15 @@ class Mivisionx(CMakePackage):
         "opencv@:3.4"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
-        type="build", when="@:5.2",
+        type="build",
+        when="@:5.2",
     )
     depends_on(
         "opencv@4.5:"
         "+calib3d+features2d+highgui+imgcodecs+imgproc"
         "+video+videoio+flann+photo+objdetect",
-        type="build", when="@5.3:",
+        type="build",
+        when="@5.3:",
     )
     depends_on("rocm-opencl@3.5.0", when="@1.7+opencl")
     depends_on("rocm-cmake@3.5.0", type="build", when="@1.7")
