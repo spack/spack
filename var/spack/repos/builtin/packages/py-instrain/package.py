@@ -17,7 +17,6 @@ class PyInstrain(PythonPackage):
     homepage = "https://github.com/MrOlm/instrain"
     pypi = "inStrain/inStrain-1.5.7.tar.gz"
 
-    variant("coverm", default=False, description="Enables quick_profile operation")
     variant("prodigal", default=False, description="Enables profiling on a gene by gene level")
 
     version("1.5.7", sha256="c5dcb01dae244927fe987b5f0695d895ccf521c9dfd87a2cb59057ad50bd9bfa")
@@ -40,5 +39,4 @@ class PyInstrain(PythonPackage):
     depends_on("py-numba", type=("build", "run"))
     depends_on("samtools", type=("build", "run"))
     # Optional dependencies
-    depends_on("coverm", type=("build", "run"), when="+coverm")
     depends_on("prodigal", type=("build", "run"), when="+prodigal")
