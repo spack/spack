@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -46,6 +48,17 @@ class PyCython(PythonPackage):
     depends_on("gdb@7.2:", type="test")
 
     @property
+    def prefix(self):
+        prefix = super(PyCython, self).prefix
+        with when('^python@3.10:'):
+            prefix.bin = os.path.join(prefix, 'local', 'bin')
+            prefix.lib = os.path.join(prefix, 'local', 'lib')
+        print("prefix.bin = '{}'".format(prefix.bin))
+        print("prefix.lib = '{}'".format(prefix.lib))
+        #raise Exception("prefix = '{}'".format(prefix))
+        return prefix
+
+    @property
     def command(self):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
@@ -55,3 +68,7 @@ class PyCython(PythonPackage):
     def build_test(self):
         # Warning: full suite of unit tests takes a very long time
         python("runtests.py", "-j", str(make_jobs))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
