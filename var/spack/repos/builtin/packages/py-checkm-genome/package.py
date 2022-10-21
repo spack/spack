@@ -21,7 +21,7 @@ class PyCheckmGenome(PythonPackage):
 
     depends_on("python@2.7.0:2.7", type=("build", "run"), when="@:1.0.18")
     depends_on("python@3:", type=("build", "run"), when="@1.1.0:")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=("build", "run"))
     depends_on("hmmer@3.1b1:", type=("build", "run"))
     depends_on("pplacer", type=("build", "run"))
     depends_on("prodigal@2.6.1:", type=("build", "run"))
