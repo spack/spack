@@ -50,12 +50,9 @@ class PyCython(PythonPackage):
     @property
     def prefix(self):
         prefix = super(PyCython, self).prefix
-        with when('^python@3.10:'):
-            prefix.bin = os.path.join(prefix, 'local', 'bin')
-            prefix.lib = os.path.join(prefix, 'local', 'lib')
-        print("prefix.bin = '{}'".format(prefix.bin))
-        print("prefix.lib = '{}'".format(prefix.lib))
-        #raise Exception("prefix = '{}'".format(prefix))
+        with when("^python@3.10:"):
+            prefix.bin = os.path.join(prefix, "local", "bin")
+            prefix.lib = os.path.join(prefix, "local", "lib")
         return prefix
 
     @property
