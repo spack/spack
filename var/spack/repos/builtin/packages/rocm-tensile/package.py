@@ -13,11 +13,12 @@ class RocmTensile(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/Tensile/"
     git = "https://github.com/ROCmSoftwarePlatform/Tensile.git"
-    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.2.3.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/Tensile/archive/rocm-5.3.0.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
+    version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
     version("5.2.3", sha256="840698bf2ac62e08ae76c3843f1dad5367ed098d42e6a5fa7953de70642fd2cf")
     version("5.2.1", sha256="49582e28f7e14fed6a66c59482a41d3899c1eb8e7aa0ce40a7a2e806dadc536b")
     version("5.2.0", sha256="aa6107944482ad278111d11d2e926393423fc70e7e1838574fe7ad9f553bdacf")
@@ -129,11 +130,12 @@ class RocmTensile(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocm-cmake@" + ver, type="build", when="@" + ver)
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("comgr@" + ver, when="@" + ver)
-        depends_on("llvm-amdgpu@" + ver, when="@" + ver + "+openmp")
+        depends_on("rocm-openmp-extras@" + ver, when="@" + ver + "+openmp")
         depends_on("llvm-amdgpu@" + ver + "~openmp", when="@" + ver + "~openmp")
         depends_on("rocminfo@" + ver, type="build", when="@" + ver)
 
@@ -155,6 +157,7 @@ class RocmTensile(CMakePackage):
         "5.2.0",
         "5.2.1",
         "5.2.3",
+        "5.3.0",
     ]:
         depends_on("rocm-smi-lib@" + ver, type="build", when="@" + ver)
 
@@ -163,6 +166,7 @@ class RocmTensile(CMakePackage):
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch("0001-fix-compile-error.patch", when="@3.7.0:3.8.0")
     patch("0002-require-openmp-when-tensile-use-openmp-is-on.patch", when="@3.9.0:4.0.0")
+    patch("0003-require-openmp-when-tensile-use-openmp-is-on.patch", when="@5.2.0:")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
@@ -184,6 +188,7 @@ class RocmTensile(CMakePackage):
         args = [
             self.define("amd_comgr_DIR", self.spec["comgr"].prefix),
             self.define("Tensile_COMPILER", "hipcc"),
+            self.define("ROCM_OPENMP_EXTRAS_PATH", self.spec["rocm-openmp-extras"].prefix),
             self.define("Tensile_LOGIC", "asm_full"),
             self.define("Tensile_CODE_OBJECT_VERSION", "V3"),
             self.define("Boost_USE_STATIC_LIBS", "OFF"),
