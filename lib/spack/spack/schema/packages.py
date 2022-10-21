@@ -99,8 +99,15 @@ properties = {
                             },
                         },
                         "patternProperties": {
-                            r"\w[\w-]*": {
-                                "type": "string",
+                            r"\w+": {
+                                "oneOf": [
+                                    {"type": "string"},
+                                    {"type": "array", "items": {"type": "string"}},
+                                    {
+                                        "type": "object",
+                                        "patternProperties": {r"\w+": {"type": "string"}},
+                                    },
+                                ]
                             },
                         },
                     },

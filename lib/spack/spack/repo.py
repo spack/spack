@@ -1374,6 +1374,12 @@ class Repo(object):
         # sets attributes that it used to)
         new_overidden_attrs = {}
         for key, val in new_cfg_settings.items():
+            if hasattr(cls, key):
+                new_overidden_attrs[key] = getattr(cls, key)
+            if isinstance(val, list):
+                raise spack.config.ConfigError("Unsupported attribute value: list")
+            elif isinstance(val, dict):
+                raise spack.config.ConfigError("Unsupported attribute value: dict")
             if key not in ["git", "url", "submodules"]:
                 # Infer type
                 val = yaml.load(val)

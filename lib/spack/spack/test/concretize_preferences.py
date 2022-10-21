@@ -179,7 +179,7 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert "zmpi" in spec
 
-    def test_config_set_url_for_package(self, mutable_mock_repo):
+    def test_config_set_pkg_property_url(self, mutable_mock_repo):
         """Test preferred providers of virtual packages are
         applied correctly
         """
@@ -195,10 +195,8 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.package.fetcher[0].url == "http://www.llnl.gov/mpileaks-2.3.tar.gz"
 
-    def test_config_set_package_property(self, mutable_mock_repo):
-        """Test preferred providers of virtual packages are
-        applied correctly
-        """
+    def test_config_set_pkg_property_new(self, mutable_mock_repo):
+        """Test that you can set arbitrary attributes on the Package class"""
         update_packages(
             "mpileaks",
             "package_attributes",
@@ -207,6 +205,12 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         assert spec.package.x == 1
         assert spec.package.y == True
+
+    def test_config_set_pkg_property_collecton_unsupported(self, mutable_mock_repo):
+        """Test that an error is raised if you attempt to assign a list value"""
+        update_packages("mpileaks", "package_attributes", {"x": ["a", "b"]})
+        with pytest.raises(ConfigError):
+            spec = concretize("mpileaks")
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
