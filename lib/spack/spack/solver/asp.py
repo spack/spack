@@ -56,7 +56,6 @@ import spack.version
 ASTType = None
 parse_files = None
 
-
 #: Data class that contain configuration on what a
 #: clingo solve should output.
 #:
@@ -2335,6 +2334,16 @@ class Solver(object):
                 spack.spec.Spec.ensure_valid_variants(s)
         return reusable
 
+    def filter_buildable(self, index):
+        """Filter out buildcache entries of specs that match packages locally marked as buildable:false"""
+        packages_yaml = spack.config.get("packages")
+        filter = ()
+        for pkg_name, data in packages_yaml.items():
+            buildable = data.get("buildable", True)
+            if not buildable:
+                filter += (pkg_name,)
+        return [i for i in index if not i.to_dict()["spec"]["nodes"][0]["name"] in filter]
+
     def _reusable_specs(self):
         reusable_specs = []
         if self.reuse:
@@ -2351,7 +2360,7 @@ class Solver(object):
             # Specs from buildcaches
             try:
                 index = spack.binary_distribution.update_cache_and_get_specs()
-                reusable_specs.extend(index)
+                reusable_specs.extend(self.filter_buildable(index))
             except (spack.binary_distribution.FetchCacheError, IndexError):
                 # this is raised when no mirrors had indices.
                 # TODO: update mirror configuration so it can indicate that the
