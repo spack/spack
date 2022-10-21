@@ -30,11 +30,13 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Allowed C++ standard
     variant(
-        "cxxstd", default='17', values=('14', '17', '2a', '2b'),
+        "cxxstd",
+        default="17",
+        values=("14", "17", "2a", "2b"),
         multi=False,
-        description='Use the specified C++ standard when building.',
+        description="Use the specified C++ standard when building.",
     )
-    conflicts("cxxstd=14", when='@1.3:')
+    conflicts("cxxstd=14", when="@1.3:")
 
     # ArborX relies on Kokkos to provide devices, providing one-to-one matching
     # variants. The only way to disable those devices is to make sure Kokkos
