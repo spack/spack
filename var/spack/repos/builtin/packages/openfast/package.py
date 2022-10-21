@@ -86,7 +86,7 @@ class Openfast(CMakePackage):
                     self.define("MPI_Fortran_COMPILER", spec["mpi"].mpifc),
                     self.define("HDF5_ROOT", spec["hdf5"].prefix),
                     self.define("YAML_ROOT", spec["yaml-cpp"].prefix),
-                    # The following xpects that HDF5 was built with CMake.
+                    # The following expects that HDF5 was built with CMake.
                     # Solves issue with OpenFAST trying to link
                     # to HDF5 libraries with a "-shared" prefix
                     # that do not exist.
