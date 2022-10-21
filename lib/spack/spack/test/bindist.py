@@ -656,12 +656,11 @@ def test_build_manifest_visitor(tmpdir):
         # Hardlink the file
         os.link(file, "hardlink_of_file")
 
-        # Hardlink the symlinks
-        os.link("symlink_to_file", "hardlink_of_symlink_to_file")
-
-        # Seems like hardlinks of symlinked dirs are too exotic for darwin.
-        # Let's just stick to Linux, I did not check BSD or other platforms.
+        # Hardlinked symlinks: seems like this is only a thing on Linux,
+        # on Darwin the symlink *target* is hardlinked, on Linux the
+        # symlink *itself* is hardlinked.
         if sys.platform.startswith("linux"):
+            os.link("symlink_to_file", "hardlink_of_symlink_to_file")
             os.link("symlink_to_directory", "hardlink_of_symlink_to_directory")
 
     visitor = bindist.BuildManifestVisitor()
@@ -673,9 +672,9 @@ def test_build_manifest_visitor(tmpdir):
     # We do not de-dupe symlinks, cause it's unclear how to update symlinks
     # in-place, preserving inodes.
     if sys.platform.startswith("linux"):
-        assert len(visitor.symlinks) == 4  # includes hardlink of symlink to dir.
+        assert len(visitor.symlinks) == 4  # includes hardlinks of symlinks.
     else:
-        assert len(visitor.symlinks) == 3
+        assert len(visitor.symlinks) == 2
 
     with tmpdir.as_cwd():
         assert not any(os.path.islink(f) or os.path.isdir(f) for f in visitor.files)
