@@ -17,6 +17,8 @@ class PyInstrain(PythonPackage):
     homepage = "https://github.com/MrOlm/instrain"
     pypi = "inStrain/inStrain-1.5.7.tar.gz"
 
+    variant("prodigal", default=False, description="Enables profiling on a gene by gene level")
+
     version("1.5.7", sha256="c5dcb01dae244927fe987b5f0695d895ccf521c9dfd87a2cb59057ad50bd9bfa")
 
     depends_on("python@3.4.0:", type=("build", "run"))
@@ -35,3 +37,9 @@ class PyInstrain(PythonPackage):
     depends_on("py-psutil", type=("build", "run"))
     depends_on("py-lmfit", type=("build", "run"))
     depends_on("py-numba", type=("build", "run"))
+    # non-python dependencies
+    # https://instrain.readthedocs.io/en/latest/installation.html#dependencies
+    # Essential dependencies
+    depends_on("samtools", type=("build", "run"))
+    # Optional dependencies
+    depends_on("prodigal", type=("build", "run"), when="+prodigal")
