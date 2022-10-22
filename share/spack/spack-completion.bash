@@ -412,8 +412,12 @@ _spack_bootstrap() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="status enable disable reset root list trust untrust add remove mirror"
+        SPACK_COMPREPLY="now status enable disable reset root list trust untrust add remove mirror"
     fi
+}
+
+_spack_bootstrap_now() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_bootstrap_status() {
@@ -504,7 +508,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy sync update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile sync update-index"
     fi
 }
 
@@ -562,10 +566,6 @@ _spack_buildcache_get_buildcache_name() {
 
 _spack_buildcache_save_specfile() {
     SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
-}
-
-_spack_buildcache_copy() {
-    SPACK_COMPREPLY="-h --help --base-dir --spec-file --destination-url"
 }
 
 _spack_buildcache_sync() {
@@ -1018,7 +1018,12 @@ _spack_env_revert() {
 }
 
 _spack_env_depfile() {
-    SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver -o --output -G --generator"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --make-target-prefix --make-disable-jobserver --use-buildcache -o --output -G --generator"
+    else
+        _all_packages
+    fi
 }
 
 _spack_extensions() {

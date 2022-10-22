@@ -16,7 +16,7 @@ spack:
   packages:
     all:
       compiler: [gcc@11.2.0]
-      target: [x86_64_v4]
+      target: [x86_64_v3]
       variants: ~rocm+cuda cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
