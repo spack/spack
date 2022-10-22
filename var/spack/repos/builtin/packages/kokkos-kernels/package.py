@@ -23,6 +23,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     # openssl sha256 kokkos-kernels-x.y.z.tar.gz
     version("develop", branch="develop")
     version("master", branch="master")
+    version("3.7.00", sha256="51bc6db3995392065656848e2b152cfd1c3a95a951ab18a3934278113d59f32b")
+    version("3.6.01", sha256="f000b156c8c0b80e85d38587907c11d9479aaf362408b812effeda5e22b24d0d")
     version("3.6.00", sha256="2753643fd643b9eed9f7d370e0ff5fa957211d08a91aa75398e31cbc9e5eb0a5")
     version("3.5.00", sha256="a03a41a047d95f9f07cd1e1d30692afdb75b5c705ef524e19c1d02fe60ccf8d1")
     version("3.4.01", sha256="f504aa4afbffb58fa7c4430d0fdb8fd5690a268823fa15eb0b7d58dab9d351e6")
@@ -37,6 +39,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@3.7.00", when="@3.7.00")
+    depends_on("kokkos@3.6.01", when="@3.6.01")
     depends_on("kokkos@3.6.00", when="@3.6.00")
     depends_on("kokkos@3.5.00", when="@3.5.00")
     depends_on("kokkos@3.4.01", when="@3.4.01")
