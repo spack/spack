@@ -129,7 +129,6 @@ spack:
 
   - target:
     - 'target=x86_64_v3'
-    - 'target=x86_64_v4'
 
 
   specs:
