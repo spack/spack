@@ -52,7 +52,12 @@ jobs:
               patchelf cmake bison libbison-dev kcov
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-cov pytest-xdist
+          pip install --upgrade pip six setuptools pytest codecov[toml] pytest-cov 
+          # Install xdist only on recent Python, to avoid stalling on Python 2.7 due
+          # to bugs on an unmaintained version of the package.
+          if [[ ${{ matrix.python-version }} != "2.7" ]]; then
+            pip install --upgrade pytest-xdist
+          fi
           # ensure style checks are not skipped in unit tests for python >= 3.6
           # note that true/false (i.e., 1/0) are opposite in conditions in python and bash
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
