@@ -744,11 +744,14 @@ def relocate_links(links, orig_layout_root, orig_install_prefix, new_install_pre
             tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
-def relocate_text(files, prefixes, concurrency=32):
+def unsafe_relocate_text(files, prefixes, concurrency=32):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
     Relocation also affects the the path in Spack's sbang script.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         files (list): Text files to be relocated
@@ -786,10 +789,13 @@ def relocate_text(files, prefixes, concurrency=32):
         tp.join()
 
 
-def relocate_text_bin(binaries, prefixes, concurrency=32):
+def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         binaries (list): binaries to be relocated
