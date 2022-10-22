@@ -18,6 +18,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["aprokop"]
 
     version("master", branch="master")
+    version("1.3", sha256="3f1e17f029a460ab99f8396e2772cec908eefc4bf3868c8828907624a2d0ce5d")
     version("1.2", sha256="ed1939110b2330b7994dcbba649b100c241a2353ed2624e627a200a398096c20")
     version("1.1", sha256="2b5f2d2d5cec57c52f470c2bf4f42621b40271f870b4f80cb57e52df1acd90ce")
     version("1.0", sha256="9b5f45c8180622c907ef0b7cc27cb18ba272ac6558725d9e460c3f3e764f1075")
@@ -26,6 +27,16 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         sha256="b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d",
         deprecated=True,
     )
+
+    # Allowed C++ standard
+    variant(
+        "cxxstd",
+        default="17",
+        values=("14", "17", "2a", "2b"),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
+    conflicts("cxxstd=14", when="@1.3:")
 
     # ArborX relies on Kokkos to provide devices, providing one-to-one matching
     # variants. The only way to disable those devices is to make sure Kokkos
@@ -49,7 +60,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Standalone Kokkos
     depends_on("kokkos@3.1.00:", when="~trilinos")
-    depends_on("kokkos@3.4.00:", when="@1.2:~trilinos")
+    depends_on("kokkos@3.4.00:", when="@1.2~trilinos")
+    depends_on("kokkos@3.6.00:", when="@1.3:~trilinos")
     for backend in kokkos_backends:
         depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
 
@@ -69,7 +81,8 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     # - current version of Trilinos package does not allow enabling CUDA
     depends_on("trilinos+kokkos", when="+trilinos")
     depends_on("trilinos+openmp", when="+trilinos+openmp")
-    depends_on("trilinos@13.2.0:", when="@1.2:+trilinos")
+    depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
+    depends_on("trilinos@13.4.0:", when="@1.3:+trilinos")
     conflicts("~serial", when="+trilinos")
     conflicts("+cuda", when="+trilinos")
 
