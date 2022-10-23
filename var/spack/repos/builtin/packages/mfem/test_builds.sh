@@ -8,7 +8,7 @@ rocm_arch="gfx908"
 spack_jobs=''
 # spack_jobs='-j 128'
 
-mfem='mfem@4.4.0'${compiler}
+mfem='mfem@4.5.0'${compiler}
 mfem_dev='mfem@develop'${compiler}
 
 backends='+occa+raja+libceed'
@@ -31,11 +31,11 @@ builds=(
     # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: add back '+slepc' when its build is fixed.
     ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
     ${mfem}'~mpi \
         '"$backends"'+suite-sparse+sundials+gslib+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit \
+        +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $hdf5_spec"' ^sundials~mpi'
 
     # develop version, shared builds:
@@ -47,13 +47,13 @@ builds=(
     # TODO: add back '+slepc' when its build is fixed.
     ${mfem_dev}'+shared~static \
         '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
     # NOTE: Shared build with +gslib works on mac but not on linux
     # TODO: add back '+gslib' when the above NOTE is addressed.
     ${mfem_dev}'+shared~static~mpi \
         '"$backends"'+suite-sparse+sundials+mpfr+netcdf \
-        +zlib+gnutls+libunwind+conduit \
+        +zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $hdf5_spec"' ^sundials~mpi'
 )
 
@@ -79,8 +79,11 @@ builds2=(
     ${mfem}'+petsc'" $petsc_spec"
     # TODO: uncomment the next line when the slepc build is fixed.
     # ${mfem}'+petsc+slepc'" $petsc_spec"
+    ${mfem}'+ginkgo'
+    ${mfem}'+hiop'
     # TODO: uncomment the next line when the threadsafe build is fixed.
     # ${mfem}'+threadsafe'
+    #
     # develop version
     ${mfem_dev}"$backends $backends_specs"
     ${mfem_dev}'+superlu-dist'
@@ -101,6 +104,8 @@ builds2=(
     ${mfem_dev}'+umpire'
     ${mfem_dev}'+petsc'" $petsc_spec"
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
+    ${mfem_dev}'+ginkgo'
+    ${mfem_dev}'+hiop'
     # TODO: uncomment the next line when the threadsafe build is fixed.
     # ${mfem_dev}'+threadsafe'
 )
@@ -125,7 +130,7 @@ builds_cuda=(
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
     ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
         +strumpack+suite-sparse \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
         '"$hdf5_spec"
 
@@ -138,7 +143,7 @@ builds_cuda=(
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
     ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
         +suite-sparse \
-        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hypre+cuda \
         '"$hdf5_spec"
 
@@ -164,7 +169,7 @@ builds_cuda=(
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
     ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
         +strumpack+suite-sparse \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
         '"$hdf5_spec"
 
@@ -177,7 +182,7 @@ builds_cuda=(
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
     ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
         +suite-sparse \
-        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+cuda+openmp ^hypre+cuda \
         '"$hdf5_spec"
 )
@@ -200,7 +205,7 @@ builds_rocm=(
     # TODO: add "+petsc+slepc $petsc_spec_rocm" when it is supported.
     ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         +strumpack+suite-sparse \
-        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+rocm~openmp ^occa~cuda'" $strumpack_rocm_spec"' \
         '"$hdf5_spec"
 
@@ -212,7 +217,7 @@ builds_rocm=(
     # TODO: add back "+sundials" when it's supported with '^hypre+rocm'.
     ${mfem}'+rocm+openmp+raja+occa+libceed amdgpu_target='"${rocm_arch}"' \
         +suite-sparse \
-        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
+        +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         ^raja+rocm~openmp ^occa~cuda ^hypre+rocm \
         '"$hdf5_spec"
 
