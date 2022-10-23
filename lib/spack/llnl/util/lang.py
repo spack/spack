@@ -756,7 +756,7 @@ def pretty_seconds(seconds):
         seconds (float): Number of seconds
 
     Returns:
-        string: Time string with units
+        str: Time string with units
     """
     if seconds >= 1:
         value, unit = seconds, "s"
