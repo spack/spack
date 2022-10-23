@@ -118,6 +118,14 @@ def test_pretty_string_to_date(format, pretty_string):
     assert t1 == t2
 
 
+def test_pretty_seconds():
+    assert llnl.util.lang.pretty_seconds(2.1) == "2.100s"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000) == "2.100ms"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000) == "2.100us"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000) == "2.100ns"
+    assert llnl.util.lang.pretty_seconds(2.1 / 1000 / 1000 / 1000 / 10) == "0.210ns"
+
+
 def test_match_predicate():
     matcher = match_predicate(lambda x: True)
     assert matcher("foo")
@@ -306,15 +314,15 @@ def test_grouped_exception():
     due to the following failures:
     inner method raised ValueError: wow!
       File "{0}", \
-line 290, in test_grouped_exception
+line 298, in test_grouped_exception
         inner()
       File "{0}", \
-line 287, in inner
+line 295, in inner
         raise ValueError("wow!")
 
     top-level raised TypeError: ok
       File "{0}", \
-line 293, in test_grouped_exception
+line 301, in test_grouped_exception
         raise TypeError("ok")
     """
         ).format(__file__)
