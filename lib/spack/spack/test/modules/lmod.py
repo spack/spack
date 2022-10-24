@@ -67,11 +67,13 @@ class TestLmod(object):
         else:
             assert compiler.replace("@", "/") in layout.available_path_parts
 
-        # Check that the provider part instead has always an hash even if
-        # hash has been disallowed in the configuration file
+        # Check that the provider part has a hash that matches the
+        # hash_length in the configuration file
+        hash_length = spack.modules.lmod.get_hash_length()
         path_parts = layout.available_path_parts
         service_part = spec_string.replace("@", "/")
-        service_part = "-".join([service_part, layout.spec.dag_hash(length=7)])
+        if hash_length > 0:
+            service_part = "-".join([service_part, layout.spec.dag_hash(length=hash_length)])
         assert service_part in path_parts
 
         # Check that multi-providers have repetitions in path parts
@@ -158,9 +160,7 @@ class TestLmod(object):
         path = module.layout.filename
         mpi_spec = spec["mpi"]
 
-        mpi_element = "{0}/{1}-{2}/".format(
-            mpi_spec.name, mpi_spec.version, mpi_spec.dag_hash(length=7)
-        )
+        mpi_element = "{0}/{1}/".format(mpi_spec.name, mpi_spec.version)
 
         assert mpi_element in path
 
