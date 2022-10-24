@@ -14,8 +14,8 @@
 import os
 import platform
 import re
-import sys
 import subprocess
+import sys
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
@@ -23,7 +23,6 @@ from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-from spack.util.replace_string import replace_string
 
 is_windows = sys.platform == "win32"
 
@@ -183,12 +182,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         os.chmod("lib/perlbug.t", 0o644)
         filter_file("!/$B/", "! (/(?:$B|PATH)/)", "lib/perlbug.t")
 
-        # there is probably a spack utility which does this
-        # it can't be done with a patch since the script in question
-        # explicitly prevents using tools like which to find paths
         pwd_full_path = subprocess.check_output(['which', 'pwd']).decode('ascii').rstrip()
         script_to_patch = "dist/PathTools/Cwd.pm"
-        replace_string(script_to_patch, "/QOpenSys/bin/pwd", pwd_full_path)
+        filter_file("/QOpenSys/bin/pwd", pwd_full_path, script_to_patch)
 
     @classmethod
     def determine_version(cls, exe):

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+import subprocess
 
 from spack.package import *
 
@@ -187,6 +188,10 @@ class Bazel(Package):
     patch("gcc11_2.patch", when="@0.3.2:4%gcc@11:")
     patch("gcc11_3.patch", when="@0.3:4%gcc@11:")
     patch("gcc11_4.patch", when="@4.1:4%gcc@11:")
+
+    def patch(self):
+        bash_full_path = subprocess.check_output(['which', 'bash']).decode('ascii').rstrip()
+
 
     # bazel-4.0.0 does not compile with gcc-11
     # newer versions of grpc and abseil dependencies are needed but are not in
