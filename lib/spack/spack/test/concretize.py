@@ -1283,7 +1283,7 @@ class TestConcretize(object):
     @pytest.mark.regression("22718")
     @pytest.mark.parametrize(
         "spec_str,expected_compiler",
-        [("mpileaks", "%gcc@4.5.0"), ("mpileaks ^mpich%clang@3.3", "%clang@3.3")],
+        [("mpileaks", "%gcc@10.2.1"), ("mpileaks ^mpich%clang@12.0.0", "%clang@12.0.0")],
     )
     def test_compiler_is_unique(self, spec_str, expected_compiler):
         s = Spec(spec_str).concretized()
