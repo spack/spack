@@ -955,10 +955,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@2.0")
+    install("a%gcc@12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -1013,11 +1013,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@2.0")
-    install("a%gcc@2.0")
+    install("gcc@12.0")
+    install("a%gcc@12.0")
 
 
 def test_install_fails_no_args(tmpdir):
