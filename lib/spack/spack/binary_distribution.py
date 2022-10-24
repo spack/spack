@@ -6,7 +6,6 @@
 import codecs
 import collections
 import hashlib
-import io
 import json
 import os
 import shutil
@@ -689,6 +688,15 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         return False
 
 
+def file_matches_any_binary_regex(path, regexes):
+    with open(path, "rb") as f:
+        contents = f.read()
+    for regex in regexes:
+        if regex.search(contents):
+            return True
+    return False
+
+
 def get_buildfile_manifest(spec):
     """
     Return a data structure with information about a build, including
@@ -753,17 +761,8 @@ def get_buildfile_manifest(spec):
                 continue
 
         elif relocate.needs_text_relocation(m_type, m_subtype):
-            added = False
-            with io.open(abs_path, "rb") as f:
-                contents = f.read()
-
-            for prefix in compiled_prefixes:
-                if prefix.search(contents):
-                    data["text_to_relocate"].append(rel_path)
-                    added = True
-                    break
-
-            if added:
+            if file_matches_any_binary_regex(abs_path, compiled_prefixes):
+                data["text_to_relocate"].append(rel_path)
                 continue
 
         data["other"].append(abs_path)
