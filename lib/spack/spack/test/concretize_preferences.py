@@ -6,6 +6,7 @@
 import os
 import stat
 
+import archspec
 import pytest
 
 import spack.config
@@ -106,7 +107,9 @@ class TestConcretizePreferences(object):
     def test_preferred_compilers(self):
         """Test preferred compilers are applied correctly"""
         # Need to make sure the test uses an available compiler
-        compiler_list = spack.compilers.all_compiler_specs()
+        arch = spack.spec.ArchSpec(('test', 'redhat6', archspec.cpu.host().name))
+
+        compiler_list = spack.compilers.compiler_specs_for_arch(arch)
         assert compiler_list
 
         # Try the first available compiler
