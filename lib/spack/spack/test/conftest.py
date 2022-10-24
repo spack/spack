@@ -1938,3 +1938,12 @@ def shell_as(shell):
         # restore old shell if one was set
         if _shell:
             os.environ["SPACK_SHELL"] = _shell
+
+
+@pytest.fixture()
+def nullify_globals(request, monkeypatch):
+    ensure_configuration_fixture_run_before(request)
+    monkeypatch.setattr(spack.config, "config", None)
+    monkeypatch.setattr(spack.caches, "misc_cache", None)
+    monkeypatch.setattr(spack.repo, "path", None)
+    monkeypatch.setattr(spack.store, "store", None)
