@@ -23,7 +23,7 @@ class Cdo(AutotoolsPackage):
     version(
         "2.1.0",
         sha256="b871346c944b05566ab21893827c74616575deaad0b20eacb472b80b1fa528cc",
-        url="https://code.mpimet.mpg.de/attachments/download/27481/cdo-2.0.6.tar.gz",
+        url="https://code.mpimet.mpg.de/attachments/download/27481/cdo-2.1.0.tar.gz",
     )
     version(
         "2.0.6",
