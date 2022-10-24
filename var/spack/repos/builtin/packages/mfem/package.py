@@ -342,7 +342,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             "ginkgo+rocm amdgpu_target={0}".format(gfx),
             when="+ginkgo+rocm amdgpu_target={0}".format(gfx),
         )
-    depends_on("hiop@0.4.6:", when="+hiop")
+    depends_on("hiop@0.4.6:~mpi", when="+hiop~mpi")
+    depends_on("hiop@0.4.6:+mpi", when="+hiop+mpi")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
             "hiop+cuda cuda_arch={0}".format(sm_),
@@ -521,6 +522,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             else:
                 mfem_mpiexec = "jsrun"
                 mfem_mpiexec_np = "-p"
+        elif "FLUX_JOB_ID" in os.environ:
+            mfem_mpiexec = "flux mini run"
+            mfem_mpiexec_np = "-n"
 
         metis5_str = "NO"
         if ("+metis" in spec) and spec["metis"].satisfies("@5:"):
@@ -574,6 +578,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         cxxstd = None
         if self.spec.satisfies("@4.0.0:"):
             cxxstd = "11"
+        if self.spec.satisfies("^raja@2022.03.0:"):
+            cxxstd = "14"
+        if self.spec.satisfies("^umpire@2022.03.0:"):
+            cxxstd = "14"
         if self.spec.satisfies("^sundials@6.4.0:"):
             cxxstd = "14"
         if self.spec.satisfies("^ginkgo"):

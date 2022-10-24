@@ -243,9 +243,9 @@ for bld in "${run_builds[@]}"; do
     printf "    %s\n" "${bld}"
     printf "%s\n" "${SEP}"
     eval bbb="\"${bld}\""
-    spack spec -I $bbb || exit 1
+    spack spec --fresh -I $bbb || exit 1
     printf "%s\n" "${sep}"
-    spack install $spack_jobs --test=root $bbb || exit 2
+    spack install $spack_jobs --fresh --test=root $bbb || exit 2
 done
 
 # Uninstall all mfem builds:
