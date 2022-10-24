@@ -726,6 +726,7 @@ def get_buildfile_manifest(spec):
     # look for them to decide if text file needs to be relocated or not
     prefixes = [d.prefix for d in spec.traverse(root=True, deptype="all") if not d.external]
     prefixes.append(spack.hooks.sbang.sbang_install_path())
+    prefixes.append(str(spack.store.layout.root))
 
     # Create a list regexes matching collected prefixes
     compiled_prefixes = [utf8_path_to_binary_regex(prefix) for prefix in prefixes]
