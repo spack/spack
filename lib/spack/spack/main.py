@@ -528,6 +528,12 @@ def make_argument_parser(**kwargs):
         help="add stacktraces to all printed statements",
     )
     parser.add_argument(
+        "--backtrace",
+        action="store_true",
+        default="SPACK_BACKTRACE" in os.environ,
+        help="always show backtraces for exceptions",
+    )
+    parser.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
@@ -561,8 +567,10 @@ def setup_main_options(args):
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
 
+    if args.debug or args.backtrace:
+        spack.error.debug = True
+
     if args.debug:
-        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.tracing_enabled = True
