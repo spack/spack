@@ -518,7 +518,6 @@ def ci_rebuild(args):
     install_args.extend(
         [
             "install",
-            "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
             "--use-buildcache",
             "dependencies:only,package:never",
