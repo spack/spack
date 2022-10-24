@@ -1459,10 +1459,12 @@ class TestConcretize(object):
 
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
+        default_target = spack.platforms.test.Test.default
+        generic_target = archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
-        assert s.concretized().satisfies("target=core2")
+        assert s.concretized().satisfies("target=%s" % default_target)
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
-            assert s.concretized().satisfies("target=x86_64")
+            assert s.concretized().satisfies("target=%s" % generic_target)
 
     def test_host_compatible_concretization(self):
         if spack.config.get("config:concretizer") == "original":
