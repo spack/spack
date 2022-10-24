@@ -1396,7 +1396,6 @@ def import_signing_key(base64_signing_key):
             fd.write(decoded_key)
 
         key_import_output = spack_gpg("trust", sign_key_path, output=str)
-        return
         tty.debug("spack gpg trust {0}".format(sign_key_path))
         tty.debug(key_import_output)
 

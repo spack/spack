@@ -1689,12 +1689,19 @@ class TestConcretize(object):
             # version_declared("b","0.9",1,"package_py").
             # version_declared("b","1.0",2,"installed").
             # version_declared("b","0.9",3,"installed").
-            for criterion in [
-                (1, None, "number of packages to build (vs. reuse)"),
+            #
+            # Depending on the target, it may also use gnuconfig
+            result_spec = result.specs[0]
+            num_specs = len(list(result_spec.traverse()))
+
+            criteria = [
+                (num_specs - 1, None, "number of packages to build (vs. reuse)"),
                 (2, 0, "version badness"),
-            ]:
+            ]
+
+            for criterion in criteria:
                 assert criterion in result.criteria
-            assert result.specs[0].satisfies("^b@1.0")
+            assert result_spec.satisfies("^b@1.0")
 
     @pytest.mark.regression("31169")
     def test_not_reusing_incompatible_os_or_compiler(self):
