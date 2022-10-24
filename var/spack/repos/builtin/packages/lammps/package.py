@@ -108,6 +108,7 @@ class Lammps(CMakePackage, CudaPackage):
         "dipole",
         "electrode",
         "granular",
+        "intel",
         "kspace",
         "kokkos",
         "latte",
@@ -146,6 +147,7 @@ class Lammps(CMakePackage, CudaPackage):
         "user-eff",
         "user-fep",
         "user-h5md",
+        "user-intel",
         "user-lb",
         "user-manifold",
         "user-meamc",
@@ -294,6 +296,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on("py-cython", when="+ml-iap+python")
     depends_on("py-numpy", when="+mliap+python")
     depends_on("py-numpy", when="+ml-iap+python")
+    depends_on("py-setuptools", when="@20220217:+python", type="build")
 
     conflicts("+cuda", when="+opencl")
     conflicts("+body", when="+poems@:20180628")
@@ -485,6 +488,14 @@ class Lammps(CMakePackage, CudaPackage):
         msg="+user-h5md was removed after @20210527, use +h5md instead",
     )
     conflicts("+h5md", when="@:20210527", msg="+h5md only added @20210702, use +user-h5md instead")
+    conflicts(
+        "+user-intel",
+        when="@20210702:",
+        msg="+user-intel was removed after @20210527, use +intel instead",
+    )
+    conflicts(
+        "+intel", when="@:20210527", msg="+intel only added @20210702, use +user-intel instead"
+    )
     conflicts(
         "+user-lb",
         when="@20210702:",

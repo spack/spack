@@ -20,3 +20,15 @@ class Mcl(AutotoolsPackage):
     def patch(self):
         filter_file("^dim", "extern dim", "src/impala/iface.h")
         filter_file("^double", "extern double", "src/impala/iface.h")
+
+    depends_on("perl", type="run")
+
+    variant("blast", default=False, description="Build bio-informatics tools.")
+
+    def configure_args(self):
+        args = []
+
+        if "+blast" in self.spec:
+            args.append("--enable-blast")
+
+        return args

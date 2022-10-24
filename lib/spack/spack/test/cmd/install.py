@@ -5,6 +5,7 @@
 
 import argparse
 import filecmp
+import itertools
 import os
 import re
 import sys
@@ -14,7 +15,9 @@ import pytest
 from six.moves import builtins
 
 import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
+import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.compilers as compilers
 import spack.config
@@ -49,11 +52,12 @@ def test_install_package_and_dependency(
     tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery
 ):
 
+    log = "test"
     with tmpdir.as_cwd():
-        install("--log-format=junit", "--log-file=test.xml", "libdwarf")
+        install("--log-format=junit", "--log-file={0}".format(log), "libdwarf")
 
     files = tmpdir.listdir()
-    filename = tmpdir.join("test.xml")
+    filename = tmpdir.join("{0}.xml".format(log))
     assert filename in files
 
     content = filename.open().read()
@@ -1089,3 +1093,80 @@ def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
     assert output.count(method) == 2
     assert output.count("method not implemented") == 1
     assert output.count("TestFailure: 1 tests failed") == 1
+
+
+def test_install_use_buildcache(
+    capsys,
+    mock_packages,
+    mock_fetch,
+    mock_archive,
+    mock_binary_index,
+    tmpdir,
+    install_mockery_mutable_config,
+):
+    """
+    Make sure installing with use-buildcache behaves correctly.
+    """
+
+    package_name = "dependent-install"
+    dependency_name = "dependency-install"
+
+    def validate(mode, out, pkg):
+        def assert_auto(pkg, out):
+            assert "==> Extracting {0}".format(pkg) in out
+
+        def assert_only(pkg, out):
+            assert "==> Extracting {0}".format(pkg) in out
+
+        def assert_never(pkg, out):
+            assert "==> {0}: Executing phase: 'install'".format(pkg) in out
+
+        if mode == "auto":
+            assert_auto(pkg, out)
+        elif mode == "only":
+            assert_only(pkg, out)
+        else:
+            assert_never(pkg, out)
+
+    def install_use_buildcache(opt):
+        out = install(
+            "--no-check-signature", "--use-buildcache", opt, package_name, fail_on_error=True
+        )
+
+        pkg_opt, dep_opt = spack.cmd.common.arguments.use_buildcache(opt)
+        validate(dep_opt, out, dependency_name)
+        validate(pkg_opt, out, package_name)
+
+        # Clean up installed packages
+        uninstall("-y", "-a")
+
+    # Setup the mirror
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join("mirror_dir")
+    mirror_url = "file://{0}".format(mirror_dir.strpath)
+
+    # Populate the buildcache
+    install(package_name)
+    buildcache("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, package_name, dependency_name)
+
+    # Uninstall the all of the packages for clean slate
+    uninstall("-y", "-a")
+
+    # Configure the mirror where we put that buildcache w/ the compiler
+    mirror("add", "test-mirror", mirror_url)
+
+    with capsys.disabled():
+        # Install using the matrix of possible combinations with --use-buildcache
+        for pkg, deps in itertools.product(["auto", "only", "never"], repeat=2):
+            tty.debug(
+                "Testing `spack install --use-buildcache package:{0},dependencies:{1}`".format(
+                    pkg, deps
+                )
+            )
+            install_use_buildcache("package:{0},dependencies:{1}".format(pkg, deps))
+            install_use_buildcache("dependencies:{0},package:{1}".format(deps, pkg))
+
+        # Install using a default override option
+        # Alternative to --cache-only (always) or --no-cache (never)
+        for opt in ["auto", "only", "never"]:
+            install_use_buildcache(opt)

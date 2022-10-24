@@ -23,6 +23,8 @@ class PyNumpy(PythonPackage):
     maintainers = ["adamjstewart", "rgommers"]
 
     version("main", branch="main")
+    version("1.23.4", sha256="ed2cc92af0efad20198638c69bb0fc2870a58dabfba6eb722c933b48556c686c")
+    version("1.23.3", sha256="51bf49c0cd1d52be0a240aa66f3458afc4b95d8993d2d04f0d91fa60c10af6cd")
     version("1.23.2", sha256="b78d00e48261fbbd04aa0d7427cf78d18401ee0abd89c7559bbf422e5b1c7d01")
     version("1.23.1", sha256="d748ef349bfef2e1194b59da37ed5a29c19ea8d7e6342019921ba2ba4fd8b624")
     version("1.23.0", sha256="bd3fa4fe2e38533d5336e1272fc4e765cabbbde144309ccee8675509d5cd7b05")
@@ -104,8 +106,7 @@ class PyNumpy(PythonPackage):
     depends_on("python@3.6:3.10", type=("build", "link", "run"), when="@1.19")
     depends_on("python@3.7:3.10", type=("build", "link", "run"), when="@1.20:1.21")
     depends_on("python@3.8:", type=("build", "link", "run"), when="@1.22:")
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@:59", when="@:1.22.1", type=("build", "run"))
+    depends_on("py-setuptools@:59", type=("build", "run"))
     # Check pyproject.toml for updates to the required cython version
     depends_on("py-cython@0.29.13:2", when="@1.18.0:", type="build")
     depends_on("py-cython@0.29.14:2", when="@1.18.1:", type="build")

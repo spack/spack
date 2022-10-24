@@ -75,7 +75,7 @@ class MesonPackage(PackageBase):
     @property
     def archive_files(self):
         """Files to archive for packages based on Meson"""
-        return [os.path.join(self.build_directory, "meson-logs/meson-log.txt")]
+        return [os.path.join(self.build_directory, "meson-logs", "meson-log.txt")]
 
     @property
     def root_mesonlists_dir(self):
@@ -139,12 +139,20 @@ class MesonPackage(PackageBase):
         setattr(self, "meson_flag_args", [])
 
     @property
+    def build_dirname(self):
+        """Returns the directory name to use when building the package
+
+        :return: name of the subdirectory for building the package
+        """
+        return "spack-build-%s" % self.spec.dag_hash(7)
+
+    @property
     def build_directory(self):
         """Returns the directory to use when building the package
 
         :return: directory where to build the package
         """
-        return os.path.join(self.stage.source_path, "spack-build")
+        return os.path.join(self.stage.path, self.build_dirname)
 
     def meson_args(self):
         """Produces a list containing all the arguments that must be passed to

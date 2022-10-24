@@ -22,15 +22,29 @@ class Unifyfs(AutotoolsPackage):
     tags = ["e4s"]
 
     version("develop", branch="dev")
-    version("0.9.2", sha256="7046625dc0677535f5d960187cb2e2d58a6f8cfb4dc6a3604f825257eb0891aa")
-    version("0.9.1", sha256="2498a859cfa4961356fdf5c4c17e3afc3de7e034ad013b8c7145a622ef6199a0")
+    version("1.0", sha256="c9ad0d15d382773841a3dab89c661fbdcfd686ec37fa263eb22713f6404258f5")
+    version(
+        "0.9.2",
+        sha256="7046625dc0677535f5d960187cb2e2d58a6f8cfb4dc6a3604f825257eb0891aa",
+        deprecated=True,
+    )
+    version(
+        "0.9.1",
+        sha256="2498a859cfa4961356fdf5c4c17e3afc3de7e034ad013b8c7145a622ef6199a0",
+        deprecated=True,
+    )
 
     variant(
         "auto-mount",
         default="True",
         description="Enable automatic mount/unmount in MPI_Init/Finalize",
     )
-    variant("fortran", default="False", description="Build with gfortran support")
+    variant(
+        "boostsys",
+        default="False",
+        description="Have Mercury use preprocessor headers from boost dependency",
+    )
+    variant("fortran", default="True", description="Build with gfortran support")
     variant("pmi", default="False", description="Enable PMI2 build options")
     variant("pmix", default="False", description="Enable PMIx build options")
     variant("spath", default="True", description="Use spath library to normalize relative paths")
@@ -43,17 +57,23 @@ class Unifyfs(AutotoolsPackage):
     depends_on("pkgconfig", type="build")
 
     # Required dependencies
-    depends_on("gotcha@1.0.3:")
-    depends_on("mercury@1.0.1+bmi", when="@:0.9.1")
+    depends_on("gotcha@1.0.4:")
     depends_on("mochi-margo@0.4.3", when="@:0.9.1")
-    depends_on("mochi-margo", when="@0.9.2:")
+    depends_on("mochi-margo@0.9.6", when="@0.9.2:1.0")
+    depends_on("mochi-margo@0.9.6:0.9.9", when="@develop")
     depends_on("mpi")
     depends_on("openssl@:1")
 
-    # Optional dependencies
+    # Mochi-Margo dependencies
+    depends_on("mercury@1.0.1+bmi", when="@:0.9.1")
+    depends_on("mercury@2.1", when="^mochi-margo@0.9.6:0.9.9")
+    depends_on("mercury~boostsys", when="~boostsys")
     depends_on("libfabric fabrics=rxm,sockets,tcp", when="^mercury@2:+ofi")
+
+    # Optional dependencies
     depends_on("spath~mpi", when="+spath")
 
+    conflicts("^libfabric@1.13")
     conflicts("^mercury~bmi~ofi")
     conflicts("^mercury~sm")
     # Known compatibility issues with ifort and xlf. Fixes coming.
@@ -77,6 +97,9 @@ class Unifyfs(AutotoolsPackage):
         if name in ("cflags", "cppflags"):
             if "-g" in flags:
                 self.debug_build = True
+        if name == "cflags":
+            if self.spec.satisfies("%gcc@4"):
+                flags.append("-std=gnu99")
         return (None, None, flags)
 
     def setup_build_environment(self, env):
@@ -84,22 +107,18 @@ class Unifyfs(AutotoolsPackage):
         # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
         if "%gcc@11" in self.spec:
             env.append_flags("CFLAGS", "-Wno-array-bounds")
+        if self.spec.satisfies("%oneapi"):
+            env.append_flags("CFLAGS", "-Wno-unused-function")
 
     def configure_args(self):
         spec = self.spec
-        args = []
+        args = ["--with-gotcha=%s" % spec["gotcha"].prefix]
 
-        if "+auto-mount" in spec:
-            args.append("--enable-mpi-mount")
-
-        if "+fortran" in spec:
-            args.append("--enable-fortran")
-
-        if "+pmi" in spec:
-            args.append("--enable-pmi")
-
-        if "+pmix" in spec:
-            args.append("--enable-pmix")
+        args.extend(self.with_or_without("spath", activation_value="prefix"))
+        args.extend(self.enable_or_disable("mpi-mount", variant="auto-mount"))
+        args.extend(self.enable_or_disable("fortran"))
+        args.extend(self.enable_or_disable("pmi"))
+        args.extend(self.enable_or_disable("pmix"))
 
         if self.debug_build:
             args.append("--disable-silent-rules")
@@ -110,8 +129,8 @@ class Unifyfs(AutotoolsPackage):
 
     @when("@develop")
     def autoreconf(self, spec, prefix):
-        bash = which("bash")
-        bash("./autogen.sh")
+        sh = which("sh")
+        sh("./autogen.sh")
 
     @when("%cce@11.0.3:")
     def patch(self):

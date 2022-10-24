@@ -17,7 +17,6 @@ import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from llnl.util.filesystem import rename
 from llnl.util.lang import dedupe
 from llnl.util.symlink import symlink
 
@@ -593,7 +592,7 @@ class ViewDescriptor(object):
             symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
-            rename(tmp_symlink_name, self.root)
+            fs.rename(tmp_symlink_name, self.root)
         except Exception as e:
             # Clean up new view and temporary symlink on any failure.
             try:
@@ -898,6 +897,11 @@ class Environment(object):
         return os.path.join(self.path, env_subdir_name, "logs")
 
     @property
+    def config_stage_dir(self):
+        """Directory for any staged configuration file(s)."""
+        return os.path.join(self.env_subdir_path, "config")
+
+    @property
     def view_path_default(self):
         # default path for environment views
         return os.path.join(self.env_subdir_path, "view")
@@ -928,6 +932,47 @@ class Environment(object):
             # allow paths to contain spack config/environment variables, etc.
             config_path = substitute_path_variables(config_path)
 
+            # strip file URL prefix, if needed, to avoid unnecessary remote
+            # config processing for local files
+            config_path = config_path.replace("file://", "")
+
+            if not os.path.exists(config_path):
+                # Stage any remote configuration file(s)
+                if spack.util.url.is_url_format(config_path):
+                    staged_configs = (
+                        os.listdir(self.config_stage_dir)
+                        if os.path.exists(self.config_stage_dir)
+                        else []
+                    )
+                    basename = os.path.basename(config_path)
+                    if basename in staged_configs:
+                        # Do NOT re-stage configuration files over existing
+                        # ones with the same name since there is a risk of
+                        # losing changes (e.g., from 'spack config update').
+                        tty.warn(
+                            "Will not re-stage configuration from {0} to avoid "
+                            "losing changes to the already staged file of the "
+                            "same name.".format(config_path)
+                        )
+
+                        # Recognize the configuration stage directory
+                        # is flattened to ensure a single copy of each
+                        # configuration file.
+                        config_path = self.config_stage_dir
+                        if basename.endswith(".yaml"):
+                            config_path = os.path.join(config_path, basename)
+                    else:
+                        staged_path = spack.config.fetch_remote_configs(
+                            config_path,
+                            self.config_stage_dir,
+                            skip_existing=True,
+                        )
+                        if not staged_path:
+                            raise SpackEnvironmentError(
+                                "Unable to fetch remote configuration {0}".format(config_path)
+                            )
+                        config_path = staged_path
+
             # treat relative paths as relative to the environment
             if not os.path.isabs(config_path):
                 config_path = os.path.join(self.path, config_path)
@@ -936,10 +981,14 @@ class Environment(object):
             if os.path.isdir(config_path):
                 # directories are treated as regular ConfigScopes
                 config_name = "env:%s:%s" % (self.name, os.path.basename(config_path))
+                tty.debug("Creating ConfigScope {0} for '{1}'".format(config_name, config_path))
                 scope = spack.config.ConfigScope(config_name, config_path)
             elif os.path.exists(config_path):
                 # files are assumed to be SingleFileScopes
                 config_name = "env:%s:%s" % (self.name, config_path)
+                tty.debug(
+                    "Creating SingleFileScope {0} for '{1}'".format(config_name, config_path)
+                )
                 scope = spack.config.SingleFileScope(
                     config_name, config_path, spack.schema.merged.schema
                 )
@@ -1023,6 +1072,58 @@ class Environment(object):
             self.update_stale_references(list_name)
 
         return bool(not existing)
+
+    def change_existing_spec(
+        self,
+        change_spec,
+        list_name=user_speclist_name,
+        match_spec=None,
+        allow_changing_multiple_specs=False,
+    ):
+        """
+        Find the spec identified by `match_spec` and change it to `change_spec`.
+
+        Arguments:
+            change_spec (spack.spec.Spec): defines the spec properties that
+                need to be changed. This will not change attributes of the
+                matched spec unless they conflict with `change_spec`.
+            list_name (str): identifies the spec list in the environment that
+                should be modified
+            match_spec (spack.spec.Spec): if set, this identifies the spec
+                that should be changed. If not set, it is assumed we are
+                looking for a spec with the same name as `change_spec`.
+        """
+        if not (change_spec.name or (match_spec and match_spec.name)):
+            raise ValueError(
+                "Must specify a spec name to identify a single spec"
+                " in the environment that will be changed"
+            )
+        match_spec = match_spec or Spec(change_spec.name)
+
+        list_to_change = self.spec_lists[list_name]
+        if list_to_change.is_matrix:
+            raise SpackEnvironmentError(
+                "Cannot directly change specs in matrices:"
+                " specify a named list that is not a matrix"
+            )
+
+        matches = list(x for x in list_to_change if x.satisfies(match_spec))
+        if len(matches) == 0:
+            raise ValueError(
+                "There are no specs named {0} in {1}".format(match_spec.name, list_name)
+            )
+        elif len(matches) > 1 and not allow_changing_multiple_specs:
+            raise ValueError("{0} matches multiple specs".format(str(match_spec)))
+
+        new_speclist = SpecList(list_name)
+        for i, spec in enumerate(list_to_change):
+            if spec.satisfies(match_spec):
+                new_speclist.add(Spec.override(spec, change_spec))
+            else:
+                new_speclist.add(spec)
+
+        self.spec_lists[list_name] = new_speclist
+        self.update_stale_references()
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
@@ -1116,7 +1217,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = os.path.normpath(os.path.join(self.path, path))
+            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
 
             # Stage, at the moment, requires a concrete Spec, since it needs the
             # dag_hash for the stage dir name. Below though we ask for a stage
@@ -1694,7 +1795,7 @@ class Environment(object):
         spec for already concretized but not yet installed specs.
         """
         # use a transaction to avoid overhead of repeated calls
-        # to `package.installed`
+        # to `package.spec.installed`
         with spack.store.db.read_transaction():
             concretized = dict(self.concretized_specs())
             for spec in self.user_specs:
@@ -1717,6 +1818,14 @@ class Environment(object):
                 if dep_hash.startswith(dag_hash):
                     matches[dep_hash] = spec
         return list(matches.values())
+
+    def get_one_by_hash(self, dag_hash):
+        """Returns the single spec from the environment which matches the
+        provided hash.  Raises an AssertionError if no specs match or if
+        more than one spec matches."""
+        hash_matches = self.get_by_hash(dag_hash)
+        assert len(hash_matches) == 1
+        return hash_matches[0]
 
     def matching_spec(self, spec):
         """

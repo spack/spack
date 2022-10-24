@@ -20,3 +20,6 @@ os_compatible("ubuntu20.04", "ubuntu19.10").
 os_compatible("ubuntu19.10", "ubuntu19.04").
 os_compatible("ubuntu19.04", "ubuntu18.10").
 os_compatible("ubuntu18.10", "ubuntu18.04").
+
+%EL8
+os_compatible("rhel8", "rocky8").

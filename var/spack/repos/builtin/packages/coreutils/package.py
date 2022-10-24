@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -17,6 +19,8 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "coreutils/coreutils-8.26.tar.xz"
 
     tags = ["core-packages"]
+
+    executables = [r"^md5sum$"]
 
     version("9.1", sha256="61a1f410d78ba7e7f37a5a4f50e6d1320aca33375484a3255eddf17a38580423")
     version("9.0", sha256="ce30acdf4a41bc5bb30dd955e9eaa75fa216b4e3deb08889ed32433c7b3b97ce")
@@ -54,3 +58,9 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
             configure_args.append("gl_cv_func_ftello_works=yes")
 
         return configure_args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"\(GNU coreutils\)\s+([\d\.]+)", output)
+        return match.group(1) if match else None

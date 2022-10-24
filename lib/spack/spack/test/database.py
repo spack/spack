@@ -2,11 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-"""
-These tests check the database is functioning properly,
-both in memory and in its file
-"""
+"""Check the database is functioning properly, both in memory and in its file."""
 import datetime
 import functools
 import json
@@ -36,7 +32,6 @@ import spack.spec
 import spack.store
 from spack.schema.database_index import schema
 from spack.util.executable import Executable
-from spack.util.mock_package import MockPackageMultiRepo
 
 is_windows = sys.platform == "win32"
 
@@ -44,8 +39,8 @@ pytestmark = pytest.mark.db
 
 
 @pytest.fixture()
-def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
-    mock_db_root = str(tmpdir_factory.mktemp("mock_db_root"))
+def upstream_and_downstream_db(tmpdir, gen_mock_layout):
+    mock_db_root = str(tmpdir.mkdir("mock_db_root"))
     upstream_write_db = spack.database.Database(mock_db_root)
     upstream_db = spack.database.Database(mock_db_root, is_upstream=True)
     # Generate initial DB file to avoid reindex
@@ -53,7 +48,7 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
         upstream_write_db._write_to_file(db_file)
     upstream_layout = gen_mock_layout("/a/")
 
-    downstream_db_root = str(tmpdir_factory.mktemp("mock_downstream_db_root"))
+    downstream_db_root = str(tmpdir.mkdir("mock_downstream_db_root"))
     downstream_db = spack.database.Database(downstream_db_root, upstream_dbs=[upstream_db])
     with open(downstream_db._index_path, "w") as db_file:
         downstream_db._write_to_file(db_file)
@@ -63,7 +58,9 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
-def test_spec_installed_upstream(upstream_and_downstream_db, config, monkeypatch):
+def test_spec_installed_upstream(
+    upstream_and_downstream_db, mock_custom_repository, config, monkeypatch
+):
     """Test whether Spec.installed_upstream() works."""
     (
         upstream_write_db,
@@ -74,11 +71,8 @@ def test_spec_installed_upstream(upstream_and_downstream_db, config, monkeypatch
     ) = upstream_and_downstream_db
 
     # a known installed spec should say that it's installed
-    mock_repo = MockPackageMultiRepo()
-    mock_repo.add_package("x", [], [])
-
-    with spack.repo.use_repositories(mock_repo):
-        spec = spack.spec.Spec("x").concretized()
+    with spack.repo.use_repositories(mock_custom_repository):
+        spec = spack.spec.Spec("c").concretized()
         assert not spec.installed
         assert not spec.installed_upstream
 
@@ -98,7 +92,7 @@ def test_spec_installed_upstream(upstream_and_downstream_db, config, monkeypatch
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
-def test_installed_upstream(upstream_and_downstream_db):
+def test_installed_upstream(upstream_and_downstream_db, tmpdir):
     (
         upstream_write_db,
         upstream_db,
@@ -107,17 +101,14 @@ def test_installed_upstream(upstream_and_downstream_db):
         downstream_layout,
     ) = upstream_and_downstream_db
 
-    default = ("build", "link")
-    mock_repo = MockPackageMultiRepo()
-    x = mock_repo.add_package("x", [], [])
-    z = mock_repo.add_package("z", [], [])
-    y = mock_repo.add_package("y", [z], [default])
-    mock_repo.add_package("w", [x, y], [default, default])
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("x")
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", None, None)])
+    builder.add_package("w", dependencies=[("x", None, None), ("y", None, None)])
 
-    with spack.repo.use_repositories(mock_repo):
-        spec = spack.spec.Spec("w")
-        spec.concretize()
-
+    with spack.repo.use_repositories(builder.root):
+        spec = spack.spec.Spec("w").concretized()
         for dep in spec.traverse(root=False):
             upstream_write_db.add(dep, upstream_layout)
         upstream_db._read()
@@ -126,10 +117,9 @@ def test_installed_upstream(upstream_and_downstream_db):
             record = downstream_db.get_by_hash(dep.dag_hash())
             assert record is not None
             with pytest.raises(spack.database.ForbiddenLockError):
-                record = upstream_db.get_by_hash(dep.dag_hash())
+                upstream_db.get_by_hash(dep.dag_hash())
 
-        new_spec = spack.spec.Spec("w")
-        new_spec.concretize()
+        new_spec = spack.spec.Spec("w").concretized()
         downstream_db.add(new_spec, downstream_layout)
         for dep in new_spec.traverse(root=False):
             upstream, record = downstream_db.query_by_spec_hash(dep.dag_hash())
@@ -145,7 +135,7 @@ def test_installed_upstream(upstream_and_downstream_db):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
-def test_removed_upstream_dep(upstream_and_downstream_db):
+def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir):
     (
         upstream_write_db,
         upstream_db,
@@ -154,20 +144,17 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
         downstream_layout,
     ) = upstream_and_downstream_db
 
-    default = ("build", "link")
-    mock_repo = MockPackageMultiRepo()
-    z = mock_repo.add_package("z", [], [])
-    mock_repo.add_package("y", [z], [default])
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", None, None)])
 
-    with spack.repo.use_repositories(mock_repo):
-        spec = spack.spec.Spec("y")
-        spec.concretize()
+    with spack.repo.use_repositories(builder):
+        spec = spack.spec.Spec("y").concretized()
 
         upstream_write_db.add(spec["z"], upstream_layout)
         upstream_db._read()
 
-        new_spec = spack.spec.Spec("y")
-        new_spec.concretize()
+        new_spec = spack.spec.Spec("y").concretized()
         downstream_db.add(new_spec, downstream_layout)
 
         upstream_write_db.remove(new_spec["z"])
@@ -181,7 +168,7 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config")
-def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
+def test_add_to_upstream_after_downstream(upstream_and_downstream_db, tmpdir):
     """An upstream DB can add a package after it is installed in the downstream
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
@@ -194,15 +181,13 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
         downstream_layout,
     ) = upstream_and_downstream_db
 
-    mock_repo = MockPackageMultiRepo()
-    mock_repo.add_package("x", [], [])
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("x")
 
-    with spack.repo.use_repositories(mock_repo):
-        spec = spack.spec.Spec("x")
-        spec.concretize()
+    with spack.repo.use_repositories(builder.root):
+        spec = spack.spec.Spec("x").concretized()
 
         downstream_db.add(spec, downstream_layout)
-
         upstream_write_db.add(spec, upstream_layout)
         upstream_db._read()
 
@@ -224,12 +209,12 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config", "temporary_store")
-def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
-    roots = [str(tmpdir_factory.mktemp(x)) for x in ["a", "b"]]
+def test_cannot_write_upstream(tmpdir, gen_mock_layout):
+    roots = [str(tmpdir.mkdir(x)) for x in ["a", "b"]]
     layouts = [gen_mock_layout(x) for x in ["/ra/", "/rb/"]]
 
-    mock_repo = MockPackageMultiRepo()
-    mock_repo.add_package("x", [], [])
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("x")
 
     # Instantiate the database that will be used as the upstream DB and make
     # sure it has an index file
@@ -239,7 +224,7 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
 
     upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots([roots[1]], _test=True)
 
-    with spack.repo.use_repositories(mock_repo):
+    with spack.repo.use_repositories(builder.root):
         spec = spack.spec.Spec("x")
         spec.concretize()
 
@@ -249,19 +234,17 @@ def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Upstreams currently unsupported on Windows")
 @pytest.mark.usefixtures("config", "temporary_store")
-def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
-    roots = [str(tmpdir_factory.mktemp(x)) for x in ["a", "b", "c"]]
+def test_recursive_upstream_dbs(tmpdir, gen_mock_layout):
+    roots = [str(tmpdir.mkdir(x)) for x in ["a", "b", "c"]]
     layouts = [gen_mock_layout(x) for x in ["/ra/", "/rb/", "/rc/"]]
 
-    default = ("build", "link")
-    mock_repo = MockPackageMultiRepo()
-    z = mock_repo.add_package("z", [], [])
-    y = mock_repo.add_package("y", [z], [default])
-    mock_repo.add_package("x", [y], [default])
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", None, None)])
+    builder.add_package("x", dependencies=[("y", None, None)])
 
-    with spack.repo.use_repositories(mock_repo):
-        spec = spack.spec.Spec("x")
-        spec.concretize()
+    with spack.repo.use_repositories(builder.root):
+        spec = spack.spec.Spec("x").concretized()
         db_c = spack.database.Database(roots[2])
         db_c.add(spec["z"], layouts[2])
 
@@ -721,11 +704,11 @@ def test_110_no_write_with_exception_on_install(database):
         assert database.query("cmake", installed=any) == []
 
 
-def test_115_reindex_with_packages_not_in_repo(mutable_database):
+def test_115_reindex_with_packages_not_in_repo(mutable_database, tmpdir):
     # Dont add any package definitions to this repository, the idea is that
     # packages should not have to be defined in the repository once they
     # are installed
-    with spack.repo.use_repositories(MockPackageMultiRepo()):
+    with spack.repo.use_repositories(spack.repo.MockRepositoryBuilder(tmpdir).root):
         spack.store.store.reindex()
         _check_db_sanity(mutable_database)
 
@@ -875,7 +858,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
-        raise lk.LockTimeoutError("Mock acquire_write failure")
+        raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
     # Ensure attempt to acquire write lock on the mark raises the exception
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)
@@ -1063,11 +1046,11 @@ def test_consistency_of_dependents_upon_remove(mutable_database):
 
 
 @pytest.mark.regression("30187")
-def test_query_installed_when_package_unknown(database):
+def test_query_installed_when_package_unknown(database, tmpdir):
     """Test that we can query the installation status of a spec
     when we don't know its package.py
     """
-    with spack.repo.use_repositories(MockPackageMultiRepo()):
+    with spack.repo.use_repositories(spack.repo.MockRepositoryBuilder(tmpdir).root):
         specs = database.query("mpileaks")
         for s in specs:
             # Assert that we can query the installation methods even though we

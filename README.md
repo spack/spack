@@ -2,7 +2,6 @@
 
 [![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Bootstrapping](https://github.com/spack/spack/actions/workflows/bootstrap.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/bootstrap.yml)
-[![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Containers](https://github.com/spack/spack/actions/workflows/build-containers.yml/badge.svg)](https://github.com/spack/spack/actions/workflows/build-containers.yml)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
@@ -63,6 +62,7 @@ Resources:
 
 * **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
   To get an invitation, visit [slack.spack.io](https://slack.spack.io).
+* [**Github Discussions**](https://github.com/spack/spack/discussions): not just for discussions, also Q&A.
 * **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
 * **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
   `@mention` us!

@@ -16,7 +16,12 @@ class Nemsio(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-nemsio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-nemsio/archive/refs/tags/v2.5.2.tar.gz"
 
-    maintainers = ["t-brown", "edwardhartnett", "kgerheiser", "Hang-Lei-NOAA"]
+    maintainers = [
+        "t-brown",
+        "edwardhartnett",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+    ]
 
     variant("mpi", default=True, description="Build Nemsio with MPI")
     # Nemsio 2.5.3 and below require MPI

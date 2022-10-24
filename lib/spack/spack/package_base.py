@@ -63,6 +63,7 @@ from spack.stage import ResourceStage, Stage, StageComposite, stage_prefix
 from spack.util.executable import ProcessError, which
 from spack.util.package_hash import package_hash
 from spack.util.prefix import Prefix
+from spack.util.web import FetchError
 from spack.version import GitVersion, Version, VersionBase
 
 if sys.version_info[0] >= 3:
@@ -94,6 +95,26 @@ _spack_times_log = "install_times.json"
 
 # Filename for the Spack configure args file.
 _spack_configure_argsfile = "spack-configure-args.txt"
+
+
+is_windows = sys.platform == "win32"
+
+
+def deprecated_version(pkg, version):
+    """Return True if the version is deprecated, False otherwise.
+
+    Arguments:
+        pkg (Package): The package whose version is to be checked.
+        version (str or spack.version.VersionBase): The version being checked
+    """
+    if not isinstance(version, VersionBase):
+        version = Version(version)
+
+    for k, v in pkg.versions.items():
+        if version == k and v.get("deprecated", False):
+            return True
+
+    return False
 
 
 def preferred_version(pkg):
@@ -181,6 +202,30 @@ class InstallPhase(object):
             return other
 
 
+class WindowsRPathMeta(object):
+    """Collection of functionality surrounding Windows RPATH specific features
+
+    This is essentially meaningless for all other platforms
+    due to their use of RPATH. All methods within this class are no-ops on
+    non Windows. Packages can customize and manipulate this class as
+    they would a genuine RPATH, i.e. adding directories that contain
+    runtime library dependencies"""
+
+    def add_search_paths(self, *path):
+        """Add additional rpaths that are not implicitly included in the search
+        scheme
+        """
+        self.win_rpath.include_additional_link_paths(*path)
+
+    def windows_establish_runtime_linkage(self):
+        """Establish RPATH on Windows
+
+        Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
+        """
+        if is_windows:
+            self.win_rpath.establish_link()
+
+
 #: Registers which are the detectable packages, by repo and package name
 #: Need a pass of package repositories to be filled.
 detectable_packages = collections.defaultdict(list)
@@ -220,7 +265,7 @@ class DetectablePackageMeta(object):
                 plat_exe = []
                 if hasattr(cls, "executables"):
                     for exe in cls.executables:
-                        if sys.platform == "win32":
+                        if is_windows:
                             exe = to_windows_exe(exe)
                         plat_exe.append(exe)
                 return plat_exe
@@ -512,7 +557,7 @@ def test_log_pathname(test_stage, spec):
     return os.path.join(test_stage, "test-{0}-out.txt".format(TestSuite.test_pkg_id(spec)))
 
 
-class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
+class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewMixin, object)):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -751,6 +796,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Set up timing variables
         self._fetch_time = 0.0
+
+        self.win_rpath = fsys.WindowsSimulatedRPath(self)
 
         if self.is_extension:
             pkg_cls = spack.repo.path.get_pkg_class(self.extendee_spec.name)
@@ -1738,6 +1785,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             b32_hash = b32_hash.decode("utf-8")
 
         return b32_hash
+
+    @property
+    def cmake_prefix_paths(self):
+        return [self.prefix]
 
     def _has_make_target(self, target):
         """Checks to see if 'target' is a valid target in a Makefile.
@@ -2749,6 +2800,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         deps = self.spec.dependencies(deptype="link")
         rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
         rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+        if is_windows:
+            rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
         return rpaths
 
     @property
@@ -2840,6 +2893,10 @@ def test_process(pkg, kwargs):
             print_test_message(logger, "Skipped tests for external package", verbose)
             return
 
+        if not pkg.spec.installed:
+            print_test_message(logger, "Skipped not installed package", verbose)
+            return
+
         # run test methods from the package and all virtuals it
         # provides virtuals have to be deduped by name
         v_names = list(set([vspec.name for vspec in pkg.virtuals_provided]))
@@ -2910,6 +2967,9 @@ def test_process(pkg, kwargs):
             # non-pass-only methods
             if ran_actual_test_function:
                 fsys.touch(pkg.tested_file)
+                # log one more test message to provide a completion timestamp
+                # for CDash reporting
+                tty.msg("Completed testing")
             else:
                 print_test_message(logger, "No tests to run", verbose)
 
@@ -3013,13 +3073,6 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
         pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
-
-
-class FetchError(spack.error.SpackError):
-    """Raised when something goes wrong during fetch."""
-
-    def __init__(self, message, long_msg=None):
-        super(FetchError, self).__init__(message, long_msg)
 
 
 class PackageStillNeededError(InstallError):

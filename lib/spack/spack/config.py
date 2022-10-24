@@ -64,6 +64,7 @@ import spack.schema.upstreams
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
+import spack.util.web as web_util
 from spack.error import SpackError
 from spack.util.cpus import cpus_available
 
@@ -408,28 +409,22 @@ class Configuration(object):
     @_config_mutator
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
-        cmd_line_scope = None
-        if self.scopes:
-            highest_precedence_scope = list(self.scopes.values())[-1]
-            if highest_precedence_scope.name == "command_line":
-                # If the command-line scope is present, it should always
-                # be the scope of highest precedence
-                cmd_line_scope = self.pop_scope()
-
+        tty.debug("[CONFIGURATION: PUSH SCOPE]: {}".format(str(scope)), level=2)
         self.scopes[scope.name] = scope
-        if cmd_line_scope:
-            self.scopes["command_line"] = cmd_line_scope
 
     @_config_mutator
     def pop_scope(self):
         """Remove the highest precedence scope and return it."""
         name, scope = self.scopes.popitem(last=True)
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
         return scope
 
     @_config_mutator
     def remove_scope(self, scope_name):
         """Remove scope by name; has no effect when ``scope_name`` does not exist"""
-        return self.scopes.pop(scope_name, None)
+        scope = self.scopes.pop(scope_name, None)
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
+        return scope
 
     @property
     def file_scopes(self):
@@ -994,18 +989,19 @@ def read_config_file(filename, schema=None):
     # schema when it's not necessary) while allowing us to validate against a
     # known schema when the top-level key could be incorrect.
 
-    # Ignore nonexisting files.
     if not os.path.exists(filename):
+        # Ignore nonexistent files.
+        tty.debug("Skipping nonexistent config path {0}".format(filename))
         return None
 
     elif not os.path.isfile(filename):
         raise ConfigFileError("Invalid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):
-        raise ConfigFileError("Config file is not readable: %s" % filename)
+        raise ConfigFileError("Config file is not readable: {0}".format(filename))
 
     try:
-        tty.debug("Reading config file %s" % filename)
+        tty.debug("Reading config from file {0}".format(filename))
         with open(filename) as f:
             data = syaml.load_config(f)
 
@@ -1020,7 +1016,15 @@ def read_config_file(filename, schema=None):
         raise ConfigFileError("Config file is empty or is not a valid YAML dict: %s" % filename)
 
     except MarkedYAMLError as e:
-        raise ConfigFileError("Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
+        msg = "Error parsing yaml"
+        mark = e.context_mark if e.context_mark else e.problem_mark
+        if mark:
+            line, column = mark.line, mark.column
+            msg += ": near %s, %s, %s" % (mark.name, str(line), str(column))
+        else:
+            msg += ": %s" % (filename)
+        msg += ": %s" % (e.problem)
+        raise ConfigFileError(msg)
 
     except IOError as e:
         raise ConfigFileError("Error reading configuration file %s: %s" % (filename, str(e)))
@@ -1294,6 +1298,95 @@ def _config_from(scopes_or_paths):
 
     configuration = Configuration(*scopes)
     return configuration
+
+
+def raw_github_gitlab_url(url):
+    """Transform a github URL to the raw form to avoid undesirable html.
+
+    Args:
+        url: url to be converted to raw form
+
+    Returns: (str) raw github/gitlab url or the original url
+    """
+    # Note we rely on GitHub to redirect the 'raw' URL returned here to the
+    # actual URL under https://raw.githubusercontent.com/ with '/blob'
+    # removed and or, '/blame' if needed.
+    if "github" in url or "gitlab" in url:
+        return url.replace("/blob/", "/raw/")
+
+    return url
+
+
+def collect_urls(base_url):
+    """Return a list of configuration URLs.
+
+    Arguments:
+        base_url (str): URL for a configuration (yaml) file or a directory
+            containing yaml file(s)
+
+    Returns: (list) list of configuration file(s) or empty list if none
+    """
+    if not base_url:
+        return []
+
+    extension = ".yaml"
+
+    if base_url.endswith(extension):
+        return [base_url]
+
+    # Collect configuration URLs if the base_url is a "directory".
+    _, links = web_util.spider(base_url, 0)
+    return [link for link in links if link.endswith(extension)]
+
+
+def fetch_remote_configs(url, dest_dir, skip_existing=True):
+    """Retrieve configuration file(s) at the specified URL.
+
+    Arguments:
+        url (str): URL for a configuration (yaml) file or a directory containing
+            yaml file(s)
+        dest_dir (str): destination directory
+        skip_existing (bool): Skip files that already exist in dest_dir if
+            ``True``; otherwise, replace those files
+
+    Returns: (str) path to the corresponding file if URL is or contains a
+       single file and it is the only file in the destination directory or
+       the root (dest_dir) directory if multiple configuration files exist
+       or are retrieved.
+    """
+
+    def _fetch_file(url):
+        raw = raw_github_gitlab_url(url)
+        tty.debug("Reading config from url {0}".format(raw))
+        return web_util.fetch_url_text(raw, dest_dir=dest_dir)
+
+    if not url:
+        raise ConfigFileError("Cannot retrieve configuration without a URL")
+
+    # Return the local path to the cached configuration file OR to the
+    # directory containing the cached configuration files.
+    config_links = collect_urls(url)
+    existing_files = os.listdir(dest_dir) if os.path.isdir(dest_dir) else []
+
+    paths = []
+    for config_url in config_links:
+        basename = os.path.basename(config_url)
+        if skip_existing and basename in existing_files:
+            tty.warn(
+                "Will not fetch configuration from {0} since a version already"
+                "exists in {1}".format(config_url, dest_dir)
+            )
+            path = os.path.join(dest_dir, basename)
+        else:
+            path = _fetch_file(config_url)
+
+        if path:
+            paths.append(path)
+
+    if paths:
+        return dest_dir if len(paths) > 1 else paths[0]
+
+    raise ConfigFileError("Cannot retrieve configuration (yaml) from {0}".format(url))
 
 
 class ConfigError(SpackError):

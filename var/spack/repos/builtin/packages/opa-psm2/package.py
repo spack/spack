@@ -14,6 +14,7 @@ class OpaPsm2(MakefilePackage):
 
     maintainers = ["jack-morrison"]
 
+    version("11.2.230", sha256="e56262ed9ced4a8b53540cc6370d7ec9733bd5c791a9c05251010c1bbb60c75c")
     version("11.2.228", sha256="e302afc8cd054409616d59b69e4d7f140278dc3815ae07f0fc14080fd860bd5c")
     version("11.2.206", sha256="08aa41f41bdb485ee037d3f7e32dd45e79858ce38e744d33b9db2af60e3c627a")
     version("11.2.185", sha256="8c0446e989feb4a3822791e4a3687060916f7c4612d1e8e493879be66f10db09")

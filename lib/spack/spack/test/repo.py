@@ -121,3 +121,36 @@ def test_relative_import_spack_packages_as_python_modules(mock_packages):
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
     assert issubclass(Mpileaks, spack.package_base.Package)
+
+
+def test_all_virtual_packages_have_default_providers():
+    """All virtual packages must have a default provider explicitly set."""
+    defaults = spack.config.get("packages", scope="defaults")
+    default_providers = defaults["all"]["providers"]
+    providers = spack.repo.path.provider_index.providers
+    default_providers_filename = spack.config.config.scopes["defaults"].get_section_filename(
+        "packages"
+    )
+    for provider in providers:
+        assert provider in default_providers, (
+            "all providers must have a default in %s" % default_providers_filename
+        )
+
+
+def test_get_all_mock_packages(mock_packages):
+    """Get the mock packages once each too."""
+    for name in mock_packages.all_package_names():
+        mock_packages.get_pkg_class(name)
+
+
+def test_repo_path_handles_package_removal(tmpdir, mock_packages):
+    builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="removal")
+    builder.add_package("c")
+    with spack.repo.use_repositories(builder.root, override=False) as repos:
+        r = repos.repo_for_pkg("c")
+        assert r.namespace == "removal"
+
+    builder.remove("c")
+    with spack.repo.use_repositories(builder.root, override=False) as repos:
+        r = repos.repo_for_pkg("c")
+        assert r.namespace == "builtin.mock"

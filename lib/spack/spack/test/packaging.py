@@ -36,7 +36,7 @@ from spack.relocate import (
     needs_binary_relocation,
     needs_text_relocation,
     relocate_links,
-    relocate_text,
+    unsafe_relocate_text,
 )
 from spack.spec import Spec
 
@@ -190,7 +190,7 @@ echo $PATH"""
 
 
 @pytest.mark.usefixtures("install_mockery")
-def test_relocate_text(tmpdir):
+def test_unsafe_relocate_text(tmpdir):
     spec = Spec("trivial-install-test-package")
     spec.concretize()
     with tmpdir.as_cwd():
@@ -203,7 +203,7 @@ def test_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = "/opt/rh/devtoolset/"
         # Singleton dict doesn't matter if Ordered
-        relocate_text(filenames, {old_dir: new_dir})
+        unsafe_relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
@@ -573,7 +573,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual, in
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
 
     expected = pkg.download_instr if manual else "All fetchers failed"
-    with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+    with pytest.raises(spack.util.web.FetchError, match=expected):
         pkg.do_fetch()
 
 

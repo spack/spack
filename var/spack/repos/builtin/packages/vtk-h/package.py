@@ -98,6 +98,8 @@ class VtkH(CMakePackage, CudaPackage):
 
     depends_on("vtk-m~shared", when="~shared")
 
+    patch("vtk-h-shared-cuda.patch", when="@0.8")
+
     # provide cmake args (pass host config as cmake cache file)
     def cmake_args(self):
         host_config = self._get_host_config_path(self.spec)
@@ -177,6 +179,23 @@ class VtkH(CMakePackage, CudaPackage):
         cfg.write("# cpp compiler used by spack\n")
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
+        # use global spack compiler flags
+        cppflags = " ".join(spec.compiler_flags["cppflags"])
+        if cppflags:
+            # avoid always ending up with ' ' with no flags defined
+            cppflags += " "
+        cflags = cppflags + " ".join(spec.compiler_flags["cflags"])
+        if cflags:
+            cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+        cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
+        if cxxflags:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+        fflags = " ".join(spec.compiler_flags["fflags"])
+        if self.spec.satisfies("%cce"):
+            fflags += " -ef"
+        if fflags:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+
         # shared vs static libs
         if "+shared" in spec:
             cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
@@ -195,7 +214,8 @@ class VtkH(CMakePackage, CudaPackage):
         if "+mpi" in spec:
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
-            mpifc_path = spec["mpi"].mpifc
+            has_mpifc = hasattr(spec["mpi"], "mpifc")
+            mpifc_path = spec["mpi"].mpifc if has_mpifc else None
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers
@@ -207,7 +227,8 @@ class VtkH(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
+            if has_mpifc:
+                cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec["mpi"].prefix.bin, "mpiexec")
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
