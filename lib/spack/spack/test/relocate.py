@@ -20,6 +20,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+from spack.relocate import utf8_path_to_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -406,7 +407,7 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
     new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
 
-    spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
+    spack.relocate.unsafe_relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
@@ -421,7 +422,7 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     with open(fpath, "w") as f:
         f.write("/short")
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
-        spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
+        spack.relocate.unsafe_relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
@@ -476,3 +477,12 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
+
+
+def test_text_relocation_regex_is_safe():
+    assert (
+        utf8_path_to_binary_regex("/[a-z]/")
+        .search(b"This does not match /a/, but this does: /[a-z]/.")
+        .group(0)
+        == b"/[a-z]/"
+    )
