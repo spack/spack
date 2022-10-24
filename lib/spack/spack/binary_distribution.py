@@ -6,8 +6,10 @@
 import codecs
 import collections
 import hashlib
+import io
 import json
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -712,6 +714,21 @@ def get_buildfile_manifest(spec):
     root = spec.prefix
     visit_directory_tree(root, visitor)
 
+    # Collect a list of prefixes for this package and it's dependencies, Spack will
+    # look for them to decide if text file needs to be relocated or not
+    prefixes = [d.prefix for d in spec.traverse(root=False, deptype="all") if not d.external]
+    prefixes.append(spec.prefix)
+
+    # Adopted from relocate.unsafe_relocate_text
+    # Create a list regexes matching collected prefixes
+    compiled_prefixes = []
+
+    for prefix in prefixes:
+        prefix_bytes = prefix.encode("utf-8")
+        prefix_rexp = re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
+
+        compiled_prefixes.append(prefix_rexp)
+
     # Symlinks.
 
     # Obvious bugs:
@@ -743,8 +760,18 @@ def get_buildfile_manifest(spec):
                 continue
 
         elif relocate.needs_text_relocation(m_type, m_subtype):
-            data["text_to_relocate"].append(rel_path)
-            continue
+            added = False
+            with io.open(abs_path, "rb") as f:
+                contents = f.read()
+
+            for prefix in compiled_prefixes:
+                if prefix.search(contents):
+                    data["text_to_relocate"].append(rel_path)
+                    added = True
+                    break
+
+            if added:
+                continue
 
         data["other"].append(abs_path)
 
