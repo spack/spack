@@ -11,8 +11,8 @@ class Highfive(CMakePackage):
     """HighFive - Header only C++ HDF5 interface"""
 
     homepage = "https://github.com/BlueBrain/HighFive"
-    url      = "https://github.com/BlueBrain/HighFive/archive/v2.0.tar.gz"
-    git      = "https://github.com/BlueBrain/HighFive.git"
+    url = "https://github.com/BlueBrain/HighFive/archive/v2.0.tar.gz"
+    git = "https://github.com/BlueBrain/HighFive.git"
 
     version('master', branch='master')
     version('2.4.1', tag='v2.4.1')
@@ -31,15 +31,15 @@ class Highfive(CMakePackage):
     # This is a header-only lib so dependencies shall be specified in the
     # target project directly and never specified here since they get truncated
     # when installed as external packages (which makes sense to improve reuse)
-    variant('boost',   default=True,  description='Support Boost')
-    variant('mpi',     default=True,  description='Support MPI')
-    variant('eigen',   default=False, description='Support Eigen')
+    variant('boost', default=True,  description='Support Boost')
+    variant('mpi', default=True,  description='Support MPI')
+    variant('eigen', default=False, description='Support Eigen')
     variant('xtensor', default=False, description='Support xtensor')
 
     # Develop builds tests which require boost
     conflicts('~boost', when='@develop')
 
-    depends_on('boost @1.41:', when='+boost')
+    depends_on('boost @1.41: +serialization+system', when='+boost')
     depends_on('hdf5 ~mpi', when='~mpi')
     depends_on('hdf5 +mpi', when='+mpi')
     depends_on('eigen', when='+eigen')
