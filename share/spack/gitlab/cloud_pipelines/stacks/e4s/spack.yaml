@@ -460,7 +460,7 @@ spack:
         - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
-    build-group: New PR testing workflow
+    build-group: E4S
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
