@@ -42,6 +42,7 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 
@@ -1069,7 +1070,7 @@ class PackageInstaller(object):
 
         try:
             if lock is None:
-                tty.debug(msg.format("Acquiring", desc, pkg_id, timeout))
+                tty.debug(msg.format("Acquiring", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "acquire"
                 lock = spack.store.db.prefix_lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
@@ -1088,14 +1089,18 @@ class PackageInstaller(object):
                 # must be downgraded to be a read lock
                 # Retain the original lock timeout, which is in the lock's
                 # default_timeout setting.
-                tty.debug(msg.format("Downgrading to", desc, pkg_id, lock.default_timeout))
+                tty.debug(
+                    msg.format(
+                        "Downgrading to", desc, pkg_id, pretty_seconds(lock.default_timeout or 0)
+                    )
+                )
                 op = "downgrade to"
                 lock.downgrade_write_to_read()
 
             else:  # read -> write
                 # Only get here if the current lock is a read lock, which
                 # must be upgraded to be a write lock
-                tty.debug(msg.format("Upgrading to", desc, pkg_id, timeout))
+                tty.debug(msg.format("Upgrading to", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "upgrade to"
                 lock.upgrade_read_to_write(timeout)
             tty.debug("{0} is now {1} locked".format(pkg_id, lock_type))
