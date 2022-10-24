@@ -783,10 +783,16 @@ class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
 
     def __init__(self, lock_type, path, time, attempts):
-        msg = "Timed out waiting for a {} lock after {} and {} attempts on file: {}".format(
-            lock_type, pretty_seconds(time), attempts, path
+        fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
+        super(LockTimeoutError, self).__init__(
+            fmt.format(
+                lock_type,
+                pretty_seconds(time),
+                attempts,
+                "attempt" if attempts == 1 else "attempts",
+                path,
+            )
         )
-        super(LockTimeoutError, self).__init__(msg)
 
 
 class LockUpgradeError(LockError):
