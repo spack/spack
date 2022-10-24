@@ -1060,7 +1060,7 @@ def test_error_message_when_using_too_new_db(database, monkeypatch):
     back to an older version of Spack. This test ensures that the error message for a too
     new database version stays comprehensible across refactoring of the database code.
     """
-    monkeypatch.setattr(spack.database, "_db_version", vn.Version("0"))
+    monkeypatch.setattr(spack.database, "_DB_VERSION", vn.Version("0"))
     with pytest.raises(
         spack.database.InvalidDatabaseVersionError, match="you need a newer Spack version"
     ):

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Spack's installation tracking database.
 
 The database serves two purposes:
@@ -56,17 +55,17 @@ from spack.util.crypto import bit_length
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
 
-# DB goes in this directory underneath the root
-_db_dirname = ".spack-db"
+#: DB goes in this directory underneath the root
+_DB_DIRNAME = ".spack-db"
 
-# DB version.  This is stuck in the DB file to track changes in format.
-# Increment by one when the database format changes.
-# Versions before 5 were not integers.
-_db_version = vn.Version("7")
+#: DB version.  This is stuck in the DB file to track changes in format.
+#: Increment by one when the database format changes.
+#: Versions before 5 were not integers.
+_DB_VERSION = vn.Version("7")
 
-# For any version combinations here, skip reindex when upgrading.
-# Reindexing can take considerable time and is not always necessary.
-_skip_reindex = [
+#: For any version combinations here, skip reindex when upgrading.
+#: Reindexing can take considerable time and is not always necessary.
+_SKIP_REINDEX = [
     # reindexing takes a significant amount of time, and there's
     # no reason to do it from DB version 0.9.3 to version 5. The
     # only difference is that v5 can contain "deprecated_for"
@@ -77,26 +76,26 @@ _skip_reindex = [
     (vn.Version("6"), vn.Version("7")),
 ]
 
-# Default timeout for spack database locks in seconds or None (no timeout).
-# A balance needs to be struck between quick turnaround for parallel installs
-# (to avoid excess delays) and waiting long enough when the system is busy
-# (to ensure the database is updated).
-_db_lock_timeout = 120
+#: Default timeout for spack database locks in seconds or None (no timeout).
+#: A balance needs to be struck between quick turnaround for parallel installs
+#: (to avoid excess delays) and waiting long enough when the system is busy
+#: (to ensure the database is updated).
+_DEFAULT_DB_LOCK_TIMEOUT = 120
 
-# Default timeout for spack package locks in seconds or None (no timeout).
-# A balance needs to be struck between quick turnaround for parallel installs
-# (to avoid excess delays when performing a parallel installation) and waiting
-# long enough for the next possible spec to install (to avoid excessive
-# checking of the last high priority package) or holding on to a lock (to
-# ensure a failed install is properly tracked).
-_pkg_lock_timeout = None
+#: Default timeout for spack package locks in seconds or None (no timeout).
+#: A balance needs to be struck between quick turnaround for parallel installs
+#: (to avoid excess delays when performing a parallel installation) and waiting
+#: long enough for the next possible spec to install (to avoid excessive
+#: checking of the last high priority package) or holding on to a lock (to
+#: ensure a failed install is properly tracked).
+_DEFAULT_PKG_LOCK_TIMEOUT = None
 
-# Types of dependencies tracked by the database
-# We store by DAG hash, so we track the dependencies that the DAG hash includes.
-_tracked_deps = ht.dag_hash.deptype
+#: Types of dependencies tracked by the database
+#: We store by DAG hash, so we track the dependencies that the DAG hash includes.
+_TRACKED_DEPENDENCIES = ht.dag_hash.deptype
 
-# Default list of fields written for each install record
-default_install_record_fields = [
+#: Default list of fields written for each install record
+DEFAULT_INSTALL_RECORD_FIELDS = (
     "spec",
     "ref_count",
     "path",
@@ -104,7 +103,7 @@ default_install_record_fields = [
     "explicit",
     "installation_time",
     "deprecated_for",
-]
+)
 
 
 def reader(version):
@@ -220,7 +219,7 @@ class InstallRecord:
         else:
             return InstallStatuses.MISSING in installed
 
-    def to_dict(self, include_fields=default_install_record_fields):
+    def to_dict(self, include_fields=DEFAULT_INSTALL_RECORD_FIELDS):
         rec_dict = {}
 
         for field_name in include_fields:
@@ -260,7 +259,7 @@ class ForbiddenLock:
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
 
 
-_query_docstring = """
+_QUERY_DOCSTRING = """
 
         Args:
             query_spec: queries iterate through specs in the database and
@@ -325,7 +324,7 @@ class Database:
         upstream_dbs=None,
         is_upstream=False,
         enable_transaction_locking=True,
-        record_fields=default_install_record_fields,
+        record_fields=DEFAULT_INSTALL_RECORD_FIELDS,
     ):
         """Create a Database for Spack installations under ``root``.
 
@@ -354,7 +353,7 @@ class Database:
         self.root = root
 
         # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
+        self._db_dir = db_dir or os.path.join(self.root, _DB_DIRNAME)
 
         # Set up layout of database files within the db dir
         self._index_path = os.path.join(self._db_dir, "index.json")
@@ -391,9 +390,11 @@ class Database:
         self._state_is_inconsistent = False
 
         # initialize rest of state.
-        self.db_lock_timeout = spack.config.get("config:db_lock_timeout") or _db_lock_timeout
+        self.db_lock_timeout = (
+            spack.config.get("config:db_lock_timeout") or _DEFAULT_DB_LOCK_TIMEOUT
+        )
         self.package_lock_timeout = (
-            spack.config.get("config:package_lock_timeout") or _pkg_lock_timeout
+            spack.config.get("config:package_lock_timeout") or _DEFAULT_PKG_LOCK_TIMEOUT
         )
         tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
         timeout_format_str = (
@@ -672,7 +673,7 @@ class Database:
             "database": {
                 # TODO: move this to a top-level _meta section if we ever
                 # TODO: bump the DB version to 7
-                "version": str(_db_version),
+                "version": str(_DB_VERSION),
                 # dictionary of installation records, keyed by DAG hash
                 "installs": installs,
             }
@@ -809,13 +810,13 @@ class Database:
 
         # TODO: better version checking semantics.
         version = vn.Version(db["version"])
-        if version > _db_version:
-            raise InvalidDatabaseVersionError(self, _db_version, version)
-        elif version < _db_version:
-            if not any(old == version and new == _db_version for old, new in _skip_reindex):
+        if version > _DB_VERSION:
+            raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
+        elif version < _DB_VERSION:
+            if not any(old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX):
                 tty.warn(
                     "Spack database version changed from %s to %s. Upgrading."
-                    % (version, _db_version)
+                    % (version, _DB_VERSION)
                 )
 
                 self.reindex(spack.store.layout)
@@ -1006,7 +1007,7 @@ class Database:
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies(deptype=_tracked_deps):
+            for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -1128,7 +1129,7 @@ class Database:
         # Retrieve optional arguments
         installation_time = installation_time or _now()
 
-        for edge in spec.edges_to_dependencies(deptype=_tracked_deps):
+        for edge in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
             if edge.spec.dag_hash() in self._data:
                 continue
             # allow missing build-only deps. This prevents excessive
@@ -1180,7 +1181,7 @@ class Database:
             self._data[key] = InstallRecord(new_spec, path, installed, ref_count=0, **extra_args)
 
             # Connect dependencies from the DB to the new copy.
-            for dep in spec.edges_to_dependencies(deptype=_tracked_deps):
+            for dep in spec.edges_to_dependencies(deptype=_TRACKED_DEPENDENCIES):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, deptypes=dep.deptypes, virtuals=dep.virtuals)
@@ -1243,7 +1244,7 @@ class Database:
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
 
-            for dep in spec.dependencies(deptype=_tracked_deps):
+            for dep in spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
                 self._decrement_ref_count(dep)
 
     def _increment_ref_count(self, spec):
@@ -1273,8 +1274,8 @@ class Database:
 
         # Remove any reference to this node from dependencies and
         # decrement the reference count
-        rec.spec.detach(deptype=_tracked_deps)
-        for dep in rec.spec.dependencies(deptype=_tracked_deps):
+        rec.spec.detach(deptype=_TRACKED_DEPENDENCIES)
+        for dep in rec.spec.dependencies(deptype=_TRACKED_DEPENDENCIES):
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
@@ -1545,7 +1546,7 @@ class Database:
 
     if _query.__doc__ is None:
         _query.__doc__ = ""
-    _query.__doc__ += _query_docstring
+    _query.__doc__ += _QUERY_DOCSTRING
 
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database.
@@ -1559,7 +1560,7 @@ class Database:
 
     if query_local.__doc__ is None:
         query_local.__doc__ = ""
-    query_local.__doc__ += _query_docstring
+    query_local.__doc__ += _QUERY_DOCSTRING
 
     def query(self, *args, **kwargs):
         """Query the Spack database including all upstream databases."""
@@ -1578,7 +1579,7 @@ class Database:
 
     if query.__doc__ is None:
         query.__doc__ = ""
-    query.__doc__ += _query_docstring
+    query.__doc__ += _QUERY_DOCSTRING
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.
