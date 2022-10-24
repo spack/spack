@@ -42,6 +42,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.relocate import utf8_path_to_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
 
@@ -687,6 +688,15 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         return False
 
 
+def file_matches_any_binary_regex(path, regexes):
+    with open(path, "rb") as f:
+        contents = f.read()
+    for regex in regexes:
+        if regex.search(contents):
+            return True
+    return False
+
+
 def get_buildfile_manifest(spec):
     """
     Return a data structure with information about a build, including
@@ -711,6 +721,15 @@ def get_buildfile_manifest(spec):
     visitor = BuildManifestVisitor()
     root = spec.prefix
     visit_directory_tree(root, visitor)
+
+    # Collect a list of prefixes for this package and it's dependencies, Spack will
+    # look for them to decide if text file needs to be relocated or not
+    prefixes = [d.prefix for d in spec.traverse(root=True, deptype="all") if not d.external]
+    prefixes.append(spack.hooks.sbang.sbang_install_path())
+    prefixes.append(str(spack.store.layout.root))
+
+    # Create a list regexes matching collected prefixes
+    compiled_prefixes = [utf8_path_to_binary_regex(prefix) for prefix in prefixes]
 
     # Symlinks.
 
@@ -743,8 +762,9 @@ def get_buildfile_manifest(spec):
                 continue
 
         elif relocate.needs_text_relocation(m_type, m_subtype):
-            data["text_to_relocate"].append(rel_path)
-            continue
+            if file_matches_any_binary_regex(abs_path, compiled_prefixes):
+                data["text_to_relocate"].append(rel_path)
+                continue
 
         data["other"].append(abs_path)
 
