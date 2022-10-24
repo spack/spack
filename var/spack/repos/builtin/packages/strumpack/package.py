@@ -74,6 +74,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cuda", when="@4.0.0: +cuda")
     depends_on("zfp", when="+zfp")
     depends_on("hipblas", when="+rocm")
+    depends_on("hipsparse", type="link", when="@7.0.1: +rocm")
     depends_on("rocsolver", when="+rocm")
     depends_on("slate", when="+slate")
     depends_on("slate+cuda", when="+cuda+slate")
@@ -146,8 +147,12 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             args.append("-DHIP_ROOT_DIR={0}".format(spec["hip"].prefix))
             rocm_archs = spec.variants["amdgpu_target"].value
+            hipcc_flags = []
+            if spec.satisfies("@7.0.1: +rocm"):
+                hipcc_flags.append("-std=c++14")
             if "none" not in rocm_archs:
-                args.append("-DHIP_HIPCC_FLAGS=--amdgpu-target={0}".format(",".join(rocm_archs)))
+                hipcc_flags.append("--amdgpu-target={0}".format(",".join(rocm_archs)))
+            args.append("-DHIP_HIPCC_FLAGS={0}".format(" ".join(hipcc_flags)))
 
         return args
 
