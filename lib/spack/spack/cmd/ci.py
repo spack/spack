@@ -25,7 +25,7 @@ description = "manage continuous integration pipelines"
 section = "build"
 level = "long"
 
-CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "--backtrace", "-v"]
+CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "--color=always", "--backtrace", "--verbose"]
 INSTALL_FAIL_CODE = 1
 
 
