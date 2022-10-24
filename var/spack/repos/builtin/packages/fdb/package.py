@@ -44,6 +44,8 @@ class Fdb(CMakePackage):
     depends_on("eckit+admin", when="+tools")
 
     depends_on("eccodes@2.10:")
+    depends_on("eccodes+tools", when="+tools")
+
     depends_on("metkit@1.5:+grib")
 
     depends_on("lustre", when="backends=lustre")
