@@ -7,4 +7,5 @@
       OSName="{{ osname }}"
       OSRelease="{{ osrelease }}"
       VendorString="{{ target }}"
+      ChangeId="33490"
 >
