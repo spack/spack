@@ -73,6 +73,7 @@ properties = {
             "binary_index_root": {"type": "string"},
             "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
+            "binary_index_ttl": {"type": "integer", "minimum": 0},
         },
         "deprecatedProperties": {
             "properties": ["module_roots"],

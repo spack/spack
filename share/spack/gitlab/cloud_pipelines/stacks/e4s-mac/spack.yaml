@@ -51,6 +51,7 @@ spack:
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    match_behavior: first
     mappings:
       - match: ['os=monterey']
         runner-attributes:

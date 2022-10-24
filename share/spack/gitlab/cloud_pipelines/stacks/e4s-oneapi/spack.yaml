@@ -3,7 +3,7 @@ spack:
 
   concretizer:
     reuse: false
-    unify: when_possible
+    unify: false
 
   config:
     concretizer: clingo
@@ -282,6 +282,7 @@ spack:
 
     image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
     
+    match_behavior: first
     mappings:
       - match:
           - hipblas
