@@ -528,6 +528,12 @@ def make_argument_parser(**kwargs):
         help="add stacktraces to all printed statements",
     )
     parser.add_argument(
+        "--backtrace",
+        action="store_true",
+        default="SPACK_BACKTRACE" in os.environ,
+        help="always show backtraces for exceptions",
+    )
+    parser.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
@@ -547,6 +553,12 @@ def setup_main_options(args):
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
+    if sys.version_info[:2] == (2, 7):
+        warnings.warn(
+            "Python 2.7 support is deprecated and will be removed in Spack v0.20.\n"
+            "    Please move to Python 3.6 or higher."
+        )
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -555,8 +567,10 @@ def setup_main_options(args):
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
 
+    if args.debug or args.backtrace:
+        spack.error.debug = True
+
     if args.debug:
-        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.tracing_enabled = True
@@ -571,7 +585,14 @@ def setup_main_options(args):
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
-        spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
+        import spack.util.spack_yaml as syaml
+
+        key = syaml.syaml_str("repos")
+        key.override = True
+        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+            [(key, [spack.paths.mock_packages_path])]
+        )
+        spack.repo.path = spack.repo.create(spack.config.config)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

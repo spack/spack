@@ -243,8 +243,8 @@ class PythonPackage(PackageBase):
         """Discover header files in platlib."""
 
         # Headers may be in either location
-        include = inspect.getmodule(self).include
-        platlib = inspect.getmodule(self).platlib
+        include = self.prefix.join(self.spec["python"].package.include)
+        platlib = self.prefix.join(self.spec["python"].package.platlib)
         headers = find_all_headers(include) + find_all_headers(platlib)
 
         if headers:
@@ -259,7 +259,7 @@ class PythonPackage(PackageBase):
 
         # Remove py- prefix in package name
         library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = inspect.getmodule(self).platlib
+        root = self.prefix.join(self.spec["python"].package.platlib)
 
         for shared in [True, False]:
             libs = find_libraries(library, root, shared=shared, recursive=True)

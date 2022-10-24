@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -59,6 +61,18 @@ class Xyce(CMakePackage):
     variant("cxxstd", default="11", values=cxxstd_choices, multi=False)
 
     variant("pymi", default=False, description="Enable Python Model Interpreter for Xyce")
+    # Downstream dynamic library symbols from pip installed numpy and other
+    # pip installed python packages can cause conflicts. This is most often
+    # seen with blas symbols from numpy, and building blas static resolves
+    # this issue.
+    variant(
+        "pymi_static_tpls",
+        default=True,
+        sticky=True,
+        when="+pymi",
+        description="Require static blas build for PyMi",
+    )
+
     depends_on("python@3:", type=("build", "link", "run"), when="+pymi")
     depends_on("py-pip", type="run", when="+pymi")
     depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="+pymi")
@@ -66,10 +80,12 @@ class Xyce(CMakePackage):
     depends_on(
         "trilinos"
         "+amesos+amesos2+anasazi+aztec+basker+belos+complex+epetra+epetraext"
-        "+explicit_template_instantiation+fortran+ifpack+isorropia+kokkos+nox"
-        "+sacado+suite-sparse+trilinoscouplings+zoltan+stokhos+epetraextbtf"
+        "+explicit_template_instantiation+fortran+ifpack+kokkos+nox"
+        "+sacado+suite-sparse+trilinoscouplings+stokhos+epetraextbtf"
         "+epetraextexperimental+epetraextgraphreorderings"
     )
+    depends_on("trilinos+isorropia+zoltan", when="+mpi")
+
     # tested versions of Trilinos for everything up to 7.4.0
     depends_on("trilinos@12.12.1:13.4", when="@:7.5")
     depends_on("trilinos@13.5.0:develop", when="@7.6.0:master")
@@ -86,34 +102,46 @@ class Xyce(CMakePackage):
     # installation of many more packages than are needed for Xyce.
     depends_on("trilinos~float~ifpack2~ml~muelu~zoltan2")
 
+    # Issue #1712 forces explicitly enumerating blas packages to propagate variants
+    with when("+pymi_static_tpls"):
+
+        # BLAS
+        depends_on("openblas~shared", when="^openblas")
+        depends_on("netlib-lapack~shared", when="^netlib-lapack~external-blas")
+
+        depends_on("armpl-gcc~shared", when="^armpl-gcc")
+        depends_on("atlas~shared", when="^atlas")
+        depends_on("blis libs=static", when="^blis+cblas")
+        depends_on("blis libs=static", when="^blis+blas")
+        depends_on("clblast~shared", when="^clblast+netlib")
+        depends_on("intel-mkl~shared", when="^intel-mkl")
+        depends_on("intel-oneapi-mkl~shared", when="^intel-oneapi-mkl")
+        depends_on("intel-parallel-studio~shared", when="^intel-parallel-studio+mkl")
+        depends_on("veclibfort~shared", when="^veclibfort")
+        conflicts("^essl", msg="essl not supported with +pymi_static_tpls")
+        conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_tpls")
+        conflicts("^nvhpc", msg="nvhpc not supported with +pymi_static_tpls")
+        conflicts("^cray-libsci", msg="cray-libsci not supported with +pymi_static_tpls")
+        # netlib-xblas+plain_blas is always static
+
+        # HDF5
+        depends_on("hdf5~shared", when="^hdf5")
+
     def cmake_args(self):
         spec = self.spec
 
-        trilinos = spec["trilinos"]
-
-        cxx_flags = [self.compiler.cxx_pic_flag]
-        try:
-            cxx_flags.append(self.compiler.cxx11_flag)
-        except ValueError:
-            pass
-        cxx_flags.append("-DXyce_INTRUSIVE_PCE -Wreorder -O3")
-
         options = []
-        options.extend(
-            [
-                "-DTrilinos_DIR:PATH={0}".format(trilinos.prefix),
-                "-DCMAKE_CXX_FLAGS:STRING={0}".format(" ".join(cxx_flags)),
-            ]
-        )
 
         if "+mpi" in spec:
-            options.append("-DCMAKE_CXX_COMPILER:STRING={0}".format(spec["mpi"].mpicxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
         else:
-            options.append("-DCMAKE_CXX_COMPILER:STRING={0}".format(self.compiler.cxx))
+            options.append(self.define("CMAKE_CXX_COMPILER", self.compiler.cxx))
 
-        options.append(self.define_from_variant("Xyce_PLUGIN_SUPPORT", "plugin"))
         options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
         options.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
+        options.append(self.define_from_variant("CMAKE_BUILD_TYPE", "build_type"))
+        options.append(self.define_from_variant("Xyce_PLUGIN_SUPPORT", "plugin"))
+        options.append(self.define("Trilinos_DIR", spec["trilinos"].prefix))
 
         if "+pymi" in spec:
             pybind11 = spec["py-pybind11"]
@@ -124,3 +152,24 @@ class Xyce(CMakePackage):
             options.append("-DPython_FIND_STRATEGY=LOCATION")
 
         return options
+
+    def flag_handler(self, name, flags):
+        spec = self.spec
+        if name == "cxxflags":
+            flags.append("-DXyce_INTRUSIVE_PCE -Wreorder")
+        elif name == "ldflags":
+            # Fortran lib (assumes clang is built with gfortran!)
+            if spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+                fc = Executable(self.compiler.fc)
+                libgfortran = fc(
+                    "--print-file-name", "libgfortran." + dso_suffix, output=str
+                ).strip()
+                # if libgfortran is equal to "libgfortran.<dso_suffix>" then
+                # print-file-name failed, use static library instead
+                if libgfortran == "libgfortran." + dso_suffix:
+                    libgfortran = fc("--print-file-name", "libgfortran.a", output=str).strip()
+                # -L<libdir> -lgfortran required for OSX
+                # https://github.com/spack/spack/pull/25823#issuecomment-917231118
+                flags.append("-L{0} -lgfortran".format(os.path.dirname(libgfortran)))
+
+        return (flags, None, None)
