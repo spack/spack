@@ -18,7 +18,7 @@ as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
-
+import collections
 import contextlib
 import datetime
 import os
@@ -42,9 +42,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 import spack.hash_types as ht
-import spack.repo
 import spack.spec
-import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
 import spack.version as vn
@@ -307,6 +305,40 @@ _QUERY_DOCSTRING = """
 
         """
 
+#: Data class to configure locks in Database objects
+#:
+#: Args:
+#:    enable (bool): whether to enable locks or not.
+#:    database_timeout (int or None): timeout for the database lock
+#:    package_timeout (int or None): timeout for the package lock
+LockConfiguration = collections.namedtuple(
+    "LockConfiguration", ["enable", "database_timeout", "package_timeout"]
+)
+
+
+#: Configure a database to avoid using locks
+NO_LOCK = LockConfiguration(enable=False, database_timeout=None, package_timeout=None)
+
+
+#: Configure the database to use locks without a timeout
+NO_TIMEOUT = LockConfiguration(enable=True, database_timeout=None, package_timeout=None)
+
+#: Default configuration for database locks
+DEFAULT_LOCK_CFG = LockConfiguration(
+    enable=True,
+    database_timeout=_DEFAULT_DB_LOCK_TIMEOUT,
+    package_timeout=_DEFAULT_PKG_LOCK_TIMEOUT,
+)
+
+
+def lock_configuration(configuration):
+    """Return a LockConfiguration from a spack.config.Configuration object."""
+    return LockConfiguration(
+        enable=configuration.get("config:locks", None),
+        database_timeout=configuration.get("config:db_lock_timeout"),
+        package_timeout=configuration.get("config:db_lock_timeout"),
+    )
+
 
 class Database:
 
@@ -317,63 +349,55 @@ class Database:
     """Per-process failure (lock) objects for each install prefix."""
     _prefix_failures: Dict[str, lk.Lock] = {}
 
-    def __init__(
-        self,
-        root,
-        db_dir=None,
-        upstream_dbs=None,
-        is_upstream=False,
-        enable_transaction_locking=True,
-        record_fields=DEFAULT_INSTALL_RECORD_FIELDS,
-    ):
-        """Create a Database for Spack installations under ``root``.
+    #: Fields written for each install record
+    record_fields = DEFAULT_INSTALL_RECORD_FIELDS
 
-        A Database is a cache of Specs data from ``$prefix/spec.yaml``
-        files in Spack installation directories.
+    def __init__(self, root, upstream_dbs=None, is_upstream=False, lock_cfg=DEFAULT_LOCK_CFG):
+        """Database for Spack installations.
 
-        By default, Database files (data and lock files) are stored
-        under ``root/.spack-db``, which is created if it does not
-        exist.  This is the ``db_dir``.
+        A Database is a cache of Specs data from ``$prefix/spec.yaml`` files
+        in Spack installation directories.
 
-        The Database will attempt to read an ``index.json`` file in
-        ``db_dir``.  If that does not exist, it will create a database
-        when needed by scanning the entire Database root for ``spec.yaml``
-        files according to Spack's ``DirectoryLayout``.
+        Database files (data and lock files) are stored under ``root/.spack-db``, which is
+        created if it does not exist.  This is the "database directory".
 
-        Caller may optionally provide a custom ``db_dir`` parameter
-        where data will be stored. This is intended to be used for
-        testing the Database class.
+        The database will attempt to read an ``index.json`` file in the database directory.
+        If that does not exist, it will create a database when needed by scanning the entire
+        store root for ``spec.json`` files according to Spack's directory layout.
 
-        This class supports writing buildcache index files, in which case
-        certain fields are not needed in each install record, and no
-        transaction locking is required.  To use this feature, provide
-        ``enable_transaction_locking=False``, and specify a list of needed
-        fields in ``record_fields``.
+        A database supports writing buildcache index files, in which case certain fields are not
+        needed in each install record, and no locking is required. To use this feature, provide
+        ``lock_cfg=NO_LOCK``, and override the list of ``record_fields``.
+
+        Args:
+            root (str): root directory where to create the database directory.
+            upstream_dbs (list of Database): upstream databases for this repository.
+            is_upstream (bool): whether this repository is an upstream.
+            lock_cfg (LockConfiguration): configuration for the locks to be used by this
+                repository. Relevant only if the repository is not an upstream.
         """
         self.root = root
-
-        # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _DB_DIRNAME)
+        self.database_directory = os.path.join(self.root, _DB_DIRNAME)
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, "index.json")
-        self._verifier_path = os.path.join(self._db_dir, "index_verifier")
-        self._lock_path = os.path.join(self._db_dir, "lock")
+        self._index_path = os.path.join(self.database_directory, "index.json")
+        self._verifier_path = os.path.join(self.database_directory, "index_verifier")
+        self._lock_path = os.path.join(self.database_directory, "lock")
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self._db_dir, "prefix_lock")
+        self.prefix_lock_path = os.path.join(self.database_directory, "prefix_lock")
 
         # Ensure a persistent location for dealing with parallel installation
         # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self._db_dir, "failures")
+        self._failure_dir = os.path.join(self.database_directory, "failures")
 
         # Support special locks for handling parallel installation failures
         # of a spec.
-        self.prefix_fail_path = os.path.join(self._db_dir, "prefix_failures")
+        self.prefix_fail_path = os.path.join(self.database_directory, "prefix_failures")
 
         # Create needed directories and files
-        if not is_upstream and not os.path.exists(self._db_dir):
-            fs.mkdirp(self._db_dir)
+        if not is_upstream and not os.path.exists(self.database_directory):
+            fs.mkdirp(self.database_directory)
 
         if not is_upstream and not os.path.exists(self._failure_dir):
             fs.mkdirp(self._failure_dir)
@@ -390,12 +414,9 @@ class Database:
         self._state_is_inconsistent = False
 
         # initialize rest of state.
-        self.db_lock_timeout = (
-            spack.config.get("config:db_lock_timeout") or _DEFAULT_DB_LOCK_TIMEOUT
-        )
-        self.package_lock_timeout = (
-            spack.config.get("config:package_lock_timeout") or _DEFAULT_PKG_LOCK_TIMEOUT
-        )
+        self.db_lock_timeout = lock_cfg.database_timeout
+        self.package_lock_timeout = lock_cfg.package_timeout
+
         tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
         timeout_format_str = (
             "{0}s".format(str(self.package_lock_timeout))
@@ -408,7 +429,10 @@ class Database:
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(
-                self._lock_path, default_timeout=self.db_lock_timeout, desc="database"
+                self._lock_path,
+                default_timeout=self.db_lock_timeout,
+                desc="database",
+                enable=lock_cfg.enable,
             )
         self._data: Dict[str, InstallRecord] = {}
 
@@ -427,14 +451,12 @@ class Database:
         # message)
         self._fail_when_missing_deps = False
 
-        if enable_transaction_locking:
+        if lock_cfg.enable:
             self._write_transaction_impl = lk.WriteTransaction
             self._read_transaction_impl = lk.ReadTransaction
         else:
             self._write_transaction_impl = lang.nullcontext
             self._read_transaction_impl = lang.nullcontext
-
-        self._record_fields = record_fields
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -660,7 +682,7 @@ class Database:
         """
         # map from per-spec hash code to installation record.
         installs = dict(
-            (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
+            (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
         )
 
         # database includes installation list and version.
@@ -981,7 +1003,7 @@ class Database:
                 # applications.
                 tty.debug("RECONSTRUCTING FROM OLD DB: {0}".format(entry.spec))
                 try:
-                    layout = None if entry.spec.external else spack.store.layout
+                    layout = None if entry.spec.external else directory_layout
                     kwargs = {
                         "spec": entry.spec,
                         "directory_layout": layout,
@@ -1096,13 +1118,13 @@ class Database:
     ):
         """Add an install record for this spec to the database.
 
-        Assumes spec is installed in ``layout.path_for_spec(spec)``.
+        Assumes spec is installed in ``directory_layout.path_for_spec(spec)``.
 
         Also ensures dependencies are present and updated in the DB as
         either installed or missing.
 
         Args:
-            spec: spec to be added
+            spec (spack.spec.Spec): spec to be added
             directory_layout: layout of the spec installation
             explicit:
                 Possible values: True, False, any
@@ -1391,10 +1413,7 @@ class Database:
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):
-        """
-        Return the specs of all packages that extend
-        the given spec
-        """
+        """Returns the specs of all packages that extend the given spec"""
         for spec in self.query():
             if spec.package.extends(extendee_spec):
                 yield spec.package
@@ -1421,7 +1440,7 @@ class Database:
         # nothing found
         return default
 
-    def get_by_hash_local(self, *args, **kwargs):
+    def get_by_hash_local(self, dag_hash, default=None, installed=any):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Arguments:
@@ -1445,7 +1464,7 @@ class Database:
 
         """
         with self.read_transaction():
-            return self._get_by_hash_local(*args, **kwargs)
+            return self._get_by_hash_local(dag_hash, default=default, installed=installed)
 
     def get_by_hash(self, dag_hash, default=None, installed=any):
         """Look up a spec by DAG hash, or by a DAG hash prefix.
@@ -1531,7 +1550,7 @@ class Database:
             if explicit is not any and rec.explicit != explicit:
                 continue
 
-            if known is not any and spack.repo.path.exists(rec.spec.name) != known:
+            if known is not any and known(rec.spec.name):
                 continue
 
             if start_date or end_date:

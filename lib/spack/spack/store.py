@@ -20,6 +20,7 @@ debugging easier.
 import contextlib
 import os
 import re
+import uuid
 from typing import Union
 
 import llnl.util.lang
@@ -123,7 +124,7 @@ def parse_install_tree(config_dict):
     else:
         root = unpadded_root
 
-    return (root, unpadded_root, projections)
+    return root, unpadded_root, projections
 
 
 class Store:
@@ -149,12 +150,27 @@ class Store:
             layout; spec hash suffixes will be truncated to this length
     """
 
-    def __init__(self, root, unpadded_root=None, projections=None, hash_length=None):
+    def __init__(
+        self,
+        root,
+        unpadded_root=None,
+        projections=None,
+        hash_length=None,
+        upstreams=None,
+        enable_locks=None,
+        db_lock_timeout=None,
+        package_lock_timeout=None,
+    ):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
-        self.db = spack.database.Database(root, upstream_dbs=retrieve_upstream_dbs())
+        lock_cfg = spack.database.LockConfiguration(
+            enable=enable_locks,
+            database_timeout=db_lock_timeout,
+            package_timeout=package_lock_timeout,
+        )
+        self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
         )
@@ -183,21 +199,57 @@ class Store:
         return Store(*token)
 
 
-def _store():
-    """Get the singleton store instance."""
-    import spack.bootstrap
+def create(configuration):
+    """Create a store from the configuration passed as input.
 
-    config_dict = spack.config.get("config")
+    Args:
+        configuration (spack.config.Configuration): configuration to use to create a store.
+    """
+    configuration = configuration or spack.config.config
+    config_dict = configuration.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = spack.config.get("config:install_hash_length")
+    hash_length = configuration.get("config:install_hash_length")
 
+    install_roots = [
+        install_properties["install_tree"]
+        for install_properties in configuration.get("upstreams", {}).values()
+    ]
+    upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
+
+    db_lock_timeout = configuration.get("config:db_lock_timeout")
+    package_lock_timeout = configuration.get("config:db_lock_timeout")
+    enable_locks = configuration.get("config:locks", None)
     return Store(
-        root=root, unpadded_root=unpadded_root, projections=projections, hash_length=hash_length
+        root=root,
+        unpadded_root=unpadded_root,
+        projections=projections,
+        hash_length=hash_length,
+        upstreams=upstreams,
+        enable_locks=enable_locks,
+        db_lock_timeout=db_lock_timeout,
+        package_lock_timeout=package_lock_timeout,
     )
 
 
+def _create_global():
+    # Check that the user is not trying to install software into the store
+    # reserved by Spack to bootstrap its own dependencies, since this would
+    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
+    # user installed software)
+    import spack.bootstrap
+
+    enable_bootstrap = spack.config.config.get("bootstrap:enable", True)
+    if enable_bootstrap and spack.bootstrap.store_path() == root:
+        msg = (
+            'please change the install tree root "{0}" in your '
+            "configuration [path reserved for Spack internal use]"
+        )
+        raise ValueError(msg.format(root))
+    return create(configuration=spack.config.config)
+
+
 #: Singleton store instance
-store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_store)
+store: Union[Store, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_create_global)
 
 
 def _store_root():
@@ -232,7 +284,7 @@ def reinitialize():
 
     token = store, root, unpadded_root, db, layout
 
-    store = llnl.util.lang.Singleton(_store)
+    store = llnl.util.lang.Singleton(_create_global)
     root = llnl.util.lang.LazyReference(_store_root)
     unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
     db = llnl.util.lang.LazyReference(_store_db)
@@ -246,16 +298,6 @@ def restore(token):
     global store
     global root, unpadded_root, db, layout
     store, root, unpadded_root, db, layout = token
-
-
-def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get("upstreams", {})
-
-    install_roots = []
-    for install_properties in other_spack_instances.values():
-        install_roots.append(install_properties["install_tree"])
-
-    return _construct_upstream_dbs_from_install_roots(install_roots)
 
 
 def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
@@ -342,24 +384,31 @@ def specfile_matches(filename, **kwargs):
 
 
 @contextlib.contextmanager
-def use_store(store_or_path):
+def use_store(store_or_path, extra_data=None):
     """Use the store passed as argument within the context manager.
 
     Args:
-        store_or_path: either a Store object ot a path to where the store resides
+        store_or_path: either a Store object ot a path to where the store resides.
+        extra_data (dict): extra configuration under "config:install_tree" to be
+            taken into account.
 
     Returns:
         Store object associated with the context manager's store
     """
     global store, db, layout, root, unpadded_root
 
-    # Normalize input arguments
-    temporary_store = store_or_path
-    if not isinstance(store_or_path, Store):
-        temporary_store = Store(store_or_path)
+    assert not isinstance(store_or_path, Store), "cannot pass a store anymore"
+    scope_name = "use-store-{}".format(uuid.uuid4())
+    data = {"root": store_or_path}
+    if extra_data:
+        data.update(extra_data)
 
     # Swap the store with the one just constructed and return it
     _ = store.db
+    spack.config.config.push_scope(
+        spack.config.InternalConfigScope(name=scope_name, data={"config": {"install_tree": data}})
+    )
+    temporary_store = create(configuration=spack.config.config)
     original_store, store = store, temporary_store
     db, layout = store.db, store.layout
     root, unpadded_root = store.root, store.unpadded_root
@@ -371,6 +420,7 @@ def use_store(store_or_path):
         store = original_store
         db, layout = original_store.db, original_store.layout
         root, unpadded_root = original_store.root, original_store.unpadded_root
+        spack.config.config.remove_scope(scope_name=scope_name)
 
 
 class MatchError(spack.error.SpackError):

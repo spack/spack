@@ -190,8 +190,7 @@ class BinaryCacheIndex:
         tmpdir = tempfile.mkdtemp()
 
         try:
-            db_root_dir = os.path.join(tmpdir, "db_root")
-            db = spack_db.Database(None, db_dir=db_root_dir, enable_transaction_locking=False)
+            db = spack_db.Database(tmpdir, lock_cfg=spack_db.NO_LOCK)
 
             try:
                 self._index_file_cache.init_entry(cache_key)
@@ -1059,13 +1058,13 @@ def generate_package_index(cache_prefix, concurrency=32):
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
     tmpdir = tempfile.mkdtemp()
-    db_root_dir = os.path.join(tmpdir, "db_root")
-    db = spack_db.Database(
-        None,
-        db_dir=db_root_dir,
-        enable_transaction_locking=False,
-        record_fields=["spec", "ref_count", "in_buildcache"],
-    )
+
+    class BuildCacheDatabase(spack_db.Database):
+        record_fields = ("spec", "ref_count", "in_buildcache")
+
+    db = BuildCacheDatabase(tmpdir, lock_cfg=spack_db.NO_LOCK)
+    db.root = None
+    db_root_dir = db.database_directory
 
     try:
         _read_specs_and_push_index(file_list, read_fn, cache_prefix, db, db_root_dir, concurrency)
