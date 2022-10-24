@@ -49,7 +49,7 @@ class Parallelio(CMakePackage):
 
     def url_for_version(self, version):
         url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
-        if self.spec.satisfies(@:2.5.8):
+        if self.spec.satisfies("@:2.5.8"):
             return url.format(version.underscored)
         else:
             return url

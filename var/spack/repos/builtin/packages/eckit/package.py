@@ -149,7 +149,7 @@ class Eckit(CMakePackage):
         # system have SHARED hardcoded (in several CMakeLists.txt files).
         if "~shared" in self.spec:
             # args.append("-DBUILD_SHARED_LIBS=OFF")
-            raise InstrallError("eckit static build not supported")
+            raise InstallError("eckit static build not supported")
 
             # ENABLE_LAPACK is ignored if MKL backend is enabled
             # (the LAPACK backend is still built though):
