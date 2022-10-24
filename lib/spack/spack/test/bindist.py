@@ -11,7 +11,7 @@ import sys
 import py
 import pytest
 
-from llnl.util.filesystem import visit_directory_tree
+from llnl.util.filesystem import join_path, visit_directory_tree
 
 import spack.binary_distribution as bindist
 import spack.config
@@ -22,6 +22,7 @@ import spack.repo
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
+from spack.binary_distribution import get_buildfile_manifest
 from spack.directory_layout import DirectoryLayout
 from spack.paths import test_path
 from spack.spec import Spec
@@ -679,3 +680,13 @@ def test_build_manifest_visitor(tmpdir):
     with tmpdir.as_cwd():
         assert not any(os.path.islink(f) or os.path.isdir(f) for f in visitor.files)
         assert all(os.path.islink(f) for f in visitor.symlinks)
+
+
+def test_text_relocate_if_needed(install_mockery, mock_fetch, monkeypatch, capfd):
+    spec = Spec("needs-text-relocation").concretized()
+    install_cmd(str(spec))
+
+    manifest = get_buildfile_manifest(spec)
+    assert join_path("bin", "exe") in manifest["text_to_relocate"]
+    assert join_path("bin", "otherexe") not in manifest["text_to_relocate"]
+    assert join_path("bin", "secretexe") not in manifest["text_to_relocate"]

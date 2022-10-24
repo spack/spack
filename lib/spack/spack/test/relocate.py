@@ -20,6 +20,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+from spack.relocate import utf8_path_to_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -476,3 +477,12 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
+
+
+def test_text_relocation_regex_is_safe():
+    assert (
+        utf8_path_to_binary_regex("/[a-z]/")
+        .search(b"This does not match /a/, but this does: /[a-z]/.")
+        .group(0)
+        == b"/[a-z]/"
+    )
