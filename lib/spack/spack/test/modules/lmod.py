@@ -24,7 +24,7 @@ writer_cls = spack.modules.lmod.LmodModulefileWriter
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 
 
-@pytest.fixture(params=["clang@3.3", "gcc@4.5.0"])
+@pytest.fixture(params=["clang@12.0.0", "gcc@10.2.1"])
 def compiler(request):
     return request.param
 
