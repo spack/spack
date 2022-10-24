@@ -157,19 +157,12 @@ class Store:
         projections=None,
         hash_length=None,
         upstreams=None,
-        enable_locks=None,
-        db_lock_timeout=None,
-        package_lock_timeout=None,
+        lock_cfg=spack.database.NO_LOCK,
     ):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
-        lock_cfg = spack.database.LockConfiguration(
-            enable=enable_locks,
-            database_timeout=db_lock_timeout,
-            package_timeout=package_lock_timeout,
-        )
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
@@ -216,18 +209,13 @@ def create(configuration):
     ]
     upstreams = _construct_upstream_dbs_from_install_roots(install_roots)
 
-    db_lock_timeout = configuration.get("config:db_lock_timeout")
-    package_lock_timeout = configuration.get("config:db_lock_timeout")
-    enable_locks = configuration.get("config:locks", None)
     return Store(
         root=root,
         unpadded_root=unpadded_root,
         projections=projections,
         hash_length=hash_length,
         upstreams=upstreams,
-        enable_locks=enable_locks,
-        db_lock_timeout=db_lock_timeout,
-        package_lock_timeout=package_lock_timeout,
+        lock_cfg=spack.database.lock_configuration(configuration),
     )
 
 
