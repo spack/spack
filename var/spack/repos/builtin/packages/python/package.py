@@ -1250,12 +1250,26 @@ config.update(get_paths())
         # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
-        shared_libs = [
-            self.config_vars["LDLIBRARY"],
+
+        # When using homebrew on macOS, self.config_vars["LDLIBRARY"] points to
+        # Python.framework/Versions/X.Y/Python, which is indeed a shared library
+        # but doesn't have the correct filename suffix. This confuses several
+        # packages (e.g. met) that use python.libs.ld_flags. Ignore this config.
+        file_extension_shared = os.path.splitext(self.config_vars["LDLIBRARY"])[-1]
+        if file_extension_shared == "":
+            shared_libs = []
+        else:
+            shared_libs = [self.config_vars["LDLIBRARY"]]
+        shared_libs += [
             "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
         ]
-        static_libs = [
-            self.config_vars["LIBRARY"],
+        # Similar for static libraries
+        file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
+        if file_extension_static == "":
+            static_libs = []
+        else:
+            static_libs = [self.config_vars["LIBRARY"]]
+        static_libs += [
             "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
         ]
 
