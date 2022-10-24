@@ -118,3 +118,8 @@ class Touchdetector(CMakePackage):
                 )
 
         return args
+
+    def setup_build_environment(self, env):
+        # The default CMAKE_PREFIX_PATH may not contain the necessary symlink to the TBB
+        # CMake glue, set it ourselves.
+        env.prepend_path("CMAKE_PREFIX_PATH", self.spec["tbb"].package.component_prefix)
