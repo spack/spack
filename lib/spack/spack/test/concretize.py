@@ -1714,8 +1714,8 @@ class TestConcretize(object):
             setup = spack.solver.asp.SpackSolverSetup()
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
         concrete_spec = result.specs[0]
-        assert concrete_spec.satisfies("%gcc@4.5.0")
-        assert concrete_spec.satisfies("os=debian6")
+        assert concrete_spec.satisfies("%{}".format(s.compiler))
+        assert concrete_spec.satisfies("os={}".format(s.architecture.os))
 
     def test_git_hash_assigned_version_is_preferred(self):
         hash = "a" * 40
