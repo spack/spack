@@ -44,6 +44,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.relocate import utf8_path_to_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
 
@@ -719,15 +720,8 @@ def get_buildfile_manifest(spec):
     prefixes = [d.prefix for d in spec.traverse(root=False, deptype="all") if not d.external]
     prefixes.append(spec.prefix)
 
-    # Adopted from relocate.unsafe_relocate_text
     # Create a list regexes matching collected prefixes
-    compiled_prefixes = []
-
-    for prefix in prefixes:
-        prefix_bytes = prefix.encode("utf-8")
-        prefix_rexp = re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
-
-        compiled_prefixes.append(prefix_rexp)
+    compiled_prefixes = [utf8_path_to_binary_regex(prefix) for prefix in prefixes]
 
     # Symlinks.
 
