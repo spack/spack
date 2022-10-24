@@ -10,7 +10,7 @@ import llnl.util.tty as tty
 from spack.package import *
 
 
-class Octopus(Package, CudaPackage):
+class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -90,7 +90,12 @@ class Octopus(Package, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
-    def install(self, spec, prefix):
+    def autoreconf(self, spec, prefix):
+
+        autoreconf("--install", "--verbose", "--force")
+
+    def configure_args(self):
+        spec = self.spec
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         args = []
@@ -211,12 +216,8 @@ class Octopus(Package, CudaPackage):
                 args.append(fcflags)
                 args.append(fflags)
 
-        autoreconf("-i")
-        configure(*args)
-        make()
-        # short tests take forever...
-        # make('check-short')
-        make("install")
+        return args
+
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
