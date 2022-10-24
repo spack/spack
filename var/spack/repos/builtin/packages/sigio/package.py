@@ -15,7 +15,12 @@ class Sigio(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sigio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-sigio/archive/refs/tags/v2.3.2.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+    ]
 
     version("2.3.2", sha256="333f3cf3a97f97103cbafcafc2ad89b24faa55b1332a98adc1637855e8a5b613")
 
