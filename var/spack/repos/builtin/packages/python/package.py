@@ -44,6 +44,7 @@ class Python(Package):
     install_targets = ["install"]
     build_targets = []  # type: List[str]
 
+    version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
     version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
     version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
@@ -420,14 +421,14 @@ class Python(Package):
     patch("python-2.7.17+-distutils-C++-fixup.patch", when="@2.7.17:2.7.18")
     patch("python-3.6.8-distutils-C++.patch", when="@3.6.8,3.7.2")
     patch("python-3.7.3-distutils-C++.patch", when="@3.7.3")
-    patch("python-3.7.4+-distutils-C++.patch", when="@3.7.4:")
+    patch("python-3.7.4+-distutils-C++.patch", when="@3.7.4:3.10")
     patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:")
     patch("cpython-windows-externals.patch", when="@:3.9.6 platform=windows")
     patch("tkinter.patch", when="@:2.8,3.3:3.7 platform=darwin")
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
     patch("tkinter-3.8.patch", when="@3.8:3.9 ~tkinter")
-    patch("tkinter-3.10.patch", when="@3.10: ~tkinter")
+    patch("tkinter-3.10.patch", when="@3.10.0:3.10 ~tkinter")
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch("cray-rpath-2.3.patch", when="@2.3:3.0.1 platform=cray")
