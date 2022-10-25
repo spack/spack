@@ -92,14 +92,14 @@ def test_changed_files_from_git_rev_base(tmpdir, capfd):
         git("checkout", "-b", "main")
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
-        git("commit", "--allow-empty", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "--allow-empty", "-m", "initial commit")
 
         tmpdir.ensure("bin/spack")
         assert changed_files(base="HEAD") == ["bin/spack"]
         assert changed_files(base="main") == ["bin/spack"]
 
         git("add", "bin/spack")
-        git("commit", "-m", "v1")
+        git("commit", "--no-gpg-sign", "-m", "v1")
         assert changed_files(base="HEAD") == []
         assert changed_files(base="HEAD~") == ["bin/spack"]
 
@@ -113,7 +113,7 @@ def test_changed_no_base(tmpdir, capfd):
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
         git("add", ".")
-        git("commit", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
 
         with pytest.raises(SystemExit):
             changed_files(base="foobar")
@@ -198,7 +198,7 @@ def external_style_root(flake8_package_with_errors, tmpdir):
         git("config", "user.name", "test user")
         git("config", "user.email", "test@user.com")
         git("add", ".")
-        git("commit", "-m", "initial commit")
+        git("commit", "--no-gpg-sign", "-m", "initial commit")
         git("branch", "-m", "develop")
         git("checkout", "-b", "feature")
 
@@ -210,7 +210,7 @@ def external_style_root(flake8_package_with_errors, tmpdir):
     # add the buggy file on the feature branch
     with tmpdir.as_cwd():
         git("add", str(py_file))
-        git("commit", "-m", "add new file")
+        git("commit", "--no-gpg-sign", "-m", "add new file")
 
     yield tmpdir, py_file
 
