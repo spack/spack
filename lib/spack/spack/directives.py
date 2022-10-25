@@ -27,6 +27,7 @@ The available directives are:
   * ``version``
 
 """
+import copy
 import functools
 import os.path
 import re
@@ -757,6 +758,47 @@ def resource(**kwargs):
 
     return _execute_resource
 
+
+@directive("dependencies")
+def drop_dependency(name):
+    """Completely remove dependency on a given package"""
+    def _execute_remove_dep(pkg):
+        del pkg.dependencies[name]
+
+    return _execute_remove_dep
+
+
+@directive("conflicts")
+def drop_conflict(name):
+    """Completely remove conflict with a given name (first argument to `conflicts`)"""
+    def _execute_drop_conflict(pkg):
+        del pkg.conflicts[name]
+
+    return _execute_drop_conflict
+
+
+@directive("patches")
+def drop_patch(name):
+    """Completely remove a patch with a given filename or URL"""
+    def _execute_drop_patch(pkg):
+        def filter_func(p):
+            if isinstance(p, spack.FilePatch):
+                return p.relative_path != name
+            elif isinstance(p, spack.UrlPatch):
+                return p.url != name
+            else:
+                raise RuntimeError("Unknown package type: " + str(type(p)))
+
+        old_patches = copy.deepcopy(pkg.patches)
+        new_patches = {}
+        for spec, patches in old_patches.items():
+            filtered_patches = [p for p in patches if filter_func(p)]
+            if filtered_patches:
+                new_patches[spec] = filtered_patches
+
+        pkg.patches = new_patches
+
+    return _execute_drop_patch
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
