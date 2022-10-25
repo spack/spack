@@ -335,7 +335,7 @@ _spacktivate() {
 _spack() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
+        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -b --bootstrap -p --profile --sorted-profile --lines -v --verbose --stacktrace --backtrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add arch audit blame bootstrap build-env buildcache cd change checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop diff docs edit env extensions external fetch find gc gpg graph help info install license list load location log-parse maintainers make-installer mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style tags test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
@@ -508,7 +508,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile copy sync update-index"
+        SPACK_COMPREPLY="create install list keys preview check download get-buildcache-name save-specfile sync update-index"
     fi
 }
 
@@ -566,10 +566,6 @@ _spack_buildcache_get_buildcache_name() {
 
 _spack_buildcache_save_specfile() {
     SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
-}
-
-_spack_buildcache_copy() {
-    SPACK_COMPREPLY="-h --help --base-dir --spec-file --destination-url"
 }
 
 _spack_buildcache_sync() {

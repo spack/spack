@@ -2118,8 +2118,9 @@ def run_standalone_tests(**kwargs):
 
     test_args = [
         "spack",
-        "-d",
-        "-v",
+        "--color=always",
+        "--backtrace",
+        "--verbose",
         "test",
         "run",
     ]
