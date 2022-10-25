@@ -86,6 +86,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
             "node_compiler",
             "node_compiler_version",
             "node",
+            "package_hash",
             "hash",
         )
     )

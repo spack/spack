@@ -101,6 +101,6 @@ class Must(CMakePackage):
             cmake_args.extend(["-DUSE BACKWARD=Off"])
         else:
             if spec.satisfies("+backward"):
-                cmake_args.extend(["-DSUSE BACKWARD=On"])
+                cmake_args.extend(["-DUSE BACKWARD=On"])
 
         return cmake_args

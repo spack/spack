@@ -30,8 +30,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
+    version("2.9.2", sha256="8cd7ed82b096dc349764c3369331751e870d39c86e73bbb5374e1664a59dcdf7")
     version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
     version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
+    version("2.8.3", sha256="4b7ecbe50b36887e1615bc2a582cb86df1250004d8bb540e18336d539803b5a7")
     version("2.8.2", sha256="b3f860c02c22a30e9787e2548ca252ab289a76b7778af6e9fa763d4aafd904c7")
     version("2.8.1", sha256="4b487a63d6f0c1ca46a2ac37ba4687eabdc3a260c222616fa414f6df73228cec")
     version("2.8.0", sha256="66b953ae7fba61fd78969a2e24e350b26ec116cf2e6a7eb93d02c63939c6f9f7")
@@ -40,6 +43,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         sha256="45b79c125edfdc008274f1b150d8b5a53b3ff4713fd1ad1ff4738f515aad8191",
         url="https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/archive/refs/tags/v2.7.4-rocm-enhanced.tar.gz",
     )
+    version("2.7.4", sha256="75b2e40a9623df32da16d8e97528f5e02e4a958e23b1f2ee9637be8eec5d021b")
     version("2.7.3", sha256="b576c2e124cd6d4d04cbfe985430a0d955614e882172b2258217f0ec9b61f39b")
     version("2.7.2", sha256="b3c8577f3b7cc82368ff7f9315821d506abd2f716ea6692977d255b7d8bc54c0")
     version("2.7.1", sha256="abebe2cf5ca379e18071693ca5f45b88ade941b16258a21cc1f12d77d5387a21")
@@ -152,13 +156,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     # https://github.com/tensorflow/tensorflow/issues/33374
     depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
 
-    # TODO: Older versions of TensorFlow don't list the viable version range,
-    # just the minimum version of bazel that will work. The latest version of
-    # bazel doesn't seem to work, so for now we force them to use min version.
-    # Need to investigate further.
-
+    # See .bazelversion
+    depends_on("bazel@5.1.1", type="build", when="@2.10:")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9:")
+    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
     depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
     depends_on("bazel@3.7.2:4.99.0", type="build", when="@2.7")
     depends_on("bazel@3.7.2:3.99.0", type="build", when="@2.5:2.6")
@@ -198,7 +199,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9:")
+    depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:")
+    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9")
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
     depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
@@ -246,8 +248,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@0.11:1.3")
     depends_on("py-numpy@1.10.1:1.14.5", type=("build", "run"), when="@0.7.1:0.10 platform=darwin")
     depends_on("py-numpy@1.8.2:1.14.5", type=("build", "run"), when="@0.5:0.10")
-    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
+    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
     depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
@@ -289,7 +291,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         depends_on("rocblas")
         depends_on("rocfft")
         depends_on("hipfft")
-        depends_on("rccl")
+        depends_on("rccl", when="+nccl")
         depends_on("hipsparse")
         depends_on("hipcub")
         depends_on("rocsolver")
@@ -307,11 +309,12 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    depends_on("py-tensorboard@2.9", type=("build", "run"), when="@2.9")
-    depends_on("py-tensorboard@2.8", type=("build", "run"), when="@2.8")
-    depends_on("py-tensorboard@2.7", type=("build", "run"), when="@2.7")
-    depends_on("py-tensorboard@2.6", type=("build", "run"), when="@2.6")
-    depends_on("py-tensorboard@2.5", type=("build", "run"), when="@2.5")
+    for minor_ver in range(5, 11):
+        depends_on(
+            "py-tensorboard@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
     # TODO: is this still true? We now install tensorboard from wheel for all versions
     # depends_on('py-tensorboard', when='@:2.4')  # circular dep
     # depends_on('py-tensorflow-estimator')  # circular dep
@@ -345,7 +348,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("cudnn@:6", when="@0.5:0.6 +cuda")
     depends_on("cudnn@:7", when="@0.7:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
-    depends_on("nccl", when="+nccl")
+    depends_on("nccl", when="+nccl+cuda")
     depends_on("mpi", when="+mpi")
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
@@ -415,7 +418,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
         msg="Currently TensorRT is only supported on Linux platform",
     )
     conflicts("+nccl", when="@:1.7")
-    conflicts("+nccl", when="~cuda")
+    conflicts("+nccl", when="~cuda~rocm")
     conflicts(
         "+nccl", when="platform=darwin", msg="Currently NCCL is only supported on Linux platform"
     )
@@ -437,8 +440,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
-    # TODO: why is this needed?
+    # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
+    # old downloads are removed from that site immediately after a new release.
+    # If the tf mirrors don't work, make sure the fallback is to something existing.
     patch("url-zlib.patch", when="@0.10.0")
+    # bump to zlib 1.2.13
+    patch(
+        "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
+        sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
+        when="@2.9:2.10.0",
+    )
     # TODO: why is this needed?
     patch("crosstool.patch", when="@0.10.0+cuda")
     # Avoid build error: "no such package '@io_bazel_rules_docker..."

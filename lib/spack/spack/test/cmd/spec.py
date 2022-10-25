@@ -12,8 +12,8 @@ import spack.environment as ev
 import spack.error
 import spack.spec
 import spack.store
-from spack.fetch_strategy import FetchError
 from spack.main import SpackCommand, SpackCommandError
+from spack.util.web import FetchError
 
 pytestmark = pytest.mark.usefixtures("config", "mutable_mock_repo")
 

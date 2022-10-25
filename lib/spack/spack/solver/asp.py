@@ -47,6 +47,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version
@@ -945,6 +946,13 @@ class SpackSolverSetup(object):
         requirements = config.get(pkg_name, {}).get("require", []) or config.get("all", {}).get(
             "require", []
         )
+        rules = self._rules_from_requirements(pkg_name, requirements)
+        self.emit_facts_from_requirement_rules(rules, virtual=False)
+
+    def _rules_from_requirements(self, pkg_name, requirements):
+        """Manipulate requirements from packages.yaml, and return a list of tuples
+        with a uniform structure (name, policy, requirements).
+        """
         if isinstance(requirements, string_types):
             rules = [(pkg_name, "one_of", [requirements])]
         else:
@@ -953,17 +961,7 @@ class SpackSolverSetup(object):
                 for policy in ("one_of", "any_of"):
                     if policy in requirement:
                         rules.append((pkg_name, policy, requirement[policy]))
-
-        for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
-            self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
-            self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
-            for requirement_weight, spec_str in enumerate(requirement_grp):
-                spec = spack.spec.Spec(spec_str)
-                if not spec.name:
-                    spec.name = pkg_name
-                member_id = self.condition(spec, imposed_spec=spec, name=pkg_name)
-                self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
-                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+        return rules
 
     def pkg_rules(self, pkg, tests):
         pkg = packagize(pkg)
@@ -1057,7 +1055,7 @@ class SpackSolverSetup(object):
 
         self.package_requirement_rules(pkg)
 
-    def condition(self, required_spec, imposed_spec=None, name=None, msg=None):
+    def condition(self, required_spec, imposed_spec=None, name=None, msg=None, node=False):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -1067,6 +1065,8 @@ class SpackSolverSetup(object):
             name (str or None): name for `required_spec` (required if
                 required_spec is anonymous, ignored if not)
             msg (str or None): description of the condition
+            node (bool): if False does not emit "node" or "virtual_node" requirements
+                from the imposed spec
         Returns:
             int: id of the condition created by this function
         """
@@ -1083,7 +1083,7 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.condition_requirement(condition_id, pred.name, *pred.args))
 
         if imposed_spec:
-            self.impose(condition_id, imposed_spec, node=False, name=name)
+            self.impose(condition_id, imposed_spec, node=node, name=name)
 
         return condition_id
 
@@ -1161,6 +1161,37 @@ class SpackSolverSetup(object):
             lambda v, p, i: self.gen.fact(fn.default_provider_preference(v, p, i)),
         )
 
+    def provider_requirements(self):
+        self.gen.h2("Requirements on virtual providers")
+        msg = (
+            "Internal Error: possible_virtuals is not populated. Please report to the spack"
+            " maintainers"
+        )
+        packages_yaml = spack.config.config.get("packages")
+        assert self.possible_virtuals is not None, msg
+        for virtual_str in sorted(self.possible_virtuals):
+            requirements = packages_yaml.get(virtual_str, {}).get("require", [])
+            rules = self._rules_from_requirements(virtual_str, requirements)
+            self.emit_facts_from_requirement_rules(rules, virtual=True)
+
+    def emit_facts_from_requirement_rules(self, rules, virtual=False):
+        """Generate facts to enforce requirements from packages.yaml."""
+        for requirement_grp_id, (pkg_name, policy, requirement_grp) in enumerate(rules):
+            self.gen.fact(fn.requirement_group(pkg_name, requirement_grp_id))
+            self.gen.fact(fn.requirement_policy(pkg_name, requirement_grp_id, policy))
+            for requirement_weight, spec_str in enumerate(requirement_grp):
+                spec = spack.spec.Spec(spec_str)
+                if not spec.name:
+                    spec.name = pkg_name
+                when_spec = spec
+                if virtual:
+                    when_spec = spack.spec.Spec(pkg_name)
+                member_id = self.condition(
+                    required_spec=when_spec, imposed_spec=spec, name=pkg_name, node=virtual
+                )
+                self.gen.fact(fn.requirement_group_member(member_id, pkg_name, requirement_grp_id))
+                self.gen.fact(fn.requirement_has_weight(member_id, requirement_weight))
+
     def external_packages(self):
         """Facts on external packages, as read from packages.yaml"""
         # Read packages.yaml and normalize it, so that it
@@ -1180,10 +1211,11 @@ class SpackSolverSetup(object):
 
             self.gen.h2("External package: {0}".format(pkg_name))
             # Check if the external package is buildable. If it is
-            # not then "external(<pkg>)" is a fact.
+            # not then "external(<pkg>)" is a fact, unless we can
+            # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
             if not external_buildable:
-                self.gen.fact(fn.external_only(pkg_name))
+                self.gen.fact(fn.buildable_false(pkg_name))
 
             # Read a list of all the specs for this package
             externals = data.get("externals", [])
@@ -1414,6 +1446,9 @@ class SpackSolverSetup(object):
 
         # dependencies
         if spec.concrete:
+            # older specs do not have package hashes, so we have to do this carefully
+            if getattr(spec, "_package_hash", None):
+                clauses.append(fn.package_hash(spec.name, spec._package_hash))
             clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
@@ -1485,8 +1520,10 @@ class SpackSolverSetup(object):
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
+                # v can be a string so force it into an actual version for comparisons
+                ver = spack.version.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
         for spec in specs:
@@ -1930,6 +1967,7 @@ class SpackSolverSetup(object):
 
         self.virtual_providers()
         self.provider_defaults()
+        self.provider_requirements()
         self.external_packages()
         self.flag_defaults()
 
@@ -2249,7 +2287,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
+    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (

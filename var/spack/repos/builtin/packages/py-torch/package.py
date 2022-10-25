@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTorch(PythonPackage, CudaPackage):
+class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
@@ -100,6 +100,7 @@ class PyTorch(PythonPackage, CudaPackage):
     )
 
     conflicts("+cuda+rocm")
+    conflicts("+tensorpipe", when="+rocm", msg="TensorPipe doesn't yet support ROCm")
     conflicts("+breakpad", when="target=ppc64:")
     conflicts("+breakpad", when="target=ppc64le:")
 
@@ -177,14 +178,14 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on("cudnn@7:", when="@1.6:+cudnn")
     depends_on("magma+cuda", when="+magma+cuda")
     depends_on("magma+rocm", when="+magma+rocm")
-    depends_on("nccl", when="+nccl")
+    depends_on("nccl", when="+nccl+cuda")
     depends_on("numactl", when="+numa")
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("valgrind", when="+valgrind")
     with when("+rocm"):
         depends_on("hsa-rocr-dev")
         depends_on("hip")
-        depends_on("rccl")
+        depends_on("rccl", when="+nccl")
         depends_on("rocprim")
         depends_on("hipcub")
         depends_on("rocthrust")
@@ -320,37 +321,6 @@ class PyTorch(PythonPackage, CudaPackage):
         when="@:1.9.1 ^cuda@11.4.100:",
     )
 
-    @property
-    def headers(self):
-        """Discover header files in platlib."""
-
-        # Headers may be in either location
-        include = join_path(self.prefix, self.spec["python"].package.include)
-        platlib = join_path(self.prefix, self.spec["python"].package.platlib)
-        headers = find_all_headers(include) + find_all_headers(platlib)
-
-        if headers:
-            return headers
-
-        msg = "Unable to locate {} headers in {} or {}"
-        raise NoHeadersError(msg.format(self.spec.name, include, platlib))
-
-    @property
-    def libs(self):
-        """Discover libraries in platlib."""
-
-        # Remove py- prefix in package name
-        library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = join_path(self.prefix, self.spec["python"].package.platlib)
-
-        for shared in [True, False]:
-            libs = find_libraries(library, root, shared=shared, recursive=True)
-            if libs:
-                return libs
-
-        msg = "Unable to recursively locate {} libraries in {}"
-        raise NoLibrariesError(msg.format(self.spec.name, root))
-
     @when("@1.5.0:")
     def patch(self):
         # https://github.com/pytorch/pytorch/issues/52208
@@ -423,6 +393,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable("rocm")
         if "+rocm" in self.spec:
+            env.set("PYTORCH_ROCM_ARCH", ";".join(self.spec.variants["amdgpu_target"].value))
             env.set("HSA_PATH", self.spec["hsa-rocr-dev"].prefix)
             env.set("ROCBLAS_PATH", self.spec["rocblas"].prefix)
             env.set("ROCFFT_PATH", self.spec["rocfft"].prefix)
@@ -432,7 +403,8 @@ class PyTorch(PythonPackage, CudaPackage):
             env.set("HIPRAND_PATH", self.spec["rocrand"].prefix)
             env.set("ROCRAND_PATH", self.spec["rocrand"].prefix)
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
-            env.set("RCCL_PATH", self.spec["rccl"].prefix)
+            if "+nccl" in self.spec:
+                env.set("RCCL_PATH", self.spec["rccl"].prefix)
             env.set("ROCPRIM_PATH", self.spec["rocprim"].prefix)
             env.set("HIPCUB_PATH", self.spec["hipcub"].prefix)
             env.set("ROCTHRUST_PATH", self.spec["rocthrust"].prefix)
@@ -454,7 +426,7 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable("breakpad")
 
         enable_or_disable("nccl")
-        if "+nccl" in self.spec:
+        if "+cuda+nccl" in self.spec:
             env.set("NCCL_LIB_DIR", self.spec["nccl"].libs.directories[0])
             env.set("NCCL_INCLUDE_DIR", self.spec["nccl"].prefix.include)
 

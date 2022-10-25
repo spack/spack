@@ -50,12 +50,14 @@ def test_checksum(arguments, expected, mock_packages, mock_stage):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Not supported on Windows (yet)")
 def test_checksum_interactive(mock_packages, mock_fetch, mock_stage, monkeypatch):
+    # TODO: mock_fetch doesn't actually work with stage, working around with ignoring
+    # fail_on_error for now
     def _get_number(*args, **kwargs):
         return 1
 
     monkeypatch.setattr(tty, "get_number", _get_number)
 
-    output = spack_checksum("preferred-test")
+    output = spack_checksum("preferred-test", fail_on_error=False)
     assert "version of preferred-test" in output
     assert "version(" in output
 
@@ -66,3 +68,13 @@ def test_checksum_versions(mock_packages, mock_fetch, mock_stage):
     output = spack_checksum("preferred-test", versions[0])
     assert "Found 1 version" in output
     assert "version(" in output
+
+
+def test_checksum_missing_version(mock_packages, mock_fetch, mock_stage):
+    output = spack_checksum("preferred-test", "99.99.99", fail_on_error=False)
+    assert "Could not find any remote versions" in output
+
+
+def test_checksum_deprecated_version(mock_packages, mock_fetch, mock_stage):
+    output = spack_checksum("deprecated-versions", "1.1.0", fail_on_error=False)
+    assert "Version 1.1.0 is deprecated" in output

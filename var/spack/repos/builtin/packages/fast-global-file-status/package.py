@@ -25,7 +25,7 @@ class FastGlobalFileStatus(AutotoolsPackage):
 
     depends_on("mrnet")
     # we depend on mpa@master for bug fixes since mpa 1.1
-    depends_on("mount-point-attributes@master")
+    depends_on("mount-point-attributes@1.1.1:")
     depends_on("mpi")
     depends_on("openssl")
     depends_on("elf")

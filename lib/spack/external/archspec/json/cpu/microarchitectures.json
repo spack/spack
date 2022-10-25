@@ -1099,8 +1099,7 @@
         "avx512cd",
         "avx512vbmi",
         "avx512ifma",
-        "sha",
-        "umip"
+        "sha"
       ],
       "compilers": {
         "gcc": [
@@ -1263,7 +1262,6 @@
         "avx512vbmi",
         "avx512ifma",
         "sha_ni",
-        "umip",
         "clwb",
         "rdpid",
         "gfni",
@@ -2249,7 +2247,7 @@
       }
     },
     "graviton2": {
-      "from": ["aarch64"],
+      "from": ["graviton"],
       "vendor": "ARM",
       "features": [
           "fp",
@@ -2315,6 +2313,107 @@
               {
                   "versions": "20:",
                   "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              }
+          ]
+      }
+    },
+    "graviton3": {
+      "from": ["graviton2"],
+      "vendor": "ARM",
+      "features": [
+	  "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "sm3",
+          "sm4",
+          "asimddp",
+          "sha512",
+          "sve",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "svei8mm",
+          "svebf16",
+          "i8mm",
+          "bf16",
+          "dgh",
+          "rng"
+      ],
+      "compilers" : {
+          "gcc": [
+              {
+                  "versions": "4.8:4.8.9",
+                  "flags": "-march=armv8-a"
+              },
+              {
+                  "versions": "4.9:5.9",
+                  "flags": "-march=armv8-a+crc+crypto"
+              },
+              {
+                  "versions": "6:6.9",
+                  "flags" : "-march=armv8.1-a"
+              },
+              {
+                  "versions": "7:7.9",
+                  "flags" : "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
+              },
+              {
+                  "versions": "8.0:8.9",
+                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+              },
+              {
+                  "versions": "9.0:9.9",
+                  "flags" : "-march=armv8.4-a+crypto+rcpc+sha3+sm4+sve+rng+nodotprod -mtune=neoverse-v1"
+              },
+	            {
+                  "versions": "10.0:",
+                  "flags" : "-march=armv8.4-a+crypto+rcpc+sha3+sm4+sve+rng+ssbs+i8mm+bf16+nodotprod -mtune=neoverse-v1"
+              }
+
+          ],
+          "clang" : [
+              {
+                  "versions": "3.9:4.9",
+                  "flags" : "-march=armv8.2-a+fp16+crc+crypto"
+              },
+              {
+                  "versions": "5:10",
+                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              },
+              {
+                  "versions": "11:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
+              }
+          ],
+          "arm" : [
+              {
+                  "versions": "20:21.9",
+                  "flags" : "-march=armv8.2-a+sve+fp16+rcpc+dotprod+crypto"
+              },
+	            {
+                  "versions": "22:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
               }
           ]
       }
