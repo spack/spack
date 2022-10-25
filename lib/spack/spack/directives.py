@@ -762,6 +762,7 @@ def resource(**kwargs):
 @directive("dependencies")
 def drop_dependency(name):
     """Completely remove dependency on a given package"""
+
     def _execute_remove_dep(pkg):
         del pkg.dependencies[name]
 
@@ -771,6 +772,7 @@ def drop_dependency(name):
 @directive("conflicts")
 def drop_conflict(name):
     """Completely remove conflict with a given name (first argument to `conflicts`)"""
+
     def _execute_drop_conflict(pkg):
         del pkg.conflicts[name]
 
@@ -780,6 +782,7 @@ def drop_conflict(name):
 @directive("patches")
 def drop_patch(name):
     """Completely remove a patch with a given filename or URL"""
+
     def _execute_drop_patch(pkg):
         def filter_func(p):
             if isinstance(p, spack.FilePatch):
@@ -799,6 +802,7 @@ def drop_patch(name):
         pkg.patches = new_patches
 
     return _execute_drop_patch
+
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
