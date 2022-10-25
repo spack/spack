@@ -76,7 +76,7 @@ class NetcdfC(AutotoolsPackage):
     variant("dap", default=False, description="Enable DAP support")
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
-    variant("zstd", default=False, description="Enable ZStandard compression", when="@4.9.0:")
+    variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
