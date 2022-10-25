@@ -168,7 +168,7 @@ compilers:
     modules: 'None'
     target: x86_64
 - compiler:
-    spec: gcc@foo
+    spec: gcc@20foo
     operating_system: redhat6
     paths:
       cc: /path/to/gcc
@@ -225,5 +225,15 @@ compilers:
       cxx: /path/to/g++
       f77: None
       fc: None
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@20foo
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
     modules: 'None'
     target: aarch64

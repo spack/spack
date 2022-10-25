@@ -1077,8 +1077,8 @@ class TestConcretize(object):
         if spack.config.get("config:concretizer") == "original":
             pytest.xfail("Known failure of the original concretizer")
 
-        s = Spec("a %gcc@foo os=redhat6").concretized()
-        assert "%gcc@foo" in s
+        s = Spec("a %gcc@20foo os=redhat6").concretized()
+        assert "%gcc@20foo" in s
 
     def test_all_patches_applied(self):
         uuidpatch = (
