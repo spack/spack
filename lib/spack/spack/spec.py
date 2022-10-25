@@ -3970,12 +3970,23 @@ class Spec(object):
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
+        # In some cases a package appears multiple times in the same DAG for *distinct*
+        # specs. For example, a build-type dependency may itself depend on a package
+        # the current spec depends on, but their specs may differ. Therefore we iterate
+        # in an order here that prioritizes the build, test and runtime dependencies;
+        # only when we don't find the package do we consider the full DAG.
+        order = lambda: itertools.chain(
+            self.traverse(deptype="link"),
+            self.dependencies(deptype=("build", "run", "test")),
+            self.traverse(),  # fall back to a full search
+        )
+
         try:
             value = next(
                 itertools.chain(
                     # Regular specs
-                    (x for x in self.traverse() if x.name == name),
-                    (x for x in self.traverse() if (not x.virtual) and x.package.provides(name)),
+                    (x for x in order() if x.name == name),
+                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
                 )
             )
         except StopIteration:
