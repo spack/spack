@@ -256,7 +256,9 @@ class Mivisionx(CMakePackage):
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
         if self.spec.satisfies("@5.3.0 + hip"):
-            args.append(self.define(
-               "HIP_CXX_COMPILER", "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix)
-           ))
+            args.append(
+                self.define(
+                    "HIP_CXX_COMPILER", "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix)
+                )
+            )
         return args
