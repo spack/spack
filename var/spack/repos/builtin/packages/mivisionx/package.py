@@ -147,6 +147,19 @@ class Mivisionx(CMakePackage):
                 "amd_openvx_extensions/CMakeLists.txt",
                 string=True,
             )
+        if self.spec.satisfies("@5.3.0: + hip"):
+            filter_file(
+                  "${ROCM_PATH}/llvm/bin/clang++",
+                  "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                  "amd_openvx/openvx/hipvx/CMakeLists.txt",
+                  string=True,
+            )
+            filter_file(
+                  "${ROCM_PATH}/llvm/bin/clang++",
+                  "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                  "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
+                  string=True,
+            )
 
     depends_on("cmake@3.5:", type="build")
     depends_on("ffmpeg@:4", type="build")
@@ -218,6 +231,7 @@ class Mivisionx(CMakePackage):
             "5.3.0",
         ]:
             depends_on("miopen-hip@" + ver, when="@" + ver)
+            depends_on("migraphx@" + ver, when="@" + ver)
 
     def flag_handler(self, name, flags):
         spec = self.spec
@@ -241,4 +255,8 @@ class Mivisionx(CMakePackage):
             args.append(self.define("HIP_PATH", spec["hip"].prefix))
         if self.spec.satisfies("~hip~opencl"):
             args.append(self.define("BACKEND", "CPU"))
+        if self.spec.satisfies("@5.3.0 + hip"):
+            args.append(self.define(
+               "HIP_CXX_COMPILER", "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix)
+           ))
         return args
