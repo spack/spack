@@ -34,6 +34,7 @@ class Parallelio(CMakePackage):
 
     patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
 
+    depends_on("cmake@3.7:")
     depends_on("mpi")
     depends_on("netcdf-c +mpi", type="link")
     depends_on("netcdf-fortran", type="link", when="+fortran")
@@ -49,10 +50,7 @@ class Parallelio(CMakePackage):
 
     def url_for_version(self, version):
         url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
-        if self.spec.satisfies("@:2.5.8"):
-            return url.format(version.underscored)
-        else:
-            return url
+        return url.format(version.underscored)
 
     # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
     patch("gfortran.patch", when="+fortran %gcc@10:")
