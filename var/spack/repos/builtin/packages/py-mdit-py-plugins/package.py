@@ -21,6 +21,6 @@ class PyMditPyPlugins(PythonPackage):
     depends_on("python@3.7:", when="@0.3.1", type=("build", "run"))
     depends_on("py-markdown-it-py@1.0:2", when="@0.3.1", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", when="@:0.2", type="build")
     depends_on("py-markdown-it-py@1.0:1", when="@0.2.8", type=("build", "run"))
     depends_on("python@3.6:3", when="@0.2.8", type=("build", "run"))
