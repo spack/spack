@@ -28,6 +28,7 @@ from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_t
 import spack.cmd
 import spack.config as config
 import spack.database as spack_db
+import spack.dependency as dep
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
@@ -1225,11 +1226,12 @@ def _build_tarball(
     return None
 
 
-def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
+def nodes_to_be_packaged(specs, deptype, include_root=True, include_dependencies=True):
     """Return the list of nodes to be packaged, given a list of specs.
 
     Args:
         specs (List[spack.spec.Spec]): list of root specs to be processed
+        deptype: dependency types to package
         include_root (bool): include the root of each spec in the nodes
         include_dependencies (bool): include the dependencies of each
             spec in the nodes
@@ -1248,10 +1250,7 @@ def nodes_to_be_packaged(specs, include_root=True, include_dependencies=True):
             nodes = [current_spec]
         else:
             nodes = [
-                n
-                for n in current_spec.traverse(
-                    order="post", root=include_root, deptype=("link", "run")
-                )
+                n for n in current_spec.traverse(order="post", root=include_root, deptype=deptype)
             ]
 
         for node in nodes:
@@ -1274,7 +1273,11 @@ def push(specs, push_url, specs_kwargs=None, **kwargs):
         **kwargs: TODO
 
     """
-    specs_kwargs = specs_kwargs or {"include_root": True, "include_dependencies": True}
+    specs_kwargs = specs_kwargs or {
+        "include_root": True,
+        "include_dependencies": True,
+        "deptype": dep.default_deptype,
+    }
     nodes = nodes_to_be_packaged(specs, **specs_kwargs)
 
     # TODO: This seems to be an easy target for task
