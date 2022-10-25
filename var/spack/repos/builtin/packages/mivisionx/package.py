@@ -149,16 +149,16 @@ class Mivisionx(CMakePackage):
             )
         if self.spec.satisfies("@5.3.0: + hip"):
             filter_file(
-                  "${ROCM_PATH}/llvm/bin/clang++",
-                  "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
-                  "amd_openvx/openvx/hipvx/CMakeLists.txt",
-                  string=True,
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "amd_openvx/openvx/hipvx/CMakeLists.txt",
+                string=True,
             )
             filter_file(
-                  "${ROCM_PATH}/llvm/bin/clang++",
-                  "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
-                  "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
-                  string=True,
+                "${ROCM_PATH}/llvm/bin/clang++",
+                "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
+                "amd_openvx_extensions/amd_nn/nn_hip/CMakeLists.txt",
+                string=True,
             )
 
     depends_on("cmake@3.5:", type="build")
