@@ -50,8 +50,9 @@ important to understand.
    include `setuptools <https://setuptools.pypa.io/>`__,
    `flit <https://flit.pypa.io/>`_,
    `poetry <https://python-poetry.org/>`_,
-   `hatchling <https://hatch.pypa.io/latest/>`_, and
-   `meson <https://meson-python.readthedocs.io/>`_.
+   `hatchling <https://hatch.pypa.io/latest/>`_,
+   `meson <https://meson-python.readthedocs.io/>`_, and
+   `pdm <https://pdm.fming.dev/latest/>`_.
 
 ^^^^^^^^^^^
 Downloading
@@ -215,7 +216,7 @@ Note that ``py-wheel`` is already listed as a build dependency in the
 need to specify a specific version requirement or change the
 dependency type.
 
-See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`_ and
+See `PEP 517 <https://www.python.org/dev/peps/pep-0517/>`__ and
 `PEP 518 <https://www.python.org/dev/peps/pep-0518/>`_ for more
 information on the design of ``pyproject.toml``.
 
@@ -368,6 +369,16 @@ it uses the meson build system. Meson uses the default
 See https://meson-python.readthedocs.io/en/latest/usage/start.html
 for more information.
 
+"""
+pdm
+"""
+
+If the ``pyproject.toml`` lists ``pdm.pep517.api`` as the ``build-backend``,
+it uses the PDM build system. PDM uses the default ``pyproject.toml``
+keys to list dependencies.
+
+See https://pdm.fming.dev/latest/ for more information.
+
 """"""
 wheels
 """"""
@@ -412,6 +423,34 @@ packages. However, the installation instructions for a package may
 suggest passing certain flags to the ``setup.py`` call. The
 ``PythonPackage`` class has two techniques for doing this.
 
+"""""""""""""""
+Config settings
+"""""""""""""""
+
+These settings are passed to
+`PEP 517 <https://peps.python.org/pep-0517/>`__ build backends.
+For example, ``py-scipy`` package allows you to specify the name of
+the BLAS/LAPACK library you want pkg-config to search for:
+
+.. code-block:: python
+
+   depends_on('py-pip@22.1:', type='build')
+
+   def config_settings(self, spec, prefix):
+       return {
+           'blas': spec['blas'].libs.names[0],
+           'lapack': spec['lapack'].libs.names[0],
+       }
+
+
+.. note::
+
+   This flag only works for packages that define a ``build-backend``
+   in ``pyproject.toml``. Also, it is only supported by pip 22.1+,
+   which requires Python 3.7+. For packages that still support Python
+   3.6 and older, ``install_options`` should be used instead.
+
+
 """"""""""""""
 Global options
 """"""""""""""
@@ -429,6 +468,16 @@ has an optional dependency on ``libyaml`` that can be enabled like so:
        else:
            options.append('--without-libyaml')
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 """""""""""""""
@@ -449,6 +498,16 @@ allows you to specify the directories to search for ``libyaml``:
                spec['libyaml'].headers.include_flags,
            ])
        return options
+
+
+.. note::
+
+   Direct invocation of ``setup.py`` is
+   `deprecated <https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html>`_.
+   This flag forces pip to use a deprecated installation procedure.
+   It should only be used in packages that don't define a
+   ``build-backend`` in ``pyproject.toml`` or packages that still
+   support Python 3.6 and older.
 
 
 ^^^^^^^
@@ -522,6 +581,19 @@ These tests often catch missing dependencies and non-RPATHed
 libraries. Make sure not to add modules/packages containing the word
 "test", as these likely won't end up in the installation directory,
 or may require test dependencies like pytest to be installed.
+
+Instead of defining the ``import_modules`` explicity, only the subset
+of module names to be skipped can be defined by using ``skip_modules``.
+If a defined module has submodules, they are skipped as well, e.g.,
+in case the ``plotting`` modules should be excluded from the
+automatically detected ``import_modules`` ``['nilearn', 'nilearn.surface',
+'nilearn.plotting', 'nilearn.plotting.data']`` set:
+
+.. code-block:: python
+
+        skip_modules = ['nilearn.plotting']
+
+This will set ``import_modules`` to ``['nilearn', 'nilearn.surface']``
 
 Import tests can be run during the installation using ``spack install
 --test=root`` or at any time after the installation using
@@ -710,3 +782,4 @@ For more information on build backend tools, see:
 * poetry: https://python-poetry.org/
 * hatchling: https://hatch.pypa.io/latest/
 * meson: https://meson-python.readthedocs.io/
+* pdm: https://pdm.fming.dev/latest/

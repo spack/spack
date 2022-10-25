@@ -15,7 +15,7 @@ class PyPip(Package):
     url = "https://files.pythonhosted.org/packages/py3/p/pip/pip-20.2-py3-none-any.whl"
     list_url = "https://pypi.org/simple/pip/"
 
-    maintainers = ["adamjstewart"]
+    maintainers = ["adamjstewart", "pradyunsg"]
 
     version(
         "22.1.2",
@@ -94,7 +94,7 @@ class PyPip(Package):
         python(*args)
 
     def setup_dependent_package(self, module, dependent_spec):
-        pip = self.spec["python"].command
+        pip = dependent_spec["python"].command
         pip.add_default_arg("-m")
         pip.add_default_arg("pip")
         setattr(module, "pip", pip)

@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack.package import *
 
 
@@ -18,7 +17,7 @@ class QuantumEspresso(CMakePackage):
     url = "https://gitlab.com/QEF/q-e/-/archive/qe-6.6/q-e-qe-6.6.tar.gz"
     git = "https://gitlab.com/QEF/q-e.git"
 
-    maintainers = ["ye-luo", "danielecesarini"]
+    maintainers = ["ye-luo", "danielecesarini", "bellenlau"]
 
     version("develop", branch="develop")
     version("7.1", sha256="d56dea096635808843bd5a9be2dee3d1f60407c01dbeeda03f8256a3bcfc4eb6")
@@ -61,23 +60,46 @@ class QuantumEspresso(CMakePackage):
     with when("+cmake"):
         depends_on("cmake@3.14.0:", type="build")
         conflicts("@:6.7", msg="+cmake works since QE v6.8")
-        # TODO
-        # variant(
-        #     'gpu', default='none', description='Builds with GPU support',
-        #     values=('nvidia', 'none'), multi=False
-        # )
 
     variant("libxc", default=False, description="Uses libxc")
     depends_on("libxc@5.1.2:", when="+libxc")
 
-    variant("openmp", default=False, description="Enables openMP support")
+    variant("openmp", default=True, description="Enables OpenMP support")
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        conflicts("^fftw~openmp")
-        conflicts("^amdfftw~openmp")
-        conflicts("^openblas threads=none")
-        conflicts("^openblas threads=pthreads")
+        depends_on("fftw+openmp", when="^fftw")
+        depends_on("amdfftw+openmp", when="^amdfftw")
+        depends_on("openblas threads=openmp", when="^openblas")
+        depends_on("amdblis threads=openmp", when="^amdblis")
+
+    # Add Cuda Fortran support
+    # depends on NVHPC compiler, not directly on CUDA toolkit
+    with when("%nvhpc"):
+        variant(
+            "cuda",
+            default=False,
+            description="Build with CUDA Fortran",
+        )
+        with when("+cuda"):
+            # GPUs are enabled since v6.6
+            conflicts("@:6.5")
+            # cuda version >= 10.1
+            # conflicts("cuda@:10.0.130")
+            # bugs with following nvhpcsdk versions and +openmp
+            with when("+openmp"):
+                conflicts(
+                    "%nvhpc@21.11:22.3",
+                    msg="bugs with NVHPCSDK from v21.11 to v22.3, OpenMP and GPU",
+                )
+            # only cmake is supported
+            conflicts("~cmake", msg="Only CMake supported for GPU-enabled version")
+
+    # NVTX variant for profiling
+    # requires linking to CUDA runtime APIs , handled by CMake
+    variant("nvtx", default=False, description="Enables NVTX markers for profiling")
+    with when("+nvtx~cuda"):
+        depends_on("cuda")
 
     # Apply upstream patches by default. Variant useful for 3rd party
     # patches which are incompatible with upstream patches
@@ -89,6 +111,9 @@ class QuantumEspresso(CMakePackage):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
+        with when("%nvhpc+cuda"):
+            # add mpi_gpu_aware variant, False by default
+            variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
 
     with when("+scalapack"):
         depends_on("scalapack")
@@ -208,6 +233,8 @@ class QuantumEspresso(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
+    depends_on("git@2.13:", type="build")
+    depends_on("m4", type="build")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
@@ -352,7 +379,13 @@ class QuantumEspresso(CMakePackage):
             self.define_from_variant("QE_ENABLE_SCALAPACK", "scalapack"),
             self.define_from_variant("QE_ENABLE_ELPA", "elpa"),
             self.define_from_variant("QE_ENABLE_LIBXC", "libxc"),
+            self.define_from_variant("QE_ENABLE_CUDA", "cuda"),
+            self.define_from_variant("QE_ENABLE_PROFILE_NVTX", "nvtx"),
+            self.define_from_variant("QE_ENABLE_MPI_GPU_AWARE", "mpigpu"),
         ]
+
+        if "+cuda" in self.spec:
+            cmake_args.append(self.define("QE_ENABLE_OPENACC", True))
 
         # QE prefers taking MPI compiler wrappers as CMake compilers.
         if "+mpi" in spec:

@@ -5,6 +5,7 @@
 
 import os
 
+import spack.util.executable
 from spack.package import *
 
 
@@ -19,7 +20,8 @@ class FluxCore(AutotoolsPackage):
     maintainers = ["grondo"]
 
     version("master", branch="master")
-
+    version("0.42.0", sha256="ac64055976cd7cda26e2991174b9a58048bd4fb75c5c2012023050d76c718445")
+    version("0.41.0", sha256="3f3a6a8a1e7d2f326b0e684dcf70e4489076b3f52dd14480e2f33cfdaeba690a")
     version("0.40.0", sha256="b15996b6165f037e5a6c42ea277e2c1c56a4f4b6bf47334105e324dcfefbf6fa")
     version("0.39.0", sha256="ad55529fc3f056ac167b53b5bd489167c2ef218c3c49e721ad507a8ea9c409db")
     version("0.38.0", sha256="69d150c3d48b5985bca606e1a4de12282eb76233b6b730de1a9fff4136faf65f")
@@ -103,7 +105,7 @@ class FluxCore(AutotoolsPackage):
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
-    variant("docs", default=False, description="Build flux manpages")
+    variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     depends_on("libarchive", when="@0.38.0:")
@@ -130,9 +132,10 @@ class FluxCore(AutotoolsPackage):
     depends_on("jansson@2.10:", when="@0.21.0:")
     depends_on("pkgconfig")
     depends_on("lz4")
+    depends_on("sqlite")
 
     depends_on("asciidoc", type="build", when="+docs")
-    depends_on("py-docutils", type="build", when="@0.32.0:")
+    depends_on("py-docutils", type="build", when="@0.32.0: +docs")
 
     # Need autotools when building on master:
     depends_on("autoconf", type="build", when="@master")
@@ -173,9 +176,13 @@ class FluxCore(AutotoolsPackage):
         with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which("git")
-            git("fetch", "--unshallow")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
+            # When using spack develop, this will already be unshallow
+            try:
+                git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
+            except spack.util.executable.ProcessError:
+                git("fetch")
 
     def autoreconf(self, spec, prefix):
         self.setup()

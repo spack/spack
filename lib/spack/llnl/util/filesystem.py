@@ -22,7 +22,7 @@ import six
 from llnl.util import tty
 from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
 from spack.util.executable import Executable
 from spack.util.path import path_to_os_path, system_path_filter
@@ -81,6 +81,8 @@ __all__ = [
     "unset_executable_mode",
     "working_dir",
     "keep_modification_time",
+    "BaseDirectoryVisitor",
+    "visit_directory_tree",
 ]
 
 
@@ -635,7 +637,11 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                 if symlinks:
                     target = os.readlink(s)
                     if os.path.isabs(target):
-                        new_target = re.sub(abs_src, abs_dest, target)
+
+                        def escaped_path(path):
+                            return path.replace("\\", r"\\")
+
+                        new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
@@ -1133,20 +1139,89 @@ def lexists_islink_isdir(path):
     return True, is_link, is_dir
 
 
-def visit_directory_tree(root, visitor, rel_path="", depth=0):
-    """
-    Recurses the directory root depth-first through a visitor pattern
+class BaseDirectoryVisitor(object):
+    """Base class and interface for :py:func:`visit_directory_tree`."""
 
-    The visitor interface is as follows:
-    - visit_file(root, rel_path, depth)
-    - before_visit_dir(root, rel_path, depth) -> bool
-        if True, descends into this directory
-    - before_visit_symlinked_dir(root, rel_path, depth) -> bool
-        if True, descends into this directory
-    - after_visit_dir(root, rel_path, depth) -> void
-        only called when before_visit_dir returns True
-    - after_visit_symlinked_dir(root, rel_path, depth) -> void
-        only called when before_visit_symlinked_dir returns True
+    def visit_file(self, root, rel_path, depth):
+        """Handle the non-symlink file at ``os.path.join(root, rel_path)``
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current file from ``root``
+            depth (int): depth of current file from the ``root`` directory"""
+        pass
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        """Handle the symlink to a file at ``os.path.join(root, rel_path)``.
+        Note: ``rel_path`` is the location of the symlink, not to what it is
+        pointing to. The symlink may be dangling.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory"""
+        pass
+
+    def before_visit_dir(self, root, rel_path, depth):
+        """Return True from this function to recurse into the directory at
+        os.path.join(root, rel_path). Return False in order not to recurse further.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current directory from ``root``
+            depth (int): depth of current directory from the ``root`` directory
+
+        Returns:
+            bool: ``True`` when the directory should be recursed into. ``False`` when
+            not"""
+        return False
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        """Return ``True`` to recurse into the symlinked directory and ``False`` in
+        order not to. Note: ``rel_path`` is the path to the symlink itself.
+        Following symlinked directories blindly can cause infinite recursion due to
+        cycles.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory
+
+        Returns:
+            bool: ``True`` when the directory should be recursed into. ``False`` when
+            not"""
+        return False
+
+    def after_visit_dir(self, root, rel_path, depth):
+        """Called after recursion into ``rel_path`` finished. This function is not
+        called when ``rel_path`` was not recursed into.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current directory from ``root``
+            depth (int): depth of current directory from the ``root`` directory"""
+        pass
+
+    def after_visit_symlinked_dir(self, root, rel_path, depth):
+        """Called after recursion into ``rel_path`` finished. This function is not
+        called when ``rel_path`` was not recursed into.
+
+        Parameters:
+            root (str): root directory
+            rel_path (str): relative path to current symlink from ``root``
+            depth (int): depth of current symlink from the ``root`` directory"""
+        pass
+
+
+def visit_directory_tree(root, visitor, rel_path="", depth=0):
+    """Recurses the directory root depth-first through a visitor pattern using the
+    interface from :py:class:`BaseDirectoryVisitor`
+
+    Parameters:
+        root (str): path of directory to recurse into
+        visitor (BaseDirectoryVisitor): what visitor to use
+        rel_path (str): current relative path from the root
+        depth (str): current depth from the root
     """
     dir = os.path.join(root, rel_path)
 
@@ -1190,9 +1265,11 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
             if not lexists:
                 continue
 
-        if not isdir:
-            # handle files
+        if not isdir and not islink:
+            # handle non-symlink files
             visitor.visit_file(root, rel_child, depth)
+        elif not isdir:
+            visitor.visit_symlinked_file(root, rel_child, depth)
         elif not islink and visitor.before_visit_dir(root, rel_child, depth):
             # Handle ordinary directories
             visit_directory_tree(root, visitor, rel_child, depth + 1)
@@ -1220,7 +1297,7 @@ def last_modification_time_recursive(path):
     path = os.path.abspath(path)
     times = [os.stat(path).st_mtime]
     times.extend(
-        os.stat(os.path.join(root, name)).st_mtime
+        os.lstat(os.path.join(root, name)).st_mtime
         for root, dirs, files in os.walk(path)
         for name in dirs + files
     )
@@ -1830,7 +1907,11 @@ class LibraryList(FileList):
                 name = x[3:]
 
             # Valid extensions include: ['.dylib', '.so', '.a']
-            for ext in [".dylib", ".so", ".a"]:
+            # on non Windows platform
+            # Windows valid library extensions are:
+            # ['.dll', '.lib']
+            valid_exts = [".dll", ".lib"] if is_windows else [".dylib", ".so", ".a"]
+            for ext in valid_exts:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -1973,15 +2054,23 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
+    if is_windows:
+        static_ext = "lib"
+        shared_ext = "dll"
+    else:
+        # Used on both Linux and macOS
+        static_ext = "a"
+        shared_ext = "so"
+
     # Construct the right suffix for the library
     if shared:
         # Used on both Linux and macOS
-        suffixes = ["so"]
+        suffixes = [shared_ext]
         if sys.platform == "darwin":
             # Only used on macOS
             suffixes.append("dylib")
     else:
-        suffixes = ["a"]
+        suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
@@ -1994,7 +2083,11 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
-    for subdir in ("lib", "lib64"):
+    common_lib_dirs = ["lib", "lib64"]
+    if is_windows:
+        common_lib_dirs.extend(["bin", "Lib"])
+
+    for subdir in common_lib_dirs:
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
             continue
@@ -2005,6 +2098,155 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
+
+
+def find_all_shared_libraries(root, recursive=False):
+    """Convenience function that returns the list of all shared libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+    return find_libraries("*", root=root, shared=True, recursive=recursive)
+
+
+def find_all_static_libraries(root, recursive=False):
+    """Convenience function that returns the list of all static libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+    return find_libraries("*", root=root, shared=False, recursive=recursive)
+
+
+def find_all_libraries(root, recursive=False):
+    """Convenience function that returns the list of all libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+
+    return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
+        root, recursive=recursive
+    )
+
+
+class WindowsSimulatedRPath(object):
+    """Class representing Windows filesystem rpath analog
+
+    One instance of this class is associated with a package (only on Windows)
+    For each lib/binary directory in an associated package, this class introduces
+    a symlink to any/all dependent libraries/binaries. This includes the packages
+    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    and vis versa.
+    """
+
+    def __init__(self, package, link_install_prefix=True):
+        """
+        Args:
+            package (spack.package_base.PackageBase): Package requiring links
+            link_install_prefix (bool): Link against package's own install or stage root.
+                Packages that run their own executables during build and require rpaths to
+                the build directory during build time require this option. Default: install
+                root
+        """
+        self.pkg = package
+        self._addl_rpaths = set()
+        self.link_install_prefix = link_install_prefix
+        self._internal_links = set()
+
+    @property
+    def link_dest(self):
+        """
+        Set of directories where package binaries/libraries are located.
+        """
+        if hasattr(self.pkg, "libs") and self.pkg.libs:
+            pkg_libs = set(self.pkg.libs.directories)
+        else:
+            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+
+        return pkg_libs | set([self.pkg.prefix.bin]) | self.internal_links
+
+    @property
+    def internal_links(self):
+        """
+        linking that would need to be established within the package itself. Useful for links
+        against extension modules/build time executables/internal linkage
+        """
+        return self._internal_links
+
+    def add_internal_links(self, *dest):
+        """
+        Incorporate additional paths into the rpath (sym)linking scheme.
+
+        Paths provided to this method are linked against by a package's libraries
+        and libraries found at these paths are linked against a package's binaries.
+        (i.e. /site-packages -> /bin and /bin -> /site-packages)
+
+        Specified paths should be outside of a package's lib, lib64, and bin
+        directories.
+        """
+        self._internal_links = self._internal_links | set(*dest)
+
+    @property
+    def link_targets(self):
+        """
+        Set of libraries this package needs to link against during runtime
+        These packages will each be symlinked into the packages lib and binary dir
+        """
+
+        dependent_libs = []
+        for path in self.pkg.rpath:
+            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
+        for extra_path in self._addl_rpaths:
+            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
+        return set(dependent_libs)
+
+    def include_additional_link_paths(self, *paths):
+        """
+        Add libraries found at the root of provided paths to runtime linking
+
+        These are libraries found outside of the typical scope of rpath linking
+        that require manual inclusion in a runtime linking scheme
+
+        Args:
+            *paths (str): arbitrary number of paths to be added to runtime linking
+        """
+        self._addl_rpaths = self._addl_rpaths | set(paths)
+
+    def establish_link(self):
+        """
+        (sym)link packages to runtime dependencies based on RPath configuration for
+        Windows heuristics
+        """
+        # from build_environment.py:463
+        # The top-level package is always RPATHed. It hasn't been installed yet
+        # so the RPATHs are added unconditionally
+
+        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
+        # install a symlink to each dependent library
+        for library, lib_dir in itertools.product(self.link_targets, self.link_dest):
+            if not path_contains_subdirectory(library, lib_dir):
+                file_name = os.path.basename(library)
+                dest_file = os.path.join(lib_dir, file_name)
+                if os.path.exists(lib_dir):
+                    try:
+                        symlink(library, dest_file)
+                    # For py2 compatibility, we have to catch the specific Windows error code
+                    # associate with trying to create a file that already exists (winerror 183)
+                    except OSError as e:
+                        if e.winerror == 183:
+                            # We have either already symlinked or we are encoutering a naming clash
+                            # either way, we don't want to overwrite existing libraries
+                            already_linked = islink(dest_file)
+                            tty.debug(
+                                "Linking library %s to %s failed, " % (library, dest_file)
+                                + "already linked."
+                                if already_linked
+                                else "library with name %s already exists." % file_name
+                            )
+                            pass
+                        else:
+                            raise e
 
 
 @system_path_filter

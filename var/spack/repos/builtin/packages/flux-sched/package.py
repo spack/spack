@@ -5,6 +5,7 @@
 
 import os
 
+import spack.util.executable
 from spack.package import *
 
 
@@ -107,9 +108,13 @@ class FluxSched(AutotoolsPackage):
         with working_dir(self.stage.source_path):
             # Allow git-describe to get last tag so flux-version works:
             git = which("git")
-            git("fetch", "--unshallow")
-            git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
-            git("fetch", "origin")
+            # When using spack develop, this will already be unshallow
+            try:
+                git("fetch", "--unshallow")
+                git("config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*")
+                git("fetch", "origin")
+            except spack.util.executable.ProcessError:
+                git("fetch")
 
     def autoreconf(self, spec, prefix):
         self.setup()
@@ -133,6 +138,8 @@ class FluxSched(AutotoolsPackage):
             args.append("CXXFLAGS=-Wno-uninitialized")
         if self.spec.satisfies("%clang@12:"):
             args.append("CXXFLAGS=-Wno-defaulted-function-deleted")
+        if self.spec.satisfies("%oneapi"):
+            args.append("CXXFLAGS=-Wno-tautological-constant-compare")
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
         args.append("--with-boost={0}".format(self.spec["boost"].prefix))
