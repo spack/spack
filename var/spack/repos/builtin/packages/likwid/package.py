@@ -6,6 +6,8 @@
 import glob
 import os
 
+import llnl.util.tty as tty
+
 from spack.package import *
 
 
@@ -125,12 +127,8 @@ class Likwid(Package):
             "^COMPILER .*", "COMPILER = " + supported_compilers[self.compiler.name], "config.mk"
         )
         filter_file("^PREFIX .*", "PREFIX = " + prefix, "config.mk")
-
-        # FIXME: once https://github.com/spack/spack/issues/4432 is
-        # resolved, install as root by default and remove this
-        filter_file("^ACCESSMODE .*", "ACCESSMODE = perf_event", "config.mk")
-        filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
-        filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
+        # Disable the chown, see the `spack_perms_fix` template and script
+        filter_file("^INSTALL_CHOWN .*", "INSTALL_CHOWN =", "config.mk")
 
         if "+fortran" in self.spec:
             filter_file("^FORTRAN_INTERFACE .*", "FORTRAN_INTERFACE = true", "config.mk")
@@ -187,3 +185,45 @@ class Likwid(Package):
         env["PWD"] = os.getcwd()
         make()
         make("install")
+
+    # Below is shamelessly lifted from singularityce
+    def perm_script(self):
+        return 'spack_perms_fix.sh'
+
+    def perm_script_tmpl(self):
+        return "{0}.j2".format(self.perm_script())
+
+    def perm_script_path(self):
+        return join_path(self.spec.prefix.bin, self.perm_script())
+
+    def _build_script(self, filename, variable_data):
+        with open(filename, 'w') as f:
+            env = spack.tengine.make_environment(dirs=self.package_dir)
+            t = env.get_template(self.perm_script_tmpl())
+            f.write(t.render(variable_data))
+
+    @run_after('install')
+    def build_perms_script(self):
+        script = self.perm_script_path()
+        daemons = ['sbin/likwid-accessD', 'sbin/likwid-setFreq']
+        self._build_script(script, {'prefix': self.spec.prefix,
+                                    'chown_files': daemons,
+                                    'setuid_files': daemons})
+        chmod = which('chmod')
+        chmod('555', script)
+
+    # Until tty output works better from build steps, this ends up in
+    # the build log.  See https://github.com/spack/spack/pull/10412.
+    @run_after('install')
+    def caveats(self):
+        tty.warn("""
+        For full functionality, you'll need to chown and chmod some files
+        after installing the package.  This has security implications.
+
+        We've installed a script that will make the necessary changes;
+        read through it and then execute it as root (e.g. via sudo).
+
+        The script is named:
+
+        {0}
+        """.format(self.perm_script_path()))
