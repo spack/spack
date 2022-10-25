@@ -25,7 +25,7 @@ description = "manage continuous integration pipelines"
 section = "build"
 level = "long"
 
-CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "-d", "-v"]
+CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "--color=always", "--backtrace", "--verbose"]
 INSTALL_FAIL_CODE = 1
 
 
@@ -518,7 +518,6 @@ def ci_rebuild(args):
     install_args.extend(
         [
             "install",
-            "--show-log-on-error",  # Print full log on fails
             "--keep-stage",
             "--use-buildcache",
             "dependencies:only,package:never",
