@@ -56,6 +56,9 @@ class PyCython(PythonPackage):
         if os.path.isdir(os.path.join(prefix, "local", "lib")) and \
                 not os.path.isdir(os.path.join(prefix, "lib")):
             prefix.lib = os.path.join(prefix, "local", "lib")
+        elif os.path.isdir(os.path.join(prefix, "local", "lib64")) and \
+                not os.path.isdir(os.path.join(prefix, "lib64")):
+            prefix.lib = os.path.join(prefix, "local", "lib64")
         return prefix
 
     @property
