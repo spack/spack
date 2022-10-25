@@ -32,7 +32,6 @@ jobs:
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         cd spack
         dir
-        (Get-Item '.\lib\spack\docs\_spack_root').Delete()
         spack unit-test --verbose --cov --cov-config=pyproject.toml --ignore=lib/spack/spack/test/cmd
         coverage combine -a
         coverage xml
@@ -58,7 +57,6 @@ jobs:
       run: |
         echo F|xcopy .\spack\share\spack\qa\configuration\windows_config.yaml $env:USERPROFILE\.spack\windows\config.yaml
         cd spack
-        (Get-Item '.\lib\spack\docs\_spack_root').Delete()
         spack unit-test --verbose --cov --cov-config=pyproject.toml lib/spack/spack/test/cmd
         coverage combine -a
         coverage xml

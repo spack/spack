@@ -221,9 +221,6 @@ jobs:
         $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
         coverage combine -a
         coverage xml
-        # Delete the symlink going from ./lib/spack/docs/_spack_root back to
-        # the initial directory, since it causes ELOOP errors with codecov/actions@2
-        rm lib/spack/docs/_spack_root
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos
