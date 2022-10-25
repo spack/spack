@@ -21,7 +21,7 @@ class PyMystParser(PythonPackage):
     depends_on("py-docutils@0.15:0.19", type=("build", "run"))
     depends_on("py-jinja2", type=("build", "run"))  # let sphinx decide version
     depends_on("py-markdown-it-py@1.0.0:2", type=("build", "run"))
-    depends_on("py-mdit-py-plugins@0.3.1", type=("build", "run"))
+    depends_on("py-mdit-py-plugins@0.3.1:0.3", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-sphinx@4.0.0:5", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"))
