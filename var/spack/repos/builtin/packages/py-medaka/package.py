@@ -35,4 +35,5 @@ class PyMedaka(PythonPackage):
     depends_on("py-pyspoa@0.0.3:", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("samtools", type=("build", "run"))
-    depends_on("htslib", type=("build", "run"))
+    depends_on("htslib", type=("build", "run", "link"))
+    depends_on("libdeflate", type=("build", "run", "link"))
