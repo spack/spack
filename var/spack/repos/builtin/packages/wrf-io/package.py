@@ -16,7 +16,12 @@ class WrfIo(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-wrf_io"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-wrf_io/archive/refs/tags/v1.2.0.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+    ]
 
     version("1.2.0", sha256="000cf5294a2c68460085258186e1f36c86d3d0d9c433aa969a0f92736b745617")
 

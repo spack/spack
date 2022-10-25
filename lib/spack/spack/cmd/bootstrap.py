@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import os.path
+import platform
 import shutil
 import tempfile
 
@@ -72,6 +73,8 @@ def _add_scope_option(parser):
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(dest="subcommand")
+
+    sp.add_parser("now", help="Spack ready, right now!")
 
     status = sp.add_parser("status", help="get the status of Spack")
     status.add_argument(
@@ -404,6 +407,14 @@ def _mirror(args):
     print(instructions)
 
 
+def _now(args):
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spack.bootstrap.ensure_clingo_importable_or_raise()
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
+        if platform.system().lower() == "linux":
+            spack.bootstrap.ensure_patchelf_in_path_or_raise()
+
+
 def bootstrap(parser, args):
     callbacks = {
         "status": _status,
@@ -417,5 +428,6 @@ def bootstrap(parser, args):
         "add": _add,
         "remove": _remove,
         "mirror": _mirror,
+        "now": _now,
     }
     callbacks[args.subcommand](args)
