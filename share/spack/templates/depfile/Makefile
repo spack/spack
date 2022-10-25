@@ -18,6 +18,9 @@ SPACK ?= spack
 	{{ jobserver_support }}$(SPACK) -e '{{ environment }}' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package --no-add /$(notdir $@) # $(SPEC)
 	@touch $@
 
+{{ install_deps_target }}/%: | {{ dirs_target }}
+	@touch $@
+
 # Set a human-readable SPEC variable for each target that has a hash
 {% for (parent, name, build_cache, _) in adjacency_list -%}
 {{ any_hash_target }}/{{ parent }}: SPEC = {{ name }}
