@@ -1161,7 +1161,11 @@ def _build_tarball(
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, "w:gz")) as tar:
+    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
         tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
