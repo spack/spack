@@ -13,7 +13,7 @@ on:
     paths:
       - '.github/workflows/build-containers.yml'
       - 'share/spack/docker/*'
-      - 'share/templates/container/*'
+      - 'share/spack/templates/container/*'
       - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
