@@ -17,7 +17,7 @@ class PyMystParser(PythonPackage):
     version("0.18.1", sha256="79317f4bb2c13053dd6e64f9da1ba1da6cd9c40c8a430c447a7b146a594c246d")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-flit-core@3.4:3", type=("build", "run"))
+    depends_on("py-flit-core@3.4:3", type="build")
     depends_on("py-docutils@0.15:0.19", type=("build", "run"))
     #depends_on("py-jinja2", type=("build", "run")) # let sphinx decide version
     depends_on("py-markdown-it-py@1.0.0:2", type=("build", "run"))
