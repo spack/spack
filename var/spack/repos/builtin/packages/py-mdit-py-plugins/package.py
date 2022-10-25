@@ -18,7 +18,7 @@ class PyMditPyPlugins(PythonPackage):
     version("0.2.8", sha256="5991cef645502e80a5388ec4fc20885d2313d4871e8b8e320ca2de14ac0c015f")
 
     depends_on("py-flit-core@3.4:3", when="@0.3.1", type=("build", "run"))
-    depends_on("python@3.7:3", when="@0.3.1", type=("build", "run"))
+    depends_on("python@3.7:", when="@0.3.1", type=("build", "run"))
     depends_on("py-markdown-it-py@1.0:2", when="@0.3.1", type=("build", "run"))
 
     depends_on("py-setuptools", type="build")
