@@ -500,19 +500,49 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Skip this hassle if not found
             if orig_bytes not in data:
                 continue
-            # Check relocation suffix safety, we only care about this problem if we are about
-            # to replace
-            if not (new_bytes[-16:] == orig_bytes[-16:] and len(new_bytes) <= len(orig_bytes)):
+            N = 7
+            # Check relocation suffix safety, we can only do anything at all if the new
+            # prefix is <= len(orig_bytes)
+            if len(new_bytes) > len(orig_bytes):
                 tty.debug("Binary failing to relocate is %s" % filename)
                 raise BinaryTextReplaceError(orig_bytes, new_bytes)
 
+            # Ok, we can do *something*, we try:
+            # 1. prefix-pad if installing into a path where:
+            #    len(new_bytes) >= len(orig_bytes) - N
+            # 2. shorten and avoid suffix overwriting where:
+            #    len(new_bytes) < len(orig_bytes) - N
+            # if len(new_bytes) >= len(orig_bytes) - N:
+            #     pad_length = len(orig_bytes) - len(new_bytes)
+            #     padding = os.sep * pad_length
+            #     padding = padding.encode("utf-8")
+            #     new_bytes = padding+new_bytes
+            #     data = data.replace(orig_bytes, new_bytes)
+            # else:
+            #     delta = len(orig_bytes) - len(new_bytes) - 1
+            #     print('delta', delta)
+            #     new_bytes = new_bytes + b"\0" + orig_bytes[-1 * delta:]
+            #     data = data.replace(orig_bytes, new_bytes)
+            # shortening when orig is found embedded in a string is broken, switching to
+            # only null-terminated shortening, followed by non-null terminated fixups
+            # with padding
+
+            delta = len(orig_bytes) - len(new_bytes)
+            print("delta", delta)
+            # shorten where it is safe, which is only when the string ends in a null
+            # immediately after prefix
+            data = data.replace(orig_bytes + b"\0", new_bytes + b"\0" + orig_bytes[-1 * delta :])
+            if orig_bytes not in data:
+                continue
+            # pad where we can't shorten
             pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length
             padding = padding.encode("utf-8")
-            data = data.replace(orig_bytes, padding + new_bytes)
+            new_bytes = padding + new_bytes
+            data = data.replace(orig_bytes, new_bytes)
+
             # Really needs to be the same length
             if not len(data) == original_data_len:
-                print("Length of pad:", pad_length, "should be", len(padding))
                 print(new_bytes, "was to replace", orig_bytes)
                 raise BinaryStringReplacementError(filename, original_data_len, len(data))
         f.write(data)
