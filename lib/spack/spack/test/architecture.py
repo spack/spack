@@ -140,7 +140,7 @@ def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
         (spack.spec.CompilerSpec("gcc@9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
         (
-            spack.spec.CompilerSpec("gcc@foo"),
+            spack.spec.CompilerSpec("gcc@10foo"),
             "9.2.0",
             "icelake",
             "-march=icelake-client -mtune=icelake-client",
