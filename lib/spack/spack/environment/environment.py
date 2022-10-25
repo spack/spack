@@ -1217,7 +1217,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = os.path.normpath(os.path.join(self.path, path))
+            abspath = spack.util.path.canonicalize_path(path, default_wd=self.path)
 
             # Stage, at the moment, requires a concrete Spec, since it needs the
             # dag_hash for the stage dir name. Below though we ask for a stage
@@ -1818,6 +1818,14 @@ class Environment(object):
                 if dep_hash.startswith(dag_hash):
                     matches[dep_hash] = spec
         return list(matches.values())
+
+    def get_one_by_hash(self, dag_hash):
+        """Returns the single spec from the environment which matches the
+        provided hash.  Raises an AssertionError if no specs match or if
+        more than one spec matches."""
+        hash_matches = self.get_by_hash(dag_hash)
+        assert len(hash_matches) == 1
+        return hash_matches[0]
 
     def matching_spec(self, spec):
         """

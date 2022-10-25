@@ -22,6 +22,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.18.0", sha256="18af535d979a646363df01f407c75f0e3b0dd97b3fdeb20dca25b30cd89239ee")
     version("3.17.2", sha256="f784cca83a14156631d6e0f5726ca0778e259e1fe40c927607d5fb12d958d705")
     version("3.17.1", sha256="11386cd3f4c0f9727af3c1c59141cc4bf5f83bdf7c50251de0845e406816f575")
     version("3.17.0", sha256="d4685fed01b2351c66706cbd6d08e4083a4645df398ef5ccd68fdfeb2f86ea97")
@@ -69,6 +70,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on("petsc@main", when="@main")
+    depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
     depends_on("petsc@3.15.0:3.15", when="@3.15.0:3.15")

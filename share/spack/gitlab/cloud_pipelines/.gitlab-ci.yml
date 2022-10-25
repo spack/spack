@@ -91,6 +91,9 @@ protected-publish:
   extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
+  retry:
+    max: 2
+    when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}
@@ -267,11 +270,11 @@ e4s-mac-protected-build:
 
 e4s-pr-generate:
   extends: [ ".e4s", ".pr-generate"]
-  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 e4s-protected-generate:
   extends: [ ".e4s", ".protected-generate"]
-  image: ecpe4s/ubuntu22.04-runner-x86_64:2022-07-01
+  image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
 
 e4s-pr-build:
   extends: [ ".e4s", ".pr-build" ]
@@ -749,3 +752,123 @@ tutorial-protected-build:
   needs:
     - artifacts: True
       job: tutorial-protected-generate
+
+########################################
+# Machine Learning (CPU)
+########################################
+.ml-cpu:
+  variables:
+    SPACK_CI_STACK_NAME: ml-cpu
+
+.ml-cpu-generate:
+  extends: .ml-cpu
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
+ml-cpu-pr-generate:
+  extends: [ ".ml-cpu-generate", ".pr-generate"]
+
+ml-cpu-protected-generate:
+  extends: [ ".ml-cpu-generate", ".protected-generate"]
+
+ml-cpu-pr-build:
+  extends: [ ".ml-cpu", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cpu-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cpu-pr-generate
+
+ml-cpu-protected-build:
+  extends: [ ".ml-cpu", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cpu-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cpu-protected-generate
+
+########################################
+# Machine Learning (CUDA)
+########################################
+.ml-cuda:
+  variables:
+    SPACK_CI_STACK_NAME: ml-cuda
+
+.ml-cuda-generate:
+  extends: .ml-cuda
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
+ml-cuda-pr-generate:
+  extends: [ ".ml-cuda-generate", ".pr-generate"]
+
+ml-cuda-protected-generate:
+  extends: [ ".ml-cuda-generate", ".protected-generate"]
+
+ml-cuda-pr-build:
+  extends: [ ".ml-cuda", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cuda-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cuda-pr-generate
+
+ml-cuda-protected-build:
+  extends: [ ".ml-cuda", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-cuda-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-cuda-protected-generate
+
+########################################
+# Machine Learning (ROCm)
+########################################
+.ml-rocm:
+  variables:
+    SPACK_CI_STACK_NAME: ml-rocm
+
+.ml-rocm-generate:
+  extends: .ml-rocm
+  image: ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21
+  tags: ["spack", "aws", "public", "medium", "x86_64_v4"]
+
+ml-rocm-pr-generate:
+  extends: [ ".ml-rocm-generate", ".pr-generate"]
+
+ml-rocm-protected-generate:
+  extends: [ ".ml-rocm-generate", ".protected-generate"]
+
+ml-rocm-pr-build:
+  extends: [ ".ml-rocm", ".pr-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-rocm-pr-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-rocm-pr-generate
+
+ml-rocm-protected-build:
+  extends: [ ".ml-rocm", ".protected-build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: ml-rocm-protected-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: ml-rocm-protected-generate

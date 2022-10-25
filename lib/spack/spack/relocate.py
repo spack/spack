@@ -11,6 +11,7 @@ import shutil
 import macholib.mach_o
 import macholib.MachO
 
+import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.lang import memoized
@@ -743,11 +744,22 @@ def relocate_links(links, orig_layout_root, orig_install_prefix, new_install_pre
             tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
-def relocate_text(files, prefixes, concurrency=32):
+def utf8_path_to_binary_regex(prefix):
+    """Create a (binary) regex that matches the input path in utf8"""
+    prefix_bytes = re.escape(prefix).encode("utf-8")
+    prefix_rexp = re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
+
+    return prefix_rexp
+
+
+def unsafe_relocate_text(files, prefixes, concurrency=32):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
     Relocation also affects the the path in Spack's sbang script.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         files (list): Text files to be relocated
@@ -763,11 +775,8 @@ def relocate_text(files, prefixes, concurrency=32):
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
-            orig_bytes = orig_prefix.encode("utf-8")
-            orig_prefix_rexp = re.compile(
-                b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % orig_bytes
-            )
-            new_bytes = b"\\1%s\\2" % new_prefix.encode("utf-8")
+            orig_prefix_rexp = utf8_path_to_binary_regex(orig_prefix)
+            new_bytes = b"\\1%s\\2" % new_prefix.replace("\\", r"\\").encode("utf-8")
             compiled_prefixes[orig_prefix_rexp] = new_bytes
 
     # Do relocations on text that refers to the install tree
@@ -785,10 +794,13 @@ def relocate_text(files, prefixes, concurrency=32):
         tp.join()
 
 
-def relocate_text_bin(binaries, prefixes, concurrency=32):
+def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         binaries (list): binaries to be relocated
@@ -887,7 +899,7 @@ def file_is_relocatable(filename, paths_to_relocate=None):
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(filename, output=str).split())
 
-    m_type, m_subtype = mime_type(filename)
+    m_type, m_subtype = fs.mime_type(filename)
     if m_type == "application":
         tty.debug("{0},{1}".format(m_type, m_subtype), level=2)
 
@@ -923,7 +935,7 @@ def is_binary(filename):
     Returns:
         True or False
     """
-    m_type, _ = mime_type(filename)
+    m_type, _ = fs.mime_type(filename)
 
     msg = "[{0}] -> ".format(filename)
     if m_type == "application":
@@ -932,30 +944,6 @@ def is_binary(filename):
 
     tty.debug(msg + "TEXT FILE")
     return False
-
-
-@llnl.util.lang.memoized
-def _get_mime_type():
-    file_cmd = executable.which("file")
-    for arg in ["-b", "-h", "--mime-type"]:
-        file_cmd.add_default_arg(arg)
-    return file_cmd
-
-
-@llnl.util.lang.memoized
-def mime_type(filename):
-    """Returns the mime type and subtype of a file.
-
-    Args:
-        filename: file to be analyzed
-
-    Returns:
-        Tuple containing the MIME type and subtype
-    """
-    output = _get_mime_type()(filename, output=str, error=str).strip()
-    tty.debug("==> " + output, level=2)
-    type, _, subtype = output.partition("/")
-    return type, subtype
 
 
 # Memoize this due to repeated calls to libraries in the same directory.
@@ -975,7 +963,7 @@ def fixup_macos_rpath(root, filename):
         True if fixups were applied, else False
     """
     abspath = os.path.join(root, filename)
-    if mime_type(abspath) != ("application", "x-mach-binary"):
+    if fs.mime_type(abspath) != ("application", "x-mach-binary"):
         return False
 
     # Get Mach-O header commands

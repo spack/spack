@@ -26,6 +26,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.26.0", sha256="c214084bddc61a06f3758d82947f7f831e76d7e3edeac2c78bb82d597686e05d")
     version("2.25.0", sha256="f9fc8371d91239fca694284dab17175bfda3821d7b7a871fd2e8f9d5930f303c")
     version("2.24.0", sha256="f480e61fc25bf533fc201fdf79ec440be79bb8117650627d1f25151e8be2fdb5")
     version("2.23.0", sha256="8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2")
@@ -72,6 +73,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("unified-memory", default=False, description="Use unified memory")
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("gptune", default=False, description="Add the GPTune hookup code")
+    variant("umpire", default=False, description="Enable Umpire support")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -92,18 +94,34 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
     depends_on("superlu-dist", when="+superlu-dist+mpi")
+    depends_on("rocsparse", when="+rocm")
+    depends_on("rocthrust", when="+rocm")
+    depends_on("rocrand", when="+rocm")
+    depends_on("umpire", when="+umpire")
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on(
+            "umpire+cuda cuda_arch={0}".format(sm_), when="+umpire+cuda cuda_arch={0}".format(sm_)
+        )
+    for gfx in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "umpire+rocm amdgpu_target={0}".format(gfx),
+            when="+umpire+rocm amdgpu_target={0}".format(gfx),
+        )
 
+    # Conflicts
     conflicts("+cuda", when="+int64")
     conflicts("+rocm", when="+int64")
     conflicts("+rocm", when="@:2.20")
     conflicts("+unified-memory", when="~cuda~rocm")
     conflicts("+gptune", when="~mpi")
+    # Umpire device allocator exports device code, which requires static libs
+    conflicts("+umpire", when="+shared+cuda")
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
     conflicts("+shared@:2.12 platform=darwin")
 
-    # Conflicts
+    # Version conflicts
     # Option added in v2.13.0
     conflicts("+superlu-dist", when="@:2.12")
 
@@ -112,6 +130,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     # Option added in v2.16.0
     conflicts("+mixedint", when="@:2.15")
+
+    # Option added in v2.21.0
+    conflicts("+umpire", when="@:2.20")
 
     configure_directory = "src"
 
@@ -176,6 +197,14 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
             configure_args.append("--with-dsuperlu-lib=%s" % spec["superlu-dist"].libs)
             configure_args.append("--with-dsuperlu")
 
+        if "+umpire" in spec:
+            configure_args.append("--with-umpire-include=%s" % spec["umpire"].prefix.include)
+            configure_args.append("--with-umpire-lib=%s" % spec["umpire"].libs)
+            if "~cuda~rocm" in spec:
+                configure_args.append("--with-umpire-host")
+            else:
+                configure_args.append("--with-umpire")
+
         configure_args.extend(self.enable_or_disable("debug"))
 
         if "+cuda" in spec:
@@ -209,11 +238,16 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--disable-cub")
 
         if "+rocm" in spec:
+            rocm_pkgs = ["rocsparse", "rocthrust", "rocprim", "rocrand"]
+            rocm_inc = ""
+            for pkg in rocm_pkgs:
+                rocm_inc += spec[pkg].headers.include_flags + " "
             configure_args.extend(
                 [
                     "--with-hip",
                     "--enable-rocrand",
                     "--enable-rocsparse",
+                    "--with-extra-CUFLAGS={0}".format(rocm_inc),
                 ]
             )
             rocm_arch_vals = spec.variants["amdgpu_target"].value

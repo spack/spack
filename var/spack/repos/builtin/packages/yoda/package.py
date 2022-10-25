@@ -15,6 +15,7 @@ class Yoda(AutotoolsPackage):
 
     tags = ["hep"]
 
+    version("1.9.7", sha256="8d07bb04dcb79364858718a18203452d8d9fa00029fa94239eafa8529032b8ff")
     version("1.9.6", sha256="21523fa2f6b6c8f3348959f3a948734a930ca25951d3c9190b4424e13735f2a4")
     version("1.9.5", sha256="59191a0e9afa8db53ffaa2079f8532e5b13de1be622703d6f7060d3610528b6b")
     version("1.9.0", sha256="9a55de12ffebbe41d1704459c5c9289eeaf0f0eb6a4d0104ea222d7ab889fdf4")
@@ -64,7 +65,7 @@ class Yoda(AutotoolsPackage):
 
     variant("root", default=False, description="Enable ROOT interface")
 
-    depends_on("python", type=("build", "run"))
+    depends_on("python", type=("build", "link", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("zlib")
     depends_on("boost", when="@:1.6.0", type=("build", "run"))

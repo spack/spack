@@ -19,9 +19,9 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
---------------------
-``install_tree``
---------------------
+---------------------
+``install_tree:root``
+---------------------
 
 The location where Spack will install packages and their dependencies.
 Default is ``$spack/opt/spack``.

@@ -18,6 +18,7 @@ class RSpacetime(RPackage):
 
     cran = "spacetime"
 
+    version("1.2-8", sha256="4297a027ab4cff32e41cec65aa7d92af66c7a885fd2322b010b0af9a14f24c59")
     version("1.2-6", sha256="8fd46606ed9589ffce19368d40004890f96e8fe77f13b546e6a2f8b9ced0dd81")
     version("1.2-5", sha256="8f2acc3886780a902fb0476d6ab271e6640be1a1af4c7f9a21d8a2882fb72746")
     version("1.2-3", sha256="ca7c0b962d5da0741f6dd85b271d693598756e0eeeb364ada828dbb6d1b9b25b")
