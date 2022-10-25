@@ -500,7 +500,7 @@ def _replace_prefix_bin(filename, byte_prefixes):
             # Skip this hassle if not found
             if orig_bytes not in data:
                 continue
-            N = 7
+
             # Check relocation suffix safety, we can only do anything at all if the new
             # prefix is <= len(orig_bytes)
             if len(new_bytes) > len(orig_bytes):
