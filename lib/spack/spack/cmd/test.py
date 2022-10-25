@@ -55,6 +55,12 @@ def setup_parser(subparser):
         "--externals", action="store_true", help="Test packages that are externally installed."
     )
     run_parser.add_argument(
+        "-x",
+        "--explicit",
+        action="store_true",
+        help="Only test packages that are explicitly installed.",
+    )
+    run_parser.add_argument(
         "--keep-stage", action="store_true", help="Keep testing directory for debugging"
     )
     run_parser.add_argument(
@@ -188,6 +194,9 @@ environment variables:
     if args.fail_fast:
         spack.config.set("config:fail_fast", True, scope="command_line")
 
+    explicit = args.explicit or any
+    explicit_str = "explicitly " if args.explicit else ""
+
     # Get specs to test
     env = ev.active_environment()
     hashes = env.all_hashes() if env else None
@@ -195,9 +204,13 @@ environment variables:
     specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
     specs_to_test = []
     for spec in specs:
-        matching = spack.store.db.query_local(spec, hashes=hashes)
+        matching = spack.store.db.query_local(
+            spec,
+            hashes=hashes,
+            explicit=explicit,
+        )
         if spec and not matching:
-            tty.warn("No installed packages match spec %s" % spec)
+            tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
             """
             TODO: Need to write out a log message and/or CDASH Testing
               output that package not installed IF continue to process
@@ -208,6 +221,7 @@ environment variables:
                 # to ensure report package as skipped (e.g., for CI)
                 specs_to_test.append(spec)
             """
+
         specs_to_test.extend(matching)
 
     # test_stage_dir
