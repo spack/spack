@@ -26,54 +26,19 @@ class Julia(MakefilePackage):
     maintainers = ["glennpj", "vchuravy", "haampie"]
 
     version("master", branch="master")
-    version("1.8.0-rc1", sha256="ed0395880c32c48a284b115279d27d79ab1ca6fb53a4b97a8d25eba54ec97306")
-    version(
-        "1.7.3",
-        sha256="06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306",
-        preferred=True,
-    )
+    version("1.8.2", sha256="3e2cea35bf5df963ed7b75a83e8febfc000acf1e664ecd657a0772508eb1fb5d")
+    version("1.8.1", sha256="066f4ca7a2ad39b003e2af77dbecfbfb9b0a1cb1664033f657ffdbe2f374d956")
+    version("1.8.0", sha256="0fa980286d6d912f24ed9f90a02930560d985e0ada8233a4ae5610884feb2438")
+
+    version("1.7.3", sha256="06df2a81e6a18d0333ffa58d36f6eb84934c38984898f9e0c3072c8facaa7306")
     version("1.7.2", sha256="0847943dd65001f3322b00c7dc4e12f56e70e98c6b798ccbd4f02d27ce161fef")
     version("1.7.1", sha256="17d298e50e4e3dd897246ccebd9f40ce5b89077fa36217860efaec4576aa718e")
     version("1.7.0", sha256="8e870dbef71bc72469933317a1a18214fd1b4b12f1080784af7b2c56177efcb4")
-    version(
-        "1.6.6",
-        sha256="a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090",
-        preferred=True,
-    )
+
+    version("1.6.7", sha256="74af1dc7b5841757a06a899923a62cac04665c09829324e8bf53cfb66f7b3d61")
+    version("1.6.6", sha256="a8023708cadb2649395769810e6cec8afc8e352aa6d407189b6c88b86d7f5090")
     version("1.6.5", sha256="b70ae299ff6b63a9e9cbf697147a48a31b4639476d1947cb52e4201e444f23cb")
     version("1.6.4", sha256="a4aa921030250f58015201e28204bff604a007defc5a379a608723e6bb1808d4")
-
-    # We've deprecated these versions, so that we can remove them in Spack 0.18
-    # They are still available in Spack 0.17. Julia 0.17.0 is the first version that
-    # can be built enitrely from Spack packages, without a network connection during
-    # the build.
-    for v in [
-        "1.6.3",
-        "1.6.2",
-        "1.6.1",
-        "1.6.0",
-        "1.5.4",
-        "1.5.3",
-        "1.5.2",
-        "1.5.1",
-        "1.5.0",
-        "1.4.2",
-        "1.4.1",
-        "1.4.0",
-        "1.3.1",
-        "1.2.0",
-        "1.1.1",
-        "1.0.0",
-        "0.6.2",
-        "0.5.2",
-        "0.5.1",
-        "0.5.0",
-        "0.4.7",
-        "0.4.6",
-        "0.4.5",
-        "0.4.3",
-    ]:
-        version(v, deprecated=True)
 
     variant("precompile", default=True, description="Improve julia startup time")
     variant("openlibm", default=True, description="Use openlibm instead of libm")
@@ -87,7 +52,8 @@ class Julia(MakefilePackage):
         " version_suffix=jl +link_llvm_dylib ~internal_unwind"
     )
     depends_on("libuv", when="@:1.7")
-    depends_on("libuv-julia", when="@1.8:")
+    depends_on("libuv-julia@1.42.0", when="@1.8.0:1.8.1")
+    depends_on("libuv-julia@1.44.2", when="@1.8.2:")
 
     with when("@1.8.0:1.8"):
         # libssh2.so.1, libpcre2-8.so.0, mbedtls.so.14, mbedcrypto.so.7, mbedx509.so.1
@@ -96,7 +62,6 @@ class Julia(MakefilePackage):
         depends_on("libblastrampoline@5.1.0:5")
         depends_on("libgit2@1.3.0:1.3")
         depends_on("libssh2@1.10.0:1.10")
-        depends_on("libuv-julia@1.44.1")
         depends_on("llvm@13.0.1 shlib_symbol_version=jl")
         depends_on("mbedtls@2.28.0:2.28")
         depends_on("openlibm@0.8.1:0.8", when="+openlibm")
@@ -195,7 +160,8 @@ class Julia(MakefilePackage):
 
     # Patches for julia
     patch("julia-1.6-system-libwhich-and-p7zip-symlink.patch", when="@1.6.0:1.6")
-    patch("use-add-rpath.patch")
+    patch("use-add-rpath.patch", when="@:1.8.0")
+    patch("use-add-rpath-2.patch", when="@1.8.1:")
 
     # Fix gfortran abi detection https://github.com/JuliaLang/julia/pull/44026
     patch("fix-gfortran.patch", when="@1.7.0:1.7.2")
@@ -209,7 +175,6 @@ class Julia(MakefilePackage):
 
     # Make sure Julia sets -DNDEBUG when including LLVM header files.
     patch("llvm-NDEBUG.patch", when="@1.7.0:1.7")
-    patch("llvm-NDEBUG-1.8.patch", when="@1.8.0:1.8")
 
     def patch(self):
         # The system-libwhich-libblastrampoline.patch causes a rebuild of docs as it

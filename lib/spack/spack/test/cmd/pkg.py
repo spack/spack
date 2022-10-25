@@ -81,7 +81,7 @@ def mock_pkg_git_repo(tmpdir_factory):
         git("rm", "-rf", "pkg-c")
         git("-c", "commit.gpgsign=false", "commit", "-m", "change pkg-b, remove pkg-c, add pkg-d")
 
-    with spack.repo.use_repositories(mock_repo):
+    with spack.repo.use_repositories(str(repo_path)):
         yield mock_repo_packages
 
 

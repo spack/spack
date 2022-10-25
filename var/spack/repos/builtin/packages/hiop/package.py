@@ -22,6 +22,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ["ashermancinelli", "CameronRutherford", "pelesh"]
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version("0.7.0", commit="5f42ab34b419b7cf64d0fffb29d443b009dbfd75", submodules=True)
     version("0.6.2", commit="55652fbe923ab9107d002d0d070865bd22375b28")
     version("0.6.1", commit="a9e2697b00aa13ecf0ae4783dd8a41dee11dc50e")
     version("0.6.0", commit="21af7eb0d6427be73546cf303abc84e834a5a55d")
@@ -113,7 +114,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("coinhsl+blas", when="+sparse")
     depends_on("metis", when="+sparse")
 
-    depends_on("ginkgo@glu_experimental", when="+ginkgo")
+    depends_on("ginkgo@1.5.0.glu_experimental", when="+ginkgo")
 
     conflicts(
         "+shared",

@@ -14,6 +14,7 @@ class RStatnetCommon(RPackage):
 
     cran = "statnet.common"
 
+    version("4.7.0", sha256="b69731a606b56b729b1917375efafb572b960ce5000a0fc2ec5222fd7d80a1b3")
     version("4.6.0", sha256="ddad51128b50d465e1d1aca3a53b452810b9ba578e96b08b8f50f5850d7bb21d")
     version("4.5.0", sha256="3cdb23db86f3080462f15e29bcf3e941590bc17ea719993b301199b22d6f882f")
     version("4.4.1", sha256="4ecf2b84718d7fb60f196215b4cf6f52cd6b26cc9148a6da6981b26e885509fd")
