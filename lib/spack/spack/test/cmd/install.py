@@ -17,6 +17,7 @@ from six.moves import builtins
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.cmd.common.arguments
 import spack.cmd.install
 import spack.compilers as compilers
 import spack.config
@@ -1132,7 +1133,7 @@ def test_install_use_buildcache(
             "--no-check-signature", "--use-buildcache", opt, package_name, fail_on_error=True
         )
 
-        pkg_opt, dep_opt = spack.cmd.install.parse_use_buildcache(opt)
+        pkg_opt, dep_opt = spack.cmd.common.arguments.use_buildcache(opt)
         validate(dep_opt, out, dependency_name)
         validate(pkg_opt, out, package_name)
 
