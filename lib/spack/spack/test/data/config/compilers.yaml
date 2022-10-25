@@ -168,7 +168,7 @@ compilers:
     modules: 'None'
     target: x86_64
 - compiler:
-    spec: gcc@20foo
+    spec: gcc@10foo
     operating_system: redhat6
     paths:
       cc: /path/to/gcc
@@ -238,7 +238,34 @@ compilers:
     modules: 'None'
     target: aarch64
 - compiler:
-    spec: gcc@20foo
+    spec: gcc@11.1.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    flags:
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: clang@12.2.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang35
+      cxx: /path/to/clang++35
+      f77: None
+      fc: None
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
+    target: aarch64
+- compiler:
+    spec: gcc@10foo
     operating_system: redhat6
     paths:
       cc: /path/to/gcc

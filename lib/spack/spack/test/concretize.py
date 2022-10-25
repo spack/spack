@@ -313,8 +313,8 @@ class TestConcretize(object):
 
     def test_different_compilers_get_different_flags(self):
         client = Spec(
-            "cmake-client %gcc@4.7.2 platform=test os=fe target=fe"
-            + " ^cmake %clang@3.5 platform=test os=fe target=fe"
+            "cmake-client %gcc@11.1.0 platform=test os=fe target=fe"
+            + " ^cmake %clang@12.2.0 platform=test os=fe target=fe"
         )
         client.concretize()
         cmake = client["cmake"]
@@ -328,7 +328,7 @@ class TestConcretize(object):
         UnavailableCompilerVersionError if the architecture is concretized
         incorrectly.
         """
-        spec = Spec("cmake-client %gcc@4.7.2 os=fe ^ cmake")
+        spec = Spec("cmake-client %gcc@11.1.0 os=fe ^ cmake")
         spec.concretize()
         assert spec["cmake"].architecture == spec.architecture
 
@@ -449,7 +449,7 @@ class TestConcretize(object):
         spec.normalize()
         spec.concretize()
 
-    @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@4.5.0", "clang@:3.3.0"])
+    @pytest.mark.parametrize("compiler_str", ["clang", "gcc", "gcc@10.2.1", "clang@:12.0.0"])
     def test_compiler_inheritance(self, compiler_str):
         spec_str = "mpileaks %{0}".format(compiler_str)
         spec = Spec(spec_str).concretized()
@@ -692,15 +692,15 @@ class TestConcretize(object):
     @pytest.mark.regression("8735,14730")
     def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
         # Ensure that a concrete compiler with different compiler version
-        # doesn't match (here it's 4.5 vs. 4.5.0)
+        # doesn't match (here it's 10.2 vs. 10.2.1)
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
-            s = Spec("mpileaks %gcc@4.5")
+            s = Spec("mpileaks %gcc@10.2")
             s.concretize()
 
         # An abstract compiler with a version list could resolve to 4.5.0
-        s = Spec("mpileaks %gcc@4.5:")
+        s = Spec("mpileaks %gcc@10.2:")
         s.concretize()
-        assert str(s.compiler.version) == "4.5.0"
+        assert str(s.compiler.version) == "10.2.1"
 
     def test_concretize_anonymous(self):
         with pytest.raises(spack.error.SpackError):
@@ -717,11 +717,11 @@ class TestConcretize(object):
         "spec_str,expected_str",
         [
             # Unconstrained versions select default compiler (gcc@4.5.0)
-            ("bowtie@1.3.0", "%gcc@4.5.0"),
+            ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
-            ("bowtie@1.2.2", "%clang@3.3"),
+            ("bowtie@1.3.0", "%clang@12.0.0"),
             # If a higher gcc is available still prefer that
-            ("bowtie@1.2.2 os=redhat6", "%gcc@4.7.2"),
+            ("bowtie@1.2.2 os=redhat6", "%gcc@11.1.0"),
         ],
     )
     def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
@@ -1077,8 +1077,8 @@ class TestConcretize(object):
         if spack.config.get("config:concretizer") == "original":
             pytest.xfail("Known failure of the original concretizer")
 
-        s = Spec("a %gcc@20foo os=redhat6").concretized()
-        assert "%gcc@20foo" in s
+        s = Spec("a %gcc@10foo os=redhat6").concretized()
+        assert "%gcc@10foo" in s
 
     def test_all_patches_applied(self):
         uuidpatch = (
