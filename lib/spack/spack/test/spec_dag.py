@@ -1070,6 +1070,7 @@ def test_adding_same_deptype_with_the_same_name_raises(
         p.add_dependency_edge(c2, deptype=c2_deptypes)
 
 
+@pytest.mark.regression("33499")
 def test_indexing_prefers_direct_or_transitive_link_deps():
     # Test whether spec indexing prefers direct/transitive link type deps over deps of
     # build/run/test deps, and whether it does fall back to a full dag search.
