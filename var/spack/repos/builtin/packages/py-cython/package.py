@@ -50,14 +50,17 @@ class PyCython(PythonPackage):
     @property
     def prefix(self):
         prefix = super(PyCython, self).prefix
-        if os.path.isdir(os.path.join(prefix, "local", "bin")) and \
-                not os.path.isdir(os.path.join(prefix, "bin")):
+        if os.path.isdir(os.path.join(prefix, "local", "bin")) and not os.path.isdir(
+            os.path.join(prefix, "bin")
+        ):
             prefix.bin = os.path.join(prefix, "local", "bin")
-        if os.path.isdir(os.path.join(prefix, "local", "lib")) and \
-                not os.path.isdir(os.path.join(prefix, "lib")):
+        if os.path.isdir(os.path.join(prefix, "local", "lib")) and not os.path.isdir(
+            os.path.join(prefix, "lib")
+        ):
             prefix.lib = os.path.join(prefix, "local", "lib")
-        elif os.path.isdir(os.path.join(prefix, "local", "lib64")) and \
-                not os.path.isdir(os.path.join(prefix, "lib64")):
+        elif os.path.isdir(os.path.join(prefix, "local", "lib64")) and not os.path.isdir(
+            os.path.join(prefix, "lib64")
+        ):
             prefix.lib = os.path.join(prefix, "local", "lib64")
         return prefix
 
