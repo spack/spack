@@ -70,8 +70,8 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     # Control the package's build-type depending on the release or debug flag
     for pkg in ["raja", "umpire", "magma", "camp", "ginkgo"]:
-        depends_on("{0} build_type=Release".format(pkg), when="build_type=Release")
-        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="build_type=RelWithDebInfo")
+        depends_on("{0} build_type=Release".format(pkg), when="+{0} build_type=Release".format(pkg))
+        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+{0} build_type=RelWithDebInfo".format(pkg))
 
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
