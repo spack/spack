@@ -69,10 +69,29 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop~deepchecking  build_type=Release ", when="+hiop build_type=Release ")
 
     # Control the package's build-type depending on the release or debug flag
-    for pkg in ["raja", "umpire", "magma", "camp", "ginkgo"]:
-        depends_on("{0} build_type=Release".format(pkg), when="+{0} build_type=Release".format(pkg))
-        depends_on("{0} build_type=RelWithDebInfo".format(pkg), when="+{0} build_type=RelWithDebInfo".format(pkg))
+    for pkg in [
+        ("raja", "raja"),
+        ("umpire", "raja"),
+        ("magma", "hiop+cuda"),
+        ("magma", "hiop+rocm"),
+        ("camp", "raja"),
+    ]:
+        depends_on(
+            "{0} build_type=Release".format(pkg[0]), when="+{0} build_type=Release".format(pkg[1])
+        )
+        depends_on(
+            "{0} build_type=RelWithDebInfo".format(pkg[0]),
+            when="+{0} build_type=RelWithDebInfo".format(pkg[1]),
+        )
 
+    depends_on(
+        "{0} build_type=Release".format("hiop+ginkgo ^ginkgo"),
+        when="+{0} build_type=Release".format("hiop ^hiop+ginkgo"),
+    )
+    depends_on(
+        "{0} build_type=Debug".format("hiop+ginkgo ^ginkgo"),
+        when="+{0} build_type=RelWithDebInfo".format("hiop ^hiop+ginkgo"),
+    )
     # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
     # depends_on("tau", when="with_profiling=tau")
     # ^ need to depend when both hpctoolkit and tau
