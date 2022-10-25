@@ -1044,11 +1044,11 @@ class TestConcretize(object):
         # that doesn't allow newer versions with gcc@4.4.0. Check
         # that an old version of openblas is selected, rather than
         # a different compiler for just that node.
-        spec_str = "simple-inheritance+openblas %gcc@4.4.0 os=redhat6"
+        spec_str = "simple-inheritance+openblas %gcc@10.1.0 os=redhat6"
         s = Spec(spec_str).concretized()
 
-        assert "openblas@0.2.13" in s
-        assert s["openblas"].satisfies("%gcc@4.4.0")
+        assert "openblas@0.2.15" in s
+        assert s["openblas"].satisfies("%gcc@10.1.0")
 
     @pytest.mark.regression("19981")
     def test_target_ranges_in_conflicts(self):
