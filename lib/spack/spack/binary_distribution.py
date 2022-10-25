@@ -1161,7 +1161,7 @@ def _build_tarball(
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, "w:gz")) as tar:
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
         tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
