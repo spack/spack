@@ -1270,8 +1270,8 @@ class TestConcretize(object):
             ("mpileaks", "os=debian6"),
             # To trigger the bug in 22871 we need to have the same compiler
             # spec available on both operating systems
-            ("mpileaks%gcc@4.5.0 platform=test os=debian6", "os=debian6"),
-            ("mpileaks%gcc@4.5.0 platform=test os=redhat6", "os=redhat6"),
+            ("mpileaks%gcc@10.2.1 platform=test os=debian6", "os=debian6"),
+            ("mpileaks%gcc@10.2.1 platform=test os=redhat6", "os=redhat6"),
         ],
     )
     def test_os_selection_when_multiple_choices_are_possible(self, spec_str, expected_os):
