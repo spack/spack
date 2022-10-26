@@ -95,6 +95,7 @@ class Zfp(CMakePackage, CudaPackage):
         default="never",
         values=("never", "first", "last"),
         multi=False,
+        when="@1.0.0:",
         description="EXPERIMENTAL: Set coefficient rounding method",
     )
 
@@ -105,6 +106,7 @@ class Zfp(CMakePackage, CudaPackage):
     variant(
         "tight-error",
         default=False,
+        when="@1.0.0:",
         description="EXPERIMENTAL: Use tighter error bound when rounding is enabled",
     )
 
@@ -119,12 +121,6 @@ class Zfp(CMakePackage, CudaPackage):
     conflicts("+cuda", when="@:0.5.3", msg="+cuda requires zfp 0.5.4 or later")
     conflicts("+fasthash", when="@:0.5.1", msg="+fasthash requires zfp 0.5.2 or later")
     conflicts("+profile", when="@:0.5.1", msg="+profile requires zfp 0.5.2 or later")
-
-    conflicts("round=never", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
-    conflicts("round=first", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
-    conflicts("round=last", when="@:0.5.5", msg="round requires zfp 1.0.0 or later")
-
-    conflicts("+tight-error", when="@:0.5.5", msg="+tight-error requires zfp 1.0.0 or later")
     conflicts(
         "+tight-error",
         when="round=never",
