@@ -815,10 +815,6 @@ def _sort_by_dep_types(dspec):
     return tuple(t not in dspec.deptypes for t in ("link", "run", "build", "test"))
 
 
-def _sort_edges_by_pkg_name(edges):
-    edges.sort(key=lambda edge: edge.spec.name)
-
-
 #: Enum for edge directions
 EdgeDirection = lang.enum(parent=0, child=1)
 
