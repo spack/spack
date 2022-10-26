@@ -32,7 +32,7 @@ oneAPI packages or use::
 
 For more information on a specific package, do::
 
-  spack info <package-name>
+  spack info --all <package-name>
 
 Intel no longer releases new versions of Parallel Studio, which can be
 used in Spack via the :ref:`intelpackage`. All of its components can
