@@ -872,6 +872,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 # rocsparse (which is a dependency of hipsparse).
                 options += [
                     "HIP_DIR=%s" % spec["rocsparse"].prefix,
+                    "HIP_OPT=%s" % spec["hipsparse"].headers.cpp_flags,
                     "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs),
                 ]
 
