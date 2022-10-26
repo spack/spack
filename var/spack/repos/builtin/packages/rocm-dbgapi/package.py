@@ -139,8 +139,7 @@ class RocmDbgapi(CMakePackage):
         )
 
     def cmake_args(self):
-        args = [
-        ]
+        args = []
         if "@5.3.0:" in self.spec:
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
         return args
