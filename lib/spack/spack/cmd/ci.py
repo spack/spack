@@ -25,7 +25,8 @@ description = "manage continuous integration pipelines"
 section = "build"
 level = "long"
 
-CI_REBUILD_INSTALL_BASE_ARGS = ["spack", "-d", "-v"]
+SPACK_COMMAND = "spack"
+MAKE_COMMAND = "make"
 INSTALL_FAIL_CODE = 1
 
 
@@ -509,42 +510,88 @@ def ci_rebuild(args):
     # No hash match anywhere means we need to rebuild spec
 
     # Start with spack arguments
-    install_args = [base_arg for base_arg in CI_REBUILD_INSTALL_BASE_ARGS]
+    spack_cmd = [SPACK_COMMAND, "--color=always", "--backtrace", "--verbose"]
 
     config = cfg.get("config")
     if not config["verify_ssl"]:
-        install_args.append("-k")
+        spack_cmd.append("-k")
 
-    install_args.extend(
-        [
-            "install",
-            "--show-log-on-error",  # Print full log on fails
-            "--keep-stage",
-            "--use-buildcache",
-            "dependencies:only,package:never",
-        ]
-    )
+    install_args = []
 
     can_verify = spack_ci.can_verify_binaries()
     verify_binaries = can_verify and spack_is_pr_pipeline is False
     if not verify_binaries:
         install_args.append("--no-check-signature")
 
+    cdash_args = []
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
-        install_args.extend(cdash_handler.args())
+        cdash_args.extend(cdash_handler.args())
 
-    # A compiler action of 'FIND_ANY' means we are building a bootstrap
-    # compiler or one of its deps.
-    # TODO: when compilers are dependencies, we should include --no-add
-    if compiler_action != "FIND_ANY":
-        install_args.append("--no-add")
+    slash_hash = "/{}".format(job_spec.dag_hash())
+    deps_install_args = install_args
+    root_install_args = install_args + [
+        "--no-add",
+        "--keep-stage",
+        "--only=package",
+        "--use-buildcache=package:never,dependencies:only",
+        slash_hash,
+    ]
 
-    # Identify spec to install by hash
-    install_args.append("/{0}".format(job_spec.dag_hash()))
+    # ["x", "y"] -> "'x' 'y'"
+    args_to_string = lambda args: " ".join("'{}'".format(arg) for arg in args)
+
+    commands = [
+        # apparently there's a race when spack bootstraps? do it up front once
+        [
+            SPACK_COMMAND,
+            "-e",
+            env.path,
+            "bootstrap",
+            "now",
+        ],
+        [
+            SPACK_COMMAND,
+            "-e",
+            env.path,
+            "config",
+            "add",
+            "config:db_lock_timeout:120",  # 2 minutes for processes to fight for a db lock
+        ],
+        [
+            SPACK_COMMAND,
+            "-e",
+            env.path,
+            "env",
+            "depfile",
+            "-o",
+            "Makefile",
+            "--use-buildcache=package:never,dependencies:only",
+            "--make-target-prefix",
+            "ci",
+            slash_hash,  # limit to spec we're building
+        ],
+        [
+            # --output-sync requires GNU make 4.x.
+            # Old make errors when you pass it a flag it doesn't recognize,
+            # but it doesn't error or warn when you set unrecognized flags in
+            # this variable.
+            "export",
+            "GNUMAKEFLAGS=--output-sync=recurse",
+        ],
+        [
+            MAKE_COMMAND,
+            "SPACK={}".format(args_to_string(spack_cmd)),
+            "SPACK_COLOR=always",
+            "SPACK_INSTALL_FLAGS={}".format(args_to_string(deps_install_args)),
+            "-j$(nproc)",
+            "ci/.install-deps/{}".format(job_spec.dag_hash()),
+        ],
+        spack_cmd + ["install"] + root_install_args,
+    ]
 
     tty.debug("Installing {0} from source".format(job_spec.name))
-    install_exit_code = spack_ci.process_command("install", install_args, repro_dir)
+    install_exit_code = spack_ci.process_command("install", commands, repro_dir)
 
     # Now do the post-install tasks
     tty.debug("spack install exited {0}".format(install_exit_code))
