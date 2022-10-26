@@ -240,16 +240,14 @@ def traverse_edges(
     root_edges = root_specs(specs)
     visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
 
-    if order == "pre" or order == "post":
-        post_order = order == "post"
-        generator = traverse_depth_first_edges_generator(
-            root_edges, visitor, post_order, root, depth
+    # Depth-first
+    if order in ("pre", "post"):
+        return traverse_depth_first_edges_generator(
+            root_edges, visitor, order == "post", root, depth
         )
     else:
-        generator = traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
-
-    for item in generator:
-        yield item
+        # Breadth-first
+        return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
 
 
 def traverse_nodes(
