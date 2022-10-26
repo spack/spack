@@ -245,9 +245,9 @@ def traverse_edges(
         return traverse_depth_first_edges_generator(
             root_edges, visitor, order == "post", root, depth
         )
-    else:
-        # Breadth-first
-        return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
+
+    # Breadth-first
+    return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
 
 
 def traverse_nodes(
