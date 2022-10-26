@@ -163,6 +163,8 @@ class Store:
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
+        self.upstreams = upstreams
+        self.lock_cfg = lock_cfg
         self.db = spack.database.Database(root, upstream_dbs=upstreams, lock_cfg=lock_cfg)
         self.layout = spack.directory_layout.DirectoryLayout(
             root, projections=projections, hash_length=hash_length
@@ -172,24 +174,15 @@ class Store:
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex(self.layout)
 
-    def serialize(self):
-        """Return a pickle-able object that can be used to reconstruct
-        a store.
-        """
-        return (self.root, self.unpadded_root, self.projections, self.hash_length)
-
-    @staticmethod
-    def deserialize(token):
-        """Return a store reconstructed from a token created by
-        the serialize method.
-
-        Args:
-            token: return value of the serialize method
-
-        Returns:
-            Store object reconstructed from the token
-        """
-        return Store(*token)
+    def __reduce__(self):
+        return Store, (
+            self.root,
+            self.unpadded_root,
+            self.projections,
+            self.hash_length,
+            self.upstreams,
+            self.lock_cfg,
+        )
 
 
 def create(configuration):

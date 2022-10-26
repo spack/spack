@@ -253,8 +253,11 @@ class ForbiddenLockError(SpackError):
 
 
 class ForbiddenLock:
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
+
+    def __reduce__(self):
+        return ForbiddenLock, tuple()
 
 
 _QUERY_DOCSTRING = """
