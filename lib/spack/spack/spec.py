@@ -1607,25 +1607,12 @@ class Spec(object):
         return upstream
 
     def traverse(self, **kwargs):
-        for item in spack.traverse.traverse_nodes([self], **kwargs):
-            yield item
+        """Shorthand for spack.traverse.traverse_nodes"""
+        return spack.traverse.traverse_nodes([self], **kwargs)
 
     def traverse_edges(self, **kwargs):
-        """Generic traversal of the DAG represented by this spec.
-
-        This yields ``DependencySpec`` objects as they are traversed.
-
-        An imaginary incoming edge to the root is yielded first as
-        ``DependencySpec(None, root, ())``.
-
-        Note: the edges are traversed from ``edge.parent`` to ``edge.spec``,
-        even if the direction is reversed. When ``direction="children"`` the
-        parent points to the dependent, and spec to the dependency. Conversely
-        when ``direction="parents"`` parent points to the dependency, and spec
-        to the dependent.
-        """
-        for item in spack.traverse.traverse_edges([self], **kwargs):
-            yield item
+        """Shorthand for spack.traverse.traverse_edges"""
+        return spack.traverse.traverse_edges([self], **kwargs)
 
     @property
     def short_spec(self):
