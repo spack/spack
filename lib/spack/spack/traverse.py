@@ -195,105 +195,6 @@ def traverse_breadth_first_edges_generator(queue, visitor, root=True, depth=Fals
             queue.append(EdgeAndDepth(edge, node.depth + 1))
 
 
-def traverse_edges(
-    specs,
-    root=True,
-    order="pre",
-    cover="nodes",
-    direction="children",
-    deptype="all",
-    depth=False,
-    key=id,
-    visited=None,
-):
-    """
-    Generator that yields edges from the DAG, starting from a list of root specs.
-
-    Arguments:
-
-        specs (list): List of root specs (considered to be depth 0)
-        root (bool): Yield the root nodes themselves
-        order (str): What order of traversal to use in the DAG. For depth-first
-            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
-        cover (str): Determines how extensively to cover the dag.  Possible values:
-            ``nodes`` -- Visit each unique node in the dag only once.
-            ``edges`` -- If a node has been visited once but is reached along a
-            new path, it's accepted, but not recurisvely followed. This traverses
-            each 'edge' in the DAG once.
-            ``paths`` -- Explore every unique path reachable from the root.
-            This descends into visited subtrees and will accept nodes multiple
-            times if they're reachable by multiple paths.
-        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
-            of this spec's children.  If ``parents``, traverses upwards in the DAG
-            towards the root.
-        deptype (str or tuple): allowed dependency types
-        depth (bool): When ``False``, yield just edges. When ``True`` yield
-            the tuple (depth, edge), where depth corresponds to the depth
-            at which edge.spec was discovered.
-        key: function that takes a spec and outputs a key for uniqueness test.
-        visited (set or None): a set of nodes not to follow
-
-    Yields:
-        By default DependencySpec, or a tuple of depth and DependencySpec if depth
-        was set to ``True``.
-    """
-    root_edges = root_specs(specs)
-    visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
-
-    # Depth-first
-    if order in ("pre", "post"):
-        return traverse_depth_first_edges_generator(
-            root_edges, visitor, order == "post", root, depth
-        )
-
-    # Breadth-first
-    return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
-
-
-def traverse_nodes(
-    specs,
-    root=True,
-    order="pre",
-    cover="nodes",
-    direction="children",
-    deptype="all",
-    depth=False,
-    key=id,
-    visited=None,
-):
-    """
-    Generator that yields specs from the DAG, starting from a list of root specs.
-
-    Arguments:
-        specs (list): List of root specs (considered to be depth 0)
-        root (bool): Yield the root nodes themselves
-        order (str): What order of traversal to use in the DAG. For depth-first
-            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
-        cover (str): Determines how extensively to cover the dag.  Possible values:
-            ``nodes`` -- Visit each unique node in the dag only once.
-            ``edges`` -- If a node has been visited once but is reached along a
-            new path, it's accepted, but not recurisvely followed. This traverses
-            each 'edge' in the DAG once.
-            ``paths`` -- Explore every unique path reachable from the root.
-            This descends into visited subtrees and will accept nodes multiple
-            times if they're reachable by multiple paths.
-        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
-            of this spec's children.  If ``parents``, traverses upwards in the DAG
-            towards the root.
-        deptype (str or tuple): allowed dependency types
-        depth (bool): When ``False``, yield just edges. When ``True`` yield
-            the tuple ``(depth, edge)``, where depth corresponds to the depth
-            at which ``edge.spec`` was discovered.
-        key: function that takes a spec and outputs a key for uniqueness test.
-        visited (set or None): a set of nodes not to follow
-
-    Yields:
-        By default Spec, or a tuple of depth and Spec if depth was set to ``True``.
-    """
-    for item in traverse_edges(specs, root, order, cover, direction, deptype, depth, key, visited):
-        yield (item[0], item[1].spec) if depth else item.spec
-
-
 def traverse_breadth_first_with_visitor(specs, visitor):
     """Performs breadth first traversal for a list of specs (not a generator).
 
@@ -314,7 +215,7 @@ def traverse_breadth_first_with_visitor(specs, visitor):
             queue.append(EdgeAndDepth(edge, node.depth + 1))
 
 
-# Breadth first traversal to trees
+# Helper functions for generating a tree using breadth-first traversal
 
 
 def breadth_first_to_tree_edges(roots, deptype="all", key=id):
@@ -372,7 +273,135 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
             yield item
 
 
+# High-level API: traverse_edges, traverse_nodes, traverse_tree.
+
+
+def traverse_edges(
+    specs,
+    root=True,
+    order="pre",
+    cover="nodes",
+    direction="children",
+    deptype="all",
+    depth=False,
+    key=id,
+    visited=None,
+):
+    """
+    Generator that yields edges from the DAG, starting from a list of root specs.
+
+    Arguments:
+
+        specs (list): List of root specs (considered to be depth 0)
+        root (bool): Yield the root nodes themselves
+        order (str): What order of traversal to use in the DAG. For depth-first
+            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
+        cover (str): Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a
+            new path, it's accepted, but not recurisvely followed. This traverses
+            each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root.
+            This descends into visited subtrees and will accept nodes multiple
+            times if they're reachable by multiple paths.
+        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
+            of this spec's children.  If ``parents``, traverses upwards in the DAG
+            towards the root.
+        deptype (str or tuple): allowed dependency types
+        depth (bool): When ``False``, yield just edges. When ``True`` yield
+            the tuple (depth, edge), where depth corresponds to the depth
+            at which edge.spec was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow
+
+    Returns:
+        A generator that yields ``DependencySpec`` if depth is ``False``
+        or a tuple of ``(depth, DependencySpec)`` if depth is ``True``.
+    """
+    root_edges = root_specs(specs)
+    visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
+
+    # Depth-first
+    if order in ("pre", "post"):
+        return traverse_depth_first_edges_generator(
+            root_edges, visitor, order == "post", root, depth
+        )
+
+    # Breadth-first
+    return traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
+
+
+def traverse_nodes(
+    specs,
+    root=True,
+    order="pre",
+    cover="nodes",
+    direction="children",
+    deptype="all",
+    depth=False,
+    key=id,
+    visited=None,
+):
+    """
+    Generator that yields specs from the DAG, starting from a list of root specs.
+
+    Arguments:
+        specs (list): List of root specs (considered to be depth 0)
+        root (bool): Yield the root nodes themselves
+        order (str): What order of traversal to use in the DAG. For depth-first
+            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
+        cover (str): Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a
+            new path, it's accepted, but not recurisvely followed. This traverses
+            each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root.
+            This descends into visited subtrees and will accept nodes multiple
+            times if they're reachable by multiple paths.
+        direction (str): ``children`` or ``parents``. If ``children``, does a traversal
+            of this spec's children.  If ``parents``, traverses upwards in the DAG
+            towards the root.
+        deptype (str or tuple): allowed dependency types
+        depth (bool): When ``False``, yield just edges. When ``True`` yield
+            the tuple ``(depth, edge)``, where depth corresponds to the depth
+            at which ``edge.spec`` was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow
+
+    Yields:
+        By default ``Spec``, or a tuple ``(depth, Spec)`` if depth is set to ``True``.
+    """
+    for item in traverse_edges(specs, root, order, cover, direction, deptype, depth, key, visited):
+        yield (item[0], item[1].spec) if depth else item.spec
+
+
 def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True):
+    """
+    Generator that yields ``(depth, DependencySpec)`` tuples in the depth-first
+    pre-order, so that a tree can be printed from it.
+
+    Arguments:
+
+        specs (list): List of root specs (considered to be depth 0)
+        cover (str): Determines how extensively to cover the dag.  Possible values:
+            ``nodes`` -- Visit each unique node in the dag only once.
+            ``edges`` -- If a node has been visited once but is reached along a
+            new path, it's accepted, but not recurisvely followed. This traverses
+            each 'edge' in the DAG once.
+            ``paths`` -- Explore every unique path reachable from the root.
+            This descends into visited subtrees and will accept nodes multiple
+            times if they're reachable by multiple paths.
+        deptype (str or tuple): allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness test.
+        depth_first (bool): Explore the tree in depth-first or breadth-first order.
+            When setting depth_first=True and cover=nodes, each spec only occurs
+            once at the shallowest level, which is useful when rendering the
+            tree in a terminal.
+
+    Returns:
+        A generator that yields ``(depth, DependencySpec)`` tuples in such an order
+        that a tree can be printed.
+    """
     # BFS only makes sense when going over edges and nodes, for paths the tree is
     # identical to DFS, which is much more efficient then.
     if not depth_first and cover == "edges":
