@@ -145,11 +145,13 @@ class Zfp(CMakePackage, CudaPackage):
             self.define_from_variant("ZFP_WITH_DAZ", "daz"),
             self.define_from_variant("ZFP_WITH_CACHE_FAST_HASH", "fasthash"),
             self.define_from_variant("ZFP_WITH_CACHE_PROFILE", "profile"),
-            self.define("ZFP_ROUNDING_MODE", "ZFP_ROUND_" + spec.variants["round"].value.upper()),
             self.define_from_variant("ZFP_WITH_BIT_STREAM_STRIDED", "strided"),
             self.define_from_variant("ZFP_WITH_TIGHT_ERROR", "tight-error"),
             self.define_from_variant("ZFP_WITH_CACHE_TWOWAY", "twoway"),
         ]
+
+        if "round" in spec.variants:
+            args.append("ZFP_ROUNDING_MODE={0}".format(spec.variants["round"].value.upper()))
 
         if "+cuda" in spec:
             args.append("-DCUDA_BIN_DIR={0}".format(spec["cuda"].prefix.bin))
