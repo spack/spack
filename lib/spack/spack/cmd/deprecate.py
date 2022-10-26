@@ -117,7 +117,7 @@ def deprecate(parser, args):
     all_deprecators = []
 
     generator = (
-        deprecate.traverse(order="post", type="link", root=True)
+        deprecate.traverse(order="post", deptype="link", root=True)
         if args.dependencies
         else [deprecate]
     )
