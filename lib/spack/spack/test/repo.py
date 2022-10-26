@@ -113,14 +113,14 @@ def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     assert hasattr(spack.pkg.builtin.mock, "mpileaks")
     assert hasattr(spack.pkg.builtin.mock.mpileaks, "Mpileaks")
     assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.Package)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
     from spack.pkg.builtin.mock.mpileaks import Mpileaks
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(Mpileaks, spack.package_base.Package)
+    assert issubclass(Mpileaks, spack.package_base.PackageBase)
 
 
 def test_all_virtual_packages_have_default_providers():

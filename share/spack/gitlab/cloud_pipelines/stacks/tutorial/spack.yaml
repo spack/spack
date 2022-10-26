@@ -18,6 +18,8 @@ spack:
   packages:
     all:
       target: [x86_64]
+    tbb:
+      require: 'intel-tbb'
 
   definitions:
   - gcc_system_packages:

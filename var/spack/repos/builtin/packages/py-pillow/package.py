@@ -15,6 +15,18 @@ class PyPillowBase(PythonPackage):
 
     # These defaults correspond to Pillow defaults
     # https://pillow.readthedocs.io/en/stable/installation.html#external-libraries
+    VARIANTS_IN_SETUP_CFG = (
+        "zlib",
+        "jpeg",
+        "tiff",
+        "freetype",
+        "lcms",
+        "webp",
+        "webpmux",
+        "jpeg2000",
+        "imagequant",
+        "xcb",
+    )
     variant("zlib", default=True, description="Compressed PNG functionality")
     variant("jpeg", default=True, description="JPEG functionality")
     variant("tiff", default=False, description="Compressed TIFF functionality")
@@ -79,8 +91,7 @@ class PyPillowBase(PythonPackage):
 
         with open("setup.cfg", "a") as setup:
             setup.write("[build_ext]\n")
-            variants = list(self.spec.variants)
-            for variant in variants:
+            for variant in self.VARIANTS_IN_SETUP_CFG:
                 setup.write(variant_to_cfg(variant))
 
             setup.write("rpath={0}\n".format(":".join(self.rpath)))

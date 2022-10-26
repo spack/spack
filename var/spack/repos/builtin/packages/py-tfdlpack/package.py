@@ -7,7 +7,7 @@
 from spack.package import *
 
 
-class PyTfdlpack(CMakePackage, PythonPackage):
+class PyTfdlpack(CMakePackage, PythonExtension):
     """Tensorflow plugin for DLPack."""
 
     homepage = "https://github.com/VoVAllen/tf-dlpack"

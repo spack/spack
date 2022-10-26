@@ -22,7 +22,7 @@ import spack.config
         # This package has a GitHub patch URL without full_index=1
         (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone 'test' method in build-time callbacks
-        (["test-build-callbacks"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
+        (["fail-test-audit"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has no issues
         (["mpileaks"], None),
         # This package has a conflict with a trigger which cannot constrain the constraint

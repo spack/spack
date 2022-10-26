@@ -29,4 +29,5 @@ class DevBuildTestInstallPhases(Package):
         print("Three locomoco")
 
     def install(self, spec, prefix):
+        mkdirp(prefix.bin)
         print("install")

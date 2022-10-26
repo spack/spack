@@ -120,32 +120,36 @@ class SpecMultiMethod(object):
                 return method
         return self.default or None
 
-    def __call__(self, package_self, *args, **kwargs):
+    def __call__(self, package_or_builder_self, *args, **kwargs):
         """Find the first method with a spec that matches the
         package's spec.  If none is found, call the default
         or if there is none, then raise a NoSuchMethodError.
         """
-        spec_method = self._get_method_by_spec(package_self.spec)
+        spec_method = self._get_method_by_spec(package_or_builder_self.spec)
         if spec_method:
-            return spec_method(package_self, *args, **kwargs)
+            return spec_method(package_or_builder_self, *args, **kwargs)
         # Unwrap the MRO of `package_self by hand. Note that we can't
         # use `super()` here, because using `super()` recursively
         # requires us to know the class of `package_self`, as well as
         # its superclasses for successive calls. We don't have that
         # information within `SpecMultiMethod`, because it is not
         # associated with the package class.
-        for cls in inspect.getmro(package_self.__class__)[1:]:
+        for cls in inspect.getmro(package_or_builder_self.__class__)[1:]:
             superself = cls.__dict__.get(self.__name__, None)
+
             if isinstance(superself, SpecMultiMethod):
                 # Check parent multimethod for method for spec.
-                superself_method = superself._get_method_by_spec(package_self.spec)
+                superself_method = superself._get_method_by_spec(package_or_builder_self.spec)
                 if superself_method:
-                    return superself_method(package_self, *args, **kwargs)
+                    return superself_method(package_or_builder_self, *args, **kwargs)
             elif superself:
-                return superself(package_self, *args, **kwargs)
+                return superself(package_or_builder_self, *args, **kwargs)
 
         raise NoSuchMethodError(
-            type(package_self), self.__name__, package_self.spec, [m[0] for m in self.method_list]
+            type(package_or_builder_self),
+            self.__name__,
+            package_or_builder_self.spec,
+            [m[0] for m in self.method_list],
         )
 
 

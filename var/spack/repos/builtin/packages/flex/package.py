@@ -113,20 +113,19 @@ class Flex(AutotoolsPackage):
         args += self.enable_or_disable("nls")
         return args
 
-    @run_after("install")
+    @run_after("install", when="+lex")
     def symlink_lex(self):
         """Install symlinks for lex compatibility."""
-        if self.spec.satisfies("+lex"):
-            dso = dso_suffix
-            for dir, flex, lex in (
-                (self.prefix.bin, "flex", "lex"),
-                (self.prefix.lib, "libfl.a", "libl.a"),
-                (self.prefix.lib, "libfl." + dso, "libl." + dso),
-                (self.prefix.lib64, "libfl.a", "libl.a"),
-                (self.prefix.lib64, "libfl." + dso, "libl." + dso),
-            ):
+        dso = dso_suffix
+        for dir, flex, lex in (
+            (self.prefix.bin, "flex", "lex"),
+            (self.prefix.lib, "libfl.a", "libl.a"),
+            (self.prefix.lib, "libfl." + dso, "libl." + dso),
+            (self.prefix.lib64, "libfl.a", "libl.a"),
+            (self.prefix.lib64, "libfl." + dso, "libl." + dso),
+        ):
 
-                if os.path.isdir(dir):
-                    with working_dir(dir):
-                        if os.path.isfile(flex) and not os.path.lexists(lex):
-                            symlink(flex, lex)
+            if os.path.isdir(dir):
+                with working_dir(dir):
+                    if os.path.isfile(flex) and not os.path.lexists(lex):
+                        symlink(flex, lex)

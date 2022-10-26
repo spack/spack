@@ -21,5 +21,3 @@ class RktCompilerLib(RacketPackage):
     depends_on("rkt-zo-lib@1.3", type=("build", "run"), when="@8.3")
 
     racket_name = "compiler-lib"
-    pkgs = True
-    subdirectory = "pkgs/{0}".format(racket_name)

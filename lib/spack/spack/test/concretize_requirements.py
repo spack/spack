@@ -7,6 +7,7 @@ import sys
 
 import pytest
 
+import spack.build_systems.generic
 import spack.config
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -102,7 +103,7 @@ def fake_installs(monkeypatch, tmpdir):
     stage_path = str(tmpdir.ensure("fake-stage", dir=True))
     universal_unused_stage = spack.stage.DIYStage(stage_path)
     monkeypatch.setattr(
-        spack.package_base.Package, "_make_stage", MakeStage(universal_unused_stage)
+        spack.build_systems.generic.Package, "_make_stage", MakeStage(universal_unused_stage)
     )
 
 
