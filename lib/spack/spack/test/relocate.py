@@ -20,7 +20,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
-from spack.relocate import utf8_path_to_binary_regex
+from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -480,9 +480,24 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
 
 def test_text_relocation_regex_is_safe():
-    assert (
-        utf8_path_to_binary_regex("/[a-z]/")
-        .search(b"This does not match /a/, but this does: /[a-z]/.")
-        .group(0)
-        == b"/[a-z]/"
-    )
+    # Test whether prefix regex is properly escaped
+    string = b"This does not match /a/, but this does: /[a-z]/."
+    assert utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
+
+
+def test_utf8_paths_to_single_binary_regex():
+    regex = utf8_paths_to_single_binary_regex(["/first/path", "/second/path", "/safe/[a-z]"])
+    # Match nothing
+    assert not regex.search(b"text /neither/first/path text /the/second/path text")
+
+    # Match first
+    string = b"contains both /first/path/subdir and /second/path/sub"
+    assert regex.search(string).group(0) == b"/first/path/subdir"
+
+    # Match second
+    string = b"contains both /not/first/path/subdir but /second/path/subdir"
+    assert regex.search(string).group(0) == b"/second/path/subdir"
+
+    # Match "unsafe" dir name
+    string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
+    assert regex.search(string).group(0) == b"/safe/[a-z]/file"
