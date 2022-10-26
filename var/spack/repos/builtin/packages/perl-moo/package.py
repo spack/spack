@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 from spack.package import *
 
 
@@ -38,13 +39,16 @@ class PerlMoo(PerlPackage):
     provides("perl-moo--utils")  # AUTO-CPAN2Spack
     provides("perl-moo-sification")  # AUTO-CPAN2Spack
     provides("perl-oo")  # AUTO-CPAN2Spack
-    depends_on("perl-sub-quote@2.6.6:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
-    depends_on("perl-class-method-modifiers@1.10:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-test-fatal@0.3:", type=("build", "test"))  # AUTO-CPAN2Spack
+
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-sub-util", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-carp", type=("build", "run"))
+    depends_on("perl-class-method-modifiers@1.10:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-class-xsaccessor@1.18:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-exporter-tiny", type=("build", "run"))
+    depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-role-tiny@2.2.3:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util@1.0:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-sub-defer@2.6.6:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-sub-quote@2.6.6:", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-sub-util", type="run")  # AUTO-CPAN2Spack
+    depends_on("perl-test-fatal@0.3:", type=("build", "test"))  # AUTO-CPAN2Spack

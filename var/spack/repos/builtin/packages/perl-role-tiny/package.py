@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 from spack.package import *
 
 
@@ -26,5 +27,7 @@ class PerlRoleTiny(PerlPackage):
     )
 
     provides("perl-role-tiny-with")  # AUTO-CPAN2Spack
+
+    depends_on("perl-exporter-tiny", type=("build", "run"))
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-class-method-modifiers@1.5:", type="run")  # AUTO-CPAN2Spack

@@ -22,6 +22,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    maintainers = ["mwkrentel"]
+
+    version("0.187", sha256="e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8")
     version("0.186", sha256="7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177")
     version("0.185", sha256="dc8d3e74ab209465e7f568e1b3bb9a5a142f8656e2b57d10049a73da2ae6b5a6")
     version("0.184", sha256="87e7d1d7f0333815dd1f62135d047a4dc4082068f361452f357997c11360644b")
@@ -49,7 +52,12 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     # libdebuginfod support
     # NB: For 0.181 and newer, this enables _both_ the client and server
-    variant("debuginfod", default=False, description="Enable libdebuginfod support.")
+    variant(
+        "debuginfod",
+        default=False,
+        description="Enable libdebuginfod support.",
+        when="@0.179:",
+    )
 
     # elfutils-0.185-static-inline.patch
     # elflint.c (buffer_left): Mark as 'inline' to avoid external linkage failure.
@@ -73,7 +81,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     depends_on("curl@7.29.0:", type="link", when="+debuginfod")
 
     conflicts("%gcc@7.2.0:", when="@0.163")
-    conflicts("+debuginfod", when="@:0.178")
 
     provides("elf@1")
 
