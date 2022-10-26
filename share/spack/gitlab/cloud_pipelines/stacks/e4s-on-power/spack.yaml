@@ -214,6 +214,7 @@ spack:
   gitlab-ci:
 
     script:
+      - curl -Lfs https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0%2B0/GNUMake.v4.3.0.powerpc64le-linux-gnu.tar.gz | tar -xzf - -C /usr 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
       - cd ${SPACK_CONCRETE_ENV_DIR}
