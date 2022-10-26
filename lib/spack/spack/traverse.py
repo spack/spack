@@ -374,7 +374,7 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
             yield item
 
 
-def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=False):
+def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True):
     # BFS only makes sense when going over edges and nodes, for paths the tree is
     # identical to DFS, which is much more efficient then.
     if not depth_first and cover == "edges":

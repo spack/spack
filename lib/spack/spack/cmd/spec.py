@@ -92,7 +92,7 @@ def spec(parser, args):
     install_status_fn = spack.spec.Spec.install_status
     tree_kwargs = {
         "cover": args.cover,
-        "breadth_first": args.breadth_first,
+        "depth_first": not args.breadth_first,
         "format": name_fmt + fmt,
         "hashlen": None if args.very_long else 7,
         "show_types": args.types,

@@ -4491,13 +4491,13 @@ class Spec(object):
         show_types = kwargs.pop("show_types", False)
         deptypes = kwargs.pop("deptypes", "all")
         recurse_dependencies = kwargs.pop("recurse_dependencies", True)
-        breadth_first = kwargs.pop("breadth_first", False)
+        depth_first = kwargs.pop("depth_first", False)
         lang.check_kwargs(kwargs, self.tree)
 
         out = ""
 
         for d, dep_spec in spack.traverse.traverse_tree(
-            [self], cover=cover, deptype=deptypes, depth_first=not breadth_first
+            [self], cover=cover, deptype=deptypes, depth_first=depth_first
         ):
             node = dep_spec.spec
 

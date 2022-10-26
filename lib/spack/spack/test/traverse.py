@@ -115,7 +115,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # BFS should find all nodes as direct deps
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="nodes", breadth_first=True)
+        for (depth, edge) in traverse_tree([s], cover="nodes", depth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -126,7 +126,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="nodes", breadth_first=False)
+        for (depth, edge) in traverse_tree([s], cover="nodes", depth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -137,7 +137,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="edges", breadth_first=True)
+        for (depth, edge) in traverse_tree([s], cover="edges", depth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -150,7 +150,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # In DFS we see the chain again.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="edges", breadth_first=False)
+        for (depth, edge) in traverse_tree([s], cover="edges", depth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -173,7 +173,7 @@ chain-a
         ^chain-c
             ^chain-d
 """
-    assert s.tree(breadth_first=False, **args) == dfs_tree_nodes
+    assert s.tree(depth_first=True, **args) == dfs_tree_nodes
 
     bfs_tree_nodes = """\
 chain-a
@@ -181,7 +181,7 @@ chain-a
     ^chain-c
     ^chain-d
 """
-    assert s.tree(breadth_first=True, **args) == bfs_tree_nodes
+    assert s.tree(depth_first=False, **args) == bfs_tree_nodes
 
     dfs_tree_edges = """\
 chain-a
@@ -191,7 +191,7 @@ chain-a
     ^chain-c
     ^chain-d
 """
-    assert s.tree(breadth_first=False, cover="edges", **args) == dfs_tree_edges
+    assert s.tree(depth_first=True, cover="edges", **args) == dfs_tree_edges
 
     bfs_tree_edges = """\
 chain-a
@@ -201,4 +201,4 @@ chain-a
         ^chain-d
     ^chain-d
 """
-    assert s.tree(breadth_first=True, cover="edges", **args) == bfs_tree_edges
+    assert s.tree(depth_first=False, cover="edges", **args) == bfs_tree_edges
