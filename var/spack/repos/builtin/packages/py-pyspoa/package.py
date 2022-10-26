@@ -17,6 +17,7 @@ class PyPyspoa(PythonPackage):
 
     depends_on("py-wheel@0.34.1:", type="build")
     depends_on("py-setuptools", type="build")
+    depends_on("cmake@3.18.4", type="build")
     depends_on("py-pybind11@2.4:", type=("build", "run"))
     depends_on("py-auditwheel@3.1.0:", type=("build", "run"))
     depends_on("py-scikit-build@0.11.1", type=("build", "run"))
