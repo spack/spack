@@ -16,7 +16,6 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
-
     version("8.0.29", sha256="fc02246f39764b7b2b7815bb260d52983296919ba13246f3de8873b3e86dc579")
 
     version("8.0.19", sha256="323b11dc35e25f13ed55d5b1c2f8f511fbead3c02675472f1f00c88e3a878a1d")
@@ -148,7 +147,6 @@ class Mysql(CMakePackage):
         return find_libraries("libmysqlclient", root=self.prefix, recursive=True)
 
     def url_for_version(self, version):
-        #url = "https://dev.mysql.com/get/Downloads/MySQL-{0}/mysql-{1}.tar.gz"
         url = "https://github.com/mysql/mysql-server/archive/refs/tags/mysql-{0}.tar.gz"
         return url.format(version)
 

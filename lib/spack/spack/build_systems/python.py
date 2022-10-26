@@ -16,10 +16,25 @@ import spack.builder
 import spack.multimethod
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
-from spack.error import NoHeadersError, NoLibrariesError, SpecError
+from spack.error import NoHeadersError, NoLibrariesError, SpackError, SpecError
 from spack.version import Version
 
 from ._checks import BaseBuilder, execute_install_time_tests
+
+
+class UnknownFeatureError(SpackError):
+    """Raised if we specify any extra features not known to the package."""
+
+    def __init__(self, name, provided, selected):
+        super(UnknownFeatureError, self).__init__(
+            "selected features {sel} not known ({name} provides {prov})".format(
+                sel=str(selected), name=name, prov=str(provided)
+            )
+        )
+
+        self.name = name
+        self.provided = provided
+        self.selected = selected
 
 
 class PythonExtension(spack.package_base.PackageBase):
@@ -188,6 +203,10 @@ class PythonPackage(PythonExtension):
 
     #: Callback names for install-time test
     install_time_test_callbacks = ["test"]
+
+    # Optional extra features provided by the Python package: see
+    # optional_extras()
+    provides_extras = []  # type: List[str]
 
     build_system("python_pip")
 
