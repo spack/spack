@@ -28,9 +28,7 @@ builds=(
     # preferred version:
     ${mfem}
     ${mfem}'~mpi~metis~zlib'
-    # TODO: add back '+gslib' when the gslib test is fixed.
-    # TODO: add back '+slepc' when its build is fixed.
-    ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
+    ${mfem}"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc+gslib \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
     ${mfem}'~mpi \
@@ -42,11 +40,10 @@ builds=(
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
     # NOTE: Shared build with +gslib works on mac but not on linux
-    # TODO: add back '+gslib' when the gslib test is fixed and the above NOTE
+    # TODO: add back '+gslib' when the above NOTE
     #       is addressed.
-    # TODO: add back '+slepc' when its build is fixed.
     ${mfem_dev}'+shared~static \
-        '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc \
+        '"$backends"'+superlu-dist+strumpack+suite-sparse+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
         '"$backends_specs $strumpack_spec $petsc_spec $hdf5_spec"
     # NOTE: Shared build with +gslib works on mac but not on linux
@@ -67,8 +64,7 @@ builds2=(
     ${mfem}'+sundials~mpi ^sundials~mpi'
     ${mfem}'+sundials'
     ${mfem}'+pumi'
-    # TODO: uncomment the next line when the gslib test is fixed.
-    # ${mfem}'+gslib'
+    ${mfem}'+gslib'
     ${mfem}'+netcdf~mpi'
     ${mfem}'+netcdf'
     ${mfem}'+mpfr'
@@ -77,12 +73,10 @@ builds2=(
     ${mfem}'+conduit'
     ${mfem}'+umpire'
     ${mfem}'+petsc'" $petsc_spec"
-    # TODO: uncomment the next line when the slepc build is fixed.
-    # ${mfem}'+petsc+slepc'" $petsc_spec"
+    ${mfem}'+petsc+slepc'" $petsc_spec"
     ${mfem}'+ginkgo'
     ${mfem}'+hiop'
-    # TODO: uncomment the next line when the threadsafe build is fixed.
-    # ${mfem}'+threadsafe'
+    ${mfem}'+threadsafe'
     #
     # develop version
     ${mfem_dev}"$backends $backends_specs"
@@ -93,8 +87,7 @@ builds2=(
     ${mfem_dev}'+sundials~mpi ^sundials~mpi'
     ${mfem_dev}'+sundials'
     ${mfem_dev}'+pumi'
-    # TODO: uncomment the next line when the gslib test is fixed.
-    # ${mfem_dev}'+gslib'
+    ${mfem_dev}'+gslib'
     ${mfem_dev}'+netcdf~mpi'
     ${mfem_dev}'+netcdf'
     ${mfem_dev}'+mpfr'
@@ -106,8 +99,7 @@ builds2=(
     ${mfem_dev}'+petsc+slepc'" $petsc_spec"
     ${mfem_dev}'+ginkgo'
     ${mfem_dev}'+hiop'
-    # TODO: uncomment the next line when the threadsafe build is fixed.
-    # ${mfem_dev}'+threadsafe'
+    ${mfem_dev}'+threadsafe'
 )
 
 
