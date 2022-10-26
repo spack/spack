@@ -1083,7 +1083,11 @@ def temp_cwd():
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
-        shutil.rmtree(tmp_dir)
+        kwargs = {}
+        if is_windows:
+            kwargs["ignore_errors"] = False
+            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
+        shutil.rmtree(tmp_dir, **kwargs)
 
 
 @contextmanager
