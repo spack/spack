@@ -1,0 +1,20 @@
+--- a/src/libscotch/CMakeLists.txt
++++ b/src/libscotch/CMakeLists.txt
+@@ -508,7 +508,7 @@ add_library(scotch
+ set_target_properties(scotch PROPERTIES VERSION
+   ${SCOTCH_VERSION}.${SCOTCH_RELEASE}.${SCOTCH_PATCHLEVEL})
+ add_dependencies(scotch parser_yy_c parser_ll_c)
+-target_link_libraries(scotch PUBLIC m)
++target_link_libraries(scotch PUBLIC m scotcherr)
+ target_include_directories(scotch PUBLIC
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+@@ -748,7 +748,7 @@ if(BUILD_PTSCOTCH)
+   set_target_properties(ptscotch PROPERTIES
+     VERSION ${SCOTCH_VERSION}.${SCOTCH_RELEASE}.${SCOTCH_PATCHLEVEL}
+     COMPILE_FLAGS -DSCOTCH_PTSCOTCH)
+-  target_link_libraries(ptscotch PUBLIC scotch MPI::MPI_C)
++  target_link_libraries(ptscotch PUBLIC ptscotcherr scotch MPI::MPI_C)
+   target_include_directories(ptscotch PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>

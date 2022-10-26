@@ -44,6 +44,12 @@ class Scotch(CMakePackage):
         "metis", default=False, description="Expose vendored METIS/ParMETIS libraries and wrappers"
     )
     variant("int64", default=False, description="Use int64_t for SCOTCH_Num typedef")
+    variant(
+        "link_error_lib",
+        default=False,
+        when="@7.0.1",
+        description="Link error handling library to libscotch/libptscotch",
+    )
 
     # Does not build with flex 2.6.[23]
     depends_on("flex@:2.6.1,2.6.4:", type="build")
@@ -57,6 +63,7 @@ class Scotch(CMakePackage):
     patch("metis-headers-6.0.4.patch", when="@6.0.4")
 
     patch("libscotchmetis-return-6.0.5a.patch", when="@6.0.5a")
+    patch("libscotch-scotcherr-link-7.0.1.patch", when="@7.0.1 +link_error_lib")
 
     # Vendored dependency of METIS/ParMETIS conflicts with standard
     # installations
