@@ -36,6 +36,8 @@ class Botan(MakefilePackage):
 
     variant("doc", default=False, description="Build documentation")
 
+    executables = ["^botan$"]
+
     depends_on("python", type="build")
     depends_on("py-sphinx@1.2:", type="build", when="+doc")
 
@@ -51,3 +53,8 @@ class Botan(MakefilePackage):
         else:
             args.append("--without-documentation")
         return args
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        return output
