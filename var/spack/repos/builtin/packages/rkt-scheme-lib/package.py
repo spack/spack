@@ -17,4 +17,3 @@ class RktSchemeLib(RacketPackage):
     depends_on("rkt-base@8.3", type=("build", "run"), when="@8.3")
 
     racket_name = "scheme-lib"
-    pkgs = True

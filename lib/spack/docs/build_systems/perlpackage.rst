@@ -5,9 +5,9 @@
 
 .. _perlpackage:
 
------------
-PerlPackage
------------
+----
+Perl
+----
 
 Much like Octave, Perl has its own language-specific
 build system.
@@ -16,7 +16,7 @@ build system.
 Phases
 ^^^^^^
 
-The ``PerlPackage`` base class comes with 3 phases that can be overridden:
+The ``PerlBuilder`` and ``PerlPackage`` base classes come with 3 phases that can be overridden:
 
 #. ``configure`` - configure the package
 #. ``build`` - build the package

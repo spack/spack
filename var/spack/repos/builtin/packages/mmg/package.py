@@ -5,6 +5,7 @@
 
 import os
 
+import spack.build_systems.cmake
 from spack.package import *
 from spack.util.executable import which
 
@@ -43,24 +44,22 @@ class Mmg(CMakePackage):
     depends_on("doxygen", when="+doc")
     depends_on("vtk", when="+vtk")
 
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        args = []
-
-        args.append(self.define_from_variant("USE_SCOTCH", "scotch"))
-        args.append(self.define_from_variant("USE_VTK", "vtk"))
-
-        if "+shared" in self.spec:
-            args.append("-DLIBMMG3D_SHARED=ON")
-            args.append("-DLIBMMG2D_SHARED=ON")
-            args.append("-DLIBMMGS_SHARED=ON")
-            args.append("-DLIBMMG_SHARED=ON")
-        else:
-            args.append("-DLIBMMG3D_STATIC=ON")
-            args.append("-DLIBMMG2D_STATIC=ON")
-            args.append("-DLIBMMGS_STATIC=ON")
-            args.append("-DLIBMMG_STATIC=ON")
-
-        return args
+        shared_active = self.spec.satisfies("+shared")
+        return [
+            self.define_from_variant("USE_SCOTCH", "scotch"),
+            self.define_from_variant("USE_VTK", "vtk"),
+            self.define("LIBMMG3D_SHARED", shared_active),
+            self.define("LIBMMG2D_SHARED", shared_active),
+            self.define("LIBMMGS_SHARED", shared_active),
+            self.define("LIBMMG_SHARED", shared_active),
+            self.define("LIBMMG3D_STATIC", not shared_active),
+            self.define("LIBMMG2D_STATIC", not shared_active),
+            self.define("LIBMMGS_STATIC", not shared_active),
+            self.define("LIBMMG_STATIC", not shared_active),
+        ]
 
     # parmmg requires this for its build
     @run_after("install")

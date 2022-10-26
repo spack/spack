@@ -237,8 +237,7 @@ def test_test_list_all(mock_packages):
             "simple-standalone-test",
             "test-error",
             "test-fail",
-            "test-build-callbacks",
-            "test-install-callbacks",
+            "fail-test-audit",
         ]
     )
 
