@@ -15,6 +15,7 @@ import spack.binary_distribution as bindist
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
+import spack.dependency as dep
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.mirror
@@ -29,11 +30,24 @@ from spack.cmd import display_specs
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_specfiles
 from spack.stage import Stage
+from spack.util.pattern import Args
 from spack.util.string import plural
 
 description = "create, download and install binary packages"
 section = "packaging"
 level = "long"
+
+
+@arguments.arg
+def deptype_default_default_deptype():
+    return Args(
+        "--deptype",
+        action=arguments.DeptypeAction,
+        metavar="deptype",
+        default=dep.default_deptype,
+        help="comma-separated list of deptypes to traverse\ndefault=%s"
+        % ",".join(dep.default_deptype),
+    )
 
 
 def setup_parser(subparser):
@@ -110,7 +124,7 @@ def setup_parser(subparser):
             " or only the dependencies"
         ),
     )
-    arguments.add_common_arguments(create, ["specs"])
+    arguments.add_common_arguments(create, ["specs", "deptype_default_default_deptype"])
     create.set_defaults(func=create_fn)
 
     install = subparsers.add_parser("install", help=install_fn.__doc__)
@@ -369,6 +383,7 @@ def create_fn(args):
     specs_kwargs = {
         "include_root": "package" in args.things_to_install,
         "include_dependencies": "dependencies" in args.things_to_install,
+        "deptype": args.deptype,
     }
     kwargs = {
         "key": args.key,
