@@ -178,9 +178,7 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
         ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
     ],
 )
-def test_repository_construction_doesnt_use_globals(
-    nullify_globals, repo_paths, namespaces
-):
+def test_repository_construction_doesnt_use_globals(nullify_globals, repo_paths, namespaces):
     repo_path = spack.repo.RepoPath(*repo_paths)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
