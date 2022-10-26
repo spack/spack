@@ -866,13 +866,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
-            if "^hipsparse" in spec: # hipsparse is needed @4.4.0:+rocm
+            if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
                 # Note: MFEM's defaults.mk want to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
                 # rocsparse (which is a dependency of hipsparse).
                 options += [
                     "HIP_DIR=%s" % spec["rocsparse"].prefix,
-                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs)
+                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs),
                 ]
 
         if "+occa" in spec:
