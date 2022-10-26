@@ -238,6 +238,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     conflicts("^mpich@4:", when="@:4.3+mpi")
 
     depends_on("mpi", when="+mpi")
+    depends_on("hipsparse", when="@4.4.0:+rocm")
     depends_on("hypre@2.10.0:2.13", when="@:3.3+mpi")
     depends_on("hypre@:2.20.0", when="@3.4:4.2+mpi")
     depends_on("hypre@:2.23.0", when="@4.3.0+mpi")
@@ -647,9 +648,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "+cuda" in hypre:
                 hypre_gpu_libs = " -lcusparse -lcurand"
             elif "+rocm" in hypre:
-                hypre_gpu_libs = " " + ld_flags_from_dirs(
-                    [env["ROCM_PATH"] + "/lib"], ["rocsparse", "rocrand"]
-                )
+                hypre_rocm_libs = LibraryList([])
+                if "^rocsparse" in hypre:
+                    hypre_rocm_libs += hypre["rocsparse"].libs
+                if "^rocrand" in hypre:
+                    hypre_rocm_libs += hypre["rocrand"].libs
+                hypre_gpu_libs = " " + ld_flags_from_library_list(hypre_rocm_libs)
             options += [
                 "HYPRE_OPT=-I%s" % hypre.prefix.include,
                 "HYPRE_LIB=%s%s" % (ld_flags_from_library_list(all_hypre_libs), hypre_gpu_libs),
@@ -862,6 +866,14 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            if "^hipsparse" in spec: # hipsparse is needed @4.4.0:+rocm
+                # Note: MFEM's defaults.mk want to find librocsparse.* in
+                # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
+                # rocsparse (which is a dependency of hipsparse).
+                options += [
+                    "HIP_DIR=%s" % spec["rocsparse"].prefix,
+                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs)
+                ]
 
         if "+occa" in spec:
             options += [
