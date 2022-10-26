@@ -62,19 +62,20 @@ class ReverseVisitor(object):
 class CoverNodesVisitor(object):
     """A visitor that traverses each node once."""
 
-    def __init__(self, visitor):
+    def __init__(self, visitor, key=id, visited=None):
         self.visitor = visitor
-        self.visited = set()
+        self.key = key
+        self.visited = set() if visited is None else visited
 
     def accept(self, node):
         # Covering nodes means: visit nodes once and only once.
-        dag_hash = node.edge.spec.dag_hash()
+        key = self.key(node.edge.spec)
 
-        if dag_hash in self.visited:
+        if key in self.visited:
             return False
 
         accept = self.visitor.accept(node)
-        self.visited.add(dag_hash)
+        self.visited.add(key)
         return accept
 
     def neighbors(self, node):
@@ -84,25 +85,26 @@ class CoverNodesVisitor(object):
 class CoverEdgesVisitor(object):
     """A visitor that traverses all edges once."""
 
-    def __init__(self, visitor):
+    def __init__(self, visitor, key=id, visited=None):
         self.visitor = visitor
-        self.visited = set()
+        self.visited = set() if visited is None else visited
+        self.key = key
 
     def accept(self, node):
         return self.visitor.accept(node)
 
     def neighbors(self, node):
         # Covering edges means: drop dependencies of visited nodes.
-        dag_hash = node.edge.spec.dag_hash()
+        key = self.key(node.edge.spec)
 
-        if dag_hash in self.visited:
+        if key in self.visited:
             return []
 
-        self.visited.add(dag_hash)
+        self.visited.add(key)
         return self.visitor.neighbors(node)
 
 
-def get_visitor_from_args(cover, direction, deptype, visitor=None):
+def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visitor=None):
     """
     Create a visitor object from keyword arguments, which simplifies the API
     a bit, as cover, direction, deptype kwargs have been around for long in Spack.
@@ -120,6 +122,8 @@ def get_visitor_from_args(cover, direction, deptype, visitor=None):
             of this spec's children.  If ``parents``, traverses upwards in the DAG
             towards the root.
         deptype (str or tuple): allowed dependency types
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow (when using cover=nodes/edges)
         visitor: An initial visitor that is used for composition.
 
     Returns:
@@ -127,37 +131,87 @@ def get_visitor_from_args(cover, direction, deptype, visitor=None):
     """
     visitor = visitor or BaseVisitor(deptype)
     if cover == "nodes":
-        visitor = CoverNodesVisitor(visitor)
+        visitor = CoverNodesVisitor(visitor, key, visited)
     elif cover == "edges":
-        visitor = CoverEdgesVisitor(visitor)
+        visitor = CoverEdgesVisitor(visitor, key, visited)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
     return visitor
 
 
-def init_queue(specs):
-    """Initialize a queue for breadth-first traversal for given root specs.
-
-    Returns:
-        list: A list of edges from "nowhere" to the given specs at depth 0.
-    """
+def root_specs(specs):
+    """Initialize a list of edges from an imaginary root node to the root specs."""
     return [
         EdgeAndDepth(edge=spack.spec.DependencySpec(parent=None, spec=s, deptypes=()), depth=0)
         for s in specs
     ]
 
 
-def traverse_breadth_first_edges(
-    specs, root=True, cover="nodes", direction="children", deptype="all", depth=False
+def traverse_depth_first_edges_generator(nodes, visitor, post_order=False, root=True, depth=False):
+    # This is a somewhat non-standard implementation, but the reason to start with
+    # edges is that we don't have to deal with an artificial root node when doing DFS
+    # on multiple (root) specs.
+    for node in nodes:
+        if not visitor.accept(node):
+            continue
+
+        yield_me = root or node.depth > 0
+
+        # Pre
+        if yield_me and not post_order:
+            yield (node.depth, node.edge) if depth else node.edge
+
+        neighbors = [
+            EdgeAndDepth(edge=edge, depth=node.depth + 1) for edge in visitor.neighbors(node)
+        ]
+
+        # This extra branch is just for efficiency.
+        if len(neighbors) >= 0:
+            for item in traverse_depth_first_edges_generator(
+                neighbors, visitor, post_order, root, depth
+            ):
+                yield item
+
+        # Post
+        if yield_me and post_order:
+            yield (node.depth, node.edge) if depth else node.edge
+
+
+def traverse_breadth_first_edges_generator(queue, visitor, root=True, depth=False):
+    while len(queue) > 0:
+        node = queue.pop(0)
+
+        # If the visitor doesn't accept the node, we don't yield it nor follow its edges.
+        if not visitor.accept(node):
+            continue
+
+        if root or node.depth > 0:
+            yield (node.depth, node.edge) if depth else node.edge
+
+        for edge in visitor.neighbors(node):
+            queue.append(EdgeAndDepth(edge, node.depth + 1))
+
+
+def traverse_edges(
+    specs,
+    root=True,
+    order="pre",
+    cover="nodes",
+    direction="children",
+    deptype="all",
+    depth=False,
+    key=id,
+    visited=None,
 ):
     """
-    Generator that yields edges from the DAG in breadth-first order, starting
-    from a list of root specs.
+    Generator that yields edges from the DAG, starting from a list of root specs.
 
     Arguments:
 
         specs (list): List of root specs (considered to be depth 0)
         root (bool): Yield the root nodes themselves
+        order (str): What order of traversal to use in the DAG. For depth-first
+            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
@@ -173,43 +227,47 @@ def traverse_breadth_first_edges(
         depth (bool): When ``False``, yield just edges. When ``True`` yield
             the tuple (depth, edge), where depth corresponds to the depth
             at which edge.spec was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow
 
     Yields:
         By default DependencySpec, or a tuple of depth and DependencySpec if depth
         was set to ``True``.
     """
-    # Initialize the queue with None -> Spec edges, where None indicates it's
-    # the root.
-    queue = init_queue(specs)
-    visitor = get_visitor_from_args(cover, direction, deptype)
+    root_edges = root_specs(specs)
+    visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
 
-    while len(queue) > 0:
-        node = queue.pop(0)
+    if order == "pre" or order == "post":
+        post_order = order == "post"
+        generator = traverse_depth_first_edges_generator(
+            root_edges, visitor, post_order, root, depth
+        )
+    else:
+        generator = traverse_breadth_first_edges_generator(root_edges, visitor, root, depth)
 
-        # If the visitor doesn't accept the node, we don't yield it nor follow its edges.
-        if not visitor.accept(node):
-            continue
-
-        if root or node.depth > 0:
-            if depth:
-                yield node.depth, node.edge
-            else:
-                yield node.edge
-
-        for edge in visitor.neighbors(node):
-            queue.append(EdgeAndDepth(edge, node.depth + 1))
+    for item in generator:
+        yield item
 
 
-def traverse_breadth_first_nodes(
-    specs, root=True, cover="nodes", direction="children", deptype="all", depth=False
+def traverse_nodes(
+    specs,
+    root=True,
+    order="pre",
+    cover="nodes",
+    direction="children",
+    deptype="all",
+    depth=False,
+    key=id,
+    visited=None,
 ):
     """
-    Generator that yields specs from the DAG in breadth-first order, starting
-    from a list of root specs.
+    Generator that yields specs from the DAG, starting from a list of root specs.
 
     Arguments:
         specs (list): List of root specs (considered to be depth 0)
         root (bool): Yield the root nodes themselves
+        order (str): What order of traversal to use in the DAG. For depth-first
+            search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
@@ -225,15 +283,14 @@ def traverse_breadth_first_nodes(
         depth (bool): When ``False``, yield just edges. When ``True`` yield
             the tuple ``(depth, edge)``, where depth corresponds to the depth
             at which ``edge.spec`` was discovered.
+        key: function that takes a spec and outputs a key for uniqueness test.
+        visited (set or None): a set of nodes not to follow
 
     Yields:
         By default Spec, or a tuple of depth and Spec if depth was set to ``True``.
     """
-    for item in traverse_breadth_first_edges(specs, root, cover, direction, deptype, depth):
-        if depth:
-            yield item[0], item[1].spec
-        else:
-            yield item.spec
+    for item in traverse_edges(specs, root, order, cover, direction, deptype, depth, key, visited):
+        yield (item[0], item[1].spec) if depth else item.spec
 
 
 def traverse_breadth_first_with_visitor(specs, visitor):
@@ -244,7 +301,7 @@ def traverse_breadth_first_with_visitor(specs, visitor):
         visitor: object that implements accept and neighbors interface, see
             for example BaseVisitor.
     """
-    queue = init_queue(specs)
+    queue = root_specs(specs)
     while len(queue) > 0:
         node = queue.pop(0)
 
@@ -259,7 +316,7 @@ def traverse_breadth_first_with_visitor(specs, visitor):
 # Breadth first traversal to trees
 
 
-def breadth_first_to_tree_edges(roots, deptype="all"):
+def breadth_first_to_tree_edges(roots, deptype="all", key=id):
     """This produces an adjacency list (with edges) and a map of parents.
     There may be nodes that are reached through multiple edges. To print as
     a tree, one should use the parents dict to verify if the path leading to
@@ -268,9 +325,9 @@ def breadth_first_to_tree_edges(roots, deptype="all"):
     edges = defaultdict(list)
     parents = dict()
 
-    for edge in traverse_breadth_first_edges(roots, cover="edges", deptype=deptype):
-        parent_id = None if edge.parent is None else edge.parent.dag_hash()
-        child_id = edge.spec.dag_hash()
+    for edge in traverse_edges(roots, order="breadth", cover="edges", deptype=deptype, key=key):
+        parent_id = None if edge.parent is None else key(edge.parent)
+        child_id = key(edge.spec)
         edges[parent_id].append(edge)
         if child_id not in parents:
             parents[child_id] = parent_id
@@ -278,48 +335,48 @@ def breadth_first_to_tree_edges(roots, deptype="all"):
     return edges, parents
 
 
-def breadth_first_to_tree_nodes(roots, deptype="all"):
+def breadth_first_to_tree_nodes(roots, deptype="all", key=id):
     """This produces a list of edges that forms a tree; every node has no more
     that one incoming edge."""
     edges = defaultdict(list)
 
-    for edge in traverse_breadth_first_edges(roots, cover="nodes", deptype=deptype):
-        parent_id = None if edge.parent is None else edge.parent.dag_hash()
+    for edge in traverse_edges(roots, order="breadth", cover="nodes", deptype=deptype, key=key):
+        parent_id = None if edge.parent is None else key(edge.parent)
         edges[parent_id].append(edge)
 
     return edges
 
 
-def traverse_breadth_first_tree_edges(parent_id, edges, parents, depth=0):
+def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0):
     """Do a depth-first search on edges generated by bread-first traversal,
     which can be used to produce a tree."""
     for edge in edges[parent_id]:
         yield (depth, edge)
 
-        child_id = edge.spec.dag_hash()
+        child_id = key(edge.spec)
 
         # Don't follow further if we're not the parent
         if parents[child_id] != parent_id:
             continue
 
         # yield from ... in Python 3.
-        for item in traverse_breadth_first_tree_edges(child_id, edges, parents, depth + 1):
+        for item in traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1):
             yield item
 
 
-def traverse_breadth_first_tree_nodes(parent_id, edges, depth=0):
+def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
     for edge in edges[parent_id]:
         yield (depth, edge)
-        for item in traverse_breadth_first_tree_nodes(edge.spec.dag_hash(), edges, depth + 1):
+        for item in traverse_breadth_first_tree_nodes(key(edge.spec), edges, key, depth + 1):
             yield item
 
 
-def traverse_breadth_first_tree(specs, cover="nodes", deptype="all"):
+def traverse_breadth_first_tree(specs, cover="nodes", deptype="all", key=id):
     if cover == "edges":
-        edges, parents = breadth_first_to_tree_edges(specs, deptype)
+        edges, parents = breadth_first_to_tree_edges(specs, deptype, key)
         generator = traverse_breadth_first_tree_edges(None, edges, parents)
     elif cover == "nodes":
-        edges = breadth_first_to_tree_nodes(specs, deptype)
+        edges = breadth_first_to_tree_nodes(specs, deptype, key)
         generator = traverse_breadth_first_tree_nodes(None, edges)
     else:
         raise ValueError("cover should be nodes or edges")

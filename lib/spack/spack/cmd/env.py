@@ -728,7 +728,9 @@ def env_depfile(args):
     # edges for those specs that are installed through a binary cache.
     pkg_buildcache, dep_buildcache = args.use_buildcache
     make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
-    traverse_breadth_first_with_visitor(roots, CoverNodesVisitor(make_targets))
+    traverse_breadth_first_with_visitor(
+        roots, CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    )
 
     # Root specs without deps are the prereqs for the environment target
     root_install_targets = [get_install_target(h.dag_hash()) for h in roots]
