@@ -1068,3 +1068,38 @@ def test_adding_same_deptype_with_the_same_name_raises(
     p.add_dependency_edge(c1, deptype=c1_deptypes)
     with pytest.raises(spack.error.SpackError):
         p.add_dependency_edge(c2, deptype=c2_deptypes)
+
+
+@pytest.mark.regression("33499")
+def test_indexing_prefers_direct_or_transitive_link_deps():
+    # Test whether spec indexing prefers direct/transitive link type deps over deps of
+    # build/run/test deps, and whether it does fall back to a full dag search.
+    root = Spec("root")
+
+    # Use a and z to since we typically traverse by edges sorted alphabetically.
+    a1 = Spec("a1")
+    a2 = Spec("a2")
+    z1 = Spec("z1")
+    z2 = Spec("z2")
+
+    # Same package, different spec.
+    z3_flavor_1 = Spec("z3 +through_a1")
+    z3_flavor_2 = Spec("z3 +through_z1")
+
+    root.add_dependency_edge(a1, deptype=("build", "run", "test"))
+
+    # unique package as a dep of a build/run/test type dep.
+    a1.add_dependency_edge(a2, deptype="all")
+    a1.add_dependency_edge(z3_flavor_1, deptype="all")
+
+    # chain of link type deps root -> z1 -> z2 -> z3
+    root.add_dependency_edge(z1, deptype="link")
+    z1.add_dependency_edge(z2, deptype="link")
+    z2.add_dependency_edge(z3_flavor_2, deptype="link")
+
+    # Indexing should prefer the link-type dep.
+    assert "through_z1" in root["z3"].variants
+    assert "through_a1" in a1["z3"].variants
+
+    # Ensure that the full DAG is still searched
+    assert root["a2"]
