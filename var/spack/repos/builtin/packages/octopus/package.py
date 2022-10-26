@@ -218,7 +218,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
         return args
 
-
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def smoke_tests_after_install(self):
