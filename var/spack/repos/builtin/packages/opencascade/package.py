@@ -21,7 +21,7 @@ class Opencascade(CMakePackage):
     version(
         "7.6.3",
         extension="tar.gz",
-        sha256="e7f989d52348c3b3acb7eb4ee001bb5c2eed5250cdcceaa6ae97edc294f2cabd",
+        sha256="baae5b3a7a38825396fc45ef9d170db406339f5eeec62e21b21036afeda31200",
     )
     version(
         "7.6.0",
