@@ -45,6 +45,7 @@ spack:
       - tmp="$(mktemp -d)"; export SPACK_USER_CONFIG_PATH="$tmp"; export SPACK_USER_CACHE_PATH="$tmp"
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
