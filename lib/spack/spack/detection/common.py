@@ -228,7 +228,7 @@ def compute_windows_program_path_for_package(pkg):
     program files location, return list of best guesses
 
     Args:
-        pkg (spack.package_base.Package): package for which
+        pkg (spack.package_base.PackageBase): package for which
                            Program Files location is to be computed
     """
     if not is_windows:

@@ -17,5 +17,3 @@ class RktZoLib(RacketPackage):
     depends_on("rkt-base@8.3:", type=("build", "run"), when="@1.3")
 
     racket_name = "zo-lib"
-    pkgs = True
-    subdirectory = "pkgs/{0}".format(racket_name)
