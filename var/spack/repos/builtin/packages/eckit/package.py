@@ -156,3 +156,12 @@ class Eckit(CMakePackage):
             args.append(self.define("ENABLE_LAPACK", "linalg=lapack" in self.spec))
 
         return args
+
+    def setup_build_environment(self, env):
+        # Bug fix for macOS - cmake's find_package doesn't add "libtinfo.dylib" to the
+        # ncurses libraries, but the ncurses pkgconfig explicitly sets it. We need to
+        # add the correct spec['ncurses'].libs.ld_flags to LDFLAGS to compile eckit
+        # when the admin variant is enabled.
+        if self.spec.satisfies("platform=darwin") and self.spec.satisfies("+admin"):
+            env.append_flags("LDFLAGS", self.spec["ncurses"].libs.ld_flags)
+
