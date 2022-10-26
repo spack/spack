@@ -7,6 +7,9 @@ from collections import defaultdict
 
 import spack.spec
 
+# Export only the high-level API.
+__all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
+
 
 class EdgeAndDepth(object):
     def __init__(self, edge, depth):
@@ -371,15 +374,14 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
             yield item
 
 
-def traverse_breadth_first_tree(specs, cover="nodes", deptype="all", key=id):
-    if cover == "edges":
+def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=False):
+    # BFS only makes sense when going over edges and nodes, for paths the tree is
+    # identical to DFS, which is much more efficient then.
+    if not depth_first and cover == "edges":
         edges, parents = breadth_first_to_tree_edges(specs, deptype, key)
-        generator = traverse_breadth_first_tree_edges(None, edges, parents)
-    elif cover == "nodes":
+        return traverse_breadth_first_tree_edges(None, edges, parents)
+    elif not depth_first and cover == "nodes":
         edges = breadth_first_to_tree_nodes(specs, deptype, key)
-        generator = traverse_breadth_first_tree_nodes(None, edges)
-    else:
-        raise ValueError("cover should be nodes or edges")
+        return traverse_breadth_first_tree_nodes(None, edges)
 
-    for item in generator:
-        yield item
+    return traverse_edges(specs, order="pre", cover=cover, deptype=deptype, key=key, depth=True)

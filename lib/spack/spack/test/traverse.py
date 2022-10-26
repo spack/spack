@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.spec import Spec
-from spack.traverse import traverse_breadth_first_tree, traverse_edges, traverse_nodes
+from spack.traverse import traverse_edges, traverse_nodes, traverse_tree
 
 
 def key_by_hash(spec):
@@ -115,7 +115,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # BFS should find all nodes as direct deps
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_breadth_first_tree([s], cover="nodes")
+        for (depth, edge) in traverse_tree([s], cover="nodes", breadth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -126,7 +126,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_edges([s], order="pre", depth=True, cover="nodes")
+        for (depth, edge) in traverse_tree([s], cover="nodes", breadth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -137,7 +137,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_breadth_first_tree([s], cover="edges")
+        for (depth, edge) in traverse_tree([s], cover="edges", breadth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -150,7 +150,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # In DFS we see the chain again.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_edges([s], order="pre", depth=True, cover="edges")
+        for (depth, edge) in traverse_tree([s], cover="edges", breadth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),

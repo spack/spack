@@ -4496,14 +4496,9 @@ class Spec(object):
 
         out = ""
 
-        if breadth_first and cover in ("nodes", "edges"):
-            generator = spack.traverse.traverse_breadth_first_tree(
-                [self], cover=cover, deptype=deptypes
-            )
-        else:
-            generator = self.traverse_edges(order="pre", cover=cover, depth=True, deptype=deptypes)
-
-        for d, dep_spec in generator:
+        for d, dep_spec in spack.traverse.traverse_tree(
+            [self], cover=cover, deptype=deptypes, depth_first=not breadth_first
+        ):
             node = dep_spec.spec
 
             if prefix is not None:
