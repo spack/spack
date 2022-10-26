@@ -65,6 +65,11 @@ class Clhep(CMakePackage):
     patch("clhep-cms.patch", when="+cms", level=0)
 
     def patch(self):
+        # Patched line removed since 2.3.2.2
+        # https://gitlab.cern.ch/CLHEP/CLHEP/-/commit/5da6830d69c71dc178632f7f5121a3a00e379f94
+        if self.spec.satisfies("@2.3.2.2:"):
+            return
+
         filter_file(
             "SET CMP0042 OLD",
             "SET CMP0042 NEW",
