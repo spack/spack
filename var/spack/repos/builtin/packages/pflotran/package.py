@@ -38,3 +38,8 @@ class Pflotran(AutotoolsPackage):
     @property
     def parallel(self):
         return self.spec.satisfies("@xsdk-0.4.0:")
+
+    def flag_handler(self, name, flags):
+        if "%gcc@10:" in self.spec and name == "fflags":
+            flags.append("-fallow-argument-mismatch")
+        return flags, None, None
