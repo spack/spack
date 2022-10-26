@@ -1,0 +1,34 @@
+# patch method copied from bioconda recipe
+# github.com/bioconda/bioconda-recipes/blob/master/recipes/medaka/build.sh
+diff -Naur spack-src/setup.py spack-src.patched/setup.py
+--- spack-src/setup.py	2022-10-26 16:10:27.824793639 -0500
++++ spack-src.patched/setup.py	2022-10-26 16:16:57.815324146 -0500
+@@ -144,6 +144,6 @@
+             'scripts/mini_align', 'scripts/hdf2tf.py'],
+         zip_safe=False,
+         cmdclass={
+-            'build_ext': HTSBuild
++            
+         },
+     )
+diff -Naur spack-src/build.py spack-src.patched/build.py
+--- spack-src/build.py	2022-10-26 16:15:35.891735658 -0500
++++ spack-src.patched/build.py	2022-10-26 16:18:42.468243578 -0500
+@@ -12,7 +12,7 @@
+ deflatever = "1.10"
+ deflate_dir = os.path.join(dir_path, 'submodules', 'libdeflate-{}'.format(deflatever))
+ 
+-libraries=['m', 'z', 'lzma', 'bz2', 'pthread', 'curl', 'crypto']
++libraries=["hts",'m', 'z', 'lzma', 'bz2', 'pthread', 'curl', 'crypto']
+ library_dirs=[htslib_dir]
+ if os.getenv('WITHDEFLATE') == "1":
+     print("Using deflate")
+@@ -52,7 +52,7 @@
+             'fastrle.c', 'medaka_trimbam.c', 'medaka_pytrimbam.c',
+             'medaka_rnn_variants.c')],
+     extra_compile_args=extra_compile_args,
+-    extra_objects=['libhts.a']
++    
+ )
+ 
+ cdef = [
