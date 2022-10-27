@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from six import string_types, text_type
+from six.moves import shlex_quote
 
 import llnl.util.tty as tty
 
@@ -333,7 +334,7 @@ def which(*args, **kwargs):
         Executable: The first executable that is found in the path
     """
     exe = which_string(*args, **kwargs)
-    return Executable(exe) if exe else None
+    return Executable(shlex_quote(exe)) if exe else None
 
 
 class ProcessError(spack.error.SpackError):
