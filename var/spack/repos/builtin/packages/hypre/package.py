@@ -209,7 +209,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-umpire-host")
             else:
                 configure_args.append("--with-umpire")
-            if (("+cuda" in spec or "+rocm" in spec) and "--enable-device-memory-pool" in configure_args):
+            if (
+                "+cuda" in spec or "+rocm" in spec
+            ) and "--enable-device-memory-pool" in configure_args:
                 configure_args.remove("--enable-device-memory-pool")
 
         configure_args.extend(self.enable_or_disable("debug"))
