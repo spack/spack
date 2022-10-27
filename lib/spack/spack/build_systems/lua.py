@@ -20,6 +20,9 @@ class LuaPackage(spack.package_base.PackageBase):
     #: system base class
     build_system_class = "LuaPackage"
 
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "lua"
+
     list_depth = 1  # LuaRocks requires at least one level of spidering to find versions
 
     build_system("lua")
