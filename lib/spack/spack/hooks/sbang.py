@@ -186,44 +186,38 @@ def install_sbang():
     ``sbang`` here ensures that users can access the script and that
     ``sbang`` itself is in a short path.
     """
-    # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
-        return
 
-    # make $install_tree/bin
+    all = spack.spec.Spec("all")
+    group_name = spack.package_prefs.get_package_group(all)
+    config_mode = spack.package_prefs.get_package_dir_permissions(all)
+    group_id = grp.getgrnam(group_name).gr_gid if group_name else None
+
+    # First setup the bin dir correctly.
     sbang_bin_dir = os.path.dirname(sbang_path)
-    fs.mkdirp(sbang_bin_dir)
+    if not os.path.isdir(sbang_bin_dir):
+        fs.mkdirp(sbang_bin_dir)
 
-    # get permissions for bin dir from configuration files
-    group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all"))
-    config_mode = spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all"))
-
-    if group_name:
-        os.chmod(sbang_bin_dir, config_mode)  # Use package directory permissions
+    # Set group and ownership like we do on package directories
+    if group_id:
+        os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, group_id)
+        os.chmod(sbang_bin_dir, config_mode)
     else:
         fs.set_install_permissions(sbang_bin_dir)
 
-    # set group on sbang_bin_dir if not already set (only if set in configuration)
-    # TODO: after we drop python2 support, use shutil.chown to avoid gid lookups that
-    # can fail for remote groups
-    if group_name and os.stat(sbang_bin_dir).st_gid != grp.getgrnam(group_name).gr_gid:
-        os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
+    # Then check if we need to install sbang itself.
+    try:
+        already_installed = filecmp.cmp(spack.paths.sbang_script, sbang_path)
+    except (IOError, OSError):
+        already_installed = False
 
-    # copy over the fresh copy of `sbang`
-    sbang_tmp_path = os.path.join(
-        os.path.dirname(sbang_path),
-        ".%s.tmp" % os.path.basename(sbang_path),
-    )
-    shutil.copy(spack.paths.sbang_script, sbang_tmp_path)
+    if not already_installed:
+        shutil.copy(spack.paths.sbang_script, sbang_path)
 
-    # set permissions on `sbang` (including group if set in configuration)
-    os.chmod(sbang_tmp_path, config_mode)
-    if group_name:
-        os.chown(sbang_tmp_path, os.stat(sbang_tmp_path).st_uid, grp.getgrnam(group_name).gr_gid)
-
-    # Finally, move the new `sbang` into place atomically
-    os.rename(sbang_tmp_path, sbang_path)
+    # Set permissions on `sbang` (including group if set in configuration)
+    os.chmod(sbang_path, config_mode)
+    if group_id:
+        os.chown(sbang_path, os.stat(sbang_path).st_uid, group_id)
 
 
 def post_install(spec):
