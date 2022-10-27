@@ -129,7 +129,7 @@ class Curl(AutotoolsPackage):
         for exe in exes:
             variants = ""
             curl = Executable(exe)
-            output = curl("--version", output=str, error="str")
+            output = curl("--version", output=str, error=str)
             if "nghttp2" in output:
                 variants += "+nghttp2"
             protocols_match = re.search(r"Protocols: (.*)\n", output)
