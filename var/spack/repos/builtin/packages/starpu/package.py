@@ -80,6 +80,7 @@ class Starpu(AutotoolsPackage):
     depends_on("mpi", when="+mpi~simgrid")
     depends_on("cuda", when="+cuda~simgrid")
     depends_on("fxt", when="+fxt")
+    depends_on("fxt+static", when="+fxt+simgrid+mpi")
     depends_on("simgrid", when="+simgrid")
     depends_on("simgrid+smpi", when="+simgrid+mpi")
     depends_on("simgrid+mc", when="+simgridmc")
