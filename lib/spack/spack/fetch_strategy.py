@@ -866,7 +866,11 @@ class GitFetchStrategy(VCSFetchStrategy):
                 if self.stage:
                     self.stage.srcdir = repo_name
                 shutil.copytree(repo_name, dest, symlinks=True)
-                shutil.rmtree(repo_name, ignore_errors=False, onerror=fs.readonly_file_handler(ignore_errors=True))
+                shutil.rmtree(
+                    repo_name,
+                    ignore_errors=False,
+                    onerror=fs.readonly_file_handler(ignore_errors=True),
+                )
 
             with working_dir(dest):
                 checkout_args = ["checkout", commit]
