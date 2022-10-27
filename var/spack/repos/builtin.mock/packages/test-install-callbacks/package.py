@@ -2,9 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems._checks as checks
+import spack.build_systems.generic
 from spack.package import *
-from spack.package_base import run_after
 
 
 class TestInstallCallbacks(Package):
@@ -15,13 +15,11 @@ class TestInstallCallbacks(Package):
 
     version("1.0", "0123456789abcdef0123456789abcdef")
 
+
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
     # Include an undefined callback method
-    install_time_test_callbacks = ["undefined-install-test", "test"]
-    run_after("install")(Package._run_default_install_time_test_callbacks)
+    install_time_test_callbacks = ["undefined-install-test"]
+    run_after("install")(checks.execute_install_time_tests)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         mkdirp(prefix.bin)
-
-    def test(self):
-        print("test: test-install-callbacks")
-        print("PASSED")
