@@ -333,9 +333,20 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hwloc", when="+hwloc")
     depends_on("kokkos", when="+kokkos")
     depends_on("kokkos-kernels", when="+kokkos")
-    depends_on("kokkos+cuda+wrapper+cuda_lambda", when="+kokkos +cuda")
-    depends_on("kokkos-kernels+cuda", when="+kokkos +cuda")
-    depends_on("kokkos+rocm", when="+kokkos +rocm")
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos+cuda+cuda_lambda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "kokkos-kernels+cuda cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+    for rocm_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % rocm_arch,
+            when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
+        )
 
     phases = ["configure", "build", "install"]
 
