@@ -88,7 +88,7 @@ for your shell:
    $ . spack/share/spack/setup-env.fish
 
    # For nix
-   $ cd spack/share/spack; nix-shell
+   $ nix-shell spack/share/shell.nix
 
 That's it! You're ready to use Spack.
 

@@ -17,7 +17,7 @@ with pkgs; stdenv.mkDerivation {
 
   name = "spack-shell";
   shellHook = ''
-    source ./setup-env.sh
+    source ${toString ./.}/setup-env.sh
     spack external find openjdk
     spack external find bazel
   '';
