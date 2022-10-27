@@ -74,6 +74,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant("fortran", default=True, description="Enables fortran bindings")
     variant("gptune", default=False, description="Add the GPTune hookup code")
     variant("umpire", default=False, description="Enable Umpire support")
+    variant("gpu-aware-mpi", default=False, description="Use GPU-aware MPI")
+    variant("rocblas", default=False, description="Use rocBLAS")
+    variant("cublas", default=False, description="Use cuBLAS")
 
     # Patch to add gptune hookup codes
     patch("ij_gptune.patch", when="+gptune@2.19.0")
@@ -112,6 +115,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="+int64")
     conflicts("+rocm", when="+int64")
     conflicts("+rocm", when="@:2.20")
+    conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
+    conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
     conflicts("+unified-memory", when="~cuda~rocm")
     conflicts("+gptune", when="~mpi")
     # Umpire device allocator exports device code, which requires static libs
@@ -204,6 +209,8 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
                 configure_args.append("--with-umpire-host")
             else:
                 configure_args.append("--with-umpire")
+            if (("+cuda" in spec or "+rocm" in spec) and "--enable-device-memory-pool" in configure_args):
+                configure_args.remove("--enable-device-memory-pool")
 
         configure_args.extend(self.enable_or_disable("debug"))
 
@@ -266,6 +273,15 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         if "+unified-memory" in spec:
             configure_args.append("--enable-unified-memory")
+
+        if "+gpu-aware-mpi" in spec:
+            configure_args.append("--enable-gpu-aware-mpi")
+
+        if "+rocblas" in spec:
+            configure_args.append("--enable-rocblas")
+
+        if "+cublas" in spec:
+            configure_args.append("--enable-cublas")
 
         configure_args.extend(self.enable_or_disable("fortran"))
 
