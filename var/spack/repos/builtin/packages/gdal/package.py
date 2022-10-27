@@ -228,7 +228,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     )
 
     with when("build_system=cmake"):
-        generator = "Ninja"
         depends_on("cmake@3.9:", type="build")
         depends_on("ninja", type="build")
 
