@@ -1,0 +1,13 @@
+diff --git a/include/cppunit/extensions/TestSuiteBuilderContext.h b/include/cppunit/extensions/TestSuiteBuilderContext.h
+index 12d157e..ad1a34f 100644
+--- a/include/cppunit/extensions/TestSuiteBuilderContext.h
++++ b/include/cppunit/extensions/TestSuiteBuilderContext.h
+@@ -42,8 +42,6 @@ public:
+ 
+   TestSuiteBuilderContextBase(TestSuiteBuilderContextBase const &) = default;
+   TestSuiteBuilderContextBase(TestSuiteBuilderContextBase &&) = default;
+-  TestSuiteBuilderContextBase & operator =(TestSuiteBuilderContextBase const &) = default;
+-  TestSuiteBuilderContextBase & operator =(TestSuiteBuilderContextBase &&) = default;
+ 
+   /*! \brief Adds a test to the fixture suite.
+    *
