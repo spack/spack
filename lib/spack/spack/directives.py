@@ -17,6 +17,7 @@ definition to modify the package, for example:
 
 The available directives are:
 
+  * ``build_system``
   * ``conflicts``
   * ``depends_on``
   * ``extends``
@@ -59,13 +60,15 @@ __all__ = [
     "patch",
     "variant",
     "resource",
+    "build_system",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ["patches", "dev_path"]
 
-#: Names of possible directives. This list is populated elsewhere in the file.
-directive_names = []
+#: Names of possible directives. This list is mostly populated using the @directive decorator.
+#: Some directives leverage others and in that case are not automatically added.
+directive_names = ["build_system"]
 
 _patch_order_index = 0
 
@@ -756,6 +759,17 @@ def resource(**kwargs):
         resources.append(Resource(name, fetcher, destination, placement))
 
     return _execute_resource
+
+
+def build_system(*values, **kwargs):
+    default = kwargs.get("default", None) or values[0]
+    return variant(
+        "build_system",
+        values=tuple(values),
+        description="Build systems supported by the package",
+        default=default,
+        multi=False,
+    )
 
 
 class DirectiveError(spack.error.SpackError):
