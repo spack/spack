@@ -157,9 +157,13 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             "-DH2_ENABLE_DISTCONV_LEGACY=%s" % ("+distconv" in spec),
             "-DH2_ENABLE_OPENMP=%s" % ("+openmp" in spec),
             "-DH2_ENABLE_FP16=%s" % ("+half" in spec),
-            "-DH2_ENABLE_ROCM=%s" % ("+rocm" in spec),
             "-DH2_DEVELOPER_BUILD=%s" % ("+developer" in spec),
         ]
+
+        if spec.version < Version("0.3"):
+            args.append("-DH2_ENABLE_HIP_ROCM=%s" % ("+rocm" in spec))
+        else:
+            args.append("-DH2_ENABLE_ROCM=%s" % ("+rocm" in spec))
 
         if not spec.satisfies("^cmake@3.23.0"):
             # There is a bug with using Ninja generator in this version
