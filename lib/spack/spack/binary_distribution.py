@@ -23,7 +23,7 @@ from six.moves.urllib.error import HTTPError, URLError
 import llnl.util.filesystem as fsys
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import BaseDirectoryVisitor, mkdirp, visit_directory_tree
 
 import spack.cmd
 import spack.config as config
@@ -42,6 +42,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
+from spack.relocate import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
 
@@ -106,7 +107,8 @@ class BinaryCacheIndex(object):
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
-        # mapping from mirror urls to the time.time() of the last index fetch.
+        # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
+        # whether the fetch succeeded or not.
         self._last_fetch_times = {}
 
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
@@ -345,21 +347,25 @@ class BinaryCacheIndex(object):
                     with_cooldown
                     and ttl > 0
                     and cached_mirror_url in self._last_fetch_times
-                    and now - self._last_fetch_times[cached_mirror_url] < ttl
+                    and now - self._last_fetch_times[cached_mirror_url][0] < ttl
                 ):
-                    # The fetch worked last time, so don't error
-                    all_methods_failed = False
+                    # We're in the cooldown period, don't try to fetch again
+                    # If the fetch succeeded last time, consider this update a success, otherwise
+                    # re-report the error here
+                    if self._last_fetch_times[cached_mirror_url][1]:
+                        all_methods_failed = False
                 else:
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
                             cached_mirror_url, expect_hash=cached_index_hash
                         )
-                        self._last_fetch_times[cached_mirror_url] = now
+                        self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
                     except FetchCacheError as fetch_error:
                         needs_regen = False
                         fetch_errors.extend(fetch_error.errors)
+                        self._last_fetch_times[cached_mirror_url] = (now, False)
                     # The need to regenerate implies a need to clear as well.
                     spec_cache_clear_needed |= needs_regen
                     spec_cache_regenerate_needed |= needs_regen
@@ -391,11 +397,12 @@ class BinaryCacheIndex(object):
                 # Need to fetch the index and update the local caches
                 try:
                     needs_regen = self._fetch_and_cache_index(mirror_url)
-                    self._last_fetch_times[mirror_url] = now
+                    self._last_fetch_times[mirror_url] = (now, True)
                     all_methods_failed = False
                 except FetchCacheError as fetch_error:
                     fetch_errors.extend(fetch_error.errors)
                     needs_regen = False
+                    self._last_fetch_times[mirror_url] = (now, False)
                 # Generally speaking, a new mirror wouldn't imply the need to
                 # clear the spec cache, so leave it as is.
                 if needs_regen:
@@ -642,6 +649,57 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
+class BuildManifestVisitor(BaseDirectoryVisitor):
+    """Visitor that collects a list of files and symlinks
+    that can be checked for need of relocation. It knows how
+    to dedupe hardlinks and deal with symlinks to files and
+    directories."""
+
+    def __init__(self):
+        # Save unique identifiers of files to avoid
+        # relocating hardlink files for each path.
+        self.visited = set()
+
+        # Lists of files we will check
+        self.files = []
+        self.symlinks = []
+
+    def seen_before(self, root, rel_path):
+        stat_result = os.lstat(os.path.join(root, rel_path))
+        identifier = (stat_result.st_dev, stat_result.st_ino)
+        if identifier in self.visited:
+            return True
+        else:
+            self.visited.add(identifier)
+            return False
+
+    def visit_file(self, root, rel_path, depth):
+        if self.seen_before(root, rel_path):
+            return
+        self.files.append(rel_path)
+
+    def visit_symlinked_file(self, root, rel_path, depth):
+        # Note: symlinks *can* be hardlinked, but it is unclear if
+        # symlinks can be relinked in-place (preserving inode).
+        # Therefore, we do *not* de-dupe hardlinked symlinks.
+        self.symlinks.append(rel_path)
+
+    def before_visit_dir(self, root, rel_path, depth):
+        return os.path.basename(rel_path) not in (".spack", "man")
+
+    def before_visit_symlinked_dir(self, root, rel_path, depth):
+        # Treat symlinked directories simply as symlinks.
+        self.visit_symlinked_file(root, rel_path, depth)
+        # Never recurse into symlinked directories.
+        return False
+
+
+def file_matches(path, regex):
+    with open(path, "rb") as f:
+        contents = f.read()
+    return bool(regex.search(contents))
+
+
 def get_buildfile_manifest(spec):
     """
     Return a data structure with information about a build, including
@@ -657,57 +715,61 @@ def get_buildfile_manifest(spec):
         "link_to_relocate": [],
         "other": [],
         "binary_to_relocate_fullpath": [],
+        "hardlinks_deduped": True,
     }
 
-    exclude_list = (".spack", "man")
+    # Guard against filesystem footguns of hardlinks and symlinks by using
+    # a visitor to retrieve a list of files and symlinks, so we don't have
+    # to worry about hardlinks of symlinked dirs and what not.
+    visitor = BuildManifestVisitor()
+    root = spec.prefix
+    visit_directory_tree(root, visitor)
 
-    # Do this at during tarball creation to save time when tarball unpacked.
-    # Used by make_package_relative to determine binaries to change.
-    for root, dirs, files in os.walk(spec.prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in exclude_list]
+    # Collect a list of prefixes for this package and it's dependencies, Spack will
+    # look for them to decide if text file needs to be relocated or not
+    prefixes = [d.prefix for d in spec.traverse(root=True, deptype="all") if not d.external]
+    prefixes.append(spack.hooks.sbang.sbang_install_path())
+    prefixes.append(str(spack.store.layout.root))
 
-        # Directories may need to be relocated too.
-        for directory in dirs:
-            dir_path_name = os.path.join(root, directory)
-            rel_path_name = os.path.relpath(dir_path_name, spec.prefix)
-            if os.path.islink(dir_path_name):
-                link = os.readlink(dir_path_name)
-                if os.path.isabs(link) and link.startswith(spack.store.layout.root):
-                    data["link_to_relocate"].append(rel_path_name)
+    # Create a giant regex that matches all prefixes
+    regex = utf8_paths_to_single_binary_regex(prefixes)
 
-        for filename in files:
-            path_name = os.path.join(root, filename)
-            m_type, m_subtype = fsys.mime_type(path_name)
-            rel_path_name = os.path.relpath(path_name, spec.prefix)
-            added = False
+    # Symlinks.
 
-            if os.path.islink(path_name):
-                link = os.readlink(path_name)
-                if os.path.isabs(link):
-                    # Relocate absolute links into the spack tree
-                    if link.startswith(spack.store.layout.root):
-                        data["link_to_relocate"].append(rel_path_name)
-                    added = True
+    # Obvious bugs:
+    #   1. relative links are not relocated.
+    #   2. paths are used as strings.
+    for rel_path in visitor.symlinks:
+        abs_path = os.path.join(root, rel_path)
+        link = os.readlink(abs_path)
+        if os.path.isabs(link) and link.startswith(spack.store.layout.root):
+            data["link_to_relocate"].append(rel_path)
 
-            if relocate.needs_binary_relocation(m_type, m_subtype):
-                if (
-                    (
-                        m_subtype in ("x-executable", "x-sharedlib", "x-pie-executable")
-                        and sys.platform != "darwin"
-                    )
-                    or (m_subtype in ("x-mach-binary") and sys.platform == "darwin")
-                    or (not filename.endswith(".o"))
-                ):
-                    data["binary_to_relocate"].append(rel_path_name)
-                    data["binary_to_relocate_fullpath"].append(path_name)
-                    added = True
+    # Non-symlinks.
+    for rel_path in visitor.files:
+        abs_path = os.path.join(root, rel_path)
+        m_type, m_subtype = fsys.mime_type(abs_path)
 
-            if relocate.needs_text_relocation(m_type, m_subtype):
-                data["text_to_relocate"].append(rel_path_name)
-                added = True
+        if relocate.needs_binary_relocation(m_type, m_subtype):
+            # Why is this branch not part of needs_binary_relocation? :(
+            if (
+                (
+                    m_subtype in ("x-executable", "x-sharedlib", "x-pie-executable")
+                    and sys.platform != "darwin"
+                )
+                or (m_subtype in ("x-mach-binary") and sys.platform == "darwin")
+                or (not rel_path.endswith(".o"))
+            ):
+                data["binary_to_relocate"].append(rel_path)
+                data["binary_to_relocate_fullpath"].append(abs_path)
+                continue
 
-            if not added:
-                data["other"].append(path_name)
+        elif relocate.needs_text_relocation(m_type, m_subtype) and file_matches(abs_path, regex):
+            data["text_to_relocate"].append(rel_path)
+            continue
+
+        data["other"].append(abs_path)
+
     return data
 
 
@@ -734,6 +796,7 @@ def write_buildinfo_file(spec, workdir, rel=False):
     buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
     buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
     buildinfo["relocate_links"] = manifest["link_to_relocate"]
+    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
     buildinfo["prefix_to_hash"] = prefix_to_hash
     filename = buildinfo_file_name(workdir)
     with open(filename, "w") as outfile:
@@ -1094,7 +1157,11 @@ def _build_tarball(
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, "w:gz")) as tar:
+    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
         tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
@@ -1441,6 +1508,38 @@ def check_package_relocatable(workdir, spec, allow_root):
     relocate.raise_if_not_relocatable(cur_path_names, allow_root)
 
 
+def dedupe_hardlinks_if_necessary(root, buildinfo):
+    """Updates a buildinfo dict for old archives that did
+    not dedupe hardlinks. De-duping hardlinks is necessary
+    when relocating files in parallel and in-place. This
+    means we must preserve inodes when relocating."""
+
+    # New archives don't need this.
+    if buildinfo.get("hardlinks_deduped", False):
+        return
+
+    # Clearly we can assume that an inode is either in the
+    # textfile or binary group, but let's just stick to
+    # a single set of visited nodes.
+    visited = set()
+
+    # Note: we do *not* dedupe hardlinked symlinks, since
+    # it seems difficult or even impossible to relink
+    # symlinks while preserving inode.
+    for key in ("relocate_textfiles", "relocate_binaries"):
+        if key not in buildinfo:
+            continue
+        new_list = []
+        for rel_path in buildinfo[key]:
+            stat_result = os.lstat(os.path.join(root, rel_path))
+            identifier = (stat_result.st_dev, stat_result.st_ino)
+            if identifier in visited:
+                continue
+            visited.add(identifier)
+            new_list.append(rel_path)
+        buildinfo[key] = new_list
+
+
 def relocate_package(spec, allow_root):
     """
     Relocate the given package
@@ -1503,6 +1602,9 @@ def relocate_package(spec, allow_root):
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
+    # Old archives maybe have hardlinks repeated.
+    dedupe_hardlinks_if_necessary(workdir, buildinfo)
+
     def is_backup_file(file):
         return file.endswith("~")
 
@@ -1548,7 +1650,7 @@ def relocate_package(spec, allow_root):
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.relocate_text(text_names, prefix_to_prefix_text)
+        relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
         paths_to_relocate = [old_prefix, old_layout_root]
         paths_to_relocate.extend(prefix_to_hash.keys())
@@ -1564,13 +1666,13 @@ def relocate_package(spec, allow_root):
             )
         )
         # relocate the install prefixes in binary files including dependencies
-        relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.relocate_text(text_names, prefix_to_prefix_text)
+            relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):

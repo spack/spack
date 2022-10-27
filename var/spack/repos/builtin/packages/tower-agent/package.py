@@ -15,9 +15,16 @@ class TowerAgent(Package):
     """
 
     homepage = "https://github.com/seqeralabs/tower-agent"
+    maintainers = ["marcodelapierre"]
 
     if platform.machine() == "x86_64":
         if platform.system() == "Linux":
+            version(
+                "0.4.5",
+                sha256="d3f38931ff769299b9f9f7e78d9f6a55f93914878c09117b8eaf5decd0c734ec",
+                url="https://github.com/seqeralabs/tower-agent/releases/download/v0.4.5/tw-agent-linux-x86_64",
+                expand=False,
+            )
             version(
                 "0.4.3",
                 sha256="1125e64d4e3342e77fcf7f6827f045e421084654fe8faafd5389e356e0613cc0",

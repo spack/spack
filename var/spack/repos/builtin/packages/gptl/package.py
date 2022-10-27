@@ -16,7 +16,7 @@ class Gptl(AutotoolsPackage):
     homepage = "https://jmrosinski.github.io/GPTL/"
     url = "https://github.com/jmrosinski/GPTL/releases/download/v8.0.3/gptl-8.0.3.tar.gz"
 
-    maintainers = ["edwardhartnett", "kgerheiser", "Hang-Lei-NOAA", " jmrosinski"]
+    maintainers = ["edwardhartnett", "AlexanderRichert-NOAA", "Hang-Lei-NOAA", "jmrosinski"]
 
     version("8.1.1", sha256="b8ee26f7aeedd2a31d565789634e7c380023fe6b65bbf59030884f4dcbce94a5")
     version("8.0.3", sha256="334979c6fe78d4ed1b491ec57fb61df7a910c58fd39a3658d03ad89f077a4db6")
