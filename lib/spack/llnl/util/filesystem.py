@@ -2243,7 +2243,7 @@ class WindowsSimulatedRPath(object):
         """
         Set of directories where package binaries/libraries are located.
         """
-        return set(self.pkg.prefix.bin) | self._additional_library_dependents
+        return set([self.pkg.prefix.bin]) | self._additional_library_dependents
 
     def add_library_dependent(self, *dest):
         """
@@ -2303,7 +2303,7 @@ class WindowsSimulatedRPath(object):
                     tty.debug(
                         "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
                         if already_linked
-                        else "library with name %s already exists." % file_name
+                        else "library with name %s already exists at location %s." % (file_name, dest)
                     )
                     pass
                 else:

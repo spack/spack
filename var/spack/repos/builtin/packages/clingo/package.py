@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
 
@@ -120,6 +121,6 @@ class Clingo(CMakePackage):
 
     def win_add_library_dependent(self):
         if "+python" in self.spec:
-            return [self.spec["python"].platlib]
+            return [os.path.join(self.prefix, self.spec["python"].package.platlib)]
         else:
             return []
