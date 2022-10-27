@@ -1,0 +1,20 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
+
+class PyPylatex(PythonPackage):
+    """A Python library for creating LaTeX files and snippets"""
+
+    homepage = "https://github.com/JelteF/PyLaTeX"
+    pypi = "PyLaTeX/PyLaTeX-1.4.1.tar.gz"
+
+    version("1.4.1", sha256="d3c12efb8b260771260443dce78d1e9089c09f9d0b92e6273dfca0bf5e7302fb")
+
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@:57.99", type="build", when='@:1.4.1')
+
+    depends_on("texlive", type="run")
