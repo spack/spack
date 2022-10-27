@@ -15,6 +15,9 @@ class SuiteSparse(Package):
     url = "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz"
     git = "https://github.com/DrTimothyAldenDavis/SuiteSparse.git"
 
+    version("5.13.0", sha256="59c6ca2959623f0c69226cf9afb9a018d12a37fab3a8869db5f6d7f83b6b147d")
+    version("5.12.0", sha256="5fb0064a3398111976f30c5908a8c0b40df44c6dd8f0cc4bfa7b9e45d8c647de")
+    version("5.11.0", sha256="fdd957ed06019465f7de73ce931afaf5d40e96e14ae57d91f60868b8c123c4c8")
     version("5.10.1", sha256="acb4d1045f48a237e70294b950153e48dce5b5f9ca8190e86c2b8c54ce00a7ee")
     version("5.10.0", sha256="4bcc974901c0173acf80c41ee0fd779eb7dce2871d4afa24a5d15b1a468f93e5")
     version("5.9.0", sha256="7bdd4811f1cf0767c5fdb5e435817fdadee50b0acdb598f4882ae7b8291a7f24")
@@ -34,7 +37,6 @@ class SuiteSparse(Package):
     version("4.5.5", sha256="80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91")
     version("4.5.3", sha256="b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4")
 
-    variant("tbb", default=False, description="Build with Intel TBB")
     variant(
         "pic",
         default=True,
@@ -48,21 +50,33 @@ class SuiteSparse(Package):
         description="Build with GraphBLAS (takes a long time to compile)",
     )
 
-    depends_on("mpfr@4.0.0:", type=("build", "link"), when="@5.8.0:")
-    depends_on("gmp", type=("build", "link"), when="@5.8.0:")
+    # In @4.5.1. TBB support in SPQR seems to be broken as TBB-related linking
+    # flags does not seem to be used, which leads to linking errors on Linux.
+    # Support for TBB has been removed in version 5.11
+    variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
+
     depends_on("blas")
     depends_on("lapack")
-    depends_on("m4", type="build", when="@5.0.0:")
-    depends_on("cmake", when="+graphblas @5.2.0:", type="build")
-
-    depends_on("metis@5.1.0", when="@4.5.1:")
-    # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
-    # flags does not seem to be used, which leads to linking errors on Linux.
-    depends_on("tbb", when="@4.5.3:+tbb")
-
     depends_on("cuda", when="+cuda")
 
-    patch("tbb_453.patch", when="@4.5.3:4.5.5+tbb")
+    depends_on("mpfr@4.0.0:", when="@5.8.0:")
+    depends_on("gmp", when="@5.8.0:")
+    depends_on("m4", type="build", when="@5.0.0:")
+    depends_on("cmake", when="+graphblas @5.2.0:", type="build")
+    depends_on("metis@5.1.0", when="@4.5.1:")
+
+    with when("+tbb"):
+        depends_on("tbb")
+        patch("tbb_453.patch", when="@4.5.3:4.5.5")
+        # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
+        # related stuff (which have long been deprecated).  This appears to be
+        # rather problematic for suite-sparse (see e.g.
+        # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
+        depends_on("intel-tbb@:2020 build_system=makefile", when="^intel-tbb")
+        conflicts(
+            "^intel-oneapi-tbb@2021:",
+            msg="suite-sparse needs task_scheduler_init.h dropped in recent tbb libs",
+        )
 
     # This patch removes unsupported flags for pgi compiler
     patch("pgi.patch", when="%pgi")
@@ -79,22 +93,6 @@ class SuiteSparse(Package):
 
     conflicts(
         "%gcc@:4.8", when="@5.2.0:", msg="gcc version must be at least 4.9 for suite-sparse@5.2.0:"
-    )
-
-    # The @2021.x versions of tbb dropped the task_scheduler_init.h header and
-    # related stuff (which have long been deprecated).  This appears to be
-    # rather problematic for suite-sparse (see e.g.
-    # https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/SPQR/Source/spqr_parallel.cpp)
-    # Have Spack complain if +tbb and trying to use a 2021.x version of tbb
-    conflicts(
-        "+tbb",
-        when="^intel-oneapi-tbb@2021:",
-        msg="suite-sparse needs task_scheduler_init.h dropped in " "recent tbb libs",
-    )
-    conflicts(
-        "+tbb",
-        when="^intel-tbb@2021:",
-        msg="suite-sparse needs task_scheduler_init.h dropped in " "recent tbb libs",
     )
 
     def symbol_suffix_blas(self, spec, args):
