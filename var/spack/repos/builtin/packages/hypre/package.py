@@ -118,6 +118,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     conflicts("+cublas", when="~cuda", msg="cuBLAS requires CUDA to be enabled")
     conflicts("+rocblas", when="~rocm", msg="rocBLAS requires ROCm to be enabled")
     conflicts("+unified-memory", when="~cuda~rocm")
+    conflicts("+gpu-aware-mpi", when="~cuda~rocm~mpi")
     conflicts("+gptune", when="~mpi")
     # Umpire device allocator exports device code, which requires static libs
     conflicts("+umpire", when="+shared+cuda")
