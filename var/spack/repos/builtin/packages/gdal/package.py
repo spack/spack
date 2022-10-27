@@ -86,7 +86,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         description="Speed up computations related to the Thin Plate Spline transformer",
     )
     variant(
-        "arrow", default=False, when="buildsystem=cmake", description="Required for Arrow driver"
+        "arrow", default=False, when="build_system=cmake", description="Required for Arrow driver"
     )
     variant("blosc", default=False, when="@3.4:", description="Required for Zarr driver")
     variant("brunsli", default=True, when="@3.4:", description="Required for MRF driver")
@@ -142,13 +142,13 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant(
         "mssql_ncli",
         default=False,
-        when="buildsystem=cmake",
+        when="build_system=cmake",
         description="Required for MSSQLSpatial driver",
     )
     variant(
         "mssql_odbc",
         default=False,
-        when="buildsystem=cmake",
+        when="build_system=cmake",
         description="Required for MSSQLSpatial driver",
     )
     variant("mysql", default=False, description="Required for MySQL driver")
@@ -157,12 +157,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant(
         "odbccpp",
         default=False,
-        when="buildsystem=cmake",
+        when="build_system=cmake",
         description="Required for SAP HANA driver",
     )
     variant("ogdi", default=False, description="Required for OGDI driver")
     variant(
-        "opencad", default=False, when="buildsystem=cmake", description="Required for CAD driver"
+        "opencad", default=False, when="build_system=cmake", description="Required for CAD driver"
     )
     variant("opencl", default=False, description="Required to accelerate warping computations")
     variant("openexr", default=False, when="@3.1:", description="Required for EXR driver")
@@ -172,7 +172,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant(
         "parquet",
         default=False,
-        when="buildsystem=cmake",
+        when="build_system=cmake",
         description="Required for Parquet driver",
     )
     variant("pcidsk", default=False, description="Required for PCIDSK driver")
@@ -216,23 +216,23 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # Language bindings
     variant("python", default=False, description="Build Python bindings")
     variant("java", default=False, description="Build Java bindings")
-    variant("csharp", default=False, when="buildsystem=cmake", description="Build C# bindings")
+    variant("csharp", default=False, when="build_system=cmake", description="Build C# bindings")
     variant("perl", default=False, when="@:3.4", description="Build Perl bindings")
     variant("php", default=False, when="@:2.3", description="Build PHP bindings")
 
     # Build system
-    buildsystem(
+    build_system(
         conditional("cmake", when="@3.5:"),
         conditional("autotools", when="@:3.5"),
         default="cmake",
     )
 
-    with when("buildsystem=cmake"):
+    with when("build_system=cmake"):
         generator = "Ninja"
         depends_on("cmake@3.9:", type="build")
         depends_on("ninja", type="build")
 
-    with when("buildsystem=autotools"):
+    with when("build_system=autotools"):
         depends_on("gmake", type="build")
 
     # Required dependencies
