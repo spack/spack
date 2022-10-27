@@ -41,7 +41,6 @@ class PerlMoo(PerlPackage):
     provides("perl-oo")  # AUTO-CPAN2Spack
 
     depends_on("perl@5.6:", type="run")  # AUTO-CPAN2Spack
-    depends_on("perl-carp", type=("build", "run"))
     depends_on("perl-class-method-modifiers@1.10:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-class-xsaccessor@1.18:", type="run")  # AUTO-CPAN2Spack
     depends_on("perl-exporter-tiny", type=("build", "run"))

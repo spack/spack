@@ -18,7 +18,6 @@ class PerlClassMethodModifiers(PerlPackage):
     version("2.13", sha256="ab5807f71018a842de6b7a4826d6c1f24b8d5b09fcce5005a3309cf6ea40fd63")
     version("2.12", sha256="e44c1073020bf55b8c97975ed77235fd7e2a6a56f29b5c702301721184e27ac8")
 
-    depends_on("perl-carp", type=("build", "run"))
     depends_on("perl-exporter-tiny", type=("build", "run"))
     depends_on("perl-test-fatal", type=("build", "test"))  # AUTO-CPAN2Spack
     depends_on("perl-extutils-makemaker", type=("build", "test"))  # AUTO-CPAN2Spack
