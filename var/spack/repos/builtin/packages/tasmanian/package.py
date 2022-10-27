@@ -15,7 +15,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     ApproximatioN is a robust library for high dimensional integration and
     interpolation as well as parameter calibration."""
 
-    homepage = "http://tasmanian.ornl.gov"
+    homepage = "https://ornl.github.io/TASMANIAN/stable/"
     url = "https://github.com/ORNL/TASMANIAN/archive/v7.5.tar.gz"
     git = "https://github.com/ORNL/TASMANIAN.git"
 
@@ -24,6 +24,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="master")
 
+    version("7.9", sha256="decba62e6bbccf1bc26c6e773a8d4fd51d7f3e3e534ddd386ec41300694ce5cc")
     version("7.7", sha256="85fb3a7b302ea21a3b700712767a59a623d9ab93da03308fa47d4413654c3878")
     version("7.5", sha256="d621bd36dced4db86ef638693ba89b336762e7a3d7fedb3b5bcefb03390712b3")
     version("7.3", sha256="5bd1dd89cc5c84506f6900b6569b17e50becd73eb31ec85cfa11d6f1f912c4fa")
