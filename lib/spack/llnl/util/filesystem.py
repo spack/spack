@@ -2303,7 +2303,8 @@ class WindowsSimulatedRPath(object):
                     tty.debug(
                         "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
                         if already_linked
-                        else "library with name %s already exists at location %s." % (file_name, dest)
+                        else "library with name %s already exists at location %s."
+                        % (file_name, dest)
                     )
                     pass
                 else:
