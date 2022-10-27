@@ -93,9 +93,6 @@ class Chameleon(CMakePackage, CudaPackage):
         if spec.satisfies("+mpi +simgrid"):
             args.extend(
                 [
-                    self.define("MPI_C_COMPILER", self.spec["simgrid"].smpicc),
-                    self.define("MPI_CXX_COMPILER", self.spec["simgrid"].smpicxx),
-                    self.define("MPI_Fortran_COMPILER", self.spec["simgrid"].smpifc),
                     self.define("CMAKE_C_COMPILER", self.spec["simgrid"].smpicc),
                     self.define("CMAKE_CXX_COMPILER", self.spec["simgrid"].smpicxx),
                     self.define("CMAKE_Fortran_COMPILER", self.spec["simgrid"].smpifc),
