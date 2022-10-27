@@ -24,12 +24,17 @@ class Reframe(Package):
     maintainers = ["victorusu", "vkarak"]
 
     version("master", branch="master")
-    version("4.0.0-dev.1",
-            sha256="6db55c20b79764fc1f0e0a13de062850007425fa2c7f54a113b96adee50741ed")
-    version("4.0.0-dev.0",
-            sha256="a96162a88a36ea0793836c492a39470010f6e63b8d9bd324c033614d27304fa6")
-    version("3.12.0", sha256="425cc546e24edd5b2dbfcdcb61dbbf723ca1a2a2977948e359e893514f5eb10f",
-            preferred=True)
+    version(
+        "4.0.0-dev.1", sha256="6db55c20b79764fc1f0e0a13de062850007425fa2c7f54a113b96adee50741ed"
+    )
+    version(
+        "4.0.0-dev.0", sha256="a96162a88a36ea0793836c492a39470010f6e63b8d9bd324c033614d27304fa6"
+    )
+    version(
+        "3.12.0",
+        sha256="425cc546e24edd5b2dbfcdcb61dbbf723ca1a2a2977948e359e893514f5eb10f",
+        preferred=True
+    )
     version("3.11.2", sha256="d6f36071df316d6a5ef5ce6f0477b3385d9dac5c1b82e54ae6954dc9b68f9440")
     version("3.11.1", sha256="7f591cd8f4fbb2c6255cc8ea02e3814393355a8931ac883e9f57490fde699b63")
     version("3.11.0", sha256="3ddfef5482f0c304286a6c8f1ad0b3d75c4c61d0b9f9f8429b6157c189f2bb64")
