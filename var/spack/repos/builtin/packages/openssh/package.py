@@ -57,6 +57,13 @@ class Openssh(AutotoolsPackage):
     depends_on("zlib")
     depends_on("py-twisted", type="test")
 
+    conflicts(
+        "%clang@15:",
+        when="@8.3p1:9.0p1",
+        msg="openssh between 8.3 and 9.0 (included) fail to build with clang-15 and later. "
+        "Please either use a release of openssh outside this range or switch to another compiler.",
+    )
+
     maintainers = ["bernhardkaindl"]
     executables = [
         "^ssh$",
