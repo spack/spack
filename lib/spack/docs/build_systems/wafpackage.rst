@@ -5,9 +5,9 @@
 
 .. _wafpackage:
 
-----------
-WafPackage
-----------
+---
+Waf
+---
 
 Like SCons, Waf is a general-purpose build system that does not rely
 on Makefiles to build software.
@@ -16,7 +16,7 @@ on Makefiles to build software.
 Phases
 ^^^^^^
 
-The ``WafPackage`` base class comes with the following phases:
+The ``WafBuilder`` and ``WafPackage`` base classes come with the following phases:
 
 #. ``configure`` - configure the project
 #. ``build`` - build the project

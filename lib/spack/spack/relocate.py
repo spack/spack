@@ -747,9 +747,13 @@ def relocate_links(links, orig_layout_root, orig_install_prefix, new_install_pre
 def utf8_path_to_binary_regex(prefix):
     """Create a (binary) regex that matches the input path in utf8"""
     prefix_bytes = re.escape(prefix).encode("utf-8")
-    prefix_rexp = re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
 
-    return prefix_rexp
+
+def utf8_paths_to_single_binary_regex(prefixes):
+    """Create a (binary) regex that matches any input path in utf8"""
+    all_prefixes = b"|".join(re.escape(prefix).encode("utf-8") for prefix in prefixes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
 def unsafe_relocate_text(files, prefixes, concurrency=32):

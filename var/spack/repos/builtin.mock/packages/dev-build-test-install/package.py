@@ -2,18 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 from spack.package import *
 
 
-class DevBuildTestInstall(Package):
+class DevBuildTestInstall(MakefilePackage):
     homepage = "example.com"
     url = "fake.com"
 
     version("0.0.0", sha256="0123456789abcdef0123456789abcdef")
-
-    phases = ["edit", "install"]
 
     filename = "dev-build-test-file.txt"
     original_string = "This file should be edited"
@@ -25,6 +21,9 @@ class DevBuildTestInstall(Package):
             f.seek(0)
             f.truncate()
             f.write(self.replacement_string)
+
+    def build(self, spec, prefix):
+        pass
 
     def install(self, spec, prefix):
         install(self.filename, prefix)
