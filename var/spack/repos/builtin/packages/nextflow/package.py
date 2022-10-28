@@ -15,6 +15,11 @@ class Nextflow(Package):
     maintainers = ["dialvarezs"]
 
     version(
+        "22.10.1",
+        sha256="fa6b6faa8b213860212da413e77141a56a5e128662d21ea6603aeb9717817c4c",
+        expand=False,
+    )
+    version(
         "22.10.0",
         sha256="6acea8bd21f7f66b1363eef900cd696d9523d2b9edb53327940f093189c1535e",
         expand=False,
