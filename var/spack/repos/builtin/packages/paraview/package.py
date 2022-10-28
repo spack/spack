@@ -73,6 +73,13 @@ class Paraview(CMakePackage, CudaPackage):
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
+    variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
+    variant(
+        "libcatalyst",
+        default=False,
+        description="Enable Catalyst 2 (libcatalyst) implementation",
+        when="@5.10:",
+    )
 
     variant(
         "advanced_debug",
@@ -205,6 +212,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("lz4")
     depends_on("xz")
     depends_on("zlib")
+    depends_on("libcatalyst", when="+libcatalyst")
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
@@ -573,5 +581,14 @@ class Paraview(CMakePackage, CudaPackage):
 
         if "+advanced_debug" in spec:
             cmake_args.append("-DVTK_DEBUG_LEAKS:BOOL=ON")
+
+        if "+catalyst" in spec:
+            cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_Catalyst=YES")
+            if "+python3" in spec:
+                cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_PythonCatalyst=YES")
+
+        if "+libcatalyst" in spec:
+            cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_InSitu=YES")
+            cmake_args.append("-DPARAVIEW_ENABLE_CATALYST=YES")
 
         return cmake_args
