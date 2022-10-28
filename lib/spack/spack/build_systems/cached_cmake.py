@@ -34,7 +34,7 @@ class CachedCMakeBuilder(CMakeBuilder):
 
     #: Phases of a Cached CMake package
     #: Note: the initconfig phase is used for developer builds as a final phase to stop on
-    phases = ("initconfig", "cmake", "build", "install")
+    phases = ("initconfig", "cmake", "build", "install") # type: Optional[Tuple[str, ...]]
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = CMakeBuilder.legacy_methods + (
