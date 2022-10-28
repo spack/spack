@@ -155,7 +155,7 @@ class CMakeBuilder(BaseBuilder):
     """
 
     #: Phases of a CMake package
-    phases = ("cmake", "build", "install")
+    phases = ("cmake", "build", "install")  # type: Tuple[str, ...]
 
     #: Names associated with package methods in the old build-system format
     legacy_methods = ("cmake_args", "check")  # type: Tuple[str, ...]
