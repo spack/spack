@@ -69,7 +69,7 @@ class Starpu(AutotoolsPackage):
     variant("simgrid", default=False, description="Enable SimGrid support")
     variant("simgridmc", default=False, description="Enable SimGrid model checker support")
     variant("examples", default=True, description="Enable Examples")
-    variant("papi", default=False, description="Enable PAPI support")
+    variant("papi", default=False, description="Enable PAPI support", when="@master:")
     variant("blocking", default=False, description="Enable blocking drivers support")
 
     depends_on("pkgconfig", type="build")
@@ -92,9 +92,6 @@ class Starpu(AutotoolsPackage):
         "+shared", when="+mpi+simgrid", msg="Simgrid MPI cannot be built with a shared library"
     )
 
-    conflicts(
-        "+papi", when="@:999", msg="PAPI support is only available at the development branch"
-    )
     conflicts("+papi", when="+simgrid")
 
     def autoreconf(self, spec, prefix):
