@@ -42,6 +42,13 @@ class JsonC(CMakePackage, AutotoolsPackage):
     def patch(self):
         filter_file("-Werror", "", "CMakeLists.txt")
 
+    def flag_handler(self, name, flags):
+        iflags = []
+        if name == "cflags":
+            if self.spec.satisfies("%oneapi"):
+                iflags.append("-Wno-error=implicit-function-declaration")
+        return (iflags, None, None)
+
     @run_after("install")
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
