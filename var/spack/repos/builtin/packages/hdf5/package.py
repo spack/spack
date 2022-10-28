@@ -196,6 +196,7 @@ class Hdf5(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
 
+    depends_on("libfabric", when="^cray-mpich")
     depends_on("mpi", when="+mpi")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
