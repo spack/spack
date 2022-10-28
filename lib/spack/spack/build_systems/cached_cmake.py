@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import Tuple
+from typing import Optional, Tuple
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
