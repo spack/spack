@@ -1607,11 +1607,11 @@ class Spec(object):
         return upstream
 
     def traverse(self, **kwargs):
-        """Shorthand for traverse.traverse_nodes"""
+        """Shorthand for :meth:`~spack.traverse.traverse_nodes`"""
         return traverse.traverse_nodes([self], **kwargs)
 
     def traverse_edges(self, **kwargs):
-        """Shorthand for traverse.traverse_edges"""
+        """Shorthand for :meth:`~spack.traverse.traverse_edges`"""
         return traverse.traverse_edges([self], **kwargs)
 
     @property

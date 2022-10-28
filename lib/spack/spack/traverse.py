@@ -369,7 +369,8 @@ def traverse_nodes(
         visited (set or None): a set of nodes not to follow
 
     Yields:
-        By default ``Spec``, or a tuple ``(depth, Spec)`` if depth is set to ``True``.
+        By default :class:`~spack.spec.Spec`, or a tuple ``(depth, Spec)`` if depth is
+        set to ``True``.
     """
     for item in traverse_edges(specs, root, order, cover, direction, deptype, depth, key, visited):
         yield (item[0], item[1].spec) if depth else item.spec
@@ -394,9 +395,9 @@ def traverse_tree(specs, cover="nodes", deptype="all", key=id, depth_first=True)
         deptype (str or tuple): allowed dependency types
         key: function that takes a spec and outputs a key for uniqueness test.
         depth_first (bool): Explore the tree in depth-first or breadth-first order.
-            When setting depth_first=True and cover=nodes, each spec only occurs
-            once at the shallowest level, which is useful when rendering the
-            tree in a terminal.
+            When setting ``depth_first=True`` and ``cover=nodes``, each spec only
+            occurs once at the shallowest level, which is useful when rendering
+            the tree in a terminal.
 
     Returns:
         A generator that yields ``(depth, DependencySpec)`` tuples in such an order
