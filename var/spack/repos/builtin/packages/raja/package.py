@@ -80,11 +80,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
                 "camp+rocm amdgpu_target={0}".format(arch), when="amdgpu_target={0}".format(arch)
             )
         conflicts("+openmp")
+    depends_on("camp~rocm", when="~rocm")
 
     with when("+cuda @0.12.0:"):
         depends_on("camp+cuda")
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("camp +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+    depends_on("camp~cuda", when="~cuda")
 
     def _get_sys_type(self, spec):
         sys_type = spec.architecture

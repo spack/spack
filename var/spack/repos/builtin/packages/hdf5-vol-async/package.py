@@ -23,7 +23,7 @@ class Hdf5VolAsync(CMakePackage):
     version("1.0", tag="v1.0")
 
     depends_on("mpi")
-    depends_on("argobots@main")
+    depends_on("argobots@1.1:")
     depends_on("hdf5@1.13: +mpi +threadsafe")
 
     def setup_run_environment(self, env):

@@ -353,7 +353,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # Old trilinos fails with new CUDA (see #27180)
     conflicts("@:13.0.1 +cuda", when="^cuda@11:")
     # Build hangs with CUDA 11.6 (see #28439)
-    conflicts("+cuda +stokhos", when="^cuda@11.6:")
+    conflicts("+cuda +stokhos", when="^cuda@11.6:11.6")
     # Cuda UVM must be enabled prior to 13.2
     # See https://github.com/spack/spack/issues/28869
     conflicts("~uvm", when="@:13.1 +cuda")

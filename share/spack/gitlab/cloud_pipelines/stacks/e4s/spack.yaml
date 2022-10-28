@@ -10,34 +10,39 @@ spack:
       padded_length: 512
       projections:
         all: '{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'
-
   packages:
-    # These specs are the default preferred for all packages,
-    # however, variants may be disabled in the following spec
-    # list as needed.
     all:
       compiler: [gcc@11.1.0]
       target: [x86_64]
       variants: +mpi
-    tbb:
-      require: "intel-tbb"
+    adios2:
+      require: +blosc +dataman +hdf5 +mpi +python +shared +ssc +sst +sz
+    argobots:
+      require: '@1.1 +perf'
+    ascent:
+      require: +adios2 +dray +fortran +mpi +openmp +python +serial +shared +vtkh
     binutils:
       require: +ld +gold +headers +libiberty ~nls
     blas:
       require: openblas
+    boost:
+      require: +atomic+chrono~clanglibcpp+container~context~contract~coroutine+date_time~debug+exception~fiber+filesystem+graph~graph_parallel
+        ~icu+iostreams~json+locale+log+math+mpi+multithreaded~nowide~numpy~pic+program_options~python+random+regex+serialization+shared
+        +signals~singlethreaded+stacktrace+system~taggedlayout+test+thread+timer~type_erasure~versionedlayout+wave
+        cxxstd=17 visibility=global
     cuda:
-      version: [11.7.0]
+      require: '@11.7.0'
     chai:
       require: ~benchmarks ~tests
     ecp-data-vis-sdk:
-      require: +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf
-        +sensei +sz +unifyfs +veloc +visit +vtkm +zfp
+      require: +adios2 +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sensei +sz
+        +unifyfs +veloc +visit +vtkm +zfp
     elfutils:
       require: +bzip2 ~nls +xz
     glew:
       require: gl=osmesa
     hdf5:
-      require: +fortran +hl +shared
+      require: '@1.13 +fortran +hl +shared +threadsafe'
     hpx:
       require: networking=mpi
     libfabric:
@@ -51,29 +56,47 @@ spack:
     mesa:
       version: [22.1.2, 21.3.8]
       require: +llvm +osmesa +glx
+    mercury:
+      require: +boostsys
+    mfem:
+      require: +conduit +exceptions +fms
     mpich:
-      require: ~wrapperrpath
+      require: ~hwloc ~wrapperrpath
     mpi:
       require: mpich
     ncurses:
-      require: +termlib
+      require: '@6.3 +termlib'
     openblas:
-      require: threads=openmp
+      require: '@0.3.20 ~ilp64+locking+pic+shared threads=openmp'
     paraview:
-      # Require ParaView without frontend and canonical features
       require: ~qt +osmesa use_vtkm=on build_edition=canonical
     python:
-      version: [3.8.13]
+      require: '@3.7.13'
+    py-setuptools:
+      require: '@59.4.0'
+    py-numpy:
+      require: '@1.21.5 +blas +lapack'
+    sensei:
+      require: +adios2 +hdf5 +python ~vtkio
+    swig:
+      require: '@4.0.2-fortran'
+    sz:
+      require: '@2.1.12.2 +fortran +hdf5 +random_access +shared'
+    tbb:
+      require: "intel-tbb"
     trilinos:
-      require: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
-        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
-        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+      require: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
+        +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox
+        +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
         +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     warpx:
       require: +ascent +sensei +shared
     xz:
       require: +pic
+    vtk-m:
+      require: +ascent_types +doubleprecision +fpic +mpi +rendering +shared +testlib
   specs:
+  
   # CPU
   - adios
   - alquimia
@@ -93,7 +116,7 @@ spack:
   - datatransferkit
   - dyninst
   - exaworks
-  - ecp-data-vis-sdk ~cuda ~rocm
+  - ecp-data-vis-sdk +ascent ~cuda ~rocm
   - flecsi ~cuda
   - flit
   - flux-core ~cuda
@@ -173,6 +196,34 @@ spack:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   # CUDA
   - amrex +cuda cuda_arch=80
   - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
@@ -181,7 +232,7 @@ spack:
   - caliper +cuda cuda_arch=80
   - chai +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
   - dealii +cuda cuda_arch=80
-  - ecp-data-vis-sdk +cuda cuda_arch=80
+  - ecp-data-vis-sdk ~ascent +cuda cuda_arch=80
   - flecsi +cuda cuda_arch=80
   - flux-core +cuda
   - ginkgo +cuda cuda_arch=80
@@ -211,8 +262,36 @@ spack:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   # ROCm
-  - ecp-data-vis-sdk +rocm amdgpu_target=gfx90a
+  - ecp-data-vis-sdk ~ascent +rocm amdgpu_target=gfx90a
   - amrex +rocm amdgpu_target=gfx90a
   - arborx +rocm amdgpu_target=gfx90a
   - cabana +rocm
@@ -262,7 +341,7 @@ spack:
   #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
   #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
 
-  mirrors: {mirror: 's3://spack-binaries/develop/e4s'}
+  # mirrors: {mirror: 's3://spack-binaries/develop/e4s'}
   gitlab-ci:
     script:
       - uname -a || true
@@ -282,193 +361,185 @@ spack:
       - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
-
     broken-tests-packages:
     - gptune
 
     match_behavior: first
     mappings:
-      - match:
-          - hipblas
-          - llvm
-          - llvm-amdgpu
-          - rocblas
-        runner-attributes:
-          tags: [ "spack", "huge", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: huge
-            KUBERNETES_CPU_REQUEST: 11000m
-            KUBERNETES_MEMORY_REQUEST: 42G
-
-      - match:
-          - cuda
-          - dyninst
-          - ginkgo
-          - hpx
-          - kokkos-kernels
-          - kokkos-nvcc-wrapper
-          - magma
-          - mfem
-          - mpich
-          - openturns
-          - precice
-          - raja
-          - rust
-          - slate
-          - trilinos
-          - vtk-m
-          - warpx
-        runner-attributes:
-          tags: [ "spack", "large", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: large
-            KUBERNETES_CPU_REQUEST: 8000m
-            KUBERNETES_MEMORY_REQUEST: 12G
-
-      - match:
-          - adios2
-          - amrex
-          - archer
-          - ascent
-          - axom
-          - binutils
-          - blaspp
-          - boost
-          - butterflypack
-          - cabana
-          - caliper
-          - camp
-          - chai
-          - conduit
-          - datatransferkit
-          - faodel
-          - ffmpeg
-          - fftw
-          - fortrilinos
-          - gperftools
-          - gptune
-          - hdf5
-          - heffte
-          - hpctoolkit
-          - hwloc
-          - hypre
-          - kokkos
-          - lammps
-          - lapackpp
-          - legion
-          - libzmq
-          - llvm-openmp-ompt
-          - mbedtls
-          - netlib-scalapack
-          - omega-h
-          - openmpi
-          - openpmd-api
-          - pagmo2
-          - papyrus
-          - parsec
-          - pdt
-          - petsc
-          - pumi
-          - py-ipython-genutils
-          - py-petsc4py
-          - py-scipy
-          - py-statsmodels
-          - py-warlock
-          - py-warpx
-          - pygmo
-          - slepc
-          - slurm
-          - strumpack
-          - sundials
-          - superlu-dist
-          - tasmanian
-          - tau
-          - upcxx
-          - vtk-h
-          - zfp
-        runner-attributes:
-          tags: [ "spack", "medium", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: "medium"
-            KUBERNETES_CPU_REQUEST: "2000m"
-            KUBERNETES_MEMORY_REQUEST: "4G"
-
-      - match:
-          - alsa-lib
-          - ant
-          - antlr
-          - argobots
-          - automake
-          - berkeley-db
-          - bison
-          - blt
-          - cmake
-          - curl
-          - darshan-util
-          - diffutils
-          - exmcutils
-          - expat
-          - flit
-          - freetype
-          - gdbm
-          - gotcha
-          - hpcviewer
-          - jansson
-          - json-c
-          - libbsd
-          - libevent
-          - libjpeg-turbo
-          - libnrm
-          - libpng
-          - libunistring
-          - lua-luaposix
-          - m4
-          - mpfr
-          - ncurses
-          - openblas
-          - openjdk
-          - papi
-          - parallel-netcdf
-          - pcre2
-          - perl-data-dumper
-          - pkgconf
-          - py-alembic
-          - py-idna
-          - py-testpath
-          - qhull
-          - snappy
-          - swig
-          - tar
-          - tcl
-          - texinfo
-          - unzip
-          - util-linux-uuid
-          - util-macros
-          - yaml-cpp
-          - zlib
-          - zstd
-        runner-attributes:
-          tags: [ "spack", "small", "x86_64" ]
-          variables:
-            CI_JOB_SIZE: "small"
-            KUBERNETES_CPU_REQUEST: "500m"
-            KUBERNETES_MEMORY_REQUEST: "500M"
-
-      - match: ['os=ubuntu20.04']
-        runner-attributes:
-          tags: ["spack", "x86_64"]
-          variables:
-            CI_JOB_SIZE: "default"
-
-    broken-specs-url: "s3://spack-binaries/broken-specs"
-
+    - match:
+      - hipblas
+      - llvm
+      - llvm-amdgpu
+      - rocblas
+      runner-attributes:
+        tags: [spack, huge, x86_64]
+        variables:
+          CI_JOB_SIZE: huge
+          KUBERNETES_CPU_REQUEST: 11000m
+          KUBERNETES_MEMORY_REQUEST: 42G
+    - match:
+      - cuda
+      - dyninst
+      - ginkgo
+      - hpx
+      - kokkos-kernels
+      - kokkos-nvcc-wrapper
+      - magma
+      - mfem
+      - mpich
+      - openturns
+      - precice
+      - raja
+      - rust
+      - slate
+      - trilinos
+      - vtk-m
+      - warpx
+      runner-attributes:
+        tags: [spack, large, x86_64]
+        variables:
+          CI_JOB_SIZE: large
+          KUBERNETES_CPU_REQUEST: 8000m
+          KUBERNETES_MEMORY_REQUEST: 12G
+    - match:
+      - adios2
+      - amrex
+      - archer
+      - ascent
+      - axom
+      - binutils
+      - blaspp
+      - boost
+      - butterflypack
+      - cabana
+      - caliper
+      - camp
+      - chai
+      - conduit
+      - datatransferkit
+      - faodel
+      - ffmpeg
+      - fftw
+      - fortrilinos
+      - gperftools
+      - gptune
+      - hdf5
+      - heffte
+      - hpctoolkit
+      - hwloc
+      - hypre
+      - kokkos
+      - lammps
+      - lapackpp
+      - legion
+      - libzmq
+      - llvm-openmp-ompt
+      - mbedtls
+      - netlib-scalapack
+      - omega-h
+      - openmpi
+      - openpmd-api
+      - pagmo2
+      - papyrus
+      - parsec
+      - pdt
+      - petsc
+      - pumi
+      - py-ipython-genutils
+      - py-petsc4py
+      - py-scipy
+      - py-statsmodels
+      - py-warlock
+      - py-warpx
+      - pygmo
+      - slepc
+      - slurm
+      - strumpack
+      - sundials
+      - superlu-dist
+      - tasmanian
+      - tau
+      - upcxx
+      - vtk-h
+      - zfp
+      runner-attributes:
+        tags: [spack, medium, x86_64]
+        variables:
+          CI_JOB_SIZE: medium
+          KUBERNETES_CPU_REQUEST: 2000m
+          KUBERNETES_MEMORY_REQUEST: 4G
+    - match:
+      - alsa-lib
+      - ant
+      - antlr
+      - argobots
+      - automake
+      - berkeley-db
+      - bison
+      - blt
+      - cmake
+      - curl
+      - darshan-util
+      - diffutils
+      - exmcutils
+      - expat
+      - flit
+      - freetype
+      - gdbm
+      - gotcha
+      - hpcviewer
+      - jansson
+      - json-c
+      - libbsd
+      - libevent
+      - libjpeg-turbo
+      - libnrm
+      - libpng
+      - libunistring
+      - lua-luaposix
+      - m4
+      - mpfr
+      - ncurses
+      - openblas
+      - openjdk
+      - papi
+      - parallel-netcdf
+      - pcre2
+      - perl-data-dumper
+      - pkgconf
+      - py-alembic
+      - py-idna
+      - py-testpath
+      - qhull
+      - snappy
+      - swig
+      - tar
+      - tcl
+      - texinfo
+      - unzip
+      - util-linux-uuid
+      - util-macros
+      - yaml-cpp
+      - zlib
+      - zstd
+      runner-attributes:
+        tags: [spack, small, x86_64]
+        variables:
+          CI_JOB_SIZE: small
+          KUBERNETES_CPU_REQUEST: 500m
+          KUBERNETES_MEMORY_REQUEST: 500M
+    - match: [os=ubuntu20.04]
+      runner-attributes:
+        tags: [spack, x86_64]
+        variables:
+          CI_JOB_SIZE: default
+    broken-specs-url: s3://spack-binaries/broken-specs
     service-job-attributes:
       before_script:
-        - . "./share/spack/setup-env.sh"
-        - spack --version
+      - . "./share/spack/setup-env.sh"
+      - spack --version
       image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
-      tags: ["spack", "public", "x86_64"]
-
+      tags: [spack, public, x86_64]
     signing-job-attributes:
       image: {name: 'ghcr.io/spack/notary:latest', entrypoint: ['']}
       tags: [spack, aws]
@@ -483,3 +554,30 @@ spack:
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
+  compilers:
+  - compiler:
+      spec: gcc@11.1.0
+      paths:
+        cc: /usr/bin/gcc-11
+        cxx: /usr/bin/g++-11
+        f77: /usr/bin/gfortran-11
+        fc: /usr/bin/gfortran-11
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  - compiler:
+      spec: gcc@9.4.0
+      paths:
+        cc: /usr/bin/gcc
+        cxx: /usr/bin/g++
+        f77: /usr/bin/gfortran
+        fc: /usr/bin/gfortran
+      flags: {}
+      operating_system: ubuntu20.04
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []

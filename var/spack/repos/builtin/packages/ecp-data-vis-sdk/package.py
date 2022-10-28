@@ -10,7 +10,6 @@ from spack.package import *
 def dav_sdk_depends_on(spec, when=None, propagate=None):
     # Do the basic depends_on
     depends_on(spec, when=when)
-    print(f"depends_on({spec}, when={when})")
 
     # Strip spec string to just the base spec name
     # ie. A +c ~b -> A
@@ -30,7 +29,6 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
         when_not = when.replace("+", "~")
         # If the package is in the spec tree then it must
         # be enabled in the SDK.
-        print(f"conflicts({when_not}, ^{spec}")
         conflicts(when_not, when="^" + spec)
 >>>>>>> 8665b3f52c (WIP: Fixups for packages and e4s pipeline)
 
@@ -135,15 +133,11 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     # due to incomaptiblity between these variants in sensei.
     dav_sdk_depends_on("sensei@4: ~vtkio +python", when="+sensei", propagate=["adios2", "hdf5"])
 
-    # Fortran support with ascent is problematic on some Cray platforms so the
-    # SDK is explicitly disabling it until the issues are resolved.
     dav_sdk_depends_on(
-        "ascent+mpi~fortran+openmp+python+shared+vtkh+dray~test",
+        "ascent+mpi+openmp+python+shared+vtkh+dray",
         when="+ascent",
-        propagate=["adios2", "cuda"] + cuda_arch_variants,
+        propagate=["adios2", "cuda", "fortran"] + cuda_arch_variants,
     )
-    depends_on("ascent+openmp", when="~rocm+ascent")
-    depends_on("ascent~openmp", when="+rocm+ascent")
 
     # Need to explicitly turn off conduit hdf5_compat in order to build
     # hdf5@1.12 which is required for SDK
