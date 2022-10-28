@@ -45,7 +45,7 @@ from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename, write_tmp_and_move
+from llnl.util.filesystem import mkdirp, write_tmp_and_move
 
 import spack.compilers
 import spack.paths
