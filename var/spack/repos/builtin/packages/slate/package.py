@@ -60,6 +60,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp ~cuda", when="~cuda")
     depends_on("lapackpp +cuda", when="+cuda")
     depends_on("lapackpp ~rocm", when="~rocm")
+    for val in CudaPackage.cuda_arch_values:
+        depends_on("blaspp +cuda cuda_arch=%s" % val, when="cuda_arch=%s" % val)
+        depends_on("lapackpp +cuda cuda_arch=%s" % val, when="cuda_arch=%s" % val)
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
         depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
@@ -68,7 +71,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
     depends_on("lapackpp@master", when="@master")
-    depends_on("scalapack")
+    depends_on("scalapack", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
 
     cpp_17_msg = "Requires C++17 compiler support"
@@ -92,14 +95,16 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "hip"
             backend_config = "-Dgpu_backend=%s" % backend
 
-        return [
+        config = [
             "-Dbuild_tests=%s" % self.run_tests,
             "-Duse_openmp=%s" % ("+openmp" in spec),
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
-            "-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"),
         ]
+        if self.run_tests:
+            config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
+        return config
 
     @run_after("install")
     def cache_test_sources(self):

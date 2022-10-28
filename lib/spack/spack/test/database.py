@@ -858,7 +858,7 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
     """Add coverage to mark_failed."""
 
     def _raise_exc(lock):
-        raise lk.LockTimeoutError("Mock acquire_write failure")
+        raise lk.LockTimeoutError("write", "/mock-lock", 1.234, 10)
 
     # Ensure attempt to acquire write lock on the mark raises the exception
     monkeypatch.setattr(lk.Lock, "acquire_write", _raise_exc)

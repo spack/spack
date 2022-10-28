@@ -113,12 +113,20 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         when="@3.13.0:+blopex",
     )
 
+    def revert_kokkos_nvcc_wrapper(self):
+        # revert changes by kokkos-nvcc-wrapper
+        if self.spec.satisfies("^kokkos+cuda+wrapper"):
+            env["MPICH_CXX"] = env["CXX"]
+            env["OMPI_CXX"] = env["CXX"]
+            env["MPICXX_CXX"] = env["CXX"]
+
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
         # Note that one should set the current (temporary) directory instead
         # its symlink in spack/stage/ !
         os.environ["SLEPC_DIR"] = os.getcwd()
 
+        self.revert_kokkos_nvcc_wrapper()
         if self.spec.satisfies("%cce"):
             filter_file(
                 "          flags = l",
@@ -158,7 +166,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         python("configure", "--prefix=%s" % prefix, *options)
 
-        make("MAKE_NP=%s" % make_jobs, parallel=False)
+        make("V=1 MAKE_NP=%s" % make_jobs, parallel=False)
         if self.run_tests:
             make("test", parallel=False)
 
