@@ -13,6 +13,7 @@ class RNlme(RPackage):
 
     cran = "nlme"
 
+    version("3.1-159", sha256="9bb05f5c3146e2d75078e668821485a3e9ca246fd5d7db2ef1963d3735d919bf")
     version("3.1-157", sha256="ddf2a2729dcb6cbaaf579d8093cf62fc41736648b5e8b74afc3acc7a9ae1d96c")
     version("3.1-155", sha256="9f390f842852422921b5845130ea73c1f006d7bb5e988e82f728093a0cbdff4f")
     version("3.1-153", sha256="3d27a98edf1b16ee868949e823ac0babbf10c937a7220d648b7ef9480cd680e3")

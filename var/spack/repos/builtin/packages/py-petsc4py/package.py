@@ -16,6 +16,9 @@ class PyPetsc4py(PythonPackage):
     maintainers = ["balay"]
 
     version("main", branch="main")
+    version("3.18.1", sha256="6d9d9632e2da0920c4e3905b7bac919837bdd85ecfaf1b9e461ba7e05ec4a5ce")
+    version("3.18.0", sha256="76bad2d35f380f698f5649c3f38eabd153b9b19b1fe3ce3a1d3de9aa5824a4d2")
+    version("3.17.5", sha256="e435d927bf22950c71c30bda538e1ae75f48f6931a63205c6fbeff6cf4393f09")
     version("3.17.4", sha256="216c3da074557946615d37d0826bc89f1f2e599323e2dacbdc45326d78bd50c6")
     version("3.17.3", sha256="c588ab4a17deebe7f0a57f966b3368d88f01d1a1c09f220f63fe8e3b37a32899")
     version("3.17.2", sha256="7e256e13013ce12c8e52edee35920e3d2c1deaae1b71597a3064201eba7abc1c")
@@ -61,6 +64,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
+    depends_on("petsc@3.18.0:3.18", when="@3.18.0:3.18")
     depends_on("petsc@3.17.0:3.17", when="@3.17.0:3.17")
     depends_on("petsc@3.16.0:3.16", when="@3.16.0:3.16")
     depends_on("petsc@3.15.0:3.15", when="@3.15.0:3.15")
