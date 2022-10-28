@@ -3,18 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 import spack.spec
 
 # Export only the high-level API.
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
 
-
-class EdgeAndDepth(object):
-    def __init__(self, edge, depth):
-        self.edge = edge
-        self.depth = depth
+#: Data class that stores a directed edge together with depth at
+#: which the target vertex was found.
+EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
 
 
 def sort_edges(edges):
