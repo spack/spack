@@ -69,6 +69,8 @@ class Starpu(AutotoolsPackage):
     variant("simgrid", default=False, description="Enable SimGrid support")
     variant("simgridmc", default=False, description="Enable SimGrid model checker support")
     variant("examples", default=True, description="Enable Examples")
+    variant("papi", default=False, description="Enable PAPI support", when="@master:")
+    variant("blocking", default=False, description="Enable blocking drivers support")
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
@@ -84,10 +86,13 @@ class Starpu(AutotoolsPackage):
     depends_on("simgrid", when="+simgrid")
     depends_on("simgrid+smpi", when="+simgrid+mpi")
     depends_on("simgrid+mc", when="+simgridmc")
+    depends_on("papi", when="+papi")
 
     conflicts(
         "+shared", when="+mpi+simgrid", msg="Simgrid MPI cannot be built with a shared library"
     )
+
+    conflicts("+papi", when="+simgrid")
 
     def autoreconf(self, spec, prefix):
         if not os.path.isfile("./configure"):
@@ -125,6 +130,8 @@ class Starpu(AutotoolsPackage):
                 "--%s-build-examples" % ("enable" if "+examples" in spec else "disable"),
                 "--%s-fortran" % ("enable" if "+fortran" in spec else "disable"),
                 "--%s-openmp" % ("enable" if "+openmp" in spec else "disable"),
+                "--%s-blocking-drivers" % ("enable" if "+blocking" in spec else "disable"),
+                "--%s-papi" % ("enable" if "+papi" in spec else "disable"),
                 "--%s-opencl"
                 % ("disable" if "~opencl" in spec or "+simgrid" in spec else "enable"),
                 "--%s-cuda" % ("disable" if "~cuda" in spec or "+simgrid" in spec else "enable"),
