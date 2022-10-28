@@ -6,7 +6,6 @@ import stat
 
 from six import string_types
 
-import spack.config
 import spack.error
 import spack.repo
 from spack.config import ConfigError
