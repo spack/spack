@@ -6,9 +6,9 @@ import stat
 
 from six import string_types
 
+import spack.config
 import spack.error
 import spack.repo
-import spack.config
 from spack.config import ConfigError
 from spack.util.path import canonicalize_path
 from spack.version import VersionList

@@ -212,7 +212,8 @@ def install_sbang():
         already_installed = False
 
     if not already_installed:
-        shutil.copy(spack.paths.sbang_script, sbang_path)
+        with fs.write_tmp_and_move(sbang_path) as f:
+            shutil.copy(spack.paths.sbang_script, f.name)
 
     # Set permissions on `sbang` (including group if set in configuration)
     os.chmod(sbang_path, config_mode)
