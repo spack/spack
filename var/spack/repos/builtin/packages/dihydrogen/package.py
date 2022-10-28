@@ -85,7 +85,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("roctracer-dev", when="+rocm +distconv")
 
-    depends_on("cudnn", when="+cuda +distconv")
+    depends_on("cudnn", when="+cuda")
     depends_on("cub", when="^cuda@:10")
 
     # Note that #1712 forces us to enumerate the different blas variants
