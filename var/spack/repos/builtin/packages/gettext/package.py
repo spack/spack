@@ -120,7 +120,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
             root = "/usr/lib64"
             liblist = (["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc"],)
         else:
-            root = (self.prefix,)
+            root = self.prefix
             liblist = (
                 ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc", "libintl"],
             )
