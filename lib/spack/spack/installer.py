@@ -2486,11 +2486,17 @@ class PackageInstaller:
 
         # Ensure we properly report if one or more explicit specs failed
         # or were not installed when should have been.
-        missing = [
-            (request.pkg, request.pkg_id)
-            for request in self.build_requests
-            if request.install_args.get("install_package") and request.pkg_id not in self.installed
-        ]
+        missing = []
+        for request in self.build_requests:
+            miss_package = (
+                request.install_args.get("install_package")
+                and request.pkg_id not in self.installed
+            )
+            miss_deps = request.install_args.get(
+                "install_deps"
+            ) and not request.dependencies.issubset(self.installed)
+            if miss_package or miss_deps:
+                missing.append((request.pkg, request.pkg_id))
 
         if failed_build_requests or missing:
             for _, pkg_id, err in failed_build_requests:
