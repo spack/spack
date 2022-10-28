@@ -228,7 +228,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         """This method is to be overwritten by the package"""
         return []
 
-    def initconfig(self):
+    def initconfig(self, pkg, spec, prefix):
         cache_entries = (
             self.std_initconfig_entries()
             + self.initconfig_compiler_entries()
