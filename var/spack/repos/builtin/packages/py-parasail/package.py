@@ -18,8 +18,10 @@ class PyParasail(PythonPackage):
 
     version("1.3.3", sha256="06f05066d9cf624c0b043f51a1e9d2964154e1edd0f9843e0838f32073e576f8")
 
+    depends_on("perl", type="build")
+    depends_on("m4", type="build")
+    depends_on("libtool", type="build")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
-    depends_on("libtool", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
