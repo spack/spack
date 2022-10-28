@@ -11,7 +11,9 @@ import spack.spec
 __all__ = ["traverse_edges", "traverse_nodes", "traverse_tree"]
 
 #: Data class that stores a directed edge together with depth at
-#: which the target vertex was found.
+#: which the target vertex was found. It is passed to ``accept``
+#: and ``neighbors`` of visitors, so they can decide whether to
+#: follow the edge or not.
 EdgeAndDepth = namedtuple("EdgeAndDepth", ["edge", "depth"])
 
 
@@ -21,6 +23,9 @@ def sort_edges(edges):
 
 
 class BaseVisitor(object):
+    """A simple visitor that accepts all edges unconditionally and follows all
+    edges to dependencies of a given ``deptype``."""
+
     def __init__(self, deptype="all"):
         self.deptype = deptype
 
@@ -107,8 +112,7 @@ class CoverEdgesVisitor(object):
 
 def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visitor=None):
     """
-    Create a visitor object from keyword arguments, which simplifies the API
-    a bit, as cover, direction, deptype kwargs have been around for long in Spack.
+    Create a visitor object from common keyword arguments.
 
     Arguments:
         cover (str): Determines how extensively to cover the dag.  Possible values:
