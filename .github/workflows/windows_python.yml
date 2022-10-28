@@ -82,6 +82,7 @@ jobs:
         spack external find cmake
         spack external find ninja
         spack -d install abseil-cpp
+        spack unit-test lib/spack/spack/test/cmd
   make-installer:
     runs-on: windows-latest
     steps:
