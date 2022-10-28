@@ -19,5 +19,5 @@ class PyAuditwheel(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools@45:", type="build")
     depends_on("py-setuptools-scm@6.2:", type="build")
-    depends_on("py-pyelftools", type=("build", "run"))
-    depends_on("py-importlib-metadata", type=("build", "run"))
+    depends_on("py-pyelftools@0.24:", type=("build", "run"))
+    depends_on("py-importlib-metadata", when="^python@:3.7", type=("build", "run"))
