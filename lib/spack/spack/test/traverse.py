@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.traverse as traverse
 from spack.spec import Spec
-from spack.traverse import traverse_edges, traverse_nodes, traverse_tree
 
 
 def key_by_hash(spec):
@@ -15,7 +15,10 @@ def test_breadth_first_traversal(config, mock_packages):
     # That that depth of discovery is non-decreasing
     s = Spec("dttop").concretized()
     depths = [
-        depth for (depth, _) in traverse_nodes([s], order="breadth", key=key_by_hash, depth=True)
+        depth
+        for (depth, _) in traverse.traverse_nodes(
+            [s], order="breadth", key=key_by_hash, depth=True
+        )
     ]
     assert depths == sorted(depths)
 
@@ -34,7 +37,9 @@ def test_breadth_first_deptype_traversal(config, mock_packages):
         "dtlink4",
     ]
 
-    traversal = traverse_nodes([s], order="breadth", key=key_by_hash, deptype=("build", "link"))
+    traversal = traverse.traverse_nodes(
+        [s], order="breadth", key=key_by_hash, deptype=("build", "link")
+    )
     assert [x.name for x in traversal] == names
 
 
@@ -43,7 +48,9 @@ def test_breadth_firsrt_traversal_deptype_with_builddeps(config, mock_packages):
 
     names = ["dttop", "dtbuild1", "dtlink1", "dtbuild2", "dtlink2", "dtlink3", "dtlink4"]
 
-    traversal = traverse_nodes([s], order="breadth", key=key_by_hash, deptype=("build", "link"))
+    traversal = traverse.traverse_nodes(
+        [s], order="breadth", key=key_by_hash, deptype=("build", "link")
+    )
     assert [x.name for x in traversal] == names
 
 
@@ -65,20 +72,20 @@ def test_breadth_first_traversal_deptype_full(config, mock_packages):
         "dtbuild3",
     ]
 
-    traversal = traverse_nodes([s], order="breadth", key=key_by_hash, deptype="all")
+    traversal = traverse.traverse_nodes([s], order="breadth", key=key_by_hash, deptype="all")
     assert [x.name for x in traversal] == names
 
 
 def test_breadth_first_traversal_deptype_run(config, mock_packages):
     s = Spec("dttop").concretized()
     names = ["dttop", "dtrun1", "dtrun3"]
-    traversal = traverse_nodes([s], order="breadth", key=key_by_hash, deptype="run")
+    traversal = traverse.traverse_nodes([s], order="breadth", key=key_by_hash, deptype="run")
     assert [x.name for x in traversal] == names
 
 
 def test_breadth_first_traversal_reverse(config, mock_packages):
     s = Spec("dt-diamond").concretized()
-    gen = traverse_nodes(
+    gen = traverse.traverse_nodes(
         [s["dt-diamond-bottom"]], order="breadth", key=key_by_hash, direction="parents", depth=True
     )
     assert [(depth, spec.name) for (depth, spec) in gen] == [
@@ -95,7 +102,7 @@ def test_breadth_first_traversal_multiple_roots(config, mock_packages):
     # root dt-diamond-right at depth 1 instead.
     s = Spec("dt-diamond").concretized()
     roots = [s["dt-diamond"], s["dt-diamond-right"]]
-    gen = traverse_edges(roots, order="breadth", key=key_by_hash, depth=True, root=False)
+    gen = traverse.traverse_edges(roots, order="breadth", key=key_by_hash, depth=True, root=False)
     assert [(depth, edge.parent.name, edge.spec.name) for (depth, edge) in gen] == [
         (1, "dt-diamond", "dt-diamond-left"),  # edge from first root "to" depth 1
         (1, "dt-diamond-right", "dt-diamond-bottom"),  # edge from second root "to" depth 1
@@ -115,7 +122,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # BFS should find all nodes as direct deps
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="nodes", depth_first=False)
+        for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -126,7 +133,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # DFS will disover all nodes along the chain a -> b -> c -> d.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="nodes", depth_first=True)
+        for (depth, edge) in traverse.traverse_tree([s], cover="nodes", depth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -137,7 +144,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # When covering all edges, we should never exceed depth 2 in BFS.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="edges", depth_first=False)
+        for (depth, edge) in traverse.traverse_tree([s], cover="edges", depth_first=False)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),
@@ -150,7 +157,7 @@ def test_breadth_first_versus_depth_first_tree(config, mock_packages):
     # In DFS we see the chain again.
     assert [
         (depth, edge.spec.name)
-        for (depth, edge) in traverse_tree([s], cover="edges", depth_first=True)
+        for (depth, edge) in traverse.traverse_tree([s], cover="edges", depth_first=True)
     ] == [
         (0, "chain-a"),
         (1, "chain-b"),

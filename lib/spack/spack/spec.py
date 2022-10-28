@@ -106,7 +106,7 @@ import spack.repo
 import spack.solver
 import spack.store
 import spack.target
-import spack.traverse
+import spack.traverse as traverse
 import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
@@ -1607,12 +1607,12 @@ class Spec(object):
         return upstream
 
     def traverse(self, **kwargs):
-        """Shorthand for spack.traverse.traverse_nodes"""
-        return spack.traverse.traverse_nodes([self], **kwargs)
+        """Shorthand for traverse.traverse_nodes"""
+        return traverse.traverse_nodes([self], **kwargs)
 
     def traverse_edges(self, **kwargs):
-        """Shorthand for spack.traverse.traverse_edges"""
-        return spack.traverse.traverse_edges([self], **kwargs)
+        """Shorthand for traverse.traverse_edges"""
+        return traverse.traverse_edges([self], **kwargs)
 
     @property
     def short_spec(self):
@@ -4483,7 +4483,7 @@ class Spec(object):
 
         out = ""
 
-        for d, dep_spec in spack.traverse.traverse_tree(
+        for d, dep_spec in traverse.traverse_tree(
             [self], cover=cover, deptype=deptypes, depth_first=depth_first
         ):
             node = dep_spec.spec

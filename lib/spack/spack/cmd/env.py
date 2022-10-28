@@ -28,12 +28,8 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.tengine
+import spack.traverse as traverse
 import spack.util.string as string
-from spack.traverse import (
-    CoverNodesVisitor,
-    sort_edges,
-    traverse_breadth_first_with_visitor,
-)
 from spack.util.environment import EnvironmentModifications
 
 description = "manage virtual environments"
@@ -667,7 +663,7 @@ class MakeTargetVisitor(object):
     def neighbors(self, node):
         """Produce a list of spec to follow from node"""
         deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
-        return sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
 
     def build_cache_flag(self, depth):
         setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
@@ -728,8 +724,8 @@ def env_depfile(args):
     # edges for those specs that are installed through a binary cache.
     pkg_buildcache, dep_buildcache = args.use_buildcache
     make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
-    traverse_breadth_first_with_visitor(
-        roots, CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    traverse.traverse_breadth_first_with_visitor(
+        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
     )
 
     # Root specs without deps are the prereqs for the environment target
