@@ -15,15 +15,13 @@ is an entire command dedicated to the management of every aspect of bootstrappin
 
 .. command-output:: spack bootstrap --help
 
-The first thing to know to understand bootstrapping in Spack is that each of
-Spack's dependencies is bootstrapped lazily; i.e. the first time it is needed and
-can't be found. You can readily check if any prerequisite for using Spack
-is missing by running:
+Spack is configured to bootstrap its dependencies lazily by default; i.e. the first time they are needed and
+can't be found. You can readily check if any prerequisite for using Spack is missing by running:
 
 .. code-block:: console
 
    % spack bootstrap status
-   Spack v0.17.1 - python@3.8
+   Spack v0.19.0 - python@3.8
 
    [FAIL] Core Functionalities
      [B] MISSING "clingo": required to concretize specs
@@ -47,6 +45,21 @@ they can be bootstrapped. Running a command that concretize a spec, like:
    [ ... ]
 
 triggers the bootstrapping of clingo from pre-built binaries as expected.
+
+Users can also bootstrap all the dependencies needed by Spack in a single command, which
+might be useful to setup containers or other similar environments:
+
+.. code-block:: console
+
+   $ spack bootstrap now
+   ==> Bootstrapping clingo from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/clingo-bootstrap-spack/linux-centos7-x86_64-gcc-10.2.1-clingo-bootstrap-spack-shqedxgvjnhiwdcdrvjhbd73jaevv7wt.spack
+   ==> Installing "clingo-bootstrap@spack%gcc@10.2.1~docs~ipo+python+static_libstdcpp build_type=Release arch=linux-centos7-x86_64" from a buildcache
+   ==> Bootstrapping patchelf from pre-built binaries
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spec.json
+   ==> Fetching https://mirror.spack.io/bootstrap/github-actions/v0.3/build_cache/linux-centos7-x86_64/gcc-10.2.1/patchelf-0.15.0/linux-centos7-x86_64-gcc-10.2.1-patchelf-0.15.0-htk62k7efo2z22kh6kmhaselru7bfkuc.spack
+   ==> Installing "patchelf@0.15.0%gcc@10.2.1 ldflags="-static-libstdc++ -static-libgcc"  arch=linux-centos7-x86_64" from a buildcache
 
 -----------------------
 The Bootstrapping store
@@ -107,19 +120,19 @@ If need be, you can disable bootstrapping altogether by running:
 
 in which case it's your responsibility to ensure Spack runs in an
 environment where all its prerequisites are installed. You can
-also configure Spack to skip certain bootstrapping methods by *untrusting*
-them. For instance:
+also configure Spack to skip certain bootstrapping methods by disabling
+them specifically:
 
 .. code-block:: console
 
-   % spack bootstrap untrust github-actions
-   ==> "github-actions" is now untrusted and will not be used for bootstrapping
+   % spack bootstrap disable github-actions
+   ==> "github-actions" is now disabled and will not be used for bootstrapping
 
 tells Spack to skip trying to bootstrap from binaries. To add the "github-actions" method back you can:
 
 .. code-block:: console
 
-   % spack bootstrap trust github-actions
+   % spack bootstrap enable github-actions
 
 There is also an option to reset the bootstrapping configuration to Spack's defaults:
 
