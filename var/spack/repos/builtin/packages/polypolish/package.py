@@ -21,6 +21,7 @@ class Polypolish(Package):
 
     depends_on("rust")
     depends_on("python@3.6:", type="run")
+    depends_on("bwa", type="run")
 
     def install(self, spec, prefix):
         cargo = which("cargo")
