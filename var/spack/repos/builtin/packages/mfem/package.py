@@ -867,7 +867,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
-                # Note: MFEM's defaults.mk want to find librocsparse.* in
+                # Note: MFEM's defaults.mk wants to find librocsparse.* in
                 # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
                 # rocsparse (which is a dependency of hipsparse).
                 options += [
@@ -883,12 +883,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+raja" in spec:
-            raja_opt = "-I%s" % spec["raja"].prefix.include
-            if spec["raja"].satisfies("^camp"):
-                raja_opt += " -I%s" % spec["camp"].prefix.include
+            raja = spec["raja"]
+            raja_opt = "-I%s" % raja.prefix.include
+            raja_lib = find_libraries(
+                "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+            )
+            if raja.satisfies("^camp"):
+                camp = raja["camp"]
+                raja_opt += " -I%s" % camp.prefix.include
+                raja_lib += find_optional_library("libcamp", camp.prefix)
             options += [
                 "RAJA_OPT=%s" % raja_opt,
-                "RAJA_LIB=%s" % ld_flags_from_dirs([spec["raja"].prefix.lib], ["RAJA"]),
+                "RAJA_LIB=%s" % ld_flags_from_library_list(raja_lib),
             ]
 
         if "+amgx" in spec:

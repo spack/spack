@@ -19,9 +19,9 @@ hdf5_spec='^hdf5@1.8.19:1.8'
 # petsc spec
 petsc_spec='^petsc+suite-sparse+mumps'
 petsc_spec_cuda='^petsc+cuda+suite-sparse+mumps'
-# strumpack spec without cuda (use @master until version > 6.3.1 is released)
-strumpack_spec='^strumpack@master~slate~openmp~cuda'
-strumpack_cuda_spec='^strumpack@master~slate~openmp'
+# strumpack spec without cuda (use version > 6.3.1)
+strumpack_spec='^strumpack~slate~openmp~cuda'
+strumpack_cuda_spec='^strumpack~slate~openmp'
 strumpack_rocm_spec='^strumpack+rocm~slate~openmp~cuda'
 
 builds=(
@@ -116,27 +116,27 @@ builds_cuda=(
         ^raja+cuda~openmp ^hypre+cuda'
 
     # hypre without cuda:
+    # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: add back '+gslib' when the gslib test is fixed.
-    # TODO: restore '+superlu-dist' when the unit test is fixed.
-    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +strumpack+suite-sparse \
+        +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
-        '"$hdf5_spec"
+        ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
+        '"$petsc_spec_cuda $hdf5_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
     # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
+    # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +suite-sparse \
+        +suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        ^raja+cuda+openmp ^hypre+cuda \
+        ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
         '"$hdf5_spec"
 
     #
@@ -155,27 +155,27 @@ builds_cuda=(
         ^raja+cuda~openmp ^hypre+cuda'
 
     # hypre without cuda:
+    # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: add back '+gslib' when the gslib test is fixed.
-    # TODO: restore '+superlu-dist' when the unit test is fixed.
-    # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +strumpack+suite-sparse \
+        +superlu-dist+strumpack+suite-sparse+gslib+petsc+slepc \
         +sundials+pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        ^raja+cuda+openmp'" $strumpack_cuda_spec"' \
-        '"$hdf5_spec"
+        ^raja+cuda+openmp ^hiop+shared'" $strumpack_cuda_spec"' \
+        '"$petsc_spec_cuda $hdf5_spec"
 
     # hypre with cuda:
     # TODO: restore '+libceed' when the libCEED CUDA unit tests take less time.
-    # TODO: add back '+gslib' when the gslib test is fixed.
     # TODO: restore '+superlu-dist' when we support it with '^hypre+cuda'.
     # TODO: add back "+strumpack $strumpack_cuda_spec" when it's supported.
     # TODO: add back "+petsc+slepc $petsc_spec_cuda" when it works.
+    # NOTE: PETSc tests may need PETSC_OPTIONS="-use_gpu_aware_mpi 0"
     # TODO: add back "+sundials" when it's supported with '^hypre+cuda'.
+    # TODO: remove "^hiop+shared" when the default static build is fixed.
     ${mfem_dev}'+cuda+openmp+raja+occa cuda_arch='"${cuda_arch}"' \
-        +suite-sparse \
+        +suite-sparse+gslib \
         +pumi+mpfr+netcdf+zlib+gnutls+libunwind+conduit+ginkgo+hiop \
-        ^raja+cuda+openmp ^hypre+cuda \
+        ^raja+cuda+openmp ^hiop+shared ^hypre+cuda \
         '"$hdf5_spec"
 )
 
@@ -230,14 +230,20 @@ run_builds=("${builds[@]}" "${builds2[@]}")
 # run_builds=("${builds_cuda[@]}")
 # run_builds=("${builds_rocm[@]}")
 
+# PETSc CUDA tests on Lassen need this:
+# export PETSC_OPTIONS="-use_gpu_aware_mpi 0"
+
 for bld in "${run_builds[@]}"; do
     printf "\n%s\n" "${SEP}"
     printf "    %s\n" "${bld}"
     printf "%s\n" "${SEP}"
     eval bbb="\"${bld}\""
     spack spec --fresh -I $bbb || exit 1
+    # echo ./bin/spack spec --fresh -I $bbb
     printf "%s\n" "${sep}"
     spack install $spack_jobs --fresh --test=root $bbb || exit 2
+    # echo ./bin/spack install $spack_jobs --fresh --test=root $bbb
+    # echo
 done
 
 # Uninstall all mfem builds:
