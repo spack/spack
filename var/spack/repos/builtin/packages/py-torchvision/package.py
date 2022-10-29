@@ -109,7 +109,7 @@ class PyTorchvision(PythonPackage):
     depends_on("pil@5.3:8.2,8.4:", when="@0.13: backend=pil", type=("build", "run"))
     depends_on("py-accimage", when="backend=accimage", type=("build", "run"))
     depends_on("libpng@1.6.0:", when="backend=png")
-    depends_on("jpeg", when="backend=jpeg")
+    depends_on("jpeg")  # seems to be required for all backends
 
     depends_on("ffmpeg@3.1:", when="@0.4.2:")
 
