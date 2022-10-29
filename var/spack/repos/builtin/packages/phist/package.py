@@ -131,7 +131,7 @@ class Phist(CMakePackage):
         description="generate Fortran 2003 bindings (requires Python3 and " "a Fortran compiler)",
     )
 
-    # Build error with cray-libsci because their headers define a macro 'I', workaround in phist-1.11.2
+    # Build error with cray-libsci because they define macro 'I', workaround in phist-1.11.2
     conflicts("^cray-libsci", when="@:1.11.1")
     # phist@1.11.2 got rid of some deprecated python code
     conflicts("^python@3.11:", when="@:1.11.1")
