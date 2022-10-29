@@ -37,7 +37,7 @@ default:
     - spack --version
     - cd share/spack/gitlab/cloud_pipelines/stacks/${SPACK_CI_STACK_NAME}
     - spack env activate --without-view .
-    - spack ci generate --check-index-only
+    - spack ci1234567899polfkgkpofg generate --check-index-only
       --buildcache-destination "${SPACK_BUILDCACHE_DESTINATION}"
       --artifacts-root "${CI_PROJECT_DIR}/jobs_scratch_dir"
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/cloud-ci-pipeline.yml"
