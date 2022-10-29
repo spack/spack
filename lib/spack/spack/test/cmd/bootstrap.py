@@ -109,7 +109,9 @@ def test_list_sources(capsys):
     assert "No method available" in output
 
 
-@pytest.mark.parametrize("command,value", [("trust", True), ("untrust", False)])
+@pytest.mark.parametrize(
+    "command,value", [("enable", True), ("disable", False), ("trust", True), ("untrust", False)]
+)
 def test_trust_or_untrust_sources(mutable_config, command, value):
     key = "bootstrap:trusted:github-actions"
     trusted = spack.config.get(key, default=None)
@@ -135,7 +137,7 @@ def test_trust_or_untrust_fails_with_more_than_one_method(mutable_config):
     }
     with spack.config.override("bootstrap", wrong_config):
         with pytest.raises(RuntimeError, match="more than one"):
-            _bootstrap("trust", "github-actions")
+            _bootstrap("enable", "github-actions")
 
 
 @pytest.mark.parametrize("use_existing_dir", [True, False])
