@@ -142,10 +142,10 @@ class PyTorchvision(PythonPackage):
         if "+cuda" in self.spec["py-torch"]:
             env.set("FORCE_CUDA", 1)
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
-            pytorch_cuda_arch = ";".join(
+            torch_cuda_arch_list = ";".join(
                 "{0:.1f}".format(float(i) / 10.0)
                 for i in self.spec["py-torch"].variants["cuda_arch"].value
             )
-            env.set("TORCH_CUDA_ARCH_LIST", pytorch_cuda_arch)
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
         else:
             env.set("FORCE_CUDA", 0)

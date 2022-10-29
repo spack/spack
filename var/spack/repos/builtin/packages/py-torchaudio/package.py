@@ -20,10 +20,33 @@ class PyTorchaudio(PythonPackage):
     extension."""
 
     homepage = "https://github.com/pytorch/audio"
-    url = "https://github.com/pytorch/audio/archive/v0.4.0.tar.gz"
+    git = "https://github.com/pytorch/audio.git"
 
-    version("0.4.0", sha256="9361312319b1ab880fc348ea82b024053bca6faf477ef6a9232a5b805742dc66")
+    version("main", branch="main", submodules=True)
+    version("0.13.0", tag="v0.13.0", submodules=True)
+    version("0.4.0", tag="v0.4.0", submodules=True)
 
+    depends_on("cmake@3.18:", when="@0.10:", type="build")
+    depends_on("cmake@3.5:", when="@0.8:", type="build")
     depends_on("py-setuptools", type="build")
-    depends_on("sox@14.3.2:")
-    depends_on("py-torch@1.2.0:", type=("build", "run"))
+
+    # https://github.com/pytorch/audio#dependencies
+    depends_on("py-torch@master", when="@main", type=("build", "run"))
+    depends_on("py-torch@1.13.0", when="@0.13.0", type=("build", "run"))
+    depends_on("py-torch@1.4.0", when="@0.4.0", type=("build", "run"))
+
+    def setup_build_environment(self, env):
+        if "+cuda" in self.spec["py-torch"]:
+            env.set("USE_CUDA", 1)
+            torch_cuda_arch_list = ";".join(
+                "{0:.1f}".format(float(i) / 10.0)
+                for i in self.spec["py-torch"].variants["cuda_arch"].value
+            )
+            env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch_list)
+        else:
+            env.set("USE_CUDA", 0)
+
+        if "+rocm" in self.spec["py-torch"]:
+            env.set("USE_ROCM", 1)
+        else:
+            env.set("USE_ROCM", 0)
