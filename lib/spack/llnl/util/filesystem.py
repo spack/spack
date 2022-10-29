@@ -1025,7 +1025,7 @@ def write_tmp_and_move(path, mode="w"):
 
     try:
         yield file
-    except:
+    except BaseException:
         # On any failure, try to remove the temporary file.
         _try_unlink(tmp_path)
         raise
