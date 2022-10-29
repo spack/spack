@@ -2,7 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.cmake
+import spack.build_systems.makefile
 from spack.package import *
 
 
@@ -36,6 +37,12 @@ class Plasma(CMakePackage):
         "17.1",
         sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
         url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz",
+    )
+
+    build_system(
+        conditional("makefile", when="@:17.1"),
+        conditional("cmake", when="@18.9:"),
+        default="cmake",
     )
 
     variant("shared", default=True, description="Build shared library (disables static library)")
@@ -82,18 +89,15 @@ class Plasma(CMakePackage):
     def patch(self):
         python("tools/generate_precisions.py")
 
-    @when("@18.9.0:")
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     def cmake_args(self):
-        options = list()
-
-        options.extend(
-            [
-                "-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs.joined(";"),
-                "-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs.joined(";"),
-            ]
-        )
-
-        options += ["-DBUILD_SHARED_LIBS=%s" % ("ON" if ("+shared" in self.spec) else "OFF")]
+        options = [
+            self.define("BLAS_LIBRARIES", self.spec["blas"].libs.joined(";")),
+            self.define("LAPACK_LIBRARIES", self.spec["lapack"].libs.joined(";")),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("PLASMA_DETECT_LUA", "lua"),
+        ]
 
         for package, provider in (
             ("openblas", "openblas"),
@@ -102,32 +106,13 @@ class Plasma(CMakePackage):
         ):
             if package in self.spec:
                 for lib in ("CBLAS", "LAPACKE"):
-                    options.append("-D%s_PROVIDER=%s" % (lib, provider))
-
-        if "lua" in self.spec:
-            options.append("-DPLASMA_DETECT_LUA=TRUE")
+                    options.append(self.define("{}_PROVIDER".format(lib), provider))
 
         return options
 
-    # Before 18.9.0 it was an Makefile package
-    @when("@:17.1")
-    def cmake(self, spec, prefix):
-        pass
 
-    # Before 18.9.0 it was an Makefile package
-    @when("@:17.1")
-    def build(self, spec, prefix):
-        pass
-
-    # Before 18.9.0 it was an Makefile package
-    @when("@:17.1")
-    def install(self, spec, prefix):
-        self.edit(spec, prefix)
-        make()
-        make("install")
-
-    @when("@:17.1")
-    def edit(self, spec, prefix):
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+    def edit(self, pkg, spec, prefix):
         # copy "make.inc.mkl-gcc" provided by default into "make.inc"
         open("make.inc", "w").write(open("make.inc.mkl-gcc").read())
 

@@ -14,6 +14,8 @@ spack:
 
   definitions:
     - default_specs:
+      - 'uncrustify build_system=autotools'
+      - 'uncrustify build_system=cmake'
       - lz4  # MakefilePackage
       - mpich~fortran  # AutotoolsPackage
       - py-setuptools  # PythonPackage
@@ -32,11 +34,14 @@ spack:
 
   gitlab-ci:
     script:
-      - curl -Lfs https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0%2B0/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz -o gmake.tar.gz
-      - printf 'b019c4aa757503d442c906047f6b1c393bf8eeba71260d455537cfc708862249  gmake.tar.gz' | sha256sum --check --strict --quiet
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
       - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
