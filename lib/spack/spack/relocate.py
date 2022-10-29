@@ -485,15 +485,17 @@ def _replace_prefix_bin(filename, byte_prefixes):
             raise BinaryTextReplaceError(old, new)
         return new + b"/" * pad
 
-    matches = []
-
     with open(filename, "rb+") as f:
-        for m in re.finditer(all_prefixes, f.read()):
-            matches.append((m.start(), padded_replacement(m.group(0))))
+        # Register what replacement string to put on what offsets in the file.
+        replacements_at_offset = [
+            (padded_replacement(m.group(0)), m.start())
+            for m in re.finditer(all_prefixes, f.read())
+        ]
 
-        for byte_offset, bytes_to_write in matches:
-            f.seek(byte_offset)
-            f.write(bytes_to_write)
+        # Apply the replacements
+        for replacement, offset in replacements_at_offset:
+            f.seek(offset)
+            f.write(replacement)
 
 
 def relocate_macho_binaries(
