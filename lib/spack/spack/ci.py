@@ -12,11 +12,12 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
 
-from six import iteritems
+from six import iteritems, string_types
 from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
@@ -42,7 +43,6 @@ import spack.util.web as web_util
 from spack.error import SpackError
 from spack.reporters.cdash import CDash
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
-from spack.spec import Spec
 from spack.util.pattern import Bunch
 
 JOB_RETRY_CONDITIONS = [
@@ -142,13 +142,6 @@ def _get_spec_string(spec):
     return spec.format("".join(format_elements))
 
 
-def _format_root_spec(spec, main_phase, strip_compiler):
-    if main_phase is False and strip_compiler is True:
-        return "{0}@{1} arch={2}".format(spec.name, spec.version, spec.architecture)
-    else:
-        return spec.dag_hash()
-
-
 def _spec_deps_key(s):
     return "{0}/{1}".format(s.name, s.dag_hash(7))
 
@@ -174,8 +167,7 @@ def _get_spec_dependencies(
 
         for entry in specs:
             spec_labels[entry["label"]] = {
-                "spec": Spec(entry["spec"]),
-                "rootSpec": entry["root_spec"],
+                "spec": entry["spec"],
                 "needs_rebuild": entry["needs_rebuild"],
             }
 
@@ -202,7 +194,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
         and stages:
 
         spec_labels: A dictionary mapping the spec labels which are made of
-            (pkg-name/hash-prefix), to objects containing "rootSpec" and "spec"
+            (pkg-name/hash-prefix), to objects containing "spec" and "needs_rebuild"
             keys.  The root spec is the spec of which this spec is a dependency
             and the spec is the formatted spec string for this spec.
 
@@ -317,17 +309,14 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
            ],
            "specs": [
                {
-                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
                  "spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-highs...",
                  "label": "readline/ip6aiun"
                },
                {
-                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
                  "spec": "ncurses@6.1%apple-clang@9.1.0 arch=darwin-highsi...",
                  "label": "ncurses/y43rifz"
                },
                {
-                 "root_spec": "readline@7.0%apple-clang@9.1.0 arch=darwin-...",
                  "spec": "pkgconf@1.5.4%apple-clang@9.1.0 arch=darwin-high...",
                  "label": "pkgconf/eg355zb"
                }
@@ -349,8 +338,6 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
         )
 
     for spec in spec_list:
-        root_spec = spec
-
         for s in spec.traverse(deptype=all):
             if s.external:
                 tty.msg("Will not stage external pkg: {0}".format(s))
@@ -362,8 +349,7 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
 
             skey = _spec_deps_key(s)
             spec_labels[skey] = {
-                "spec": _get_spec_string(s),
-                "root": root_spec,
+                "spec": s,
                 "needs_rebuild": not up_to_date_mirrors,
             }
 
@@ -380,7 +366,6 @@ def _compute_spec_deps(spec_list, check_index_only=False, mirrors_to_check=None)
             {
                 "label": spec_label,
                 "spec": spec_holder["spec"],
-                "root_spec": spec_holder["root"],
                 "needs_rebuild": spec_holder["needs_rebuild"],
             }
         )
@@ -455,10 +440,6 @@ def _find_matching_config(spec, gitlab_ci):
             break
 
     return runner_attributes if matched else None
-
-
-def _pkg_name_from_spec_label(spec_label):
-    return spec_label[: spec_label.index("/")]
 
 
 def _format_job_needs(
@@ -626,11 +607,11 @@ def generate_gitlab_ci_yaml(
     cdash_handler = CDashHandler(yaml_root.get("cdash")) if "cdash" in yaml_root else None
     build_group = cdash_handler.build_group if cdash_handler else None
 
-    prune_untouched_packages = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
-    if prune_untouched_packages:
+    prune_untouched_packages = False
+    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
+    if spack_prune_untouched is not None and spack_prune_untouched.lower() == "true":
         # Requested to prune untouched packages, but assume we won't do that
         # unless we're actually in a git repo.
-        prune_untouched_packages = False
         rev1, rev2 = get_change_revisions()
         tty.debug("Got following revisions: rev1={0}, rev2={1}".format(rev1, rev2))
         if rev1 and rev2:
@@ -645,6 +626,14 @@ def generate_gitlab_ci_yaml(
                 tty.debug("all affected specs:")
                 for s in affected_specs:
                     tty.debug("  {0}".format(s.name))
+
+    # Allow overriding --prune-dag cli opt with environment variable
+    prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
+    if prune_dag_override is not None:
+        prune_dag = True if prune_dag_override.lower() == "true" else False
+
+    # If we are not doing any kind of pruning, we are rebuilding everything
+    rebuild_everything = not prune_dag and not prune_untouched_packages
 
     # Downstream jobs will "need" (depend on, for both scheduling and
     # artifacts, which include spack.lock file) this pipeline generation
@@ -845,7 +834,6 @@ def generate_gitlab_ci_yaml(
         phase_name = phase["name"]
         strip_compilers = phase["strip-compilers"]
 
-        main_phase = _is_main_phase(phase_name)
         spec_labels, dependencies, stages = staged_phases[phase_name]
 
         for stage_jobs in stages:
@@ -855,9 +843,7 @@ def generate_gitlab_ci_yaml(
 
             for spec_label in stage_jobs:
                 spec_record = spec_labels[spec_label]
-                root_spec = spec_record["rootSpec"]
-                pkg_name = _pkg_name_from_spec_label(spec_label)
-                release_spec = root_spec[pkg_name]
+                release_spec = spec_record["spec"]
                 release_spec_dag_hash = release_spec.dag_hash()
 
                 if prune_untouched_packages:
@@ -878,7 +864,7 @@ def generate_gitlab_ci_yaml(
                     # For spack pipelines "public" and "protected" are reserved tags
                     tags = _remove_reserved_tags(tags)
                     if spack_pipeline_type == "spack_protected_branch":
-                        tags.extend(["aws", "protected"])
+                        tags.extend(["protected"])
                     elif spack_pipeline_type == "spack_pull_request":
                         tags.extend(["public"])
 
@@ -927,7 +913,6 @@ def generate_gitlab_ci_yaml(
                         compiler_action = "INSTALL_MISSING"
 
                 job_vars = {
-                    "SPACK_ROOT_SPEC": _format_root_spec(root_spec, main_phase, strip_compilers),
                     "SPACK_JOB_SPEC_DAG_HASH": release_spec_dag_hash,
                     "SPACK_JOB_SPEC_PKG_NAME": release_spec.name,
                     "SPACK_COMPILER_ACTION": compiler_action,
@@ -944,9 +929,7 @@ def generate_gitlab_ci_yaml(
                         # purposes, so we only get the direct dependencies.
                         dep_jobs = []
                         for dep_label in dependencies[spec_label]:
-                            dep_pkg = _pkg_name_from_spec_label(dep_label)
-                            dep_root = spec_labels[dep_label]["rootSpec"]
-                            dep_jobs.append(dep_root[dep_pkg])
+                            dep_jobs.append(spec_labels[dep_label]["spec"])
 
                     job_dependencies.extend(
                         _format_job_needs(
@@ -1030,7 +1013,11 @@ def generate_gitlab_ci_yaml(
                             tty.debug(debug_msg)
 
                 if prune_dag and not rebuild_spec:
-                    tty.debug("Pruning {0}, does not need rebuild.".format(release_spec.name))
+                    tty.debug(
+                        "Pruning {0}/{1}, does not need rebuild.".format(
+                            release_spec.name, release_spec.dag_hash()
+                        )
+                    )
                     continue
 
                 if broken_spec_urls is not None and release_spec_dag_hash in broken_spec_urls:
@@ -1298,6 +1285,8 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
+            "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
 
         if remote_mirror_override:
@@ -1357,7 +1346,9 @@ def generate_gitlab_ci_yaml(
     if known_broken_specs_encountered:
         tty.error("This pipeline generated hashes known to be broken on develop:")
         display_broken_spec_messages(broken_specs_url, known_broken_specs_encountered)
-        tty.die()
+
+        if not rebuild_everything:
+            sys.exit(1)
 
     with open(output_file, "w") as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
@@ -1469,64 +1460,6 @@ def configure_compilers(compiler_action, scope=None):
     return None
 
 
-def get_concrete_specs(env, root_spec, job_name, compiler_action):
-    """Build a dictionary of concrete specs relevant to a particular
-        rebuild job.  This includes the root spec and the spec to be
-        rebuilt (which could be the same).
-
-    Arguments:
-
-        env (spack.environment.Environment): Activated spack environment
-            used to get concrete root spec by hash in case compiler_action
-            is anthing other than FIND_ANY.
-        root_spec (str): If compiler_action is FIND_ANY root_spec is
-            a string representation which can be turned directly into
-            a spec, otherwise, it's a hash used to index the activated
-            spack environment.
-        job_name (str): Name of package to be built, used to index the
-            concrete root spec and produce the concrete spec to be
-            built.
-        compiler_action (str): Determines how to interpret the root_spec
-            parameter, either as a string representation as a hash.
-
-    Returns:
-
-    .. code-block:: JSON
-
-       {
-           "root": "<spec>",
-           "<job-pkg-name>": "<spec>",
-        }
-
-    """
-    spec_map = {
-        "root": None,
-    }
-
-    if compiler_action == "FIND_ANY":
-        # This corresponds to a bootstrapping phase where we need to
-        # rely on any available compiler to build the package (i.e. the
-        # compiler needed to be stripped from the spec when we generated
-        # the job), and thus we need to concretize the root spec again.
-        tty.debug("About to concretize {0}".format(root_spec))
-        concrete_root = Spec(root_spec).concretized()
-        tty.debug("Resulting concrete root: {0}".format(concrete_root))
-    else:
-        # in this case, either we're relying on Spack to install missing
-        # compiler bootstrapped in a previous phase, or else we only had one
-        # phase (like a site which already knows what compilers are available
-        # on it's runners), so we don't want to concretize that root spec
-        # again.  The reason we take this path in the first case (bootstrapped
-        # compiler), is that we can't concretize a spec at this point if we're
-        # going to ask spack to "install_missing_compilers".
-        concrete_root = env.specs_by_hash[root_spec]
-
-    spec_map["root"] = concrete_root
-    spec_map[job_name] = concrete_root[job_name]
-
-    return spec_map
-
-
 def _push_mirror_contents(env, specfile_path, sign_binaries, mirror_url):
     """Unchecked version of the public API, for easier mocking"""
     unsigned = not sign_binaries
@@ -1573,6 +1506,19 @@ def push_mirror_contents(env, specfile_path, mirror_url, sign_binaries):
             tty.msg(err_msg)
         else:
             raise inst
+
+
+def remove_other_mirrors(mirrors_to_keep, scope=None):
+    """Remove all mirrors from the given config scope, the exceptions being
+    any listed in in mirrors_to_keep, which is a list of mirror urls.
+    """
+    mirrors_to_remove = []
+    for name, mirror_url in spack.config.get("mirrors", scope=scope).items():
+        if mirror_url not in mirrors_to_keep:
+            mirrors_to_remove.append(name)
+
+    for mirror_name in mirrors_to_remove:
+        spack.mirror.remove(mirror_name, scope)
 
 
 def copy_files_to_artifacts(src, artifacts_dir):
@@ -1990,26 +1936,35 @@ def reproduce_ci_job(url, work_dir):
     print("".join(inst_list))
 
 
-def process_command(cmd, cmd_args, repro_dir):
+def process_command(name, commands, repro_dir):
     """
     Create a script for and run the command. Copy the script to the
     reproducibility directory.
 
     Arguments:
-        cmd (str): name of the command being processed
-        cmd_args (list): string arguments to pass to the command
+        name (str): name of the command being processed
+        commands (list): list of arguments for single command or list of lists of
+            arguments for multiple commands. No shell escape is performed.
         repro_dir (str): Job reproducibility directory
 
     Returns: the exit code from processing the command
     """
-    tty.debug("spack {0} arguments: {1}".format(cmd, cmd_args))
+    tty.debug("spack {0} arguments: {1}".format(name, commands))
+
+    if len(commands) == 0 or isinstance(commands[0], string_types):
+        commands = [commands]
+
+    # Create a string [command 1] && [command 2] && ... && [command n] with commands
+    # quoted using double quotes.
+    args_to_string = lambda args: " ".join('"{}"'.format(arg) for arg in args)
+    full_command = " && ".join(map(args_to_string, commands))
 
     # Write the command to a shell script
-    script = "{0}.sh".format(cmd)
+    script = "{0}.sh".format(name)
     with open(script, "w") as fd:
-        fd.write("#!/bin/bash\n\n")
-        fd.write("\n# spack {0} command\n".format(cmd))
-        fd.write(" ".join(['"{0}"'.format(i) for i in cmd_args]))
+        fd.write("#!/bin/sh\n\n")
+        fd.write("\n# spack {0} command\n".format(name))
+        fd.write(full_command)
         fd.write("\n")
 
     st = os.stat(script)
@@ -2021,15 +1976,15 @@ def process_command(cmd, cmd_args, repro_dir):
     # Run the generated install.sh shell script as if it were being run in
     # a login shell.
     try:
-        cmd_process = subprocess.Popen(["bash", "./{0}".format(script)])
+        cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
         cmd_process.wait()
         exit_code = cmd_process.returncode
     except (ValueError, subprocess.CalledProcessError, OSError) as err:
-        tty.error("Encountered error running {0} script".format(cmd))
+        tty.error("Encountered error running {0} script".format(name))
         tty.error(err)
         exit_code = 1
 
-    tty.debug("spack {0} exited {1}".format(cmd, exit_code))
+    tty.debug("spack {0} exited {1}".format(name, exit_code))
     return exit_code
 
 
@@ -2172,8 +2127,9 @@ def run_standalone_tests(**kwargs):
 
     test_args = [
         "spack",
-        "-d",
-        "-v",
+        "--color=always",
+        "--backtrace",
+        "--verbose",
         "test",
         "run",
     ]

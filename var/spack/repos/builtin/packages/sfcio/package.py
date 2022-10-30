@@ -15,7 +15,12 @@ class Sfcio(CMakePackage):
     homepage = "https://noaa-emc.github.io/NCEPLIBS-sfcio"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-sfcio/archive/refs/tags/v1.4.1.tar.gz"
 
-    maintainers = ["t-brown", "kgerheiser", "Hang-Lei-NOAA", "edwardhartnett"]
+    maintainers = [
+        "t-brown",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+    ]
 
     version("1.4.1", sha256="d9f900cf18ec1a839b4128c069b1336317ffc682086283443354896746b89c59")
 

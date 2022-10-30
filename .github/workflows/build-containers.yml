@@ -13,7 +13,7 @@ on:
     paths:
       - '.github/workflows/build-containers.yml'
       - 'share/spack/docker/*'
-      - 'share/templates/container/*'
+      - 'share/spack/templates/container/*'
       - 'lib/spack/spack/container/*'
   # Let's also build & tag Spack containers on releases.
   release:
@@ -89,7 +89,7 @@ jobs:
         uses: docker/setup-qemu-action@8b122486cedac8393e77aa9734c3528886e4a1a8 # @v1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@95cb08cb2672c73d4ffd2f422e6d11953d2a9c70 # @v1
+        uses: docker/setup-buildx-action@c74574e6c82eeedc46366be1b0d287eff9085eb6 # @v1
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # @v1

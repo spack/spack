@@ -1819,6 +1819,14 @@ class Environment(object):
                     matches[dep_hash] = spec
         return list(matches.values())
 
+    def get_one_by_hash(self, dag_hash):
+        """Returns the single spec from the environment which matches the
+        provided hash.  Raises an AssertionError if no specs match or if
+        more than one spec matches."""
+        hash_matches = self.get_by_hash(dag_hash)
+        assert len(hash_matches) == 1
+        return hash_matches[0]
+
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized

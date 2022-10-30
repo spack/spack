@@ -20,6 +20,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
+from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -406,7 +407,7 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     orig_path_bytes = str(orig_binary.dirpath()).encode("utf-8")
     new_path_bytes = str(new_binary.dirpath()).encode("utf-8")
 
-    spack.relocate.relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
+    spack.relocate.unsafe_relocate_text_bin([str(new_binary)], {orig_path_bytes: new_path_bytes})
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
@@ -421,7 +422,7 @@ def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     with open(fpath, "w") as f:
         f.write("/short")
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
-        spack.relocate.relocate_text_bin([fpath], {short_prefix: long_prefix})
+        spack.relocate.unsafe_relocate_text_bin([fpath], {short_prefix: long_prefix})
 
 
 @pytest.mark.requires_executables("install_name_tool", "file", "cc")
@@ -476,3 +477,27 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
     # (this is a corner case for GCC installation)
     (root, filename) = make_object_file()
     assert not fixup_rpath(root, filename)
+
+
+def test_text_relocation_regex_is_safe():
+    # Test whether prefix regex is properly escaped
+    string = b"This does not match /a/, but this does: /[a-z]/."
+    assert utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
+
+
+def test_utf8_paths_to_single_binary_regex():
+    regex = utf8_paths_to_single_binary_regex(["/first/path", "/second/path", "/safe/[a-z]"])
+    # Match nothing
+    assert not regex.search(b"text /neither/first/path text /the/second/path text")
+
+    # Match first
+    string = b"contains both /first/path/subdir and /second/path/sub"
+    assert regex.search(string).group(0) == b"/first/path/subdir"
+
+    # Match second
+    string = b"contains both /not/first/path/subdir but /second/path/subdir"
+    assert regex.search(string).group(0) == b"/second/path/subdir"
+
+    # Match "unsafe" dir name
+    string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
+    assert regex.search(string).group(0) == b"/safe/[a-z]/file"

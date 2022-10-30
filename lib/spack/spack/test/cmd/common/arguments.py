@@ -129,3 +129,19 @@ def test_concretizer_arguments(mutable_config, mock_packages):
     spec("--fresh", "zlib")
 
     assert spack.config.get("concretizer:reuse", None) is False
+
+
+def test_use_buildcache_type():
+    assert arguments.use_buildcache("only") == ("only", "only")
+    assert arguments.use_buildcache("never") == ("never", "never")
+    assert arguments.use_buildcache("auto") == ("auto", "auto")
+    assert arguments.use_buildcache("package:never,dependencies:only") == ("never", "only")
+    assert arguments.use_buildcache("only,package:never") == ("never", "only")
+    assert arguments.use_buildcache("package:only,package:never") == ("never", "auto")
+    assert arguments.use_buildcache("auto , package: only") == ("only", "auto")
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        assert arguments.use_buildcache("pkg:only,deps:never")
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        assert arguments.use_buildcache("sometimes")

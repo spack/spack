@@ -24,5 +24,5 @@ class Dbow2(CMakePackage):
     # See https://github.com/spack/spack/pull/22303 for reference
     depends_on(Boost.with_default_variants)
     depends_on("opencv+calib3d+features2d+highgui+imgproc")
-    depends_on("dlib")
+    depends_on("dorian3d-dlib")
     depends_on("eigen", type="link")

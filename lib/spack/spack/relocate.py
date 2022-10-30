@@ -744,11 +744,26 @@ def relocate_links(links, orig_layout_root, orig_install_prefix, new_install_pre
             tty.warn(msg.format(link_target, abs_link, new_install_prefix))
 
 
-def relocate_text(files, prefixes, concurrency=32):
+def utf8_path_to_binary_regex(prefix):
+    """Create a (binary) regex that matches the input path in utf8"""
+    prefix_bytes = re.escape(prefix).encode("utf-8")
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
+
+
+def utf8_paths_to_single_binary_regex(prefixes):
+    """Create a (binary) regex that matches any input path in utf8"""
+    all_prefixes = b"|".join(re.escape(prefix).encode("utf-8") for prefix in prefixes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
+
+
+def unsafe_relocate_text(files, prefixes, concurrency=32):
     """Relocate text file from the original installation prefix to the
     new prefix.
 
     Relocation also affects the the path in Spack's sbang script.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         files (list): Text files to be relocated
@@ -764,11 +779,8 @@ def relocate_text(files, prefixes, concurrency=32):
 
     for orig_prefix, new_prefix in prefixes.items():
         if orig_prefix != new_prefix:
-            orig_bytes = orig_prefix.encode("utf-8")
-            orig_prefix_rexp = re.compile(
-                b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % orig_bytes
-            )
-            new_bytes = b"\\1%s\\2" % new_prefix.encode("utf-8")
+            orig_prefix_rexp = utf8_path_to_binary_regex(orig_prefix)
+            new_bytes = b"\\1%s\\2" % new_prefix.replace("\\", r"\\").encode("utf-8")
             compiled_prefixes[orig_prefix_rexp] = new_bytes
 
     # Do relocations on text that refers to the install tree
@@ -786,10 +798,13 @@ def relocate_text(files, prefixes, concurrency=32):
         tp.join()
 
 
-def relocate_text_bin(binaries, prefixes, concurrency=32):
+def unsafe_relocate_text_bin(binaries, prefixes, concurrency=32):
     """Replace null terminated path strings hard coded into binaries.
 
     The new install prefix must be shorter than the original one.
+
+    Note: unsafe when files contains duplicates, such as repeated paths,
+    symlinks, hardlinks.
 
     Args:
         binaries (list): binaries to be relocated

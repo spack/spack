@@ -3030,29 +3030,106 @@ def test_read_legacy_lockfile_and_reconcretize(mock_stage, mock_fetch, install_m
     assert current_versions == expected_versions
 
 
-def test_environment_depfile_makefile(tmpdir, mock_packages):
+@pytest.mark.parametrize(
+    "depfile_flags,expected_installs",
+    [
+        # This installs the full environment
+        (
+            ["--use-buildcache=never"],
+            [
+                "dtbuild1",
+                "dtbuild2",
+                "dtbuild3",
+                "dtlink1",
+                "dtlink2",
+                "dtlink3",
+                "dtlink4",
+                "dtlink5",
+                "dtrun1",
+                "dtrun2",
+                "dtrun3",
+                "dttop",
+            ],
+        ),
+        # This prunes build deps at depth > 0
+        (
+            ["--use-buildcache=package:never,dependencies:only"],
+            [
+                "dtbuild1",
+                "dtlink1",
+                "dtlink2",
+                "dtlink3",
+                "dtlink4",
+                "dtlink5",
+                "dtrun1",
+                "dtrun2",
+                "dtrun3",
+                "dttop",
+            ],
+        ),
+        # This prunes all build deps
+        (
+            ["--use-buildcache=only"],
+            [
+                "dtlink1",
+                "dtlink3",
+                "dtlink4",
+                "dtlink5",
+                "dtrun1",
+                "dtrun3",
+                "dttop",
+            ],
+        ),
+        # Test whether pruning of build deps is correct if we explicitly include one
+        # that is also a dependency of a root.
+        (
+            ["--use-buildcache=only", "dttop", "dtbuild1"],
+            [
+                "dtbuild1",
+                "dtlink1",
+                "dtlink2",
+                "dtlink3",
+                "dtlink4",
+                "dtlink5",
+                "dtrun1",
+                "dtrun2",
+                "dtrun3",
+                "dttop",
+            ],
+        ),
+    ],
+)
+def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, mock_packages):
     env("create", "test")
     make = Executable("make")
     makefile = str(tmpdir.join("Makefile"))
     with ev.read("test"):
-        add("libdwarf")
+        add("dttop")
         concretize()
 
     # Disable jobserver so we can do a dry run.
     with ev.read("test"):
         env(
-            "depfile", "-o", makefile, "--make-disable-jobserver", "--make-target-prefix", "prefix"
+            "depfile",
+            "-o",
+            makefile,
+            "--make-disable-jobserver",
+            "--make-target-prefix=prefix",
+            *depfile_flags
         )
 
     # Do make dry run.
-    all_out = make("-n", "-f", makefile, output=str)
+    out = make("-n", "-f", makefile, output=str)
 
-    # Check whether `make` installs everything
-    with ev.read("test") as e:
-        for _, root in e.concretized_specs():
-            for spec in root.traverse(root=True):
-                tgt = os.path.join("prefix", ".install", spec.dag_hash())
-                assert "touch {}".format(tgt) in all_out
+    # Spack install commands are of the form "spack install ... # <spec>",
+    # so we just parse the spec again, for simplicity.
+    specs_that_make_would_install = [
+        Spec(line.split("# ")[1]).name for line in out.splitlines() if line.startswith("spack")
+    ]
+
+    # Check that all specs are there (without duplicates)
+    assert set(specs_that_make_would_install) == set(expected_installs)
+    assert len(specs_that_make_would_install) == len(expected_installs)
 
 
 def test_environment_depfile_out(tmpdir, mock_packages):

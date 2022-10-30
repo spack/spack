@@ -89,6 +89,9 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
 
+    # https://github.com/xianyi/OpenBLAS/pull/3778
+    patch("fix-cray-fortran-detection-pr3778.patch", when="@0.3.21")
+
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
 
@@ -193,7 +196,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20 %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 

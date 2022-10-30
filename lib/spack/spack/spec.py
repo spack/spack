@@ -734,6 +734,9 @@ class DependencySpec(object):
     def canonical(self):
         return self.parent.dag_hash(), self.spec.dag_hash(), self.deptypes
 
+    def flip(self):
+        return DependencySpec(parent=self.spec, spec=self.parent, deptypes=self.deptypes)
+
 
 _valid_compiler_flags = ["cflags", "cxxflags", "fflags", "ldflags", "ldlibs", "cppflags"]
 
@@ -810,6 +813,10 @@ class FlagMap(lang.HashableMap):
 def _sort_by_dep_types(dspec):
     # Use negation since False < True for sorting
     return tuple(t not in dspec.deptypes for t in ("link", "run", "build", "test"))
+
+
+def _sort_edges_by_pkg_name(edges):
+    edges.sort(key=lambda edge: edge.spec.name)
 
 
 #: Enum for edge directions
@@ -1604,29 +1611,28 @@ class Spec(object):
         return upstream
 
     def traverse(self, **kwargs):
-        direction = kwargs.get("direction", "children")
         depth = kwargs.get("depth", False)
 
-        get_spec = lambda s: s.spec
-        if direction == "parents":
-            get_spec = lambda s: s.parent
-
         if depth:
-            for d, dspec in self.traverse_edges(**kwargs):
-                yield d, get_spec(dspec)
+            for d, edge in self.traverse_edges(**kwargs):
+                yield d, edge.spec
         else:
-            for dspec in self.traverse_edges(**kwargs):
-                yield get_spec(dspec)
+            for edge in self.traverse_edges(**kwargs):
+                yield edge.spec
 
     def traverse_edges(self, visited=None, d=0, deptype="all", dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
 
         This yields ``DependencySpec`` objects as they are traversed.
 
-        When traversing top-down, an imaginary incoming edge to the root
-        is yielded first as ``DependencySpec(None, root, ())``. When
-        traversing bottom-up, imaginary edges to leaves are yielded first
-        as ``DependencySpec(left, None, ())`` objects.
+        An imaginary incoming edge to the root is yielded first as
+        ``DependencySpec(None, root, ())``.
+
+        Note: the edges are traversed from ``edge.parent`` to ``edge.spec``,
+        even if the direction is reversed. When ``direction="children"`` the
+        parent points to the dependent, and spec to the dependency. Conversely
+        when ``direction="parents"`` parent points to the dependency, and spec
+        to the dependent.
 
         Options:
 
@@ -1711,10 +1717,7 @@ class Spec(object):
         def return_val(dspec):
             if not dspec:
                 # make a fake dspec for the root.
-                if direction == "parents":
-                    dspec = DependencySpec(self, None, ())
-                else:
-                    dspec = DependencySpec(None, self, ())
+                dspec = DependencySpec(None, self, ())
             return (d, dspec) if depth else dspec
 
         yield_me = yield_root or d > 0
@@ -1729,22 +1732,18 @@ class Spec(object):
 
             # This code determines direction and yields the children/parents
             if direction == "children":
-                edges = self.edges_to_dependencies
-                key_fn = lambda dspec: dspec.spec.name
-                succ = lambda dspec: dspec.spec
-            elif direction == "parents":
-                edges = self.edges_from_dependents
-                key_fn = lambda dspec: dspec.parent.name
-                succ = lambda dspec: dspec.parent
+                edges = self.edges_to_dependencies()
             else:
-                raise ValueError("Invalid traversal direction: %s" % direction)
+                edges = [edge.flip() for edge in self.edges_from_dependents()]
 
-            for dspec in sorted(edges(), key=key_fn):
+            _sort_edges_by_pkg_name(edges)
+
+            for dspec in edges:
                 dt = dspec.deptypes
                 if dt and not any(d in deptype for d in dt):
                     continue
 
-                for child in succ(dspec).traverse_edges(visited, d + 1, deptype, dspec, **kwargs):
+                for child in dspec.spec.traverse_edges(visited, d + 1, deptype, dspec, **kwargs):
                     yield child
 
         # Postorder traversal yields after successors
@@ -3970,12 +3969,23 @@ class Spec(object):
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r"\s*,\s*", csv)
 
+        # In some cases a package appears multiple times in the same DAG for *distinct*
+        # specs. For example, a build-type dependency may itself depend on a package
+        # the current spec depends on, but their specs may differ. Therefore we iterate
+        # in an order here that prioritizes the build, test and runtime dependencies;
+        # only when we don't find the package do we consider the full DAG.
+        order = lambda: itertools.chain(
+            self.traverse(deptype="link"),
+            self.dependencies(deptype=("build", "run", "test")),
+            self.traverse(),  # fall back to a full search
+        )
+
         try:
             value = next(
                 itertools.chain(
                     # Regular specs
-                    (x for x in self.traverse() if x.name == name),
-                    (x for x in self.traverse() if (not x.virtual) and x.package.provides(name)),
+                    (x for x in order() if x.name == name),
+                    (x for x in order() if (not x.virtual) and x.package.provides(name)),
                 )
             )
         except StopIteration:
