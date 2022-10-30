@@ -246,6 +246,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # nested disection won't be available thought PTScotch
     depends_on("scotch+esmumps~metis+mpi", when="+ptscotch")
     depends_on("scotch+int64", when="+ptscotch+int64")
+    depends_on("bison", when="+ptscotch")
 
     depends_on("hdf5@:1.10+mpi", when="@:3.12+hdf5+mpi")
     depends_on("hdf5+mpi", when="@3.13:+hdf5+mpi")
@@ -508,6 +509,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             "mmg",
             "parmmg",
             ("tetgen", "tetgen", False, False),
+            ("bison", "bison", False, False),
         ):
             # Cannot check `library in spec` because of transitive deps
             # Cannot check variants because parmetis keys on +metis
