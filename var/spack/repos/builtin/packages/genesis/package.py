@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class Genesis(AutotoolsPackage, CudaPackage):
@@ -14,12 +14,14 @@ class Genesis(AutotoolsPackage, CudaPackage):
     """
 
     homepage = "https://www.r-ccs.riken.jp/labs/cbrt/"
-    url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2"
+    url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2022/02/genesis-2.0.0.tar.bz2"
     git = "https://github.com/genesis-release-r-ccs/genesis.git"
+    maintainers = ["chig"]
 
     version("master", branch="master")
     version(
-        "2.0.0",tag='v2.0.0',
+        "2.0.0",
+        tag='v2.0.0',
     )
     version(
         "1.7.1",
@@ -82,7 +84,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     variant("openmp", default=True, description="Enable OpenMP.")
     variant("single", default=False, description="Enable single precision.")
-    variant("mixed",  default=False, description="Enable mixed precision.", when="@2.0.0:")
+    variant("mixed", default=False, description="Enable mixed precision.", when="@2.0.0:")
     variant("hmdisk", default=False, description="Enable huge molecule on hard disk.")
 
     conflicts("%apple-clang", when="+openmp")
@@ -148,9 +150,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
     def test(self):
         if self.spec.satisfies("@master"):
             exe_name = self.spec["python"].command.path
-            test_name = join_path(
-                self.install_test_root, "tests", "regression_test", "test.py"
-            )
+            test_name = join_path(self.install_test_root, "tests", "regression_test", "test.py")
             bin_name = join_path(self.prefix.bin, "spdyn")
             opts = [
                 test_name,
