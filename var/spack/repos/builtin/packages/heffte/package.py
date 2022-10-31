@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+from llnl.util import tty
+
 from spack.package import *
 
 
@@ -19,6 +23,7 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("develop", branch="master")
+    version("2.3.0", sha256="27c0a8da8f7bc91c8715ecb640721ab7e0454e22f6e3f521fe5acc45c28d60a9")
     version("2.2.0", sha256="aff4f5111d3d05b269a1378bb201271c40b39e9c960c05c4ef247a31a039be58")
     version("2.1.0", sha256="527a3e21115231715a0342afdfaf6a8878d2dd0f02f03c92b53692340fd940b9")
     version("2.0.0", sha256="12f2b49a1a36c416eac174cf0cc50e729d56d68a9f68886d8c34bd45a0be26b6")
@@ -104,11 +109,64 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
+    def cmake_bin(self, set=True):
+        """(Hack) Set/get cmake dependency path. Sync with Tasmanian."""
+        filepath = join_path(self.install_test_root, "cmake_bin_path.txt")
+        if set:
+            with open(filepath, "w") as out_file:
+                cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+                out_file.write("{0}\n".format(cmake_bin))
+        elif os.path.isfile(filepath):
+            with open(filepath, "r") as in_file:
+                return in_file.read().strip()
+
+    @run_after("install")
+    def setup_smoke_test(self):
+        install_tree(
+            self.prefix.share.heffte.testing, join_path(self.install_test_root, "testing")
+        )
+        self.cmake_bin(set=True)
+
     def test(self):
-        # using the tests installed in <prefix>/share/heffte/testing
-        cmake_dir = join_path(self.prefix, "share", "heffte", "testing")
-        test_dir = join_path(self.test_suite.current_test_cache_dir, "test_install")
-        with working_dir(test_dir, create=True):
-            cmake(cmake_dir)
-            make()
-            make("test")
+        cmake_bin = self.cmake_bin(set=False)
+
+        if not cmake_bin:
+            tty.msg("Skipping heffte test: cmake_bin_path.txt not found")
+            return
+
+        # using the tests copied from <prefix>/share/heffte/testing
+        cmake_dir = self.test_suite.current_test_cache_dir.testing
+
+        options = [
+            cmake_dir,
+        ]
+        if "+rocm" in self.spec:
+            options.append(
+                "-DAMDDeviceLibs_DIR="
+                + join_path(self.spec["llvm-amdgpu"].prefix, "lib", "cmake", "AMDDeviceLibs")
+            )
+            options.append(
+                "-Damd_comgr_DIR="
+                + join_path(self.spec["comgr"].prefix, "lib", "cmake", "amd_comgr")
+            )
+            options.append(
+                "-Dhsa-runtime64_DIR="
+                + join_path(self.spec["hsa-rocr-dev"].prefix, "lib", "cmake", "hsa-runtime64")
+            )
+            options.append(
+                "-DHSA_HEADER=" + join_path(self.spec["hsa-rocr-dev"].prefix, "include")
+            )
+            options.append(
+                "-Drocfft_DIR=" + join_path(self.spec["rocfft"].prefix, "lib", "cmake", "rocfft")
+            )
+
+        if not self.run_test(cmake_bin, options=options, purpose="Generate the Makefile"):
+            tty.msg("Skipping heffte test: failed to generate Makefile")
+            return
+
+        if not self.run_test("make", purpose="Build test software"):
+            tty.msg("Skipping heffte test: failed to build test")
+            return
+
+        if not self.run_test("make", options=["test"], purpose="Run test"):
+            tty.msg("Failed heffte test: failed to run test")

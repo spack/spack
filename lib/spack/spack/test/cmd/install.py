@@ -1087,7 +1087,7 @@ def test_install_empty_env(
         ("test-install-callbacks", "undefined-install-test"),
     ],
 )
-def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
 
     assert output.count(method) == 2

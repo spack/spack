@@ -87,7 +87,7 @@ class ScalapackBase(CMakePackage):
         # Work around errors of the form:
         #   error: implicit declaration of function 'BI_smvcopy' is
         #   invalid in C99 [-Werror,-Wimplicit-function-declaration]
-        if spec.satisfies("%clang") or spec.satisfies("%apple-clang"):
+        if spec.satisfies("%clang") or spec.satisfies("%apple-clang") or spec.satisfies("%oneapi"):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
         options.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))

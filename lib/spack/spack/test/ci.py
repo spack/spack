@@ -467,7 +467,7 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_process_command(tmpdir):
     repro_dir = tmpdir.join("repro_dir").strpath
@@ -479,7 +479,7 @@ def test_ci_process_command(tmpdir):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_process_command_fail(tmpdir, monkeypatch):
     import subprocess
@@ -526,7 +526,7 @@ def test_ci_run_standalone_tests_missing_requirements(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_junit(
     tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
@@ -547,7 +547,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_cdash(
     tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
