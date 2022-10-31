@@ -1594,13 +1594,6 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix[old_layout_root] = new_layout_root
     for orig_prefix, hash in prefix_to_hash.items():
         prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
-    # This is vestigial code for the *old* location of sbang. Previously,
-    # sbang was a bash script, and it lived in the spack prefix. It is
-    # now a POSIX script that lives in the install prefix. Old packages
-    # will have the old sbang location in their shebangs.
-    orig_sbang = "#!/bin/bash {0}/bin/sbang".format(old_spack_prefix)
-    new_sbang = spack.hooks.sbang.sbang_shebang_line()
-    prefix_to_prefix[orig_sbang] = new_sbang
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
