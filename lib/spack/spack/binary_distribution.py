@@ -1564,26 +1564,20 @@ def relocate_package(spec, allow_root):
     old_sbang_install_path = None
     if "sbang_install_path" in buildinfo:
         old_sbang_install_path = str(buildinfo["sbang_install_path"])
+    if "prefix_to_hash" not in prefix_to_hash:
+        raise NewLayoutException(
+            "Package tarball was created from an install "
+            "prefix with a different directory layout and an older "
+            "buildcache create implementation. It cannot be relocated."
+        )
     old_layout_root = str(buildinfo["buildpath"])
     old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
     rel = buildinfo.get("relative_rpaths")
-    prefix_to_hash = buildinfo.get("prefix_to_hash", None)
-    if old_rel_prefix != new_rel_prefix and not prefix_to_hash:
-        msg = "Package tarball was created from an install "
-        msg += "prefix with a different directory layout and an older "
-        msg += "buildcache create implementation. It cannot be relocated."
-        raise NewLayoutException(msg)
-    # older buildcaches do not have the prefix_to_hash dictionary
-    # need to set an empty dictionary and add one entry to
-    # prefix_to_prefix to reproduce the old behavior
-    if not prefix_to_hash:
-        prefix_to_hash = dict()
+
     hash_to_prefix = hashes_to_prefixes(spec)
-    # Spurious replacements (e.g. sbang) will cause issues with binaries
-    # For example, the new sbang can be longer than the old one.
-    # Hence 2 dictionaries are maintained here.
+    prefix_to_hash = buildinfo.get("prefix_to_hash")
     prefix_to_prefix = collections.OrderedDict()
 
     if old_sbang_install_path:
@@ -1592,8 +1586,8 @@ def relocate_package(spec, allow_root):
 
     prefix_to_prefix[old_prefix] = new_prefix
     prefix_to_prefix[old_layout_root] = new_layout_root
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
+    for orig_prefix, dag_hash in prefix_to_hash.items():
+        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(dag_hash, None)
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
