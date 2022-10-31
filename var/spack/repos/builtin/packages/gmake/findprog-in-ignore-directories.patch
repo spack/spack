@@ -1,0 +1,132 @@
+From 6e6abd0cdfe4bb96f6412aebc511f10bf254a820 Mon Sep 17 00:00:00 2001
+From: Bruno Haible <bruno@clisp.org>
+Date: Sat, 23 May 2020 12:19:34 +0200
+Subject: [PATCH] findprog-in: Ignore directories.
+
+Reported by Frederick Eaton via Dmitry Goncharov in
+<https://lists.gnu.org/archive/html/bug-gnulib/2020-03/msg00003.html>.
+
+* lib/findprog-in.c (find_in_given_path): When the file found is a
+directory, set errno to EACCES and, during a PATH search, continue
+searching.
+* modules/findprog-in (Depends-on): Add sys_stat, stat.
+---
+ ChangeLog           | 10 ++++++
+ lib/findprog-in.c   | 75 ++++++++++++++++++++++++++++++---------------
+ modules/findprog-in |  2 ++
+ 3 files changed, 62 insertions(+), 25 deletions(-)
+
+diff --git a/lib/findprog-in.c b/lib/findprog-in.c
+index c254f2f58..0f76e36ca 100644
+--- a/lib/findprog-in.c
++++ b/lib/findprog-in.c
+@@ -26,6 +26,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <sys/stat.h>
+ 
+ #include "filename.h"
+ #include "concat-filename.h"
+@@ -58,8 +59,8 @@ static const char * const suffixes[] =
+     /* Note: The cmd.exe program does a different lookup: It searches according
+        to the PATHEXT environment variable.
+        See <https://stackoverflow.com/questions/7839150/>.
+-       Also, it executes files ending .bat and .cmd directly without letting the
+-       kernel interpret the program file.  */
++       Also, it executes files ending in .bat and .cmd directly without letting
++       the kernel interpret the program file.  */
+     #elif defined __CYGWIN__
+     "", ".exe", ".com"
+     #elif defined __EMX__
+@@ -136,14 +137,26 @@ find_in_given_path (const char *progname, const char *path,
+                        call access() despite its design flaw.  */
+                     if (eaccess (progpathname, X_OK) == 0)
+                       {
+-                        /* Found!  */
+-                        if (strcmp (progpathname, progname) == 0)
++                        /* Check that the progpathname does not point to a
++                           directory.  */
++                        struct stat statbuf;
++
++                        if (stat (progpathname, &statbuf) >= 0)
+                           {
+-                            free (progpathname);
+-                            return progname;
++                            if (! S_ISDIR (statbuf.st_mode))
++                              {
++                                /* Found!  */
++                                if (strcmp (progpathname, progname) == 0)
++                                  {
++                                    free (progpathname);
++                                    return progname;
++                                  }
++                                else
++                                  return progpathname;
++                              }
++
++                            errno = EACCES;
+                           }
+-                        else
+-                          return progpathname;
+                       }
+ 
+                     if (errno != ENOENT)
+@@ -210,25 +223,37 @@ find_in_given_path (const char *progname, const char *path,
+                    call access() despite its design flaw.  */
+                 if (eaccess (progpathname, X_OK) == 0)
+                   {
+-                    /* Found!  */
+-                    if (strcmp (progpathname, progname) == 0)
++                    /* Check that the progpathname does not point to a
++                       directory.  */
++                    struct stat statbuf;
++
++                    if (stat (progpathname, &statbuf) >= 0)
+                       {
+-                        free (progpathname);
+-
+-                        /* Add the "./" prefix for real, that
+-                           xconcatenated_filename() optimized away.  This
+-                           avoids a second PATH search when the caller uses
+-                           execl/execv/execlp/execvp.  */
+-                        progpathname =
+-                          XNMALLOC (2 + strlen (progname) + 1, char);
+-                        progpathname[0] = '.';
+-                        progpathname[1] = NATIVE_SLASH;
+-                        memcpy (progpathname + 2, progname,
+-                                strlen (progname) + 1);
+-                      }
++                        if (! S_ISDIR (statbuf.st_mode))
++                          {
++                            /* Found!  */
++                            if (strcmp (progpathname, progname) == 0)
++                              {
++                                free (progpathname);
++
++                                /* Add the "./" prefix for real, that
++                                   xconcatenated_filename() optimized away.
++                                   This avoids a second PATH search when the
++                                   caller uses execl/execv/execlp/execvp.  */
++                                progpathname =
++                                  XNMALLOC (2 + strlen (progname) + 1, char);
++                                progpathname[0] = '.';
++                                progpathname[1] = NATIVE_SLASH;
++                                memcpy (progpathname + 2, progname,
++                                        strlen (progname) + 1);
++                              }
++
++                            free (path_copy);
++                            return progpathname;
++                          }
+ 
+-                    free (path_copy);
+-                    return progpathname;
++                        errno = EACCES;
++                      }
+                   }
+ 
+                 if (errno != ENOENT)
+-- 
+2.38.1
+
