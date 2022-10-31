@@ -13,11 +13,13 @@ class PyRadicalPilot(PythonPackage):
 
     homepage = "https://radical-cybertools.github.io"
     git = "https://github.com/radical-cybertools/radical.pilot.git"
-    pypi = "radical.pilot/radical.pilot-1.14.0.tar.gz"
+    pypi = "radical.pilot/radical.pilot-1.16.0.tar.gz"
 
     maintainers = ["andre-merzky"]
 
     version("develop", branch="devel")
+    version("1.16.0", sha256="057941a206ee96b62b97a63a507c1136b7fe821ae9f9e5eebe7949a3f53941f9")
+    version("1.15.1", sha256="35c3b179a0bc85f52d2165e98e19acf2bf79037dd14f4d9ff3fc55ae0122d17e")
     version("1.14.0", sha256="462471065de25f6d6e8baee705790828444c2eebb2073f5faf67a8da800d15a9")
     version("1.13.0", sha256="5bd9eef1884ccca09c242ab6d1361588a442d9cd980613c66604ba140786bde5")
     version("1.12.0", sha256="a266355d30d838f20b6cac190ce589ca919acd41883ad06aec62386239475133")
@@ -38,6 +40,9 @@ class PyRadicalPilot(PythonPackage):
 
     depends_on("py-radical-utils@1.8.4:1.11", type=("build", "run"), when="@1.11")
     depends_on("py-radical-saga@1.8:1.11", type=("build", "run"), when="@1.11")
+
+    depends_on("py-radical-utils@:1.8.3", type=("build", "run"), when="@:1.10")
+    depends_on("py-radical-saga@:1.7", type=("build", "run"), when="@:1.10")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"), when="@1.14:")

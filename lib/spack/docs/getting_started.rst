@@ -23,8 +23,36 @@ be present on the machine where Spack is run:
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
 platforms like Cray.  Not all packages should be expected
-to work on all platforms.  A build matrix showing which packages are
-working on which systems is planned but not yet available.
+to work on all platforms.
+
+A build matrix showing which packages are working on which systems is shown below.
+
+.. tab-set::
+
+   .. tab-item:: Debian/Ubuntu
+
+      .. code-block:: console
+
+         apt update
+         apt install build-essential ca-certificates coreutils curl environment-modules gfortran git gpg lsb-release python3 python3-distutils python3-venv unzip zip
+
+   .. tab-item:: RHEL
+
+      .. code-block:: console
+
+         yum update -y
+         yum install -y epel-release
+         yum update -y
+         yum --enablerepo epel groupinstall -y "Development Tools"
+         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute make patch python3 python3-pip python3-setuptools unzip
+         python3 -m pip install boto3
+
+   .. tab-item:: macOS Brew
+
+      .. code-block:: console
+
+         brew update
+         brew install curl gcc git gnupg zip
 
 ------------
 Installation

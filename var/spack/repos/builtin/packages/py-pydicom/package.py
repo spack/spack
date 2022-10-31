@@ -15,6 +15,7 @@ class PyPydicom(PythonPackage):
     homepage = "https://github.com/pydicom/pydicom"
     pypi = "pydicom/pydicom-2.1.2.tar.gz"
 
+    version("2.3.0", sha256="dbfa081c9ad9ac8ff8a8efbd71784104db9eecf02fd775f7d7773f2183f89386")
     version("2.1.2", sha256="65f36820c5fec24b4e7ca45b7dae93e054ed269d55f92681863d39d30459e2fd")
 
     variant("numpy", default=False, description="Use NumPy for Pixel data")

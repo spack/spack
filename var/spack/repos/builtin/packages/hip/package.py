@@ -25,6 +25,9 @@ class Hip(CMakePackage):
     libraries = ["libamdhip64"]
 
     version("master", branch="master")
+
+    version("5.2.3", sha256="5b83d1513ea4003bfad5fe8fa741434104e3e49a87e1d7fad49e5a8c1d06e57b")
+    version("5.2.1", sha256="7d4686a2f8a9124bb21f7f3958e451c57019f48a0cbb42ffdc56ed02860a46c3")
     version("5.2.0", sha256="a6e0515d4d25865c037b546035df9c51f0882cd2700e759c266ff7e199f37c3a")
     version("5.1.3", sha256="ce755ee6e407904eba3f6b3c9efcdd48eb4f58a26b06e1892166d05f19a75973")
     version("5.1.0", sha256="47e542183699f4005c48631d96f6a1fbdf27e07ad3402ccd7b5f707c2c602266")
@@ -126,6 +129,8 @@ class Hip(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("hsakmt-roct@" + ver, when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, when="@" + ver)
@@ -144,6 +149,8 @@ class Hip(CMakePackage):
 
     # Add hip-amd sources thru the below
     for d_version, d_shasum in [
+        ("5.2.3", "5031d07554ce07620e24e44d482cbc269fa972e3e35377e935d2694061ff7c04"),
+        ("5.2.1", "4feaa3883cbc54ddcd5d2d5becbe0f3fe3edd5b3b468dc73b5104893029eefac"),
         ("5.2.0", "8774958bebc29a4b7eb9dc2d38808d79d9a24bf9c1f44e801ff99d2d5ba82240"),
         ("5.1.3", "707f2217f0e7aeb62d7b76830a271056d665542bf5f7a54e40adf4d5f299ca93"),
         ("5.1.0", "77984854bfe00f938353fe4c7604d09967eaf5c609d05f1e6423d3c3dea86e61"),
@@ -165,6 +172,8 @@ class Hip(CMakePackage):
         )
     # Add opencl sources thru the below
     for d_version, d_shasum in [
+        ("5.2.3", "932ea3cd268410010c0830d977a30ef9c14b8c37617d3572a062b5d4595e2b94"),
+        ("5.2.1", "eb4ff433f8894ca659802f81792646034f8088b47aca6ad999292bcb8d6381d5"),
         ("5.2.0", "80f73387effdcd987a150978775a87049a976aa74f5770d4420847b004dd59f0"),
         ("5.1.3", "44a7fac721abcd93470e1a7e466bdea0c668c253dee93e4f1ea9a72dbce4ba31"),
         ("5.1.0", "362d81303048cf7ed5d2f69fb65ed65425bc3da4734fff83e3b8fbdda51b0927"),
@@ -185,6 +194,8 @@ class Hip(CMakePackage):
             when="@{0}".format(d_version),
         )
     for d_version, d_shasum in [
+        ("5.2.3", "0493c414d4db1af8e1eb30a651d9512044644244488ebb13478c2138a7612998"),
+        ("5.2.1", "465ca9fa16869cd89dab8c2d66d9b9e3c14f744bbedaa1d215b0746d77a500ba"),
         ("5.2.0", "37f5fce04348183bce2ece8bac1117f6ef7e710ca68371ff82ab08e93368bafb"),
         ("5.1.3", "ddee63cdc6515c90bab89572b13e1627b145916cb8ede075ef8446cbb83f0a48"),
         ("5.1.0", "f4f265604b534795a275af902b2c814f416434d9c9e16db81b3ed5d062187dfa"),
@@ -228,7 +239,12 @@ class Hip(CMakePackage):
     patch(
         "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
         ".5.2.0.patch",
-        when="@5.2.0:",
+        when="@5.2.0",
+    )
+    patch(
+        "0012-Improve-compilation-without-git-repo-and-remove-compiler-rt-linkage-for-host"
+        ".5.2.1.patch",
+        when="@5.2.1:",
     )
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
@@ -272,10 +288,22 @@ class Hip(CMakePackage):
         if self.spec.external:
             # For external packages we only assume the `hip` prefix is known,
             # because spack does not set prefixes of dependencies of externals.
-            # We assume self.spec.prefix is /opt/rocm-x.y.z/hip and rocm has a
-            # default installation with everything installed under
-            # /opt/rocm-x.y.z
-            rocm_prefix = Prefix(os.path.dirname(self.spec.prefix))
+            hip_libs_at_top = os.path.basename(self.spec.prefix) != "hip"
+            # We assume self.spec.prefix is  /opt/rocm-x.y.z for rocm-5.2.0 and newer
+            # and /opt/rocm-x.y.z/hip for older versions
+            if self.spec.satisfies("@5.2.0:"):
+                rocm_prefix = Prefix(self.spec.prefix)
+            else:
+                # We assume self.spec.prefix is /opt/rocm-x.y.z/hip and rocm has a
+                # default installation with everything installed under
+                # /opt/rocm-x.y.z
+                # Note that since the key hip library can also exist at the top of the
+                # /opt/rocm-x.y.z/lib tree, it is possible that the package is detected
+                # without the correct prefix.  Work around it.
+                if hip_libs_at_top:
+                    rocm_prefix = Prefix(self.spec.prefix)
+                else:
+                    rocm_prefix = Prefix(os.path.dirname(self.spec.prefix))
 
             if not os.path.isdir(rocm_prefix):
                 msg = "Could not determine prefix for other rocm components\n"
@@ -284,7 +312,13 @@ class Hip(CMakePackage):
                 msg += "a workaround."
                 raise RuntimeError(msg)
 
+            if hip_libs_at_top:
+                hip_path = "{0}/hip".format(self.spec.prefix)
+            else:
+                hip_path = self.spec.prefix
+
             paths = {
+                "hip-path": hip_path,
                 "rocm-path": rocm_prefix,
                 "llvm-amdgpu": rocm_prefix.llvm,
                 "hsa-rocr-dev": rocm_prefix.hsa,
@@ -293,6 +327,7 @@ class Hip(CMakePackage):
             }
         else:
             paths = {
+                "hip-path": self.spec.prefix,
                 "rocm-path": self.spec.prefix,
                 "llvm-amdgpu": self.spec["llvm-amdgpu"].prefix,
                 "hsa-rocr-dev": self.spec["hsa-rocr-dev"].prefix,
@@ -356,7 +391,7 @@ class Hip(CMakePackage):
         env.set("HIP_DEVICE_LIB_PATH", paths["bitcode"])
 
         # Just the prefix of hip (used in hipcc)
-        env.set("HIP_PATH", paths["rocm-path"])
+        env.set("HIP_PATH", paths["hip-path"])
 
         # Used in comgr and seems necessary when using the JIT compiler, e.g.
         # hiprtcCreateProgram:
@@ -462,7 +497,7 @@ class Hip(CMakePackage):
         args = [
             self.define(
                 "PROF_API_HEADER_PATH",
-                join_path(self.spec["roctracer-dev-api"].prefix, "roctracer", "inc", "ext"),
+                join_path(self.spec["roctracer-dev-api"].prefix, "roctracer", "include", "ext"),
             ),
             self.define("HIP_COMPILER", "clang"),
             self.define("HSA_PATH", self.spec["hsa-rocr-dev"].prefix),

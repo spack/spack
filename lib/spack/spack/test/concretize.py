@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import shutil
 import sys
 
 import jinja2
@@ -177,70 +176,47 @@ class Changing(Package):
 {% endif %}
 """
 
-    class _ChangingPackage(object):
-        default_context = [
-            ("delete_version", True),
-            ("delete_variant", False),
-            ("add_variant", False),
-        ]
+    with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
 
-        def __init__(self, repo_directory):
-            self.repo_dir = repo_directory
-            self.repo = spack.repo.Repo(str(repo_directory))
-            mutable_mock_repo.put_first(self.repo)
+        class _ChangingPackage(object):
+            default_context = [
+                ("delete_version", True),
+                ("delete_variant", False),
+                ("add_variant", False),
+            ]
 
-        def change(self, changes=None):
-            changes = changes or {}
-            context = dict(self.default_context)
-            context.update(changes)
-            # Remove the repo object and delete Python modules
-            mutable_mock_repo.remove(self.repo)
-            # TODO: this mocks a change in the recipe that should happen in a
-            # TODO: different process space. Leaving this comment as a hint
-            # TODO: in case tests using this fixture start failing.
-            if sys.modules.get("spack.pkg.changing.changing"):
-                del sys.modules["spack.pkg.changing.changing"]
-                del sys.modules["spack.pkg.changing.root"]
-                del sys.modules["spack.pkg.changing"]
+            def __init__(self, repo_directory):
+                self.repo_dir = repo_directory
+                self.repo = spack.repo.Repo(str(repo_directory))
 
-            # Change the recipe
-            t = jinja2.Template(changing_template)
-            changing_pkg_str = t.render(**context)
-            packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
+            def change(self, changes=None):
+                changes = changes or {}
+                context = dict(self.default_context)
+                context.update(changes)
+                # Remove the repo object and delete Python modules
+                repository.remove(self.repo)
+                # TODO: this mocks a change in the recipe that should happen in a
+                # TODO: different process space. Leaving this comment as a hint
+                # TODO: in case tests using this fixture start failing.
+                if sys.modules.get("spack.pkg.changing.changing"):
+                    del sys.modules["spack.pkg.changing.changing"]
+                    del sys.modules["spack.pkg.changing.root"]
+                    del sys.modules["spack.pkg.changing"]
 
-            # Re-add the repository
-            self.repo = spack.repo.Repo(str(self.repo_dir))
-            mutable_mock_repo.put_first(self.repo)
+                # Change the recipe
+                t = jinja2.Template(changing_template)
+                changing_pkg_str = t.render(**context)
+                packages_dir.join("changing", "package.py").write(changing_pkg_str, ensure=True)
 
-    _changing_pkg = _ChangingPackage(repo_dir)
-    _changing_pkg.change({"delete_version": False, "delete_variant": False, "add_variant": False})
+                # Re-add the repository
+                self.repo = spack.repo.Repo(str(self.repo_dir))
+                repository.put_first(self.repo)
 
-    return _changing_pkg
-
-
-@pytest.fixture()
-def additional_repo_with_c(tmpdir_factory, mutable_mock_repo):
-    """Add a repository with a simple package"""
-    repo_dir = tmpdir_factory.mktemp("myrepo")
-    repo_dir.join("repo.yaml").write(
-        """
-repo:
-  namespace: myrepo
-""",
-        ensure=True,
-    )
-    packages_dir = repo_dir.ensure("packages", dir=True)
-    package_py = """
-class C(Package):
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/root-1.0.tar.gz"
-
-    version(1.0, sha256='abcde')
-"""
-    packages_dir.join("c", "package.py").write(package_py, ensure=True)
-    repo = spack.repo.Repo(str(repo_dir))
-    mutable_mock_repo.put_first(repo)
-    return repo
+        _changing_pkg = _ChangingPackage(repo_dir)
+        _changing_pkg.change(
+            {"delete_version": False, "delete_variant": False, "add_variant": False}
+        )
+        yield _changing_pkg
 
 
 # This must use the mutable_config fixture because the test
@@ -1188,6 +1164,9 @@ class TestConcretize(object):
             second_spec.concretize()
         assert first_spec.dag_hash() != second_spec.dag_hash()
 
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     @pytest.mark.regression("20292")
     @pytest.mark.parametrize(
         "context",
@@ -1510,6 +1489,9 @@ class TestConcretize(object):
             s = Spec("python target=k10").concretized()
         assert s.satisfies("target=k10")
 
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     @pytest.mark.regression("29201")
     def test_delete_version_and_reuse(self, mutable_database, repo_with_changing_recipe):
         """Test that we can reuse installed specs with versions not
@@ -1528,6 +1510,9 @@ class TestConcretize(object):
         assert root.dag_hash() == new_root.dag_hash()
 
     @pytest.mark.regression("29201")
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
     def test_installed_version_is_selected_only_for_reuse(
         self, mutable_database, repo_with_changing_recipe
     ):
@@ -1549,39 +1534,34 @@ class TestConcretize(object):
         assert not new_root["changing"].satisfies("@1.0")
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_namespace_dont_raise(
-        self, additional_repo_with_c, mutable_mock_repo
-    ):
-        s = Spec("c").concretized()
-        assert s.namespace == "myrepo"
-        s.package.do_install(fake=True, explicit=True)
-
-        # TODO: To mock repo removal we need to recreate the RepoPath
-        mutable_mock_repo.remove(additional_repo_with_c)
-        spack.repo.path = spack.repo.RepoPath(*spack.repo.path.repos)
+    def test_reuse_with_unknown_namespace_dont_raise(self, mock_custom_repository):
+        with spack.repo.use_repositories(mock_custom_repository, override=False):
+            s = Spec("c").concretized()
+            assert s.namespace != "builtin.mock"
+            s.package.do_install(fake=True, explicit=True)
 
         with spack.config.override("concretizer:reuse", True):
             s = Spec("c").concretized()
         assert s.namespace == "builtin.mock"
 
     @pytest.mark.regression("28259")
-    def test_reuse_with_unknown_package_dont_raise(
-        self, additional_repo_with_c, mutable_mock_repo, monkeypatch
-    ):
-        s = Spec("c").concretized()
-        assert s.namespace == "myrepo"
-        s.package.do_install(fake=True, explicit=True)
-
-        # Here we delete the package.py instead of removing the repo and we
-        # make it such that "c" doesn't exist in myrepo
-        del sys.modules["spack.pkg.myrepo.c"]
-        c_dir = os.path.join(additional_repo_with_c.root, "packages", "c")
-        shutil.rmtree(c_dir)
-        monkeypatch.setattr(additional_repo_with_c, "exists", lambda x: False)
-
-        with spack.config.override("concretizer:reuse", True):
+    def test_reuse_with_unknown_package_dont_raise(self, tmpdir, monkeypatch):
+        builder = spack.repo.MockRepositoryBuilder(tmpdir, namespace="myrepo")
+        builder.add_package("c")
+        with spack.repo.use_repositories(builder.root, override=False):
             s = Spec("c").concretized()
-        assert s.namespace == "builtin.mock"
+            assert s.namespace == "myrepo"
+            s.package.do_install(fake=True, explicit=True)
+
+        del sys.modules["spack.pkg.myrepo.c"]
+        del sys.modules["spack.pkg.myrepo"]
+        builder.remove("c")
+        with spack.repo.use_repositories(builder.root, override=False) as repos:
+            # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
+            repos.repos[0]._pkg_checker.invalidate()
+            with spack.config.override("concretizer:reuse", True):
+                s = Spec("c").concretized()
+            assert s.namespace == "builtin.mock"
 
     @pytest.mark.parametrize(
         "specs,expected",
@@ -1767,3 +1747,93 @@ class TestConcretize(object):
             match="The reference version 'main' for package 'develop-branch-version'",
         ):
             s.concretized()
+
+    @pytest.mark.regression("31484")
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (2, 7), reason="Fixture fails intermittently with Python 2.7"
+    )
+    def test_installed_externals_are_reused(self, mutable_database, repo_with_changing_recipe):
+        """Test that external specs that are in the DB can be reused."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {
+            "changing": {
+                "buildable": False,
+                "externals": [{"spec": "changing@1.0", "prefix": "/usr"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        # Install the external spec
+        external1 = Spec("changing@1.0").concretized()
+        external1.package.do_install(fake=True, explicit=True)
+        assert external1.external
+
+        # Modify the package.py file
+        repo_with_changing_recipe.change({"delete_variant": True})
+
+        # Try to concretize the external without reuse and confirm the hash changed
+        with spack.config.override("concretizer:reuse", False):
+            external2 = Spec("changing@1.0").concretized()
+        assert external2.dag_hash() != external1.dag_hash()
+
+        # ... while with reuse we have the same hash
+        with spack.config.override("concretizer:reuse", True):
+            external3 = Spec("changing@1.0").concretized()
+        assert external3.dag_hash() == external1.dag_hash()
+
+    @pytest.mark.regression("31484")
+    def test_user_can_select_externals_with_require(self, mutable_database):
+        """Test that users have means to select an external even in presence of reusable specs."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {
+            "mpi": {"buildable": False},
+            "multi-provider-mpi": {
+                "externals": [{"spec": "multi-provider-mpi@2.0.0", "prefix": "/usr"}]
+            },
+        }
+        spack.config.set("packages", external_conf)
+
+        # mpich and others are installed, so check that
+        # fresh use the external, reuse does not
+        with spack.config.override("concretizer:reuse", False):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name == "multi-provider-mpi"
+
+        with spack.config.override("concretizer:reuse", True):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name != "multi-provider-mpi"
+
+        external_conf["mpi"]["require"] = "multi-provider-mpi"
+        spack.config.set("packages", external_conf)
+
+        with spack.config.override("concretizer:reuse", True):
+            mpi_spec = Spec("mpi").concretized()
+            assert mpi_spec.name == "multi-provider-mpi"
+
+    @pytest.mark.regression("31484")
+    def test_installed_specs_disregard_conflicts(self, mutable_database, monkeypatch):
+        """Test that installed specs do not trigger conflicts. This covers for the rare case
+        where a conflict is added on a package after a spec matching the conflict was installed.
+        """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Add a conflict to "mpich" that match an already installed "mpich~debug"
+        pkg_cls = spack.repo.path.get_pkg_class("mpich")
+        monkeypatch.setitem(pkg_cls.conflicts, "~debug", [(spack.spec.Spec(), None)])
+
+        # If we concretize with --fresh the conflict is taken into account
+        with spack.config.override("concretizer:reuse", False):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("+debug")
+
+        # If we concretize with --reuse it is not, since "mpich~debug" was already installed
+        with spack.config.override("concretizer:reuse", True):
+            s = Spec("mpich").concretized()
+            assert s.satisfies("~debug")

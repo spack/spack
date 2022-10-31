@@ -22,5 +22,5 @@ class PyPyjwt(PythonPackage):
     depends_on("python@3.6:", when="@2.1.0:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cryptography@1.4:", when="+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:3", when="@2.1.0:+crypto", type=("build", "run"))
-    depends_on("py-cryptography@3.3.1:", when="@2.4.0:+crypto", type=("build", "run"))
+    depends_on("py-cryptography@3.3.1:3", when="@2.1:2.3+crypto", type=("build", "run"))
+    depends_on("py-cryptography@3.3.1:", when="@2.4:+crypto", type=("build", "run"))

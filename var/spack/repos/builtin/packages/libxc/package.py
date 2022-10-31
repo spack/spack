@@ -72,11 +72,6 @@ class Libxc(AutotoolsPackage, CudaPackage):
         # microarchitecture-specific optimization flags should be controlled
         # by Spack, otherwise we may end up with contradictory or invalid flags
         # see https://github.com/spack/spack/issues/17794
-        # libxc on the other hand only sets the generic -O2 when it detects GCC
-
-        optflags = "-O2"
-        env.append_flags("CFLAGS", optflags)
-        env.append_flags("FCFLAGS", optflags)
 
         if "%intel" in self.spec:
             env.append_flags("CFLAGS", "-std=c99")

@@ -60,6 +60,9 @@ class Adios2(CMakePackage, CudaPackage):
     variant("mpi", default=True, description="Enable MPI")
 
     # Compression libraries
+    variant(
+        "libpressio", default=False, when="@2.8:", description="Enable LibPressio for compression"
+    )
     variant("blosc", default=True, when="@2.4:", description="Enable Blosc compression")
     variant("bzip2", default=True, when="@2.4:", description="Enable BZip2 compression")
     variant("zfp", default=True, description="Enable ZFP compression")
@@ -103,6 +106,7 @@ class Adios2(CMakePackage, CudaPackage):
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
 
+    depends_on("libpressio", when="+libpressio")
     depends_on("c-blosc", when="+blosc")
     depends_on("bzip2", when="+bzip2")
     depends_on("libpng@1.6:", when="+png")
@@ -178,6 +182,7 @@ class Adios2(CMakePackage, CudaPackage):
             from_variant("ADIOS2_USE_SZ", "sz"),
             from_variant("ADIOS2_USE_ZFP", "zfp"),
             from_variant("ADIOS2_USE_CUDA", "cuda"),
+            from_variant("ADIOS2_USE_LIBPRESSIO", "libpressio"),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("ADIOS2_BUILD_EXAMPLES", False),
             self.define("ADIOS2_USE_Endian_Reverse", True),

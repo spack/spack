@@ -31,6 +31,12 @@ def setup_parser(subparser):
     )
     subparser.add_argument("-c", dest="python_command", help="command to execute")
     subparser.add_argument(
+        "-u",
+        dest="unbuffered",
+        action="store_true",
+        help="for compatibility with xdist, do not use without adding -u to the interpreter",
+    )
+    subparser.add_argument(
         "-i",
         dest="python_interpreter",
         help="python interpreter",

@@ -214,9 +214,7 @@ spack:
     - '%gcc@7.3.1'
 
   - target:
-    #- 'target=x86_64'
     - 'target=x86_64_v3'
-    - 'target=x86_64_v4'
 
 
   specs:
@@ -253,6 +251,7 @@ spack:
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+    match_behavior: first
     mappings:
       - match:
         - llvm

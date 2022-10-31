@@ -17,6 +17,7 @@ class PyMarkdown(PythonPackage):
     homepage = "https://python-markdown.github.io/"
     pypi = "markdown/Markdown-2.6.11.tar.gz"
 
+    version("3.4.1", sha256="3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff")
     version("3.3.4", sha256="31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49")
     version("3.1.1", sha256="2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a")
     version("2.6.11", sha256="a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81")
@@ -32,11 +33,13 @@ class PyMarkdown(PythonPackage):
     version("2.5.1", sha256="8f81ed12c18608a502828acb7d318f362c42f4eca97d01e93cadfc52c1e40b73")
     version("2.5", sha256="6ba74a1e7141c9603750d80711b639a7577bffb785708e6260090239ee5bc76d")
 
-    depends_on("python@2.7:2.8,3.2:3.4", when="@:2.6.7")
-    depends_on("python@2.7:2.8,3.2:3.6", when="@2.6.8:2.6.11")
-    depends_on("python@2.7:2.8,3.3.5:", when="@3.1.1:")
-    depends_on("python@3.6:", when="@3.3.4:")
+    depends_on("python@2.7:2.8,3.2:3.4", when="@:2.6.7", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.2:3.6", when="@2.6.8:2.6.11", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.3.5:", when="@3.1.1:", type=("build", "run"))
+    depends_on("python@3.6:", when="@3.3.4:", type=("build", "run"))
+    depends_on("python@3.7:", when="@3.4.1:", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build", when="@2.6.11:")
-    depends_on("py-setuptools@36.6:", type="build", when="@3.1:")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="@3.3.4: ^python@:3.7")
+    depends_on("py-setuptools", when="@2.6.11:", type="build")
+    depends_on("py-setuptools@36.6:", when="@3.1:", type="build")
+    depends_on("py-importlib-metadata", when="@3.3.4: ^python@:3.7", type=("build", "run"))
+    depends_on("py-importlib-metadata@4.4:", when="@3.4.1: ^python@:3.9", type=("build", "run"))

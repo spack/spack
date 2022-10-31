@@ -6,6 +6,7 @@
 import socket
 
 from spack.package import *
+from spack.pkg.builtin.camp import hip_repair_cache
 
 
 class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
@@ -61,11 +62,17 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("camp@0.2.2:0.2.3", when="@0.14.0")
     depends_on("camp@0.1.0", when="@0.10.0:0.13.0")
-    depends_on("camp@2022.03.0:", when="@2022.03.0:")
+    depends_on("camp@2022.03.2:", when="@2022.03.0:")
+    depends_on("camp@main", when="@main")
+    depends_on("camp@main", when="@develop")
+    depends_on("camp+openmp", when="+openmp")
 
     depends_on("cmake@:3.20", when="+rocm", type="build")
     depends_on("cmake@3.14:", when="@2022.03.0:")
 
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
+
+    depends_on("rocprim", when="+rocm")
     with when("+rocm @0.12.0:"):
         depends_on("camp+rocm")
         for arch in ROCmPackage.amdgpu_targets:
@@ -97,6 +104,13 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
             self.spec.compiler.version,
         )
 
+    def initconfig_compiler_entries(self):
+        spec = self.spec
+        entries = super(Raja, self).initconfig_compiler_entries()
+        if "+rocm" in spec:
+            entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
+        return entries
+
     def initconfig_hardware_entries(self):
         spec = self.spec
         entries = super(Raja, self).initconfig_hardware_entries()
@@ -118,12 +132,15 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             entries.append(cmake_cache_option("ENABLE_HIP", True))
             entries.append(cmake_cache_path("HIP_ROOT_DIR", "{0}".format(spec["hip"].prefix)))
+            hip_repair_cache(entries, spec)
+            hipcc_flags = []
+            if self.spec.satisfies("@0.14.0"):
+                hipcc_flags.append("-std=c++14")
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
+                hipcc_flags.append("--amdgpu-target={0}".format(arch_str))
+            entries.append(cmake_cache_string("HIP_HIPCC_FLAGS", " ".join(hipcc_flags)))
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 

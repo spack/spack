@@ -17,9 +17,11 @@ class Hdf5VolLog(AutotoolsPackage):
 
     version("master-1.1", branch="master")
 
-    version("1.1.0", commit="ca146fa7d320ec5c0b397669b330c78fceeabb57")
+    version("1.3.0", tag="logvol.1.3.0")
+    version("1.2.0", tag="logvol.1.2.0")
+    version("1.1.0", tag="logvol.1.1.0")
 
-    depends_on("hdf5@1.13.0:")
+    depends_on("hdf5@1.13.2:")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")

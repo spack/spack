@@ -12,6 +12,7 @@ class PyMoreItertools(PythonPackage):
     homepage = "https://github.com/erikrose/more-itertools"
     pypi = "more-itertools/more-itertools-7.2.0.tar.gz"
 
+    version("8.14.0", sha256="c09443cd3d5438b8dafccd867a6bc1cb0894389e90cb53d227456b0b0bccb750")
     version("8.12.0", sha256="7dc6ad46f05f545f900dd59e8dfb4e84a4827b97b3cfecb175ea0c7d247f6064")
     version("8.11.0", sha256="0a2fd25d343c08d7e7212071820e7e7ea2f41d8fb45d6bc8a00cd6ce3b7aab88")
     version("8.9.0", sha256="8c746e0d09871661520da4f1241ba6b908dc903839733c8203b552cffaf173bd")
@@ -28,5 +29,6 @@ class PyMoreItertools(PythonPackage):
     depends_on("python@3.4:", when="@6:", type=("build", "run"))
     depends_on("python@2.7:2.8,3.2:", when="@2.3:", type=("build", "run"))
     depends_on("python@2.6:2.8,3.2:", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", when="@:8.12.0", type="build")
+    depends_on("py-flit-core@3.2:3", when="@8.14.0:", type="build")
     depends_on("py-six@1.0.0:1", when="@:5", type=("build", "run"))

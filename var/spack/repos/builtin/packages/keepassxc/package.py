@@ -43,6 +43,7 @@ class Keepassxc(CMakePackage):
     depends_on("qt+dbus~framework@5.2:")
     depends_on("libgcrypt@1.6:", type="link")
     depends_on("zlib", type="link")
+    depends_on("minizip", when="+autotype")
     depends_on("libmicrohttpd", type="link")
     depends_on("libsodium@1.0.12:", type="link")
     depends_on("readline")
@@ -57,6 +58,9 @@ class Keepassxc(CMakePackage):
     # These are required to build Auto-Type, Yubikey and browser integration support.
     depends_on("libxi", type="link", when="+autotype")
     depends_on("libxtst", type="link", when="+autotype")
+    depends_on("gengetopt", when="+autotype")
+    depends_on("libusb", when="+autotype")
+    depends_on("pcsclite", when="+autotype")
     depends_on("botan@2:", when="@2.7.0:")
 
     def cmake_args(self):

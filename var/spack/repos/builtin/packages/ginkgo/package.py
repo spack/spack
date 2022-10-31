@@ -22,9 +22,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
-    version("glu", branch="glu")
-    version("glu_experimental", branch="glu_experimental")
-    version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e")  # v1.4.0
+    version("1.5.0.glu", branch="glu")
+    version("1.5.0.glu_experimental", branch="glu_experimental")
+    version("1.4.0", commit="f811917c1def4d0fcd8db3fe5c948ce13409e28e", preferred=True)  # v1.4.0
     version("1.3.0", commit="4678668c66f634169def81620a85c9a20b7cec78")  # v1.3.0
     version("1.2.0", commit="b4be2be961fd5db45c3d02b5e004d73550722e31")  # v1.2.0
     version("1.1.1", commit="08d2c5200d3c78015ac8a4fd488bafe1e4240cf5")  # v1.1.1
@@ -153,17 +153,58 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 )
         return args
 
+    extra_install_tests = join_path("test", "test_install")
+
     @run_after("install")
-    def setup_build_tests(self):
-        """Build and install the smoke tests."""
-        # For now only 1.4.0 and later releases support this scheme.
-        if self.spec.satisfies("@:1.3.0"):
+    def cache_test_sources(self):
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    @property
+    def _cached_tests_src_dir(self):
+        """The cached smoke test source directory."""
+        return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
+
+    @property
+    def _cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self._cached_tests_src_dir, "build")
+
+    def _build_test(self):
+        cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
+        cmake_args = [
+            "-DCMAKE_C_COMPILER={0}".format(self.compiler.cc),
+            "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx),
+            self._cached_tests_src_dir,
+        ]
+
+        # Fix: For HIP tests, add the ARCH compilation flags when not present
+        if "+rocm" in self.spec:
+            src_path = join_path(self._cached_tests_src_dir, "CMakeLists.txt")
+            cmakelists = open(src_path, "rt")
+            data = cmakelists.read()
+            data = data.replace(
+                'CLANG_OPTIONS "${GINKGO_PIC_OPTION}"',
+                'CLANG_OPTIONS "${GINKGO_AMD_ARCH_FLAGS}" "${GINKGO_PIC_OPTION}"',
+            )
+            cmakelists.close()
+            cmakelists = open(src_path, "wt")
+            cmakelists.write(data)
+            cmakelists.close()
+
+        if not self.run_test(
+            cmake_bin,
+            options=cmake_args,
+            purpose="Generate the Makefile",
+            work_dir=self._cached_tests_work_dir,
+        ):
+            print("Skipping Ginkgo test: failed to generate Makefile")
             return
-        with working_dir(self.build_directory):
-            make("test_install")
-        smoke_test_path = join_path(self.build_directory, "test", "test_install")
-        with working_dir(smoke_test_path):
-            make("install")
+
+        if not self.run_test(
+            "make", purpose="Build test software", work_dir=self._cached_tests_work_dir
+        ):
+            print("Skipping Ginkgo test: failed to build test")
+            return
 
     def test(self):
         """Run the smoke tests."""
@@ -172,10 +213,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
 
-        # The installation process installs tests and associated data
-        # in a non-standard subdirectory. Consequently, those files must
-        # be manually copied to the test stage here.
-        install_tree(self.prefix.smoke_tests, self.test_suite.current_test_cache_dir)
+        self._build_test()
 
         # Perform the test(s) created by setup_build_tests.
         files = [
@@ -191,5 +229,5 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 skip_missing=True,
                 installed=False,
                 purpose="test: Running {0}".format(f),
-                work_dir=self.test_suite.current_test_cache_dir,
+                work_dir=self._cached_tests_work_dir,
             )

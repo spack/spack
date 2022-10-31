@@ -18,6 +18,7 @@ class RJomo(RPackage):
 
     cran = "jomo"
 
+    version("2.7-4", sha256="2d25bc248dc1b931e6c19636197cd6f58fb00f5e1102ed3c04084c71d03d93fd")
     version("2.7-3", sha256="9d3987f3a73d305f3ab6fc66efc04a196a7eb8b65e20c411131dc17af51f0063")
     version("2.7-2", sha256="3962d5cbecc60e72670329dbef0dd74303080f5ea2a79c91e27f75db99ba6ce9")
     version("2.6-9", sha256="b90f47071e62b8863b00b1ae710a56ae6efbfe2baeb9963f8a91a10d6183cc9b")

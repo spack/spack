@@ -12,6 +12,7 @@ class PyHepMl(PythonPackage):
     homepage = "https://github.com/arogozhnikov/hep_ml"
     pypi = "hep_ml/hep_ml-0.7.0.tar.gz"
 
+    version("0.7.1", sha256="f13635dac09ffc32ae276af9c58ebf93c593dae3da25c4e456e10e965708320b")
     version("0.7.0", sha256="0402037064d78f5723106b385ad5f20df8f67cb312c57cb4ce3839c5616f328e")
 
     depends_on("py-setuptools", type="build")

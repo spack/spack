@@ -20,20 +20,72 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("0.16", sha256="4e149c2c9be9f9ca3a6d863498bb0f642dda1a43a19ac1afe7f99854ded5c510")
     version("0.15", sha256="6c1520877ba1bce250e35a2a56c0a3da89fae0916c5ed7d5548d658237e067d9")
     version("0.14.3", sha256="2a7a405dedc7f6980a0aad7df87b427a1f43bcf6d923a9bcce1698fd296359f7")
-    version("0.14.1", sha256="361ac3f3ec6f5a4830729ab45f96c19f0f62e9415ff681f7c6cdb4ebdb796f72")
-    version("0.14", sha256="47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb")
-    version("0.13.2", sha256="645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb")
-    version("0.13.1", sha256="2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353")
-    version("0.13", sha256="e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498")
-    version("0.12", sha256="1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a")
-    version("0.11", sha256="4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6")
-    version("0.10", sha256="b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2")
-    version("0.9.2", sha256="8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240")
-    version("0.9", sha256="3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f")
-    version("0.8", sha256="9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327")
+    version(
+        "0.14.1",
+        sha256="361ac3f3ec6f5a4830729ab45f96c19f0f62e9415ff681f7c6cdb4ebdb796f72",
+        deprecated=True,
+    )
+    version(
+        "0.14",
+        sha256="47f99f1190dc71d6deb52a2b1831250515dbd5c9e0f263c3c8553ffc5b260dfb",
+        deprecated=True,
+    )
+    version(
+        "0.13.2",
+        sha256="645f6915ca6f34789157c0a9dc8b0e9ec901e019b96eb8a68fb39011602e92eb",
+        deprecated=True,
+    )
+    version(
+        "0.13.1",
+        sha256="2ae561c2a0e46c44245aa2098772374ad246c9fcb1956875c95c69c963501353",
+        deprecated=True,
+    )
+    version(
+        "0.13",
+        sha256="e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498",
+        deprecated=True,
+    )
+    version(
+        "0.12",
+        sha256="1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a",
+        deprecated=True,
+    )
+    version(
+        "0.11",
+        sha256="4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6",
+        deprecated=True,
+    )
+    version(
+        "0.10",
+        sha256="b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2",
+        deprecated=True,
+    )
+    version(
+        "0.9.2",
+        sha256="8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240",
+        deprecated=True,
+    )
+    version(
+        "0.9",
+        sha256="3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f",
+        deprecated=True,
+    )
+    version(
+        "0.8",
+        sha256="9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327",
+        deprecated=True,
+    )
 
+    variant(
+        "cxxstd",
+        default="17",
+        values=("17", conditional("20", when="@0.15:")),
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
     variant("sio", default=False, description="Build the SIO I/O backend")
 
     # cpack config throws an error on some systems
@@ -41,7 +93,8 @@ class Podio(CMakePackage):
     patch("dictloading.patch", when="@0.10.0")
     patch("python-tests.patch", when="@:0.14.0")
 
-    depends_on("root@6.08.06: cxxstd=17")
+    depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
+    depends_on("root@6.25.02: cxxstd=20", when="cxxstd=20")
 
     depends_on("cmake@3.8:", type="build")
     depends_on("python", type=("build", "run"))
@@ -55,6 +108,7 @@ class Podio(CMakePackage):
     def cmake_args(self):
         args = [
             self.define_from_variant("ENABLE_SIO", "sio"),
+            self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
@@ -62,6 +116,10 @@ class Podio(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path("PYTHONPATH", self.prefix.python)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["podio"].libs.directories[0])
+        if "+sio" in self.spec and self.version >= Version("0.16"):
+            # sio needs to be on LD_LIBRARY_PATH for ROOT to be able to
+            # dynamicaly load the python bindings library
+            env.prepend_path("LD_LIBRARY_PATH", self.spec["sio"].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("PYTHONPATH", self.prefix.python)

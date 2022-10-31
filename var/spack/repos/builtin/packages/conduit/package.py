@@ -43,6 +43,7 @@ class Conduit(CMakePackage):
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.8.4", sha256="55c37ddc668dbc45d43b60c440192f76e688a530d64f9fe1a9c7fdad8cd525fd")
     version("0.8.3", sha256="a9e60945366f3b8c37ee6a19f62d79a8d5888be7e230eabc31af2f837283ed1a")
     version("0.8.2", sha256="928eb8496bc50f6d8404f5bfa70220250876645d68d4f35ce0b99ecb85546284")
     version("0.8.1", sha256="488f22135a35136de592173131d123f7813818b7336c3b18e04646318ad3cbee")
@@ -452,7 +453,7 @@ class Conduit(CMakePackage):
         if "+mpi" in spec:
             mpicc_path = spec["mpi"].mpicc
             mpicxx_path = spec["mpi"].mpicxx
-            mpifc_path = spec["mpi"].mpifc
+            mpifc_path = spec["mpi"].mpifc if "+fortran" in spec else None
             # if we are using compiler wrappers on cray systems
             # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
             # etc make return the spack compiler wrappers

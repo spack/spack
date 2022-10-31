@@ -14,7 +14,13 @@ problems if you encounter them.
 Spack does not seem to respect ``packages.yaml``
 ------------------------------------------------
 
-A common problem in Spack v0.18 and above is that package, compiler and target
+.. note::
+
+   This issue is **resolved** as of v0.19.0.dev0 commit
+   `8281a0c5feabfc4fe180846d6fe95cfe53420bc5`, through the introduction of package
+   requirements. See :ref:`package-requirements`.
+
+A common problem in Spack v0.18.0 up to v0.19.0.dev0 is that package, compiler and target
 preferences specified in ``packages.yaml`` do not seem to be respected. Spack picks the
 "wrong" compilers and their versions, package versions and variants, and
 micro-architectures.

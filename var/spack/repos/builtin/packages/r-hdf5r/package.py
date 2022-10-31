@@ -18,6 +18,7 @@ class RHdf5r(RPackage):
 
     cran = "hdf5r"
 
+    version("1.3.7", sha256="6e8a02843ed1c970cb41f97e2acee34853d3b70ce617bc9bcff07c41b98f295b")
     version("1.3.5", sha256="87b75173ab226a9fbaa5b28289349f3c56b638629560a172994b8f9323c1622f")
     version("1.3.3", sha256="a0f83cbf21563e81dbd1a1bd8379623ed0c9c4df4e094c75013abfd7a5271545")
     version("1.2.0", sha256="58813e334fd3f9040038345a7186e5cb02090898883ac192477a76a5b8b4fe81")

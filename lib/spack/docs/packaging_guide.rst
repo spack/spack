@@ -3369,27 +3369,44 @@ The name and order in which the phases will be executed can be obtained either r
 docs at :py:mod:`~.spack.build_systems`, or using the ``spack info`` command:
 
 .. code-block:: console
-    :emphasize-lines: 13,14
+    :emphasize-lines: 26-27
 
-    $ spack info m4
-    AutotoolsPackage:    m4
-    Homepage:            https://www.gnu.org/software/m4/m4.html
+    $ spack info --phases m4
+    AutotoolsPackage:   m4
+
+    Description:
+        GNU M4 is an implementation of the traditional Unix macro processor.
+
+    Homepage: https://www.gnu.org/software/m4/m4.html
+
+    Preferred version:
+        1.4.19    https://ftpmirror.gnu.org/m4/m4-1.4.19.tar.gz
 
     Safe versions:
-        1.4.17    ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+        1.4.19    https://ftpmirror.gnu.org/m4/m4-1.4.19.tar.gz
+        1.4.18    https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz
+        1.4.17    https://ftpmirror.gnu.org/m4/m4-1.4.17.tar.gz
+
+    Deprecated versions:
+        None
 
     Variants:
-        Name       Default   Description
+        Name [Default]    When    Allowed values    Description
+        ==============    ====    ==============    ===============================
 
-        sigsegv    on        Build the libsigsegv dependency
+        sigsegv [on]      --      on, off           Build the libsigsegv dependency
 
     Installation Phases:
         autoreconf    configure    build    install
 
     Build Dependencies:
+        diffutils  gnuconfig  libsigsegv
+
+    Link Dependencies:
         libsigsegv
 
-    ...
+    Run Dependencies:
+        None
 
 
 Typically, phases have default implementations that fit most of the common cases:
@@ -4561,6 +4578,9 @@ other checks.
    * - :ref:`AutotoolsPackage <autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
+   * - :ref:`CachedCMakePackage <cachedcmakepackage>`
+     - ``check`` (``make check``, ``make test``)
+     - Not applicable
    * - :ref:`CMakePackage <cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
@@ -4585,6 +4605,9 @@ other checks.
    * - :ref:`SIPPackage <sippackage>`
      - Not applicable
      - ``test`` (module imports)
+   * - :ref:`WafPackage <wafpackage>`
+     - ``build_test`` (must be overridden)
+     - ``install_test`` (must be overridden)
 
 For example, the ``Libelf`` package inherits from ``AutotoolsPackage``
 and its ``Makefile`` has a standard ``check`` target. So Spack will

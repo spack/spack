@@ -15,12 +15,15 @@ class LlvmAmdgpu(CMakePackage):
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
     git = "https://github.com/RadeonOpenCompute/llvm-project.git"
-    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["srekolam", "renjithravindrankannath", "haampie"]
 
     version("master", branch="amd-stg-open")
+
+    version("5.2.3", sha256="1b852711aec3137b568fb65f93606d37fdcd62e06f5da3766f2ffcd4e0c646df")
+    version("5.2.1", sha256="3644e927d943d61e22672422591c47a62ff83e3d87ced68439822156d8f79abf")
     version("5.2.0", sha256="0f892174111b78a02d1a00f8f46d9f80b9abb95513a7af38ecf2a5a0882fe87f")
     version("5.1.3", sha256="d236a2064363c0278f7ba1bb2ff1545ee4c52278c50640e8bb2b9cfef8a2f128")
     version("5.1.0", sha256="db5d45c4a7842a908527c1b7b8d4a40c688225a41d23cfa382eab23edfffdd10")
@@ -144,6 +147,8 @@ class LlvmAmdgpu(CMakePackage):
 
     # Add device libs sources so they can be an external LLVM project
     for d_version, d_shasum in [
+        ("5.2.3", "16b7fc7db4759bd6fb54852e9855fa16ead76c97871d7e1e9392e846381d611a"),
+        ("5.2.1", "e5855387ce73ed483ed0d03dbfef31f297c6ca66cf816f6816fd5ee373fc8225"),
         ("5.2.0", "901674bc941115c72f82c5def61d42f2bebee687aefd30a460905996f838e16c"),
         ("5.1.3", "c41958560ec29c8bf91332b9f668793463904a2081c330c0d828bf2f91d4f04e"),
         ("5.1.0", "47dbcb41fb4739219cadc9f2b5f21358ed2f9895ce786d2f7a1b2c4fd044d30f"),
@@ -229,18 +234,7 @@ class LlvmAmdgpu(CMakePackage):
 
         # Get the GCC prefix for LLVM.
         if self.compiler.name == "gcc":
-            compiler = Executable(self.compiler.cc)
-            gcc_output = compiler("-print-search-dirs", output=str, error=str)
-
-            gcc_prefix = ""
-            for line in gcc_output.splitlines():
-                if line.startswith("install:"):
-                    # Get path and strip any whitespace
-                    # (causes oddity with ancestor)
-                    gcc_prefix = line.split(":")[1].strip()
-                    gcc_prefix = ancestor(gcc_prefix, 4)
-                    break
-            args.append(self.define("GCC_INSTALL_PREFIX", gcc_prefix))
+            args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
 
         return args
 
@@ -250,7 +244,7 @@ class LlvmAmdgpu(CMakePackage):
         # bootstraping the libcxx with the just built clang
         if self.spec.satisfies("@4.5.0:"):
             spec = self.spec
-            define = CMakePackage.define
+            define = self.define
             libcxxdir = "build-bootstrapped-libcxx"
             with working_dir(libcxxdir, create=True):
                 cmake_args = [

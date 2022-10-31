@@ -20,7 +20,7 @@ class Libxsmm(MakefilePackage):
 
     maintainers = ["hfp"]
 
-    version("master", branch="master")
+    version("main", branch="main")
     version("1.17", sha256="8b642127880e92e8a75400125307724635ecdf4020ca4481e5efe7640451bb92")
     version("1.16.3", sha256="e491ccadebc5cdcd1fc08b5b4509a0aba4e2c096f53d7880062a66b82a0baf84")
     version("1.16.2", sha256="bdc7554b56b9e0a380fc9c7b4f4394b41be863344858bc633bc9c25835c4c64e")

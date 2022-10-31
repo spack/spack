@@ -2,11 +2,12 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
+import json
 import os
 import shutil
 import sys
 import tempfile
-import warnings
 
 import llnl.util.tty as tty
 
@@ -15,7 +16,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.environment as ev
-import spack.fetch_strategy as fs
 import spack.hash_types as ht
 import spack.mirror
 import spack.relocate
@@ -257,22 +257,14 @@ def setup_parser(subparser):
     )
     savespecfile.set_defaults(func=save_specfile_fn)
 
-    # Copy buildcache from some directory to another mirror url
-    copy = subparsers.add_parser("copy", help=copy_fn.__doc__)
-    copy.add_argument(
-        "--base-dir", default=None, help="Path to mirror directory (root of existing buildcache)"
-    )
-    copy.add_argument(
-        "--spec-file",
-        default=None,
-        help=("Path to spec json or yaml file representing buildcache entry to" + " copy"),
-    )
-    copy.add_argument("--destination-url", default=None, help="Destination mirror url")
-    copy.set_defaults(func=copy_fn)
-
     # Sync buildcache entries from one mirror to another
     sync = subparsers.add_parser("sync", help=sync_fn.__doc__)
-    source = sync.add_mutually_exclusive_group(required=True)
+    sync.add_argument(
+        "--manifest-glob",
+        default=None,
+        help="A quoted glob pattern identifying copy manifest files",
+    )
+    source = sync.add_mutually_exclusive_group(required=False)
     source.add_argument(
         "--src-directory", metavar="DIRECTORY", type=str, help="Source mirror as a local file path"
     )
@@ -282,7 +274,7 @@ def setup_parser(subparser):
     source.add_argument(
         "--src-mirror-url", metavar="MIRROR_URL", type=str, help="URL of the source mirror"
     )
-    dest = sync.add_mutually_exclusive_group(required=True)
+    dest = sync.add_mutually_exclusive_group(required=False)
     dest.add_argument(
         "--dest-directory",
         metavar="DIRECTORY",
@@ -543,76 +535,29 @@ def save_specfile_fn(args):
     sys.exit(0)
 
 
-def copy_fn(args):
-    """Copy a buildcache entry and all its files from one mirror, given as
-    '--base-dir', to some other mirror, specified as '--destination-url'.
-    The specific buildcache entry to be copied from one location to the
-    other is identified using the '--spec-file' argument."""
-    # TODO: Remove after v0.18.0 release
-    msg = (
-        '"spack buildcache copy" is deprecated and will be removed from '
-        "Spack starting in v0.19.0"
-    )
-    warnings.warn(msg)
+def copy_buildcache_file(src_url, dest_url, local_path=None):
+    """Copy from source url to destination url"""
+    tmpdir = None
 
-    if not args.spec_file:
-        tty.msg("No spec yaml provided, exiting.")
-        sys.exit(1)
-
-    if not args.base_dir:
-        tty.msg("No base directory provided, exiting.")
-        sys.exit(1)
-
-    if not args.destination_url:
-        tty.msg("No destination mirror url provided, exiting.")
-        sys.exit(1)
-
-    dest_url = args.destination_url
-
-    if dest_url[0:7] != "file://" and dest_url[0] != "/":
-        tty.msg('Only urls beginning with "file://" or "/" are supported ' + "by buildcache copy.")
-        sys.exit(1)
+    if not local_path:
+        tmpdir = tempfile.mkdtemp()
+        local_path = os.path.join(tmpdir, os.path.basename(src_url))
 
     try:
-        with open(args.spec_file, "r") as fd:
-            spec = Spec.from_yaml(fd.read())
-    except Exception as e:
-        tty.debug(e)
-        tty.error("Unable to concrectize spec from yaml {0}".format(args.spec_file))
-        sys.exit(1)
-
-    dest_root_path = dest_url
-    if dest_url[0:7] == "file://":
-        dest_root_path = dest_url[7:]
-
-    build_cache_dir = bindist.build_cache_relative_path()
-
-    tarball_rel_path = os.path.join(build_cache_dir, bindist.tarball_path_name(spec, ".spack"))
-    tarball_src_path = os.path.join(args.base_dir, tarball_rel_path)
-    tarball_dest_path = os.path.join(dest_root_path, tarball_rel_path)
-
-    specfile_rel_path = os.path.join(build_cache_dir, bindist.tarball_name(spec, ".spec.json"))
-    specfile_src_path = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path = os.path.join(dest_root_path, specfile_rel_path)
-
-    specfile_rel_path_yaml = os.path.join(
-        build_cache_dir, bindist.tarball_name(spec, ".spec.yaml")
-    )
-    specfile_src_path_yaml = os.path.join(args.base_dir, specfile_rel_path)
-    specfile_dest_path_yaml = os.path.join(dest_root_path, specfile_rel_path)
-
-    # Make sure directory structure exists before attempting to copy
-    os.makedirs(os.path.dirname(tarball_dest_path))
-
-    # Now copy the specfile and tarball files to the destination mirror
-    tty.msg("Copying {0}".format(tarball_rel_path))
-    shutil.copyfile(tarball_src_path, tarball_dest_path)
-
-    tty.msg("Copying {0}".format(specfile_rel_path))
-    shutil.copyfile(specfile_src_path, specfile_dest_path)
-
-    tty.msg("Copying {0}".format(specfile_rel_path_yaml))
-    shutil.copyfile(specfile_src_path_yaml, specfile_dest_path_yaml)
+        temp_stage = Stage(src_url, path=os.path.dirname(local_path))
+        try:
+            temp_stage.create()
+            temp_stage.fetch()
+            web_util.push_to_url(local_path, dest_url, keep_original=True)
+        except web_util.FetchError as e:
+            # Expected, since we have to try all the possible extensions
+            tty.debug("no such file: {0}".format(src_url))
+            tty.debug(e)
+        finally:
+            temp_stage.destroy()
+    finally:
+        if tmpdir and os.path.exists(tmpdir):
+            shutil.rmtree(tmpdir)
 
 
 def sync_fn(args):
@@ -623,6 +568,10 @@ def sync_fn(args):
         src (str): Source mirror URL
         dest (str): Destination mirror URL
     """
+    if args.manifest_glob:
+        manifest_copy(glob.glob(args.manifest_glob))
+        return 0
+
     # Figure out the source mirror
     source_location = None
     if args.src_directory:
@@ -688,8 +637,9 @@ def sync_fn(args):
         buildcache_rel_paths.extend(
             [
                 os.path.join(build_cache_dir, bindist.tarball_path_name(s, ".spack")),
-                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json.sig")),
                 os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.json")),
+                os.path.join(build_cache_dir, bindist.tarball_name(s, ".spec.yaml")),
             ]
         )
 
@@ -702,22 +652,29 @@ def sync_fn(args):
             dest_url = url_util.join(dest_mirror_url, rel_path)
 
             tty.debug("Copying {0} to {1} via {2}".format(src_url, dest_url, local_path))
-
-            stage = Stage(
-                src_url, name="temporary_file", path=os.path.dirname(local_path), keep=True
-            )
-
-            try:
-                stage.create()
-                stage.fetch()
-                web_util.push_to_url(local_path, dest_url, keep_original=True)
-            except fs.FetchError as e:
-                tty.debug("spack buildcache unable to sync {0}".format(rel_path))
-                tty.debug(e)
-            finally:
-                stage.destroy()
+            copy_buildcache_file(src_url, dest_url, local_path=local_path)
     finally:
         shutil.rmtree(tmpdir)
+
+
+def manifest_copy(manifest_file_list):
+    """Read manifest files containing information about specific specs to copy
+    from source to destination, remove duplicates since any binary packge for
+    a given hash should be the same as any other, and copy all files specified
+    in the manifest files."""
+    deduped_manifest = {}
+
+    for manifest_path in manifest_file_list:
+        with open(manifest_path) as fd:
+            manifest = json.loads(fd.read())
+            for spec_hash, copy_list in manifest.items():
+                # Last duplicate hash wins
+                deduped_manifest[spec_hash] = copy_list
+
+    for spec_hash, copy_list in deduped_manifest.items():
+        for copy_file in copy_list:
+            tty.debug("copying {0} to {1}".format(copy_file["src"], copy_file["dest"]))
+            copy_buildcache_file(copy_file["src"], copy_file["dest"])
 
 
 def update_index(mirror_url, update_keys=False):

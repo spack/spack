@@ -537,6 +537,14 @@ class Compiler(object):
             )
             return self.extract_version_from_output(output)
 
+    @property
+    def prefix(self):
+        """Query the compiler for its install prefix. This is the install
+        path as reported by the compiler. Note that paths for cc, cxx, etc
+        are not enough to find the install prefix of the compiler, since
+        the can be symlinks, wrappers, or filenames instead of absolute paths."""
+        raise NotImplementedError("prefix is not implemented for this compiler")
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

@@ -25,6 +25,9 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
     version(
+        "2022.07.00", sha256="176db81aef44b1d498a37c67b30aff88d4025770c9200e19ceebd416e4101327"
+    )
+    version(
         "2022.06.00", sha256="4da23f3c3c51fde65120f80df2b2f703aee1910389c08f971804aa77d11ac027"
     )
     version(
@@ -54,13 +57,18 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("blaspp ~cuda", when="~cuda")
     depends_on("blaspp +cuda", when="+cuda")
     depends_on("blaspp ~rocm", when="~rocm")
+    depends_on("lapackpp ~cuda", when="~cuda")
+    depends_on("lapackpp +cuda", when="+cuda")
+    depends_on("lapackpp ~rocm", when="~rocm")
     for val in ROCmPackage.amdgpu_targets:
         depends_on("blaspp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
-    depends_on("lapackpp@2022.05.00", when="@2022.05.00:")
+        depends_on("lapackpp +rocm amdgpu_target=%s" % val, when="amdgpu_target=%s" % val)
+    depends_on("lapackpp@2022.07.00", when="@2022.07.00:")
+    depends_on("lapackpp@2022.05.00:", when="@2022.05.00:")
     depends_on("lapackpp@2021.04.00:", when="@2021.05.01:")
     depends_on("lapackpp@2020.10.02", when="@2020.10.00")
     depends_on("lapackpp@master", when="@master")
-    depends_on("scalapack")
+    depends_on("scalapack", type="test")
     depends_on("hipify-clang", when="@:2021.05.02 +rocm ^hip@5:")
 
     cpp_17_msg = "Requires C++17 compiler support"
@@ -84,14 +92,16 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
                 backend = "hip"
             backend_config = "-Dgpu_backend=%s" % backend
 
-        return [
+        config = [
             "-Dbuild_tests=%s" % self.run_tests,
             "-Duse_openmp=%s" % ("+openmp" in spec),
             "-DBUILD_SHARED_LIBS=%s" % ("+shared" in spec),
             backend_config,
             "-Duse_mpi=%s" % ("+mpi" in spec),
-            "-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"),
         ]
+        if self.run_tests:
+            config.append("-DSCALAPACK_LIBRARIES=%s" % spec["scalapack"].libs.joined(";"))
+        return config
 
     @run_after("install")
     def cache_test_sources(self):
@@ -109,13 +119,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, "examples", "build")
         with working_dir(test_dir, create=True):
             cmake_bin = join_path(self.spec["cmake"].prefix.bin, "cmake")
-            prefixes = ";".join(
-                [
-                    self.spec["blaspp"].prefix,
-                    self.spec["lapackpp"].prefix,
-                    self.spec["mpi"].prefix,
-                ]
-            )
+            deps = "blaspp lapackpp mpi"
+            if self.spec.satisfies("+rocm"):
+                deps += " rocblas hip llvm-amdgpu comgr hsa-rocr-dev rocsolver"
+            prefixes = ";".join([self.spec[x].prefix for x in deps.split()])
             self.run_test(cmake_bin, ["-DCMAKE_PREFIX_PATH=" + prefixes, ".."])
             make()
             test_args = ["-n", "4", "./ex05_blas"]
