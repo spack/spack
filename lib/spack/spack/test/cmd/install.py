@@ -935,7 +935,16 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         with tmpdir.as_cwd():
             # Test would fail if install raised an error.
-            install("--log-file=cdash_reports", "--log-format=cdash", "configure-warning")
+
+            # Ensure that even on non-x86_64 architectures, there are no
+            # dependencies installed
+            spec = spack.spec.Spec('configure-warning').concretized()
+            spec.clear_dependencies()
+            specfile = "./spec.json"
+            with open(specfile, 'w') as f:
+                f.write(spec.to_json())
+
+            install("--log-file=cdash_reports", "--log-format=cdash", specfile)
             # Verify Configure.xml exists with expected contents.
             report_dir = tmpdir.join("cdash_reports")
             assert report_dir in tmpdir.listdir()
