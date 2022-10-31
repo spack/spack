@@ -122,7 +122,7 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             if cuda_arch[0] != "none":
                 append_define("CMAKE_CUDA_ARCHITECTURES", cuda_arch[0])
 
-        if "+rocm" in spec and (spec.satisfies("@amd") or spec.satisfies("@8.0.0:")):
+        if "+rocm" in spec and (spec.satisfies("@amd") or spec.satisfies("@8:")):
             append_define("TPL_ENABLE_HIPLIB", True)
             append_define("HIP_ROOT_DIR", spec["hip"].prefix)
             rocm_archs = spec.variants["amdgpu_target"].value
