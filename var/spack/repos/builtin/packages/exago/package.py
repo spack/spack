@@ -136,6 +136,17 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         spec = self.spec
 
+        if "~mpi" in self.spec:
+            args.append(self.define("CMAKE_C_COMPILER", os.environ["CC"]))
+            args.append(self.define("CMAKE_CXX_COMPILER", os.environ["CXX"]))
+        else:
+            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+            args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
+            if "+cuda" in spec:
+                args.append(self.define("MPI_CXX_HEADER_DIR", spec["mpi"].prefix.include))
+
         # NOTE: If building with spack develop on a cluster, you may want to
         # change the ctest launch command to use your job scheduler like so:
         #
