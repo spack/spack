@@ -7,6 +7,7 @@ import os.path
 import re
 import shutil
 import sys
+from collections import OrderedDict
 
 import pytest
 
@@ -501,3 +502,32 @@ def test_utf8_paths_to_single_binary_regex():
     # Match "unsafe" dir name
     string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
     assert regex.search(string).group(0) == b"/safe/[a-z]/file"
+
+
+def test_ordered_replacement(tmpdir):
+    # This tests whether binary text replacement respects order, so that
+    # a long package prefix is replaced before a shorter sub-prefix like
+    # the root of the spack store (as a fallback).
+    def replace_and_expect(prefix_map, before, after):
+        file = str(tmpdir.join("file"))
+        with open(file, "wb") as f:
+            f.write(before)
+        spack.relocate._replace_prefix_bin(file, prefix_map)
+        with open(file, "rb") as f:
+            assert f.read() == after
+
+    replace_and_expect(
+        OrderedDict(
+            [(b"/old-spack/opt/specific-package", b"/first"), (b"/old-spack/opt", b"/second")]
+        ),
+        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
+        b"Binary with /first///////////////////////// and /second///////",
+    )
+
+    replace_and_expect(
+        OrderedDict(
+            [(b"/old-spack/opt", b"/second"), (b"/old-spack/opt/specific-package", b"/first")]
+        ),
+        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
+        b"Binary with /second////////specific-package and /second///////",
+    )
