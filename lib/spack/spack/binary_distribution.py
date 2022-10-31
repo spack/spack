@@ -1580,14 +1580,17 @@ def relocate_package(spec, allow_root):
     prefix_to_hash = buildinfo.get("prefix_to_hash")
     prefix_to_prefix = collections.OrderedDict()
 
+    # First add the most specific prefixes from package install dirs.
+    for orig_prefix, dag_hash in prefix_to_hash.items():
+        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(dag_hash, None)
+
+    # Then add sbang and more generic fallbacks.
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()
         prefix_to_prefix[old_sbang_install_path] = install_path
 
     prefix_to_prefix[old_prefix] = new_prefix
     prefix_to_prefix[old_layout_root] = new_layout_root
-    for orig_prefix, dag_hash in prefix_to_hash.items():
-        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(dag_hash, None)
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
