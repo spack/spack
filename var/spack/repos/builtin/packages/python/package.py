@@ -1255,6 +1255,14 @@ config.update(get_paths())
         # Python.framework/Versions/X.Y/Python, which is indeed a shared library
         # but doesn't have the correct filename suffix. This confuses several
         # packages (e.g. met) that use python.libs.ld_flags. Ignore this config.
+
+        # With framework python on macOS, self.config_vars["LDLIBRARY"] can point
+        # to a library that is not linkable because it does not have the required
+        # suffix of a shared library (it is called "Python" without extention).
+        # The linker then falls back to libPython.tbd in the default macOS
+        # software tree, which security settings prohibit to link against
+        # (your binary is not an allowed client of /path/to/libPython.tbd).
+        # To avoid this, we replace the entry in config_vars with a default value.
         file_extension_shared = os.path.splitext(self.config_vars["LDLIBRARY"])[-1]
         if file_extension_shared == "":
             shared_libs = []
@@ -1263,7 +1271,7 @@ config.update(get_paths())
         shared_libs += [
             "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
         ]
-        # Similar for static libraries
+        # Like LDLIBRARY for Python on Mac OS, LIBRARY may refer to an un-linkable object
         file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
         if file_extension_static == "":
             static_libs = []
