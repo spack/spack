@@ -938,10 +938,10 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
 
             # Ensure that even on non-x86_64 architectures, there are no
             # dependencies installed
-            spec = spack.spec.Spec('configure-warning').concretized()
+            spec = spack.spec.Spec("configure-warning").concretized()
             spec.clear_dependencies()
             specfile = "./spec.json"
-            with open(specfile, 'w') as f:
+            with open(specfile, "w") as f:
                 f.write(spec.to_json())
 
             install("--log-file=cdash_reports", "--log-format=cdash", specfile)

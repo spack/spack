@@ -2177,7 +2177,9 @@ spack:
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
             target_name = spack.platforms.test.Test.default
-            job_name = ci.get_job_name("specs", False, job_spec, "test-debian6-%s" % target_name, None)
+            job_name = ci.get_job_name(
+                "specs", False, job_spec, "test-debian6-%s" % target_name, None
+            )
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {

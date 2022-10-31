@@ -638,7 +638,6 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     assert installed[0].startswith("b")
 
 
-
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
     const_arg = installer_args(["a"], {})
     installer = create_installer(const_arg)
