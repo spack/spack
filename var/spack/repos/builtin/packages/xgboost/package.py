@@ -22,6 +22,7 @@ class Xgboost(CMakePackage, CudaPackage):
     maintainers = ["adamjstewart"]
 
     version("master", branch="master", submodules=True)
+    version("1.6.2", tag="v1.6.2", submodules=True)
     version("1.6.1", tag="v1.6.1", submodules=True)
     version("1.5.2", tag="v1.5.2", submodules=True)
     version("1.3.3", tag="v1.3.3", submodules=True)
@@ -39,6 +40,8 @@ class Xgboost(CMakePackage, CudaPackage):
     depends_on("llvm-openmp", when="%apple-clang +openmp")
     depends_on("hwloc", when="%clang")
 
+    # https://github.com/dmlc/xgboost/issues/6972
+    conflicts("%gcc@:7", when="+cuda")
     conflicts("%gcc@:4", msg="GCC version must be at least 5.0!")
     conflicts("+nccl", when="~cuda", msg="NCCL requires CUDA")
     conflicts("+cuda", when="~openmp", msg="CUDA requires OpenMP")

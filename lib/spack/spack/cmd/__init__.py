@@ -291,17 +291,22 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, fir
     elif first:
         return matching_specs[0]
 
-    elif len(matching_specs) > 1:
-        format_string = "{name}{@version}{%compiler}{arch=architecture}"
-        args = ["%s matches multiple packages." % spec, "Matching packages:"]
-        args += [
-            colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string)
-            for s in matching_specs
-        ]
-        args += ["Use a more specific spec."]
-        tty.die(*args)
+    ensure_single_spec_or_die(spec, matching_specs)
 
     return matching_specs[0]
+
+
+def ensure_single_spec_or_die(spec, matching_specs):
+    if len(matching_specs) <= 1:
+        return
+
+    format_string = "{name}{@version}{%compiler}{arch=architecture}"
+    args = ["%s matches multiple packages." % spec, "Matching packages:"]
+    args += [
+        colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
+    ]
+    args += ["Use a more specific spec (e.g., prepend '/' to the hash)."]
+    tty.die(*args)
 
 
 def gray_hash(spec, length):
@@ -640,3 +645,8 @@ def find_environment(args):
         return ev.Environment(env)
 
     raise ev.SpackEnvironmentError("no environment in %s" % env)
+
+
+def first_line(docstring):
+    """Return the first line of the docstring."""
+    return docstring.split("\n")[0]

@@ -189,11 +189,18 @@ class Warpx(CMakePackage):
             self.define_from_variant("WarpX_QED_TABLE_GEN", "qedtablegen"),
         ]
 
-        with when("+openpmd"):
+        # FindMPI needs an extra hint sometimes, particularly on cray systems
+        if "+mpi" in spec:
+            args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
+
+        if "+openpmd" in spec:
             args.append("-DWarpX_openpmd_internal=OFF")
 
+        # Work-around for SENSEI 4.0: wrong install location for CMake config
+        #   https://github.com/SENSEI-insitu/SENSEI/issues/79
         if "+sensei" in spec:
-            args.append(self.define("SENSEI_DIR", join_path(spec["sensei"].prefix.lib, "cmake")))
+            args.append(self.define("SENSEI_DIR", spec["sensei"].prefix.lib.cmake))
 
         return args
 

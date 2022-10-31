@@ -16,7 +16,12 @@ class Fms(CMakePackage):
     url = "https://github.com/NOAA-GFDL/FMS/archive/refs/tags/2022.02.tar.gz"
     git = "https://github.com/NOAA-GFDL/FMS.git"
 
-    maintainers = ["kgerheiser", "Hang-Lei-NOAA", "edwardhartnett", "rem1776"]
+    maintainers = [
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "edwardhartnett",
+        "rem1776",
+    ]
 
     version("2022.03", sha256="42d2ac53d3c889a8177a6d7a132583364c0f6e5d5cbde0d980443b6797ad4838")
     version("2022.02", sha256="ad4978302b219e11b883b2f52519e1ee455137ad947474abb316c8654f72c874")

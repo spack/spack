@@ -90,6 +90,7 @@ parallel = true
 concurrency = ["multiprocessing"]
 branch = true
 source = ["bin", "lib"]
+data_file = "./tests-coverage/.coverage"
 omit = [
     'lib/spack/spack/test/*',
     'lib/spack/docs/*',

@@ -15,6 +15,7 @@ class RPackrat(RPackage):
 
     cran = "packrat"
 
+    version("0.8.1", sha256="45db0301fa6a0a6944b070ac219cd1fa754bac24e517e59758cdc51e8aed23da")
     version("0.8.0", sha256="3025b9052974bec00fb09299226b80004d48e611e15a65e5a0bc49d3538844ef")
     version("0.7.0", sha256="e8bce1fd78f28f3a7bf56e65a2ae2c6802e69bf55466c24e1d1a4b8a5f83dcc2")
     version("0.5.0", sha256="d6a09290fbe037a6c740921c5dcd70b500e5b36e4713eae4010adf0c456bc5f7")

@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+from textwrap import dedent
 
 import pytest
 
@@ -126,6 +127,19 @@ def test_namespaces_shown_correctly(database):
 
     out = find("--namespace")
     assert "builtin.mock.zmpi" in out
+
+
+@pytest.mark.db
+def test_find_cli_output_format(database, mock_tty_stdout):
+    out = find("zmpi")
+    assert out.endswith(
+        dedent(
+            """\
+    zmpi@1.0
+    ==> 1 installed package
+    """
+        )
+    )
 
 
 def _check_json_output(spec_list):

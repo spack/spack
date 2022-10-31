@@ -13,9 +13,11 @@ class Parallelio(CMakePackage):
 
     homepage = "https://ncar.github.io/ParallelIO/"
     url = "https://github.com/NCAR/ParallelIO/archive/pio2_5_8.tar.gz"
+    git = "https://github.com/NCAR/ParallelIO.git"
 
     maintainers = ["jedwards4b"]
 
+    version("2.5.9", sha256="e5dbc153d8637111de3a51a9655660bf15367d55842de78240dcfc024380553d")
     version("2.5.8", sha256="f2584fb4310ff7da39d51efbe3f334efd0ac53ae2995e5fc157decccc0570a89")
     version("2.5.7", sha256="af8af04e41af17f98f2c90b996ef0d8bcd980377e0b35e57b38938c7fdc87cbd")
     version("2.5.4", sha256="e51dc71683da808a714deddc1a80c2650ce847110383e42f1710f3ba567e7a65")
@@ -32,14 +34,15 @@ class Parallelio(CMakePackage):
 
     patch('remove_redefinition_of_mpi_offset.patch', when='@:2.5.6')
 
+    depends_on("cmake@3.7:")
     depends_on("mpi")
     depends_on("netcdf-c +mpi", type="link")
     depends_on("netcdf-fortran", type="link", when="+fortran")
     depends_on("parallel-netcdf", type="link", when="+pnetcdf")
 
-    resource(name="CMake_Fortran_utils",
-             git="https://github.com/CESM-Development/CMake_Fortran_utils.git",
-             tag="master")
+    #resource(name="CMake_Fortran_utils",
+    #         git="https://github.com/CESM-Development/CMake_Fortran_utils.git",
+    #         tag="master")
 
     resource(name="genf90",
              git="https://github.com/PARALLELIO/genf90.git",
@@ -48,6 +51,9 @@ class Parallelio(CMakePackage):
     def url_for_version(self, version):
         url = 'https://github.com/NCAR/ParallelIO/archive/refs/tags/pio{}.tar.gz'
         return url.format(version.underscored)
+
+    # Allow argument mismatch in gfortran versions > 10 for mpi library compatibility
+    patch("gfortran.patch", when="+fortran %gcc@10:")
 
     def cmake_args(self):
         define = self.define
@@ -62,6 +68,7 @@ class Parallelio(CMakePackage):
             define("USER_CMAKE_MODULE_PATH", join_path(src, "CMake_Fortran_utils")),
             define("GENF90_PATH", join_path(src, "genf90")),
             define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            define("PIO_ENABLE_EXAMPLES", False),
         ]
         if spec.satisfies("+pnetcdf"):
             args.extend([
@@ -84,3 +91,8 @@ class Parallelio(CMakePackage):
             ])
 
         return args
+
+    def url_for_version(self, version):
+        return "https://github.com/NCAR/ParallelIO/archive/pio{0}.tar.gz".format(
+            version.underscored
+        )

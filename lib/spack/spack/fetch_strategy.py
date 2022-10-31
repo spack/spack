@@ -52,9 +52,9 @@ import spack.url
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
-import spack.util.web
+import spack.util.web as web_util
 import spack.version
-from spack.util.compression import decompressor_for, extension
+from spack.util.compression import decompressor_for, extension_from_path
 from spack.util.executable import CommandNotFoundError, which
 from spack.util.string import comma_and, quote
 
@@ -337,7 +337,8 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
-            if not self._existing_url(url):
+            if not web_util.url_exists(url, self.curl):
+                tty.debug("URL does not exist: " + url)
                 continue
 
             try:
@@ -351,30 +352,6 @@ class URLFetchStrategy(FetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(url)
-
-    def _existing_url(self, url):
-        tty.debug("Checking existence of {0}".format(url))
-
-        if spack.config.get("config:url_fetch_method") == "curl":
-            curl = self.curl
-            # Telling curl to fetch the first byte (-r 0-0) is supposed to be
-            # portable.
-            curl_args = ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
-            if not spack.config.get("config:verify_ssl"):
-                curl_args.append("-k")
-            _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
-            return curl.returncode == 0
-        else:
-            # Telling urllib to check if url is accessible
-            try:
-                url, headers, response = spack.util.web.read_from_url(url)
-            except spack.util.web.SpackWebError as werr:
-                msg = "Urllib fetch failed to verify url\
-                      {0}\n with error {1}".format(
-                    url, werr
-                )
-                raise FailedDownloadError(url, msg)
-            return response.getcode() is None or response.getcode() == 200
 
     def _fetch_from_url(self, url):
         if spack.config.get("config:url_fetch_method") == "curl":
@@ -397,8 +374,8 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run urllib but grab the mime type from the http headers
         try:
-            url, headers, response = spack.util.web.read_from_url(url)
-        except spack.util.web.SpackWebError as e:
+            url, headers, response = web_util.read_from_url(url)
+        except web_util.SpackWebError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
@@ -433,38 +410,19 @@ class URLFetchStrategy(FetchStrategy):
         else:
             save_args = ["-O"]
 
-        curl_args = save_args + [
-            "-f",  # fail on >400 errors
-            "-D",
-            "-",  # print out HTML headers
-            "-L",  # resolve 3xx redirects
-            url,
-        ]
-
-        if not spack.config.get("config:verify_ssl"):
-            curl_args.append("-k")
-
-        if sys.stdout.isatty() and tty.msg_enabled():
-            curl_args.append("-#")  # status bar when using a tty
-        else:
-            curl_args.append("-sS")  # show errors if fail
-
-        connect_timeout = spack.config.get("config:connect_timeout", 10)
-
+        timeout = 0
+        cookie_args = []
         if self.extra_options:
             cookie = self.extra_options.get("cookie")
             if cookie:
-                curl_args.append("-j")  # junk cookies
-                curl_args.append("-b")  # specify cookie
-                curl_args.append(cookie)
+                cookie_args.append("-j")  # junk cookies
+                cookie_args.append("-b")  # specify cookie
+                cookie_args.append(cookie)
 
             timeout = self.extra_options.get("timeout")
-            if timeout:
-                connect_timeout = max(connect_timeout, int(timeout))
 
-        if connect_timeout > 0:
-            # Timeout if can't establish a connection after n sec.
-            curl_args.extend(["--connect-timeout", str(connect_timeout)])
+        base_args = web_util.base_curl_fetch_args(url, timeout)
+        curl_args = save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
@@ -479,26 +437,10 @@ class URLFetchStrategy(FetchStrategy):
             if partial_file and os.path.lexists(partial_file):
                 os.remove(partial_file)
 
-            if curl.returncode == 22:
-                # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(url, "URL %s was not found!" % url)
-
-            elif curl.returncode == 60:
-                # This is a certificate error.  Suggest spack -k
-                raise FailedDownloadError(
-                    url,
-                    "Curl was unable to fetch due to invalid certificate. "
-                    "This is either an attack, or your cluster's SSL "
-                    "configuration is bad.  If you believe your SSL "
-                    "configuration is bad, you can try running spack -k, "
-                    "which will not check SSL certificates."
-                    "Use this at your own risk.",
-                )
-
-            else:
-                # This is some other curl error.  Curl will print the
-                # error, but print a spack message too
-                raise FailedDownloadError(url, "Curl failed with error %d" % curl.returncode)
+            try:
+                web_util.check_curl_code(curl.returncode)
+            except web_util.FetchError as err:
+                raise spack.fetch_strategy.FailedDownloadError(url, str(err))
 
         self._check_headers(headers)
 
@@ -556,7 +498,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        spack.util.web.push_to_url(self.archive_file, destination, keep_original=True)
+        web_util.push_to_url(self.archive_file, destination, keep_original=True)
 
     @_needs_stage
     def check(self):
@@ -671,7 +613,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
-        assert extension(destination) == "tar.gz"
+        assert extension_from_path(destination) == "tar.gz"
         assert self.stage.source_path.startswith(self.stage.path)
 
         tar = which("tar", required=True)
@@ -1385,19 +1327,19 @@ class S3FetchStrategy(URLFetchStrategy):
 
         parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != "s3":
-            raise FetchError("S3FetchStrategy can only fetch from s3:// urls.")
+            raise web_util.FetchError("S3FetchStrategy can only fetch from s3:// urls.")
 
         tty.debug("Fetching {0}".format(self.url))
 
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            _, headers, stream = spack.util.web.read_from_url(self.url)
+            _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, "wb") as f:
                 shutil.copyfileobj(stream, f)
 
-            content_type = spack.util.web.get_header(headers, "Content-type")
+            content_type = web_util.get_header(headers, "Content-type")
 
         if content_type == "text/html":
             warn_content_type_mismatch(self.archive_file or "the archive")
@@ -1426,15 +1368,13 @@ class GCSFetchStrategy(URLFetchStrategy):
 
     @_needs_stage
     def fetch(self):
-        import spack.util.web as web_util
-
         if self.archive_file:
             tty.debug("Already downloaded {0}".format(self.archive_file))
             return
 
         parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != "gs":
-            raise FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
+            raise web_util.FetchError("GCSFetchStrategy can only fetch from gs:// urls.")
 
         tty.debug("Fetching {0}".format(self.url))
 
@@ -1489,7 +1429,7 @@ def from_kwargs(**kwargs):
             on attribute names (e.g., ``git``, ``hg``, etc.)
 
     Raises:
-        FetchError: If no ``fetch_strategy`` matches the args.
+        spack.util.web.FetchError: If no ``fetch_strategy`` matches the args.
     """
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):
@@ -1586,7 +1526,7 @@ def for_package_version(pkg, version):
     # if it's a commit, we must use a GitFetchStrategy
     if isinstance(version, spack.version.GitVersion):
         if not hasattr(pkg, "git"):
-            raise FetchError(
+            raise web_util.FetchError(
                 "Cannot fetch git version for %s. Package has no 'git' attribute" % pkg.name
             )
         # Populate the version with comparisons to other commits
@@ -1604,7 +1544,19 @@ def for_package_version(pkg, version):
             ref_type: version.ref,
             "no_cache": True,
         }
+
         kwargs["submodules"] = getattr(pkg, "submodules", False)
+
+        # if we have a ref_version already, and it is a version from the package
+        # we can use that version's submodule specifications
+        if pkg.version.ref_version:
+            ref_version = spack.version.Version(pkg.version.ref_version[0])
+            ref_version_attributes = pkg.versions.get(ref_version)
+            if ref_version_attributes:
+                kwargs["submodules"] = ref_version_attributes.get(
+                    "submodules", kwargs["submodules"]
+                )
+
         fetcher = GitFetchStrategy(**kwargs)
         return fetcher
 
@@ -1731,15 +1683,11 @@ class FsCache(object):
         shutil.rmtree(self.root, ignore_errors=True)
 
 
-class FetchError(spack.error.SpackError):
-    """Superclass for fetcher errors."""
-
-
-class NoCacheError(FetchError):
+class NoCacheError(web_util.FetchError):
     """Raised when there is no cached archive for a package."""
 
 
-class FailedDownloadError(FetchError):
+class FailedDownloadError(web_util.FetchError):
     """Raised when a download fails."""
 
     def __init__(self, url, msg=""):
@@ -1747,23 +1695,23 @@ class FailedDownloadError(FetchError):
         self.url = url
 
 
-class NoArchiveFileError(FetchError):
-    """ "Raised when an archive file is expected but none exists."""
+class NoArchiveFileError(web_util.FetchError):
+    """Raised when an archive file is expected but none exists."""
 
 
-class NoDigestError(FetchError):
+class NoDigestError(web_util.FetchError):
     """Raised after attempt to checksum when URL has no digest."""
 
 
-class ExtrapolationError(FetchError):
+class ExtrapolationError(web_util.FetchError):
     """Raised when we can't extrapolate a version for a package."""
 
 
-class FetcherConflict(FetchError):
+class FetcherConflict(web_util.FetchError):
     """Raised for packages with invalid fetch attributes."""
 
 
-class InvalidArgsError(FetchError):
+class InvalidArgsError(web_util.FetchError):
     """Raised when a version can't be deduced from a set of arguments."""
 
     def __init__(self, pkg=None, version=None, **args):
@@ -1776,11 +1724,11 @@ class InvalidArgsError(FetchError):
         super(InvalidArgsError, self).__init__(msg, long_msg)
 
 
-class ChecksumError(FetchError):
+class ChecksumError(web_util.FetchError):
     """Raised when archive fails to checksum."""
 
 
-class NoStageError(FetchError):
+class NoStageError(web_util.FetchError):
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):

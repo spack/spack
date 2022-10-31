@@ -70,12 +70,6 @@ spack:
     # - intel-oneapi-compilers@2022.1
     # - nvhpc
 
-  - cuda_specs:
-    # Depends on ctffind which embeds fsincos (x86-specific asm) within code. Will not build on ARM
-    #- relion +cuda cuda_arch=70
-    - raja +cuda cuda_arch=70
-    - mfem +cuda cuda_arch=70
-
   - app_specs:
     - bwa
 # Depends on simde which requires newer compiler?
@@ -134,11 +128,6 @@ spack:
   specs:
 
   - matrix:
-    - - $cuda_specs
-    - - $compiler
-    - - $target
-
-  - matrix:
     - - $app_specs
     - - $compiler
     - - $target
@@ -170,6 +159,7 @@ spack:
       - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+    match_behavior: first
     mappings:
       - match:
         - llvm

@@ -27,7 +27,7 @@ class MincToolkit(CMakePackage):
     depends_on("perl-text-format", type=("build", "run"))
     depends_on("perl-getopt-tabular", type=("build", "run"))
     depends_on("perl-mni-perllib", type=("build", "run"))
-    depends_on("flex", type="build")
+    depends_on("flex", type=("build", "run"))  # e.g minccalc depends on libfl.so
     depends_on("bison", type="build")
     depends_on("zlib", type="link")
     depends_on("freeglut", when="+visualisation")
@@ -43,3 +43,6 @@ class MincToolkit(CMakePackage):
             # should be packaged separately with newer ITK
             "-DMT_BUILD_ELASTIX=OFF",
         ]
+
+    def setup_run_environment(self, env):
+        env.set("MINC_TOOLKIT", self.prefix)

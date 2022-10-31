@@ -6,8 +6,11 @@
 import os
 import re
 
+from llnl.util.filesystem import ancestor
+
 import spack.compiler
 import spack.compilers.apple_clang as apple_clang
+import spack.util.executable
 from spack.version import ver
 
 
@@ -196,3 +199,21 @@ class Gcc(spack.compiler.Compiler):
     @property
     def stdcxx_libs(self):
         return ("-lstdc++",)
+
+    @property
+    def prefix(self):
+        # GCC reports its install prefix when running ``-print-search-dirs``
+        # on the first line ``install: <prefix>``.
+        cc = spack.util.executable.Executable(self.cc)
+        with self.compiler_environment():
+            gcc_output = cc("-print-search-dirs", output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    gcc_prefix = line.split(":")[1].strip()
+                    # Go from <prefix>/lib/gcc/<triplet>/<version>/ to <prefix>
+                    return ancestor(gcc_prefix, 4)
+
+            raise RuntimeError(
+                "could not find install prefix of GCC from output:\n\t{}".format(gcc_output)
+            )

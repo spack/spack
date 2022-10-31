@@ -15,6 +15,7 @@ class PyPreCommit(PythonPackage):
 
     version("2.20.0", sha256="a978dac7bc9ec0bcee55c18a277d553b0f419d259dadb4b9418ff2d00eb43959")
     version("2.17.0", sha256="c1a8040ff15ad3d648c70cc3e55b93e4d2d5b687320955505587fd79bbaed06a")
+    version("2.10.1", sha256="399baf78f13f4de82a29b649afd74bef2c4e28eb4f021661fc7f29246e8c7a3a")
     version("1.20.0", sha256="9f152687127ec90642a2cc3e4d9e1e6240c4eb153615cb02aa1ad41d331cbb6e")
 
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))

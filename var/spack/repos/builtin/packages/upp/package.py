@@ -17,10 +17,11 @@ class Upp(CMakePackage):
     git = "https://github.com/NOAA-EMC/UPP.git"
     url = "https://github.com/NOAA-EMC/UPP/archive/refs/tags/upp_v10.0.10.tar.gz"
 
-    maintainers = ["kgerheiser", "edwardhartnett", "Hang-Lei-NOAA"]
+    maintainers = ["AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA"]
 
     version("10.0.10", sha256="0c96a88d0e79b554d5fcee9401efcf4d6273da01d15e3413845274f73d70b66e")
     version("10.0.9", tag="upp_v10.0.9", submodules=True)
+    version("8.2.0", sha256="38de2178dc79420f42aa3fb8b85796fc49d43d66f90e5276e47ab50c282627ac")
 
     variant("openmp", default=True)
     variant("postexec", default=True)

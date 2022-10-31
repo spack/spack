@@ -85,7 +85,7 @@ All packages whose names or descriptions contain documentation:
 To get more information on a particular package from `spack list`, use
 `spack info`.  Just supply the name of a package:
 
-.. command-output:: spack info mpich
+.. command-output:: spack info --all mpich
 
 Most of the information is self-explanatory.  The *safe versions* are
 versions that Spack knows the checksum for, and it will use the

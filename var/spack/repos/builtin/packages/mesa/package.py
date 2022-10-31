@@ -143,7 +143,10 @@ class Mesa(MesonPackage):
         when="@21.0.0:21.0.3",
     )
 
-    patch("mesa_check_llvm_version_suffix.patch", when="@21.2.3:")
+    # llvm::Module::setOverrideStackAlignment was added in LLVM 13.0.0, but forks based
+    # on development versions of LLVM 13 may or may not have it. Use SFINAE to detect
+    # the existence of the function and call it only if it is available.
+    patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:")
 
     # Explicitly use the llvm-config tool
     def patch(self):

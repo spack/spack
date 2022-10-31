@@ -24,6 +24,7 @@ class GpiSpace(CMakePackage):
     maintainers = ["mzeyen1985", "tiberot", "rumach", "mrahn", "acastanedam"]
 
     version("latest", branch="main")
+    version("22.09", sha256="f938847205181081ed24896bba16302ac35bbf478b4ceecae5bb21d5a38c8556")
     version("22.06", sha256="d89d8a7b574430c4f151a3768073fa44d32e5cc7606fbe0f58aeedf6f5fefc0b")
     version("22.03", sha256="b01500b9480452aee865a0ef98cf40864f847b7e22ea572f9a6f0f5ac2ae9a1a")
     version("21.12.1", sha256="6c49aca95a32e66fa1e34bef542c2f380e91f86c9c2b3b0d98921901bab7abce")
@@ -31,17 +32,25 @@ class GpiSpace(CMakePackage):
     version("21.09", sha256="7f3861c2bfec15a4da46378ea38b304e1462ed315cd315b81ab2c2a8ba50dd3e")
 
     variant(
+        "monitor",
+        default=True,
+        description="""
+                    Enables the gspc-monitor application for execution monitoring.
+                    """,
+    )
+    variant(
+        "iml",
+        default=True,
+        description="""
+                    Enables IML support
+                    """,
+    )
+    variant(
         "network",
         default="ethernet",
         values=("infiniband", "ethernet"),
         description="GPI-2 fabric to enable",
-    )
-    variant(
-        "monitor",
-        default=True,
-        description="""
-                        Enables the gspc-monitor application for execution monitoring.
-                        """,
+        when="+iml",
     )
     variant(
         "build_type",
@@ -58,11 +67,12 @@ class GpiSpace(CMakePackage):
         "+atomic +chrono +coroutine +context +date_time +filesystem +iostreams"
         " +program_options +random +regex +serialization +test +timer cxxstd=14"
     )
-    depends_on("hwloc@1.10: +libudev ~shared ~libxml2")
+    depends_on("hwloc@1.10: +libudev ~libxml2 libs=static")
     depends_on("libssh2@1.7:")
     depends_on("openssl@0.9:")
-    depends_on("gpi-2@1.3.2:1.3.3 fabrics=infiniband", when="network=infiniband")
-    depends_on("gpi-2@1.3.2:1.3.3 fabrics=ethernet", when="network=ethernet")
+    with when("+iml"):
+        depends_on("gpi-2@1.3.2:1.3.3 fabrics=infiniband", when="network=infiniband")
+        depends_on("gpi-2@1.3.2:1.3.3 fabrics=ethernet", when="network=ethernet")
     depends_on("qt@5.9:5.15", when="+monitor")
 
     def cmake_args(self):
@@ -71,6 +81,7 @@ class GpiSpace(CMakePackage):
             self.define("INSTALL_DO_NOT_BUNDLE", True),
             self.define("BUILD_TESTING", False),
             self.define_from_variant("GSPC_WITH_MONITOR_APP", "monitor"),
+            self.define_from_variant("GSPC_WITH_IML", "iml"),
         ]
 
         return args

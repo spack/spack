@@ -9,18 +9,20 @@ import spack.config
 
 
 @pytest.mark.parametrize(
-    "packages,expected_error",
+    # PKG-PROPERTIES are ubiquitous in mock packages, since they don't use sha256
+    # and they don't change the example.com URL very often.
+    "packages,expected_errors",
     [
         # A non existing variant is used in a conflict directive
-        (["wrong-variant-in-conflicts"], "PKG-DIRECTIVES"),
+        (["wrong-variant-in-conflicts"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # The package declares a non-existing dependency
-        (["missing-dependency"], "PKG-DIRECTIVES"),
+        (["missing-dependency"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # The package use a non existing variant in a depends_on directive
-        (["wrong-variant-in-depends-on"], "PKG-DIRECTIVES"),
+        (["wrong-variant-in-depends-on"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a GitHub patch URL without full_index=1
-        (["invalid-github-patch-url"], "PKG-DIRECTIVES"),
+        (["invalid-github-patch-url"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has a stand-alone 'test' method in build-time callbacks
-        (["test-build-callbacks"], "PKG-DIRECTIVES"),
+        (["test-build-callbacks"], ["PKG-DIRECTIVES", "PKG-PROPERTIES"]),
         # This package has no issues
         (["mpileaks"], None),
         # This package has a conflict with a trigger which cannot constrain the constraint
@@ -28,15 +30,16 @@ import spack.config
         (["unconstrainable-conflict"], None),
     ],
 )
-def test_package_audits(packages, expected_error, mock_packages):
+def test_package_audits(packages, expected_errors, mock_packages):
     reports = spack.audit.run_group("packages", pkgs=packages)
 
     # Check that errors were reported only for the expected failure
     actual_errors = [check for check, errors in reports if errors]
-    if expected_error:
-        assert [expected_error] == actual_errors
+    msg = [str(e) for _, errors in reports for e in errors]
+    if expected_errors:
+        assert expected_errors == actual_errors, msg
     else:
-        assert not actual_errors
+        assert not actual_errors, msg
 
 
 # Data used in the test below to audit the double definition of a compiler

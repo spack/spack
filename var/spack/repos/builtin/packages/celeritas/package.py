@@ -13,11 +13,14 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     """
 
     homepage = "https://github.com/celeritas-project/celeritas"
-    url = "https://github.com/celeritas-project/celeritas/archive/refs/tags/v0.1.0.tar.gz"
+    url = "https://github.com/celeritas-project/celeritas/releases/download/v0.1.0/celeritas-0.1.0.tar.gz"
 
     maintainers = ["sethrj"]
 
-    version("0.1.0", sha256="0f5f4f05c78f115bfaf45e41913a990a2a5bd3de86513ff51570c9c6652fcd1d")
+    version("0.1.3", sha256="992c49a48adba884fe3933c9624da5bf480ef0694809430ae98903f2c28cc881")
+    version("0.1.2", sha256="d123ea2e34267adba387d46bae8c9a1146a2e047f87f2ea5f823878c1684678d")
+    version("0.1.1", sha256="a1d58e29226e89a2330d69c40049d61e7c885cf991824e60ff8c9ccc95fc5ec6")
+    version("0.1.0", sha256="46692977b9b31d73662252cc122d7f016f94139475788bca7fdcb97279b93af8")
 
     _cxxstd_values = ("14", "17")
 

@@ -20,7 +20,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import dedupe, match_predicate
 
-from spack.build_environment import dso_suffix
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -36,7 +36,7 @@ class Python(Package):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "varioustoxins"]
+    maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
 
     phases = ["configure", "build", "install"]
 
@@ -44,6 +44,8 @@ class Python(Package):
     install_targets = ["install"]
     build_targets = []  # type: List[str]
 
+    version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
+    version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
     version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
     version("3.10.5", sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
     version("3.10.4", sha256="f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28")
@@ -52,10 +54,12 @@ class Python(Package):
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
     version(
-        "3.9.13",
-        sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44",
+        "3.9.15",
+        sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8",
         preferred=True,
     )
+    version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
+    version("3.9.13", sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44")
     version("3.9.12", sha256="70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
     version("3.9.11", sha256="3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112")
     version("3.9.10", sha256="1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e")
@@ -69,6 +73,8 @@ class Python(Package):
     version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
     version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
     version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
+    version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
+    version("3.8.14", sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31")
     version("3.8.13", sha256="903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4")
     version("3.8.12", sha256="316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a")
     version("3.8.11", sha256="b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393")
@@ -83,6 +89,8 @@ class Python(Package):
     version("3.8.2", sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561")
     version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
     version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
+    version("3.7.15", sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436")
+    version("3.7.14", sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709")
     version("3.7.13", sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5")
     version("3.7.12", sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46")
     version("3.7.11", sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a")
@@ -97,53 +105,221 @@ class Python(Package):
     version("3.7.2", sha256="f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d")
     version("3.7.1", sha256="36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06")
     version("3.7.0", sha256="85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d")
-    version("3.6.15", sha256="54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043")
-    version("3.6.14", sha256="70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5")
-    version("3.6.13", sha256="614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669")
-    version("3.6.12", sha256="12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693")
-    version("3.6.11", sha256="96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c")
-    version("3.6.10", sha256="7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d")
-    version("3.6.9", sha256="47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa")
-    version("3.6.8", sha256="7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0")
-    version("3.6.7", sha256="b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239")
-    version("3.6.6", sha256="7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58")
-    version("3.6.5", sha256="53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6")
-    version("3.6.4", sha256="7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486")
-    version("3.6.3", sha256="ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91")
-    version("3.6.2", sha256="7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82")
-    version("3.6.1", sha256="aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828")
-    version("3.6.0", sha256="aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b")
-    version("3.5.10", sha256="3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a")
-    version("3.5.9", sha256="67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1")
-    version("3.5.8", sha256="18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a")
-    version("3.5.7", sha256="542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b")
-    version("3.5.6", sha256="30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8")
-    version("3.5.5", sha256="2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5")
-    version("3.5.4", sha256="6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44")
-    version("3.5.3", sha256="d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a")
-    version("3.5.2", sha256="1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0")
-    version("3.5.1", sha256="687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7")
-    version("3.5.0", sha256="584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0")
-    version("3.4.10", sha256="217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d")
-    version("3.4.3", sha256="8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147")
-    version("3.3.6", sha256="0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034")
-    version("3.2.6", sha256="fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e")
+    version(
+        "3.6.15",
+        sha256="54570b7e339e2cfd72b29c7e2fdb47c0b7b18b7412e61de5b463fc087c13b043",
+        deprecated=True,
+    )
+    version(
+        "3.6.14",
+        sha256="70064897bc434d6eae8bcc3e5678f282b5ea776d60e695da548a1219ccfd27a5",
+        deprecated=True,
+    )
+    version(
+        "3.6.13",
+        sha256="614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669",
+        deprecated=True,
+    )
+    version(
+        "3.6.12",
+        sha256="12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693",
+        deprecated=True,
+    )
+    version(
+        "3.6.11",
+        sha256="96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c",
+        deprecated=True,
+    )
+    version(
+        "3.6.10",
+        sha256="7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d",
+        deprecated=True,
+    )
+    version(
+        "3.6.9",
+        sha256="47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa",
+        deprecated=True,
+    )
+    version(
+        "3.6.8",
+        sha256="7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0",
+        deprecated=True,
+    )
+    version(
+        "3.6.7",
+        sha256="b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239",
+        deprecated=True,
+    )
+    version(
+        "3.6.6",
+        sha256="7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58",
+        deprecated=True,
+    )
+    version(
+        "3.6.5",
+        sha256="53a3e17d77cd15c5230192b6a8c1e031c07cd9f34a2f089a731c6f6bd343d5c6",
+        deprecated=True,
+    )
+    version(
+        "3.6.4",
+        sha256="7dc453e1a93c083388eb1a23a256862407f8234a96dc4fae0fc7682020227486",
+        deprecated=True,
+    )
+    version(
+        "3.6.3",
+        sha256="ab6193af1921b30f587b302fe385268510e80187ca83ca82d2bfe7ab544c6f91",
+        deprecated=True,
+    )
+    version(
+        "3.6.2",
+        sha256="7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82",
+        deprecated=True,
+    )
+    version(
+        "3.6.1",
+        sha256="aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828",
+        deprecated=True,
+    )
+    version(
+        "3.6.0",
+        sha256="aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b",
+        deprecated=True,
+    )
+    version(
+        "3.5.10",
+        sha256="3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a",
+        deprecated=True,
+    )
+    version(
+        "3.5.9",
+        sha256="67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1",
+        deprecated=True,
+    )
+    version(
+        "3.5.8",
+        sha256="18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a",
+        deprecated=True,
+    )
+    version(
+        "3.5.7",
+        sha256="542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b",
+        deprecated=True,
+    )
+    version(
+        "3.5.6",
+        sha256="30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8",
+        deprecated=True,
+    )
+    version(
+        "3.5.5",
+        sha256="2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5",
+        deprecated=True,
+    )
+    version(
+        "3.5.4",
+        sha256="6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44",
+        deprecated=True,
+    )
+    version(
+        "3.5.3",
+        sha256="d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a",
+        deprecated=True,
+    )
+    version(
+        "3.5.2",
+        sha256="1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0",
+        deprecated=True,
+    )
+    version(
+        "3.5.1",
+        sha256="687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7",
+        deprecated=True,
+    )
+    version(
+        "3.5.0",
+        sha256="584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0",
+        deprecated=True,
+    )
+    version(
+        "3.4.10",
+        sha256="217757699249ab432571b381386d441e12b433100ab5f908051fcb7cced2539d",
+        deprecated=True,
+    )
+    version(
+        "3.4.3",
+        sha256="8b743f56e9e50bf0923b9e9c45dd927c071d7aa56cd46569d8818add8cf01147",
+        deprecated=True,
+    )
+    version(
+        "3.3.6",
+        sha256="0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034",
+        deprecated=True,
+    )
+    version(
+        "3.2.6",
+        sha256="fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e",
+        deprecated=True,
+    )
     version(
         "3.1.5",
         sha256="d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103",
         deprecated=True,
     )
-    version("2.7.18", sha256="da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814")
-    version("2.7.17", sha256="f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde")
-    version("2.7.16", sha256="01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5")
-    version("2.7.15", sha256="18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db")
-    version("2.7.14", sha256="304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8")
-    version("2.7.13", sha256="a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1")
-    version("2.7.12", sha256="3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6")
-    version("2.7.11", sha256="82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6")
-    version("2.7.10", sha256="eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a")
-    version("2.7.9", sha256="c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b")
-    version("2.7.8", sha256="74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557")
+    version(
+        "2.7.18",
+        sha256="da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814",
+        deprecated=True,
+    )
+    version(
+        "2.7.17",
+        sha256="f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde",
+        deprecated=True,
+    )
+    version(
+        "2.7.16",
+        sha256="01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5",
+        deprecated=True,
+    )
+    version(
+        "2.7.15",
+        sha256="18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db",
+        deprecated=True,
+    )
+    version(
+        "2.7.14",
+        sha256="304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8",
+        deprecated=True,
+    )
+    version(
+        "2.7.13",
+        sha256="a4f05a0720ce0fd92626f0278b6b433eee9a6173ddf2bced7957dfb599a5ece1",
+        deprecated=True,
+    )
+    version(
+        "2.7.12",
+        sha256="3cb522d17463dfa69a155ab18cffa399b358c966c0363d6c8b5b3bf1384da4b6",
+        deprecated=True,
+    )
+    version(
+        "2.7.11",
+        sha256="82929b96fd6afc8da838b149107078c02fa1744b7e60999a8babbc0d3fa86fc6",
+        deprecated=True,
+    )
+    version(
+        "2.7.10",
+        sha256="eda8ce6eec03e74991abb5384170e7c65fcd7522e409b8e83d7e6372add0f12a",
+        deprecated=True,
+    )
+    version(
+        "2.7.9",
+        sha256="c8bba33e66ac3201dabdc556f0ea7cfe6ac11946ec32d357c4c6f9b018c12c5b",
+        deprecated=True,
+    )
+    version(
+        "2.7.8",
+        sha256="74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557",
+        deprecated=True,
+    )
 
     extendable = True
 
@@ -193,7 +369,6 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
-    variant("ensurepip", default=True, description="Build ensurepip module", when="@2.7.9:2,3.4:")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -356,15 +531,6 @@ class Python(Package):
                 variants += "+lzma"
             except ProcessError:
                 variants += "~lzma"
-
-        if Version(version_str) in ver("2.7.9:2,3.4:"):
-            # The ensurepip module is always available, but won't work if built with
-            # --without-ensurepip. A more reliable check to see if the package was built
-            # with --with-ensurepip is to check for the presence of a pip executable.
-            if glob.glob(os.path.join(os.path.dirname(exes[0]), "pip*")):
-                variants += "+ensurepip"
-            else:
-                variants += "~ensurepip"
 
         if Version(version_str) >= Version("3"):
             try:
@@ -622,10 +788,7 @@ class Python(Package):
                 raise ValueError("+ucs4 variant not compatible with Python 3.3 and beyond")
 
         if spec.satisfies("@2.7.9:2,3.4:"):
-            if "+ensurepip" in spec:
-                config_args.append("--with-ensurepip=install")
-            else:
-                config_args.append("--without-ensurepip")
+            config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
             cflags.append(self.compiler.cc_pic_flag)
@@ -636,7 +799,7 @@ class Python(Package):
 
         if "+dbm" in spec:
             # Default order is ndbm:gdbm:bdb
-            config_args.append("--with-dbmliborder=gdbm:bdb:ndbm")
+            config_args.append("--with-dbmliborder=gdbm")
         else:
             config_args.append("--with-dbmliborder=")
 
@@ -851,10 +1014,6 @@ class Python(Package):
                 else:
                     self.command("-c", "import Tix")
 
-            # Ensure that ensurepip module works
-            if "+ensurepip" in spec:
-                self.command("-c", "import ensurepip")
-
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -954,10 +1113,12 @@ config.update(get_paths())
         )
 
         dag_hash = self.spec.dag_hash()
-
+        lib_prefix = "lib" if not is_windows else ""
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
+            if is_windows:
+                version = str(version).split(".")[0]
             config = {
                 # get_config_vars
                 "BINDIR": self.prefix.bin,
@@ -970,8 +1131,8 @@ config.update(get_paths())
                 "LIBPL": self.prefix.lib.join("python{0}")
                 .join("config-{0}-{1}")
                 .format(version, sys.platform),
-                "LDLIBRARY": "libpython{}.{}".format(version, dso_suffix),
-                "LIBRARY": "libpython{}.a".format(version),
+                "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
+                "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
                 "LDCXXSHARED": "c++",
                 "PYTHONFRAMEWORKPREFIX": "/System/Library/Frameworks",
@@ -1005,18 +1166,6 @@ config.update(get_paths())
                 config.update(json.loads(self.command("-c", cmd, output=str)))
             except (ProcessError, RuntimeError):
                 pass
-
-            # When using homebrew on macOS, self.config_vars["LDLIBRARY"] points to
-            # Python.framework/Versions/3.9/Python, which is indeed a shared library
-            # but doesn't have the correct filename suffix. This confuses several
-            # packages (e.g. met) that use python.libs.ld_flags. Repair this by
-            # pointing back to the symbolic link .../libs/libpython3.9.dylib
-            file_extension_shared = os.path.splitext(config["LDLIBRARY"])[-1]
-            if file_extension_shared == "":
-                config["LDLIBRARY"] = "libpython{}.{}".format(version, dso_suffix)
-            file_extension_static = os.path.splitext(config["LIBRARY"])[-1]
-            if file_extension_static == "":
-                config["LIBRARY"] = "libpython{}.a".format(version)
             self._config_vars[dag_hash] = config
         return self._config_vars[dag_hash]
 
@@ -1046,7 +1195,7 @@ config.update(get_paths())
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed.
         """
-        return Prefix(self.config_vars["prefix"])
+        return Prefix(self.config_vars["base"])
 
     def find_library(self, library):
         # Spack installs libraries into lib, except on openSUSE where it installs them
@@ -1071,8 +1220,22 @@ config.update(get_paths())
 
         # Windows libraries are installed directly to BINDIR
         win_bin_dir = self.config_vars["BINDIR"]
+        win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        directories = [
+            libdir,
+            libpl,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir,
+        ]
+
+        # The Python shipped with Xcode command line tools isn't in any of these locations
+        for subdir in ["lib", "lib64"]:
+            directories.append(os.path.join(self.config_vars["base"], subdir))
+
+        directories = dedupe(directories)
         for directory in directories:
             path = os.path.join(directory, library)
             if os.path.exists(path):
@@ -1080,52 +1243,81 @@ config.update(get_paths())
 
     @property
     def libs(self):
-        # The +shared variant isn't always reliable, as `spack external find`
-        # currently can't detect it. If +shared, prefer the shared libraries, but check
-        # for static if those aren't found. Vice versa for ~shared.
-
-        # The values of LDLIBRARY and LIBRARY also aren't reliable. Intel Python uses a
+        py_version = self.version.up_to(2)
+        if is_windows:
+            py_version = str(py_version).replace(".", "")
+        lib_prefix = "lib" if not is_windows else ""
+        # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
-        # libpythonX.Y.a but only libpythonX.Y.so exists.
-        shared_libs = [
-            self.config_vars["LDLIBRARY"],
-            "libpython{}.{}".format(self.version.up_to(2), dso_suffix),
-        ]
-        static_libs = [
-            self.config_vars["LIBRARY"],
-            "libpython{}.a".format(self.version.up_to(2)),
-        ]
-        if "+shared" in self.spec:
-            libraries = shared_libs + static_libs
-        else:
-            libraries = static_libs + shared_libs
-        libraries = dedupe(libraries)
+        # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
 
-        for library in libraries:
-            lib = self.find_library(library)
+        # When using homebrew on macOS, self.config_vars["LDLIBRARY"] points to
+        # Python.framework/Versions/X.Y/Python, which is indeed a shared library
+        # but doesn't have the correct filename suffix. This confuses several
+        # packages (e.g. met) that use python.libs.ld_flags. Ignore this config.
+        file_extension_shared = os.path.splitext(self.config_vars["LDLIBRARY"])[-1]
+        if file_extension_shared == "":
+            shared_libs = []
+        else:
+            shared_libs = [self.config_vars["LDLIBRARY"]]
+        shared_libs += [
+            "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
+        ]
+        # Similar for static libraries
+        file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
+        if file_extension_static == "":
+            static_libs = []
+        else:
+            static_libs = [self.config_vars["LIBRARY"]]
+        static_libs += [
+            "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
+        ]
+
+        # The +shared variant isn't reliable, as `spack external find` currently can't
+        # detect it. If +shared, prefer the shared libraries, but check for static if
+        # those aren't found. Vice versa for ~shared.
+        if "+shared" in self.spec:
+            candidates = shared_libs + static_libs
+        else:
+            candidates = static_libs + shared_libs
+
+        candidates = dedupe(candidates)
+
+        for candidate in candidates:
+            lib = self.find_library(candidate)
             if lib:
                 return lib
 
-        msg = "Unable to locate {} libraries in {}"
-        libdir = self.config_vars["LIBDIR"]
-        raise spack.error.NoLibrariesError(msg.format(self.name, libdir))
+        raise spack.error.NoLibrariesError(
+            "Unable to find {} libraries with the following names:".format(self.name),
+            "\n".join(candidates),
+        )
 
     @property
     def headers(self):
-        # Location where pyconfig.h is _supposed_ to be
-        config_h = self.config_vars["config_h_filename"]
-        if os.path.exists(config_h):
-            headers = HeaderList(config_h)
+        # Locations where pyconfig.h could be
+        # This varies by system, especially on macOS where the command line tools are
+        # installed in a very different directory from the system python interpreter.
+        py_version = str(self.version.up_to(2))
+        candidates = [
+            os.path.dirname(self.config_vars["config_h_filename"]),
+            self.config_vars["INCLUDEPY"],
+            self.config_vars["CONFINCLUDEPY"],
+            os.path.join(self.config_vars["base"], "include", py_version),
+            os.path.join(self.config_vars["base"], "Headers"),
+        ]
+        candidates = list(dedupe(candidates))
+
+        for directory in candidates:
+            headers = find_headers("pyconfig", directory)
+            if headers:
+                config_h = headers[0]
+                break
         else:
-            # If not, one of these config vars should contain the right directory
-            for var in ["INCLUDEPY", "CONFINCLUDEPY"]:
-                headers = find_headers("pyconfig", self.config_vars[var])
-                if headers:
-                    config_h = headers[0]
-                    break
-            else:
-                msg = "Unable to locate {} headers in {}"
-                raise spack.error.NoHeadersError(msg.format(self.name, directory))
+            raise spack.error.NoHeadersError(
+                "Unable to locate {} headers in any of these locations:".format(self.name),
+                "\n".join(candidates),
+            )
 
         headers.directories = [os.path.dirname(config_h)]
         return headers

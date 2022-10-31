@@ -22,6 +22,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     executables = [r"^ncursesw?(?:\d+(?:\.\d+)*)?-config$"]
 
+    version("6.3", sha256="97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059")
     version("6.2", sha256="30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d")
     version("6.1", sha256="aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17")
     version("6.0", sha256="f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260")
@@ -49,7 +50,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     patch("patch_gcc_5.txt", when="@6.0%gcc@5.0:")
     patch("sed_pgi.patch", when="@:6.0")
-    patch("nvhpc_fix_preprocessor_flag.patch", when="@6.0:%nvhpc")
+    patch("nvhpc_fix_preprocessor_flag.patch", when="@6.0:6.2%nvhpc")
 
     @classmethod
     def determine_version(cls, exe):
@@ -110,9 +111,15 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             "--enable-overwrite",
             "--without-ada",
             "--enable-pc-files",
-            "--with-pkg-config-libdir={0}/lib/pkgconfig".format(self.prefix),
             "--disable-overwrite",
         ]
+
+        if spec.satisfies("@:6.2"):
+            opts.append("--with-pkg-config-libdir={0}/pkgconfig".format(prefix.lib))
+        else:
+            pcstage = "{0}/lib/pkgconfig".format(self.stage.source_path)
+            mkdirp(pcstage)
+            opts.append("--with-pkg-config-libdir={0}".format(pcstage))
 
         nwide_opts = ["--disable-widec", "--without-manpages", "--without-tests"]
 
@@ -163,6 +170,20 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         for header in headers:
             h = os.path.basename(header)
             os.symlink(os.path.join("ncursesw", h), os.path.join(prefix.include, h))
+
+        if spec.satisfies("@6.3:"):
+            pc_stage = "{0}/lib/pkgconfig".format(self.stage.source_path)
+            pc_install = "{0}/pkgconfig".format(prefix.lib)
+            mkdirp(pc_install)
+            install_tree(pc_stage, pc_install)
+
+    @run_after("install")
+    def symlink_curses(self):
+        soext = "so" if not self.spec.satisfies("platform=darwin") else "dylib"
+        libncurses = "{0}/libncurses.{1}".format(self.prefix.lib, soext)
+        libcurses = "{0}/libcurses.{1}".format(self.prefix.lib, soext)
+        if not os.path.exists(libcurses) and os.path.exists(libncurses):
+            os.symlink(libncurses, libcurses)
 
     def query_parameter_options(self):
         """Use query parameters passed to spec (e.g., "spec[ncurses:wide]")

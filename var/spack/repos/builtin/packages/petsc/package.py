@@ -22,6 +22,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     version("main", branch="main")
 
+    version("3.18.0", sha256="9da802e703ad79fb7ef0007d17f68916573011073ee9712dcd1673537f6a5f68")
+    version("3.17.5", sha256="a1193e6c50a1676c3972a1edf0a06eec9fac8ecc2f3771f2689a8997423e4c71")
     version("3.17.4", sha256="99c127486722a3ffd95a268b4ceb0976cbf217926c681a9631bd7246eab8cb2a")
     version("3.17.3", sha256="5c24ade5e4b32cc04935ba0db1dafe48d633bebaaa30a3033f1e58788d37875f")
     version("3.17.2", sha256="2313dd1ca41bf0ace68671ea6f8d4abf90011ed899f5e1e08658d3f18478359d")
@@ -201,6 +203,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("xcode_stub_out_of_sync.patch", when="@:3.10.4")
     patch("xlf_fix-dup-petscfecreate.patch", when="@3.11.0")
     patch("disable-DEPRECATED_ENUM.diff", when="@3.14.1 +cuda")
+    patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
 
     depends_on("diffutils", type="build")
 
@@ -217,6 +220,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("hip", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("hipsparse", when="+rocm")
+    depends_on("hipsolver", when="+rocm")
     depends_on("rocsparse", when="+rocm")
     depends_on("rocsolver", when="+rocm")
     depends_on("rocblas", when="+rocm")
@@ -543,7 +547,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             if not spec.satisfies("amdgpu_target=none"):
                 hip_arch = spec.variants["amdgpu_target"].value
                 options.append("--with-hip-arch={0}".format(hip_arch[0]))
-            hip_pkgs = ["hipsparse", "hipblas", "rocsparse", "rocsolver", "rocblas"]
+            hip_pkgs = ["hipsparse", "hipblas", "hipsolver", "rocsparse", "rocsolver", "rocblas"]
             hip_ipkgs = hip_pkgs + ["rocthrust", "rocprim"]
             hip_lpkgs = hip_pkgs
             if spec.satisfies("^rocrand@5.1:"):

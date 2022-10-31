@@ -150,13 +150,17 @@ def color_when(value):
 
 
 class match_to_ansi(object):
-    def __init__(self, color=True):
+    def __init__(self, color=True, enclose=False):
         self.color = _color_when_value(color)
+        self.enclose = enclose
 
     def escape(self, s):
         """Returns a TTY escape sequence for a color"""
         if self.color:
-            return "\033[%sm" % s
+            if self.enclose:
+                return r"\[\033[%sm\]" % s
+            else:
+                return "\033[%sm" % s
         else:
             return ""
 
@@ -201,9 +205,11 @@ def colorize(string, **kwargs):
     Keyword Arguments:
         color (bool): If False, output will be plain text without control
             codes, for output to non-console devices.
+        enclose (bool): If True, enclose ansi color sequences with
+            square brackets to prevent misestimation of terminal width.
     """
     color = _color_when_value(kwargs.get("color", get_color_when()))
-    string = re.sub(color_re, match_to_ansi(color), string)
+    string = re.sub(color_re, match_to_ansi(color, kwargs.get("enclose")), string)
     string = string.replace("}}", "}")
     return string
 

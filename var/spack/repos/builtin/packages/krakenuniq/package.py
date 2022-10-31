@@ -22,9 +22,15 @@ class Krakenuniq(Package):
     version("0.5.5", sha256="645f4387a59638526dededacd5104abc1b325c020d5e4c136b902f1167fc4fd5")
     version("0.5.3", sha256="bc57fd4d5f50363aef640d61b2b111d9bef84a32e9a4eebfb977812cb8dc0250")
 
+    variant("jellyfish", default=False, description="Install jellyfish v1.1.")
+
     depends_on("bzip2")
     depends_on("zlib")
+    depends_on("wget", when="+jellyfish")
 
     def install(self, spec, prefix):
         local_script = which("./install_krakenuniq.sh")
-        local_script(prefix.bin)
+        if "+jellyfish" in self.spec:
+            local_script("-j", prefix.bin)
+        else:
+            local_script(prefix.bin)

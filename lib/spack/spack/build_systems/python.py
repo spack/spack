@@ -33,7 +33,7 @@ class PythonPackage(PackageBase):
     #: Package name, version, and extension on PyPI
     pypi = None  # type: Optional[str]
 
-    maintainers = ["adamjstewart"]
+    maintainers = ["adamjstewart", "pradyunsg"]
 
     # Default phases
     phases = ["install"]
@@ -138,11 +138,27 @@ class PythonPackage(PackageBase):
                     path.replace(root + os.sep, "", 1).replace(".py", "").replace("/", ".")
                 )
 
-        modules = [mod for mod in modules if re.match("[a-zA-Z0-9._]+$", mod)]
+        modules = [
+            mod
+            for mod in modules
+            if re.match("[a-zA-Z0-9._]+$", mod) and not any(map(mod.startswith, self.skip_modules))
+        ]
 
         tty.debug("Detected the following modules: {0}".format(modules))
 
         return modules
+
+    @property
+    def skip_modules(self):
+        """Names of modules that should be skipped when running tests.
+
+        These are a subset of import_modules. If a module has submodules,
+        they are skipped as well (meaning a.b is skipped if a is contained).
+
+        Returns:
+            list: list of strings of module names
+        """
+        return []
 
     @property
     def build_directory(self):
@@ -227,8 +243,8 @@ class PythonPackage(PackageBase):
         """Discover header files in platlib."""
 
         # Headers may be in either location
-        include = inspect.getmodule(self).include
-        platlib = inspect.getmodule(self).platlib
+        include = self.prefix.join(self.spec["python"].package.include)
+        platlib = self.prefix.join(self.spec["python"].package.platlib)
         headers = find_all_headers(include) + find_all_headers(platlib)
 
         if headers:
@@ -243,7 +259,7 @@ class PythonPackage(PackageBase):
 
         # Remove py- prefix in package name
         library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = inspect.getmodule(self).platlib
+        root = self.prefix.join(self.spec["python"].package.platlib)
 
         for shared in [True, False]:
             libs = find_libraries(library, root, shared=shared, recursive=True)

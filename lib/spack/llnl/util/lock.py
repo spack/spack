@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, Tuple  # novm
 
 import llnl.util.tty as tty
+from llnl.util.lang import pretty_seconds
 
 import spack.util.string
 
@@ -166,7 +167,7 @@ def _attempts_str(wait_time, nattempts):
         return ""
 
     attempts = spack.util.string.plural(nattempts, "attempt")
-    return " after {0:0.2f}s and {1}".format(wait_time, attempts)
+    return " after {} and {}".format(pretty_seconds(wait_time), attempts)
 
 
 class LockType(object):
@@ -318,8 +319,8 @@ class Lock(object):
             raise LockROFileError(self.path)
 
         self._log_debug(
-            "{0} locking [{1}:{2}]: timeout {3} sec".format(
-                op_str.lower(), self._start, self._length, timeout
+            "{} locking [{}:{}]: timeout {}".format(
+                op_str.lower(), self._start, self._length, pretty_seconds(timeout or 0)
             )
         )
 
@@ -340,7 +341,8 @@ class Lock(object):
             total_wait_time = time.time() - start_time
             return total_wait_time, num_attempts
 
-        raise LockTimeoutError("Timed out waiting for a {0} lock.".format(op_str.lower()))
+        total_wait_time = time.time() - start_time
+        raise LockTimeoutError(op_str.lower(), self.path, total_wait_time, num_attempts)
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -386,8 +388,12 @@ class Lock(object):
         try:
             os.makedirs(parent)
         except OSError as e:
-            # makedirs can fail when diretory already exists.
-            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or e.errno == errno.EISDIR):
+            # os.makedirs can fail in a number of ways when the directory already exists.
+            # With EISDIR, we know it exists, and others like EEXIST, EACCES, and EROFS
+            # are fine if we ensure that the directory exists.
+            # Python 3 allows an exist_ok parameter and ignores any OSError as long as
+            # the directory exists.
+            if not (e.errno == errno.EISDIR or os.path.isdir(parent)):
                 raise
         return parent
 
@@ -775,6 +781,18 @@ class LockLimitError(LockError):
 
 class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
+
+    def __init__(self, lock_type, path, time, attempts):
+        fmt = "Timed out waiting for a {} lock after {}.\n    Made {} {} on file: {}"
+        super(LockTimeoutError, self).__init__(
+            fmt.format(
+                lock_type,
+                pretty_seconds(time),
+                attempts,
+                "attempt" if attempts == 1 else "attempts",
+                path,
+            )
+        )
 
 
 class LockUpgradeError(LockError):

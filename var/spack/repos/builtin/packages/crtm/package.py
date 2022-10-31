@@ -16,7 +16,14 @@ class Crtm(CMakePackage):
     git = "https://github.com/JCSDA/crtm.git"
     url = "https://github.com/JCSDA/crtm/archive/refs/tags/v2.3.0.tar.gz"
 
-    maintainers = ["BenjaminTJohnson", "edwardhartnett", "Hang-Lei-NOAA", "climbfuji"]
+    maintainers = [
+        "BenjaminTJohnson",
+        "t-brown",
+        "edwardhartnett",
+        "AlexanderRichert-NOAA",
+        "Hang-Lei-NOAA",
+        "climbfuji",
+    ]
 
     variant(
         "fix",

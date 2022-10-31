@@ -23,6 +23,8 @@ class Libxml2(AutotoolsPackage):
             return url.format(version.up_to(2), version)
         return "http://xmlsoft.org/sources/libxml2-{0}.tar.gz".format(version)
 
+    version("2.10.1", sha256="21a9e13cc7c4717a6c36268d0924f92c3f67a1ece6b7ff9d588958a6db9fb9d8")
+    version("2.9.14", sha256="60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee")
     version("2.9.13", sha256="276130602d12fe484ecc03447ee5e759d0465558fbc9d6bd144e3745306ebf0e")
     version("2.9.12", sha256="c8d6681e38c56f172892c85ddc0852e1fd4b53b4209e7f4ebf17f7e2eae71d92")
     version("2.9.11", sha256="886f696d5d5b45d780b2880645edf9e0c62a4fd6841b853e824ada4e02b4d331")
@@ -57,8 +59,15 @@ class Libxml2(AutotoolsPackage):
         sha256="96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7",
     )
 
-    patch("nvhpc-configure.patch", when="%nvhpc")
-    patch("nvhpc-elfgcchack.patch", when="%nvhpc")
+    patch("nvhpc-elfgcchack.patch", when="@:2.9 %nvhpc")
+
+    # Use NAN/INFINITY if available to avoid SIGFPE
+    # See https://gitlab.gnome.org/GNOME/libxml2/-/merge_requests/186
+    patch(
+        "https://gitlab.gnome.org/GNOME/libxml2/-/commit/c9925454fd384a17c8c03d358c6778a552e9287b.patch",
+        sha256="3e06d42596b105839648070a5921157fe284b932289ffdbfa304ddc3457e5637",
+        when="@2.9.11:2.9.14",
+    )
 
     @property
     def command(self):
