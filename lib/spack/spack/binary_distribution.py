@@ -1541,6 +1541,15 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
+def hashes_to_prefixes(spec):
+    return {
+        s.dag_hash(): s.prefix
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
 def relocate_package(spec, allow_root):
     """
     Relocate the given package
@@ -1571,11 +1580,7 @@ def relocate_package(spec, allow_root):
     # prefix_to_prefix to reproduce the old behavior
     if not prefix_to_hash:
         prefix_to_hash = dict()
-    hash_to_prefix = dict()
-    hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
-    new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps + spec.dependencies(deptype="run"):
-        hash_to_prefix[d.format("{hash}")] = str(d.prefix)
+    hash_to_prefix = hashes_to_prefixes(spec)
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
