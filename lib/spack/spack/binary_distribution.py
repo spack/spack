@@ -774,6 +774,24 @@ def get_buildfile_manifest(spec):
     return data
 
 
+def hashes_to_prefixes(spec):
+    return {
+        s.dag_hash(): s.prefix
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
+def prefixes_to_hashes(spec):
+    return {
+        s.prefix: s.dag_hash()
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
 def write_buildinfo_file(spec, workdir, rel=False):
     """
     Create a cache file containing information
@@ -781,24 +799,19 @@ def write_buildinfo_file(spec, workdir, rel=False):
     """
     manifest = get_buildfile_manifest(spec)
 
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps + spec.dependencies(deptype="run"):
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
-
     # Create buildinfo data and write it to disk
-    buildinfo = {}
-    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
-    buildinfo["relative_rpaths"] = rel
-    buildinfo["buildpath"] = spack.store.layout.root
-    buildinfo["spackprefix"] = spack.paths.prefix
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
-    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
-    buildinfo["relocate_links"] = manifest["link_to_relocate"]
-    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
-    buildinfo["prefix_to_hash"] = prefix_to_hash
+    buildinfo = {
+        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
+        "relative_rpaths": rel,
+        "buildpath": spack.store.layout.root,
+        "spackprefix": spack.paths.prefix,
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relocate_textfiles": manifest["text_to_relocate"],
+        "relocate_binaries": manifest["binary_to_relocate"],
+        "relocate_links": manifest["link_to_relocate"],
+        "hardlinks_deduped": manifest["hardlinks_deduped"],
+        "prefix_to_hash": prefixes_to_hashes(spec),
+    }
     filename = buildinfo_file_name(workdir)
     with open(filename, "w") as outfile:
         outfile.write(syaml.dump(buildinfo, default_flow_style=True))
@@ -1539,15 +1552,6 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
             visited.add(identifier)
             new_list.append(rel_path)
         buildinfo[key] = new_list
-
-
-def hashes_to_prefixes(spec):
-    return {
-        s.dag_hash(): s.prefix
-        for s in itertools.chain(
-            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
-        )
-    }
 
 
 def register_mappping(prefix_to_prefix, old, new):
