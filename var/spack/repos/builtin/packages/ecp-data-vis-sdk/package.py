@@ -15,7 +15,6 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
     # ie. A +c ~b -> A
     spec = Spec(spec).name
 
-<<<<<<< HEAD
     # If the package is in the spec tree then it must be enabled in the SDK.
     if "+" in when:
         _when_variants = when.strip("+").split("+")
@@ -24,13 +23,6 @@ def dav_sdk_depends_on(spec, when=None, propagate=None):
 
         for variant in _when_variants:
             conflicts("~" + variant, when="^" + spec)
-=======
-    if "+" in when and len(when.split()) == 1:
-        when_not = when.replace("+", "~")
-        # If the package is in the spec tree then it must
-        # be enabled in the SDK.
-        conflicts(when_not, when="^" + spec)
->>>>>>> 8665b3f52c (WIP: Fixups for packages and e4s pipeline)
 
     # Skip if there is nothing to propagate
     if not propagate:

@@ -105,7 +105,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
             depends_on("camp+cuda")
             for sm_ in CudaPackage.cuda_arch_values:
                 depends_on("camp+cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
-        depends_on("camp~cuda" , when="~cuda")
+        depends_on("camp~cuda", when="~cuda")
 
         with when("+rocm"):
             depends_on("camp+rocm")
@@ -114,7 +114,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
                     "camp+rocm amdgpu_target={0}".format(arch_),
                     when="amdgpu_target={0}".format(arch_),
                 )
-        depends_on("camp~rocm" , when="~rocm")
+        depends_on("camp~rocm", when="~rocm")
 
     conflicts("+numa", when="@:0.3.2")
     conflicts("~c", when="+fortran", msg="Fortran API requires C API")

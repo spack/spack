@@ -169,7 +169,9 @@ class Visit(CMakePackage):
     depends_on("vtk-m@1.7.0+testlib~cuda", when="+vtkm")
     depends_on("vtk-h@0.8.1+shared~mpi~openmp~cuda", when="+vtkm")
 
-    depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")], when="+vtkm")
+    depends_on(
+        "vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")], when="+vtkm"
+    )
 
     depends_on("zlib")
 
