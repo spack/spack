@@ -6,6 +6,7 @@
 import codecs
 import collections
 import hashlib
+import itertools
 import json
 import os
 import shutil
@@ -1568,20 +1569,17 @@ def relocate_package(spec, allow_root):
     buildinfo = read_buildinfo_file(workdir)
     new_layout_root = str(spack.store.layout.root)
     new_prefix = str(spec.prefix)
-    new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
-    new_spack_prefix = str(spack.paths.prefix)
 
     old_sbang_install_path = None
     if "sbang_install_path" in buildinfo:
         old_sbang_install_path = str(buildinfo["sbang_install_path"])
-    if "prefix_to_hash" not in prefix_to_hash:
+    if "prefix_to_hash" not in buildinfo:
         raise NewLayoutException(
             "Package tarball was created from an install "
             "prefix with a different directory layout and an older "
             "buildcache create implementation. It cannot be relocated."
         )
     old_layout_root = str(buildinfo["buildpath"])
-    old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
     rel = buildinfo.get("relative_rpaths")
