@@ -1030,7 +1030,9 @@ def _libs_default_handler(descriptor, spec, cls):
     )
 
     for shared in search_shared:
-        libs = fs.find_libraries(name, home, shared=shared, recursive=True)
+        # Since we are searching for link libraries, on Windows search only for
+        # ".Lib" extensions by default as those represent import libraries for implict links.
+        libs = fs.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
         if libs:
             return libs
 

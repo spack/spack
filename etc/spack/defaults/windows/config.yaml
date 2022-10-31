@@ -1,5 +1,5 @@
 config:
   locks: false
-  concretizer: original
+  concretizer: clingo
   build_stage::
     - '$spack/.staging'

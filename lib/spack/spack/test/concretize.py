@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
+import posixpath
 import sys
 
 import jinja2
@@ -459,7 +459,7 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec("externaltool%gcc")
         spec.concretize()
-        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
+        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
             "path", "to", "external_tool"
         )
         assert "externalprereq" not in spec
@@ -490,10 +490,10 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec("externaltest")
         spec.concretize()
-        assert spec["externaltool"].external_path == os.path.sep + os.path.join(
+        assert spec["externaltool"].external_path == posixpath.sep + posixpath.join(
             "path", "to", "external_tool"
         )
-        assert spec["stuff"].external_path == os.path.sep + os.path.join(
+        assert spec["stuff"].external_path == posixpath.sep + posixpath.join(
             "path", "to", "external_virtual_gcc"
         )
         assert spec["externaltool"].compiler.satisfies("gcc")

@@ -1083,7 +1083,11 @@ def temp_cwd():
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
-        shutil.rmtree(tmp_dir)
+        kwargs = {}
+        if is_windows:
+            kwargs["ignore_errors"] = False
+            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
+        shutil.rmtree(tmp_dir, **kwargs)
 
 
 @contextmanager
@@ -2095,7 +2099,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2116,6 +2120,10 @@ def find_libraries(libraries, root, shared=True, recursive=False):
             otherwise for static. Defaults to True.
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        runtime (bool): Windows only option, no-op elsewhere. If true,
+            search for runtime shared libs (.DLL), otherwise, search
+            for .Lib files. If shared is false, this has no meaning.
+            Defaults to True.
 
     Returns:
         LibraryList: The libraries that have been found
@@ -2130,7 +2138,9 @@ def find_libraries(libraries, root, shared=True, recursive=False):
 
     if is_windows:
         static_ext = "lib"
-        shared_ext = "dll"
+        # For linking (runtime=False) you need the .lib files regardless of
+        # whether you are doing a shared or static link
+        shared_ext = "dll" if runtime else "lib"
     else:
         # Used on both Linux and macOS
         static_ext = "a"
@@ -2174,13 +2184,13 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     return LibraryList(found_libs)
 
 
-def find_all_shared_libraries(root, recursive=False):
+def find_all_shared_libraries(root, recursive=False, runtime=True):
     """Convenience function that returns the list of all shared libraries found
     in the directory passed as argument.
 
     See documentation for `llnl.util.filesystem.find_libraries` for more information
     """
-    return find_libraries("*", root=root, shared=True, recursive=recursive)
+    return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
 
 
 def find_all_static_libraries(root, recursive=False):
@@ -2226,48 +2236,36 @@ class WindowsSimulatedRPath(object):
         self.pkg = package
         self._addl_rpaths = set()
         self.link_install_prefix = link_install_prefix
-        self._internal_links = set()
+        self._additional_library_dependents = set()
 
     @property
-    def link_dest(self):
+    def library_dependents(self):
         """
         Set of directories where package binaries/libraries are located.
         """
-        if hasattr(self.pkg, "libs") and self.pkg.libs:
-            pkg_libs = set(self.pkg.libs.directories)
-        else:
-            pkg_libs = set((self.pkg.prefix.lib, self.pkg.prefix.lib64))
+        return set([self.pkg.prefix.bin]) | self._additional_library_dependents
 
-        return pkg_libs | set([self.pkg.prefix.bin]) | self.internal_links
-
-    @property
-    def internal_links(self):
+    def add_library_dependent(self, *dest):
         """
-        linking that would need to be established within the package itself. Useful for links
-        against extension modules/build time executables/internal linkage
-        """
-        return self._internal_links
+        Add paths to directories or libraries/binaries to set of
+        common paths that need to link against other libraries
 
-    def add_internal_links(self, *dest):
-        """
-        Incorporate additional paths into the rpath (sym)linking scheme.
-
-        Paths provided to this method are linked against by a package's libraries
-        and libraries found at these paths are linked against a package's binaries.
-        (i.e. /site-packages -> /bin and /bin -> /site-packages)
-
-        Specified paths should be outside of a package's lib, lib64, and bin
+        Specified paths should fall outside of a package's common
+        link paths, i.e. the bin
         directories.
         """
-        self._internal_links = self._internal_links | set(*dest)
+        for pth in dest:
+            if os.path.isfile(pth):
+                self._additional_library_dependents.add(os.path.dirname)
+            else:
+                self._additional_library_dependents.add(pth)
 
     @property
-    def link_targets(self):
+    def rpaths(self):
         """
         Set of libraries this package needs to link against during runtime
         These packages will each be symlinked into the packages lib and binary dir
         """
-
         dependent_libs = []
         for path in self.pkg.rpath:
             dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
@@ -2275,17 +2273,42 @@ class WindowsSimulatedRPath(object):
             dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
         return set(dependent_libs)
 
-    def include_additional_link_paths(self, *paths):
+    def add_rpath(self, *paths):
         """
         Add libraries found at the root of provided paths to runtime linking
 
         These are libraries found outside of the typical scope of rpath linking
-        that require manual inclusion in a runtime linking scheme
+        that require manual inclusion in a runtime linking scheme.
+        These links are unidirectional, and are only
+        intended to bring outside dependencies into this package
 
         Args:
             *paths (str): arbitrary number of paths to be added to runtime linking
         """
         self._addl_rpaths = self._addl_rpaths | set(paths)
+
+    def _link(self, path, dest):
+        file_name = os.path.basename(path)
+        dest_file = os.path.join(dest, file_name)
+        if os.path.exists(dest):
+            try:
+                symlink(path, dest_file)
+            # For py2 compatibility, we have to catch the specific Windows error code
+            # associate with trying to create a file that already exists (winerror 183)
+            except OSError as e:
+                if e.winerror == 183:
+                    # We have either already symlinked or we are encoutering a naming clash
+                    # either way, we don't want to overwrite existing libraries
+                    already_linked = islink(dest_file)
+                    tty.debug(
+                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
+                        if already_linked
+                        else "library with name %s already exists at location %s."
+                        % (file_name, dest)
+                    )
+                    pass
+                else:
+                    raise e
 
     def establish_link(self):
         """
@@ -2298,29 +2321,8 @@ class WindowsSimulatedRPath(object):
 
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
         # install a symlink to each dependent library
-        for library, lib_dir in itertools.product(self.link_targets, self.link_dest):
-            if not path_contains_subdirectory(library, lib_dir):
-                file_name = os.path.basename(library)
-                dest_file = os.path.join(lib_dir, file_name)
-                if os.path.exists(lib_dir):
-                    try:
-                        symlink(library, dest_file)
-                    # For py2 compatibility, we have to catch the specific Windows error code
-                    # associate with trying to create a file that already exists (winerror 183)
-                    except OSError as e:
-                        if e.winerror == 183:
-                            # We have either already symlinked or we are encoutering a naming clash
-                            # either way, we don't want to overwrite existing libraries
-                            already_linked = islink(dest_file)
-                            tty.debug(
-                                "Linking library %s to %s failed, " % (library, dest_file)
-                                + "already linked."
-                                if already_linked
-                                else "library with name %s already exists." % file_name
-                            )
-                            pass
-                        else:
-                            raise e
+        for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
+            self._link(library, lib_dir)
 
 
 @system_path_filter
