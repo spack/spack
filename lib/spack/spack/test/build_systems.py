@@ -203,11 +203,12 @@ class TestAutotoolsPackage(object):
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
-    def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database):
+    def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """
         Tests whether a useful error message is shown when patch_config_files is
         enabled, but gnuconfig is not listed as a direct build dependency.
         """
+        monkeypatch.setattr(spack.platforms.test.Test, "default", "x86_64")
         s = Spec("autotools-config-replacement +patch_config_files ~gnuconfig")
         s.concretize()
 
