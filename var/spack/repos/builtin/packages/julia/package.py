@@ -209,8 +209,8 @@ class Julia(MakefilePackage):
             "utf8proc",
             "zlib",
         ]
-        if '+openlibm' in self.spec:
-            pkgs.append('openlibm') 
+        if "+openlibm" in self.spec:
+            pkgs.append("openlibm")
         if self.spec.satisfies("@1.7.0:"):
             pkgs.append("libblastrampoline")
         for pkg in pkgs:
