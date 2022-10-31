@@ -18,7 +18,7 @@ class Sperr(CMakePackage):
 
     depends_on("git", type="build")
     depends_on("zstd", type=("build", "link"), when="+zstd")
-    depends_on("pkgconf", type=("build"), when="+zstd")
+    depends_on("pkgconfig", type=("build"), when="+zstd")
 
     variant("shared", description="build shared libaries", default=True)
     variant("zstd", description="use Zstd for more compression", default=True)

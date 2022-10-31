@@ -21,7 +21,7 @@ class RiscvGnuToolchain(AutotoolsPackage):
     version("2022.08.08", tag="2022.08.08", submodules=True)
 
     # Dependencies:
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("autoconf", when="@main:", type="build")
     depends_on("python", type="build")
     depends_on("gawk", type="build")
