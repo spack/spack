@@ -991,11 +991,14 @@ class OpenfoamArch(object):
             ]
         )
 
-    def _rule_directory(self, projdir, general=False):
-        """Return the wmake/rules/ General or compiler rules directory.
+    def _rule_directory(self, projdir, general=False, common=False):
+        """Return wmake/rules/ General/common, General or
+        compiler rules directory.
         Supports wmake/rules/<ARCH><COMP> and wmake/rules/<ARCH>/<COMP>.
         """
         rules_dir = os.path.join(projdir, "wmake", "rules")
+        if common:
+            return os.path.join(rules_dir, "General", "common")
         if general:
             return os.path.join(rules_dir, "General")
 
@@ -1015,10 +1018,41 @@ class OpenfoamArch(object):
             raise InstallError("No wmake rule for {0} {1}".format(self.arch, self.compiler))
         return True
 
+    def _rule_add_rpath(self, rpath, src, dst):
+        """Create {c,c++}-spack rules in the specified project directory.
+        The compiler rules are based on the respective {cflags,cxxflags}-Opt or
+        {c,c++}Opt rules with additional rpath information for the OpenFOAM libraries.
+
+        The '-spack' rules channel spack information into OpenFOAM wmake
+        rules with minimal modification to OpenFOAM.
+        The rpath is used for the installed libpath (continue to use
+        LD_LIBRARY_PATH for values during the build).
+        """
+        # Note: the 'c' rules normally don't need rpath, since they are just
+        # used for some statically linked wmake tools, but left in anyhow.
+
+        ok = os.path.isfile(src)
+
+        if ok:
+            with open(src, "r") as infile:
+                with open(dst, "w") as outfile:
+                    for line in infile:
+                        line = line.rstrip()
+                        outfile.write(line)
+                        if re.match(r"^\S+DBUG\s*:?=", line):
+                            outfile.write(" ")
+                            outfile.write(rpath)
+                        elif re.match(r"^\S+OPT\s*:?=", line):
+                            if self.arch_option:
+                                outfile.write(" ")
+                                outfile.write(self.arch_option)
+                        outfile.write("\n")
+        return ok
+
     def create_rules(self, projdir, foam_pkg):
-        """Create {c,c++}-spack and mplib{USERMPI}
-        rules in the specified project directory.
-        The compiler rules are based on the respective {c,c++}Opt rules
+        """Create {c,c++}-spack and mplib{USERMPI} rules in the
+        specified project directory.
+        Uses General/common/{c,c++}Opt or arch-specific {c,c++}Opt rules,
         but with additional rpath information for the OpenFOAM libraries.
 
         The '-spack' rules channel spack information into OpenFOAM wmake
@@ -1036,26 +1070,20 @@ class OpenfoamArch(object):
 
         user_mpi = mplib_content(foam_pkg.spec)
         rule_dir = self._rule_directory(projdir)
+        comm_dir = self._rule_directory(projdir, False, True)
+
+        # Compiler: copy existing {c,c++}Opt or General/common/{c,c++}Opt
+        # and modify '*DBUG' value to include rpath
+
+        for lang in ["c", "c++"]:
+            gen = join_path(comm_dir, "{0}Opt".format(lang))
+            src = join_path(rule_dir, "{0}Opt".format(lang))
+            dst = join_path(rule_dir, "{0}{1}".format(lang, self.compile_option))
+
+            if not self._rule_add_rpath(rpath, src, dst):
+                self._rule_add_rpath(rpath, gen, dst)
 
         with working_dir(rule_dir):
-            # Compiler: copy existing cOpt,c++Opt and modify '*DBUG' value
-            for lang in ["c", "c++"]:
-                src = "{0}Opt".format(lang)
-                dst = "{0}{1}".format(lang, self.compile_option)
-                with open(src, "r") as infile:
-                    with open(dst, "w") as outfile:
-                        for line in infile:
-                            line = line.rstrip()
-                            outfile.write(line)
-                            if re.match(r"^\S+DBUG\s*=", line):
-                                outfile.write(" ")
-                                outfile.write(rpath)
-                            elif re.match(r"^\S+OPT\s*=", line):
-                                if self.arch_option:
-                                    outfile.write(" ")
-                                    outfile.write(self.arch_option)
-                            outfile.write("\n")
-
             # MPI rules
             for mplib in ["mplibUSERMPI"]:
                 with open(mplib, "w") as out:
