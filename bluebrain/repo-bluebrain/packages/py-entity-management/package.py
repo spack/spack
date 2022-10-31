@@ -10,9 +10,9 @@ class PyEntityManagement(PythonPackage):
     '''Pythonic Blue Brain Nexus access library.'''
 
     homepage = 'https://bbpgitlab.epfl.ch/nse/entity-management'
-    git      = 'ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git'
+    git = 'ssh://git@bbpgitlab.epfl.ch/nse/entity-management.git'
 
-    version('1.2.16', tag='entity-management-v1.2.16')
+    version('1.2.17', tag='entity-management-v1.2.17')
     version('0.1.12', tag='entity-management-v0.1.12')
 
     depends_on('py-setuptools', type=('build'))
