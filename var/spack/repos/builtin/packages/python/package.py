@@ -1251,11 +1251,6 @@ config.update(get_paths())
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
 
-        # When using homebrew on macOS, self.config_vars["LDLIBRARY"] points to
-        # Python.framework/Versions/X.Y/Python, which is indeed a shared library
-        # but doesn't have the correct filename suffix. This confuses several
-        # packages (e.g. met) that use python.libs.ld_flags. Ignore this config.
-
         # With framework python on macOS, self.config_vars["LDLIBRARY"] can point
         # to a library that is not linkable because it does not have the required
         # suffix of a shared library (it is called "Python" without extention).
