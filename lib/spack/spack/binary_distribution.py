@@ -1579,27 +1579,23 @@ def relocate_package(spec, allow_root):
     # Spurious replacements (e.g. sbang) will cause issues with binaries
     # For example, the new sbang can be longer than the old one.
     # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = collections.OrderedDict()
-    prefix_to_prefix_bin = collections.OrderedDict()
+    prefix_to_prefix = collections.OrderedDict()
 
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()
-        prefix_to_prefix_text[old_sbang_install_path] = install_path
+        prefix_to_prefix[old_sbang_install_path] = install_path
 
-    prefix_to_prefix_text[old_prefix] = new_prefix
-    prefix_to_prefix_bin[old_prefix] = new_prefix
-    prefix_to_prefix_text[old_layout_root] = new_layout_root
-    prefix_to_prefix_bin[old_layout_root] = new_layout_root
+    prefix_to_prefix[old_prefix] = new_prefix
+    prefix_to_prefix[old_layout_root] = new_layout_root
     for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+        prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
     # This is vestigial code for the *old* location of sbang. Previously,
     # sbang was a bash script, and it lived in the spack prefix. It is
     # now a POSIX script that lives in the install prefix. Old packages
     # will have the old sbang location in their shebangs.
     orig_sbang = "#!/bin/bash {0}/bin/sbang".format(old_spack_prefix)
     new_sbang = spack.hooks.sbang.sbang_shebang_line()
-    prefix_to_prefix_text[orig_sbang] = new_sbang
+    prefix_to_prefix[orig_sbang] = new_sbang
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
@@ -1630,7 +1626,7 @@ def relocate_package(spec, allow_root):
                 files_to_relocate,
                 old_layout_root,
                 new_layout_root,
-                prefix_to_prefix_bin,
+                prefix_to_prefix,
                 rel,
                 old_prefix,
                 new_prefix,
@@ -1640,7 +1636,7 @@ def relocate_package(spec, allow_root):
                 files_to_relocate,
                 old_layout_root,
                 new_layout_root,
-                prefix_to_prefix_bin,
+                prefix_to_prefix,
                 rel,
                 old_prefix,
                 new_prefix,
@@ -1652,16 +1648,16 @@ def relocate_package(spec, allow_root):
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
-        relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
+        relocate.unsafe_relocate_text(text_names, prefix_to_prefix)
 
         # relocate the install prefixes in binary files including dependencies
-        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
+        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix)
 
     # If we are installing back to the same location
     # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
-            relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
+            relocate.unsafe_relocate_text(text_names, prefix_to_prefix)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
