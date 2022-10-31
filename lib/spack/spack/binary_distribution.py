@@ -31,6 +31,7 @@ import spack.database as spack_db
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
