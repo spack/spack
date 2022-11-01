@@ -239,7 +239,7 @@ def trust(keyfile):
     keys = _get_unimported_public_keys(output)
 
     # Import them
-    GPG("--import", keyfile)
+    GPG("--batch", "--import", keyfile)
 
     # Set trust to ultimate
     key_to_fpr = dict(public_keys_to_fingerprint())
