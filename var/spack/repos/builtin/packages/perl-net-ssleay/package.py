@@ -7,6 +7,11 @@ import inspect
 
 from spack.package import *
 
+try:
+    from spack.build_systems.perl import PerlBuilder as builder
+except ImportError:
+    from spack.build_systems.perl import PerlPackage as builder
+
 
 class PerlNetSsleay(PerlPackage):
     """Perl extension for using OpenSSL"""
@@ -50,8 +55,8 @@ class PerlNetSsleay(PerlPackage):
     depends_on("perl-scalar-util", type=("build", "test"))  # AUTO-CPAN2Spack
 
     def configure(self, spec, prefix):
-        self.build_method = "Makefile.PL"
-        self.build_executable = inspect.getmodule(self).make
+        builder.build_method = "Makefile.PL"
+        builder.build_executable = inspect.getmodule(self).make
         # Do you want to run external tests?
         config_answers = ["\n"]
         config_answers_filename = "spack-config.in"
