@@ -128,8 +128,9 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             rocm_archs = spec.variants["amdgpu_target"].value
             mpiinc = spec["mpi"].prefix.include
             if "none" not in rocm_archs:
-                append_define("HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) 
-                    + " -I/" + mpiinc)
+                append_define(
+                    "HIP_HIPCC_FLAGS", "--amdgpu-target=" + ",".join(rocm_archs) + " -I/" + mpiinc
+                )
 
         append_from_variant("BUILD_SHARED_LIBS", "shared")
         return cmake_args
