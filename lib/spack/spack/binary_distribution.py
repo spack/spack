@@ -1644,27 +1644,15 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-            # Relocate links to the new install prefix
-            links = [link for link in buildinfo.get("relocate_links", [])]
-            relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
+
+        # Relocate links to the new install prefix
+        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
+        relocate.relocate_links(links, prefix_to_prefix_bin)
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
         relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
-        paths_to_relocate = [old_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(
-            filter(
-                lambda pathname: not relocate.file_is_relocatable(
-                    pathname, paths_to_relocate=paths_to_relocate
-                ),
-                map(
-                    lambda filename: os.path.join(workdir, filename),
-                    buildinfo["relocate_binaries"],
-                ),
-            )
-        )
         # relocate the install prefixes in binary files including dependencies
         relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 

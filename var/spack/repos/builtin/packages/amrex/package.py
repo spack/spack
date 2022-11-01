@@ -342,8 +342,13 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         args.append("-S./cache/amrex/Tests/SpackSmokeTest")
         args.append("-DAMReX_ROOT=" + self.prefix)
-        args.append("-DMPI_C_COMPILER=" + self.spec["mpi"].mpicc)
-        args.append("-DMPI_CXX_COMPILER=" + self.spec["mpi"].mpicxx)
+        if "+mpi" in self.spec:
+            args.append("-DMPI_C_COMPILER=" + self.spec["mpi"].mpicc)
+            args.append("-DMPI_CXX_COMPILER=" + self.spec["mpi"].mpicxx)
+
+        if "+cuda" in self.spec:
+            args.append("-DCMAKE_CUDA_COMPILER=" + join_path(self.spec["cuda"].prefix.bin, "nvcc"))
+
         args.extend(self.cmake_args())
         self.run_test(cmake_bin, args, purpose="Configure with CMake")
 
