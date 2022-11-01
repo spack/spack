@@ -1411,7 +1411,7 @@ class SpackSolverSetup(object):
                 clauses.append(f.variant_value(spec.name, vname, value))
 
                 if variant.propagate:
-                    clauses.append(f.variant_propagate(spec.name, vname))
+                    clauses.append(f.variant_propagate(spec.name, vname, value, spec.name))
 
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
@@ -2074,15 +2074,13 @@ class SpecBuilder(object):
         # FIXME: is there a way not to special case 'dev_path' everywhere?
         if name == "dev_path":
             self._specs[pkg].variants.setdefault(
-                name,
-                spack.variant.SingleValuedVariant(name, value)
+                name, spack.variant.SingleValuedVariant(name, value)
             )
             return
 
         if name == "patches":
             self._specs[pkg].variants.setdefault(
-                name,
-                spack.variant.MultiValuedVariant(name, value)
+                name, spack.variant.MultiValuedVariant(name, value)
             )
             return
 
