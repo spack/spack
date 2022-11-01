@@ -147,10 +147,10 @@ class Arrow(CMakePackage, CudaPackage):
         args.append(self.define_from_variant("ARROW_WITH_ZSTD", "zstd"))
 
         with when("@:8"):
-            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd");
+            dep_list = ("flatbuffers", "rapidjson", "zlib", "zstd")
 
             if self.spec.satisfies("+snappy"):
-                dep_list.append( "snappy" )
+                dep_list.append("snappy")
 
             for dep in dep_list:
                 args.append("-D{0}_HOME={1}".format(dep.upper(), self.spec[dep].prefix))
