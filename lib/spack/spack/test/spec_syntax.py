@@ -912,3 +912,9 @@ class TestSpecSyntax(object):
         assert not s_no_git.satisfies(s1)
         assert not s2.satisfies(s1)
         assert not s3.satisfies(s1)
+
+    @pytest.mark.regression("32471")
+    @pytest.mark.parametrize("spec_str", ["target=x86_64", "os=redhat6", "target=x86_64:"])
+    def test_platform_is_none_if_not_present(self, spec_str):
+        s = sp.Spec(spec_str)
+        assert s.architecture.platform is None, s
