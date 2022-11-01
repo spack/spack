@@ -16,7 +16,7 @@ class PyIlmbase(AutotoolsPackage):
 
     depends_on("ilmbase")
     depends_on("boost+python")
-    depends_on('py-numpy')
+    depends_on("py-numpy")
 
     # https://github.com/AcademySoftwareFoundation/openexr/issues/336
     parallel = False
