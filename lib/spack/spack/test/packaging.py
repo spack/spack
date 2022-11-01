@@ -9,10 +9,10 @@ This test checks the binary packaging infrastructure
 import argparse
 import os
 import platform
-import re
 import shutil
 import stat
 import sys
+from collections import OrderedDict
 
 import pytest
 
@@ -28,7 +28,6 @@ import spack.util.gpg
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    _placeholder,
     file_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
@@ -213,27 +212,42 @@ def test_unsafe_relocate_text(tmpdir):
 
 
 def test_relocate_links(tmpdir):
-    with tmpdir.as_cwd():
-        old_layout_root = os.path.join("%s" % tmpdir, "home", "spack", "opt", "spack")
-        old_install_prefix = os.path.join("%s" % old_layout_root, "debian6", "test")
-        old_binname = os.path.join(old_install_prefix, "binfile")
-        placeholder = _placeholder(old_layout_root)
-        re.sub(old_layout_root, placeholder, old_binname)
-        filenames = ["link.ln", "outsideprefix.ln"]
-        new_layout_root = os.path.join("%s" % tmpdir, "opt", "rh", "devtoolset")
-        new_install_prefix = os.path.join("%s" % new_layout_root, "test", "debian6")
-        new_linkname = os.path.join(new_install_prefix, "link.ln")
-        new_linkname2 = os.path.join(new_install_prefix, "outsideprefix.ln")
-        new_binname = os.path.join(new_install_prefix, "binfile")
-        mkdirp(new_install_prefix)
-        with open(new_binname, "w") as f:
-            f.write("\n")
-        os.utime(new_binname, None)
-        symlink(old_binname, new_linkname)
-        symlink("/usr/lib/libc.so", new_linkname2)
-        relocate_links(filenames, old_layout_root, old_install_prefix, new_install_prefix)
-        assert os.readlink(new_linkname) == new_binname
-        assert os.readlink(new_linkname2) == "/usr/lib/libc.so"
+    tmpdir.ensure("new_prefix_a", dir=True)
+
+    own_prefix_path = str(tmpdir.join("prefix_a", "file"))
+    dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
+    system_path = os.path.join(os.path.sep, "system", "path")
+
+    # Old prefixes to new prefixes
+    prefix_to_prefix = OrderedDict(
+        [
+            # map <tmpdir>/prefix_a -> <tmpdir>/new_prefix_a
+            (str(tmpdir.join("prefix_a")), str(tmpdir.join("new_prefix_a"))),
+            # map <tmpdir>/prefix_b -> <tmpdir>/new_prefix_b
+            (str(tmpdir.join("prefix_b")), str(tmpdir.join("new_prefix_b"))),
+            # map <tmpdir> -> /fallback/path -- this is just to see we respect order.
+            (str(tmpdir), os.path.join(os.path.sep, "fallback", "path")),
+        ]
+    )
+
+    with tmpdir.join("new_prefix_a").as_cwd():
+        # To be relocated
+        os.symlink(own_prefix_path, "to_self")
+        os.symlink(dep_prefix_path, "to_dependency")
+
+        # To be ignored
+        os.symlink(system_path, "to_system")
+        os.symlink("relative", "to_self_but_relative")
+
+        relocate_links(["to_self", "to_dependency", "to_system"], prefix_to_prefix)
+
+        # These two are relocated
+        assert os.readlink("to_self") == str(tmpdir.join("new_prefix_a", "file"))
+        assert os.readlink("to_dependency") == str(tmpdir.join("new_prefix_b", "file"))
+
+        # These two are not.
+        assert os.readlink("to_system") == system_path
+        assert os.readlink("to_self_but_relative") == "relative"
 
 
 def test_needs_relocation():
