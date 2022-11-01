@@ -777,7 +777,7 @@ def get_buildfile_manifest(spec):
 
 def hashes_to_prefixes(spec):
     return {
-        s.dag_hash(): s.prefix
+        s.dag_hash(): str(s.prefix)
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
@@ -786,7 +786,7 @@ def hashes_to_prefixes(spec):
 
 def prefixes_to_hashes(spec):
     return {
-        s.prefix: s.dag_hash()
+        str(s.prefix): s.dag_hash()
         for s in itertools.chain(
             spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
         )
