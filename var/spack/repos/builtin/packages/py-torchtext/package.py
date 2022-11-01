@@ -16,8 +16,7 @@ class PyTorchtext(PythonPackage):
     maintainers = ["adamjstewart"]
 
     version("main", branch="main", submodules=True)
-    # https://github.com/pytorch/text/issues/1976
-    version("0.14.0", tag="v1.14.0", submodules=True)
+    version("0.14.0", tag="v0.14.0", submodules=True)
     version("0.13.1", tag="v0.13.1", submodules=True)
     version("0.13.0", tag="v0.13.0", submodules=True)
     version("0.12.0", tag="v0.12.0", submodules=True)
