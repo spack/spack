@@ -13,6 +13,7 @@ _os_map = {
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
+    "rocky8" : "RHEL-8",
     "amzn2": "RHEL-7",
 }
 
