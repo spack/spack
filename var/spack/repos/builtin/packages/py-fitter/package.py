@@ -20,3 +20,6 @@ class PyFitter(PythonPackage):
     version("1.5.1", sha256="893b35ad0a84c3b96b63ec203a6a79effdba98777aed966ae61709f5e1e8cf99")
 
     depends_on("py-setuptools", type="build")
+
+    depends_on("py-tqdm")
+    depends_on("py-joblib")
