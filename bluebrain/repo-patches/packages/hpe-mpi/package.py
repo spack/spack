@@ -17,7 +17,7 @@ class HpeMpi(Package):
     """HPE-SGI MPI package"""
 
     homepage = "http://www.no-name.com"
-    url      = "http://www.no-name.com/hpempi-1.0.tar.gz"
+    url = "http://www.no-name.com/hpempi-1.0.tar.gz"
 
     version('2.21',
             sha256='2f27ad2e92ef0004b9a4dfb3b76837d1b657c43ff89f4deef99be58a322a80b7',
@@ -86,3 +86,9 @@ class HpeMpi(Package):
         self.spec.mpicxx = join_path(bindir, 'mpicxx')
         self.spec.mpifc = join_path(bindir, 'mpif77')
         self.spec.mpif77 = join_path(bindir, 'mpif90')
+
+    def setup_run_environment(self, env):
+        # REP-82: ENV variable to prevent a memory leak with MPI-IO on GPFS. The
+        #         issue affects HPE-MPI v2.24 and above.
+        if self.spec.version >= Version("2.24") and self.spec.version < Version("2.28"):
+            env.set('ROMIO_TUNEGATHER', "0")
