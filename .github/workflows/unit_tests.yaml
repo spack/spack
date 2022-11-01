@@ -203,7 +203,7 @@ jobs:
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
-          pip install --upgrade pytest codecov coverage[toml] pytest-cov
+          pip install --upgrade pytest codecov coverage[toml] pytest-xdist pytest-cov
     - name: Setup Homebrew packages
       run: |
         brew install dash fish gcc gnupg2 kcov
@@ -217,9 +217,8 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
-        $(which spack) unit-test --cov --cov-config=pyproject.toml -x
-        coverage combine -a
-        coverage xml
+        common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
+        $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos
