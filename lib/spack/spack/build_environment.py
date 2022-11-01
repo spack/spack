@@ -52,6 +52,7 @@ from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+import spack.builder
 import spack.config
 import spack.install_test
 import spack.main
@@ -558,9 +559,9 @@ def _set_variables_for_single_module(pkg, module):
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
     # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
-    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
+    m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -727,38 +728,6 @@ def get_rpaths(pkg):
     return list(dedupe(filter_system_paths(rpaths)))
 
 
-def get_std_cmake_args(pkg):
-    """List of standard arguments used if a package is a CMakePackage.
-
-    Returns:
-        list: standard arguments that would be used if this
-        package were a CMakePackage instance.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package under consideration
-
-    Returns:
-        list: arguments for cmake
-    """
-    return spack.build_systems.cmake.CMakePackage._std_args(pkg)
-
-
-def get_std_meson_args(pkg):
-    """List of standard arguments used if a package is a MesonPackage.
-
-    Returns:
-        list: standard arguments that would be used if this
-        package were a MesonPackage instance.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package under consideration
-
-    Returns:
-        list: arguments for meson
-    """
-    return spack.build_systems.meson.MesonPackage._std_args(pkg)
-
-
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package_base.PackageBase
@@ -819,7 +788,8 @@ def setup_package(pkg, dirty, context="build"):
     platform.setup_platform_environment(pkg, env_mods)
 
     if context == "build":
-        pkg.setup_build_environment(env_mods)
+        builder = spack.builder.create(pkg)
+        builder.setup_build_environment(env_mods)
 
         if (not dirty) and (not env_mods.is_unset("CPATH")):
             tty.debug(
@@ -1015,7 +985,8 @@ def modifications_from_dependencies(
                 module.__dict__.update(changes.__dict__)
 
             if context == "build":
-                dpkg.setup_dependent_build_environment(env, spec)
+                builder = spack.builder.create(dpkg)
+                builder.setup_dependent_build_environment(env, spec)
             else:
                 dpkg.setup_dependent_run_environment(env, spec)
 
@@ -1117,8 +1088,20 @@ def _setup_pkg_and_run(
                 pkg.test_suite.stage, spack.install_test.TestSuite.test_log_name(pkg.spec)
             )
 
+        error_msg = str(exc)
+        if isinstance(exc, (spack.multimethod.NoSuchMethodError, AttributeError)):
+            error_msg = (
+                "The '{}' package cannot find an attribute while trying to build "
+                "from sources. This might be due to a change in Spack's package format "
+                "to support multiple build-systems for a single package. You can fix this "
+                "by updating the build recipe, and you can also report the issue as a bug. "
+                "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
+            ).format(pkg.name)
+            error_msg = colorize("@*R{{{}}}".format(error_msg))
+            error_msg = "{}\n\n{}".format(str(exc), error_msg)
+
         # make a pickleable exception to send to parent.
-        msg = "%s: %s" % (exc_type.__name__, str(exc))
+        msg = "%s: %s" % (exc_type.__name__, error_msg)
 
         ce = ChildError(
             msg,

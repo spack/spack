@@ -54,7 +54,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     patch("test-verify-parallel-make-check.patch", when="@:0.19.8.1")
-    patch("nvhpc-builtin.patch", when="%nvhpc")
+    patch("nvhpc-builtin.patch", when="@:0.21.0 %nvhpc")
     patch("nvhpc-export-symbols.patch", when="%nvhpc")
     patch("nvhpc-long-width.patch", when="%nvhpc")
 

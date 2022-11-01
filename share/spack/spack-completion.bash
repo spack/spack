@@ -425,11 +425,21 @@ _spack_bootstrap_status() {
 }
 
 _spack_bootstrap_enable() {
-    SPACK_COMPREPLY="-h --help --scope"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_bootstrap_disable() {
-    SPACK_COMPREPLY="-h --help --scope"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --scope"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_bootstrap_reset() {
