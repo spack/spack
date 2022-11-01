@@ -14,8 +14,7 @@ class PyFitter(PythonPackage):
     homepage = "https://github.com/cokelaer/fitter"
     pypi = "fitter/fitter-1.5.1.tar.gz"
 
-    # notify when the package is updated.
-    # maintainers = ["carsonwoods"]
+    maintainers = ["carsonwoods"]
 
     version("1.5.1", sha256="893b35ad0a84c3b96b63ec203a6a79effdba98777aed966ae61709f5e1e8cf99")
 
