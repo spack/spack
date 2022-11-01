@@ -21,5 +21,7 @@ class PyFitter(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
+    depends_on("py-numpy")
+    depends_on("py-scipy")
     depends_on("py-tqdm")
     depends_on("py-joblib")
