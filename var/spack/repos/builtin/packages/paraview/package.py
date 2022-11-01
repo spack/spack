@@ -28,7 +28,7 @@ class Paraview(CMakePackage, CudaPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.11.0-RC1", sha256="892c4617b3f23f6e5c9a08ecc9b3e9f16b9e2f54c044155c3c252f00b0fbafd9"
+        "5.11.0-RC2", sha256="b5748b1ef4b8855467c3db75ffb8739096075596229e7ba16b284946964904b9"
     )
     version(
         "5.10.1",
