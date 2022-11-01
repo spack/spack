@@ -16,3 +16,4 @@ class ImpossibleConcretization(Package):
     version(1.0, "0123456789abcdef0123456789abcdef")
 
     conflicts("target=x86_64:")
+    conflicts("target=aarch64:")
