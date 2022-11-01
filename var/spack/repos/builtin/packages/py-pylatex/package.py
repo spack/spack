@@ -14,9 +14,21 @@ class PyPylatex(PythonPackage):
 
     version("1.4.1", sha256="d3c12efb8b260771260443dce78d1e9089c09f9d0b92e6273dfca0bf5e7302fb")
 
+    variant('docs', default=False)
+    variant('matrices', default=False)
+    variant('matplotlib', default=False)
+    variant('quantities', default=False)
+
     depends_on("python@2.7,3.3:", type=("build", 'run')
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
     depends_on('py-ordered-set', type='run')
+
+    # from extras section in setup.py
+    depends_on('py-sphinx', type='run', when='+docs')
+    depends_on('py-matplotlib', type='run', when='+matplotlib')
+    depends_on('py-numpy', type='run', when='+matrices')
+    depends_on('py-numpy', type='run', when='+quantities')
+    depends_on('py-quantities', type='run', when='+quantities')
 
     depends_on("texlive", type="run")
