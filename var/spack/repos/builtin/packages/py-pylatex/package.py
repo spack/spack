@@ -19,7 +19,7 @@ class PyPylatex(PythonPackage):
     variant('matplotlib', default=False)
     variant('quantities', default=False)
 
-    depends_on("python@2.7,3.3:", type=("build", 'run')
+    depends_on("python@2.7,3.3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
     depends_on('py-ordered-set', type='run')
