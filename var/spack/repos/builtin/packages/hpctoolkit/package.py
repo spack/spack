@@ -119,7 +119,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on("libunwind@1.4: +xz+pic")
     depends_on("mbedtls+pic", when="@:2022.03")
     depends_on("xerces-c transcoder=iconv")
-    depends_on("xz+pic", type="link")
+    depends_on("xz+pic@:5.2.6", type="link")
     depends_on("yaml-cpp@0.7.0:", when="@2022.10:")
     depends_on("zlib+shared")
 
