@@ -54,7 +54,6 @@ include = [
 ]
 
 [tool.hatch.envs.default]
-detached = true
 features = [
   "dev",
 ]
