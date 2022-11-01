@@ -125,6 +125,13 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("ginkgo", default=False, when="@6.4.0:", description="Enable Ginkgo interfaces")
     variant("hypre", default=False, when="@2.7.0:", description="Enable Hypre MPI parallel vector")
+    variant("kokkos", default=False, when="@6.4.0:", description="Enable Kokkos vector")
+    variant(
+        "kokkos-kernels",
+        default=False,
+        when="@6.4.0:",
+        description="Enable KokkosKernels based matrix and linear solver",
+    )
     variant("klu", default=False, description="Enable KLU sparse, direct solver")
     variant("lapack", default=False, description="Enable LAPACK direct solvers")
     variant("petsc", default=False, when="@2.7.0:", description="Enable PETSc interfaces")
@@ -223,6 +230,22 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # External libraries
     depends_on("caliper", when="+caliper")
     depends_on("ginkgo@1.5.0:", when="+ginkgo")
+    depends_on("kokkos", when="+kokkos")
+    depends_on("kokkos-kernels", when="+kokkos-kernels")
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos+cuda+cuda_lambda+cuda_constexpr cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "kokkos-kernels+cuda cuda_arch=%s" % cuda_arch,
+            when="+kokkos-kernels +cuda cuda_arch=%s" % cuda_arch,
+        )
+    for rocm_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % rocm_arch,
+            when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
+        )
     depends_on("lapack", when="+lapack")
     depends_on("hypre+mpi~int64", when="@5.7.1: +hypre ~int64")
     depends_on("hypre+mpi+int64", when="@5.7.1: +hypre +int64")
@@ -342,6 +365,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 from_variant("SUPERLUMT_ENABLE", "superlu-mt"),
                 from_variant("SUPERLUDIST_ENABLE", "superlu-dist"),
                 from_variant("Trilinos_ENABLE", "trilinos"),
+                from_variant("ENABLE_KOKKOS", "kokkos"),
+                from_variant("ENABLE_KOKKOS_KERNELS", "kokkos-kernels"),
                 from_variant("EXAMPLES_INSTALL", "examples-install"),
             ]
         )
@@ -374,20 +399,20 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # Building with Ginkgo
         if "+ginkgo" in spec:
-            gko_backends = ['REF']
+            gko_backends = ["REF"]
             if "+openmp" in spec["ginkgo"] and "+openmp" in spec:
-                gko_backends.append('OMP')
+                gko_backends.append("OMP")
             if "+cuda" in spec["ginkgo"] and "+cuda" in spec:
-                gko_backends.append('CUDA')
+                gko_backends.append("CUDA")
             if "+rocm" in spec["ginkgo"] and "+rocm" in spec:
-                gko_backends.append('HIP')
+                gko_backends.append("HIP")
             if "+oneapi" in spec["ginkgo"] and "+sycl" in spec:
-                gko_backends.append('DPCPP')
+                gko_backends.append("DPCPP")
             args.extend(
                 [
                     from_variant("ENABLE_GINKGO", "ginkgo"),
                     define("Ginkgo_DIR", spec["ginkgo"].prefix),
-                    define("SUNDIALS_GINKGO_BACKENDS", ';'.join(gko_backends))
+                    define("SUNDIALS_GINKGO_BACKENDS", ";".join(gko_backends)),
                 ]
             )
 
@@ -402,6 +427,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             if not spec["hypre"].variants["shared"].value:
                 hypre_libs = spec["blas"].libs + spec["lapack"].libs
                 args.extend([define("HYPRE_LIBRARIES", hypre_libs.joined(";"))])
+
+        # Building with Kokkos and KokkosKernels
+        if "+kokkos" in spec:
+            args.extend([define("Kokkos_DIR", spec["kokkos"].prefix)])
+        if "+kokkos-kernels" in spec:
+            args.extend([define("KokkosKernels_DIR", spec["kokkos-kernels"].prefix)])
 
         # Building with KLU
         if "+klu" in spec:
