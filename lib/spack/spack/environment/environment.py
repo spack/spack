@@ -645,6 +645,7 @@ class Environment(object):
         self.init_file = init_file
         self.with_view = with_view
         self.keep_relative = keep_relative
+        self.spack_root = None  # Default to current instance
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
@@ -1960,8 +1961,8 @@ class Environment(object):
         return data
 
     def _check_spack_spec(self, d):
-        """Check the spack spec, where the commit hash, when present,
-        takes precedence over the version."""
+        """Check the spack spec, where the commit hash, when present, takes
+        precedence over the version."""
         if "spack" not in d:
             return
 
@@ -1972,26 +1973,50 @@ class Environment(object):
         if fetch:
             curr_commit = spack.main.get_spack_commit()
             if curr_commit and curr_commit == fetch:
+                tty.info(fmt.format("commit", fetch))
                 return
 
         else:
             fetch = section.get("version")
             if fetch:
-                # Don't include anything beyond the version patch level
-                fetch = ".".join((fetch.split("."))[:3])
+                # TODO: Should the version be used as-is (e.g., 0.19.0.dev)?
+                # # Don't include anything beyond the version patch level
+                # fetch = ".".join((fetch.split("."))[:3])
                 if fetch == spack.spack_version:
+                    tty.info(fmt.format("version", fetch))
                     return
 
         # Environment depends on a different commit/version of Spack
-        spack_spec = Spec("spack@{0}".format(fetch)).concretized()
-        if spack_spec.installed:
-            _, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
-            tty.msg("{0} installed at {1}".format(spack_spec, record.path))
-            # TODO/TLD: Tell them to try again using installation?
+        spack_spec_vers = "spack@{0}".format(fetch)
+        spack_spec = Spec(spack_spec_vers).concretized()
+        if not spack_spec.installed:
+            # The version of Spack isn't install so install it
+            tty.warn(
+                "{0} not installed so installing. This may take a while.".format(spack_spec_vers)
+            )
+
+            args = {"explicit": True, "install_package": True}
+            builder = PackageInstaller([(spack_spec.package, args)])
+            builder.install()
+
+        if not spack_spec.installed:
+            raise SpackEnvironmentError(
+                "{0} not installed. Please 'spack install {0}' and try again.".format(
+                    spack_spec_vers
+                )
+            )
+
+        _, record = spack.store.db.query_by_spec_hash(spack_spec.dag_hash())
+        tty.warn("Environment relies on {0} at {1}".format(spack_spec_vers, record.path))
+        self.spack_root = record.path
+
+        dest = os.path.join(self.spack_root, "var", "spack", "environments", self.name)
+        fs.mkdirp(os.path.dirname(dest))
+
+        if not os.path.exists(dest):
+            symlink(self.path, dest)
         else:
-            # TODO/TLD: tell them to install it first
-            tty.msg("{0} installed is not installed".format(spack_spec))
-        sys.exit(1)
+            tty.warn("{0} already has the environment {1}".format(spack_spec_vers, self.name))
 
     def _read_lockfile(self, file_or_json):
         """Read a lockfile from a file or from a raw string."""

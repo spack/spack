@@ -18,6 +18,8 @@ def activate_header(env, shell, prompt=None):
     cmds = ""
     if shell == "csh":
         # TODO: figure out how to make color work for csh
+        if env.spack_root:
+            cmds += "setenv SPACK_ROOT %s;\n" % env.spack_root
         cmds += "setenv SPACK_ENV %s;\n" % env.path
         cmds += 'alias despacktivate "spack env deactivate";\n'
         if prompt:
@@ -28,6 +30,8 @@ def activate_header(env, shell, prompt=None):
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s} " % prompt, color=True)
 
+        if env.spack_root:
+            cmds += "set -gx SPACK_ROOT %s;\n" % env.spack_root
         cmds += "set -gx SPACK_ENV %s;\n" % env.path
         cmds += "function despacktivate;\n"
         cmds += "   spack env deactivate;\n"
@@ -39,6 +43,8 @@ def activate_header(env, shell, prompt=None):
         #
     elif shell == "bat":
         # TODO: Color
+        if env.spack_root:
+            cmds += 'set "SPACK_ROOT=%s"\n' % env.spack_root
         cmds += 'set "SPACK_ENV=%s"\n' % env.path
         # TODO: despacktivate
         # TODO: prompt
@@ -46,6 +52,8 @@ def activate_header(env, shell, prompt=None):
         if "color" in os.getenv("TERM", "") and prompt:
             prompt = colorize("@G{%s}" % prompt, color=True, enclose=True)
 
+        if env.spack_root:
+            cmds += "export SPACK_ROOT=%s;\n" % env.spack_root
         cmds += "export SPACK_ENV=%s;\n" % env.path
         cmds += "alias despacktivate='spack env deactivate';\n"
         if prompt:
@@ -63,12 +71,14 @@ def activate_header(env, shell, prompt=None):
 def deactivate_header(shell):
     cmds = ""
     if shell == "csh":
+        cmds += "setenv SPACK_ROOT %s;\n" % spack.paths.prefix
         cmds += "unsetenv SPACK_ENV;\n"
         cmds += "if ( $?SPACK_OLD_PROMPT ) "
         cmds += '    eval \'set prompt="$SPACK_OLD_PROMPT" &&'
         cmds += "          unsetenv SPACK_OLD_PROMPT';\n"
         cmds += "unalias despacktivate;\n"
     elif shell == "fish":
+        cmds += "set -gx SPACK_ROOT %s;\n" % spack.paths.prefix
         cmds += "set -e SPACK_ENV;\n"
         cmds += "functions -e despacktivate;\n"
         #
@@ -76,10 +86,12 @@ def deactivate_header(shell):
         #
     elif shell == "bat":
         # TODO: Color
+        cmds += 'set "SPACK_ROOT=%s"\n' % spack.paths.prefix
         cmds += 'set "SPACK_ENV="\n'
         # TODO: despacktivate
         # TODO: prompt
     else:
+        cmds += "export SPACK_ROOT=%s;\n" % spack.paths.prefix
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"
         cmds += "fi;\n"
