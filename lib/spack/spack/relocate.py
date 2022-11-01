@@ -766,10 +766,6 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
         concurrency (int): Preferred degree of parallelism
     """
 
-    # This now needs to be handled by the caller in all cases
-    # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
-    # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
-
     compiled_prefixes = collections.OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():

@@ -6,6 +6,7 @@
 import codecs
 import collections
 import hashlib
+import itertools
 import json
 import os
 import shutil
@@ -31,6 +32,7 @@ import spack.database as spack_db
 import spack.hooks
 import spack.hooks.sbang
 import spack.mirror
+import spack.paths
 import spack.platforms
 import spack.relocate as relocate
 import spack.repo
@@ -773,6 +775,24 @@ def get_buildfile_manifest(spec):
     return data
 
 
+def hashes_to_prefixes(spec):
+    return {
+        s.dag_hash(): str(s.prefix)
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
+def prefixes_to_hashes(spec):
+    return {
+        str(s.prefix): s.dag_hash()
+        for s in itertools.chain(
+            spec.traverse(root=True, deptype="link"), spec.dependencies(deptype="run")
+        )
+    }
+
+
 def write_buildinfo_file(spec, workdir, rel=False):
     """
     Create a cache file containing information
@@ -780,24 +800,19 @@ def write_buildinfo_file(spec, workdir, rel=False):
     """
     manifest = get_buildfile_manifest(spec)
 
-    prefix_to_hash = dict()
-    prefix_to_hash[str(spec.package.prefix)] = spec.dag_hash()
-    deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in deps + spec.dependencies(deptype="run"):
-        prefix_to_hash[str(d.prefix)] = d.dag_hash()
-
     # Create buildinfo data and write it to disk
-    buildinfo = {}
-    buildinfo["sbang_install_path"] = spack.hooks.sbang.sbang_install_path()
-    buildinfo["relative_rpaths"] = rel
-    buildinfo["buildpath"] = spack.store.layout.root
-    buildinfo["spackprefix"] = spack.paths.prefix
-    buildinfo["relative_prefix"] = os.path.relpath(spec.prefix, spack.store.layout.root)
-    buildinfo["relocate_textfiles"] = manifest["text_to_relocate"]
-    buildinfo["relocate_binaries"] = manifest["binary_to_relocate"]
-    buildinfo["relocate_links"] = manifest["link_to_relocate"]
-    buildinfo["hardlinks_deduped"] = manifest["hardlinks_deduped"]
-    buildinfo["prefix_to_hash"] = prefix_to_hash
+    buildinfo = {
+        "sbang_install_path": spack.hooks.sbang.sbang_install_path(),
+        "relative_rpaths": rel,
+        "buildpath": spack.store.layout.root,
+        "spackprefix": spack.paths.prefix,
+        "relative_prefix": os.path.relpath(spec.prefix, spack.store.layout.root),
+        "relocate_textfiles": manifest["text_to_relocate"],
+        "relocate_binaries": manifest["binary_to_relocate"],
+        "relocate_links": manifest["link_to_relocate"],
+        "hardlinks_deduped": manifest["hardlinks_deduped"],
+        "prefix_to_hash": prefixes_to_hashes(spec),
+    }
     filename = buildinfo_file_name(workdir)
     with open(filename, "w") as outfile:
         outfile.write(syaml.dump(buildinfo, default_flow_style=True))
@@ -1540,6 +1555,12 @@ def dedupe_hardlinks_if_necessary(root, buildinfo):
         buildinfo[key] = new_list
 
 
+def register_mappping(prefix_to_prefix, old, new):
+    if old == new:
+        return
+    prefix_to_prefix[old] = new
+
+
 def relocate_package(spec, allow_root):
     """
     Relocate the given package
@@ -1548,119 +1569,76 @@ def relocate_package(spec, allow_root):
     buildinfo = read_buildinfo_file(workdir)
     new_layout_root = str(spack.store.layout.root)
     new_prefix = str(spec.prefix)
-    new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
-    new_spack_prefix = str(spack.paths.prefix)
 
     old_sbang_install_path = None
     if "sbang_install_path" in buildinfo:
         old_sbang_install_path = str(buildinfo["sbang_install_path"])
+    if "prefix_to_hash" not in buildinfo:
+        raise NewLayoutException(
+            "Package tarball was created from an install "
+            "prefix with a different directory layout and an older "
+            "buildcache create implementation. It cannot be relocated."
+        )
     old_layout_root = str(buildinfo["buildpath"])
-    old_spack_prefix = str(buildinfo.get("spackprefix"))
     old_rel_prefix = buildinfo.get("relative_prefix")
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
     rel = buildinfo.get("relative_rpaths")
-    prefix_to_hash = buildinfo.get("prefix_to_hash", None)
-    if old_rel_prefix != new_rel_prefix and not prefix_to_hash:
-        msg = "Package tarball was created from an install "
-        msg += "prefix with a different directory layout and an older "
-        msg += "buildcache create implementation. It cannot be relocated."
-        raise NewLayoutException(msg)
-    # older buildcaches do not have the prefix_to_hash dictionary
-    # need to set an empty dictionary and add one entry to
-    # prefix_to_prefix to reproduce the old behavior
-    if not prefix_to_hash:
-        prefix_to_hash = dict()
-    hash_to_prefix = dict()
-    hash_to_prefix[spec.format("{hash}")] = str(spec.package.prefix)
-    new_deps = spack.build_environment.get_rpath_deps(spec.package)
-    for d in new_deps + spec.dependencies(deptype="run"):
-        hash_to_prefix[d.format("{hash}")] = str(d.prefix)
-    # Spurious replacements (e.g. sbang) will cause issues with binaries
-    # For example, the new sbang can be longer than the old one.
-    # Hence 2 dictionaries are maintained here.
-    prefix_to_prefix_text = collections.OrderedDict()
-    prefix_to_prefix_bin = collections.OrderedDict()
 
+    hash_to_prefix = hashes_to_prefixes(spec)
+    prefix_to_hash = buildinfo.get("prefix_to_hash")
+    prefix_to_prefix = collections.OrderedDict()
+
+    # First add the most specific prefixes from package install dirs.
+    for orig_prefix, dag_hash in prefix_to_hash.items():
+        if dag_hash in prefix_to_hash:
+            register_mappping(prefix_to_prefix, orig_prefix, hash_to_prefix[dag_hash])
+
+    # Then add sbang and more generic fallbacks.
     if old_sbang_install_path:
         install_path = spack.hooks.sbang.sbang_install_path()
-        prefix_to_prefix_text[old_sbang_install_path] = install_path
+        register_mappping(prefix_to_prefix, old_sbang_install_path, install_path)
 
-    prefix_to_prefix_text[old_prefix] = new_prefix
-    prefix_to_prefix_bin[old_prefix] = new_prefix
-    prefix_to_prefix_text[old_layout_root] = new_layout_root
-    prefix_to_prefix_bin[old_layout_root] = new_layout_root
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
-    # This is vestigial code for the *old* location of sbang. Previously,
-    # sbang was a bash script, and it lived in the spack prefix. It is
-    # now a POSIX script that lives in the install prefix. Old packages
-    # will have the old sbang location in their shebangs.
-    orig_sbang = "#!/bin/bash {0}/bin/sbang".format(old_spack_prefix)
-    new_sbang = spack.hooks.sbang.sbang_shebang_line()
-    prefix_to_prefix_text[orig_sbang] = new_sbang
+    register_mappping(prefix_to_prefix, old_prefix, new_prefix)
+    register_mappping(prefix_to_prefix, old_layout_root, new_layout_root)
+
+    if len(prefix_to_prefix) == 0:
+        return
 
     tty.debug("Relocating package from", "%s to %s." % (old_layout_root, new_layout_root))
 
     # Old archives maybe have hardlinks repeated.
     dedupe_hardlinks_if_necessary(workdir, buildinfo)
 
-    def is_backup_file(file):
-        return file.endswith("~")
-
     # Text files containing the prefix text
-    text_names = list()
-    for filename in buildinfo["relocate_textfiles"]:
-        text_name = os.path.join(workdir, filename)
-        # Don't add backup files generated by filter_file during install step.
-        if not is_backup_file(text_name):
-            text_names.append(text_name)
+    textfiles = [os.path.join(workdir, f) for f in buildinfo.get("relocate_textfiles", [])]
+    binaries = [os.path.join(workdir, f) for f in buildinfo.get("relocate_binaries", [])]
+    links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
 
-    # If we are not installing back to the same install tree do the relocation
-    if old_prefix != new_prefix:
-        files_to_relocate = [
-            os.path.join(workdir, filename) for filename in buildinfo.get("relocate_binaries")
-        ]
-        # If the buildcache was not created with relativized rpaths
-        # do the relocation of path in binaries
-        platform = spack.platforms.by_name(spec.platform)
-        if "macho" in platform.binary_formats:
-            relocate.relocate_macho_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
-        if "elf" in platform.binary_formats:
-            relocate.relocate_elf_binaries(
-                files_to_relocate,
-                old_layout_root,
-                new_layout_root,
-                prefix_to_prefix_bin,
-                rel,
-                old_prefix,
-                new_prefix,
-            )
+    platform = spack.platforms.by_name(spec.platform)
+    if "macho" in platform.binary_formats:
+        relocate.relocate_macho_binaries(
+            binaries,
+            old_layout_root,
+            new_layout_root,
+            prefix_to_prefix,
+            rel,
+            old_prefix,
+            new_prefix,
+        )
+    if "elf" in platform.binary_formats:
+        relocate.relocate_elf_binaries(
+            binaries,
+            old_layout_root,
+            new_layout_root,
+            prefix_to_prefix,
+            rel,
+            old_prefix,
+            new_prefix,
+        )
 
-        # Relocate links to the new install prefix
-        links = [link for link in buildinfo.get("relocate_links", [])]
-        relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
-
-        # For all buildcaches
-        # relocate the install prefixes in text files including dependencies
-        relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
-
-        # relocate the install prefixes in binary files including dependencies
-        relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
-
-    # If we are installing back to the same location
-    # relocate the sbang location if the spack directory changed
-    else:
-        if old_spack_prefix != new_spack_prefix:
-            relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
+    relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
+    relocate.unsafe_relocate_text(textfiles, prefix_to_prefix)
+    relocate.unsafe_relocate_text_bin(binaries, prefix_to_prefix)
 
 
 def _extract_inner_tarball(spec, filename, extract_to, unsigned, remote_checksum):
