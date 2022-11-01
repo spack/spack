@@ -1646,8 +1646,8 @@ def relocate_package(spec, allow_root):
             )
 
         # Relocate links to the new install prefix
-        links = [link for link in buildinfo.get("relocate_links", [])]
-        relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
+        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
+        relocate.relocate_links(links, prefix_to_prefix_bin)
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
