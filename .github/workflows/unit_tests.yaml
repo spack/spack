@@ -217,10 +217,13 @@ jobs:
         . share/spack/setup-env.sh
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
-        common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
+        common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x -k relocate)
         $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
         coverage combine -a
         coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3

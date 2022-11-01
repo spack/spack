@@ -765,7 +765,6 @@ def unsafe_relocate_text(files, prefixes, concurrency=32):
         prefixes (OrderedDict): String prefixes which need to be changed
         concurrency (int): Preferred degree of parallelism
     """
-
     # This now needs to be handled by the caller in all cases
     # orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(orig_spack)
     # new_sbang = '#!/bin/bash {0}/bin/sbang'.format(new_spack)
