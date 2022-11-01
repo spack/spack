@@ -204,15 +204,15 @@ class TestConcretizePreferences(object):
         )
         spec = concretize("mpileaks")
         assert spec.package.x == 1
-        assert spec.package.y == True
-        assert spec.package.w == True
+        assert spec.package.y is True
+        assert spec.package.w is True
         assert spec.package.z == "yesterday"
 
     def test_config_set_pkg_property_collecton_unsupported(self, mutable_mock_repo):
         """Test that an error is raised if you attempt to assign a list value"""
         update_packages("mpileaks", "package_attributes", {"x": ["a", "b"]})
         with pytest.raises(ConfigError):
-            spec = concretize("mpileaks")
+            concretize("mpileaks")
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
