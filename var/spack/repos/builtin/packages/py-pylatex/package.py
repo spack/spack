@@ -14,7 +14,9 @@ class PyPylatex(PythonPackage):
 
     version("1.4.1", sha256="d3c12efb8b260771260443dce78d1e9089c09f9d0b92e6273dfca0bf5e7302fb")
 
+    depends_on("python@2.7,3.3:", type=("build", 'run')
     depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools@:57.99", type="build", when='@:1.4.1')
+    depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
+    depends_on('py-ordered-set', type='run')
 
     depends_on("texlive", type="run")
