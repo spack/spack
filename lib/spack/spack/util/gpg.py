@@ -285,7 +285,7 @@ def sign(key, file, output, clearsign=False):
             signature, if False creates a detached signature
     """
     signopt = "--clearsign" if clearsign else "--detach-sign"
-    GPG(signopt, "--armor", "--default-key", key, "--output", output, file)
+    GPG(signopt, "--armor", "--local-user", key, "--output", output, file)
 
 
 @_autoinit
