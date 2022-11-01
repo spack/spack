@@ -41,45 +41,65 @@ class MakeExecutableTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+    if sys.version_info < (3, 1):
+        def assertIn(self, a, b):
+            self.assertTrue(a in b)
+
     def test_make_normal(self):
-        make = MakeExecutable("make", 8)
-        self.assertEqual(make(output=str).strip(), "-j8")
-        self.assertEqual(make("install", output=str).strip(), "-j8 install")
+        make = MakeExecutable('make', 8)
+        self.assertIn('-j8', make(output=str).strip().split())
+        inst = make('install', output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
     def test_make_explicit(self):
-        make = MakeExecutable("make", 8)
-        self.assertEqual(make(parallel=True, output=str).strip(), "-j8")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "-j8 install")
+        make = MakeExecutable('make', 8)
+        self.assertIn('-j8', make(parallel=True, output=str).strip().split())
+        inst = make('install', parallel=True, output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
     def test_make_one_job(self):
-        make = MakeExecutable("make", 1)
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        make = MakeExecutable('make', 1)
+        self.assertFalse('-j' in make(output=str).strip())
+        inst = make('install', output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
     def test_make_parallel_false(self):
-        make = MakeExecutable("make", 8)
-        self.assertEqual(make(parallel=False, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=False, output=str).strip(), "install")
+        make = MakeExecutable('make', 8)
+        self.assertFalse('-j' in make(output=str, parallel=False).strip())
+        inst = make('install', parallel=False, output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
     def test_make_parallel_disabled(self):
         make = MakeExecutable("make", 8)
 
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "true"
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'true'
+        self.assertFalse('-j' in make(output=str).strip())
+        inst = make('install', output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "1"
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = '1'
+        self.assertFalse('-j' in make(output=str).strip())
+        inst = make('install', output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
         # These don't disable (false and random string)
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "false"
-        self.assertEqual(make(output=str).strip(), "-j8")
-        self.assertEqual(make("install", output=str).strip(), "-j8 install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'false'
+        self.assertIn('-j8', make(output=str).strip().split())
+        inst = make('install', output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "foobar"
-        self.assertEqual(make(output=str).strip(), "-j8")
-        self.assertEqual(make("install", output=str).strip(), "-j8 install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'foobar'
+        self.assertIn('-j8', make(output=str).strip().split())
+        inst = make('install', output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
         del os.environ["SPACK_NO_PARALLEL_MAKE"]
 
@@ -87,29 +107,36 @@ class MakeExecutableTest(unittest.TestCase):
         make = MakeExecutable("make", 8)
 
         # These should work
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "true"
-        self.assertEqual(make(parallel=True, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'true'
+        self.assertFalse('-j' in make(output=str, parallel=True).strip())
+        inst = make('install', parallel=True, output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "1"
-        self.assertEqual(make(parallel=True, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = '1'
+        self.assertFalse('-j' in make(output=str, parallel=True).strip())
+        inst = make('install', parallel=True, output=str).strip()
+        self.assertIn('install', inst)
+        self.assertFalse('-j' in inst)
 
         # These don't disable (false and random string)
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "false"
-        self.assertEqual(make(parallel=True, output=str).strip(), "-j8")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "-j8 install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'false'
+        self.assertIn('-j8', make(parallel=True, output=str).strip().split())
+        inst = make('install', parallel=True, output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
-        os.environ["SPACK_NO_PARALLEL_MAKE"] = "foobar"
-        self.assertEqual(make(parallel=True, output=str).strip(), "-j8")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "-j8 install")
+        os.environ['SPACK_NO_PARALLEL_MAKE'] = 'foobar'
+        self.assertIn('-j8', make(parallel=True, output=str).strip().split())
+        inst = make('install', parallel=True, output=str).strip().split()
+        self.assertIn('-j8', inst)
+        self.assertIn('install', inst)
 
         del os.environ["SPACK_NO_PARALLEL_MAKE"]
 
     def test_make_jobs_env(self):
         make = MakeExecutable("make", 8)
         dump_env = {}
-        self.assertEqual(
-            make(output=str, jobs_env="MAKE_PARALLELISM", _dump_env=dump_env).strip(), "-j8"
-        )
-        self.assertEqual(dump_env["MAKE_PARALLELISM"], "8")
+        self.assertIn('-j8', make(output=str, jobs_env='MAKE_PARALLELISM',
+                                  _dump_env=dump_env).strip().split())
+        self.assertEqual(dump_env['MAKE_PARALLELISM'], '8')
