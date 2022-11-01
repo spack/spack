@@ -66,6 +66,13 @@ class Likwid(Package):
     variant("fortran", default=True, description="with fortran interface")
     variant("cuda", default=False, description="with Nvidia GPU profiling support")
 
+    variant(
+        "accessmode",
+        default="perf_event",
+        values=("perf_event", "direct", "accessdaemon"),
+        description="the default mode for MSR access",
+    )
+
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
@@ -127,8 +134,18 @@ class Likwid(Package):
             "^COMPILER .*", "COMPILER = " + supported_compilers[self.compiler.name], "config.mk"
         )
         filter_file("^PREFIX .*", "PREFIX = " + prefix, "config.mk")
-        # Disable the chown, see the `spack_perms_fix` template and script
-        filter_file("^INSTALL_CHOWN .*", "INSTALL_CHOWN =", "config.mk")
+
+        filter_file(
+            "^ACCESSMODE .*",
+            "ACCESSMODE = {}".format(spec.variants["accessmode"].value),
+            "config.mk",
+        )
+        if "accessmode=accessdaemon" in spec:
+            # Disable the chown, see the `spack_perms_fix` template and script
+            filter_file("^INSTALL_CHOWN .*", "INSTALL_CHOWN =", "config.mk")
+        else:
+            filter_file("^BUILDFREQ .*", "BUILDFREQ = false", "config.mk")
+            filter_file("^BUILDDAEMON .*", "BUILDDAEMON = false", "config.mk")
 
         if "+fortran" in self.spec:
             filter_file("^FORTRAN_INTERFACE .*", "FORTRAN_INTERFACE = true", "config.mk")
@@ -190,24 +207,32 @@ class Likwid(Package):
     # the build log.  See https://github.com/spack/spack/pull/10412.
     @run_after("install")
     def caveats(self):
-        perm_script = "spack_perms_fix.sh"
-        perm_script_path = join_path(self.spec.prefix, perm_script)
-        with open(perm_script_path, "w") as f:
-            env = spack.tengine.make_environment(dirs=self.package_dir)
-            t = env.get_template(perm_script + ".j2")
-            f.write(t.render({"prefix": self.spec.prefix, "daemons": daemons}))
-        tty.warn(
-            """
-        For full functionality, you'll need to chown and chmod some files
-        after installing the package.  This has security implications.
+        if "accessmode=accessdaemon" in self.spec:
+            perm_script = "spack_perms_fix.sh"
+            perm_script_path = join_path(self.spec.prefix, perm_script)
+            daemons = ["sbin/likwid-accessD", "sbin/likwid-setFreq"]
+            with open(perm_script_path, "w") as f:
+                env = spack.tengine.make_environment(dirs=self.package_dir)
+                t = env.get_template(perm_script + ".j2")
+                f.write(t.render({"prefix": self.spec.prefix, "daemons": daemons}))
+            tty.warn(
+                """
+            For full functionality, you'll need to chown and chmod some files
+            after installing the package.  This has security implications.
 
-        We've installed a script that will make the necessary changes;
-        read through it and then execute it as root (e.g. via sudo).
+            We've installed a script that will make the necessary changes;
+            read through it and then execute it as root (e.g. via sudo).
 
-        The script is named:
+            The script is named:
 
-        {0}
-        """.format(
-                perm_script_path
+            {0}
+            """.format(
+                    perm_script_path
+                )
             )
-        )
+        elif "accessmode=direct" in self.spec:
+            tty.warn(
+                """
+            Root permissions will be needed to run this installation of LIKWID.
+            """
+            )
