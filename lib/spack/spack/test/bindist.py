@@ -15,7 +15,6 @@ from llnl.util.filesystem import join_path, visit_directory_tree
 
 import spack.binary_distribution as bindist
 import spack.config
-import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
