@@ -1,10 +1,10 @@
 #!/bin/sh -eu
 
-{% for cf  in chown_files %}
+{% for cf in daemons %}
 chown root:root {{ prefix }}/{{ cf }}
 {% endfor %}
 
-{% for sf in setuid_files %}
+{% for sf in daemons %}
 chmod 4755 {{ prefix }}/{{ sf }}
 {% endfor %}
 
