@@ -9,7 +9,7 @@ import os
 from spack.package import *
 
 
-class Paraview(CMakePackage, CudaPackage):
+class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application. This package includes the Catalyst
     in-situ library for versions 5.7 and greater, otherwise use the
@@ -106,6 +106,9 @@ class Paraview(CMakePackage, CudaPackage):
     conflicts("+adios2", when="@:5.10 ~mpi")
     conflicts("~shared", when="+cuda")
     conflicts("+cuda", when="@5.8:5.10")
+    conflicts("+rocm", when="+cuda")
+    conflicts("+rocm", when="use_vtkm=off")
+    conflicts("paraview@:5.10", when="+rocm")
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts("~opengl2", when="@5.5:")
@@ -136,6 +139,7 @@ class Paraview(CMakePackage, CudaPackage):
         conflicts("cuda_arch=%d" % _arch, when="+cuda", msg="ParaView requires cuda_arch >= 20")
 
     depends_on("cmake@3.3:", type="build")
+    depends_on("cmake@3.21:", type="build", when="+rocm")
 
     depends_on("ninja", type="build")
 
@@ -197,6 +201,12 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("xz")
     depends_on("zlib")
     depends_on("libcatalyst", when="+libcatalyst")
+    depends_on("hip@5.2:", when="+rocm")
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos +rocm amdgpu_target={0}".format(target),
+            when="+rocm amdgpu_target={0}".format(target),
+        )
 
     # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
@@ -571,6 +581,17 @@ class Paraview(CMakePackage, CudaPackage):
 
         if "+advanced_debug" in spec:
             cmake_args.append("-DVTK_DEBUG_LEAKS:BOOL=ON")
+
+        if spec.satisfies("@5.11:"):
+            cmake_args.append("-DPARAVIEW_USE_HIP:BOOL=%s" % variant_bool("+rocm"))
+            archs = spec.variants["amdgpu_target"].value
+            if archs != "none":
+                arch_str = ",".join(archs)
+                cmake_args.append("-DCMAKE_HIP_ARCHITECTURES=%s" % arch_str)
+            if "+rocm" in spec:
+                cmake_args.append(
+                    "-DKokkos_CXX_COMPILER=%s" % join_path(spec["hip"].prefix.bin, "amdclang++")
+                )
 
         if "+catalyst" in spec:
             cmake_args.append("-DVTK_MODULE_ENABLE_ParaView_Catalyst=YES")
