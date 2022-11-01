@@ -148,8 +148,8 @@ spack:
     script:
       - uname -a || true
       - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
-      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.aarch64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf '2322c175fb092b426f9eb6c24ee22d94ffa6759c3d0c260b74d81abd8120122b gmake.tar.gz' | sha256sum --check --strict --quiet
       - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
@@ -162,28 +162,30 @@ spack:
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
       - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
+    image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
     match_behavior: first
     mappings:
       - match:
         - llvm
         - rust
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "huge", "x86_64"]
-      - match: ['os=ubuntu18.04']
+          tags: [ "spack", "huge", "aarch64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+      - match: ['os=amzn2']
         runner-attributes:
-          image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
-
+          tags: ["spack", "aarch64"]
+          variables:
+            CI_JOB_SIZE: "default"
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
-
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
-
+      image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+      tags: ["spack", "public", "aarch64"]
     signing-job-attributes:
       image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
       tags: ["spack", "aws"]
