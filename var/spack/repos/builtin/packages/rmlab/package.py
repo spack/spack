@@ -10,26 +10,23 @@ class Rmlab(CMakePackage):
     """C++ File API for the reMarkable tablet"""
 
     homepage = "https://github.com/ax3l/lines-are-beautiful"
-    git      = "https://github.com/ax3l/lines-are-beautiful.git"
+    git = "https://github.com/ax3l/lines-are-beautiful.git"
 
-    maintainers = ['ax3l']
+    maintainers = ["ax3l"]
 
-    version('develop', branch='develop')
+    version("develop", branch="develop")
 
-    variant('png', default=True,
-            description='Enable PNG conversion support')
+    variant("png", default=True, description="Enable PNG conversion support")
 
     # modern CMake
-    depends_on('cmake@3.7.0:', type='build')
+    depends_on("cmake@3.7.0:", type="build")
     # C++11
-    conflicts('%gcc@:4.7')
-    conflicts('%intel@:15')
-    conflicts('%pgi@:14')
+    conflicts("%gcc@:4.7")
+    conflicts("%intel@:15")
+    conflicts("%pgi@:14")
 
-    depends_on('pngwriter@0.6.0:', when='+png')
+    depends_on("pngwriter@0.6.0:", when="+png")
 
     def cmake_args(self):
-        args = [
-            self.define_from_variant('Rmlab_USE_PNG', 'png')
-        ]
+        args = [self.define_from_variant("Rmlab_USE_PNG", "png")]
         return args

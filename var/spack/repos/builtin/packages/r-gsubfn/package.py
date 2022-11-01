@@ -23,7 +23,7 @@ class RGsubfn(RPackage):
 
     cran = "gsubfn"
 
-    version('0.7', sha256='89351df9e65722d2862f26a0a3985666de3c86e8400808ced8a6eb6e165a4602')
-    version('0.6-6', sha256='bbc5d29bb48e836407f81880aeb368544a54a5513dacb3411c9838180723dda4')
+    version("0.7", sha256="89351df9e65722d2862f26a0a3985666de3c86e8400808ced8a6eb6e165a4602")
+    version("0.6-6", sha256="bbc5d29bb48e836407f81880aeb368544a54a5513dacb3411c9838180723dda4")
 
-    depends_on('r-proto', type=('build', 'run'))
+    depends_on("r-proto", type=("build", "run"))

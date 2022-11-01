@@ -11,11 +11,11 @@ class Libopts(AutotoolsPackage):
     development of metaheuristic-based techniques."""
 
     homepage = "https://github.com/jppbsi/LibOPT/"
-    git      = "https://github.com/jppbsi/LibOPT.git"
+    git = "https://github.com/jppbsi/LibOPT.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     parallel = False
 
     def install(self, spec, prefix):
-        install_tree('lib', prefix.lib)
+        install_tree("lib", prefix.lib)

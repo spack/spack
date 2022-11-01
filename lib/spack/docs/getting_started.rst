@@ -23,8 +23,36 @@ be present on the machine where Spack is run:
 These requirements can be easily installed on most modern Linux systems;
 on macOS, XCode is required.  Spack is designed to run on HPC
 platforms like Cray.  Not all packages should be expected
-to work on all platforms.  A build matrix showing which packages are
-working on which systems is planned but not yet available.
+to work on all platforms.
+
+A build matrix showing which packages are working on which systems is shown below.
+
+.. tab-set::
+
+   .. tab-item:: Debian/Ubuntu
+
+      .. code-block:: console
+
+         apt update
+         apt install build-essential ca-certificates coreutils curl environment-modules gfortran git gpg lsb-release python3 python3-distutils python3-venv unzip zip
+
+   .. tab-item:: RHEL
+
+      .. code-block:: console
+
+         yum update -y
+         yum install -y epel-release
+         yum update -y
+         yum --enablerepo epel groupinstall -y "Development Tools"
+         yum --enablerepo epel install -y curl findutils gcc-c++ gcc gcc-gfortran git gnupg2 hostname iproute make patch python3 python3-pip python3-setuptools unzip
+         python3 -m pip install boto3
+
+   .. tab-item:: macOS Brew
+
+      .. code-block:: console
+
+         brew update
+         brew install curl gcc git gnupg zip
 
 ------------
 Installation
@@ -149,35 +177,13 @@ Spack fall back to bootstrapping from sources:
 
 .. code-block:: console
 
-   $ spack bootstrap untrust github-actions-v0.2
-   ==> "github-actions-v0.2" is now untrusted and will not be used for bootstrapping
+   $ spack bootstrap disable github-actions-v0.3
+   ==> "github-actions-v0.2" is now disabled and will not be used for bootstrapping
 
 You can verify that the new settings are effective with:
 
-.. code-block:: console
+.. command-output:: spack bootstrap list
 
-   $ spack bootstrap list
-   Name: github-actions-v0.2 UNTRUSTED
-
-     Type: buildcache
-
-     Info:
-       url: https://mirror.spack.io/bootstrap/github-actions/v0.2
-       homepage: https://github.com/spack/spack-bootstrap-mirrors
-       releases: https://github.com/spack/spack-bootstrap-mirrors/releases
-
-     Description:
-       Buildcache generated from a public workflow using Github Actions.
-       The sha256 checksum of binaries is checked before installation.
-
-   [ ... ]
-
-   Name: spack-install TRUSTED
-
-     Type: install
-
-     Description:
-       Specs built from sources by Spack. May take a long time.
 
 .. note::
 

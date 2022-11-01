@@ -19,5 +19,5 @@ class RLearnbayes(RPackage):
 
     cran = "LearnBayes"
 
-    version('2.15.1', sha256='9b110858456523ca0b2a63f22013c4e1fbda6674b9d84dc1f4de8bffc5260532')
-    version('2.15', sha256='45c91114b4aaa0314feeb4311dbe78f5b75a3b76bb2d1ca0f8adb2e0f1cbe233')
+    version("2.15.1", sha256="9b110858456523ca0b2a63f22013c4e1fbda6674b9d84dc1f4de8bffc5260532")
+    version("2.15", sha256="45c91114b4aaa0314feeb4311dbe78f5b75a3b76bb2d1ca0f8adb2e0f1cbe233")

@@ -3,13 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
+import llnl.util.filesystem as fs
+import llnl.util.lang as lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import working_dir
 
+import spack.builder
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE, determine_number_of_jobs
-from spack.directives import extends
+from spack.directives import build_system, extends
 from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
@@ -18,33 +20,52 @@ from spack.util.executable import Executable, ProcessError
 class RacketPackage(PackageBase):
     """Specialized class for packages that are built using Racket's
     `raco pkg install` and `raco setup` commands.
-
-    This class provides the following phases that can be overridden:
-
-    * install
-    * setup
     """
+
     #: Package name, version, and extension on PyPI
-    maintainers = ['elfprince13']
-
-    # Default phases
-    phases = ['install']
-
+    maintainers = ["elfprince13"]
     # To be used in UI queries that require to know which
     # build-system class we are using
-    build_system_class = 'RacketPackage'
+    build_system_class = "RacketPackage"
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "racket"
 
-    extends('racket')
+    build_system("racket")
 
-    pkgs = False
-    subdirectory = None  # type: Optional[str]
-    name = None  # type: Optional[str]
+    extends("racket", when="build_system=racket")
+
+    racket_name = None  # type: Optional[str]
     parallel = True
 
+    @lang.classproperty
+    def homepage(cls):
+        if cls.racket_name:
+            return "https://pkgs.racket-lang.org/package/{0}".format(cls.racket_name)
+        return None
+
+
+@spack.builder.builder("racket")
+class RacketBuilder(spack.builder.Builder):
+    """The Racket builder provides an ``install`` phase that can be overridden."""
+
+    phases = ("install",)
+
+    #: Names associated with package methods in the old build-system format
+    legacy_methods = tuple()  # type: Tuple[str, ...]
+
+    #: Names associated with package attributes in the old build-system format
+    legacy_attributes = ("build_directory", "build_time_test_callbacks", "subdirectory")
+
+    #: Callback names for build-time test
+    build_time_test_callbacks = ["check"]
+
+    racket_name = None  # type: Optional[str]
+
     @property
-    def homepage(self):
-        if self.pkgs:
-            return 'https://pkgs.racket-lang.org/package/{0}'.format(self.name)
+    def subdirectory(self):
+        if self.racket_name:
+            return "pkgs/{0}".format(self.pkg.racket_name)
+        return None
 
     @property
     def build_directory(self):
@@ -53,19 +74,35 @@ class RacketPackage(PackageBase):
             ret = os.path.join(ret, self.subdirectory)
         return ret
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         """Install everything from build directory."""
         raco = Executable("raco")
-        with working_dir(self.build_directory):
-            allow_parallel = self.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
-            args = ['pkg', 'install', '-t', 'dir', '-n', self.name, '--deps', 'fail',
-                    '--ignore-implies', '--copy', '-i', '-j',
-                    str(determine_number_of_jobs(allow_parallel)),
-                    '--', os.getcwd()]
+        with fs.working_dir(self.build_directory):
+            parallel = self.pkg.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
+            args = [
+                "pkg",
+                "install",
+                "-t",
+                "dir",
+                "-n",
+                self.pkg.racket_name,
+                "--deps",
+                "fail",
+                "--ignore-implies",
+                "--copy",
+                "-i",
+                "-j",
+                str(determine_number_of_jobs(parallel)),
+                "--",
+                os.getcwd(),
+            ]
             try:
                 raco(*args)
             except ProcessError:
                 args.insert(-2, "--skip-installed")
                 raco(*args)
-                tty.warn(("Racket package {0} was already installed, uninstalling via "
-                          "Spack may make someone unhappy!").format(self.name))
+                msg = (
+                    "Racket package {0} was already installed, uninstalling via "
+                    "Spack may make someone unhappy!"
+                )
+                tty.warn(msg.format(self.pkg.racket_name))

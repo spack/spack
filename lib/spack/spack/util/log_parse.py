@@ -13,7 +13,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 
-__all__ = ['parse_log_events', 'make_log_context']
+__all__ = ["parse_log_events", "make_log_context"]
 
 
 def parse_log_events(stream, context=6, jobs=None, profile=False):
@@ -51,7 +51,7 @@ def _wrap(text, width):
     lines = []
     pos = 0
     while pos < len(text):
-        lines.append(text[pos:pos + width])
+        lines.append(text[pos : pos + width])
         pos += width
     return lines
 
@@ -77,8 +77,8 @@ def make_log_context(log_events, width=None):
     log_events = sorted(log_events, key=lambda e: e.line_no)
 
     num_width = len(str(max(error_lines or [0]))) + 4
-    line_fmt = '%%-%dd%%s' % num_width
-    indent = ' ' * (5 + num_width)
+    line_fmt = "%%-%dd%%s" % num_width
+    indent = " " * (5 + num_width)
 
     if width is None:
         _, width = tty.terminal_size()
@@ -92,14 +92,14 @@ def make_log_context(log_events, width=None):
         start = event.start
 
         if isinstance(event, BuildError):
-            color = 'R'
+            color = "R"
         elif isinstance(event, BuildWarning):
-            color = 'Y'
+            color = "Y"
         else:
-            color = 'W'
+            color = "W"
 
         if next_line != 1 and start > next_line:
-            out.write('\n     ...\n\n')
+            out.write("\n     ...\n\n")
 
         if start < next_line:
             start = next_line
@@ -108,13 +108,12 @@ def make_log_context(log_events, width=None):
             # wrap to width
             lines = _wrap(event[i], wrap_width)
             lines[1:] = [indent + ln for ln in lines[1:]]
-            wrapped_line = line_fmt % (i, '\n'.join(lines))
+            wrapped_line = line_fmt % (i, "\n".join(lines))
 
             if i in error_lines:
-                out.write(colorize(
-                    '  @%s{>> %s}\n' % (color, cescape(wrapped_line))))
+                out.write(colorize("  @%s{>> %s}\n" % (color, cescape(wrapped_line))))
             else:
-                out.write('     %s\n' % wrapped_line)
+                out.write("     %s\n" % wrapped_line)
 
         next_line = event.end
 

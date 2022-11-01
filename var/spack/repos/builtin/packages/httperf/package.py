@@ -12,15 +12,15 @@ class Httperf(AutotoolsPackage):
     measuring server performance."""
 
     homepage = "https://github.com/httperf"
-    git      = "https://github.com/httperf/httperf.git"
+    git = "https://github.com/httperf/httperf.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
-    @run_before('autoreconf')
+    @run_before("autoreconf")
     def e_autogen(self):
-        mkdirp('m4')
+        mkdirp("m4")

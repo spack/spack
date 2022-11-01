@@ -18,4 +18,4 @@ class RMultcompview(RPackage):
 
     cran = "multcompView"
 
-    version('0.1-8', sha256='123d539172ad6fc63d83d1fc7f356a5ed7b691e7803827480118bebc374fd8e5')
+    version("0.1-8", sha256="123d539172ad6fc63d83d1fc7f356a5ed7b691e7803827480118bebc374fd8e5")

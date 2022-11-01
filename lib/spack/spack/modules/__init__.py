@@ -13,13 +13,6 @@ from .common import disable_modules
 from .lmod import LmodModulefileWriter
 from .tcl import TclModulefileWriter
 
-__all__ = [
-    'TclModulefileWriter',
-    'LmodModulefileWriter',
-    'disable_modules'
-]
+__all__ = ["TclModulefileWriter", "LmodModulefileWriter", "disable_modules"]
 
-module_types = {
-    'tcl': TclModulefileWriter,
-    'lmod': LmodModulefileWriter
-}
+module_types = {"tcl": TclModulefileWriter, "lmod": LmodModulefileWriter}

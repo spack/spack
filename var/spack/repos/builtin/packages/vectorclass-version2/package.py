@@ -12,11 +12,14 @@ class VectorclassVersion2(Package):
     with the x86 or x86/64 instruction set on Windows, Linux, and Mac platforms."""
 
     homepage = "https://www.agner.org/optimize/#vectorclass"
-    url      = "https://github.com/vectorclass/version2/archive/refs/tags/v2.01.04.tar.gz"
+    url = "https://github.com/vectorclass/version2/archive/refs/tags/v2.01.04.tar.gz"
 
-    maintainers = ['haralmha']
+    maintainers = ["haralmha"]
 
-    version('2.01.04', sha256='7885c343b1af9eb940f4debdd7cd19544130a06ed70e0000e1a8471fb9c15118')
+    version("2.01.04", sha256="7885c343b1af9eb940f4debdd7cd19544130a06ed70e0000e1a8471fb9c15118")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        # Put all cpp files to an include folder
+        # (makes a filesystem view with this
+        # package in it less noisy)
+        install_tree(".", prefix.include)

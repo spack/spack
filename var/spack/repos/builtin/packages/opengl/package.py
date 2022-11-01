@@ -14,38 +14,24 @@ class Opengl(BundlePackage):
 
     homepage = "https://www.opengl.org/"
 
-    # Supported OpenGL versions:
-    # 1.0 1.1 1.2 1.3 1.4 1.5
-    # 2.0 2.1
-    # 3.0 3.1 3.2 3.3
-    # 4.0 4.1 4.2 4.3 4.4 4.5 4.6
-    for ver_major in [
-        (1, [0, 1, 2, 3, 4, 5]),
-        (2, [0, 1]),
-        (3, [0, 1, 2, 3]),
-        (4, [0, 1, 2, 3, 4, 5]),
-    ]:
-        for ver_minor in ver_major[1]:
-            ver = "{0}.{1}".format(ver_major[0], ver_minor)
-            version(ver)
-            provides("gl@:{0}".format(ver), when="@{0}".format(ver))
-
-    # The last version needs to be open-ended
-    version('4.6')
-    provides("gl@:4.6", when="@4.6:")
+    version("4.5")
 
     # This should really be when='platform=linux' but can't because of a
     # current bug in when and how ArchSpecs are constructed
-    if sys.platform == "linux":
-        provides("glx@1.4")
-
-    executables = ["^glxinfo$"]
+    if sys.platform.startswith("linux"):
+        provides("libglx")
+        executables = ["^glxinfo$"]
+    else:  # windows and mac
+        provides("gl@4.5")
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)(output=str, error=str)
-        match = re.search(r"OpenGL version string: (\S+)", output)
-        return match.group(1) if match else None
+        if exe:
+            output = Executable(exe)(output=str, error=str)
+            match = re.search(r"OpenGL version string: (\S+)", output)
+            return match.group(1) if match else None
+        else:
+            return None
 
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
@@ -98,20 +84,23 @@ class Opengl(BundlePackage):
 
     @property
     def libs(self):
-        if "platform=windows" in self.spec:
-            return find_libraries("opengl32", self.prefix, shared=True, recursive=True)
-        else:
-            return find_libraries("libGL", self.prefix, shared=True, recursive=True)
+        return self.gl_libs
 
     @property
-    def glx_libs(self):
-        return find_libraries("libGL",
-                              root=self.spec.prefix,
-                              recursive=True)
+    def gl_headers(self):
+        if "platform=darwin":
+            header_name = "OpenGL/gl.h"
+        else:
+            header_name = "GL/gl.h"
+        return find_headers(header_name, root=self.prefix, recursive=True)
 
     @property
     def gl_libs(self):
-        if "platform=windows" in self.spec:
-            return find_libraries("opengl32", self.prefix, shared=True, recursive=True)
-        else:
-            return find_libraries("libGL", self.prefix, shared=True, recursive=True)
+        spec = self.spec
+        if "platform=windows" in spec:
+            lib_name = "opengl32"
+        elif "platform=darwin" in spec:
+            lib_name = "libOpenGL"
+        else:  # linux and cray
+            lib_name = "libGL"
+        return find_libraries(lib_name, root=self.prefix, recursive=True)

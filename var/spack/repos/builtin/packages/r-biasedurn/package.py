@@ -18,4 +18,4 @@ class RBiasedurn(RPackage):
 
     cran = "BiasedUrn"
 
-    version('1.07', sha256='2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e')
+    version("1.07", sha256="2377c2e59d68e758a566452d7e07e88663ae61a182b9ee455d8b4269dda3228e")

@@ -10,17 +10,17 @@ class Gcc(Package):
     """Simple compiler package."""
 
     homepage = "http://www.example.com"
-    url      = "http://www.example.com/gcc-1.0.tar.gz"
+    url = "http://www.example.com/gcc-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', 'abcdef0123456789abcdef0123456789')
-    version('3.0', 'def0123456789abcdef0123456789abc')
+    version("1.0", "0123456789abcdef0123456789abcdef")
+    version("2.0", "abcdef0123456789abcdef0123456789")
+    version("3.0", "def0123456789abcdef0123456789abc")
 
-    depends_on('conflict', when='@3.0')
+    depends_on("conflict", when="@3.0")
 
     def install(self, spec, prefix):
         # Create the minimal compiler that will fool `spack compiler find`
         mkdirp(prefix.bin)
-        with open(prefix.bin.gcc, 'w') as f:
+        with open(prefix.bin.gcc, "w") as f:
             f.write('#!/bin/bash\necho "%s"' % str(spec.version))
         set_executable(prefix.bin.gcc)

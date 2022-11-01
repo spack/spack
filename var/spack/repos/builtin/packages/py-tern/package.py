@@ -12,11 +12,11 @@ class PyTern(PythonPackage):
     of Materials (SBoM) for containers.
     """
 
-    pypi     = "tern/tern-2.8.0.tar.gz"
-    git      = "https://github.com/tern-tools/tern.git"
+    pypi = "tern/tern-2.8.0.tar.gz"
+    git = "https://github.com/tern-tools/tern.git"
 
-    version('main', branch='main')
+    version("main", branch="main")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('py-pip', type='build')
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
+    depends_on("py-pip", type="build")

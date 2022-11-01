@@ -22,17 +22,30 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-i', '--installed', action='store_true', default=False,
+        "-i",
+        "--installed",
+        action="store_true",
+        default=False,
         help="List installed dependencies of an installed spec, "
-        "instead of possible dependencies of a package.")
+        "instead of possible dependencies of a package.",
+    )
     subparser.add_argument(
-        '-t', '--transitive', action='store_true', default=False,
-        help="show all transitive dependencies")
-    arguments.add_common_arguments(subparser, ['deptype'])
+        "-t",
+        "--transitive",
+        action="store_true",
+        default=False,
+        help="show all transitive dependencies",
+    )
+    arguments.add_common_arguments(subparser, ["deptype"])
     subparser.add_argument(
-        '-V', '--no-expand-virtuals', action='store_false', default=True,
-        dest="expand_virtuals", help="do not expand virtual dependencies")
-    arguments.add_common_arguments(subparser, ['spec'])
+        "-V",
+        "--no-expand-virtuals",
+        action="store_false",
+        default=True,
+        dest="expand_virtuals",
+        help="do not expand virtual dependencies",
+    )
+    arguments.add_common_arguments(subparser, ["spec"])
 
 
 def dependencies(parser, args):
@@ -44,12 +57,12 @@ def dependencies(parser, args):
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        format_string = '{name}{@version}{%compiler}{/hash:7}'
+        format_string = "{name}{@version}{%compiler}{/hash:7}"
         if sys.stdout.isatty():
-            tty.msg(
-                "Dependencies of %s" % spec.format(format_string, color=True))
+            tty.msg("Dependencies of %s" % spec.format(format_string, color=True))
         deps = spack.store.db.installed_relatives(
-            spec, 'children', args.transitive, deptype=args.deptype)
+            spec, "children", args.transitive, deptype=args.deptype
+        )
         if deps:
             spack.cmd.display_specs(deps, long=True)
         else:
@@ -61,7 +74,7 @@ def dependencies(parser, args):
             spec,
             transitive=args.transitive,
             expand_virtuals=args.expand_virtuals,
-            deptype=args.deptype
+            deptype=args.deptype,
         )
 
         if spec.name in dependencies:

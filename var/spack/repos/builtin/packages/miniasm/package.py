@@ -11,11 +11,11 @@ class Miniasm(MakefilePackage):
     reads."""
 
     homepage = "http://www.example.co://github.com/lh3/miniasm"
-    git      = "https://github.com/lh3/miniasm.git"
+    git = "https://github.com/lh3/miniasm.git"
 
-    version('2018-3-30', commit='55cf0189e2f7d5bda5868396cebe066eec0a9547')
+    version("2018-3-30", commit="55cf0189e2f7d5bda5868396cebe066eec0a9547")
 
-    depends_on('zlib')
+    depends_on("zlib")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix.bin)
+        install_tree(".", prefix.bin)

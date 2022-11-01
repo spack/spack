@@ -10,33 +10,30 @@ import spack.container.images
 import spack.main
 import spack.platforms
 
-containerize = spack.main.SpackCommand('containerize')
+containerize = spack.main.SpackCommand("containerize")
 
 
 def test_command(default_config, container_config_dir, capsys):
     with capsys.disabled():
         with fs.working_dir(container_config_dir):
             output = containerize()
-    assert 'FROM spack/ubuntu-bionic' in output
+    assert "FROM spack/ubuntu-bionic" in output
 
 
 def test_listing_possible_os():
-    output = containerize('--list-os')
+    output = containerize("--list-os")
 
     for expected_os in spack.container.images.all_bootstrap_os():
         assert expected_os in output
 
 
-@pytest.mark.skipif(str(spack.platforms.host()) == "windows",
-                    reason="test unsupported on Windows")
+@pytest.mark.skipif(str(spack.platforms.host()) == "windows", reason="test unsupported on Windows")
 @pytest.mark.maybeslow
-@pytest.mark.requires_executables('git')
+@pytest.mark.requires_executables("git")
 def test_bootstrap_phase(minimal_configuration, config_dumper, capsys):
-    minimal_configuration['spack']['container']['images'] = {
-        'os': 'amazonlinux:2',
-        'spack': {
-            'resolve_sha': True
-        }
+    minimal_configuration["spack"]["container"]["images"] = {
+        "os": "amazonlinux:2",
+        "spack": {"resolve_sha": True},
     }
     spack_yaml_dir = config_dumper(minimal_configuration)
 
@@ -45,4 +42,4 @@ def test_bootstrap_phase(minimal_configuration, config_dumper, capsys):
             output = containerize()
 
     # Check for the presence of the clone command
-    assert 'git clone' in output
+    assert "git clone" in output

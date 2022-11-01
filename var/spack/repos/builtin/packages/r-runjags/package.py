@@ -22,10 +22,11 @@ class RRunjags(RPackage):
 
     cran = "runjags"
 
-    version('2.2.0-3', sha256='1b1fc0b0cfecf9ecdecc3abcba804cdc114b3c5352d5cc801602deeca90db528')
-    version('2.2.0-2', sha256='e5dfeb83d36faf19ebe64429f6db64aedecf3c9a040fd5bf9c0200914bf5039a')
+    version("2.2.1-7", sha256="e81fdb15e59cdceda125d6ae7cf0cde93361ba80b123d51afd1ecdc993f25016")
+    version("2.2.0-3", sha256="1b1fc0b0cfecf9ecdecc3abcba804cdc114b3c5352d5cc801602deeca90db528")
+    version("2.2.0-2", sha256="e5dfeb83d36faf19ebe64429f6db64aedecf3c9a040fd5bf9c0200914bf5039a")
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r-lattice@0.20-10:', type=('build', 'run'))
-    depends_on('r-coda@0.17-1:', type=('build', 'run'))
-    depends_on('jags@4.3.0:')
+    depends_on("r@2.14.0:", type=("build", "run"))
+    depends_on("r-lattice@0.20-10:", type=("build", "run"))
+    depends_on("r-coda@0.17-1:", type=("build", "run"))
+    depends_on("jags@4.3.0:")

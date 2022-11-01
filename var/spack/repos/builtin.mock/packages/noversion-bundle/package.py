@@ -15,4 +15,4 @@ class NoversionBundle(BundlePackage):
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/a-1.0.tar.gz"
-    depends_on('dependency-install')
+    depends_on("dependency-install")

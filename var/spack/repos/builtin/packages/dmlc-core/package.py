@@ -12,25 +12,26 @@ class DmlcCore(CMakePackage):
     distributed machine learning libraries."""
 
     homepage = "https://github.com/dmlc/dmlc-core"
-    git      = "https://github.com/dmlc/dmlc-core.git"
+    git = "https://github.com/dmlc/dmlc-core.git"
 
-    version('master')
-    version('20170508', commit='a6c5701219e635fea808d264aefc5b03c3aec314')
+    version("master")
+    version("20170508", commit="a6c5701219e635fea808d264aefc5b03c3aec314")
 
-    variant('openmp', default=False, description='Enable OpenMP support')
+    variant("openmp", default=False, description="Enable OpenMP support")
 
-    patch('cmake.patch')
+    patch("cmake.patch")
 
     def patch(self):
-        filter_file('export CC = gcc', '', 'make/config.mk', string=True)
-        filter_file('export CXX = g++', '', 'make/config.mk', string=True)
-        filter_file('export MPICXX = mpicxx', '',
-                    'make/config.mk', string=True)
-        filter_file(r'^USE_OPENMP\s*=.*',
-                    'USE_OPENMP=%s' % ('1' if '+openmp' in self.spec else '0'),
-                    'make/config.mk')
+        filter_file("export CC = gcc", "", "make/config.mk", string=True)
+        filter_file("export CXX = g++", "", "make/config.mk", string=True)
+        filter_file("export MPICXX = mpicxx", "", "make/config.mk", string=True)
+        filter_file(
+            r"^USE_OPENMP\s*=.*",
+            "USE_OPENMP=%s" % ("1" if "+openmp" in self.spec else "0"),
+            "make/config.mk",
+        )
 
     def cmake_args(self):
         return [
-            self.define_from_variant('USE_OPENMP', 'openmp'),
+            self.define_from_variant("USE_OPENMP", "openmp"),
         ]

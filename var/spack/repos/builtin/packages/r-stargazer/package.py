@@ -15,4 +15,5 @@ class RStargazer(RPackage):
 
     cran = "stargazer"
 
-    version('5.2.2', sha256='70eb4a13a6ac1bfb35af07cb8a63d501ad38dfd9817fc3fba6724260b23932de')
+    version("5.2.3", sha256="208e9b48a11cf56ce142731c204f3d2bcb5b68719f84309a36362cd925414265")
+    version("5.2.2", sha256="70eb4a13a6ac1bfb35af07cb8a63d501ad38dfd9817fc3fba6724260b23932de")

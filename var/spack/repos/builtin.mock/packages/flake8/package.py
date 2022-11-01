@@ -7,62 +7,74 @@ from spack.package import *
 
 
 class Flake8(Package):
-    """Package containing as many PEP 8 violations as possible.
-    All of these violations are exceptions that we allow in
-    package.py files."""
+    """Package containing as many acceptable ``PEP8`` violations as possible.
+
+    All of these violations are exceptions that we allow in ``package.py`` files, and
+    Spack is more lenient than ``flake8`` is for things like URLs and long SHA sums.
+
+    See ``share/spack/qa/flake8_formatter.py`` for specifics of how we handle ``flake8``
+    exemptions.
+
+    """
 
     # Used to tell whether or not the package has been modified
-    state = 'unmodified'
+    state = "unmodified"
 
     # Make sure pre-existing noqa is not interfered with
-    blatant_violation = 'line-that-has-absolutely-no-execuse-for-being-over-79-characters'  # noqa
-    blatant_violation = 'line-that-has-absolutely-no-execuse-for-being-over-79-characters'  # noqa: E501
+    # note that black can sometimes fix shorter assignment statements by sticking them in
+    # parens and adding line breaks, e.g.:
+    #
+    # foo = (
+    #     "too-long-string"
+    # )
+    #
+    # but the one below can't even be fixed that way -- you have to add noqa, or break
+    # it up inside parens yourself.
+    blatant_violation = "line-that-has-absolutely-no-execuse-for-being-over-99-characters-and-that-black-cannot-fix-with-parens"  # noqa: E501
 
-    # Keywords exempt from line-length checks
-    homepage = '#####################################################################'
-    url      = '#####################################################################'
-    git      = '#####################################################################'
-    svn      = '#####################################################################'
-    hg       = '#####################################################################'
-    list_url = '#####################################################################'
+    # All URL strings are exempt from line-length checks.
+    #
+    # flake8 normally would complain about these, but the fix it wants (a multi-line
+    # string) is ugbly, and we're more lenient since there are many places where Spack
+    # wants URLs in strings.
+    hg = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
+    list_url = "https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
+    git = "ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default"
 
-    # URL strings exempt from line-length checks
-    # http://########################################################################
-    # https://#######################################################################
-    # ftp://#########################################################################
-    # file://########################################################################
+    # directives with URLs are exempt as well
+    version(
+        "1.0",
+        url="https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-not-ignore-by-default",
+    )
 
-    # Directives exempt from line-length checks
-    version('2.0', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
-    version('1.0', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+    #
+    # Also test URL comments (though flake8 will ignore these by default anyway)
+    #
+    # http://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
+    # https://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
+    # ftp://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
+    # ssh://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
+    # file://example.com/this-is-a-really-long-url/that-goes-over-99-characters/that-flake8-will-ignore-by-default
 
-    variant('super-awesome-feature',    default=True,  description='Enable super awesome feature')
-    variant('somewhat-awesome-feature', default=False, description='Enable somewhat awesome feature')
-
-    provides('somevirt', when='@2.0+super-awesome-feature+somewhat-awesome-feature')
-
-    extends('python', ignore='bin/(why|does|every|package|that|depends|on|numpy|need|to|copy|f2py3?)')
-
-    depends_on('boost+atomic+chrono+date_time~debug+filesystem~graph~icu+iostreams+locale+log+math~mpi+multithreaded+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer+wave')
-
-    conflicts('+super-awesome-feature', when='%intel@16:17+somewhat-awesome-feature')
-
-    resource(name='Deez-Nuts', destination='White-House', placement='President', when='@2020', url='www.elect-deez-nuts.com')
-
-    patch('hyper-specific-patch-that-fixes-some-random-bug-that-probably-only-affects-one-user.patch', when='%gcc@3.2.2:3.2.3')
+    # Strings and comments with really long checksums require no noqa annotation.
+    sha512sum = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    # the sha512sum is "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
 
     def install(self, spec, prefix):
         # Make sure lines with '# noqa' work as expected. Don't just
         # remove them entirely. This will mess up the indentation of
         # the following lines.
-        if 'really-long-if-statement' != 'that-goes-over-the-line-length-limit-and-requires-noqa':  # noqa
+        if (
+            "really-long-if-statement"
+            != "this-string-is-so-long-that-it-is-over-the-line-limit-and-black-will-not-split-it-so-it-requires-noqa"  # noqa: E501
+        ):
             pass
 
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)
 
     # '@when' decorated functions are exempt from redefinition errors
-    @when('@2.0')
+    @when("@2.0")
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
         mkdirp(prefix.bin)

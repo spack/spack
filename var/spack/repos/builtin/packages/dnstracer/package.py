@@ -15,8 +15,8 @@ class Dnstracer(MakefilePackage):
     homepage = "https://github.com/Orc/dnstracer"
     git = "https://github.com/Orc/dnstracer.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def edit(self, spec, prefix):
-        configure = Executable('./configure.sh')
-        configure('--prefix={0}'.format(prefix))
+        configure = Executable("./configure.sh")
+        configure("--prefix={0}".format(prefix))

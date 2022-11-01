@@ -10,19 +10,23 @@ class Psm(MakefilePackage):
     """Intel Performance scaled messaging library"""
 
     homepage = "https://github.com/intel/psm"
-    url      = "https://github.com/intel/psm/archive/v3.3.tar.gz"
-    git      = "https://github.com/intel/psm.git"
+    url = "https://github.com/intel/psm/archive/v3.3.tar.gz"
+    git = "https://github.com/intel/psm.git"
 
-    version('3.3', sha256='034b10e24d9f2967ef0f8d0f828572295e89cdfa1ba30c35e288b9b23c3dab8f', preferred=True)
-    version('2017-04-28', commit='604758e')
+    version(
+        "3.3",
+        sha256="034b10e24d9f2967ef0f8d0f828572295e89cdfa1ba30c35e288b9b23c3dab8f",
+        preferred=True,
+    )
+    version("2017-04-28", commit="604758e")
 
-    conflicts('%gcc@6:', when='@3.3')
+    conflicts("%gcc@6:", when="@3.3")
 
-    depends_on('uuid')
+    depends_on("uuid")
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('{DESTDIR}/usr/', '{LOCAL_PREFIX}/')
+        makefile = FileFilter("Makefile")
+        makefile.filter("{DESTDIR}/usr/", "{LOCAL_PREFIX}/")
 
     def install(self, spec, prefix):
-        make('LOCAL_PREFIX=%s' % prefix, 'install')
+        make("LOCAL_PREFIX=%s" % prefix, "install")

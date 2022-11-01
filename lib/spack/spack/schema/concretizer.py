@@ -10,37 +10,31 @@
 """
 
 properties = {
-    'concretizer': {
-        'type': 'object',
-        'additionalProperties': False,
-        'properties': {
-            'reuse': {'type': 'boolean'},
-            'targets': {
-                'type': 'object',
-                'properties': {
-                    'host_compatible': {'type': 'boolean'},
-                    'granularity': {
-                        'type': 'string',
-                        'enum': ['generic', 'microarchitectures']
-                    }
-                }
+    "concretizer": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "reuse": {"type": "boolean"},
+            "targets": {
+                "type": "object",
+                "properties": {
+                    "host_compatible": {"type": "boolean"},
+                    "granularity": {"type": "string", "enum": ["generic", "microarchitectures"]},
+                },
             },
-            'unify': {
-                'oneOf': [
-                    {'type': 'boolean'},
-                    {'type': 'string', 'enum': ['when_possible']}
-                ]
-            }
-        }
+            "unify": {
+                "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["when_possible"]}]
+            },
+        },
     }
 }
 
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/draft-07/schema#',
-    'title': 'Spack concretizer configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack concretizer configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

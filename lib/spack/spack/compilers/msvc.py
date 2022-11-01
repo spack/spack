@@ -19,15 +19,15 @@ avail_fc_version = set()  # type: Set[str]
 fc_path = dict()  # type: Dict[str, str]
 
 fortran_mapping = {
-    '2021.3.0': '19.29.30133',
-    '2021.2.1': '19.28.29913',
-    '2021.2.0': '19.28.29334',
-    '2021.1.0': '19.28.29333',
+    "2021.3.0": "19.29.30133",
+    "2021.2.1": "19.28.29913",
+    "2021.2.0": "19.28.29334",
+    "2021.1.0": "19.28.29333",
 }
 
 
 def get_valid_fortran_pth(comp_ver):
-    cl_ver = str(comp_ver).split('@')[1]
+    cl_ver = str(comp_ver).split("@")[1]
     sort_fn = lambda fc_ver: StrictVersion(fc_ver)
     sort_fc_ver = sorted(list(avail_fc_version), key=sort_fn)
     for ver in sort_fc_ver:
@@ -39,16 +39,16 @@ def get_valid_fortran_pth(comp_ver):
 
 class Msvc(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['cl.exe']
+    cc_names = ["cl.exe"]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['cl.exe']
+    cxx_names = ["cl.exe"]
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifx.exe']  # type: List[str]
+    f77_names = ["ifx.exe"]  # type: List[str]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifx.exe']  # type: List[str]
+    fc_names = ["ifx.exe"]  # type: List[str]
 
     # Named wrapper links within build_env_path
     # Due to the challenges of supporting compiler wrappers
@@ -56,20 +56,17 @@ class Msvc(Compiler):
     # based on proper versions of MSVC from there
     # pending acceptance of #28117 for full support using
     # compiler wrappers
-    link_paths = {'cc': '',
-                  'cxx': '',
-                  'f77': '',
-                  'fc': ''}
+    link_paths = {"cc": "", "cxx": "", "f77": "", "fc": ""}
 
     #: Compiler argument that produces version information
-    version_argument = ''
+    version_argument = ""
 
     # For getting ifx's version, call it with version_argument
     # and ignore the error code
     ignore_version_errors = [1]
 
     #: Regex used to extract version from compiler's output
-    version_regex = r'([1-9][0-9]*\.[0-9]*\.[0-9]*)'
+    version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
 
     # Initialize, deferring to base class but then adding the vcvarsallfile
     # file based on compiler executable path.
@@ -80,8 +77,7 @@ class Msvc(Compiler):
         super(Msvc, self).__init__(*args, **kwargs)
         if os.getenv("ONEAPI_ROOT"):
             # If this found, it sets all the vars
-            self.setvarsfile = os.path.join(
-                os.getenv("ONEAPI_ROOT"), "setvars.bat")
+            self.setvarsfile = os.path.join(os.getenv("ONEAPI_ROOT"), "setvars.bat")
         else:
             # To use the MSVC compilers, VCVARS must be invoked
             # VCVARS is located at a fixed location, referencable
@@ -90,15 +86,13 @@ class Msvc(Compiler):
             # Spack first finds the compilers via VSWHERE
             # and stores their path, but their respective VCVARS
             # file must be invoked before useage.
-            self.setvarsfile = os.path.abspath(
-                os.path.join(self.cc, '../../../../../../..'))
-            self.setvarsfile = os.path.join(
-                self.setvarsfile, 'Auxiliary', 'Build', 'vcvars64.bat')
+            self.setvarsfile = os.path.abspath(os.path.join(self.cc, "../../../../../../.."))
+            self.setvarsfile = os.path.join(self.setvarsfile, "Auxiliary", "Build", "vcvars64.bat")
 
     @property
     def msvc_version(self):
         ver = re.search(Msvc.version_regex, self.cc).group(1)
-        ver = "".join(ver.split('.')[:2])[:-1]
+        ver = "".join(ver.split(".")[:2])[:-1]
         return "MSVC" + ver
 
     def setup_custom_environment(self, pkg, env):
@@ -112,24 +106,27 @@ class Msvc(Compiler):
             # output, sort into dictionary, use that to make the build
             # environment.
             out = subprocess.check_output(  # novermin
-                'cmd /u /c "{}" {} && set'.format(self.setvarsfile, 'amd64'),
-                stderr=subprocess.STDOUT)
+                'cmd /u /c "{}" {} && set'.format(self.setvarsfile, "amd64"),
+                stderr=subprocess.STDOUT,
+            )
             if sys.version_info[0] >= 3:
-                out = out.decode('utf-16le', errors='replace')  # novermin
+                out = out.decode("utf-16le", errors="replace")  # novermin
 
-            int_env = dict((key.lower(), value) for key, _, value in
-                           (line.partition('=') for line in out.splitlines())
-                           if key and value)
+            int_env = dict(
+                (key.lower(), value)
+                for key, _, value in (line.partition("=") for line in out.splitlines())
+                if key and value
+            )
 
-            if 'path' in int_env:
-                env.set_path('PATH', int_env['path'].split(';'))
-            env.set_path('INCLUDE', int_env.get('include', '').split(';'))
-            env.set_path('LIB', int_env.get('lib', '').split(';'))
+            if "path" in int_env:
+                env.set_path("PATH", int_env["path"].split(";"))
+            env.set_path("INCLUDE", int_env.get("include", "").split(";"))
+            env.set_path("LIB", int_env.get("lib", "").split(";"))
 
-            env.set('CC', self.cc)
-            env.set('CXX', self.cxx)
-            env.set('FC', self.fc)
-            env.set('F77', self.f77)
+            env.set("CC", self.cc)
+            env.set("CXX", self.cxx)
+            env.set("FC", self.fc)
+            env.set("F77", self.f77)
         else:
             # Should not this be an exception?
             print("Cannot pull msvc compiler information in Python 2.6 or below")

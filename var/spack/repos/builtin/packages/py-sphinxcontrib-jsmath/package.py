@@ -18,7 +18,7 @@ class PySphinxcontribJsmath(PythonPackage):
     # import any modules.
     import_modules = []  # type: List[str]
 
-    version('1.0.1', sha256='a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8')
+    version("1.0.1", sha256="a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8")
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

@@ -14,9 +14,9 @@ class RAdephylo(RPackage):
 
     cran = "adephylo"
 
-    version('1.1-11', sha256='154bf2645eac4493b85877933b9445442524ca4891aefe4e80c294c398cff61a')
+    version("1.1-11", sha256="154bf2645eac4493b85877933b9445442524ca4891aefe4e80c294c398cff61a")
 
-    depends_on('r-ade4@1.7-10:', type=('build', 'run'))
-    depends_on('r-phylobase', type=('build', 'run'))
-    depends_on('r-ape', type=('build', 'run'))
-    depends_on('r-adegenet', type=('build', 'run'))
+    depends_on("r-ade4@1.7-10:", type=("build", "run"))
+    depends_on("r-phylobase", type=("build", "run"))
+    depends_on("r-ape", type=("build", "run"))
+    depends_on("r-adegenet", type=("build", "run"))

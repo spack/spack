@@ -39,12 +39,15 @@ class RSpatstatLinnet(RPackage):
 
     cran = "spatstat.linnet"
 
-    version('2.3-1', sha256='119ba6e3da651aa9594f70a7a35349209534215aa640c2653aeddc6aa25038c3')
+    version("2.3-2", sha256="9c78a4b680debfff0f3ae934575c30d03ded49bc9a7179475384af0ebaf13778")
+    version("2.3-1", sha256="119ba6e3da651aa9594f70a7a35349209534215aa640c2653aeddc6aa25038c3")
 
-    depends_on('r@3.5.0:', type=('build', 'run'))
-    depends_on('r-spatstat-data@2.1-0:', type=('build', 'run'))
-    depends_on('r-spatstat-geom@2.3-0:', type=('build', 'run'))
-    depends_on('r-spatstat-core@2.3-0:', type=('build', 'run'))
-    depends_on('r-spatstat-utils@2.2-0:', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-spatstat-sparse@2.0:', type=('build', 'run'))
+    depends_on("r@3.5.0:", type=("build", "run"))
+    depends_on("r-spatstat-data@2.1-0:", type=("build", "run"))
+    depends_on("r-spatstat-geom@2.3-0:", type=("build", "run"))
+    depends_on("r-spatstat-random@2.2-0:", type=("build", "run"), when="@2.3-2:")
+    depends_on("r-spatstat-core@2.3-0:", type=("build", "run"))
+    depends_on("r-spatstat-core@2.3-2:", type=("build", "run"), when="@2.3-2:")
+    depends_on("r-spatstat-utils@2.2-0:", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-spatstat-sparse@2.0:", type=("build", "run"))

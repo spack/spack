@@ -15,33 +15,33 @@ class Snap(MakefilePackage):
     It is modeled off the Los Alamos National Laboratory code PARTISN."""
 
     homepage = "https://github.com/lanl/SNAP"
-    git      = "https://github.com/lanl/SNAP.git"
+    git = "https://github.com/lanl/SNAP.git"
 
-    tags = ['proxy-app']
+    tags = ["proxy-app"]
 
-    version('master')
+    version("master")
 
-    variant('openmp', default=False, description='Build with OpenMP support')
-    variant('opt', default=True, description='Build with debugging')
-    variant('mpi', default=True, description='Build with MPI support')
+    variant("openmp", default=False, description="Build with OpenMP support")
+    variant("opt", default=True, description="Build with debugging")
+    variant("mpi", default=True, description="Build with MPI support")
 
-    depends_on('mpi', when='+mpi')
+    depends_on("mpi", when="+mpi")
 
-    build_directory = 'src'
+    build_directory = "src"
 
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            if '~opt' in spec:
-                makefile.filter('OPT = yes', 'OPT = no')
-            if '~mpi' in spec:
-                makefile.filter('MPI = yes', 'MPI = no')
-            if '~openmp' in spec:
-                makefile.filter('OPENMP = yes', 'OPENMP = no')
-            makefile.filter('FFLAGS =.*', 'FFLAGS =')
+            makefile = FileFilter("Makefile")
+            if "~opt" in spec:
+                makefile.filter("OPT = yes", "OPT = no")
+            if "~mpi" in spec:
+                makefile.filter("MPI = yes", "MPI = no")
+            if "~openmp" in spec:
+                makefile.filter("OPENMP = yes", "OPENMP = no")
+            makefile.filter("FFLAGS =.*", "FFLAGS =")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('src/gsnap', prefix.bin)
-        install_tree('qasnap', prefix.qasnap)
-        install('README.md', prefix)
+        install("src/gsnap", prefix.bin)
+        install_tree("qasnap", prefix.qasnap)
+        install("README.md", prefix)

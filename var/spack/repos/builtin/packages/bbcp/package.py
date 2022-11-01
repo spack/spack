@@ -10,13 +10,13 @@ class Bbcp(Package):
     """Securely and quickly copy data from source to target"""
 
     homepage = "https://www.slac.stanford.edu/~abh/bbcp/"
-    git      = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
+    git = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
-    depends_on('zlib')
-    depends_on('openssl')
-    depends_on('libnsl')
+    depends_on("zlib")
+    depends_on("openssl")
+    depends_on("libnsl")
 
     def install(self, spec, prefix):
         cd("src")
@@ -24,8 +24,7 @@ class Bbcp(Package):
         # BBCP wants to build the executable in a directory whose name depends
         # on the system type
         makesname = Executable("../MakeSname")
-        bbcp_executable_path = "../bin/%s/bbcp" % makesname(
-            output=str).rstrip("\n")
+        bbcp_executable_path = "../bin/%s/bbcp" % makesname(output=str).rstrip("\n")
         destination_path = "%s/bin/" % prefix
         mkdirp(destination_path)
         install(bbcp_executable_path, destination_path)

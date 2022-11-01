@@ -9,118 +9,125 @@ from spack.util.environment import is_system_path
 
 class Silo(AutotoolsPackage):
     """Silo is a library for reading and writing a wide variety of scientific
-       data to binary, disk files."""
+    data to binary, disk files."""
 
     homepage = "https://wci.llnl.gov/simulation/computer-codes/silo"
-    url      = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
+    url = "https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2.tgz"
 
-    version('4.11', sha256='ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac',
-            url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11.tar.gz")
-    version('4.11-bsd', sha256='6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec',
-            url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11-bsd.tar.gz")
-    version('4.10.2', sha256='3af87e5f0608a69849c00eb7c73b11f8422fa36903dd14610584506e7f68e638', preferred=True)
-    version('4.10.2-bsd', sha256='4b901dfc1eb4656e83419a6fde15a2f6c6a31df84edfad7f1dc296e01b20140e',
-            url="https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2-bsd.tgz")
-    version('4.9', sha256='90f3d069963d859c142809cfcb034bc83eb951f61ac02ccb967fc8e8d0409854')
-    version('4.8', sha256='c430c1d33fcb9bc136a99ad473d535d6763bd1357b704a915ba7b1081d58fb21')
+    version(
+        "4.11",
+        sha256="ab936c1f4fc158d9fdc4415965f7d9def7f4abeca596fe5a25bd8485654898ac",
+        url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11.tar.gz",
+    )
+    version(
+        "4.11-bsd",
+        sha256="6d0a85a079d48fcdcc0084ecb5fc4cfdcc64852edee780c60cb244d16f4bc4ec",
+        url="https://github.com/LLNL/Silo/releases/download/v4.11/silo-4.11-bsd.tar.gz",
+    )
+    version(
+        "4.10.2",
+        sha256="3af87e5f0608a69849c00eb7c73b11f8422fa36903dd14610584506e7f68e638",
+        preferred=True,
+    )
+    version(
+        "4.10.2-bsd",
+        sha256="4b901dfc1eb4656e83419a6fde15a2f6c6a31df84edfad7f1dc296e01b20140e",
+        url="https://wci.llnl.gov/sites/wci/files/2021-01/silo-4.10.2-bsd.tgz",
+    )
+    version("4.9", sha256="90f3d069963d859c142809cfcb034bc83eb951f61ac02ccb967fc8e8d0409854")
+    version("4.8", sha256="c430c1d33fcb9bc136a99ad473d535d6763bd1357b704a915ba7b1081d58fb21")
 
-    variant('fortran', default=True, description='Enable Fortran support')
-    variant('shared', default=True, description='Build shared libraries')
-    variant('silex', default=False,
-            description='Builds Silex, a GUI for viewing Silo files')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
-    variant('mpi', default=True,
-            description='Compile with MPI Compatibility')
-    variant('hdf5', default=True,
-            description='Support HDF5 for database I/O')
-    variant('hzip', default=True,
-            description='Enable hzip support')
-    variant('fpzip', default=True,
-            description='Enable fpzip support')
+    variant("fortran", default=True, description="Enable Fortran support")
+    variant("shared", default=True, description="Build shared libraries")
+    variant("silex", default=False, description="Builds Silex, a GUI for viewing Silo files")
+    variant("pic", default=True, description="Produce position-independent code (for shared libs)")
+    variant("mpi", default=True, description="Compile with MPI Compatibility")
+    variant("hdf5", default=True, description="Support HDF5 for database I/O")
+    variant("hzip", default=True, description="Enable hzip support")
+    variant("fpzip", default=True, description="Enable fpzip support")
 
-    depends_on('m4', type='build', when='+shared')
-    depends_on('autoconf', type='build', when='+shared')
-    depends_on('autoconf-archive', type='build', when='+shared')
-    depends_on('automake', type='build', when='+shared')
-    depends_on('libtool', type='build', when='+shared')
-    depends_on('mpi', when='+mpi')
-    depends_on('hdf5@1.8:', when='+hdf5')
-    depends_on('qt+gui~framework@4.8:4.9', when='+silex')
-    depends_on('libx11', when='+silex')
+    depends_on("m4", type="build", when="+shared")
+    depends_on("autoconf", type="build", when="+shared")
+    depends_on("autoconf-archive", type="build", when="+shared")
+    depends_on("automake", type="build", when="+shared")
+    depends_on("libtool", type="build", when="+shared")
+    depends_on("mpi", when="+mpi")
+    depends_on("hdf5@1.8:", when="+hdf5")
+    depends_on("qt+gui~framework@4.8:4.9", when="+silex")
+    depends_on("libx11", when="+silex")
     # Xmu dependency is required on Ubuntu 18-20
-    depends_on('libxmu', when='+silex')
-    depends_on('readline')
-    depends_on('zlib')
+    depends_on("libxmu", when="+silex")
+    depends_on("readline")
+    depends_on("zlib")
 
-    patch('remove-mpiposix.patch', when='@4.8:4.10.2')
+    patch("remove-mpiposix.patch", when="@4.8:4.10.2")
 
     # hdf5 1.10 added an additional field to the H5FD_class_t struct
-    patch('H5FD_class_t-terminate.patch', when='@:4.10.2-bsd')
+    patch("H5FD_class_t-terminate.patch", when="@:4.10.2-bsd")
 
     # H5EPR_SEMI_COLON.patch was fixed in current dev
-    patch('H5EPR_SEMI_COLON.patch', when='@:4.11-bsd')
+    patch("H5EPR_SEMI_COLON.patch", when="@:4.11-bsd")
 
     # Fix missing F77 init, fixed in 4.9
-    patch('48-configure-f77.patch', when='@:4.8')
+    patch("48-configure-f77.patch", when="@:4.8")
 
     # The previously used AX_CHECK_COMPILER_FLAGS macro was dropped from
     # autoconf-archive in 2011
-    patch('configure-AX_CHECK_COMPILE_FLAG.patch')
+    patch("configure-AX_CHECK_COMPILE_FLAG.patch")
 
     # API changes in hdf5-1.13 cause breakage
     # See https://github.com/LLNL/Silo/pull/260
-    patch('hdf5-113.patch', when='@4.11: +hdf5 ^hdf5@1.13:')
-    conflicts('hdf5@1.13:', when='@:4.10.2-bsd')
+    patch("hdf5-113.patch", when="@4.11: +hdf5 ^hdf5@1.13:")
+    conflicts("hdf5@1.13:", when="@:4.10.2-bsd")
 
     # hzip and fpzip are not available in the BSD releases
-    conflicts('+hzip', when="@4.10.2-bsd,4.11-bsd")
-    conflicts('+fpzip', when="@4.10.2-bsd,4.11-bsd")
+    conflicts("+hzip", when="@4.10.2-bsd,4.11-bsd")
+    conflicts("+fpzip", when="@4.10.2-bsd,4.11-bsd")
 
     def flag_handler(self, name, flags):
         spec = self.spec
-        if name == 'ldflags':
-            if '+hdf5' in spec:
-                if spec['hdf5'].satisfies('~shared'):
-                    flags.append('-ldl')
-            flags.append(spec['readline'].libs.search_flags)
+        if name == "ldflags":
+            if "+hdf5" in spec:
+                if spec["hdf5"].satisfies("~shared"):
+                    flags.append("-ldl")
+            flags.append(spec["readline"].libs.search_flags)
 
-        if '+pic' in spec:
-            if name == 'cflags':
+        if "+pic" in spec:
+            if name == "cflags":
                 flags.append(self.compiler.cc_pic_flag)
-            elif name == 'cxxflags':
+            elif name == "cxxflags":
                 flags.append(self.compiler.cxx_pic_flag)
-            elif name == 'fcflags':
+            elif name == "fcflags":
                 flags.append(self.compiler.fc_pic_flag)
-        if name == 'cflags' or name == 'cxxflags':
-            if '+hdf5' in spec:
+        if name == "cflags" or name == "cxxflags":
+            if "+hdf5" in spec:
                 # @:4.10 can use up to the 1.10 API
-                if '@:4.10' in spec:
-                    if '@1.10:' in spec['hdf5']:
-                        flags.append('-DH5_USE_110_API')
-                    elif '@1.8:' in spec['hdf5']:
+                if "@:4.10" in spec:
+                    if "@1.10:" in spec["hdf5"]:
+                        flags.append("-DH5_USE_110_API")
+                    elif "@1.8:" in spec["hdf5"]:
                         # Just in case anytone is trying to force the 1.6 api for
                         # some reason
-                        flags.append('-DH5_USE_18_API')
+                        flags.append("-DH5_USE_18_API")
                 else:
                     # @4.11: can use newer HDF5 APIs, so this ensures silo is
                     # presented with an HDF5 API consistent with the HDF5 version.
                     # Use the latest even-numbered API version, i.e. v1.13.1 uses
                     # API v1.12
-                    maj_ver = int(spec['hdf5'].version[0])
-                    min_ver = int(spec['hdf5'].version[1])
+                    maj_ver = int(spec["hdf5"].version[0])
+                    min_ver = int(spec["hdf5"].version[1])
                     min_apiver = int(min_ver / 2) * 2
-                    flags.append('-DH5_USE_{0}{1}_API'.format(maj_ver, min_apiver))
+                    flags.append("-DH5_USE_{0}{1}_API".format(maj_ver, min_apiver))
 
-            if spec.compiler.name in ['clang', 'apple-clang']:
-                flags.append('-Wno-implicit-function-declaration')
+            if spec.compiler.name in ["clang", "apple-clang"]:
+                flags.append("-Wno-implicit-function-declaration")
         return (flags, None, None)
 
-    @when('%clang@9:')
+    @when("%clang@9:")
     def patch(self):
         self.clang_9_patch()
 
-    @when('%apple-clang@11.0.3:')
+    @when("%apple-clang@11.0.3:")
     def patch(self):
         self.clang_9_patch()
 
@@ -131,7 +138,7 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
-        if str(self.spec.version).endswith('-bsd'):
+        if str(self.spec.version).endswith("-bsd"):
             # The files below don't exist in the BSD licenced version
             return
 
@@ -151,64 +158,62 @@ class Silo(AutotoolsPackage):
             "src/hzip/hzresidual.h",
         ]
 
-        filter_file(r'\b(DOMAIN|RANGE|UNION)\b', repl, *files_to_filter)
+        filter_file(r"\b(DOMAIN|RANGE|UNION)\b", repl, *files_to_filter)
 
     @property
     def force_autoreconf(self):
         # Update autoconf's tests whether libtool supports shared libraries.
         # (Otherwise, shared libraries are always disabled on Darwin.)
-        if self.spec.satisfies('@4.11-bsd') or self.spec.satisfies('@4.10.2-bsd'):
+        if self.spec.satisfies("@4.11-bsd") or self.spec.satisfies("@4.10.2-bsd"):
             return False
         else:
-            return self.spec.satisfies('+shared')
+            return self.spec.satisfies("+shared")
 
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--enable-install-lite-headers',
-            '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
-            '--enable-silex' if '+silex' in spec else '--disable-silex',
-            '--enable-shared' if '+shared' in spec else '--disable-shared',
-            '--enable-hzip' if '+hzip' in spec else '--disable-hzip',
-            '--enable-fpzip' if '+fpzip' in spec else '--disable-fpzip',
+            "--enable-install-lite-headers",
+            "--enable-fortran" if "+fortran" in spec else "--disable-fortran",
+            "--enable-silex" if "+silex" in spec else "--disable-silex",
+            "--enable-shared" if "+shared" in spec else "--disable-shared",
+            "--enable-hzip" if "+hzip" in spec else "--disable-hzip",
+            "--enable-fpzip" if "+fpzip" in spec else "--disable-fpzip",
         ]
 
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
-        zlib_prefix = self.spec['zlib'].prefix
+        zlib_prefix = self.spec["zlib"].prefix
         if is_system_path(zlib_prefix):
-            config_args.append('--with-zlib=yes')
+            config_args.append("--with-zlib=yes")
         else:
             config_args.append(
-                '--with-zlib=%s,%s' % (zlib_prefix.include,
-                                       zlib_prefix.lib),
+                "--with-zlib=%s,%s" % (zlib_prefix.include, zlib_prefix.lib),
             )
 
-        if '+hdf5' in spec:
+        if "+hdf5" in spec:
             config_args.append(
-                '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
-                                       spec['hdf5'].prefix.lib),
+                "--with-hdf5=%s,%s" % (spec["hdf5"].prefix.include, spec["hdf5"].prefix.lib),
             )
 
-        if '+silex' in spec:
-            x = spec['libx11']
-            config_args.extend([
-                '--with-Qt-dir=' + spec['qt'].prefix,
-                '--with-Qt-lib=QtGui -lQtCore',
-                '--x-includes=' + x.prefix.include,
-                '--x-libraries=' + x.prefix.lib,
-            ])
+        if "+silex" in spec:
+            x = spec["libx11"]
+            config_args.extend(
+                [
+                    "--with-Qt-dir=" + spec["qt"].prefix,
+                    "--with-Qt-lib=QtGui -lQtCore",
+                    "--x-includes=" + x.prefix.include,
+                    "--x-libraries=" + x.prefix.lib,
+                ]
+            )
 
-        if '+mpi' in spec:
-            config_args.append('CC=%s' % spec['mpi'].mpicc)
-            config_args.append('CXX=%s' % spec['mpi'].mpicxx)
-            config_args.append('FC=%s' % spec['mpi'].mpifc)
+        if "+mpi" in spec:
+            config_args.append("CC=%s" % spec["mpi"].mpicc)
+            config_args.append("CXX=%s" % spec["mpi"].mpicxx)
+            config_args.append("FC=%s" % spec["mpi"].mpifc)
 
         return config_args
 
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries(
-            "libsilo*", root=self.prefix, shared=shared, recursive=True
-        )
+        return find_libraries("libsilo*", root=self.prefix, shared=shared, recursive=True)

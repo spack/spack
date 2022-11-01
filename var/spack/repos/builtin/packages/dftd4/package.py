@@ -28,6 +28,7 @@ class Dftd4(MesonPackage):
     depends_on("blas")
     depends_on("cmake", type="build")
     depends_on("lapack")
+    depends_on("mctc-lib")
     depends_on("meson@0.57.1:", type="build")  # mesonbuild/meson#8377
     depends_on("pkgconfig", type="build")
     depends_on("py-cffi", when="+python")
@@ -43,6 +44,7 @@ class Dftd4(MesonPackage):
             lapack = "auto"
 
         return [
+            "--wrap-mode=nodownload",
             "-Dlapack={0}".format(lapack),
             "-Dopenmp={0}".format(str("+openmp" in self.spec).lower()),
             "-Dpython={0}".format(str("+python" in self.spec).lower()),

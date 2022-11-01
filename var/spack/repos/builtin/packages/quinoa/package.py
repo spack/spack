@@ -10,17 +10,17 @@ from spack.pkg.builtin.boost import Boost
 
 class Quinoa(CMakePackage):
     """Quinoa is a set of computational tools that enables research and
-       numerical analysis in fluid dynamics. At this time it is a test-bed
-       to experiment with various algorithms using fully asynchronous runtime
-       systems.
+    numerical analysis in fluid dynamics. At this time it is a test-bed
+    to experiment with various algorithms using fully asynchronous runtime
+    systems.
     """
 
     homepage = "https://quinoacomputing.org"
-    git      = "https://github.com/quinoacomputing/quinoa.git"
+    git = "https://github.com/quinoacomputing/quinoa.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('hdf5+mpi')
+    depends_on("hdf5+mpi")
     depends_on("charmpp backend=mpi")
     depends_on("trilinos+exodus+mpi")
     # TODO: replace this with an explicit list of components of Boost,
@@ -38,4 +38,4 @@ class Quinoa(CMakePackage):
     depends_on("pstreams")
     depends_on("pegtl")
 
-    root_cmakelists_dir = 'src'
+    root_cmakelists_dir = "src"

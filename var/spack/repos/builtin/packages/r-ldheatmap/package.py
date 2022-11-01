@@ -20,11 +20,12 @@ class RLdheatmap(RPackage):
 
     cran = "LDheatmap"
 
-    version('1.0-4', sha256='07eb385f19e6a195e8e4d75be0b47c57744eabbf14045e527f0c27e1183ae5ca')
-    version('0.99-7', sha256='aca54c839a424506d8be7153bf03b32026aeefe7ed38f534e8e19708e34212e4')
+    version("1.0-6", sha256="4cca2eea380b2a00b9958b5191ec442df24d60cd462e6634a21eaaa0fd4c293f")
+    version("1.0-4", sha256="07eb385f19e6a195e8e4d75be0b47c57744eabbf14045e527f0c27e1183ae5ca")
+    version("0.99-7", sha256="aca54c839a424506d8be7153bf03b32026aeefe7ed38f534e8e19708e34212e4")
 
-    depends_on('r@2.14.0:', type=('build', 'run'))
-    depends_on('r@4.0:', type=('build', 'run'), when='@1.0-4:')
-    depends_on('r-genetics', type=('build', 'run'))
-    depends_on('r-snpstats', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on("r@2.14.0:", type=("build", "run"))
+    depends_on("r@4.0:", type=("build", "run"), when="@1.0-4:")
+    depends_on("r-genetics", type=("build", "run"))
+    depends_on("r-snpstats", type=("build", "run"))
+    depends_on("r-rcpp", type=("build", "run"))

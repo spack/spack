@@ -20,31 +20,24 @@ class PpopenApplDemUtil(MakefilePackage):
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
     git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('master', branch='APPL/DEM')
+    version("master", branch="APPL/DEM")
 
-    depends_on('mpi')
+    depends_on("mpi")
 
     def edit(self, spec, prefix):
-        mkdirp('bin')
-        mkdirp('lib')
-        mkdirp('include')
-        makefile_in = FileFilter('Makefile.in')
-        makefile_in.filter('PREFIX += .*', 'PREFIX = {0}'.format(prefix))
-        makefile_in.filter('F90 += .*', 'F90 = {0}'.format(spack_fc))
-        makefile_in.filter('F77 += .*', 'F77 = {0}'.format(spack_fc))
+        mkdirp("bin")
+        mkdirp("lib")
+        mkdirp("include")
+        makefile_in = FileFilter("Makefile.in")
+        makefile_in.filter("PREFIX += .*", "PREFIX = {0}".format(prefix))
+        makefile_in.filter("F90 += .*", "F90 = {0}".format(spack_fc))
+        makefile_in.filter("F77 += .*", "F77 = {0}".format(spack_fc))
+        makefile_in.filter("MPIF90 += .*", "MPIF90 = {0}".format(spec["mpi"].mpifc))
+        makefile_in.filter("MPIF77 += .*", "MPIF77 = {0}".format(spec["mpi"].mpifc))
         makefile_in.filter(
-            'MPIF90 += .*',
-            'MPIF90 = {0}'.format(spec['mpi'].mpifc)
-        )
-        makefile_in.filter(
-            'MPIF77 += .*',
-            'MPIF77 = {0}'.format(spec['mpi'].mpifc)
-        )
-        makefile_in.filter(
-            'F90MPFLAGS += .*',
-            'F90MPFLAGS = -O3 {0}'.format(self.compiler.openmp_flag)
+            "F90MPFLAGS += .*", "F90MPFLAGS = -O3 {0}".format(self.compiler.openmp_flag)
         )
 
     def install(self, spec, prefix):
-        make('install')
-        install_tree('doc', prefix.doc)
+        make("install")
+        install_tree("doc", prefix.doc)

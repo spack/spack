@@ -14,6 +14,6 @@ class RRapidjsonr(RPackage):
 
     cran = "rapidjsonr"
 
-    version('1.2.0', sha256='62c94fcdcf5d0fbdfa2f6168affe526bf547c37c16d94e2e1b78d7bf608eed1f')
+    version("1.2.0", sha256="62c94fcdcf5d0fbdfa2f6168affe526bf547c37c16d94e2e1b78d7bf608eed1f")
 
-    depends_on('gmake', type='build')
+    depends_on("gmake", type="build")

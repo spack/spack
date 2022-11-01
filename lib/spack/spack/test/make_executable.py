@@ -19,22 +19,24 @@ import pytest
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 
-pytestmark = pytest.mark.skipif(sys.platform == "win32",
-                                reason="MakeExecutable \
-                                        not supported on Windows")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="MakeExecutable \
+                                        not supported on Windows",
+)
 
 
 class MakeExecutableTest(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
 
-        make_exe = os.path.join(self.tmpdir, 'make')
-        with open(make_exe, 'w') as f:
-            f.write('#!/bin/sh\n')
+        make_exe = os.path.join(self.tmpdir, "make")
+        with open(make_exe, "w") as f:
+            f.write("#!/bin/sh\n")
             f.write('echo "$@"')
         os.chmod(make_exe, 0o700)
 
-        path_put_first('PATH', [self.tmpdir])
+        path_put_first("PATH", [self.tmpdir])
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
@@ -72,7 +74,7 @@ class MakeExecutableTest(unittest.TestCase):
         self.assertFalse('-j' in inst)
 
     def test_make_parallel_disabled(self):
-        make = MakeExecutable('make', 8)
+        make = MakeExecutable("make", 8)
 
         os.environ['SPACK_NO_PARALLEL_MAKE'] = 'true'
         self.assertFalse('-j' in make(output=str).strip())
@@ -99,10 +101,10 @@ class MakeExecutableTest(unittest.TestCase):
         self.assertIn('-j8', inst)
         self.assertIn('install', inst)
 
-        del os.environ['SPACK_NO_PARALLEL_MAKE']
+        del os.environ["SPACK_NO_PARALLEL_MAKE"]
 
     def test_make_parallel_precedence(self):
-        make = MakeExecutable('make', 8)
+        make = MakeExecutable("make", 8)
 
         # These should work
         os.environ['SPACK_NO_PARALLEL_MAKE'] = 'true'
@@ -130,10 +132,10 @@ class MakeExecutableTest(unittest.TestCase):
         self.assertIn('-j8', inst)
         self.assertIn('install', inst)
 
-        del os.environ['SPACK_NO_PARALLEL_MAKE']
+        del os.environ["SPACK_NO_PARALLEL_MAKE"]
 
     def test_make_jobs_env(self):
-        make = MakeExecutable('make', 8)
+        make = MakeExecutable("make", 8)
         dump_env = {}
         self.assertIn('-j8', make(output=str, jobs_env='MAKE_PARALLELISM',
                                   _dump_env=dump_env).strip().split())

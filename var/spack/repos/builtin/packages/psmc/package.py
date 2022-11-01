@@ -11,18 +11,18 @@ class Psmc(MakefilePackage):
     (PSMC) model"""
 
     homepage = "https://github.com/lh3/psmc"
-    git      = "https://github.com/lh3/psmc.git"
+    git = "https://github.com/lh3/psmc.git"
 
-    version('2016-1-21', commit='e5f7df5d00bb75ec603ae0beff62c0d7e37640b9')
+    version("2016-1-21", commit="e5f7df5d00bb75ec603ae0beff62c0d7e37640b9")
 
-    depends_on('zlib', type='link')
+    depends_on("zlib", type="link")
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', self.prefix.bin.utils)
+        env.prepend_path("PATH", self.prefix.bin.utils)
 
     def build(self, spec, prefix):
         make()
-        with working_dir('utils'):
+        with working_dir("utils"):
             make()
 
     def install(self, spec, prefix):

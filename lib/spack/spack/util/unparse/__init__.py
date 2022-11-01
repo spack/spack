@@ -9,7 +9,7 @@ from six.moves import cStringIO
 
 from .unparser import Unparser
 
-__version__ = '1.6.3'
+__version__ = "1.6.3"
 
 
 def unparse(tree, py_ver_consistent=False):

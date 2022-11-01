@@ -19,6 +19,7 @@ class Opencv(CMakePackage, CudaPackage):
     maintainers = ["bvanessen", "adamjstewart", "glennpj"]
 
     version("master", branch="master")
+    version("4.6.0", sha256="1ec1cba65f9f20fe5a41fda1586e01c70ea0c9a6d7b67c9e13edf0cfe2239277")
     version(
         "4.5.4",
         sha256="c20bb83dd790fc69df9f105477e24267706715a9d3c705ca1e7f613c7b3bad3d",
@@ -116,6 +117,7 @@ class Opencv(CMakePackage, CudaPackage):
         "4.5.1",
         "4.5.2",
         "4.5.4",
+        "4.6.0",
     ]
     for cv in contrib_vers:
         resource(
@@ -140,7 +142,7 @@ class Opencv(CMakePackage, CudaPackage):
     patch("opencv3.4.12_clp_cmake.patch", when="@3.4.12")
     patch("opencv3.3_clp_cmake.patch", when="@:3.4.6")
 
-    patch("opencv3.4.4_cvv_cmake.patch", when="@3.4.4:")
+    patch("opencv3.4.4_cvv_cmake.patch", when="@3.4.4:4.5")
     patch("opencv3.3_cvv_cmake.patch", when="@:3.4.3")
 
     # OpenCV prebuilt apps (variants)
@@ -245,7 +247,7 @@ class Opencv(CMakePackage, CudaPackage):
     for mod in modules:
         # At least one of these modules must be enabled to build OpenCV
         variant(mod, default=False, description="Include opencv_{0} module".format(mod))
-        lib = 'libopencv_' + mod
+        lib = "libopencv_" + mod
         libraries.append(lib)
 
     # module conflicts and dependencies
@@ -809,6 +811,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on("cudnn@:6", when="@:3.3.0+cudnn")
     depends_on("eigen", when="+eigen")
     depends_on("ffmpeg+avresample", when="+ffmpeg")
+    depends_on("ffmpeg@:4+avresample", when="@:4.5+ffmpeg")
     depends_on("gdal", when="+gdal")
     depends_on("gtkplus", when="+gtk")
     depends_on("hpx", when="+hpx")
@@ -883,18 +886,20 @@ class Opencv(CMakePackage, CudaPackage):
     conflicts("+win32ui", when="platform=linux", msg="Windows only")
     conflicts("+win32ui", when="platform=cray", msg="Windows only")
 
+    # https://github.com/opencv/opencv/wiki/ChangeLog#version460
+    conflicts("%gcc@12:", when="@:4.5")
+    conflicts("%clang@15:", when="@:4.5")
+
     @classmethod
     def determine_version(cls, lib):
         ver = None
         for ext in library_extensions:
             pattern = None
-            if ext == 'dylib':
+            if ext == "dylib":
                 # Darwin switches the order of the version compared to Linux
-                pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                     ext)
+                pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
             else:
-                pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
-                                     ext)
+                pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
             match = pattern.search(lib)
             if match:
                 ver = match.group(3)
@@ -907,23 +912,21 @@ class Opencv(CMakePackage, CudaPackage):
         for lib in libs:
             for ext in library_extensions:
                 pattern = None
-                if ext == 'dylib':
+                if ext == "dylib":
                     # Darwin switches the order of the version compared to Linux
-                    pattern = re.compile(r'lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s' %
-                                         ext)
+                    pattern = re.compile(r"lib(\S*?)_(\S*)\.(\d+\.\d+\.\d+)\.%s" % ext)
                 else:
-                    pattern = re.compile(r'lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)' %
-                                         ext)
+                    pattern = re.compile(r"lib(\S*?)_(\S*)\.%s\.(\d+\.\d+\.\d+)" % ext)
                 match = pattern.search(lib)
-                if match and not match.group(2) == 'core':
-                    variants.append('+' + match.group(2))
+                if match and not match.group(2) == "core":
+                    variants.append("+" + match.group(2))
                     remaining_modules.remove(match.group(2))
 
         # If libraries are not found, mark those variants as disabled
         for mod in remaining_modules:
-            variants.append('~' + mod)
+            variants.append("~" + mod)
 
-        return ' '.join(variants)
+        return " ".join(variants)
 
     def cmake_args(self):
         spec = self.spec
@@ -970,9 +973,7 @@ class Opencv(CMakePackage, CudaPackage):
 
         # Optional 3rd party components
         for component in self.components:
-            args.append(
-                self.define_from_variant("WITH_" + component.upper(), component)
-            )
+            args.append(self.define_from_variant("WITH_" + component.upper(), component))
         for component in self.components_pending:
             args.append(self.define("WITH_" + component.upper(), "off"))
 
@@ -1075,9 +1076,7 @@ class Opencv(CMakePackage, CudaPackage):
                 [
                     self.define("Lept_LIBRARY", leptonica.libs[0]),
                     self.define("Tesseract_LIBRARY", tesseract.libs[0]),
-                    self.define(
-                        "Tesseract_INCLUDE_DIR", tesseract.headers.directories[0]
-                    ),
+                    self.define("Tesseract_INCLUDE_DIR", tesseract.headers.directories[0]),
                 ]
             )
 
@@ -1117,6 +1116,4 @@ class Opencv(CMakePackage, CudaPackage):
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries(
-            "libopencv_*", root=self.prefix, shared=shared, recursive=True
-        )
+        return find_libraries("libopencv_*", root=self.prefix, shared=shared, recursive=True)

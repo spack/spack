@@ -11,11 +11,11 @@ class DealiiParameterGui(CMakePackage):
     files."""
 
     homepage = "https://github.com/dealii/parameter_gui"
-    git      = "https://github.com/dealii/parameter_gui.git"
+    git = "https://github.com/dealii/parameter_gui.git"
 
-    version('develop', branch='master')
+    version("develop", branch="master")
 
-    depends_on('qt')
+    depends_on("qt")
 
     def setup_run_environment(self, env):
-        env.set('PARAMETER_GUI_DIR', self.prefix)
+        env.set("PARAMETER_GUI_DIR", self.prefix)

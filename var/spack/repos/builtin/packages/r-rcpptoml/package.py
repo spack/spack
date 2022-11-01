@@ -17,7 +17,7 @@ class RRcpptoml(RPackage):
 
     cran = "RcppTOML"
 
-    version('0.1.7', sha256='2f09f00cbee6c6eeff5d5f0195c10de0155496de15fbe8189c18627ee3090541')
+    version("0.1.7", sha256="2f09f00cbee6c6eeff5d5f0195c10de0155496de15fbe8189c18627ee3090541")
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
+    depends_on("r@3.3.0:", type=("build", "run"))
+    depends_on("r-rcpp@0.11.5:", type=("build", "run"))

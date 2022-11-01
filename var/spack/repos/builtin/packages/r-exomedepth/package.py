@@ -15,15 +15,15 @@ class RExomedepth(RPackage):
 
     cran = "ExomeDepth"
 
-    version('1.1.15', sha256='112bcb536f5766d9d0b55e064feedd6727ccab14cb1edfdba1f0d7b890e55ad2')
+    version("1.1.15", sha256="112bcb536f5766d9d0b55e064feedd6727ccab14cb1edfdba1f0d7b890e55ad2")
 
-    depends_on('r@3.4.0:', type=('build', 'run'))
-    depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-rsamtools', type=('build', 'run'))
-    depends_on('r-genomicranges@1.23.0:', type=('build', 'run'))
-    depends_on('r-aod', type=('build', 'run'))
-    depends_on('r-vgam@0.8.4:', type=('build', 'run'))
-    depends_on('r-genomicalignments', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on("r@3.4.0:", type=("build", "run"))
+    depends_on("r-biostrings", type=("build", "run"))
+    depends_on("r-iranges", type=("build", "run"))
+    depends_on("r-rsamtools", type=("build", "run"))
+    depends_on("r-genomicranges@1.23.0:", type=("build", "run"))
+    depends_on("r-aod", type=("build", "run"))
+    depends_on("r-vgam@0.8.4:", type=("build", "run"))
+    depends_on("r-genomicalignments", type=("build", "run"))
+    depends_on("r-dplyr", type=("build", "run"))
+    depends_on("r-magrittr", type=("build", "run"))

@@ -16,17 +16,17 @@ class ImpalajitLlvm(CMakePackage):
     homepage = "https://github.com/ravil-mobile/ImpalaJIT"
     git = "https://github.com/ravil-mobile/ImpalaJIT"
 
-    maintainers = ['ravil-mobile']
+    maintainers = ["ravil-mobile"]
 
-    version('develop', branch='master')
-    version('1.0.0', tag='v1.0.0')
+    version("develop", branch="master")
+    version("1.0.0", tag="v1.0.0")
 
-    variant('shared', default=True, description='build as a shared library')
+    variant("shared", default=True, description="build as a shared library")
 
-    depends_on('llvm@10.0.0:11.1.0')
-    depends_on('z3')
+    depends_on("llvm@10.0.0:11.1.0")
+    depends_on("z3")
 
     def cmake_args(self):
         args = []
-        args.append(self.define_from_variant('SHARED_LIB', 'shared'))
+        args.append(self.define_from_variant("SHARED_LIB", "shared"))
         return args

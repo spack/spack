@@ -21,9 +21,9 @@ X   Y
     homepage = "http://www.example.com"
     url = "http://www.example.com/patch-a-dependency-1.0.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
+    version("1.0", "0123456789abcdef0123456789abcdef")
 
     # single patch file in repo
-    depends_on('patch', patches='top.patch')
-    depends_on('dep-diamond-patch-mid1')
-    depends_on('dep-diamond-patch-mid2')
+    depends_on("patch", patches="top.patch")
+    depends_on("dep-diamond-patch-mid1")
+    depends_on("dep-diamond-patch-mid2")

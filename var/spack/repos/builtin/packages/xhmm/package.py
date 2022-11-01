@@ -13,19 +13,19 @@ class Xhmm(MakefilePackage):
     (or targeted sequencing, more generally)."""
 
     homepage = "http://atgu.mgh.harvard.edu/xhmm/index.shtml"
-    git      = "https://bitbucket.org/statgen/xhmm.git"
+    git = "https://bitbucket.org/statgen/xhmm.git"
 
-    version('20160104', commit='cc14e528d90932f059ac4fe94e869e81221fd732')
+    version("20160104", commit="cc14e528d90932f059ac4fe94e869e81221fd732")
 
-    depends_on('lapack')
+    depends_on("lapack")
 
     def edit(self, spec, prefix):
-        filter_file('GCC', 'CC', 'sources/hmm++/config_rules.Makefile')
-        filter_file('GCC =gcc', '', 'sources/hmm++/config_defs.Makefile')
+        filter_file("GCC", "CC", "sources/hmm++/config_rules.Makefile")
+        filter_file("GCC =gcc", "", "sources/hmm++/config_defs.Makefile")
 
     def build(self, spec, prefix):
-        make('LAPACK_LIBS=%s' % ''.join(spec['lapack'].libs.names))
+        make("LAPACK_LIBS=%s" % "".join(spec["lapack"].libs.names))
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('xhmm', prefix.bin)
+        install("xhmm", prefix.bin)

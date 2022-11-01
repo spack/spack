@@ -50,14 +50,14 @@ import llnl.util.tty.color
 
 import spack.dependency
 
-__all__ = ['graph_ascii', 'AsciiGraph', 'graph_dot']
+__all__ = ["graph_ascii", "AsciiGraph", "graph_dot"]
 
 
 def node_label(spec):
-    return spec.format('{name}{@version}{/hash:7}')
+    return spec.format("{name}{@version}{/hash:7}")
 
 
-def topological_sort(spec, deptype='all'):
+def topological_sort(spec, deptype="all"):
     """Return a list of dependency specs in topological sorting order.
 
     The spec argument is not modified in by the function.
@@ -78,33 +78,30 @@ def topological_sort(spec, deptype='all'):
 
     def dependencies(specs):
         """Return all the dependencies (including transitive) for a spec."""
-        return list(set(itertools.chain.from_iterable(
-            s.dependencies(deptype=deptype) for s in specs
-        )))
+        return list(
+            set(itertools.chain.from_iterable(s.dependencies(deptype=deptype) for s in specs))
+        )
 
     def dependents(specs):
         """Return all the dependents (including those of transitive dependencies)
         for a spec.
         """
-        candidates = list(set(itertools.chain.from_iterable(
-            s.dependents(deptype=deptype) for s in specs
-        )))
+        candidates = list(
+            set(itertools.chain.from_iterable(s.dependents(deptype=deptype) for s in specs))
+        )
         return [x for x in candidates if x.name in nodes]
 
     topological_order, children = [], {}
 
     # Map a spec encoded as (id, name) to a list of its transitive dependencies
     for spec in itertools.chain.from_iterable(nodes.values()):
-        children[(id(spec), spec.name)] = [
-            x for x in dependencies([spec]) if x.name in nodes
-        ]
+        children[(id(spec), spec.name)] = [x for x in dependencies([spec]) if x.name in nodes]
 
     # To return a result that is topologically ordered we need to add nodes
     # only after their dependencies. The first nodes we can add are leaf nodes,
     # i.e. nodes that have no dependencies.
     ready = [
-        spec for spec in itertools.chain.from_iterable(nodes.values())
-        if not dependencies([spec])
+        spec for spec in itertools.chain.from_iterable(nodes.values()) if not dependencies([spec])
     ]
     heapq.heapify(ready)
 
@@ -138,34 +135,33 @@ def find(seq, predicate):
 
 # Names of different graph line states.  We record previous line
 # states so that we can easily determine what to do when connecting.
-states = ('node', 'collapse', 'merge-right', 'expand-right', 'back-edge')
+states = ("node", "collapse", "merge-right", "expand-right", "back-edge")
 NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
 
 
 class AsciiGraph(object):
-
     def __init__(self):
         # These can be set after initialization or after a call to
         # graph() to change behavior.
-        self.node_character = 'o'
+        self.node_character = "o"
         self.debug = False
         self.indent = 0
         self.deptype = spack.dependency.all_deptypes
 
         # These are colors in the order they'll be used for edges.
         # See llnl.util.tty.color for details on color characters.
-        self.colors = 'rgbmcyRGBMCY'
+        self.colors = "rgbmcyRGBMCY"
 
         # Internal vars are used in the graph() function and are
         # properly initialized there.
-        self._name_to_color = None    # Node name to color
-        self._out = None              # Output stream
-        self._frontier = None         # frontier
-        self._prev_state = None       # State of previous line
-        self._prev_index = None       # Index of expansion point of prev line
+        self._name_to_color = None  # Node name to color
+        self._out = None  # Output stream
+        self._frontier = None  # frontier
+        self._prev_state = None  # State of previous line
+        self._prev_index = None  # Index of expansion point of prev line
 
     def _indent(self):
-        self._out.write(self.indent * ' ')
+        self._out.write(self.indent * " ")
 
     def _write_edge(self, string, index, sub=0):
         """Write a colored edge to the output stream."""
@@ -210,8 +206,7 @@ class AsciiGraph(object):
             collapse = True
             if self._prev_state == EXPAND_RIGHT:
                 # Special case where previous line expanded and i is off by 1.
-                self._back_edge_line([], j, i + 1, True,
-                                     label + "-1.5 " + str((i + 1, j)))
+                self._back_edge_line([], j, i + 1, True, label + "-1.5 " + str((i + 1, j)))
                 collapse = False
 
             else:
@@ -221,12 +216,10 @@ class AsciiGraph(object):
 
                 if i - j > 1:
                     # We need two lines to connect if distance > 1
-                    self._back_edge_line([], j,  i, True,
-                                         label + "-1 " + str((i, j)))
+                    self._back_edge_line([], j, i, True, label + "-1 " + str((i, j)))
                     collapse = False
 
-            self._back_edge_line([j], -1, -1, collapse,
-                                 label + "-2 " + str((i, j)))
+            self._back_edge_line([j], -1, -1, collapse, label + "-2 " + str((i, j)))
             return True
 
         elif deps:
@@ -241,9 +234,8 @@ class AsciiGraph(object):
 
         if self.debug:
             self._out.write(" " * 20)
-            self._out.write("%-20s" % (
-                str(self._prev_state) if self._prev_state else ''))
-            self._out.write("%-20s" % (str(label) if label else ''))
+            self._out.write("%-20s" % (str(self._prev_state) if self._prev_state else ""))
+            self._out.write("%-20s" % (str(label) if label else ""))
             self._out.write("%s" % self._frontier)
 
     def _back_edge_line(self, prev_ends, end, start, collapse, label=None):
@@ -287,6 +279,7 @@ class AsciiGraph(object):
         label -- optional debug label to print after the line.
 
         """
+
         def advance(to_pos, edges):
             """Write edges up to <to_pos>."""
             for i in range(self._pos, to_pos):
@@ -299,28 +292,28 @@ class AsciiGraph(object):
         self._indent()
 
         for p in prev_ends:
-            advance(p,         lambda: [("| ", self._pos)])
-            advance(p + 1,     lambda: [("|/", self._pos)])
+            advance(p, lambda: [("| ", self._pos)])
+            advance(p + 1, lambda: [("|/", self._pos)])
 
         if end >= 0:
-            advance(end + 1,   lambda: [("| ", self._pos)])
-            advance(start - 1, lambda: [("|",  self._pos), ("_", end)])
+            advance(end + 1, lambda: [("| ", self._pos)])
+            advance(start - 1, lambda: [("|", self._pos), ("_", end)])
         else:
             advance(start - 1, lambda: [("| ", self._pos)])
 
         if start >= 0:
-            advance(start,     lambda: [("|",  self._pos), ("/", end)])
+            advance(start, lambda: [("|", self._pos), ("/", end)])
 
         if collapse:
-            advance(flen,      lambda: [(" /", self._pos)])
+            advance(flen, lambda: [(" /", self._pos)])
         else:
-            advance(flen,      lambda: [("| ", self._pos)])
+            advance(flen, lambda: [("| ", self._pos)])
 
         self._set_state(BACK_EDGE, end, label)
         self._out.write("\n")
 
     def _node_label(self, node):
-        return node.format('{name}@@{version}{/hash:7}')
+        return node.format("{name}@@{version}{/hash:7}")
 
     def _node_line(self, index, node):
         """Writes a line with a node at index."""
@@ -437,8 +430,7 @@ class AsciiGraph(object):
                         self._frontier[i].remove(d)
                         if i - b > 1:
                             collapse_l1 = any(not e for e in self._frontier)
-                            self._back_edge_line(
-                                prev_ends, b, i, collapse_l1, 'left-1')
+                            self._back_edge_line(prev_ends, b, i, collapse_l1, "left-1")
                             del prev_ends[:]
                         prev_ends.append(b)
 
@@ -450,15 +442,16 @@ class AsciiGraph(object):
                         collapse_l2 = False
                     if pop:
                         self._frontier.pop(i)
-                    self._back_edge_line(
-                        prev_ends, -1, -1, collapse_l2, 'left-2')
+                    self._back_edge_line(prev_ends, -1, -1, collapse_l2, "left-2")
 
                 elif len(self._frontier[i]) > 1:
                     # Expand forward after doing all back connections
 
-                    if (i + 1 < len(self._frontier) and
-                            len(self._frontier[i + 1]) == 1 and
-                            self._frontier[i + 1][0] in self._frontier[i]):
+                    if (
+                        i + 1 < len(self._frontier)
+                        and len(self._frontier[i + 1]) == 1
+                        and self._frontier[i + 1][0] in self._frontier[i]
+                    ):
                         # We need to connect to the element to the right.
                         # Keep lines straight by connecting directly and
                         # avoiding unnecessary expand/contract.
@@ -493,9 +486,7 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                edges = sorted(
-                    node.edges_to_dependencies(deptype=self.deptype), reverse=True
-                )
+                edges = sorted(node.edges_to_dependencies(deptype=self.deptype), reverse=True)
                 if edges:
                     deps = [e.spec.dag_hash() for e in edges]
                     self._connect_deps(i, deps, "new-deps")  # anywhere.
@@ -504,8 +495,7 @@ class AsciiGraph(object):
                     self._collapse_line(i)
 
 
-def graph_ascii(spec, node='o', out=None, debug=False,
-                indent=0, color=None, deptype='all'):
+def graph_ascii(spec, node="o", out=None, debug=False, indent=0, color=None, deptype="all"):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
@@ -516,7 +506,7 @@ def graph_ascii(spec, node='o', out=None, debug=False,
     graph.write(spec, color=color, out=out)
 
 
-def graph_dot(specs, deptype='all', static=False, out=None):
+def graph_dot(specs, deptype="all", static=False, out=None):
     """Generate a graph in dot format of all provided specs.
 
     Print out a dot formatted graph of all the dependencies between
@@ -535,9 +525,8 @@ def graph_dot(specs, deptype='all', static=False, out=None):
     deptype = spack.dependency.canonical_deptype(deptype)
 
     def static_graph(spec, deptype):
-        pkg = spec.package
-        possible = pkg.possible_dependencies(
-            expand_virtuals=True, deptype=deptype)
+        pkg_cls = spack.repo.path.get_pkg_class(spec.name)
+        possible = pkg_cls.possible_dependencies(expand_virtuals=True, deptype=deptype)
 
         nodes = set()  # elements are (node name, node label)
         edges = set()  # elements are (src key, dest key)
@@ -566,38 +555,38 @@ def graph_dot(specs, deptype='all', static=False, out=None):
         nodes.update(n)
         edges.update(e)
 
-    out.write('digraph G {\n')
+    out.write("digraph G {\n")
     out.write('  labelloc = "b"\n')
     out.write('  rankdir = "TB"\n')
     out.write('  ranksep = "1"\n')
-    out.write('  edge[\n')
-    out.write('     penwidth=4')
-    out.write('  ]\n')
-    out.write('  node[\n')
-    out.write('     fontname=Monaco,\n')
-    out.write('     penwidth=4,\n')
-    out.write('     fontsize=24,\n')
-    out.write('     margin=.2,\n')
-    out.write('     shape=box,\n')
-    out.write('     fillcolor=lightblue,\n')
+    out.write("  edge[\n")
+    out.write("     penwidth=4")
+    out.write("  ]\n")
+    out.write("  node[\n")
+    out.write("     fontname=Monaco,\n")
+    out.write("     penwidth=4,\n")
+    out.write("     fontsize=24,\n")
+    out.write("     margin=.2,\n")
+    out.write("     shape=box,\n")
+    out.write("     fillcolor=lightblue,\n")
     out.write('     style="rounded,filled"')
-    out.write('  ]\n')
+    out.write("  ]\n")
 
     # write nodes
-    out.write('\n')
+    out.write("\n")
     for key, label in nodes:
         out.write('  "%s" [label="%s"]\n' % (key, label))
 
     # write edges
-    out.write('\n')
+    out.write("\n")
     for src, dest in edges:
         out.write('  "%s" -> "%s"\n' % (src, dest))
 
     # ensure that roots are all at the top of the plot
     dests = set([d for _, d in edges])
     roots = ['"%s"' % k for k, _ in nodes if k not in dests]
-    out.write('\n')
-    out.write('  { rank=min; %s; }' % "; ".join(roots))
+    out.write("\n")
+    out.write("  { rank=min; %s; }" % "; ".join(roots))
 
-    out.write('\n')
-    out.write('}\n')
+    out.write("\n")
+    out.write("}\n")

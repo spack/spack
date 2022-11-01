@@ -18,7 +18,7 @@ class RWk(RPackage):
 
     cran = "wk"
 
-    version('0.6.0', sha256='af2c2837056a6dcc9f64d5ace29601d6d668c95769f855ca0329648d7326eaf5')
-    version('0.4.1', sha256='daa7351af0bd657740972016906c686f335b8fa922ba10250e5000ddc2bb8950')
+    version("0.6.0", sha256="af2c2837056a6dcc9f64d5ace29601d6d668c95769f855ca0329648d7326eaf5")
+    version("0.4.1", sha256="daa7351af0bd657740972016906c686f335b8fa922ba10250e5000ddc2bb8950")
 
-    depends_on('r-cpp11', type=('build', 'run'))
+    depends_on("r-cpp11", type=("build", "run"))

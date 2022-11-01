@@ -29,7 +29,9 @@ class RProgressr(RPackage):
 
     cran = "progressr"
 
-    version('0.10.0', sha256='4c95dc11c50c792440fa17f4538d59f1f3012bf6ef462a5a141609f87319badc')
+    version("0.11.0", sha256="d8668c82348a20cca34bb18c0c94e6083dbb6dbea40615e07e4161aff7366cd9")
+    version("0.10.1", sha256="8f83024b2a6f52996750d45bf6698c2b438fb1062985f1df936ba3af313caed1")
+    version("0.10.0", sha256="4c95dc11c50c792440fa17f4538d59f1f3012bf6ef462a5a141609f87319badc")
 
-    depends_on('r@3.5.0:', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
+    depends_on("r@3.5.0:", type=("build", "run"))
+    depends_on("r-digest", type=("build", "run"))
