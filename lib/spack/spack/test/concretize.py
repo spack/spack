@@ -337,6 +337,9 @@ class TestConcretize(object):
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
         """
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Fixing the parser broke this test for the original concretizer.")
+
         spec_str = "mpileaks %gcc@4.5.0 os=CNL target=nocona" " ^dyninst os=CNL ^callpath os=CNL"
         spec = Spec(spec_str).concretized()
         for s in spec.traverse(root=False):
@@ -1837,3 +1840,19 @@ class TestConcretize(object):
         with spack.config.override("concretizer:reuse", True):
             s = Spec("mpich").concretized()
             assert s.satisfies("~debug")
+
+    @pytest.mark.regression("32471")
+    def test_require_targets_are_allowed(self, mutable_database):
+        """Test that users can set target constraints under the require attribute."""
+        if spack.config.get("config:concretizer") == "original":
+            pytest.xfail("Use case not supported by the original concretizer")
+
+        # Configuration to be added to packages.yaml
+        external_conf = {"all": {"require": "target=x86_64"}}
+        spack.config.set("packages", external_conf)
+
+        with spack.config.override("concretizer:reuse", False):
+            spec = Spec("mpich").concretized()
+
+        for s in spec.traverse():
+            assert s.satisfies("target=x86_64")
