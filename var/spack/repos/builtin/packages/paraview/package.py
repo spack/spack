@@ -311,6 +311,15 @@ class Paraview(CMakePackage, CudaPackage):
         if (name == "cflags" or name == "cxxflags") and self.spec.satisfies("%intel"):
             flags.append("-no-ipo")
             return (None, None, flags)
+
+        if name in ("cflags", "cxxflags"):
+            # Constrain the HDF5 API
+            if self.spec.satisfies("@:5.9 +hdf5"):
+                if self.spec["hdf5"].satisfies("@1.10:"):
+                    flags.append("-DH5_USE_18_API")
+            elif self.spec.satisfies("@5.10: +hdf5"):
+                if self.spec["hdf5"].satisfies("@1.12:"):
+                    flags.append("-DH5_USE_110_API")
         return (flags, None, None)
 
     def setup_run_environment(self, env):
