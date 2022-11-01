@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 from spack.package import *
 
@@ -54,7 +55,11 @@ class Adios2(CMakePackage, CudaPackage):
     # change how we're supporting differnt library types in the package at anytime if
     # spack decides on a standardized way of doing it across packages
     variant("shared", default=True, when="+pic", description="Build shared libraries")
-    variant("pic", default=True, description="Build pic-enabled static libraries")
+    variant(
+        "pic",
+        default=not sys.platform == "win32",
+        description="Build pic-enabled static libraries",
+    )
 
     # Features
     variant("mpi", default=True, description="Enable MPI")
@@ -95,12 +100,18 @@ class Adios2(CMakePackage, CudaPackage):
     conflicts("%oneapi@:2022.1.0", when="+fortran")
 
     depends_on("cmake@3.12.0:", type="build")
-    depends_on("pkgconfig", type="build")
 
-    depends_on("libffi", when="+sst")  # optional in DILL
-    depends_on("libfabric@1.6.0:", when="+sst")  # optional in EVPath and SST
-    # depends_on('bison', when='+sst')     # optional in FFS, broken package
-    # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
+    for plat in ["linux", "darwin", "cray"]:
+        depends_on("pkgconfig", type="build", when="platform = %s" % plat)
+
+        # libffi and libfabric and not currently supported on Windows
+        # see Paraview's superbuild handling of libfabric at https://gitlab.kitware.com/paraview/paraview-superbuild/-/blob/master/projects/adios2.cmake#L3
+        depends_on("libffi", when="+sst platform=%s" % plat)  # optional in DILL
+        depends_on(
+            "libfabric@1.6.0:", when="+sst platform=%s" % plat
+        )  # optional in EVPath and SST
+        # depends_on('bison', when='+sst')     # optional in FFS, broken package
+        # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
 
     depends_on("mpi", when="+mpi")
     depends_on("libzmq", when="+dataman")
@@ -164,6 +175,45 @@ class Adios2(CMakePackage, CudaPackage):
         elif self.spec.satisfies("%fj +fortran"):
             env.set("FFLAGS", "-Ccpp")
 
+    @property
+    def libs(self):
+        spec = self.spec
+        libs_to_seek = set()
+
+        if "@2.6:" in spec:
+            libs_to_seek.add("libadios2_core")
+            libs_to_seek.add("libadios2_c")
+            libs_to_seek.add("libadios2_cxx11")
+            if "+fortran" in spec:
+                libs_to_seek.add("libadios2_fortran")
+
+            if "+mpi" in spec:
+                libs_to_seek.add("libadios2_core_mpi")
+                libs_to_seek.add("libadios2_c_mpi")
+                libs_to_seek.add("libadios2_cxx11_mpi")
+                if "+fortran" in spec:
+                    libs_to_seek.add("libadios2_fortran_mpi")
+
+            if "@2.7: +shared+hdf5" in spec and "@1.12:" in spec["hdf5"]:
+                libs_to_seek.add("libadios2_h5vol")
+
+        else:
+            libs_to_seek.add("libadios2")
+            if "+fortran" in spec:
+                libs_to_seek.add("libadios2_fortran")
+
+        return find_libraries(
+            list(libs_to_seek), root=self.spec.prefix, shared=("+shared" in spec), recursive=True
+        )
+
+    def setup_run_environment(self, env):
+        try:
+            all_libs = self.libs
+            idx = all_libs.basenames.index("libadios2_h5vol.so")
+            env.prepend_path("HDF5_PLUGIN_PATH", os.path.dirname(all_libs[idx]))
+        except ValueError:
+            pass
+
     def cmake_args(self):
         spec = self.spec
         from_variant = self.define_from_variant
@@ -214,42 +264,3 @@ class Adios2(CMakePackage, CudaPackage):
             args.append("-DPython_EXECUTABLE:FILEPATH=%s" % spec["python"].command.path)
 
         return args
-
-    @property
-    def libs(self):
-        spec = self.spec
-        libs_to_seek = set()
-
-        if "@2.6:" in spec:
-            libs_to_seek.add("libadios2_core")
-            libs_to_seek.add("libadios2_c")
-            libs_to_seek.add("libadios2_cxx11")
-            if "+fortran" in spec:
-                libs_to_seek.add("libadios2_fortran")
-
-            if "+mpi" in spec:
-                libs_to_seek.add("libadios2_core_mpi")
-                libs_to_seek.add("libadios2_c_mpi")
-                libs_to_seek.add("libadios2_cxx11_mpi")
-                if "+fortran" in spec:
-                    libs_to_seek.add("libadios2_fortran_mpi")
-
-            if "@2.7: +shared+hdf5" in spec and "@1.12:" in spec["hdf5"]:
-                libs_to_seek.add("libadios2_h5vol")
-
-        else:
-            libs_to_seek.add("libadios2")
-            if "+fortran" in spec:
-                libs_to_seek.add("libadios2_fortran")
-
-        return find_libraries(
-            list(libs_to_seek), root=self.spec.prefix, shared=("+shared" in spec), recursive=True
-        )
-
-    def setup_run_environment(self, env):
-        try:
-            all_libs = self.libs
-            idx = all_libs.basenames.index("libadios2_h5vol.so")
-            env.prepend_path("HDF5_PLUGIN_PATH", os.path.dirname(all_libs[idx]))
-        except ValueError:
-            pass
