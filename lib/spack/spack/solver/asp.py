@@ -2335,7 +2335,8 @@ class Solver(object):
         return reusable
 
     def filter_buildable(self, index):
-        """Filter out buildcache entries of specs that match packages locally marked as buildable:false"""
+        """Filter out buildcache entries of specs that match packages locally marked as
+        buildable:false"""
         packages_yaml = spack.config.get("packages")
         filter = ()
         for pkg_name, data in packages_yaml.items():
