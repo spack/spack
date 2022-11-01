@@ -77,6 +77,7 @@ class NetcdfC(AutotoolsPackage):
     variant("jna", default=False, description="Enable JNA support")
     variant("fsync", default=False, description="Enable fsync support")
     variant("zstd", default=True, description="Enable ZStandard compression", when="@4.9.0:")
+    variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -160,6 +161,9 @@ class NetcdfC(AutotoolsPackage):
             "--enable-largefile",
             "--enable-netcdf-4",
         ]
+
+        if "+optimize" in self.spec:
+            cflags.append("-O2")
 
         config_args.extend(self.enable_or_disable("fsync"))
 
