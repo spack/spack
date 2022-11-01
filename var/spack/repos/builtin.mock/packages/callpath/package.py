@@ -18,9 +18,8 @@ class Callpath(Package):
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        mkdirp(prefix)
+        touch(os.path.join(prefix, "dummyfile"))
 
     def setup_run_environment(self, env):
         env.set("FOOBAR", self.name)
