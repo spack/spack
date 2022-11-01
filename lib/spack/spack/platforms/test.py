@@ -16,9 +16,14 @@ class Test(Platform):
     if platform.system().lower() == "darwin":
         binary_formats = ["macho"]
 
-    front_end = "x86_64"
-    back_end = "core2"
-    default = "core2"
+    if platform.machine() == "arm64":
+        front_end = "aarch64"
+        back_end = "m1"
+        default = "m1"
+    else:
+        front_end = "x86_64"
+        back_end = "core2"
+        default = "core2"
 
     front_os = "redhat6"
     back_os = "debian6"
