@@ -7,6 +7,7 @@
 Test that Spack's shebang filtering works correctly.
 """
 import filecmp
+import getpass
 import os
 import shutil
 import stat
@@ -268,6 +269,10 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
 
 @pytest.fixture(scope="function")
 def configure_group_perms():
+    # On systems with remote groups, the primary user group may be remote
+    # and grp does not act on remote groups.
+    # To ensure we find a group we can operate on, we get take the first group
+    # listed which has the current user as a member.
     conf = syaml.load_config(
         """\
 all:
@@ -276,7 +281,7 @@ all:
     write: group
     group: {0}
 """.format(
-            grp.getgrgid(os.getegid()).gr_name
+            [g.gr_name for g in grp.getgrall() if getpass.getuser() in g.gr_mem][0]
         )
     )
     spack.config.set("packages", conf, scope="user")

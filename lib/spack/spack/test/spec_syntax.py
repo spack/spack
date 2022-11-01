@@ -277,13 +277,17 @@ class TestSpecSyntax(object):
             "x ^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f", "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1"
         )
 
+        default_target = spack.platforms.test.Test.default
         self.check_parse(
-            "x arch=test-redhat6-None" " ^y arch=test-None-core2" " ^z arch=linux-None-None",
+            "x arch=test-redhat6-None"
+            + (" ^y arch=test-None-%s" % default_target)
+            + " ^z arch=linux-None-None",
             "x os=fe " "^y target=be " "^z platform=linux",
         )
 
         self.check_parse(
-            "x arch=test-debian6-core2" " ^y arch=test-debian6-core2",
+            ("x arch=test-debian6-%s" % default_target)
+            + (" ^y arch=test-debian6-%s" % default_target),
             "x os=default_os target=default_target" " ^y os=default_os target=default_target",
         )
 

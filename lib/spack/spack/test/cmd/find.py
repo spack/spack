@@ -322,7 +322,7 @@ def test_find_very_long(database, config):
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@4.5.0" in output
+    assert "mpileaks@2.3%gcc@10.2.1" in output
 
 
 @pytest.mark.db
