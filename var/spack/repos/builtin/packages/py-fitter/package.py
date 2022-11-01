@@ -1,0 +1,21 @@
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+class PyFitter(PythonPackage):
+    """fitter package provides a simple class to identify the distribution
+    from which a data samples is generated from. It uses 80 distributions
+    from Scipy and allows you to plot the results to check what is the
+    most probable distribution and the best parameters."""
+
+    homepage = "https://github.com/cokelaer/fitter"
+    pypi = "fitter/fitter-1.5.1.tar.gz"
+
+    # notify when the package is updated.
+    # maintainers = ["carsonwoods"]
+
+    version("1.5.1", sha256="893b35ad0a84c3b96b63ec203a6a79effdba98777aed966ae61709f5e1e8cf99")
+
+    depends_on("py-setuptools", type="build")
