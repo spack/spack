@@ -156,13 +156,13 @@ is_windows = sys.platform == "win32"
 
 identifier_re = r"\w[\w-]*"
 
-compiler_color = "@g"          #: color for highlighting compilers
-version_color = "@c"           #: color for highlighting versions
-architecture_color ="@m"      #: color for highlighting architectures
-enabled_variant_color = "@B"   #: color for highlighting enabled variants
+compiler_color = "@g"  #: color for highlighting compilers
+version_color = "@c"  #: color for highlighting versions
+architecture_color = "@m"  #: color for highlighting architectures
+enabled_variant_color = "@B"  #: color for highlighting enabled variants
 disabled_variant_color = "r"  #: color for highlighting disabled varaints
-dependency_color = "@."        #: color for highlighting dependencies
-hash_color = "@K"              #: color for highlighting package hashes
+dependency_color = "@."  #: color for highlighting dependencies
+hash_color = "@K"  #: color for highlighting package hashes
 
 #: This map determines the coloring of specs when using color output.
 #: We make the fields different colors to enhance readability.
@@ -4984,19 +4984,19 @@ class SpecLexer(spack.parse.Lexer):
                 (
                     r"\@([\w.\-]*\s*)*(\s*\=\s*\w[\w.\-]*)?",
                     lambda scanner, val: self.token(VER, val),
-                 ),
-                (r"\:",    lambda scanner, val: self.token(COLON, val)),
-                (r"\,",    lambda scanner, val: self.token(COMMA, val)),
-                (r"\^",    lambda scanner, val: self.token(DEP, val)),
-                (r"\+\+",  lambda scanner, val: self.token(D_ON,  val)),
-                (r"\+",    lambda scanner, val: self.token(ON, val)),
-                (r"\-\-",  lambda scanner, val: self.token(D_OFF, val)),
-                (r"\-",    lambda scanner, val: self.token(OFF, val)),
-                (r"\~\~",  lambda scanner, val: self.token(D_OFF, val)),
-                (r"\~",    lambda scanner, val: self.token(OFF, val)),
-                (r"\%",    lambda scanner, val: self.token(PCT, val)),
-                (r"\=\=",  lambda scanner, val: self.token(D_EQ,  val)),
-                (r"\=",    lambda scanner, val: self.token(EQ, val)),
+                ),
+                (r"\:", lambda scanner, val: self.token(COLON, val)),
+                (r"\,", lambda scanner, val: self.token(COMMA, val)),
+                (r"\^", lambda scanner, val: self.token(DEP, val)),
+                (r"\+\+", lambda scanner, val: self.token(D_ON, val)),
+                (r"\+", lambda scanner, val: self.token(ON, val)),
+                (r"\-\-", lambda scanner, val: self.token(D_OFF, val)),
+                (r"\-", lambda scanner, val: self.token(OFF, val)),
+                (r"\~\~", lambda scanner, val: self.token(D_OFF, val)),
+                (r"\~", lambda scanner, val: self.token(OFF, val)),
+                (r"\%", lambda scanner, val: self.token(PCT, val)),
+                (r"\=\=", lambda scanner, val: self.token(D_EQ, val)),
+                (r"\=", lambda scanner, val: self.token(EQ, val)),
                 # Filenames match before identifiers, so no initial filename
                 # component is parsed as a spec (e.g., in subdir/spec.yaml/json)
                 (filename_reg, lambda scanner, v: self.token(FILE, v)),
@@ -5133,9 +5133,7 @@ class SpecParser(spack.parse.Parser):
                         # Raise an error if the previous spec is already
                         # concrete (assigned by hash)
                         if specs and specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1],
-                                                     'compiler, version, '
-                                                     'or variant')
+                            raise RedundantSpecError(specs[-1], "compiler, version, " "or variant")
                         specs.append(self.spec(None))
                     else:
                         self.unexpected_token()
