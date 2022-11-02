@@ -935,7 +935,16 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         with tmpdir.as_cwd():
             # Test would fail if install raised an error.
-            install("--log-file=cdash_reports", "--log-format=cdash", "configure-warning")
+
+            # Ensure that even on non-x86_64 architectures, there are no
+            # dependencies installed
+            spec = spack.spec.Spec("configure-warning").concretized()
+            spec.clear_dependencies()
+            specfile = "./spec.json"
+            with open(specfile, "w") as f:
+                f.write(spec.to_json())
+
+            install("--log-file=cdash_reports", "--log-format=cdash", specfile)
             # Verify Configure.xml exists with expected contents.
             report_dir = tmpdir.join("cdash_reports")
             assert report_dir in tmpdir.listdir()
@@ -955,10 +964,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@2.0")
+    install("a%gcc@12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -1013,11 +1022,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@2.0")
-    install("a%gcc@2.0")
+    install("gcc@12.0")
+    install("a%gcc@12.0")
 
 
 def test_install_fails_no_args(tmpdir):
