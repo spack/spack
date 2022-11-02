@@ -14,12 +14,14 @@ class PyPylatex(PythonPackage):
 
     version("1.4.1", sha256="d3c12efb8b260771260443dce78d1e9089c09f9d0b92e6273dfca0bf5e7302fb")
 
-    variant('docs', default=False)
-    variant('matrices', default=False)
-    variant('matplotlib', default=False)
-    variant('quantities', default=False)
+    variant('docs', default=False, description='Build with Sphinx support for documentation')
+    variant('matrices', default=False, description='Build with matrix support')
+    variant('matplotlib', default=False, description='Build with matplotlib support')
+    variant('quantities', default=False, description='Build with quantities support')
+    variant('convert_to_py2', default=False, description='Build with future support')
 
-    depends_on("python@2.7,3.3:", type=("build", 'run')
+    depends_on("python@2.7,3.3:", type=("build", 'run') )
+    depends_on("py-future@0.15.2:", type=("build", 'run'), when='+convert_to_py2')
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
     depends_on('py-ordered-set', type='run')
