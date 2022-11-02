@@ -355,12 +355,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec, deptypes):
+    def _setup_dependent_env(self, env, dependent_spec, deptype):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptypes):
+        for d in dependent_spec.traverse(deptype=deptype):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
         if perl_lib_dirs:
@@ -370,10 +370,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.append_path("PATH", self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("build", "run", "test"))
+        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptypes=("run",))
+        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
