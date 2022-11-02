@@ -998,11 +998,15 @@ More formally, a spec consists of the following pieces:
 * ``%`` Optional compiler specifier, with an optional compiler version
   (``gcc`` or ``gcc@4.7.3``)
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
-  ``-qt``, or ``~qt``) for boolean variants
+  ``-qt``, or ``~qt``) for boolean variants. Use ``++`` or ``--`` or
+  ``~~`` to propagate variants through the dependencies (``++debug``,
+  ``--qt``, or ``~~qt``).
 * ``name=<value>`` Optional variant specifiers that are not restricted to
-  boolean variants
+  boolean variants. Use ``name==<value>`` to propagate variant through the
+  dependencies.
 * ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
   ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+  Use ``name==<value>`` to propagate compiler flags through the dependencies.
 * ``target=<value> os=<value>`` Optional architecture specifier
   (``target=haswell os=CNL10``)
 * ``^`` Dependency specs (``^callpath@1.1``)
@@ -1226,6 +1230,23 @@ variants using the backwards compatibility syntax and uses only ``~``
 for disabled boolean variants.  The ``-`` and spaces on the command
 line are provided for convenience and legibility.
 
+Spack allows variants to propagate their value to the package's
+dependency by using ``++``, ``--``, and ``~~`` for boolean variants.
+For example, for a ``debug`` variant:
+
+.. code-block:: sh
+
+    mpileaks ++debug   # enabled debug will be propagated to dependencies
+    mpileaks +debug    # only mpileaks will have debug enabled
+
+To propagate the value of non-boolean variants Spack uses ``name==value``.
+For example, for the ``stackstart`` variant:
+
+.. code-block:: sh
+
+    mpileaks stackstart=4    # variant will be propagated to dependencies
+    mpileaks stackstart==4   # only mpileaks will have this variant value
+
 ^^^^^^^^^^^^^^
 Compiler Flags
 ^^^^^^^^^^^^^^
@@ -1233,10 +1254,15 @@ Compiler Flags
 Compiler flags are specified using the same syntax as non-boolean variants,
 but fulfill a different purpose. While the function of a variant is set by
 the package, compiler flags are used by the compiler wrappers to inject
-flags into the compile line of the build. Additionally, compiler flags are
-inherited by dependencies. ``spack install libdwarf cppflags="-g"`` will
-install both libdwarf and libelf with the ``-g`` flag injected into their
-compile line.
+flags into the compile line of the build. Additionally, compiler flags can
+be inherited by dependencies by using ``==``.
+``spack install libdwarf cppflags=="-g"`` will install both libdwarf and
+libelf with the ``-g`` flag injected into their compile line.
+
+.. note::
+
+   versions of spack prior to 0.19.0 will propagate compiler flags using
+   the ``=`` syntax.
 
 Notice that the value of the compiler flags must be quoted if it
 contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
