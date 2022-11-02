@@ -20,12 +20,8 @@ class PyPylatex(PythonPackage):
     variant('quantities', default=False, description='Build with quantities support')
     variant('convert_to_py2', default=False, description='Build with future support')
 
-<<<<<<< HEAD
     depends_on("python@2.7,3.3:", type=("build", 'run') )
     depends_on("py-future@0.15.2:", type=("build", 'run'), when='+convert_to_py2')
-=======
-    depends_on("python@2.7,3.3:", type=("build", "run"))
->>>>>>> 5436bbab35fd3020ba23f2503fcad61829a00008
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
     depends_on("py-ordered-set", type=("build", "run"))
