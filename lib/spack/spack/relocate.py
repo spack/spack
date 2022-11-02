@@ -86,7 +86,7 @@ class BinaryTextReplaceError(spack.error.SpackError):
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than or equal to new path"
         err_msg += "where at least the last 16 characters match.\n"
-        err_msg += "If you have removed the hash from your projection"
+        err_msg += "If you have removed the hash from your projection "
         err_msg += "consider restoring it."
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
@@ -514,13 +514,11 @@ def _replace_prefix_bin(filename, byte_prefixes):
         for match in all_prefixes.finditer(data):
             found_full = match.group(0)
             old = escaped_null.sub(b"", found_full)
-            print(found_full)
-            print(old)
             terminated = old != found_full
 
             new = byte_prefixes[old]
 
-            if len(new) > len(old) or new[-7:] != old[-7:]:
+            if len(new) > len(old) or (terminated and new[-7:] != old[-7:]):
                 tty.debug("Binary failing to relocate is %s" % filename)
                 raise BinaryTextReplaceError(old, new)
 
