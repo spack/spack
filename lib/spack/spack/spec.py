@@ -77,7 +77,6 @@ expansion when it is the first character in an id typed on the command line.
 """
 import collections
 import itertools
-import operator
 import os
 import re
 import sys
@@ -106,6 +105,7 @@ import spack.repo
 import spack.solver
 import spack.store
 import spack.target
+import spack.traverse as traverse
 import spack.util.crypto
 import spack.util.executable
 import spack.util.hash
@@ -812,10 +812,6 @@ class FlagMap(lang.HashableMap):
 def _sort_by_dep_types(dspec):
     # Use negation since False < True for sorting
     return tuple(t not in dspec.deptypes for t in ("link", "run", "build", "test"))
-
-
-def _sort_edges_by_pkg_name(edges):
-    edges.sort(key=lambda edge: edge.spec.name)
 
 
 #: Enum for edge directions
@@ -1601,144 +1597,12 @@ class Spec(object):
         return upstream
 
     def traverse(self, **kwargs):
-        depth = kwargs.get("depth", False)
+        """Shorthand for :meth:`~spack.traverse.traverse_nodes`"""
+        return traverse.traverse_nodes([self], **kwargs)
 
-        if depth:
-            for d, edge in self.traverse_edges(**kwargs):
-                yield d, edge.spec
-        else:
-            for edge in self.traverse_edges(**kwargs):
-                yield edge.spec
-
-    def traverse_edges(self, visited=None, d=0, deptype="all", dep_spec=None, **kwargs):
-        """Generic traversal of the DAG represented by this spec.
-
-        This yields ``DependencySpec`` objects as they are traversed.
-
-        An imaginary incoming edge to the root is yielded first as
-        ``DependencySpec(None, root, ())``.
-
-        Note: the edges are traversed from ``edge.parent`` to ``edge.spec``,
-        even if the direction is reversed. When ``direction="children"`` the
-        parent points to the dependent, and spec to the dependency. Conversely
-        when ``direction="parents"`` parent points to the dependency, and spec
-        to the dependent.
-
-        Options:
-
-        order    [=pre|post]
-            Order to traverse spec nodes. Defaults to preorder traversal.
-            Options are:
-
-            'pre':  Pre-order traversal; each node is yielded before its
-                    children in the dependency DAG.
-            'post': Post-order  traversal; each node is yielded after its
-                    children in the dependency DAG.
-
-        cover    [=nodes|edges|paths]
-            Determines how extensively to cover the dag.  Possible values:
-
-            'nodes': Visit each node in the dag only once.  Every node
-                     yielded by this function will be unique.
-            'edges': If a node has been visited once but is reached along a
-                     new path from the root, yield it but do not descend
-                     into it.  This traverses each 'edge' in the DAG once.
-            'paths': Explore every unique path reachable from the root.
-                     This descends into visited subtrees and will yield
-                     nodes twice if they're reachable by multiple paths.
-
-        depth    [=False]
-            Defaults to False.  When True, yields not just nodes in the
-            spec, but also their depth from the root in a (depth, node)
-            tuple.
-
-        key   [=id]
-            Allow a custom key function to track the identity of nodes
-            in the traversal.
-
-        root     [=True]
-            If False, this won't yield the root node, just its descendents.
-
-        direction [=children|parents]
-            If 'children', does a traversal of this spec's children.  If
-            'parents', traverses upwards in the DAG towards the root.
-
-        """
-        # get initial values for kwargs
-        depth = kwargs.get("depth", False)
-        key_fun = kwargs.get("key", id)
-        if isinstance(key_fun, six.string_types):
-            key_fun = operator.attrgetter(key_fun)
-        yield_root = kwargs.get("root", True)
-        cover = kwargs.get("cover", "nodes")
-        direction = kwargs.get("direction", "children")
-        order = kwargs.get("order", "pre")
-
-        # we don't want to run canonical_deptype every time through
-        # traverse, because it is somewhat expensive. This ensures we
-        # canonicalize only once.
-        canonical_deptype = kwargs.get("canonical_deptype", None)
-        if canonical_deptype is None:
-            deptype = dp.canonical_deptype(deptype)
-            kwargs["canonical_deptype"] = deptype
-        else:
-            deptype = canonical_deptype
-
-        # Make sure kwargs have legal values; raise ValueError if not.
-        def validate(name, val, allowed_values):
-            if val not in allowed_values:
-                raise ValueError(
-                    "Invalid value for %s: %s.  Choices are %s"
-                    % (name, val, ",".join(allowed_values))
-                )
-
-        validate("cover", cover, ("nodes", "edges", "paths"))
-        validate("direction", direction, ("children", "parents"))
-        validate("order", order, ("pre", "post"))
-
-        if visited is None:
-            visited = set()
-        key = key_fun(self)
-
-        # Node traversal does not yield visited nodes.
-        if key in visited and cover == "nodes":
-            return
-
-        def return_val(dspec):
-            if not dspec:
-                # make a fake dspec for the root.
-                dspec = DependencySpec(None, self, ())
-            return (d, dspec) if depth else dspec
-
-        yield_me = yield_root or d > 0
-
-        # Preorder traversal yields before successors
-        if yield_me and order == "pre":
-            yield return_val(dep_spec)
-
-        # Edge traversal yields but skips children of visited nodes
-        if not (key in visited and cover == "edges"):
-            visited.add(key)
-
-            # This code determines direction and yields the children/parents
-            if direction == "children":
-                edges = self.edges_to_dependencies()
-            else:
-                edges = [edge.flip() for edge in self.edges_from_dependents()]
-
-            _sort_edges_by_pkg_name(edges)
-
-            for dspec in edges:
-                dt = dspec.deptypes
-                if dt and not any(d in deptype for d in dt):
-                    continue
-
-                for child in dspec.spec.traverse_edges(visited, d + 1, deptype, dspec, **kwargs):
-                    yield child
-
-        # Postorder traversal yields after successors
-        if yield_me and order == "post":
-            yield return_val(dep_spec)
+    def traverse_edges(self, **kwargs):
+        """Shorthand for :meth:`~spack.traverse.traverse_edges`"""
+        return traverse.traverse_edges([self], **kwargs)
 
     @property
     def short_spec(self):
@@ -4604,11 +4468,13 @@ class Spec(object):
         show_types = kwargs.pop("show_types", False)
         deptypes = kwargs.pop("deptypes", "all")
         recurse_dependencies = kwargs.pop("recurse_dependencies", True)
+        depth_first = kwargs.pop("depth_first", False)
         lang.check_kwargs(kwargs, self.tree)
 
         out = ""
-        for d, dep_spec in self.traverse_edges(
-            order="pre", cover=cover, depth=True, deptype=deptypes
+
+        for d, dep_spec in traverse.traverse_tree(
+            [self], cover=cover, deptype=deptypes, depth_first=depth_first
         ):
             node = dep_spec.spec
 
