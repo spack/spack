@@ -21,12 +21,12 @@ class PyPylatex(PythonPackage):
     variant('convert_to_py2', default=False, description='Build with future support')
 
     depends_on("python@2.7,3.3:", type=("build", 'run') )
-    depends_on("py-future@0.15.2:", type=("build", 'run'), when='+convert_to_py2')
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@:57", type="build", when='@:1.4.1')
     depends_on("py-ordered-set", type=("build", "run"))
 
     # from extras section in setup.py
+    depends_on("py-future@0.15.2:", type=("build", 'run'), when='+convert_to_py2')
     depends_on('py-sphinx', type='run', when='+docs')
     depends_on('py-matplotlib', type='run', when='+matplotlib')
     depends_on('py-numpy', type='run', when='+matrices')
