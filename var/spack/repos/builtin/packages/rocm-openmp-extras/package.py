@@ -260,8 +260,8 @@ class RocmOpenmpExtras(Package):
         env.prepend_path("CPATH", "{0}/include".format(openmp_extras_prefix))
         env.prepend_path("LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
         if self.spec.version >= Version("5.3.0"):
-          env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
-          env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(hsa_prefix))
+            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
+            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(hsa_prefix))
         if self.spec.version < Version("4.1.0"):
             env.set("AOMP_GPU", "`{0}/rocm-bin/mygpu`".format(openmp_extras_prefix))
         else:
