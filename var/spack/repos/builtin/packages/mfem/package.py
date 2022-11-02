@@ -866,15 +866,33 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_libs = LibraryList([])
+            # To use a C++ compiler that supports -xhip flag one can use
+            # something like this:
+            #   options += [
+            #       "HIP_CXX=%s" % (spec["mpi"].mpicxx if "+mpi" in spec else spack_cxx),
+            #       "HIP_FLAGS=-xhip --offload-arch=%s" % amdgpu_target,
+            #   ]
+            #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
+                hipsparse = spec["hipsparse"]
+                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_libs += hipsparse.libs
                 # Note: MFEM's defaults.mk wants to find librocsparse.* in
-                # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
-                # rocsparse (which is a dependency of hipsparse).
-                options += [
-                    "HIP_DIR=%s" % spec["rocsparse"].prefix,
-                    "HIP_OPT=%s" % spec["hipsparse"].headers.cpp_flags,
-                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs),
-                ]
+                # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
+                # external HIP, or the prefix of rocsparse (which is a
+                # dependency of hipsparse) when using Spack-built HIP.
+                if spec["hip"].external:
+                    options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
+                else:
+                    options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "%cce" in spec:
+                # We assume the proper Cray CCE module (cce) is loaded:
+                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_libs:
+                options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
         if "+occa" in spec:
             options += [
@@ -981,10 +999,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+hiop" in spec:
             hiop = spec["hiop"]
-            lapack_blas = spec["lapack"].libs + spec["blas"].libs
+            hiop_libs = hiop.libs
+            hiop_libs += spec["lapack"].libs + spec["blas"].libs
+            if "^magma" in hiop:
+                hiop_libs += hiop["magma"].libs
             options += [
                 "HIOP_OPT=-I%s" % hiop.prefix.include,
-                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop.libs + lapack_blas),
+                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
             ]
 
         make("config", *options, parallel=False)
@@ -1002,6 +1023,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
         else:
+            # As of v4.5.0 and ROCm up to 5.2.3, the following miniapp crashes
+            # the HIP compiler, so it has to be disabled for testing with HIP:
+            # filter_file("PAR_MINIAPPS = hooke", "PAR_MINIAPPS =", "miniapps/hooke/makefile")
             make("all")
             make("test", parallel=False)
 
