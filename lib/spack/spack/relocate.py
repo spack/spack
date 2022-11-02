@@ -502,11 +502,6 @@ def _replace_prefix_bin(filename, byte_prefixes):
         bytes representing the old prefixes and the values are the new
         prefixes (all bytes utf-8 encoded)
     """
-    for orig_bytes, new_bytes in byte_prefixes.items():
-        if len(new_bytes) > len(orig_bytes) or new_bytes[-7:] != orig_bytes[-7:]:
-            tty.debug("Binary failing to relocate is %s" % filename)
-            raise BinaryTextReplaceError(orig_bytes, new_bytes)
-
     all_prefixes = re.compile(
         b"(" + b"|".join(re.escape(prefix) for prefix in byte_prefixes.keys()) + b")\0?"
     )
@@ -524,6 +519,10 @@ def _replace_prefix_bin(filename, byte_prefixes):
             terminated = old != found_full
 
             new = byte_prefixes[old]
+
+            if len(new) > len(old) or new[-7:] != old[-7:]:
+                tty.debug("Binary failing to relocate is %s" % filename)
+                raise BinaryTextReplaceError(old, new)
 
             f.seek(match.start())
             if terminated:
