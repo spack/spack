@@ -241,7 +241,7 @@ class Qgis(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        if '+bindings' in self.spec:
+        if "+bindings" in self.spec:
             # python module isn't located at the standard path
             env.prepend_path("PYTHONPATH", self.prefix.share.qgis.python)
 
