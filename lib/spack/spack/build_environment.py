@@ -584,6 +584,16 @@ def set_module_variables_for_package(pkg):
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
     m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
+    # TODO: johnwparent: add package or builder support to define these build tools
+    # for now there is no entrypoint for builders to define these on their
+    # own
+    if sys.platform == "win32":
+        m.nmake = Executable("nmake")
+        m.msbuild = Executable("msbuild")
+        # analog to configure for win32
+        m.cscript = Executable("cscript")
+
+    m.env = os.environ
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
