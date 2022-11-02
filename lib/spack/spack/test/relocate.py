@@ -24,6 +24,7 @@ import spack.util.executable
 from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
+PREFIX_LIKE = "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
 
 
 def skip_unless_linux(f):
@@ -56,6 +57,11 @@ def is_relocatable(request):
 
 
 @pytest.fixture()
+def prefix_tmpdir(tmpdir):
+    return tmpdir.mkdir(PREFIX_LIKE)
+
+
+@pytest.fixture()
 def source_file(tmpdir, is_relocatable):
     """Returns the path to a source file of a relocatable executable."""
     if is_relocatable:
@@ -83,13 +89,13 @@ def mock_patchelf(tmpdir, mock_executable):
 
 
 @pytest.fixture()
-def hello_world(tmpdir):
+def hello_world(prefix_tmpdir):
     """Factory fixture that compiles an ELF binary setting its RPATH. Relative
     paths are encoded with `$ORIGIN` prepended.
     """
 
     def _factory(rpaths, message="Hello world!"):
-        source = tmpdir.join("main.c")
+        source = prefix_tmpdir.join("main.c")
         source.write(
             """
         #include <stdio.h>
@@ -183,7 +189,7 @@ def copy_binary():
     """
 
     def _copy_somewhere(orig_binary):
-        new_root = orig_binary.mkdtemp()
+        new_root = orig_binary.mkdtemp().mkdir(PREFIX_LIKE)
         new_binary = new_root.join("main.x")
         shutil.copy(str(orig_binary), str(new_binary))
         return new_binary
@@ -316,28 +322,32 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
 def test_replace_prefix_bin(hello_world):
+    prefix = "/usr/" + PREFIX_LIKE
+    prefix_bytes = prefix.encode("utf-8")
+    new_prefix = "/foo/" + PREFIX_LIKE
+    new_prefix_bytes = new_prefix.encode("utf-8")
     # Compile an "Hello world!" executable and set RPATHs
-    executable = hello_world(rpaths=["/usr/lib", "/usr/lib64"])
+    executable = hello_world(rpaths=[prefix + "/lib", prefix + "/lib64"])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), {b"/usr": b"/foo"})
+    spack.relocate._replace_prefix_bin(str(executable), {prefix_bytes: new_prefix_bytes})
 
     # Some compilers add rpaths so ensure changes included in final result
-    assert "/foo/lib:/foo/lib64" in rpaths_for(executable)
+    assert "%s/lib:%s/lib64" % (new_prefix, new_prefix) in rpaths_for(executable)
 
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, tmpdir):
+def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=[str(tmpdir.mkdir("lib")), "/usr/lib64"])
+    orig_binary = hello_world(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
         binaries=[str(new_binary)],
         orig_root=str(orig_binary.dirpath()),
         new_root=None,  # Not needed when relocating absolute paths
-        new_prefixes={str(tmpdir): "/foo"},
+        new_prefixes={str(orig_binary.dirpath()): "/foo"},
         rel=False,
         # Not needed when relocating absolute paths
         orig_prefix=None,
@@ -371,9 +381,13 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
+def test_make_elf_binaries_relative(hello_world, copy_binary, prefix_tmpdir):
     orig_binary = hello_world(
-        rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"]
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ]
     )
     new_binary = copy_binary(orig_binary)
 
@@ -393,15 +407,19 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
+def test_relocate_text_bin(hello_world, copy_binary, prefix_tmpdir):
     orig_binary = hello_world(
-        rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"],
-        message=str(tmpdir),
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ],
+        message=str(prefix_tmpdir),
     )
     new_binary = copy_binary(orig_binary)
 
-    # Check original directory is in the executabel and the new one is not
-    assert text_in_bin(str(tmpdir), new_binary)
+    # Check original directory is in the executable and the new one is not
+    assert text_in_bin(str(prefix_tmpdir), new_binary)
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
@@ -412,7 +430,7 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
 
     # Check original directory is not there anymore and it was
     # substituted with the new one
-    assert not text_in_bin(str(tmpdir), new_binary)
+    assert not text_in_bin(str(prefix_tmpdir), new_binary)
     assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
@@ -518,16 +536,24 @@ def test_ordered_replacement(tmpdir):
 
     replace_and_expect(
         OrderedDict(
-            [(b"/old-spack/opt/specific-package", b"/first"), (b"/old-spack/opt", b"/second")]
+            [(b"/old-spack/opt/specific-package", b"/first/specific-package"), (b"/old-spack/opt", b"/sec/spack/opt")]
         ),
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with /first///////////////////////// and /second///////",
+        b"Binary with /////////first/specific-package and /sec/spack/opt",
     )
 
     replace_and_expect(
         OrderedDict(
-            [(b"/old-spack/opt", b"/second"), (b"/old-spack/opt/specific-package", b"/first")]
+            [(b"/old-spack/opt/specific-package", b"/first/specific-package"), (b"/old-spack/opt", b"/sec/spack/opt")]
+        ),
+        b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
+        b"Binary with /first/specific-package\x00package\x00 and /sec/spack/opt\x00",
+    )
+
+    replace_and_expect(
+        OrderedDict(
+            [(b"/old-spack/opt", b"/s/spack/opt"), (b"/old-spack/opt/specific-package", b"/first/specific-package")]
         ),
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
-        b"Binary with /second////////specific-package and /second///////",
+        b"Binary with ///s/spack/opt/specific-package and ///s/spack/opt",
     )

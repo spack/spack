@@ -71,7 +71,16 @@ class BinaryTextReplaceError(spack.error.SpackError):
         msg = "New path incompatible with old path: binary text replacement not possible."
         err_msg = "The new path `%s`\n" % new_path
         err_msg += "and old path `%s`\n" % old_path
-        err_msg += "have incompatible suffixes %s != %s.\n" % (old_path[-16:], new_path[-16:])
+        err_msg += "are incompatible.\n"
+        delta = len(old_path) - len(new_path)
+        if delta < 0:
+            err_msg += "The new path is longer than the old, we cannot lengthen strings.\n"
+        if old_path[-7:] != new_path[-7:]:
+            err_msg += "They have incompatible suffixes %s != %s.\n" % (
+                old_path[-7:],
+                new_path[-7:],
+            )
+            err_msg += "Incompatible suffixes may not work, if using a custom projection, ensure hash is last.\n"
         err_msg += "Text replacement in binaries will not work.\n"
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than or equal to new path"
@@ -493,38 +502,46 @@ def _replace_prefix_bin(filename, byte_prefixes):
         prefixes (all bytes utf-8 encoded)
     """
     for orig_bytes, new_bytes in byte_prefixes.items():
-        if len(new_bytes) > len(orig_bytes):
+        if len(new_bytes) > len(orig_bytes) or new_bytes[-7:] != orig_bytes[-7:]:
             tty.debug("Binary failing to relocate is %s" % filename)
             raise BinaryTextReplaceError(orig_bytes, new_bytes)
 
-    all_prefixes = re.compile(b"(" + b"|".join(re.escape(prefix) for prefix in byte_prefixes.keys()) + b"\0?)")
+    all_prefixes = re.compile(
+        b"(" + b"|".join(re.escape(prefix) for prefix in byte_prefixes.keys()) + b")\0?"
+    )
+    print(all_prefixes)
 
+    escaped_null = re.compile(re.escape(b"\0") + b"$")
     with open(filename, "rb+") as f:
         data = f.read()
         f.seek(0)
         for match in all_prefixes.finditer(data):
             found_full = match.group(0)
-            if found_full[-1] == b'\0':
-                terminated = True
-                old = found_full[:-1]
-            else:
-                terminated = False
-                old = found_full
+            old = escaped_null.sub(b"", found_full)
+            print(found_full)
+            print(old)
+            terminated = old != found_full
 
             new = byte_prefixes[old]
 
             f.seek(match.start())
             if terminated:
-                f.write(new + b'\0')
+                f.write(new + b"\0")
             else:
                 pad = len(old) - len(new)
                 if pad < 0:
                     raise BinaryTextReplaceError(old, new)
-                f.write(b'/' * pad + new)
+                f.write(b"/" * pad + new)
 
 
 def relocate_macho_binaries(
-    path_names, old_layout_root, new_layout_root, prefix_to_prefix, rel, old_prefix, new_prefix
+    path_names,
+    old_layout_root,
+    new_layout_root,
+    prefix_to_prefix,
+    rel,
+    old_prefix,
+    new_prefix,
 ):
     """
     Use macholib python package to get the rpaths, depedent libraries
