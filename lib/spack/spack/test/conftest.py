@@ -591,6 +591,16 @@ def linux_os():
     return LinuxOS(name=name, version=version)
 
 
+@pytest.fixture(scope="function")
+def debug_output():
+    saved = tty.debug_level()
+    tty.set_debug(2)
+
+    yield
+
+    tty.set_debug(saved)
+
+
 @pytest.fixture(autouse=is_windows, scope="session")
 def platform_config():
     spack.config.add_default_platform_scope(spack.platforms.real_host().name)
