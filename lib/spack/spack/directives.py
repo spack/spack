@@ -806,6 +806,7 @@ def drop_patch(name):
 
     return _execute_drop_patch
 
+
 def build_system(*values, **kwargs):
     default = kwargs.get("default", None) or values[0]
     return variant(
