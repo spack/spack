@@ -7,7 +7,6 @@
 Test that Spack's shebang filtering works correctly.
 """
 import filecmp
-import getpass
 import os
 import shutil
 import stat
@@ -273,6 +272,9 @@ def configure_group_perms():
     # and grp does not act on remote groups.
     # To ensure we find a group we can operate on, we get take the first group
     # listed which has the current user as a member.
+    gid = fs.group_ids(os.getuid())[0]
+    group_name = grp.getgrgid(gid).gr_name
+
     conf = syaml.load_config(
         """\
 all:
@@ -281,7 +283,7 @@ all:
     write: group
     group: {0}
 """.format(
-            [g.gr_name for g in grp.getgrall() if getpass.getuser() in g.gr_mem][0]
+            group_name
         )
     )
     spack.config.set("packages", conf, scope="user")
