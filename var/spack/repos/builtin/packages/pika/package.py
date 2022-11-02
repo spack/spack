@@ -98,6 +98,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("rocblas", when="+rocm")
     depends_on("rocsolver", when="@0.5: +rocm")
     depends_on("tracy-client", when="+tracy")
+    conflicts("tracy-client@0.9:", when="@:0.9")
     depends_on("whip+rocm", when="@0.9: +rocm")
     depends_on("whip+cuda", when="@0.9: +cuda")
 
