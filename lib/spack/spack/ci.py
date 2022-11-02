@@ -181,13 +181,13 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
         allows us to maximize build parallelism within the gitlab-ci framework.
 
     Arguments:
-        specs (Iterable): Specs to build
+        specs (Iterable): concretized Specs to build
         check_index_only (bool): Regardless of whether DAG pruning is enabled,
             all configured mirrors are searched to see if binaries for specs
             are up to date on those mirrors.  This flag limits that search to
             the binary cache indices on those mirrors to speed the process up,
-            even though there is no garantee the index is up to date.
-        mirrors_to_checK: Optional mapping giving mirrors to check instead of
+            even though there is no guarantee the index is up to date.
+        mirrors_to_check: Optional mapping giving mirrors to check instead of
             any configured mirrors.
 
     Returns: A tuple of information objects describing the specs, dependencies
@@ -550,6 +550,104 @@ def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True)
     return affected_specs
 
 
+def _phase_specs(env, gitlab_ci):
+    """Returns the CI phases and any bootstrap specs.
+
+    Arguments:
+        env (spack.environment.Environment): Activated environment object
+            which must contain a gitlab-ci section describing how to map
+            specs to runners
+        gitlab_ci (dict): dictionary of the environment's gitlab-ci section
+
+    Returns:
+        phases (list): list of CI phases, in order
+        bootstrap_specs (list): list of bootstrap specs
+    """
+    bootstrap_specs = []
+    phases = []
+    if "bootstrap" in gitlab_ci:
+        for phase in gitlab_ci["bootstrap"]:
+            try:
+                phase_name = phase.get("name")
+                strip_compilers = phase.get("compiler-agnostic")
+            except AttributeError:
+                phase_name = phase
+                strip_compilers = False
+
+            phases.append(
+                {
+                    "name": phase_name,
+                    "strip-compilers": strip_compilers,
+                }
+            )
+
+            for bs in env.spec_lists[phase_name]:
+                bootstrap_specs.append(
+                    {
+                        "spec": bs,
+                        "phase-name": phase_name,
+                        "strip-compilers": strip_compilers,
+                    }
+                )
+
+    phases.append(
+        {
+            "name": "specs",
+            "strip-compilers": False,
+        }
+    )
+    return phases, bootstrap_specs
+
+
+def _staged_phases(env, phases, check_index_only=False, mirrors_to_check=None):
+    """Initialize CI phases and any bootstrap specs.
+
+    Arguments:
+        env (spack.environment.Environment): Activated environment object
+        phases (list): CI phases, each entry a dictionary with name and
+            strip-compilers entries
+        check_index_only (bool): If True, attempt to fetch the mirror index
+            and only use that to determine whether built specs on the mirror
+            this mode results in faster yaml generation time). Otherwise, also
+            check each spec directly by url (useful if there is no index or it
+            might be out of date).
+        mirrors_to_check: mapping giving mirrors to check instead of any
+            configured mirrors.
+
+    Returns:
+        staged_phases (dict): dictionary of spec jobs indexed by phase name
+    """
+    staged_phases = {}
+    for phase in phases:
+        phase_name = phase["name"]
+        if phase_name == "specs":
+            # Anything in the "specs" of the environment are already
+            # concretized by the block at the top of this method, so we
+            # only need to find the concrete versions, and then avoid
+            # re-concretizing them needlessly later on.
+            concrete_phase_specs = [
+                concrete
+                for abstract, concrete in env.concretized_specs()
+                if abstract in env.spec_lists[phase_name]
+            ]
+        else:
+            # Any specs lists in other definitions (but not in the
+            # "specs") of the environment are not yet concretized so we
+            # have to concretize them explicitly here.
+            concrete_phase_specs = env.spec_lists[phase_name]
+            with spack.concretize.disable_compiler_existence_check():
+                for phase_spec in concrete_phase_specs:
+                    phase_spec.concretize()
+
+        staged_phases[phase_name] = stage_spec_jobs(
+            concrete_phase_specs,
+            check_index_only=check_index_only,
+            mirrors_to_check=mirrors_to_check,
+        )
+
+    return staged_phases
+
+
 def generate_gitlab_ci_yaml(
     env,
     print_summary,
@@ -679,38 +777,7 @@ def generate_gitlab_ci_yaml(
     if "temporary-storage-url-prefix" in gitlab_ci:
         temp_storage_url_prefix = gitlab_ci["temporary-storage-url-prefix"]
 
-    bootstrap_specs = []
-    phases = []
-    if "bootstrap" in gitlab_ci:
-        for phase in gitlab_ci["bootstrap"]:
-            try:
-                phase_name = phase.get("name")
-                strip_compilers = phase.get("compiler-agnostic")
-            except AttributeError:
-                phase_name = phase
-                strip_compilers = False
-            phases.append(
-                {
-                    "name": phase_name,
-                    "strip-compilers": strip_compilers,
-                }
-            )
-
-            for bs in env.spec_lists[phase_name]:
-                bootstrap_specs.append(
-                    {
-                        "spec": bs,
-                        "phase-name": phase_name,
-                        "strip-compilers": strip_compilers,
-                    }
-                )
-
-    phases.append(
-        {
-            "name": "specs",
-            "strip-compilers": False,
-        }
-    )
+    phases, bootstrap_specs = _phase_specs(env, gitlab_ci)
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
@@ -776,33 +843,13 @@ def generate_gitlab_ci_yaml(
     except bindist.FetchCacheError as e:
         tty.error(e)
 
-    staged_phases = {}
     try:
-        for phase in phases:
-            phase_name = phase["name"]
-            if phase_name == "specs":
-                # Anything in the "specs" of the environment are already
-                # concretized by the block at the top of this method, so we
-                # only need to find the concrete versions, and then avoid
-                # re-concretizing them needlessly later on.
-                concrete_phase_specs = [
-                    concrete
-                    for abstract, concrete in env.concretized_specs()
-                    if abstract in env.spec_lists[phase_name]
-                ]
-            else:
-                # Any specs lists in other definitions (but not in the
-                # "specs") of the environment are not yet concretized so we
-                # have to concretize them explicitly here.
-                concrete_phase_specs = env.spec_lists[phase_name]
-                with spack.concretize.disable_compiler_existence_check():
-                    for phase_spec in concrete_phase_specs:
-                        phase_spec.concretize()
-            staged_phases[phase_name] = stage_spec_jobs(
-                concrete_phase_specs,
-                check_index_only=check_index_only,
-                mirrors_to_check=mirrors_to_check,
-            )
+        staged_phases = _staged_phases(
+            env,
+            phases,
+            check_index_only,
+            mirrors_to_check,
+        )
     finally:
         # Clean up remote mirror override if enabled
         if remote_mirror_override:

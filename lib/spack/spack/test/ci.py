@@ -615,3 +615,16 @@ def test_ci_skipped_report(tmpdir, mock_packages, config):
             elif reason in line:
                 have[1] += 1
         assert all(count == 1 for count in have)
+
+
+def test_ci_staged_phases(config, mutable_mock_env_path, mock_packages):
+    e = ev.create("phase_specs")
+    e.add("dyninst")
+    e.concretize()
+
+    phases, _ = spack.ci._phase_specs(e, {})
+    assert len(phases) == 1 and phases[0]["name"] == "specs"
+
+    staged_phases = spack.ci._staged_phases(e, phases)
+    for specs in staged_phases["specs"]:
+        assert len(specs) >= 1
