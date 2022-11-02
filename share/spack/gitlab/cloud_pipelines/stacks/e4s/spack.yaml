@@ -280,10 +280,18 @@ spack:
     match_behavior: first
     mappings:
       - match:
+          - rocblas
+        runner-attributes:
+          tags: [ "spack", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 60G
+
+      - match:
           - hipblas
           - llvm
           - llvm-amdgpu
-          - rocblas
         runner-attributes:
           tags: [ "spack", "huge", "x86_64" ]
           variables:
