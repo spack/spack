@@ -101,6 +101,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("double", default=True, description="Switches between single and double precision")
     variant("complex", default=False, description="Build with complex numbers")
     variant("debug", default=False, description="Compile in debug mode")
+    # Logging redefines all MPI functions via macros. This is disabled
+    # because it can break standard-conforming C++ code since macros
+    # cannot handle commas in template arguments. See e.g.
+    # <https://github.com/AMReX-Codes/amrex/issues/3009> for a problem
+    # caused by this. I reported this problem to the PETSc maintainers,
+    # but there is not public list of bug reports available.
+    variant("log", default=False, description="Enable logging")
 
     variant("metis", default=True, description="Activates support for metis and parmetis")
     variant(
@@ -423,6 +430,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 "--with-debugging=%s" % ("1" if "+debug" in spec else "0"),
                 "--with-openmp=%s" % ("1" if "+openmp" in spec else "0"),
                 "--with-64-bit-indices=%s" % ("1" if "+int64" in spec else "0"),
+                "--with-log=%s" % ("1" if "+log" in spec else "0"),
             ]
         )
 
