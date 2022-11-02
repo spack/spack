@@ -224,7 +224,7 @@ class Conduit(CMakePackage):
     @run_after("build")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        with working_dir("spack-build"):
+        with working_dir(self.build_directory):
             print("Running Conduit Unit Tests...")
             make("test")
 
