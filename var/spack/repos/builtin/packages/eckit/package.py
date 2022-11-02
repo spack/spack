@@ -151,10 +151,19 @@ class Eckit(CMakePackage):
         # system have SHARED hardcoded (in several CMakeLists.txt files).
         if "~shared" in self.spec:
             # args.append("-DBUILD_SHARED_LIBS=OFF")
-            raise InstrallError("eckit static build not supported")
+            raise InstallError("eckit static build not supported")
 
             # ENABLE_LAPACK is ignored if MKL backend is enabled
             # (the LAPACK backend is still built though):
             args.append(self.define("ENABLE_LAPACK", "linalg=lapack" in self.spec))
 
         return args
+
+    def setup_build_environment(self, env):
+        # Bug fix for macOS - cmake's find_package doesn't add "libtinfo.dylib" to the
+        # ncurses libraries, but the ncurses pkgconfig explicitly sets it. We need to
+        # add the correct spec['ncurses'].libs.ld_flags to LDFLAGS to compile eckit
+        # when the admin variant is enabled.
+        if self.spec.satisfies("platform=darwin") and self.spec.satisfies("+admin"):
+            env.append_flags("LDFLAGS", self.spec["ncurses"].libs.ld_flags)
+

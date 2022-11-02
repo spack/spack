@@ -19,6 +19,7 @@ class Latex2html(AutotoolsPackage):
     maintainers = ["cessenat"]
 
     version("master", branch="master")
+    version("2022.2", sha256="b1d5bba7bab7d0369d1241f2d8294137a52b7cb7df11239bfa15ec0a2546c093")
     version("2021", sha256="872fe7a53f91ababaafc964847639e3644f2b9fab3282ea059788e4e18cbba47")
     version("2017", sha256="28a5d4b8f14b1f95928da281b6332559bcd83349ba439b2fa43655b2e21c83ab")
 

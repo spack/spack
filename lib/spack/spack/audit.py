@@ -35,8 +35,11 @@ Calls to each of these functions are triggered by the ``run`` method of
 the decorator object, that will forward the keyword arguments passed
 as input.
 """
+import ast
 import collections
+import inspect
 import itertools
+import pickle
 import re
 
 from six.moves.urllib.request import urlopen
@@ -48,6 +51,7 @@ import spack.config
 import spack.patch
 import spack.repo
 import spack.spec
+import spack.util.crypto
 import spack.variant
 
 #: Map an audit tag to a list of callables implementing checks
@@ -252,6 +256,21 @@ package_directives = AuditClass(
     kwargs=("pkgs",),
 )
 
+package_attributes = AuditClass(
+    group="packages",
+    tag="PKG-ATTRIBUTES",
+    description="Sanity checks on reserved attributes of packages",
+    kwargs=("pkgs",),
+)
+
+
+package_properties = AuditClass(
+    group="packages",
+    tag="PKG-PROPERTIES",
+    description="Sanity checks on properties a package should maintain",
+    kwargs=("pkgs",),
+)
+
 
 #: Sanity checks on linting
 # This can take some time, so it's run separately from packages
@@ -309,6 +328,177 @@ def _check_patch_urls(pkgs, error_cls):
                             [patch.url],
                         )
                     )
+
+    return errors
+
+
+@package_attributes
+def _search_for_reserved_attributes_names_in_packages(pkgs, error_cls):
+    """Ensure that packages don't override reserved names"""
+    RESERVED_NAMES = ("name",)
+    errors = []
+    for pkg_name in pkgs:
+        name_definitions = collections.defaultdict(list)
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+
+        for cls_item in inspect.getmro(pkg_cls):
+            for name in RESERVED_NAMES:
+                current_value = cls_item.__dict__.get(name)
+                if current_value is None:
+                    continue
+                name_definitions[name].append((cls_item, current_value))
+
+        for name in RESERVED_NAMES:
+            if len(name_definitions[name]) == 1:
+                continue
+
+            error_msg = (
+                "Package '{}' overrides the '{}' attribute or method, "
+                "which is reserved for Spack internal use"
+            )
+            definitions = [
+                "defined in '{}'".format(x[0].__module__) for x in name_definitions[name]
+            ]
+            errors.append(error_cls(error_msg.format(pkg_name, name), definitions))
+
+    return errors
+
+
+@package_properties
+def _ensure_all_package_names_are_lowercase(pkgs, error_cls):
+    """Ensure package names are lowercase and consistent"""
+    badname_regex, errors = re.compile(r"[_A-Z]"), []
+    for pkg_name in pkgs:
+        if badname_regex.search(pkg_name):
+            error_msg = "Package name '{}' is either lowercase or conatine '_'".format(pkg_name)
+            errors.append(error_cls(error_msg, []))
+    return errors
+
+
+@package_properties
+def _ensure_packages_are_pickeleable(pkgs, error_cls):
+    """Ensure that package objects are pickleable"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            pickle.dumps(pkg)
+        except Exception as e:
+            error_msg = "Package '{}' failed to pickle".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
+    return errors
+
+
+@package_properties
+def _ensure_packages_are_unparseable(pkgs, error_cls):
+    """Ensure that all packages can unparse and that unparsed code is valid Python"""
+    import spack.util.package_hash as ph
+
+    errors = []
+    for pkg_name in pkgs:
+        try:
+            source = ph.canonical_source(pkg_name, filter_multimethods=False)
+        except Exception as e:
+            error_msg = "Package '{}' failed to unparse".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
+            continue
+
+        try:
+            compile(source, "internal", "exec", ast.PyCF_ONLY_AST)
+        except Exception as e:
+            error_msg = "The unparsed package '{}' failed to compile".format(pkg_name)
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg, details))
+
+    return errors
+
+
+@package_properties
+def _ensure_all_versions_can_produce_a_fetcher(pkgs, error_cls):
+    """Ensure all versions in a package can produce a fetcher"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+        try:
+            spack.fetch_strategy.check_pkg_attributes(pkg)
+            for version in pkg.versions:
+                assert spack.fetch_strategy.for_package_version(pkg, version)
+        except Exception as e:
+            error_msg = "The package '{}' cannot produce a fetcher for some of its versions"
+            details = ["{}".format(str(e))]
+            errors.append(error_cls(error_msg.format(pkg_name), details))
+    return errors
+
+
+@package_properties
+def _ensure_docstring_and_no_fixme(pkgs, error_cls):
+    """Ensure the package has a docstring and no fixmes"""
+    errors = []
+    fixme_regexes = [
+        re.compile(r"remove this boilerplate"),
+        re.compile(r"FIXME: Put"),
+        re.compile(r"FIXME: Add"),
+        re.compile(r"example.com"),
+    ]
+    for pkg_name in pkgs:
+        details = []
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        with open(filename, "r") as package_file:
+            for i, line in enumerate(package_file):
+                pattern = next((r for r in fixme_regexes if r.search(line)), None)
+                if pattern:
+                    details.append(
+                        "%s:%d: boilerplate needs to be removed: %s" % (filename, i, line.strip())
+                    )
+        if details:
+            error_msg = "Package '{}' contains boilerplate that need to be removed"
+            errors.append(error_cls(error_msg.format(pkg_name), details))
+
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        if not pkg_cls.__doc__:
+            error_msg = "Package '{}' miss a docstring"
+            errors.append(error_cls(error_msg.format(pkg_name), []))
+
+    return errors
+
+
+@package_properties
+def _ensure_all_packages_use_sha256_checksums(pkgs, error_cls):
+    """Ensure no packages use md5 checksums"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        if pkg_cls.manual_download:
+            continue
+
+        pkg = pkg_cls(spack.spec.Spec(pkg_name))
+
+        def invalid_sha256_digest(fetcher):
+            if getattr(fetcher, "digest", None):
+                h = spack.util.crypto.hash_algo_for_digest(fetcher.digest)
+                if h != "sha256":
+                    return h, True
+            return None, False
+
+        error_msg = "Package '{}' does not use sha256 checksum".format(pkg_name)
+        details = []
+        for v, args in pkg.versions.items():
+            fetcher = spack.fetch_strategy.for_package_version(pkg, v)
+            digest, is_bad = invalid_sha256_digest(fetcher)
+            if is_bad:
+                details.append("{}@{} uses {}".format(pkg_name, v, digest))
+
+        for _, resources in pkg.resources.items():
+            for resource in resources:
+                digest, is_bad = invalid_sha256_digest(resource.fetcher)
+                if is_bad:
+                    details.append("Resource in '{}' uses {}".format(pkg_name, digest))
+        if details:
+            errors.append(error_cls(error_msg, details))
 
     return errors
 
@@ -446,6 +636,36 @@ def _unknown_variants_in_dependencies(pkgs, error_cls):
                         errors.append(
                             error_cls(summary=summary, details=[error_msg, "in " + filename])
                         )
+
+    return errors
+
+
+@package_directives
+def _ensure_variant_defaults_are_parsable(pkgs, error_cls):
+    """Ensures that variant defaults are present and parsable from cli"""
+    errors = []
+    for pkg_name in pkgs:
+        pkg_cls = spack.repo.path.get_pkg_class(pkg_name)
+        for variant_name, entry in pkg_cls.variants.items():
+            variant, _ = entry
+            default_is_parsable = (
+                # Permitting a default that is an instance on 'int' permits
+                # to have foo=false or foo=0. Other falsish values are
+                # not allowed, since they can't be parsed from cli ('foo=')
+                isinstance(variant.default, int)
+                or variant.default
+            )
+            if not default_is_parsable:
+                error_msg = "Variant '{}' of package '{}' has a bad default value"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
+                continue
+
+            vspec = variant.make_default()
+            try:
+                variant.validate_or_raise(vspec, pkg_cls=pkg_cls)
+            except spack.variant.InvalidVariantValueError:
+                error_msg = "The variant '{}' default value in package '{}' cannot be validated"
+                errors.append(error_cls(error_msg.format(variant_name, pkg_name), []))
 
     return errors
 

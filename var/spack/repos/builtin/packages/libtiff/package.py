@@ -25,17 +25,17 @@ class Libtiff(AutotoolsPackage):
     version("4.0.6", sha256="4d57a50907b510e3049a4bba0d7888930fdfc16ce49f1bf693e5b6247370d68c")
     version("3.9.7", sha256="f5d64dd4ce61c55f5e9f6dc3920fbe5a41e02c2e607da7117a35eb5c320cef6a")
 
-    variant("zlib", default=False, description="Enable Zlib usage")
-    variant("libdeflate", default=False, description="Enable libdeflate usage")
+    variant("zlib", default=True, description="Enable Zlib usage")
+    variant("libdeflate", default=False, description="Enable libdeflate usage", when="@4.2:")
     variant("pixarlog", default=False, description="Enable support for Pixar log-format algorithm")
-    variant("jpeg", default=False, description="Enable IJG JPEG library usage")
+    variant("jpeg", default=True, description="Enable IJG JPEG library usage")
     variant("old-jpeg", default=False, description="Enable support for Old JPEG compression")
-    variant("jpeg12", default=False, description="Enable libjpeg 8/12bit dual mode")
+    variant("jpeg12", default=False, description="Enable libjpeg 8/12bit dual mode", when="@4:")
     variant("jbig", default=False, description="Enable JBIG-KIT usage")
-    variant("lerc", default=False, description="Enable liblerc usage")
-    variant("lzma", default=False, description="Enable liblzma usage")
-    variant("zstd", default=False, description="Enable libzstd usage")
-    variant("webp", default=False, description="Enable libwebp usage")
+    variant("lerc", default=False, description="Enable liblerc usage", when="@4.3:")
+    variant("lzma", default=False, description="Enable liblzma usage", when="@4:")
+    variant("zstd", default=False, description="Enable libzstd usage", when="@4.0.10:")
+    variant("webp", default=False, description="Enable libwebp usage", when="@4.0.10:")
 
     depends_on("zlib", when="+zlib")
     depends_on("zlib", when="+pixarlog")
@@ -47,14 +47,8 @@ class Libtiff(AutotoolsPackage):
     depends_on("libwebp", when="+webp")
 
     conflicts("+libdeflate", when="~zlib")
-    conflicts("+libdeflate", when="@:4.1")
     conflicts("+jpeg12", when="~jpeg")
-    conflicts("+jpeg12", when="@:3")
     conflicts("+lerc", when="~zlib")
-    conflicts("+lerc", when="@:4.2")
-    conflicts("+lzma", when="@:3")
-    conflicts("+zstd", when="@:4.0.9")
-    conflicts("+webp", when="@:4.0.9")
 
     # 4.3.0 contains a bug that breaks the build on case-sensitive filesystems when
     # using a C++20-capable compiler (commonly the case on macOS). Not an easy way to
@@ -72,19 +66,14 @@ class Libtiff(AutotoolsPackage):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("zlib")
-        if self.spec.satisfies("@4.2:"):
-            args += self.enable_or_disable("libdeflate")
+        args += self.enable_or_disable("libdeflate")
         args += self.enable_or_disable("pixarlog")
         args += self.enable_or_disable("jpeg")
         args += self.enable_or_disable("old-jpeg")
-        if self.spec.satisfies("@4:"):
-            args += self.enable_or_disable("jpeg12")
+        args += self.enable_or_disable("jpeg12")
         args += self.enable_or_disable("jbig")
-        if self.spec.satisfies("@4.3:"):
-            args += self.enable_or_disable("lerc")
-        if self.spec.satisfies("@4:"):
-            args += self.enable_or_disable("lzma")
-        if self.spec.satisfies("@4.0.10:"):
-            args += self.enable_or_disable("zstd")
-            args += self.enable_or_disable("webp")
+        args += self.enable_or_disable("lerc")
+        args += self.enable_or_disable("lzma")
+        args += self.enable_or_disable("zstd")
+        args += self.enable_or_disable("webp")
         return args

@@ -14,6 +14,7 @@ class Direnv(Package):
 
     maintainers = ["acastanedam"]
 
+    version("2.32.1", sha256="dc7df9a9e253e1124748aa74da94bf2b96f5a61d581c60d52d3f8e8dc86ecfde")
     version("2.31.0", sha256="f82694202f584d281a166bd5b7e877565f96a94807af96325c8f43643d76cb44")
     version("2.30.2", sha256="a2ee14ebdbd9274ba8bf0896eeb94e98947a056611058dedd4dbb43167e076f3")
     version("2.20.0", sha256="cc72525b0a5b3c2ab9a52a3696e95562913cd431f923bcc967591e75b7541bff")

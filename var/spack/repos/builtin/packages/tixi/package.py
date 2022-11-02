@@ -20,8 +20,21 @@ class Tixi(CMakePackage):
     version("3.0.3", sha256="3584e0cec6ab811d74fb311a9af0663736b1d7f11b81015fcb378efaf5ad3589")
     version("2.2.4", sha256="9080d2a617b7c411b9b4086de23998ce86e261b88075f38c73d3ce25da94b21c")
 
+    variant(
+        "shared", default=True, description="Enables the build of shared libraries", when="@3.0.3:"
+    )
+    variant("fortran", default=True, description="Enable Fortran bindings", when="@3.1.1:")
+
     depends_on("python", type="build")
     depends_on("expat")
     depends_on("curl")
     depends_on("libxml2")
     depends_on("libxslt")
+
+    def cmake_args(self):
+        args = []
+        if self.spec.satisfies("+shared"):
+            args.append("-DBUILD_SHARED_LIBS=ON")
+        if self.spec.satisfies("+fortran"):
+            args.append("-DTIXI_ENABLE_FORTRAN=ON")
+        return args

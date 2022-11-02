@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     maintainers = ["glennpj"]
 
+    version("4.2.1", sha256="4d52db486d27848e54613d4ee977ad952ec08ce17807e1b525b10cd4436c643f")
     version("4.2.0", sha256="38eab7719b7ad095388f06aa090c5a2b202791945de60d3e2bb0eab1f5097488")
     version("4.1.3", sha256="15ff5b333c61094060b2a52e9c1d8ec55cc42dd029e39ca22abdaa909526fed6")
     version("4.1.2", sha256="2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af")
@@ -79,6 +80,7 @@ class R(AutotoolsPackage):
     depends_on("xz")
     depends_on("which", type=("build", "run"))
     depends_on("zlib@1.2.5:")
+    depends_on("texinfo", type="build")
     depends_on("cairo+X+gobject+pdf", when="+X")
     depends_on("pango+X", when="+X")
     depends_on("harfbuzz+graphite2", when="+X")
@@ -212,16 +214,19 @@ class R(AutotoolsPackage):
         # Use the number of make_jobs set in spack. The make program will
         # determine how many jobs can actually be started.
         env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
+        env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
         # prepend it to R_LIBS
+        env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
         if dependent_spec.package.extends(self.spec):
             env.prepend_path("R_LIBS", join_path(dependent_spec.prefix, self.r_lib_dir))
 
     def setup_run_environment(self, env):
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "rlib", "R", "lib"))
         env.prepend_path("PKG_CONFIG_PATH", join_path(self.prefix, "rlib", "pkgconfig"))
+        env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
 
         if "+rmath" in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "rlib"))

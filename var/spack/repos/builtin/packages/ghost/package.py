@@ -18,6 +18,8 @@ class Ghost(CMakePackage, CudaPackage):
     homepage = "https://www.bitbucket.org/essex/ghost/"
     git = "https://bitbucket.org/essex/ghost/ghost.git"
 
+    maintainers = ["jthies"]
+
     version("develop", branch="devel")
 
     variant("shared", default=True, description="Enables the build of shared libraries")
@@ -34,6 +36,8 @@ class Ghost(CMakePackage, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("scotch", when="+scotch")
     depends_on("zoltan", when="+zoltan")
+
+    conflicts("^hwloc@2:")
 
     def cmake_args(self):
         spec = self.spec

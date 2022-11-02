@@ -291,6 +291,13 @@ def which_string(*args, **kwargs):
             win_candidates = [name + ext for ext in [".exe", ".bat"]]
         candidate_names = [name] if not win_candidates else win_candidates
 
+        if sys.platform == "win32":
+            new_path = path[:]
+            for p in path:
+                if os.path.basename(p) == "bin":
+                    new_path.append(os.path.dirname(p))
+            path = new_path
+
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
                 exe = os.path.abspath(candidate_name)

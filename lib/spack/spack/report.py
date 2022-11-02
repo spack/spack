@@ -245,6 +245,7 @@ class collect_info(object):
         self.cls = cls
         self.function = function
         self.filename = None
+        self.ctest_parsing = getattr(args, "ctest_parsing", False)
         if args.cdash_upload_url:
             self.format_name = "cdash"
             self.filename = "cdash_report"
@@ -271,10 +272,10 @@ class collect_info(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
-            # Close the collector and restore the
-            # original PackageInstaller._install_task
+            # Close the collector and restore the original function
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
             report_data = {"specs": self.collector.specs}
+            report_data["ctest-parsing"] = self.ctest_parsing
             report_fn = getattr(self.report_writer, "%s_report" % self.type)
             report_fn(self.filename, report_data)

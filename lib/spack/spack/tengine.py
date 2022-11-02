@@ -11,6 +11,7 @@ import six
 import llnl.util.lang
 
 import spack.config
+import spack.extensions
 from spack.util.path import canonicalize_path
 
 

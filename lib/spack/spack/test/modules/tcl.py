@@ -106,16 +106,16 @@ class TestTcl(object):
         assert len([x for x in content if 'setenv OMPI_MCA_mpi_leave_pinned "1"' in x]) == 1
         assert len([x for x in content if 'setenv OMPI_MCA_MPI_LEAVE_PINNED "1"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 1
-        assert len([x for x in content if "setenv MPILEAKS_ROOT" in x]) == 1
+        assert len([x for x in content if "setenv MPILEAKS_ROOT" in x]) == 1 or len([x for x in content if "setenv mpileaks_ROOT" in x]) == 1
 
         content = modulefile_content("libdwarf platform=test target=core2")
 
         assert len([x for x in content if x.startswith("prepend-path CMAKE_PREFIX_PATH")]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 0
         assert len([x for x in content if "unsetenv BAR" in x]) == 0
-        assert len([x for x in content if "is-loaded foo/bar" in x]) == 1
+        assert len([x for x in content if "is-loaded 'foo/bar'" in x]) == 1
         assert len([x for x in content if "module load foo/bar" in x]) == 1
-        assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1
+        assert len([x for x in content if "setenv LIBDWARF_ROOT" in x]) == 1 or len([x for x in content if "setenv libdwarf_ROOT" in x]) == 1
 
     @pytest.mark.parametrize("config_name", ["exclude", "blacklist"])
     def test_exclude(self, modulefile_content, module_configuration, config_name):

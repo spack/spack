@@ -12,6 +12,7 @@ class PyPycparser(PythonPackage):
     homepage = "https://github.com/eliben/pycparser"
     pypi = "pycparser/pycparser-2.19.tar.gz"
 
+    version("2.21", sha256="e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206")
     version("2.20", sha256="2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0")
     version("2.19", sha256="a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3")
     version("2.18", sha256="99a8ca03e29851d96616ad0404b4aad7d9ee16f25c9f9708a11faf2810f7b226")

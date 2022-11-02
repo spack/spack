@@ -27,3 +27,7 @@ class Dtc(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter("Makefile")
         makefile.filter("PREFIX =.*", "PREFIX = %s" % prefix)
+        if self.spec.satisfies("%clang") or self.spec.satisfies("%fj"):
+            makefile.filter(
+                r"WARNINGS = -Wall", "WARNINGS = -Wall -Wno-unused-command-line-argument"
+            )

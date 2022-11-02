@@ -159,11 +159,11 @@ class PyScipy(PythonPackage):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
 
-        # Kluge to get the gfortran linker to work correctly on Big
-        # Sur, at least until a gcc release > 10.2 is out with a fix.
-        # (There is a fix in their development tree.)
-        if platform.mac_ver()[0][0:2] == "11":
-            env.set("MACOSX_DEPLOYMENT_TARGET", "10.15")
+        ## Kluge to get the gfortran linker to work correctly on Big
+        ## Sur, at least until a gcc release > 10.2 is out with a fix.
+        ## (There is a fix in their development tree.)
+        #if platform.mac_ver()[0][0:2] == "11":
+        #    env.set("MACOSX_DEPLOYMENT_TARGET", "10.15")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

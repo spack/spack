@@ -16,6 +16,11 @@ class Launchmon(AutotoolsPackage):
     maintainers = ["lee218llnl"]
 
     version("master", branch="master")
+    version(
+        "1.2.0",
+        sha256="edba70b8a283337dd4fda64192ba4fa36b7ada3f150340349b8681bcddcebda4",
+        url="https://github.com/LLNL/LaunchMON/releases/download/v1.2.0/launchmon-v1.2.0.tar.gz",
+    )
     version("1.0.2", sha256="1d301ccccfe0873efcd66da87ed5e4d7bafc560b00aee396d8a9365f53b3a33a")
 
     depends_on("autoconf", type="build", when="@master")

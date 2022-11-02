@@ -28,6 +28,8 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     depends_on("ninja", type="build")
     depends_on("python", type=("build", "run"))
     depends_on("protobuf")
+    # https://github.com/microsoft/onnxruntime/pull/11639
+    depends_on("protobuf@:3.19", when="@:1.11")
     depends_on("py-protobuf", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
@@ -53,6 +55,7 @@ class PyOnnxRuntime(CMakePackage, PythonPackage):
     patch("cms_1_10.patch", whe="@1.10")
     # https://github.com/microsoft/onnxruntime/issues/4234#issuecomment-698077636
     patch("libiconv.patch", level=0, when="@1.7.2")
+    patch("libiconv-1.10.patch", level=0, when="@1.10.0")
     # https://github.com/microsoft/onnxruntime/commit/de4089f8cbe0baffe56a363cc3a41595cc8f0809.patch
     patch("gcc11.patch", level=1, when="@1.7.2")
 

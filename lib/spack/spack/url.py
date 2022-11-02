@@ -36,6 +36,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
+import spack.util.path as spath
 import spack.version
 
 
@@ -366,17 +367,15 @@ def split_url_extension(path):
 
     # Strip off sourceforge download suffix.
     # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
-    match = re.search(r"(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$", path)
-    if match:
-        prefix, suffix = match.groups()
+    prefix, suffix = spath.find_sourceforge_suffix(path)
 
-    ext = comp.extension(prefix)
+    ext = comp.extension_from_path(prefix)
     if ext is not None:
         prefix = comp.strip_extension(prefix)
 
     else:
         prefix, suf = strip_query_and_fragment(prefix)
-        ext = comp.extension(prefix)
+        ext = comp.extension_from_path(prefix)
         prefix = comp.strip_extension(prefix)
         suffix = suf + suffix
         if ext is None:

@@ -15,6 +15,7 @@ class RGgridges(RPackage):
 
     cran = "ggridges"
 
+    version("0.5.4", sha256="2bf71c2034804cec637e6748dc51d8cadad01d3ea4d14ace754327f082e8d851")
     version("0.5.3", sha256="f5eafab17f2d4a8a2a83821ad3e96ae7c26b62bbce9de414484c657383c7b42e")
     version("0.5.1", sha256="01f87cdcdf2052ed9c078d9352465cdeda920a41e2ca55bc154c1574fc651c36")
     version("0.5.0", sha256="124bc84044e56728fa965682f8232fc868f2af7d3eb7276f6b0df53be8d2dbfe")
@@ -24,6 +25,7 @@ class RGgridges(RPackage):
     depends_on("r@3.2:", type=("build", "run"))
     depends_on("r-ggplot2@2.2.0:", type=("build", "run"))
     depends_on("r-ggplot2@3.0.0:", type=("build", "run"), when="@0.5.3:")
-    depends_on("r-plyr@1.8.0:", type=("build", "run"))
     depends_on("r-scales@0.4.1:", type=("build", "run"))
     depends_on("r-withr@2.1.1:", type=("build", "run"), when="@0.5.0:")
+    depends_on("r-plyr@1.8.0:", type=("build", "run"))
+    depends_on("r-plyr", when="@:0.5.3")

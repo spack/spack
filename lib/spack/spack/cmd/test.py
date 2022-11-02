@@ -29,17 +29,14 @@ section = "admin"
 level = "long"
 
 
-def first_line(docstring):
-    """Return the first line of the docstring."""
-    return docstring.split("\n")[0]
-
-
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="test_command")
 
     # Run
     run_parser = sp.add_parser(
-        "run", description=test_run.__doc__, help=first_line(test_run.__doc__)
+        "run",
+        description=test_run.__doc__,
+        help=spack.cmd.first_line(test_run.__doc__),
     )
 
     alias_help_msg = "Provide an alias for this test-suite"
@@ -83,7 +80,9 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser(
-        "list", description=test_list.__doc__, help=first_line(test_list.__doc__)
+        "list",
+        description=test_list.__doc__,
+        help=spack.cmd.first_line(test_list.__doc__),
     )
     list_parser.add_argument(
         "-a",
@@ -97,7 +96,9 @@ def setup_parser(subparser):
 
     # Find
     find_parser = sp.add_parser(
-        "find", description=test_find.__doc__, help=first_line(test_find.__doc__)
+        "find",
+        description=test_find.__doc__,
+        help=spack.cmd.first_line(test_find.__doc__),
     )
     find_parser.add_argument(
         "filter",
@@ -107,7 +108,9 @@ def setup_parser(subparser):
 
     # Status
     status_parser = sp.add_parser(
-        "status", description=test_status.__doc__, help=first_line(test_status.__doc__)
+        "status",
+        description=test_status.__doc__,
+        help=spack.cmd.first_line(test_status.__doc__),
     )
     status_parser.add_argument(
         "names", nargs=argparse.REMAINDER, help="Test suites for which to print status"
@@ -115,7 +118,9 @@ def setup_parser(subparser):
 
     # Results
     results_parser = sp.add_parser(
-        "results", description=test_results.__doc__, help=first_line(test_results.__doc__)
+        "results",
+        description=test_results.__doc__,
+        help=spack.cmd.first_line(test_results.__doc__),
     )
     results_parser.add_argument(
         "-l", "--logs", action="store_true", help="print the test log for each matching package"
@@ -142,7 +147,9 @@ def setup_parser(subparser):
 
     # Remove
     remove_parser = sp.add_parser(
-        "remove", description=test_remove.__doc__, help=first_line(test_remove.__doc__)
+        "remove",
+        description=test_remove.__doc__,
+        help=spack.cmd.first_line(test_remove.__doc__),
     )
     arguments.add_common_arguments(remove_parser, ["yes_to_all"])
     remove_parser.add_argument(
@@ -191,6 +198,16 @@ environment variables:
         matching = spack.store.db.query_local(spec, hashes=hashes)
         if spec and not matching:
             tty.warn("No installed packages match spec %s" % spec)
+            """
+            TODO: Need to write out a log message and/or CDASH Testing
+              output that package not installed IF continue to process
+              these issues here.
+
+            if args.log_format:
+                # Proceed with the spec assuming the test process
+                # to ensure report package as skipped (e.g., for CI)
+                specs_to_test.append(spec)
+            """
         specs_to_test.extend(matching)
 
     # test_stage_dir
