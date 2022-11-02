@@ -20,7 +20,10 @@ class PyFitter(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy")
-    depends_on("py-scipy")
-    depends_on("py-tqdm")
-    depends_on("py-joblib")
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-scipy@0.18:", type=("build", "run"))
+    depends_on("py-tqdm", type=("build", "run"))
+    depends_on("py-joblib", type=("build", "run"))
+    depends_on("py-click", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
