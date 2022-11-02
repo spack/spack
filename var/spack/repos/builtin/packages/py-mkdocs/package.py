@@ -14,17 +14,26 @@ class PyMkdocs(PythonPackage):
     homepage = "https://www.mkdocs.org/"
     pypi = "mkdocs/mkdocs-1.3.1.tar.gz"
 
+    version("1.4.2", sha256="8947af423a6d0facf41ea1195b8e1e8c85ad94ac95ae307fe11232e0424b11c5")
     version("1.3.1", sha256="a41a2ff25ce3bbacc953f9844ba07d106233cd76c88bac1f59cb1564ac0d87ed")
 
     depends_on("python@3.6:", type=("build", "run"))
+    depends_on("python@3.7:", type=("build", "run"), when="@1.4.2:")
     depends_on("py-setuptools", type="build")
+    depends_on("py-hatchling", type="build", when="@1.4.2:")
     depends_on("py-click@3.3:", type=("build", "run"))
+    depends_on("py-click@7.0:", type=("build", "run"), when="@1.4.2:")
     depends_on("py-jinja2@2.10.2:", type=("build", "run"))
+    depends_on("py-jinja2@2.11.1:", type=("build", "run"), when="@1.4.2:")
     depends_on("py-markdown@3.2.1:3.3", type=("build", "run"))
+    depends_on("py-markdown@3.2.1:3.4", type=("build", "run"), when="@1.4.2:")
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
+    depends_on("py-pyyaml@5.1:", type=("build", "run"), when="@1.4.2:")
     depends_on("py-watchdog@2.0:", type=("build", "run"))
     depends_on("py-ghp-import@1.0:", type=("build", "run"))
     depends_on("py-pyyaml-env-tag@0.1:", type=("build", "run"))
     depends_on("py-importlib-metadata@4.3:", type=("build", "run"))
     depends_on("py-packaging@20.5:", type=("build", "run"))
     depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
+    depends_on("py-colorama@0.4:", type=("build", "run"), when="platform=win32")
+    depends_on("py-babel@2.9.0:", type=("build", "run"), when="@1.4.2:")
