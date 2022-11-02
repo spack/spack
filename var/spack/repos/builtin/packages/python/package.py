@@ -11,7 +11,6 @@ import re
 import subprocess
 import sys
 from shutil import copy
-from typing import Dict, List
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -21,6 +20,8 @@ from llnl.util.filesystem import (
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.generic import GenericBuilder
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -28,7 +29,7 @@ from spack.util.prefix import Prefix
 is_windows = sys.platform == "win32"
 
 
-class Python(Package):
+class Python(AutotoolsPackage, Package):
     """The Python programming language."""
 
     homepage = "https://www.python.org/"
@@ -37,12 +38,6 @@ class Python(Package):
     list_depth = 1
 
     maintainers = ["adamjstewart", "skosukhin", "scheibelp", "pradyunsg"]
-
-    phases = ["configure", "build", "install"]
-
-    #: phase
-    install_targets = ["install"]
-    build_targets: List[str] = []
 
     version("3.11.0", sha256="64424e96e2457abbac899b90f9530985b51eef2905951febd935f0e73414caeb")
     version(
@@ -232,6 +227,8 @@ class Python(Package):
     )
     conflicts("%nvhpc")
 
+    conflicts("~dbm", when="platform=windows")
+
     # Used to cache various attributes that are expensive to compute
     _config_vars: Dict[str, Dict[str, str]] = {}
 
@@ -239,6 +236,8 @@ class Python(Package):
     build_directory = "spack-build"
 
     executables = [r"^python[\d.]*[mw]?$"]
+
+    build_system(conditional("generic", when="platform=windows"), "autotools", default="autotools")
 
     @classmethod
     def determine_version(cls, exe):
@@ -329,30 +328,6 @@ class Python(Package):
             r"^(.*)setup\.py(.*)((build)|(install))(.*)$", r"\1setup.py\2 --no-user-cfg \3\6"
         )
 
-    def setup_build_environment(self, env):
-        spec = self.spec
-
-        # TODO: Python has incomplete support for Python modules with mixed
-        # C/C++ source, and patches are required to enable building for these
-        # modules. All Python versions without a viable patch are installed
-        # with a warning message about this potentially erroneous behavior.
-        if not spec.satisfies("@3.7.2:"):
-            tty.warn(
-                (
-                    'Python v{0} does not have the C++ "distutils" patch; '
-                    "errors may occur when installing Python modules w/ "
-                    "mixed C/C++ source files."
-                ).format(self.version)
-            )
-
-        env.unset("PYTHONPATH")
-        env.unset("PYTHONHOME")
-
-        # avoid build error on fugaku
-        if spec.satisfies("@3.10.0 arch=linux-rhel8-a64fx"):
-            if spec.satisfies("%gcc") or spec.satisfies("%fj"):
-                env.unset("LC_ALL")
-
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
         if self.spec.satisfies("@3.8: %intel"):
@@ -369,336 +344,6 @@ class Python(Package):
         # allow flags to be passed through compiler wrapper
         return (flags, None, None)
 
-    @property
-    def plat_arch(self):
-        """
-        String referencing platform architecture
-        filtered through Python's Windows build file
-        architecture support map
-
-        Note: This function really only makes
-        sense to use on Windows, could be overridden to
-        cross compile however.
-        """
-
-        arch_map = {"AMD64": "x64", "x86": "Win32", "IA64": "Win32", "EM64T": "Win32"}
-        arch = platform.machine()
-        if arch in arch_map:
-            arch = arch_map[arch]
-        return arch
-
-    @property
-    def win_build_params(self):
-        """
-        Arguments must be passed to the Python build batch script
-        in order to configure it to spec and system.
-        A number of these toggle optional MSBuild Projects
-        directly corresponding to the python support of the same
-        name.
-        """
-        args = []
-        args.append("-p %s" % self.plat_arch)
-        if self.spec.satisfies("+debug"):
-            args.append("-d")
-        if self.spec.satisfies("~ctypes"):
-            args.append("--no-ctypes")
-        if self.spec.satisfies("~ssl"):
-            args.append("--no-ssl")
-        if self.spec.satisfies("~tkinter"):
-            args.append("--no-tkinter")
-        return args
-
-    def win_installer(self, prefix):
-        """
-        Python on Windows does not export an install target
-        so we must handcraft one here. This structure
-        directly mimics the install tree of the Python
-        Installer on Windows.
-
-        Parameters:
-            prefix (str): Install prefix for package
-        """
-        proj_root = self.stage.source_path
-        pcbuild_root = os.path.join(proj_root, "PCbuild")
-        build_root = os.path.join(pcbuild_root, platform.machine().lower())
-        include_dir = os.path.join(proj_root, "Include")
-        copy_tree(include_dir, prefix.include)
-        doc_dir = os.path.join(proj_root, "Doc")
-        copy_tree(doc_dir, prefix.Doc)
-        tools_dir = os.path.join(proj_root, "Tools")
-        copy_tree(tools_dir, prefix.Tools)
-        lib_dir = os.path.join(proj_root, "Lib")
-        copy_tree(lib_dir, prefix.Lib)
-        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
-        copy(pyconfig, prefix.include)
-        shared_libraries = []
-        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
-        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
-        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
-        os.makedirs(prefix.DLLs)
-        for lib in shared_libraries:
-            file_name = os.path.basename(lib)
-            if (
-                file_name.endswith(".exe")
-                or (file_name.endswith(".dll") and "python" in file_name)
-                or "vcruntime" in file_name
-            ):
-                copy(lib, prefix)
-            else:
-                copy(lib, prefix.DLLs)
-        static_libraries = glob.glob("%s\\*.lib")
-        for lib in static_libraries:
-            copy(lib, prefix.libs)
-
-    def configure_args(self):
-        spec = self.spec
-        config_args = []
-        cflags = []
-
-        # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
-        # as it scans for the library and headers to build
-        link_deps = spec.dependencies(deptype="link")
-
-        if link_deps:
-            # Header files are often included assuming they reside in a
-            # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
-            # which is why we don't use HeaderList here. The header files of
-            # libffi reside in prefix.lib but the configure script of Python
-            # finds them using pkg-config.
-            cppflags = " ".join("-I" + spec[dep.name].prefix.include for dep in link_deps)
-
-            # Currently, the only way to get SpecBuildInterface wrappers of the
-            # dependencies (which we need to get their 'libs') is to get them
-            # using spec.__getitem__.
-            ldflags = " ".join(spec[dep.name].libs.search_flags for dep in link_deps)
-
-            config_args.extend(["CPPFLAGS=" + cppflags, "LDFLAGS=" + ldflags])
-
-        if "+optimizations" in spec:
-            config_args.append("--enable-optimizations")
-            config_args.append("--with-lto")
-            config_args.append("--with-computed-gotos")
-
-        if spec.satisfies("@3.7 %intel", strict=True):
-            config_args.append("--with-icc={0}".format(spack_cc))
-
-        if "+debug" in spec:
-            config_args.append("--with-pydebug")
-        else:
-            config_args.append("--without-pydebug")
-
-        if "+shared" in spec:
-            config_args.append("--enable-shared")
-        else:
-            config_args.append("--disable-shared")
-
-        config_args.append("--without-ensurepip")
-
-        if "+pic" in spec:
-            cflags.append(self.compiler.cc_pic_flag)
-
-        if "+ssl" in spec:
-            config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
-
-        if "+dbm" in spec:
-            # Default order is ndbm:gdbm:bdb
-            config_args.append("--with-dbmliborder=gdbm")
-        else:
-            config_args.append("--with-dbmliborder=")
-
-        if "+pyexpat" in spec:
-            config_args.append("--with-system-expat")
-        else:
-            config_args.append("--without-system-expat")
-
-        if "+ctypes" in spec:
-            config_args.append("--with-system-ffi")
-        else:
-            config_args.append("--without-system-ffi")
-
-        if "+tkinter" in spec:
-            config_args.extend(
-                [
-                    "--with-tcltk-includes=-I{0} -I{1}".format(
-                        spec["tcl"].prefix.include, spec["tk"].prefix.include
-                    ),
-                    "--with-tcltk-libs={0} {1}".format(
-                        spec["tcl"].libs.ld_flags, spec["tk"].libs.ld_flags
-                    ),
-                ]
-            )
-
-        # https://docs.python.org/3.8/library/sqlite3.html#f1
-        if spec.satisfies("+sqlite3 ^sqlite+dynamic_extensions"):
-            config_args.append("--enable-loadable-sqlite-extensions")
-
-        if spec.satisfies("%oneapi"):
-            cflags.append("-fp-model=strict")
-
-        if cflags:
-            config_args.append("CFLAGS={0}".format(" ".join(cflags)))
-
-        return config_args
-
-    def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
-        and an appropriately set prefix.
-        """
-        with working_dir(self.stage.source_path, create=True):
-            if is_windows:
-                pass
-            else:
-                options = getattr(self, "configure_flag_args", [])
-                options += ["--prefix={0}".format(prefix)]
-                options += self.configure_args()
-                configure(*options)
-
-    def build(self, spec, prefix):
-        """Makes the build targets specified by
-        :py:attr:``~.AutotoolsPackage.build_targets``
-        """
-        # Windows builds use a batch script to drive
-        # configure and build in one step
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
-                builder_cmd = os.path.join(pcbuild_root, "build.bat")
-                try:
-                    subprocess.check_output(  # novermin
-                        " ".join([builder_cmd] + self.win_build_params), stderr=subprocess.STDOUT
-                    )
-                except subprocess.CalledProcessError as e:
-                    raise ProcessError(
-                        "Process exited with status %d" % e.returncode,
-                        long_message=e.output.decode("utf-8"),
-                    )
-            else:
-                # See https://autotools.io/automake/silent.html
-                params = ["V=1"]
-                params += self.build_targets
-                make(*params)
-
-    def install(self, spec, prefix):
-        """Makes the install targets specified by
-        :py:attr:``~.AutotoolsPackage.install_targets``
-        """
-        with working_dir(self.stage.source_path):
-            if is_windows:
-                self.win_installer(prefix)
-            else:
-                make(*self.install_targets)
-
-    @run_after("install")
-    def filter_compilers(self):
-        """Run after install to tell the configuration files and Makefiles
-        to use the compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC and CXX set to Spack's generic
-        cc and c++. We want them to be bound to whatever compiler
-        they were built with."""
-        if is_windows:
-            return
-        kwargs = {"ignore_absent": True, "backup": False, "string": True}
-
-        filenames = [self.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
-
-        filter_file(spack_cc, self.compiler.cc, *filenames, **kwargs)
-        if spack_cxx and self.compiler.cxx:
-            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
-
-    @run_after("install")
-    def symlink(self):
-        if is_windows:
-            return
-        spec = self.spec
-        prefix = self.prefix
-
-        if spec.satisfies("+pythoncmd"):
-            os.symlink(os.path.join(prefix.bin, "python3"), os.path.join(prefix.bin, "python"))
-            os.symlink(
-                os.path.join(prefix.bin, "python3-config"),
-                os.path.join(prefix.bin, "python-config"),
-            )
-
-    @run_after("install")
-    def install_python_gdb(self):
-        # https://devguide.python.org/gdb/
-        src = os.path.join("Tools", "gdb", "libpython.py")
-        if os.path.exists(src):
-            install(src, self.command.path + "-gdb.py")
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def import_tests(self):
-        """Test that basic Python functionality works."""
-
-        spec = self.spec
-
-        with working_dir("spack-test", create=True):
-            # Ensure that readline module works
-            if "+readline" in spec:
-                self.command("-c", "import readline")
-
-            # Ensure that ssl module works
-            if "+ssl" in spec:
-                self.command("-c", "import ssl")
-                self.command("-c", "import hashlib")
-
-            # Ensure that sqlite3 module works
-            if "+sqlite3" in spec:
-                self.command("-c", "import sqlite3")
-
-            # Ensure that dbm module works
-            if "+dbm" in spec:
-                self.command("-c", "import dbm")
-
-            # Ensure that nis module works
-            if "+nis" in spec:
-                self.command("-c", "import nis")
-
-            # Ensure that zlib module works
-            if "+zlib" in spec:
-                self.command("-c", "import zlib")
-
-            # Ensure that bz2 module works
-            if "+bz2" in spec:
-                self.command("-c", "import bz2")
-
-            # Ensure that lzma module works
-            if "+lzma" in spec:
-                self.command("-c", "import lzma")
-
-            # Ensure that pyexpat module works
-            if "+pyexpat" in spec:
-                self.command("-c", "import xml.parsers.expat")
-                self.command("-c", "import xml.etree.ElementTree")
-
-            # Ensure that ctypes module works
-            if "+ctypes" in spec:
-                self.command("-c", "import ctypes")
-
-            # Ensure that tkinter module works
-            # https://wiki.python.org/moin/TkInter
-            if "+tkinter" in spec:
-                # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
-                if "DISPLAY" in env:
-                    self.command("-c", "import tkinter; tkinter._test()")
-                else:
-                    self.command("-c", "import tkinter")
-
-            # Ensure that uuid module works
-            if "+uuid" in spec:
-                self.command("-c", "import uuid")
-
-            # Ensure that tix module works
-            if "+tix" in spec:
-                self.command("-c", "import tkinter.tix")
-
-            # Ensure that crypt module works
-            if "+crypt" in spec:
-                self.command("-c", "import crypt")
-
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -708,9 +353,10 @@ class Python(Package):
         """Returns the Python command, which may vary depending
         on the version of Python and how it was installed.
 
-        In general, Python 3 only comes with a ``python3`` command. However, some
+        In general, Python 2 comes with ``python`` and ``python2`` commands,
+        while Python 3 only comes with a ``python3`` command. However, some
         package managers will symlink ``python`` to ``python3``, while others
-        may contain ``python3.11``, ``python3.10``, and ``python3.9`` in the
+        may contain ``python3.6``, ``python3.5``, and ``python3.4`` in the
         same directory.
 
         Returns:
@@ -720,11 +366,11 @@ class Python(Package):
         # installed python, several different commands could be located
         # in the same directory. Be as specific as possible. Search for:
         #
-        # * python3.11
+        # * python3.6
         # * python3
         # * python
         #
-        # in that order if using python@3.11.0, for example.
+        # in that order if using python@3.6.5, for example.
         version = self.spec.version
         for ver in [version.up_to(2), version.up_to(1), ""]:
             if not is_windows:
@@ -735,14 +381,33 @@ class Python(Package):
                 return Executable(path)
 
         else:
-            # Give a last try at rhel8 platform python
-            if self.spec.external and self.prefix == "/usr" and self.spec.satisfies("os=rhel8"):
-                path = os.path.join(self.prefix, "libexec", "platform-python")
-                if os.path.exists(path):
-                    return Executable(path)
-
             msg = "Unable to locate {0} command in {1}"
             raise RuntimeError(msg.format(self.name, self.prefix.bin))
+
+    def print_string(self, string):
+        """Returns the appropriate print string depending on the
+        version of Python.
+
+        Examples:
+
+        * Python 2
+
+        config_args.append("--without-ensurepip")
+
+        * Python 3
+
+        if "+ssl" in spec:
+            config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
+          .. code-block:: python
+
+
+             >>> self.print_string('sys.prefix')
+             'print(sys.prefix)'
+        """
+        if self.spec.satisfies("@:2"):
+            return "print {0}".format(string)
+        else:
+            return "print({0})".format(string)
 
     @property
     def config_vars(self):
@@ -753,7 +418,9 @@ class Python(Package):
 
         .. code-block:: console
 
-           $ python -m sysconfig
+        # https://docs.python.org/3.8/library/sqlite3.html#f1
+        if spec.satisfies("+sqlite3 ^sqlite+dynamic_extensions"):
+            config_args.append("--enable-loadable-sqlite-extensions")
 
         Returns:
             dict: variable definitions
@@ -772,8 +439,10 @@ config['config_h_filename'] = get_config_h_filename()
 config['makefile_filename'] = get_makefile_filename()
 config.update(get_paths())
 
-print(json.dumps(config))
-"""
+%s
+""" % self.print_string(
+            "json.dumps(config)"
+        )
 
         dag_hash = self.spec.dag_hash()
         lib_prefix = "lib" if not is_windows else ""
@@ -1053,94 +722,6 @@ print(json.dumps(config))
     def setup_run_environment(self, env):
         env.prepend_path("CPATH", os.pathsep.join(self.spec["python"].headers.directories))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        """Set PYTHONPATH to include the site-packages directory for the
-        extension and any other python extensions it depends on.
-        """
-        # Ensure the current Python is first in the PATH
-        path = os.path.dirname(self.command.path)
-        if not is_system_path(path):
-            env.prepend_path("PATH", path)
-
-        # Add installation prefix to PYTHONPATH, needed to run import tests
-        prefixes = set()
-        if dependent_spec.package.extends(self.spec):
-            prefixes.add(dependent_spec.prefix)
-
-        # Add direct build/run/test dependencies to PYTHONPATH,
-        # needed to build the package and to run import tests
-        for direct_dep in dependent_spec.dependencies(deptype=("build", "run", "test")):
-            if direct_dep.package.extends(self.spec):
-                prefixes.add(direct_dep.prefix)
-
-                # Add recursive run dependencies of all direct dependencies,
-                # needed by direct dependencies at run-time
-                for indirect_dep in direct_dep.traverse(deptype="run"):
-                    if indirect_dep.package.extends(self.spec):
-                        prefixes.add(indirect_dep.prefix)
-
-        for prefix in prefixes:
-            # Packages may be installed in platform-specific or platform-independent
-            # site-packages directories
-            for directory in {self.platlib, self.purelib}:
-                env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
-
-        # We need to make sure that the extensions are compiled and linked with
-        # the Spack wrapper. Paths to the executables that are used for these
-        # operations are normally taken from the sysconfigdata file, which we
-        # modify after the installation (see method filter compilers). The
-        # modified file contains paths to the real compilers, not the wrappers.
-        # The values in the file, however, can be overridden with environment
-        # variables. The first variable, CC (CXX), which is used for
-        # compilation, is set by Spack for the dependent package by default.
-        # That is not 100% correct because the value for CC (CXX) in the
-        # sysconfigdata file often contains additional compiler flags (e.g.
-        # -pthread), which we lose by simply setting CC (CXX) to the path to the
-        # Spack wrapper. Moreover, the user might try to build an extension with
-        # a compiler that is different from the one that was used to build
-        # Python itself, which might have unexpected side effects. However, the
-        # experience shows that none of the above is a real issue and we will
-        # not try to change the default behaviour. Given that, we will simply
-        # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
-        # used for linking, in a consistent manner.
-
-        for compile_var, link_var in [("CC", "LDSHARED"), ("CXX", "LDCXXSHARED")]:
-            # First, we get the values from the sysconfigdata:
-            config_compile = self.config_vars[compile_var]
-            config_link = self.config_vars[link_var]
-
-            # The dependent environment will have the compilation command set to
-            # the following:
-            new_compile = join_path(
-                spack.paths.build_env_path,
-                dependent_spec.package.compiler.link_paths[compile_var.lower()],
-            )
-
-            # Normally, the link command starts with the compilation command:
-            if config_link.startswith(config_compile):
-                new_link = new_compile + config_link[len(config_compile) :]
-            else:
-                # Otherwise, we try to replace the compiler command if it
-                # appears "in the middle" of the link command; to avoid
-                # mistaking some substring of a path for the compiler (e.g. to
-                # avoid replacing "gcc" in "-L/path/to/gcc/"), we require that
-                # the compiler command be surrounded by spaces. Note this may
-                # leave "config_link" unchanged if the compilation command does
-                # not appear in the link command at all, for example if "ld" is
-                # invoked directly (no change would be required in that case
-                # because Spack arranges for the Spack ld wrapper to be the
-                # first instance of "ld" in PATH).
-                new_link = config_link.replace(
-                    " {0} ".format(config_compile), " {0} ".format(new_compile)
-                )
-
-            # There is logic in the sysconfig module that is sensitive to the
-            # fact that LDSHARED is set in the environment, therefore we export
-            # the variable only if the new value is different from what we got
-            # from the sysconfigdata file:
-            if config_link != new_link and not is_windows:
-                env.set(link_var, new_link)
-
     def setup_dependent_run_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
@@ -1220,3 +801,464 @@ print(json.dumps(config))
         self.run_test(
             exe, options=options, expected=[self.spec.prefix], installed=True, purpose=reason
         )
+
+
+class BuildEnvironment(object):
+    def setup_build_environment(self, env):
+        spec = self.pkg.spec
+
+        # TODO: Python has incomplete support for Python modules with mixed
+        # C/C++ source, and patches are required to enable building for these
+        # modules. All Python versions without a viable patch are installed
+        # with a warning message about this potentially erroneous behavior.
+        if not spec.satisfies("@3.7.2:"):
+            tty.warn(
+                (
+                    'Python v{0} does not have the C++ "distutils" patch; '
+                    "errors may occur when installing Python modules w/ "
+                    "mixed C/C++ source files."
+                ).format(self.pkg.version)
+            )
+
+        env.unset("PYTHONPATH")
+        env.unset("PYTHONHOME")
+
+        # avoid build error on fugaku
+        if spec.satisfies("@3.10.0 arch=linux-rhel8-a64fx"):
+            if spec.satisfies("%gcc") or spec.satisfies("%fj"):
+                env.unset("LC_ALL")
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Set PYTHONPATH to include the site-packages directory for the
+        extension and any other python extensions it depends on.
+        """
+        # Ensure the current Python is first in the PATH
+        path = os.path.dirname(self.pkg.command.path)
+        if not is_system_path(path):
+            env.prepend_path("PATH", path)
+
+        # Add installation prefix to PYTHONPATH, needed to run import tests
+        prefixes = set()
+        if dependent_spec.package.extends(self.spec):
+            prefixes.add(dependent_spec.prefix)
+
+        # Add direct build/run/test dependencies to PYTHONPATH,
+        # needed to build the package and to run import tests
+        for direct_dep in dependent_spec.dependencies(deptype=("build", "run", "test")):
+            if direct_dep.package.extends(self.spec):
+                prefixes.add(direct_dep.prefix)
+
+                # Add recursive run dependencies of all direct dependencies,
+                # needed by direct dependencies at run-time
+                for indirect_dep in direct_dep.traverse(deptype="run"):
+                    if indirect_dep.package.extends(self.spec):
+                        prefixes.add(indirect_dep.prefix)
+
+        for prefix in prefixes:
+            # Packages may be installed in platform-specific or platform-independent
+            # site-packages directories
+            for directory in {self.pkg.platlib, self.pkg.purelib}:
+                env.prepend_path("PYTHONPATH", os.path.join(prefix, directory))
+
+        # We need to make sure that the extensions are compiled and linked with
+        # the Spack wrapper. Paths to the executables that are used for these
+        # operations are normally taken from the sysconfigdata file, which we
+        # modify after the installation (see method filter compilers). The
+        # modified file contains paths to the real compilers, not the wrappers.
+        # The values in the file, however, can be overridden with environment
+        # variables. The first variable, CC (CXX), which is used for
+        # compilation, is set by Spack for the dependent package by default.
+        # That is not 100% correct because the value for CC (CXX) in the
+        # sysconfigdata file often contains additional compiler flags (e.g.
+        # -pthread), which we lose by simply setting CC (CXX) to the path to the
+        # Spack wrapper. Moreover, the user might try to build an extension with
+        # a compiler that is different from the one that was used to build
+        # Python itself, which might have unexpected side effects. However, the
+        # experience shows that none of the above is a real issue and we will
+        # not try to change the default behaviour. Given that, we will simply
+        # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
+        # used for linking, in a consistent manner.
+
+        for compile_var, link_var in [("CC", "LDSHARED"), ("CXX", "LDCXXSHARED")]:
+            # First, we get the values from the sysconfigdata:
+            config_compile = self.pkg.config_vars[compile_var]
+            config_link = self.pkg.config_vars[link_var]
+
+            # The dependent environment will have the compilation command set to
+            # the following:
+            new_compile = join_path(
+                spack.paths.build_env_path,
+                dependent_spec.package.compiler.link_paths[compile_var.lower()],
+            )
+
+            # Normally, the link command starts with the compilation command:
+            if config_link.startswith(config_compile):
+                new_link = new_compile + config_link[len(config_compile) :]
+            else:
+                # Otherwise, we try to replace the compiler command if it
+                # appears "in the middle" of the link command; to avoid
+                # mistaking some substring of a path for the compiler (e.g. to
+                # avoid replacing "gcc" in "-L/path/to/gcc/"), we require that
+                # the compiler command be surrounded by spaces. Note this may
+                # leave "config_link" unchanged if the compilation command does
+                # not appear in the link command at all, for example if "ld" is
+                # invoked directly (no change would be required in that case
+                # because Spack arranges for the Spack ld wrapper to be the
+                # first instance of "ld" in PATH).
+                new_link = config_link.replace(
+                    " {0} ".format(config_compile), " {0} ".format(new_compile)
+                )
+
+            # There is logic in the sysconfig module that is sensitive to the
+            # fact that LDSHARED is set in the environment, therefore we export
+            # the variable only if the new value is different from what we got
+            # from the sysconfigdata file:
+            if config_link != new_link and not is_windows:
+                env.set(link_var, new_link)
+
+
+class RunAfter(object):
+    @run_after("install")
+    def filter_compilers(self):
+        """Run after install to tell the configuration files and Makefiles
+        to use the compilers that Spack built the package with.
+
+        If this isn't done, they'll have CC and CXX set to Spack's generic
+        cc and c++. We want them to be bound to whatever compiler
+        they were built with."""
+        if is_windows:
+            return
+        kwargs = {"ignore_absent": True, "backup": False, "string": True}
+
+        filenames = [self.pkg.get_sysconfigdata_name(), self.pkg.config_vars["makefile_filename"]]
+
+        filter_file(spack_cc, self.pkg.compiler.cc, *filenames, **kwargs)
+        if spack_cxx and self.pkg.compiler.cxx:
+            filter_file(spack_cxx, self.pkg.compiler.cxx, *filenames, **kwargs)
+
+    @run_after("install")
+    def symlink(self):
+        if is_windows:
+            return
+        spec = self.pkg.spec
+        prefix = self.pkg.prefix
+
+        # TODO:
+        # On OpenSuse 13, python uses <prefix>/lib64/python2.7/lib-dynload/*.so
+        # instead of <prefix>/lib/python2.7/lib-dynload/*.so. Oddly enough the
+        # result is that Python can not find modules like cPickle. A workaround
+        # for now is to symlink to `lib`:
+        src = os.path.join(prefix.lib64, "python{0}".format(self.pkg.version.up_to(2)), "lib-dynload")
+        dst = os.path.join(prefix.lib, "python{0}".format(self.pkg.version.up_to(2)), "lib-dynload")
+        if os.path.isdir(src) and not os.path.isdir(dst):
+            mkdirp(dst)
+            for f in os.listdir(src):
+                os.symlink(os.path.join(src, f), os.path.join(dst, f))
+
+        if spec.satisfies("@3:") and spec.satisfies("+pythoncmd"):
+            os.symlink(os.path.join(prefix.bin, "python3"), os.path.join(prefix.bin, "python"))
+            os.symlink(
+                os.path.join(prefix.bin, "python3-config"),
+                os.path.join(prefix.bin, "python-config"),
+            )
+
+    @run_after("install")
+    def install_python_gdb(self):
+        # https://devguide.python.org/gdb/
+        src = os.path.join("Tools", "gdb", "libpython.py")
+        if os.path.exists(src):
+            install(src, self.pkg.command.path + "-gdb.py")
+
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def import_tests(self):
+        """Test that basic Python functionality works."""
+
+        spec = self.pkg.spec
+
+        with working_dir("spack-test", create=True):
+            # Ensure that readline module works
+            if "+readline" in spec:
+                self.pkg.command("-c", "import readline")
+
+            # Ensure that ssl module works
+            if "+ssl" in spec:
+                self.pkg.command("-c", "import ssl")
+                self.pkg.command("-c", "import hashlib")
+
+            # Ensure that sqlite3 module works
+            if "+sqlite3" in spec:
+                self.pkg.command("-c", "import sqlite3")
+
+            # Ensure that dbm module works
+            if "+dbm" in spec:
+                self.pkg.command("-c", "import dbm")
+
+            # Ensure that nis module works
+            if "+nis" in spec:
+                self.pkg.command("-c", "import nis")
+
+            # Ensure that zlib module works
+            if "+zlib" in spec:
+                self.pkg.command("-c", "import zlib")
+
+            # Ensure that bz2 module works
+            if "+bz2" in spec:
+                self.pkg.command("-c", "import bz2")
+
+            # Ensure that lzma module works
+            if spec.satisfies("@3.3:"):
+                if "+lzma" in spec:
+                    self.pkg.command("-c", "import lzma")
+
+            # Ensure that pyexpat module works
+            if "+pyexpat" in spec:
+                self.pkg.command("-c", "import xml.parsers.expat")
+                self.pkg.command("-c", "import xml.etree.ElementTree")
+
+            # Ensure that ctypes module works
+            if "+ctypes" in spec:
+                self.pkg.command("-c", "import ctypes")
+
+            # Ensure that tkinter module works
+            # https://wiki.python.org/moin/TkInter
+            if "+tkinter" in spec:
+                # Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
+                if "DISPLAY" in env:
+                    if spec.satisfies("@3:"):
+                        self.pkg.command("-c", "import tkinter; tkinter._test()")
+                    else:
+                        self.pkg.command("-c", "import Tkinter; Tkinter._test()")
+                else:
+                    if spec.satisfies("@3:"):
+                        self.pkg.command("-c", "import tkinter")
+                    else:
+                        self.pkg.command("-c", "import Tkinter")
+
+            # Ensure that uuid module works
+            if "+uuid" in spec:
+                self.pkg.command("-c", "import uuid")
+
+            # Ensure that tix module works
+            if "+tix" in spec:
+                if spec.satisfies("@3:"):
+                    self.pkg.command("-c", "import tkinter.tix")
+                else:
+                    self.pkg.command("-c", "import Tix")
+
+
+class AutotoolsBuilder(AutotoolsBuilder, RunAfter, BuildEnvironment):
+    def configure_args(self):
+        spec = self.spec
+        config_args = []
+        cflags = []
+
+        # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
+        # as it scans for the library and headers to build
+        link_deps = spec.dependencies(deptype="link")
+
+        if link_deps:
+            # Header files are often included assuming they reside in a
+            # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
+            # which is why we don't use HeaderList here. The header files of
+            # libffi reside in prefix.lib but the configure script of Python
+            # finds them using pkg-config.
+            cppflags = " ".join("-I" + spec[dep.name].prefix.include for dep in link_deps)
+
+            # Currently, the only way to get SpecBuildInterface wrappers of the
+            # dependencies (which we need to get their 'libs') is to get them
+            # using spec.__getitem__.
+            ldflags = " ".join(spec[dep.name].libs.search_flags for dep in link_deps)
+
+            config_args.extend(["CPPFLAGS=" + cppflags, "LDFLAGS=" + ldflags])
+
+        # https://docs.python.org/3/whatsnew/3.7.html#build-changes
+        if spec.satisfies("@:3.6"):
+            config_args.append("--with-threads")
+
+        if spec.satisfies("@2.7.13:2.8,3.5.3:", strict=True) and "+optimizations" in spec:
+            config_args.append("--enable-optimizations")
+            config_args.append("--with-lto")
+            config_args.append("--with-computed-gotos")
+
+        if spec.satisfies("%gcc platform=darwin"):
+            config_args.append("--disable-toolbox-glue")
+
+        if spec.satisfies("%intel", strict=True) and spec.satisfies(
+            "@2.7.12:2.8,3.5.2:3.7", strict=True
+        ):
+            config_args.append("--with-icc={0}".format(spack_cc))
+
+        if "+debug" in spec:
+            config_args.append("--with-pydebug")
+        else:
+            config_args.append("--without-pydebug")
+
+        if "+shared" in spec:
+            config_args.append("--enable-shared")
+        else:
+            config_args.append("--disable-shared")
+
+        if "+ucs4" in spec:
+            if spec.satisfies("@:2.7"):
+                config_args.append("--enable-unicode=ucs4")
+            elif spec.satisfies("@3.0:3.2"):
+                config_args.append("--with-wide-unicode")
+            elif spec.satisfies("@3.3:"):
+                # https://docs.python.org/3.3/whatsnew/3.3.html#functionality
+                raise ValueError("+ucs4 variant not compatible with Python 3.3 and beyond")
+
+        if spec.satisfies("@2.7.9:2,3.4:"):
+            config_args.append("--without-ensurepip")
+
+        if "+pic" in spec:
+            cflags.append(self.compiler.cc_pic_flag)
+
+        if "+ssl" in spec:
+            if spec.satisfies("@3.7:"):
+                config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
+
+        if "+dbm" in spec:
+            # Default order is ndbm:gdbm:bdb
+            config_args.append("--with-dbmliborder=gdbm")
+        else:
+            config_args.append("--with-dbmliborder=")
+
+        if "+pyexpat" in spec:
+            config_args.append("--with-system-expat")
+        else:
+            config_args.append("--without-system-expat")
+
+        if "+ctypes" in spec:
+            config_args.append("--with-system-ffi")
+        else:
+            config_args.append("--without-system-ffi")
+
+        if "+tkinter" in spec:
+            config_args.extend(
+                [
+                    "--with-tcltk-includes=-I{0} -I{1}".format(
+                        spec["tcl"].prefix.include, spec["tk"].prefix.include
+                    ),
+                    "--with-tcltk-libs={0} {1}".format(
+                        spec["tcl"].libs.ld_flags, spec["tk"].libs.ld_flags
+                    ),
+                ]
+            )
+
+        # https://docs.python.org/3.8/library/sqlite3.html#f1
+        if spec.satisfies("@3.2: +sqlite3 ^sqlite+dynamic_extensions"):
+            config_args.append("--enable-loadable-sqlite-extensions")
+
+        if spec.satisfies("%oneapi"):
+            cflags.append("-fp-model=strict")
+
+        if cflags:
+            config_args.append("CFLAGS={0}".format(" ".join(cflags)))
+
+        return config_args
+
+
+class GenericBuilder(GenericBuilder, RunAfter, BuildEnvironment):
+    phases = ("build", "install")
+
+    @property
+    def plat_arch(self):
+        """
+        String referencing platform architecture
+        filtered through Python's Windows build file
+        architecture support map
+
+        Note: This function really only makes
+        sense to use on Windows, could be overridden to
+        cross compile however.
+        """
+
+        arch_map = {"AMD64": "x64", "x86": "Win32", "IA64": "Win32", "EM64T": "Win32"}
+        arch = platform.machine()
+        if arch in arch_map:
+            arch = arch_map[arch]
+        return arch
+
+    @property
+    def win_build_params(self):
+        """
+        Arguments must be passed to the Python build batch script
+        in order to configure it to spec and system.
+        A number of these toggle optional MSBuild Projects
+        directly corresponding to the python support of the same
+        name.
+        """
+        args = []
+        args.append("-p %s" % self.plat_arch)
+        if self.spec.satisfies("+debug"):
+            args.append("-d")
+        if self.spec.satisfies("~ctypes"):
+            args.append("--no-ctypes")
+        if self.spec.satisfies("~ssl"):
+            args.append("--no-ssl")
+        if self.spec.satisfies("~tkinter"):
+            args.append("--no-tkinter")
+        return args
+
+    def build(self, pkg, spec, prefix):
+        """Makes the build targets specified by
+        :py:attr:``~.AutotoolsPackage.build_targets``
+        """
+        # Windows builds use a batch script to drive
+        # configure and build in one step
+        with working_dir(self.stage.source_path):
+            if is_windows:
+                pcbuild_root = os.path.join(self.stage.source_path, "PCbuild")
+                builder_cmd = os.path.join(pcbuild_root, "build.bat")
+                try:
+                    subprocess.check_output(  # novermin
+                        " ".join([builder_cmd] + self.win_build_params), stderr=subprocess.STDOUT
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise ProcessError(
+                        "Process exited with status %d" % e.returncode,
+                        long_message=e.output.decode("utf-8"),
+                    )
+
+    def install(self, pkg, spec, prefix):
+        """
+        Python on Windows does not export an install target
+        so we must handcraft one here. This structure
+        directly mimics the install tree of the Python
+        Installer on Windows.
+
+        Parameters:
+            prefix (str): Install prefix for package
+        """
+        proj_root = self.stage.source_path
+        pcbuild_root = os.path.join(proj_root, "PCbuild")
+        build_root = os.path.join(pcbuild_root, platform.machine().lower())
+        include_dir = os.path.join(proj_root, "Include")
+        copy_tree(include_dir, prefix.include)
+        doc_dir = os.path.join(proj_root, "Doc")
+        copy_tree(doc_dir, prefix.Doc)
+        tools_dir = os.path.join(proj_root, "Tools")
+        copy_tree(tools_dir, prefix.Tools)
+        lib_dir = os.path.join(proj_root, "Lib")
+        copy_tree(lib_dir, prefix.Lib)
+        pyconfig = os.path.join(proj_root, "PC", "pyconfig.h")
+        copy(pyconfig, prefix.include)
+        shared_libraries = []
+        shared_libraries.extend(glob.glob("%s\\*.exe" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.dll" % build_root))
+        shared_libraries.extend(glob.glob("%s\\*.pyd" % build_root))
+        os.makedirs(prefix.DLLs)
+        for lib in shared_libraries:
+            file_name = os.path.basename(lib)
+            if (
+                file_name.endswith(".exe")
+                or (file_name.endswith(".dll") and "python" in file_name)
+                or "vcruntime" in file_name
+            ):
+                copy(lib, prefix)
+            else:
+                copy(lib, prefix.DLLs)
+        static_libraries = glob.glob("%s\\*.lib")
+        for lib in static_libraries:
+            copy(lib, prefix.libs)
