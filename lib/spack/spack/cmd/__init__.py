@@ -234,7 +234,8 @@ def parse_specs(args, **kwargs):
         msg = e.message
         if e.long_message:
             msg += e.long_message
-        if unquoted_flags:
+        # Unquoted flags will be read as a variant or hash
+        if unquoted_flags and ("variant" in msg or "hash" in msg):
             msg += "\n\n"
             msg += unquoted_flags.report()
 
