@@ -7,6 +7,7 @@ import os.path
 import re
 import shutil
 import sys
+from collections import OrderedDict
 
 import pytest
 
@@ -20,7 +21,7 @@ import spack.spec
 import spack.store
 import spack.tengine
 import spack.util.executable
-from spack.relocate import utf8_path_to_binary_regex
+from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
 
@@ -77,42 +78,6 @@ def source_file(tmpdir, is_relocatable):
 def mock_patchelf(tmpdir, mock_executable):
     def _factory(output):
         return mock_executable("patchelf", output=output)
-
-    return _factory
-
-
-@pytest.fixture()
-def hello_world(tmpdir):
-    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
-    paths are encoded with `$ORIGIN` prepended.
-    """
-
-    def _factory(rpaths, message="Hello world!"):
-        source = tmpdir.join("main.c")
-        source.write(
-            """
-        #include <stdio.h>
-        int main(){{
-            printf("{0}");
-        }}
-        """.format(
-                message
-            )
-        )
-        gcc = spack.util.executable.which("gcc")
-        executable = source.dirpath("main.x")
-        # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
-        rpath_str = ":".join(rpaths)
-        opts = [
-            "-Wl,--disable-new-dtags",
-            "-Wl,-rpath={0}".format(rpath_str),
-            str(source),
-            "-o",
-            str(executable),
-        ]
-        gcc(*opts)
-        return executable
 
     return _factory
 
@@ -314,9 +279,9 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_replace_prefix_bin(hello_world):
+def test_replace_prefix_bin(binary_with_rpaths):
     # Compile an "Hello world!" executable and set RPATHs
-    executable = hello_world(rpaths=["/usr/lib", "/usr/lib64"])
+    executable = binary_with_rpaths(rpaths=["/usr/lib", "/usr/lib64"])
 
     # Relocate the RPATHs
     spack.relocate._replace_prefix_bin(str(executable), {b"/usr": b"/foo"})
@@ -327,9 +292,9 @@ def test_replace_prefix_bin(hello_world):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, tmpdir):
+def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=[str(tmpdir.mkdir("lib")), "/usr/lib64"])
+    orig_binary = binary_with_rpaths(rpaths=[str(tmpdir.mkdir("lib")), "/usr/lib64"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -349,9 +314,9 @@ def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, tmpdir):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
+def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=["lib", "lib64", "/opt/local/lib"])
+    orig_binary = binary_with_rpaths(rpaths=["lib", "lib64", "/opt/local/lib"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -370,8 +335,8 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_make_elf_binaries_relative(hello_world, copy_binary, tmpdir):
-    orig_binary = hello_world(
+def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, tmpdir):
+    orig_binary = binary_with_rpaths(
         rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"]
     )
     new_binary = copy_binary(orig_binary)
@@ -392,8 +357,8 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
-    orig_binary = hello_world(
+def test_relocate_text_bin(binary_with_rpaths, copy_binary, tmpdir):
+    orig_binary = binary_with_rpaths(
         rpaths=[str(tmpdir.mkdir("lib")), str(tmpdir.mkdir("lib64")), "/opt/local/lib"],
         message=str(tmpdir),
     )
@@ -480,9 +445,53 @@ def test_fixup_macos_rpaths(make_dylib, make_object_file):
 
 
 def test_text_relocation_regex_is_safe():
-    assert (
-        utf8_path_to_binary_regex("/[a-z]/")
-        .search(b"This does not match /a/, but this does: /[a-z]/.")
-        .group(0)
-        == b"/[a-z]/"
+    # Test whether prefix regex is properly escaped
+    string = b"This does not match /a/, but this does: /[a-z]/."
+    assert utf8_path_to_binary_regex("/[a-z]/").search(string).group(0) == b"/[a-z]/"
+
+
+def test_utf8_paths_to_single_binary_regex():
+    regex = utf8_paths_to_single_binary_regex(["/first/path", "/second/path", "/safe/[a-z]"])
+    # Match nothing
+    assert not regex.search(b"text /neither/first/path text /the/second/path text")
+
+    # Match first
+    string = b"contains both /first/path/subdir and /second/path/sub"
+    assert regex.search(string).group(0) == b"/first/path/subdir"
+
+    # Match second
+    string = b"contains both /not/first/path/subdir but /second/path/subdir"
+    assert regex.search(string).group(0) == b"/second/path/subdir"
+
+    # Match "unsafe" dir name
+    string = b"don't match /safe/a/path but do match /safe/[a-z]/file"
+    assert regex.search(string).group(0) == b"/safe/[a-z]/file"
+
+
+def test_ordered_replacement(tmpdir):
+    # This tests whether binary text replacement respects order, so that
+    # a long package prefix is replaced before a shorter sub-prefix like
+    # the root of the spack store (as a fallback).
+    def replace_and_expect(prefix_map, before, after):
+        file = str(tmpdir.join("file"))
+        with open(file, "wb") as f:
+            f.write(before)
+        spack.relocate._replace_prefix_bin(file, prefix_map)
+        with open(file, "rb") as f:
+            assert f.read() == after
+
+    replace_and_expect(
+        OrderedDict(
+            [(b"/old-spack/opt/specific-package", b"/first"), (b"/old-spack/opt", b"/second")]
+        ),
+        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
+        b"Binary with /first///////////////////////// and /second///////",
+    )
+
+    replace_and_expect(
+        OrderedDict(
+            [(b"/old-spack/opt", b"/second"), (b"/old-spack/opt/specific-package", b"/first")]
+        ),
+        b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
+        b"Binary with /second////////specific-package and /second///////",
     )

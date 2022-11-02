@@ -467,40 +467,35 @@ def _replace_prefix_bin(filename, byte_prefixes):
     """Replace all the occurrences of the old install prefix with a
     new install prefix in binary files.
 
-    The new install prefix is prefixed with ``os.sep`` until the
+    The new install prefix is prefixed with ``b'/'`` until the
     lengths of the prefixes are the same.
 
     Args:
         filename (str): target binary file
         byte_prefixes (OrderedDict): OrderedDictionary where the keys are
-        precompiled regex of the old prefixes and the values are the new
-        prefixes (uft-8 encoded)
+        binary strings of the old prefixes and the values are the new
+        binary prefixes
     """
+    all_prefixes = re.compile(b"|".join(re.escape(prefix) for prefix in byte_prefixes.keys()))
+
+    def padded_replacement(old):
+        new = byte_prefixes[old]
+        pad = len(old) - len(new)
+        if pad < 0:
+            raise BinaryTextReplaceError(old, new)
+        return new + b"/" * pad
 
     with open(filename, "rb+") as f:
-        data = f.read()
-        f.seek(0)
-        for orig_bytes, new_bytes in byte_prefixes.items():
-            original_data_len = len(data)
-            # Skip this hassle if not found
-            if orig_bytes not in data:
-                continue
-            # We only care about this problem if we are about to replace
-            length_compatible = len(new_bytes) <= len(orig_bytes)
-            if not length_compatible:
-                tty.debug("Binary failing to relocate is %s" % filename)
-                raise BinaryTextReplaceError(orig_bytes, new_bytes)
-            pad_length = len(orig_bytes) - len(new_bytes)
-            padding = os.sep * pad_length
-            padding = padding.encode("utf-8")
-            data = data.replace(orig_bytes, new_bytes + padding)
-            # Really needs to be the same length
-            if not len(data) == original_data_len:
-                print("Length of pad:", pad_length, "should be", len(padding))
-                print(new_bytes, "was to replace", orig_bytes)
-                raise BinaryStringReplacementError(filename, original_data_len, len(data))
-        f.write(data)
-        f.truncate()
+        # Register what replacement string to put on what offsets in the file.
+        replacements_at_offset = [
+            (padded_replacement(m.group(0)), m.start())
+            for m in re.finditer(all_prefixes, f.read())
+        ]
+
+        # Apply the replacements
+        for replacement, offset in replacements_at_offset:
+            f.seek(offset)
+            f.write(replacement)
 
 
 def relocate_macho_binaries(
@@ -707,49 +702,39 @@ def raise_if_not_relocatable(binaries, allow_root):
             raise InstallRootStringError(binary, spack.store.layout.root)
 
 
-def relocate_links(links, orig_layout_root, orig_install_prefix, new_install_prefix):
-    """Relocate links to a new install prefix.
+def warn_if_link_cant_be_relocated(link, target):
+    if not os.path.isabs(target):
+        return
+    tty.warn('Symbolic link at "{}" to "{}" cannot be relocated'.format(link, target))
 
-    The symbolic links are relative to the original installation prefix.
-    The old link target is read and the placeholder is replaced by the old
-    layout root. If the old link target is in the old install prefix, the new
-    link target is create by replacing the old install prefix with the new
-    install prefix.
 
-    Args:
-        links (list): list of links to be relocated
-        orig_layout_root (str): original layout root
-        orig_install_prefix (str): install prefix of the original installation
-        new_install_prefix (str): install prefix where we want to relocate
-    """
-    placeholder = _placeholder(orig_layout_root)
-    abs_links = [os.path.join(new_install_prefix, link) for link in links]
-    for abs_link in abs_links:
-        link_target = os.readlink(abs_link)
-        link_target = re.sub(placeholder, orig_layout_root, link_target)
-        # If the link points to a file in the original install prefix,
-        # compute the corresponding target in the new prefix and relink
-        if link_target.startswith(orig_install_prefix):
-            link_target = re.sub(orig_install_prefix, new_install_prefix, link_target)
-            os.unlink(abs_link)
-            symlink(link_target, abs_link)
+def relocate_links(links, prefix_to_prefix):
+    """Relocate links to a new install prefix."""
+    regex = re.compile("|".join(re.escape(p) for p in prefix_to_prefix.keys()))
+    for link in links:
+        old_target = os.readlink(link)
+        match = regex.match(old_target)
 
-        # If the link is absolute and has not been relocated then
-        # warn the user about that
-        if os.path.isabs(link_target) and not link_target.startswith(new_install_prefix):
-            msg = (
-                'Link target "{0}" for symbolic link "{1}" is outside'
-                " of the new install prefix {2}"
-            )
-            tty.warn(msg.format(link_target, abs_link, new_install_prefix))
+        # No match.
+        if match is None:
+            warn_if_link_cant_be_relocated(link, old_target)
+            continue
+
+        new_target = prefix_to_prefix[match.group()] + old_target[match.end() :]
+        os.unlink(link)
+        symlink(new_target, link)
 
 
 def utf8_path_to_binary_regex(prefix):
     """Create a (binary) regex that matches the input path in utf8"""
     prefix_bytes = re.escape(prefix).encode("utf-8")
-    prefix_rexp = re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)" % prefix_bytes)
 
-    return prefix_rexp
+
+def utf8_paths_to_single_binary_regex(prefixes):
+    """Create a (binary) regex that matches any input path in utf8"""
+    all_prefixes = b"|".join(re.escape(prefix).encode("utf-8") for prefix in prefixes)
+    return re.compile(b"(?<![\\w\\-_/])([\\w\\-_]*?)(%s)([\\w\\-_/]*)" % all_prefixes)
 
 
 def unsafe_relocate_text(files, prefixes, concurrency=32):

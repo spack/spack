@@ -28,6 +28,7 @@ import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
 import spack.tengine
+import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -634,36 +635,6 @@ def env_depfile_setup_parser(subparser):
     )
 
 
-class SpecNode(object):
-    def __init__(self, spec, depth):
-        self.spec = spec
-        self.depth = depth
-
-    def key(self):
-        return self.spec.dag_hash()
-
-
-class UniqueNodesQueue(object):
-    def __init__(self, init=[]):
-        self.seen = set()
-        self.queue = []
-        for item in init:
-            self.push(item)
-
-    def push(self, item):
-        key = item.key()
-        if key in self.seen:
-            return
-        self.queue.append(item)
-        self.seen.add(key)
-
-    def empty(self):
-        return len(self.queue) == 0
-
-    def pop(self):
-        return self.queue.pop()
-
-
 def _deptypes(use_buildcache):
     """What edges should we follow for a given node? If it's a cache-only
     node, then we can drop build type deps."""
@@ -692,29 +663,27 @@ class MakeTargetVisitor(object):
     def neighbors(self, node):
         """Produce a list of spec to follow from node"""
         deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
-        return node.spec.dependencies(deptype=deptypes)
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
 
-    def visit(self, node):
-        dag_hash = node.spec.dag_hash()
-        spec_str = node.spec.format("{name}{@version}{%compiler}{variants}{arch=architecture}")
-        buildcache = self.pkg_buildcache if node.depth == 0 else self.deps_buildcache
-        if buildcache == "only":
-            build_cache_flag = "--use-buildcache=only"
-        elif buildcache == "never":
-            build_cache_flag = "--use-buildcache=never"
-        else:
-            build_cache_flag = ""
-        prereqs = " ".join([self.target(dep.dag_hash()) for dep in self.neighbors(node)])
-        self.adjacency_list.append((dag_hash, spec_str, build_cache_flag, prereqs))
+    def build_cache_flag(self, depth):
+        setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
+        if setting == "only":
+            return "--use-buildcache=only"
+        elif setting == "never":
+            return "--use-buildcache=never"
+        return ""
 
+    def accept(self, node):
+        dag_hash = node.edge.spec.dag_hash()
+        spec_str = node.edge.spec.format(
+            "{name}{@version}{%compiler}{variants}{arch=architecture}"
+        )
+        buildcache_flag = self.build_cache_flag(node.depth)
+        prereqs = " ".join([self.target(dep.spec.dag_hash()) for dep in self.neighbors(node)])
+        self.adjacency_list.append((dag_hash, spec_str, buildcache_flag, prereqs))
 
-def traverse_breadth_first(visitor, specs=[]):
-    queue = UniqueNodesQueue([SpecNode(s, 0) for s in specs])
-    while not queue.empty():
-        node = queue.pop()
-        visitor.visit(node)
-        for child in visitor.neighbors(node):
-            queue.push(SpecNode(child, node.depth + 1))
+        # We already accepted this
+        return True
 
 
 def env_depfile(args):
@@ -751,17 +720,22 @@ def env_depfile(args):
     else:
         roots = [s for _, s in env.concretized_specs()]
 
-    # Shallow means we will drop non-direct build deps from the DAG
+    # We produce a sub-DAG from the DAG induced by roots, where we drop build
+    # edges for those specs that are installed through a binary cache.
     pkg_buildcache, dep_buildcache = args.use_buildcache
-    visitor = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
-    traverse_breadth_first(visitor, roots)
+    make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
+    traverse.traverse_breadth_first_with_visitor(
+        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    )
 
     # Root specs without deps are the prereqs for the environment target
     root_install_targets = [get_install_target(h.dag_hash()) for h in roots]
 
     # Cleanable targets...
-    cleanable_targets = [get_install_target(h) for h, _, _, _ in visitor.adjacency_list]
-    cleanable_targets.extend([get_install_deps_target(h) for h, _, _, _ in visitor.adjacency_list])
+    cleanable_targets = [get_install_target(h) for h, _, _, _ in make_targets.adjacency_list]
+    cleanable_targets.extend(
+        [get_install_deps_target(h) for h, _, _, _ in make_targets.adjacency_list]
+    )
 
     buf = six.StringIO()
 
@@ -780,7 +754,7 @@ def env_depfile(args):
             "install_deps_target": get_target(".install-deps"),
             "any_hash_target": get_target("%"),
             "jobserver_support": "+" if args.jobserver else "",
-            "adjacency_list": visitor.adjacency_list,
+            "adjacency_list": make_targets.adjacency_list,
         }
     )
 
