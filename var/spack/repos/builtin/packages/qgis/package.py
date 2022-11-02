@@ -241,8 +241,9 @@ class Qgis(CMakePackage):
         return args
 
     def setup_run_environment(self, env):
-        # python module isn't located at the standard path
-        env.prepend_path("PYTHONPATH", self.prefix.share.qgis.python)
+        if '+bindings' in self.spec:
+            # python module isn't located at the standard path
+            env.prepend_path("PYTHONPATH", self.prefix.share.qgis.python)
 
     def check(self):
         """The tests of fail without access to an X server, cant run on build servers"""
