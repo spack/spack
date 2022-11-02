@@ -341,7 +341,11 @@ def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
 @skip_unless_linux
 def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
-        rpaths=[str(prefix_tmpdir.mkdir("lib")), str(prefix_tmpdir.mkdir("lib64")), "/opt/local/lib"]
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ]
     )
     new_binary = copy_binary(orig_binary)
 
@@ -363,7 +367,11 @@ def test_raise_if_not_relocatable(monkeypatch):
 @skip_unless_linux
 def test_relocate_text_bin(binary_with_rpaths, copy_binary, prefix_tmpdir):
     orig_binary = binary_with_rpaths(
-        rpaths=[str(prefix_tmpdir.mkdir("lib")), str(prefix_tmpdir.mkdir("lib64")), "/opt/local/lib"],
+        rpaths=[
+            str(prefix_tmpdir.mkdir("lib")),
+            str(prefix_tmpdir.mkdir("lib64")),
+            "/opt/local/lib",
+        ],
         message=str(prefix_tmpdir),
     )
     new_binary = copy_binary(orig_binary)
@@ -486,7 +494,10 @@ def test_ordered_replacement(tmpdir):
 
     replace_and_expect(
         OrderedDict(
-            [(b"/old-spack/opt/specific-package", b"/first/specific-package"), (b"/old-spack/opt", b"/sec/spack/opt")]
+            [
+                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+                (b"/old-spack/opt", b"/sec/spack/opt"),
+            ]
         ),
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
         b"Binary with /////////first/specific-package and /sec/spack/opt",
@@ -494,7 +505,10 @@ def test_ordered_replacement(tmpdir):
 
     replace_and_expect(
         OrderedDict(
-            [(b"/old-spack/opt/specific-package", b"/first/specific-package"), (b"/old-spack/opt", b"/sec/spack/opt")]
+            [
+                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+                (b"/old-spack/opt", b"/sec/spack/opt"),
+            ]
         ),
         b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
         b"Binary with /first/specific-package\x00package\x00 and /sec/spack/opt\x00",
@@ -502,7 +516,10 @@ def test_ordered_replacement(tmpdir):
 
     replace_and_expect(
         OrderedDict(
-            [(b"/old-spack/opt", b"/s/spack/opt"), (b"/old-spack/opt/specific-package", b"/first/specific-package")]
+            [
+                (b"/old-spack/opt", b"/s/spack/opt"),
+                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+            ]
         ),
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
         b"Binary with ///s/spack/opt/specific-package and ///s/spack/opt",

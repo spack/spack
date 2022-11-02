@@ -80,7 +80,8 @@ class BinaryTextReplaceError(spack.error.SpackError):
                 old_path[-7:],
                 new_path[-7:],
             )
-            err_msg += "Incompatible suffixes may not work, if using a custom projection, ensure hash is last.\n"
+            err_msg += "Incompatible suffixes may not work. if using a custom projection,\n"
+            err_msg += "ensure the package hash is the last component.\n"
         err_msg += "Text replacement in binaries will not work.\n"
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than or equal to new path"
