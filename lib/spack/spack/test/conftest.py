@@ -1626,7 +1626,7 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/bash\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
