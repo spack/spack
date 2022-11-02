@@ -76,8 +76,7 @@ for further documentation regarding the spec syntax, see:
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
     arguments.add_common_arguments(subparser, ["specs"])
-
-    spack.cmd.common.arguments.add_concretizer_args(subparser)
+    arguments.add_concretizer_args(subparser)
 
 
 def spec(parser, args):
