@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 Spack allows very fine-grained control over how packages are installed and
 over how they are built and configured.  To make this easy, it has its own
@@ -1506,17 +1505,6 @@ class Spec(object):
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
 
-    def _add_default_platform(self):
-        """If a spec has an os or a target and no platform, give it
-        the default platform.
-
-        This is private because it is used by the parser -- it's not
-        expected to be used outside of ``spec.py``.
-        """
-        arch = self.architecture
-        if arch and not arch.platform and (arch.os or arch.target):
-            self._set_architecture(platform=spack.platforms.host().name)
-
     #
     # Public interface
     #
@@ -2962,7 +2950,7 @@ class Spec(object):
                 if a list of names activate them for the packages in the list,
                 if True activate 'test' dependencies for all packages.
         """
-        if spack.config.get("config:concretizer") == "clingo":
+        if spack.config.get("config:concretizer", "clingo") == "clingo":
             self._new_concretize(tests)
         else:
             self._old_concretize(tests)
@@ -5323,7 +5311,6 @@ class SpecParser(spack.parse.Parser):
             else:
                 break
 
-        spec._add_default_platform()
         return spec
 
     def variant(self, name=None):

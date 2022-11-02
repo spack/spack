@@ -24,7 +24,6 @@ import spack.util.executable
 from spack.relocate import utf8_path_to_binary_regex, utf8_paths_to_single_binary_regex
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on Windows")
-PREFIX_LIKE = "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
 
 
 def skip_unless_linux(f):
@@ -57,11 +56,6 @@ def is_relocatable(request):
 
 
 @pytest.fixture()
-def prefix_tmpdir(tmpdir):
-    return tmpdir.mkdir(PREFIX_LIKE)
-
-
-@pytest.fixture()
 def source_file(tmpdir, is_relocatable):
     """Returns the path to a source file of a relocatable executable."""
     if is_relocatable:
@@ -84,42 +78,6 @@ def source_file(tmpdir, is_relocatable):
 def mock_patchelf(tmpdir, mock_executable):
     def _factory(output):
         return mock_executable("patchelf", output=output)
-
-    return _factory
-
-
-@pytest.fixture()
-def hello_world(prefix_tmpdir):
-    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
-    paths are encoded with `$ORIGIN` prepended.
-    """
-
-    def _factory(rpaths, message="Hello world!"):
-        source = prefix_tmpdir.join("main.c")
-        source.write(
-            """
-        #include <stdio.h>
-        int main(){{
-            printf("{0}");
-        }}
-        """.format(
-                message
-            )
-        )
-        gcc = spack.util.executable.which("gcc")
-        executable = source.dirpath("main.x")
-        # Encode relative RPATHs using `$ORIGIN` as the root prefix
-        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
-        rpath_str = ":".join(rpaths)
-        opts = [
-            "-Wl,--disable-new-dtags",
-            "-Wl,-rpath={0}".format(rpath_str),
-            str(source),
-            "-o",
-            str(executable),
-        ]
-        gcc(*opts)
-        return executable
 
     return _factory
 
@@ -183,13 +141,13 @@ def make_object_file(tmpdir):
 
 
 @pytest.fixture()
-def copy_binary():
+def copy_binary(prefix_like):
     """Returns a function that copies a binary somewhere and
     returns the new location.
     """
 
     def _copy_somewhere(orig_binary):
-        new_root = orig_binary.mkdtemp().mkdir(PREFIX_LIKE)
+        new_root = orig_binary.mkdtemp().mkdir(prefix_like)
         new_binary = new_root.join("main.x")
         shutil.copy(str(orig_binary), str(new_binary))
         return new_binary
@@ -321,13 +279,13 @@ def test_set_elf_rpaths_warning(mock_patchelf):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_replace_prefix_bin(hello_world):
-    prefix = "/usr/" + PREFIX_LIKE
+def test_replace_prefix_bin(binary_with_rpaths, prefix_like):
+    prefix = "/usr/" + prefix_like
     prefix_bytes = prefix.encode("utf-8")
-    new_prefix = "/foo/" + PREFIX_LIKE
+    new_prefix = "/foo/" + prefix_like
     new_prefix_bytes = new_prefix.encode("utf-8")
     # Compile an "Hello world!" executable and set RPATHs
-    executable = hello_world(rpaths=[prefix + "/lib", prefix + "/lib64"])
+    executable = binary_with_rpaths(rpaths=[prefix + "/lib", prefix + "/lib64"])
 
     # Relocate the RPATHs
     spack.relocate._replace_prefix_bin(str(executable), {prefix_bytes: new_prefix_bytes})
@@ -338,9 +296,9 @@ def test_replace_prefix_bin(hello_world):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, prefix_tmpdir):
+def test_relocate_elf_binaries_absolute_paths(binary_with_rpaths, copy_binary, prefix_tmpdir):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
+    orig_binary = binary_with_rpaths(rpaths=[str(prefix_tmpdir.mkdir("lib")), "/usr/lib64"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -360,9 +318,9 @@ def test_relocate_elf_binaries_absolute_paths(hello_world, copy_binary, prefix_t
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
+def test_relocate_elf_binaries_relative_paths(binary_with_rpaths, copy_binary):
     # Create an executable, set some RPATHs, copy it to another location
-    orig_binary = hello_world(rpaths=["lib", "lib64", "/opt/local/lib"])
+    orig_binary = binary_with_rpaths(rpaths=["lib", "lib64", "/opt/local/lib"])
     new_binary = copy_binary(orig_binary)
 
     spack.relocate.relocate_elf_binaries(
@@ -381,13 +339,9 @@ def test_relocate_elf_binaries_relative_paths(hello_world, copy_binary):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_make_elf_binaries_relative(hello_world, copy_binary, prefix_tmpdir):
-    orig_binary = hello_world(
-        rpaths=[
-            str(prefix_tmpdir.mkdir("lib")),
-            str(prefix_tmpdir.mkdir("lib64")),
-            "/opt/local/lib",
-        ]
+def test_make_elf_binaries_relative(binary_with_rpaths, copy_binary, prefix_tmpdir):
+    orig_binary = binary_with_rpaths(
+        rpaths=[str(prefix_tmpdir.mkdir("lib")), str(prefix_tmpdir.mkdir("lib64")), "/opt/local/lib"]
     )
     new_binary = copy_binary(orig_binary)
 
@@ -407,13 +361,9 @@ def test_raise_if_not_relocatable(monkeypatch):
 
 @pytest.mark.requires_executables("patchelf", "strings", "file", "gcc")
 @skip_unless_linux
-def test_relocate_text_bin(hello_world, copy_binary, prefix_tmpdir):
-    orig_binary = hello_world(
-        rpaths=[
-            str(prefix_tmpdir.mkdir("lib")),
-            str(prefix_tmpdir.mkdir("lib64")),
-            "/opt/local/lib",
-        ],
+def test_relocate_text_bin(binary_with_rpaths, copy_binary, prefix_tmpdir):
+    orig_binary = binary_with_rpaths(
+        rpaths=[str(prefix_tmpdir.mkdir("lib")), str(prefix_tmpdir.mkdir("lib64")), "/opt/local/lib"],
         message=str(prefix_tmpdir),
     )
     new_binary = copy_binary(orig_binary)

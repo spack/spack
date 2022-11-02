@@ -128,7 +128,14 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path):
 
     def commit(message):
         global commit_counter
-        git("commit", "--date", "2020-01-%02d 12:0:00 +0300" % commit_counter, "-am", message)
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
         commit_counter += 1
 
     with working_dir(repo_path):
@@ -1789,3 +1796,49 @@ def mock_spider_configs(mock_config_data, monkeypatch):
 @pytest.fixture(scope="function")
 def mock_tty_stdout(monkeypatch):
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+
+@pytest.fixture
+def prefix_like():
+    return "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
+
+
+@pytest.fixture()
+def prefix_tmpdir(tmpdir, prefix_like):
+    return tmpdir.mkdir(prefix_like)
+
+
+@pytest.fixture()
+def binary_with_rpaths(prefix_tmpdir):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
+
+    def _factory(rpaths, message="Hello world!"):
+        source = prefix_tmpdir.join("main.c")
+        source.write(
+            """
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(
+                message
+            )
+        )
+        gcc = spack.util.executable.which("gcc")
+        executable = source.dirpath("main.x")
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
+        rpath_str = ":".join(rpaths)
+        opts = [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath={0}".format(rpath_str),
+            str(source),
+            "-o",
+            str(executable),
+        ]
+        gcc(*opts)
+        return executable
+
+    return _factory
