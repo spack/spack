@@ -18,7 +18,6 @@ class PyPylatex(PythonPackage):
     variant('matrices', default=False, description='Build with matrix support')
     variant('matplotlib', default=False, description='Build with matplotlib support')
     variant('quantities', default=False, description='Build with quantities support')
-    variant('convert_to_py2', default=False, description='Build with future support')
 
     depends_on("python@2.7,3.3:", type=("build", 'run') )
     depends_on("py-setuptools", type="build")
