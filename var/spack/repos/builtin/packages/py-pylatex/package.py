@@ -26,7 +26,7 @@ class PyPylatex(PythonPackage):
     depends_on("py-ordered-set", type=("build", "run"))
 
     # from extras section in setup.py
-    depends_on("py-future@0.15.2:", type=("build", 'run'), when='+convert_to_py2')
+    depends_on("py-future@0.15.2:", type=("build", 'run'), when='^python@:2')
     depends_on('py-sphinx', type='run', when='+docs')
     depends_on('py-matplotlib', type='run', when='+matplotlib')
     depends_on('py-numpy', type='run', when='+matrices')
