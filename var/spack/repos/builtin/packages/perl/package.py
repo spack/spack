@@ -20,13 +20,15 @@ from contextlib import contextmanager
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.nmake import NMakeBuilder
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 is_windows = sys.platform == "win32"
 
 
-class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
+class Perl(AutotoolsPackage, NMakePackage):
     """Perl 5 is a highly capable, feature-rich programming language with over
     27 years of development."""
 
@@ -171,7 +173,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         placement="cpanm",
     )
 
-    phases = ["configure", "build", "install"]
+    build_system(conditional("nmake", when="platform=windows"), "autotools", default="autotools")
 
     def patch(self):
         # https://github.com/Perl/perl5/issues/15544 long PATH(>1000 chars) fails a test
@@ -234,156 +236,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         perm = os.stat(filename).st_mode
         os.chmod(filename, perm | 0o200)
 
-    @property
-    def nmake_arguments(self):
-        args = []
-        if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
-        else:
-            raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
-        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
-        args.append("INST_ARCH=\\$(ARCHNAME)")
-        if self.spec.satisfies("~shared"):
-            args.append("ALL_STATIC=%s" % "define")
-        if self.spec.satisfies("~threads"):
-            args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
-        if not self.is_64bit():
-            args.append("WIN64=undef")
-        return args
-
-    def is_64bit(self):
-        return platform.machine().endswith("64")
-
-    def configure_args(self):
-        spec = self.spec
-        prefix = self.prefix
-
-        config_args = [
-            "-des",
-            "-Dprefix={0}".format(prefix),
-            "-Dlocincpth=" + self.spec["gdbm"].prefix.include,
-            "-Dloclibpth=" + self.spec["gdbm"].prefix.lib,
-        ]
-
-        # Extensions are installed into their private tree via
-        # `INSTALL_BASE`/`--install_base` (see [1]) which results in a
-        # "predictable" installation tree that sadly does not match the
-        # Perl core's @INC structure.  This means that when activation
-        # merges the extension into the extendee[2], the directory tree
-        # containing the extensions is not on @INC and the extensions can
-        # not be found.
-        #
-        # This bit prepends @INC with the directory that is used when
-        # extensions are activated [3].
-        #
-        # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
-        # [2] via the activate method in the PackageBase class
-        # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
-        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' + self.prefix.lib.perl5 + '\\"')
-
-        # Discussion of -fPIC for Intel at:
-        # https://github.com/spack/spack/pull/3081 and
-        # https://github.com/spack/spack/pull/4416
-        if spec.satisfies("%intel"):
-            config_args.append("-Accflags={0}".format(self.compiler.cc_pic_flag))
-
-        if "+shared" in spec:
-            config_args.append("-Duseshrplib")
-
-        if "+threads" in spec:
-            config_args.append("-Dusethreads")
-
-        # Development versions have an odd second component
-        if spec.version[1] % 2 == 1:
-            config_args.append("-Dusedevel")
-
-        return config_args
-
-    def configure(self, spec, prefix):
-        if is_windows:
-            return
-        configure = Executable("./Configure")
-        configure(*self.configure_args())
-
-    def build(self, spec, prefix):
-        if is_windows:
-            pass
-        else:
-            make()
-
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def build_test(self):
-        if is_windows:
-            win32_dir = os.path.join(self.stage.source_path, "win32")
-            with working_dir(win32_dir):
-                nmake("test", ignore_quotes=True)
-        else:
-            make("test")
-
-    def install(self, spec, prefix):
-        if is_windows:
-            win32_dir = os.path.join(self.stage.source_path, "win32")
-            with working_dir(win32_dir):
-                nmake("install", *self.nmake_arguments, ignore_quotes=True)
-        else:
-            make("install")
-
-    @run_after("install")
-    def symlink_windows(self):
-        if not is_windows:
-            return
-        win_install_path = os.path.join(self.prefix.bin, "MSWin32")
-        if self.is_64bit():
-            win_install_path += "-x64"
-        else:
-            win_install_path += "-x86"
-        if self.spec.satisfies("+threads"):
-            win_install_path += "-multi-thread"
-        else:
-            win_install_path += "-perlio"
-
-        for f in os.listdir(os.path.join(self.prefix.bin, win_install_path)):
-            lnk_path = os.path.join(self.prefix.bin, f)
-            src_path = os.path.join(win_install_path, f)
-            if not os.path.exists(lnk_path):
-                symlink(src_path, lnk_path)
-
-    @run_after("install")
-    def install_cpanm(self):
-        spec = self.spec
-        maker = make
-        cpan_dir = join_path("cpanm", "cpanm")
-        if is_windows:
-            maker = nmake
-            cpan_dir = join_path(self.stage.source_path, cpan_dir)
-        if "+cpanm" in spec:
-            with working_dir(cpan_dir):
-                perl = spec["perl"].command
-                perl("Makefile.PL")
-                maker()
-                maker("install")
-
-    def _setup_dependent_env(self, env, dependent_spec, deptype):
-        """Set PATH and PERL5LIB to include the extension and
-        any other perl extensions it depends on,
-        assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
-        for d in dependent_spec.traverse(deptype=deptype):
-            if d.package.extends(self.spec):
-                perl_lib_dirs.append(d.prefix.lib.perl5)
-        if perl_lib_dirs:
-            perl_lib_path = ":".join(perl_lib_dirs)
-            env.prepend_path("PERL5LIB", perl_lib_path)
-        if is_windows:
-            env.append_path("PATH", self.prefix.bin)
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
-
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
         In most cases, extensions will only need to have one line:
@@ -404,67 +256,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Make the site packages directory for extensions,
             # if it does not exist already.
             mkdirp(module.perl_lib_dir)
-
-    def setup_build_environment(self, env):
-        if is_windows:
-            env.append_path("PATH", self.prefix.bin)
-            return
-
-        spec = self.spec
-
-        if spec.satisfies("@:5.34 platform=darwin") and macos_version() >= Version("10.16"):
-            # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
-            # as "unexpected"; override the environment variable set by spack's
-            # platforms.darwin .
-            env.set("MACOSX_DEPLOYMENT_TARGET", "10.16")
-
-        # This is how we tell perl the locations of bzip and zlib.
-        env.set("BUILD_BZIP2", 0)
-        env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
-        env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
-        env.set("BUILD_ZLIB", 0)
-        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
-        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
-
-    @run_after("install")
-    def filter_config_dot_pm(self):
-        """Run after install so that Config.pm records the compiler that Spack
-        built the package with.  If this isn't done, $Config{cc} will
-        be set to Spack's cc wrapper script.  These files are read-only, which
-        frustrates filter_file on some filesystems (NFSv4), so make them
-        temporarily writable.
-        """
-        if is_windows:
-            return
-        kwargs = {"ignore_absent": True, "backup": False, "string": False}
-
-        # Find the actual path to the installed Config.pm file.
-        perl = self.spec["perl"].command
-        config_dot_pm = perl(
-            "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
-        )
-
-        with self.make_briefly_writable(config_dot_pm):
-            match = "cc *=>.*"
-            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
-            filter_file(match, substitute, config_dot_pm, **kwargs)
-
-        # And the path Config_heavy.pl
-        d = os.path.dirname(config_dot_pm)
-        config_heavy = join_path(d, "Config_heavy.pl")
-
-        with self.make_briefly_writable(config_heavy):
-            match = "^cc=.*"
-            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
-            filter_file(match, substitute, config_heavy, **kwargs)
-
-            match = "^ld=.*"
-            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
-            filter_file(match, substitute, config_heavy, **kwargs)
-
-            match = "^ccflags='"
-            substitute = "ccflags='%s " % " ".join(self.spec.compiler_flags["cflags"])
-            filter_file(match, substitute, config_heavy, **kwargs)
 
     @contextmanager
     def make_briefly_writable(self, path):
@@ -524,3 +315,228 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         msg = "Hello, World!"
         options = ["-e", 'use warnings; use strict;\nprint("%s\n");' % msg]
         self.run_test(exe, options, msg, installed=True, purpose=reason)
+
+
+class RunAfter(object):
+    @run_after("install")
+    def install_cpanm(self):
+        spec = self.spec
+        maker = make
+        cpan_dir = join_path("cpanm", "cpanm")
+        if is_windows:
+            maker = nmake
+            cpan_dir = join_path(self.stage.source_path, cpan_dir)
+        if "+cpanm" in spec:
+            with working_dir(cpan_dir):
+                perl = spec["perl"].command
+                perl("Makefile.PL")
+                maker()
+                maker("install")
+
+    @run_after("install")
+    def filter_config_dot_pm(self):
+        """Run after install so that Config.pm records the compiler that Spack
+        built the package with.  If this isn't done, $Config{cc} will
+        be set to Spack's cc wrapper script.  These files are read-only, which
+        frustrates filter_file on some filesystems (NFSv4), so make them
+        temporarily writable.
+        """
+        if is_windows:
+            return
+        kwargs = {"ignore_absent": True, "backup": False, "string": False}
+
+        # Find the actual path to the installed Config.pm file.
+        perl = self.spec["perl"].command
+        config_dot_pm = perl(
+            "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
+        )
+
+        with self.make_briefly_writable(config_dot_pm):
+            match = "cc *=>.*"
+            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_dot_pm, **kwargs)
+
+        # And the path Config_heavy.pl
+        d = os.path.dirname(config_dot_pm)
+        config_heavy = join_path(d, "Config_heavy.pl")
+
+        with self.make_briefly_writable(config_heavy):
+            match = "^cc=.*"
+            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+            match = "^ld=.*"
+            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+            match = "^ccflags='"
+            substitute = "ccflags='%s " % " ".join(self.spec.compiler_flags["cflags"])
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+    @run_after("build")
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
+        if is_windows:
+            with working_dir(self.build_directory):
+                nmake("test", ignore_quotes=True)
+        else:
+            make("test")
+
+
+class Setup(object):
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec, deptype=("build", "run", "test"))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec, deptype=("run",))
+
+
+class AutotoolsBuilder(AutotoolsBuilder, RunAfter, Setup):
+    def setup_build_environment(self, env):
+        spec = self.spec
+
+        if spec.satisfies("@:5.34 platform=darwin") and macos_version() >= Version("10.16"):
+            # Older perl versions reject MACOSX_DEPLOYMENT_TARGET=11 or higher
+            # as "unexpected"; override the environment variable set by spack's
+            # platforms.darwin .
+            env.set("MACOSX_DEPLOYMENT_TARGET", "10.16")
+
+        # This is how we tell perl the locations of bzip and zlib.
+        env.set("BUILD_BZIP2", 0)
+        env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
+        env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
+        env.set("BUILD_ZLIB", 0)
+        env.set("ZLIB_INCLUDE", spec["zlib"].prefix.include)
+        env.set("ZLIB_LIB", spec["zlib"].libs.directories[0])
+
+    def _setup_dependent_env(self, env, dependent_spec, deptypes):
+        """Set PATH and PERL5LIB to include the extension and
+        any other perl extensions it depends on,
+        assuming they were installed with INSTALL_BASE defined."""
+        perl_lib_dirs = []
+        for d in dependent_spec.traverse(deptype=deptype):
+            if d.package.extends(self.spec):
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if perl_lib_dirs:
+            perl_lib_path = ":".join(perl_lib_dirs)
+            env.prepend_path("PERL5LIB", perl_lib_path)
+
+    def configure_args(self):
+        spec = self.spec
+        prefix = self.prefix
+
+        config_args = [
+            "-des",
+            "-Dprefix={0}".format(prefix),
+            "-Dlocincpth=" + self.spec["gdbm"].prefix.include,
+            "-Dloclibpth=" + self.spec["gdbm"].prefix.lib,
+        ]
+
+        # Extensions are installed into their private tree via
+        # `INSTALL_BASE`/`--install_base` (see [1]) which results in a
+        # "predictable" installation tree that sadly does not match the
+        # Perl core's @INC structure.  This means that when activation
+        # merges the extension into the extendee[2], the directory tree
+        # containing the extensions is not on @INC and the extensions can
+        # not be found.
+        #
+        # This bit prepends @INC with the directory that is used when
+        # extensions are activated [3].
+        #
+        # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
+        # [2] via the activate method in the PackageBase class
+        # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' + self.prefix.lib.perl5 + '\\"')
+
+        # Discussion of -fPIC for Intel at:
+        # https://github.com/spack/spack/pull/3081 and
+        # https://github.com/spack/spack/pull/4416
+        if spec.satisfies("%intel"):
+            config_args.append("-Accflags={0}".format(self.compiler.cc_pic_flag))
+
+        if "+shared" in spec:
+            config_args.append("-Duseshrplib")
+
+        if "+threads" in spec:
+            config_args.append("-Dusethreads")
+
+        # Development versions have an odd second component
+        if spec.version[1] % 2 == 1:
+            config_args.append("-Dusedevel")
+
+        return config_args
+
+
+class NMakeBuilder(NMakeBuilder, RunAfter, Setup):
+    build_targets: List[str] = ["install"]
+
+    def setup_build_environment(self, env):
+        env.append_path("PATH", self.prefix.bin)
+
+    def _setup_dependent_env(self, env, dependent_spec, deptype):
+        """Set PATH and PERL5LIB to include the extension and
+        any other perl extensions it depends on,
+        assuming they were installed with INSTALL_BASE defined."""
+        perl_lib_dirs = []
+        for d in dependent_spec.traverse(deptype=deptype):
+            if d.package.extends(self.spec):
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+        if perl_lib_dirs:
+            perl_lib_path = ":".join(perl_lib_dirs)
+            env.prepend_path("PERL5LIB", perl_lib_path)
+
+        env.append_path("PATH", self.prefix.bin)
+
+    @property
+    def ignore_quotes(self):
+        return True
+
+    @property
+    def build_directory(self):
+        return os.path.join(super(NMakeBuilder, self).build_directory, "win32")
+
+    def nmake_args(self):
+        args = []
+        if self.spec.satisfies("%msvc"):
+            args.append("CCTYPE=%s" % self.pkg.compiler.short_msvc_version)
+        else:
+            raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
+        args.append("INST_TOP=%s" % self.prefix.replace("/", "\\"))
+        args.append("INST_ARCH=\\$(ARCHNAME)")
+        if self.spec.satisfies("~shared"):
+            args.append("ALL_STATIC=%s" % "define")
+        if self.spec.satisfies("~threads"):
+            args.extend(["USE_MULTI=undef", "USE_ITHREADS=undef", "USE_IMP_SYS=undef"])
+        if not self.is_64bit():
+            args.append("WIN64=undef")
+        return args
+
+    def is_64bit(self):
+        return platform.machine().endswith("64")
+
+    def install(self, pkg, spec, prefix):
+        """Perl's build command will install the project. The install target
+        runs the build job regardless of whether or not the project has already been built.
+        So rather than run the build twice, we install during build and
+        just skip the install phase."""
+        return
+
+    @run_after("install")
+    def symlink_windows(self):
+        if not is_windows:
+            return
+        win_install_path = os.path.join(self.prefix.bin, "MSWin32")
+        if self.is_64bit():
+            win_install_path += "-x64"
+        else:
+            win_install_path += "-x86"
+        if self.spec.satisfies("+threads"):
+            win_install_path += "-multi-thread"
+        else:
+            win_install_path += "-perlio"
+
+        for f in os.listdir(os.path.join(self.prefix.bin, win_install_path)):
+            lnk_path = os.path.join(self.prefix.bin, f)
+            src_path = os.path.join(win_install_path, f)
+            if not os.path.exists(lnk_path):
+                symlink(src_path, lnk_path)
