@@ -207,7 +207,6 @@ class Seacas(CMakePackage):
                 ]
             )
 
-
         # ########## What applications should be built #############
         # Check whether they want everything; if so, do the easy way...
         if "+applications" in spec and "+legacy" in spec:
@@ -235,20 +234,24 @@ class Seacas(CMakePackage):
 
             if "+applications" in spec:
                 # C / C++ applications
-                for app in ("Aprepro", "Aprepro_lib", "Conjoin", "Cpup", "Ejoin", "Epu", "Exo2mat", "Exo_format",
-                            "Exodiff", "Mat2exo", "Nas2exo", "Nemslice", "Nemspread", "Slice", "Zellij"):
+                for app in ("Aprepro", "Aprepro_lib", "Conjoin", "Cpup", "Ejoin", "Epu", 
+                            "Exo2mat", "Exo_format", "Exodiff", "Mat2exo", "Nas2exo", 
+                            "Nemslice", "Nemspread", "Slice", "Zellij"):
                     options.append(define(project_name_base + "_ENABLE_SEACAS" + app, True))
                 # Fortran-based applications
                 for app in ("Explore", "Grepos"):
-                    options.append(from_variant(project_name_base + "_ENABLE_SEACAS" + app, "fortran"))
+                    options.append(from_variant(project_name_base + "_ENABLE_SEACAS" + app, 
+                                                "fortran"))
 
             if "+legacy" in spec:
                 # Legacy applications -- all are fortran-based except Nemesis
                 options.append(define(project_name_base + "_ENABLE_SEACASNemesis", True))
 
-                for app in ("Algebra", "Blot", "Ex1ex2v2", "Ex2ex1v2", "Exomatlab", "Exotec2", "Exotxt",
-                            "Fastq", "Gen3D", "Genshell", "Gjoin", "Mapvar", "Mapvar-kd", "Numbers", "Txtexo"):
-                    options.append(from_variant(project_name_base + "_ENABLE_SEACAS" + app, "fortran"))
+                for app in ("Algebra", "Blot", "Ex1ex2v2", "Ex2ex1v2", "Exomatlab", 
+                            "Exotec2", "Exotxt", "Fastq", "Gen3D", "Genshell", "Gjoin", 
+                            "Mapvar", "Mapvar-kd", "Numbers", "Txtexo"):
+                    options.append(from_variant(project_name_base + "_ENABLE_SEACAS" + app, 
+                                                "fortran"))
 
         # ##################### Dependencies ##########################
         # Always need NetCDF-C
@@ -267,9 +270,11 @@ class Seacas(CMakePackage):
                     define("METIS_LIBRARY_NAMES", "metis"),
                     define("TPL_METIS_INCLUDE_DIRS", spec["metis"].prefix.include),
                     define("TPL_ENABLE_ParMETIS", True),
-                    define("ParMETIS_LIBRARY_DIRS", [spec["parmetis"].prefix.lib, spec["metis"].prefix.lib]),
+                    define("ParMETIS_LIBRARY_DIRS", 
+                           [spec["parmetis"].prefix.lib, spec["metis"].prefix.lib]),
                     define("ParMETIS_LIBRARY_NAMES", ["parmetis", "metis"]),
-                    define("TPL_ParMETIS_INCLUDE_DIRS", [spec["parmetis"].prefix.include, spec["metis"].prefix.include]),
+                    define("TPL_ParMETIS_INCLUDE_DIRS", 
+                           [spec["parmetis"].prefix.include, spec["metis"].prefix.include]),
                 ]
             )
         elif "+metis" in spec:
