@@ -35,6 +35,7 @@ spack:
         - llvm
         - mvapich2
         - ninja
+        - node-js
         - nvhpc
         - pgi
         - python
@@ -125,6 +126,7 @@ spack:
     - mvapich2@2.3.7
     - ncurses
     - ninja
+    - node-js  # this is needed for our on-demand jupyter service
     - openscenegraph  # doesn't like to be built in a spec with LLVM
     # Leads to issues down the line, where it is preferred over intel-mkl
     # #providers
