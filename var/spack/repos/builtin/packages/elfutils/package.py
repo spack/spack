@@ -46,6 +46,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # Libraries for reading compressed DWARF sections.
     variant("bzip2", default=False, description="Support bzip2 compressed sections.")
     variant("xz", default=False, description="Support xz (lzma) compressed sections.")
+    variant("zstd", default=False, description="Support zstd compressed sections.", when="@0.182:")
 
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
@@ -69,6 +70,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     depends_on("bzip2", type="link", when="+bzip2")
     depends_on("xz", type="link", when="+xz")
+    depends_on("zstd", type="link", when="+zstd")
     depends_on("zlib", type="link")
     depends_on("gettext", when="+nls")
     depends_on("m4", type="build")
@@ -113,6 +115,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
             args.append("--with-lzma=%s" % spec["xz"].prefix)
         else:
             args.append("--without-lzma")
+
+        if "+zstd" in spec:
+            args.append("--with-zstd=%s" % spec["zstd"].prefix)
+        else:
+            args.append("--without-zstd")
 
         # zlib is required
         args.append("--with-zlib=%s" % spec["zlib"].prefix)
