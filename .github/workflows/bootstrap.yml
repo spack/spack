@@ -42,6 +42,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
@@ -79,6 +80,7 @@ jobs:
         shell: runuser -u spack-test -- bash {0}
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
@@ -143,6 +145,7 @@ jobs:
       - name: Bootstrap clingo
         run: |
           source share/spack/setup-env.sh
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack external find cmake bison
           spack -d solve zlib
@@ -160,6 +163,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           export PATH=/usr/local/opt/bison@2.7/bin:$PATH
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack external find --not-buildable cmake bison
           spack -d solve zlib
@@ -298,6 +302,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/
@@ -333,6 +338,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack solve zlib
+          spack bootstrap disable github-actions-v0.4
           spack bootstrap disable github-actions-v0.3
           spack -d gpg list
           tree ~/.spack/bootstrap/store/

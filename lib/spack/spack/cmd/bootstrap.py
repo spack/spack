@@ -30,7 +30,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.4/bootstrap-buildcache.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -50,8 +50,8 @@ BINARY_METADATA = {
     },
 }
 
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/gnupg.json"
+CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/clingo.json"
+GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/gnupg.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -449,10 +449,10 @@ def _mirror(args):
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
         if platform.system().lower() == "linux":
             spack.bootstrap.ensure_patchelf_in_path_or_raise()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
 
 
 def bootstrap(parser, args):
