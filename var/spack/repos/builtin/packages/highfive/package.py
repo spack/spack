@@ -13,6 +13,7 @@ class Highfive(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/HighFive"
     url = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
+    maintainers = ["alkino"]
 
     version('2.5.0', sha256='27f55596570df3cc8b878a1681a0d4ba0fe2e3da4a0ef8d436722990d77dc93a')
     version("2.4.1", sha256="6826471ef5c645ebf947d29574b302991525a8a8ff1ef687aba7311d9a0ea36f")
