@@ -35,6 +35,8 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     patch("fortran200.patch", when="@2.0.0")
 
     depends_on("cmake@3.10:", type=("build", "run"))
+    depends_on("cmake@3.19:", when="@develop", type=("build", "run"))
+    depends_on("cmake@3.21:", when="@develop+rocm", type=("build", "run"))
 
     variant("shared", default=True, description="Builds with shared libraries")
     variant("fftw", default=False, description="Builds with support for FFTW backend")
@@ -63,8 +65,10 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fftw@3.3.8:", when="+fftw", type=("build", "run"))
     depends_on("intel-mkl@2018.0.128:", when="+mkl", type=("build", "run"))
     depends_on("cuda@8.0:", when="+cuda", type=("build", "run"))
-    depends_on("hip@3.8.0:", when="+rocm")
-    depends_on("rocfft@3.8.0:", when="+rocm")
+    depends_on("hip@3.8.0:", when="+rocm", type=("build", "run"))
+    depends_on("rocfft@3.8.0:", when="+rocm", type=("build", "run"))
+    depends_on("hip@5.2.3:", when="@develop+rocm", type=("build", "run"))
+    depends_on("rocfft@5.2.3:", when="@develop+rocm", type=("build", "run"))
     depends_on("magma@2.5.3:", when="+cuda+magma", type=("build", "run"))
     depends_on("magma+rocm@2.6.1:", when="+magma+rocm @2.1:", type=("build", "run"))
     depends_on("hipblas@3.8:", when="+magma+rocm", type=("build", "run"))
@@ -141,6 +145,9 @@ class Heffte(CMakePackage, CudaPackage, ROCmPackage):
             cmake_dir,
         ]
         if "+rocm" in self.spec:
+            options.append(
+                "-Dhip_DIR=" + join_path(self.spec["hip"].prefix, "lib", "cmake", "hip")
+            )
             options.append(
                 "-DAMDDeviceLibs_DIR="
                 + join_path(self.spec["llvm-amdgpu"].prefix, "lib", "cmake", "AMDDeviceLibs")
