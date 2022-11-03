@@ -287,9 +287,8 @@ class Conduit(CMakePackage):
         # but there are subtle differences:
         # (paths differ , and we use `self.run_test`)
         print("Checking Conduit installation...")
-        spec = self.spec
-        install_prefix = spec.prefix
-        test_stage_dir = self.test_suite.stage
+        install_prefix = self.spec.prefix
+        test_stage_dir = self.test_suite.test_dir_for_spec(self.spec)
         #####
         # using-with-cmake
         #####
