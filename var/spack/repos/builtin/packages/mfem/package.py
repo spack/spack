@@ -443,9 +443,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         # Workaround for changes made by the 'kokkos-nvcc-wrapper' package
         # which can be a dependency e.g. through PETSc that uses Kokkos:
         if "^kokkos-nvcc-wrapper" in self.spec:
-           env.set("MPICH_CXX", spack_cxx)
-           env.set("OMPI_CXX", spack_cxx)
-           env.set("MPICXX_CXX", spack_cxx)
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
