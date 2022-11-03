@@ -248,6 +248,11 @@ class Rocblas(CMakePackage):
                 args.append(self.define("Tensile_LIBRARY_FORMAT", "msgpack"))
             if self.spec.satisfies("@:4.2.0"):
                 arch_define_name = "Tensile_ARCHITECTURE"
+            # Restrict the number of jobs Tensile can spawn.
+            # If we don't specify otherwise, Tensile creates a job per available core,
+            # and that consumes a lot of system memory.
+            # https://github.com/ROCmSoftwarePlatform/Tensile/blob/93e10678a0ced7843d9332b80bc17ebf9a166e8e/Tensile/Parallel.py#L38
+            args.append(self.define("Tensile_CPU_THREADS", min(16, make_jobs)))
 
         # See https://github.com/ROCmSoftwarePlatform/rocBLAS/commit/c1895ba4bb3f4f5947f3818ebd155cf71a27b634
         if "auto" not in self.spec.variants["amdgpu_target"]:
