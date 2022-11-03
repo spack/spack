@@ -18,17 +18,14 @@ class Fides(CMakePackage):
     version("master", branch="master")
     version("1.1.0", sha256="40d2e08b8d5cfdfc809eae6ed2ae0731108ce3b1383485f4934a5ec8aaa9425e")
     version("1.0.0", sha256="c355fdb4ca3790c1fa9a4491a0d294b8f883b6946c540ad9e5633c9fd8c8c3aa")
-
     variant("mpi", default=True, description="build mpi support")
-    variant("adios2", default=True, description="build ADIOS2 support")
-    variant("vtk-m", default=True, description="build VTK-m support")
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
 
     depends_on("mpi", when="+mpi")
-    depends_on("adios2~zfp", when="+adios2")
-    depends_on("vtk-m@:1.7", when="+vtk-m")
+    depends_on("adios2~zfp")
+    depends_on("vtk-m")
 
     # Fix missing implicit includes
     @when("%gcc@7:")
