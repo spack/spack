@@ -37,6 +37,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     variant("oneapi", default=False, description="Build with oneAPI support")
     variant("develtools", default=False, description="Compile with develtools enabled")
     variant("hwloc", default=False, description="Enable HWLOC support")
+    variant("mpi", default=False, description="Enable MPI support")
     variant(
         "build_type",
         default="Release",
@@ -46,6 +47,8 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cmake@3.9:", type="build")
     depends_on("cuda@9:", when="+cuda")
+
+    depends_on("mpi", when="+mpi")
 
     depends_on("rocthrust", type="build", when="+rocm")
     depends_on("hipsparse", type="link", when="+rocm")
@@ -61,6 +64,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("%gcc@:5.2.9")
     conflicts("+rocm", when="@:1.1.1")
+    conflicts("+mpi", when="@:1.4.0")
     conflicts("+cuda", when="+rocm")
     conflicts("+openmp", when="+oneapi")
 
@@ -111,6 +115,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             from_variant("GINKGO_BUILD_CUDA", "cuda"),
             from_variant("GINKGO_BUILD_HIP", "rocm"),
             from_variant("GINKGO_BUILD_OMP", "openmp"),
+            from_variant("GINKGO_BUILD_MPI", "mpi"),
             from_variant("BUILD_SHARED_LIBS", "shared"),
             from_variant("GINKGO_JACOBI_FULL_OPTIMIZATIONS", "full_optimizations"),
             from_variant("GINKGO_BUILD_HWLOC", "hwloc"),
