@@ -13,6 +13,7 @@ class Spades(CMakePackage):
     homepage = "https://cab.spbu.ru/software/spades/"
     url = "https://github.com/ablab/spades/releases/download/v3.15.3/SPAdes-3.15.3.tar.gz"
 
+    version("3.15.5", sha256="155c3640d571f2e7b19a05031d1fd0d19bd82df785d38870fb93bd241b12bbfa")
     version("3.15.3", sha256="b2e5a9fd7a65aee5ab886222d6af4f7b7bc7f755da7a03941571fabd6b9e1499")
     version("3.15.0", sha256="6719489fa4bed6dd96d78bdd4001a30806d5469170289085836711d1ffb8b28b")
     version("3.14.1", sha256="d629b78f7e74c82534ac20f5b3c2eb367f245e6840a67b9ef6a76f6fac5323ca")
