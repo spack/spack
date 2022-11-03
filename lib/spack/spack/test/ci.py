@@ -622,9 +622,26 @@ def test_ci_staged_phases(config, mutable_mock_env_path, mock_packages):
     e.add("dyninst")
     e.concretize()
 
-    phases, _ = spack.ci._phase_specs(e, {})
+    phases, _ = spack.ci.phase_specs(e, {})
     assert len(phases) == 1 and phases[0]["name"] == "specs"
 
-    staged_phases = spack.ci._staged_phases(e, phases)
-    for specs in staged_phases["specs"]:
-        assert len(specs) >= 1
+    def print_it(specs, k="", indent=""):
+        prefix = "%s%s:" % (indent, type(specs))
+        if isinstance(specs, dict):
+            for k in specs:
+                print(prefix + (" %s:" % k))
+                print_it(specs[k], k, indent + "  ")
+        elif isinstance(specs, (list, tuple)):
+            print(prefix)
+            for entry in specs:
+                print_it(entry, "", indent + "  ")
+        else:
+            print(prefix + "  " + str(specs))
+
+    staged_phases = spack.ci.staged_phases(e, phases)
+    spec_labels, dependencies, stages = staged_phases["specs"]
+
+    # The DAG for dyninst results in one stage for each spec
+    assert len(spec_labels) == len(
+        stages
+    ), "Expected dyninst to have one stage for each spec label"

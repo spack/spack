@@ -550,7 +550,7 @@ def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True)
     return affected_specs
 
 
-def _phase_specs(env, gitlab_ci):
+def phase_specs(env, gitlab_ci):
     """Returns the CI phases and any bootstrap specs.
 
     Arguments:
@@ -559,9 +559,9 @@ def _phase_specs(env, gitlab_ci):
             specs to runners
         gitlab_ci (dict): dictionary of the environment's gitlab-ci section
 
-    Returns:
-        phases (list): list of CI phases, in order
-        bootstrap_specs (list): list of bootstrap specs
+    Returns: A tuple of objects for the phases and any boostrap specs:
+        phases: An ordered list of CI phases
+        boostrap_specs: a possiblyl empty list of bootstrap specs
     """
     bootstrap_specs = []
     phases = []
@@ -599,7 +599,7 @@ def _phase_specs(env, gitlab_ci):
     return phases, bootstrap_specs
 
 
-def _staged_phases(env, phases, check_index_only=False, mirrors_to_check=None):
+def staged_phases(env, phases, check_index_only=False, mirrors_to_check=None):
     """Initialize CI phases and any bootstrap specs.
 
     Arguments:
@@ -614,10 +614,24 @@ def _staged_phases(env, phases, check_index_only=False, mirrors_to_check=None):
         mirrors_to_check: mapping giving mirrors to check instead of any
             configured mirrors.
 
-    Returns:
-        staged_phases (dict): dictionary of spec jobs indexed by phase name
+    Returns: A tuple of information objects describing the specs, dependencies
+        and stages:
+
+        spec_labels: A dictionary mapping the spec labels which are made of
+            (pkg-name/hash-prefix), to objects containing "spec" and "needs_rebuild"
+            keys.  The root spec is the spec of which this spec is a dependency
+            and the spec is the formatted spec string for this spec.
+
+        deps: A dictionary where the keys should also have appeared as keys in
+            the spec_labels dictionary, and the values are the set of
+            dependencies for that spec.
+
+        stages: An ordered list of sets, each of which contains all the jobs to
+            built in that stage.  The jobs are expressed in the same format as
+            the keys in the spec_labels and deps objects.
+
     """
-    staged_phases = {}
+    phase_stages = {}
     for phase in phases:
         phase_name = phase["name"]
         if phase_name == "specs":
@@ -639,13 +653,13 @@ def _staged_phases(env, phases, check_index_only=False, mirrors_to_check=None):
                 for phase_spec in concrete_phase_specs:
                     phase_spec.concretize()
 
-        staged_phases[phase_name] = stage_spec_jobs(
+        phase_stages[phase_name] = stage_spec_jobs(
             concrete_phase_specs,
             check_index_only=check_index_only,
             mirrors_to_check=mirrors_to_check,
         )
 
-    return staged_phases
+    return phase_stages
 
 
 def generate_gitlab_ci_yaml(
@@ -777,7 +791,7 @@ def generate_gitlab_ci_yaml(
     if "temporary-storage-url-prefix" in gitlab_ci:
         temp_storage_url_prefix = gitlab_ci["temporary-storage-url-prefix"]
 
-    phases, bootstrap_specs = _phase_specs(env, gitlab_ci)
+    phases, bootstrap_specs = phase_specs(env, gitlab_ci)
 
     # If a remote mirror override (alternate buildcache destination) was
     # specified, add it here in case it has already built hashes we might
@@ -844,7 +858,7 @@ def generate_gitlab_ci_yaml(
         tty.error(e)
 
     try:
-        staged_phases = _staged_phases(
+        phase_stages = staged_phases(
             env,
             phases,
             check_index_only,
@@ -881,7 +895,7 @@ def generate_gitlab_ci_yaml(
         phase_name = phase["name"]
         strip_compilers = phase["strip-compilers"]
 
-        spec_labels, dependencies, stages = staged_phases[phase_name]
+        spec_labels, dependencies, stages = phase_stages[phase_name]
 
         for stage_jobs in stages:
             stage_name = "stage-{0}".format(stage_id)
@@ -1023,7 +1037,7 @@ def generate_gitlab_ci_yaml(
                             # dependencies, we artificially force the spec to
                             # be rebuilt if the compiler targeted to build it
                             # needs to be rebuilt.
-                            bs_specs, _, _ = staged_phases[bs["phase-name"]]
+                            bs_specs, _, _ = phase_stages[bs["phase-name"]]
                             c_spec_key = _spec_deps_key(c_spec)
                             rbld_comp = bs_specs[c_spec_key]["needs_rebuild"]
                             rebuild_spec = rebuild_spec or rbld_comp
