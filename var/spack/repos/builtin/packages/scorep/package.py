@@ -124,7 +124,11 @@ class Scorep(AutotoolsPackage):
 
         if spec.satisfies("^intel-mpi"):
             config_args.append("--with-mpi=intel3")
-        elif spec.satisfies("^mpich") or spec.satisfies("^mvapich2") or spec.satisfies("^cray-mpich"):
+        elif (
+            spec.satisfies("^mpich")
+            or spec.satisfies("^mvapich2")
+            or spec.satisfies("^cray-mpich")
+        ):
             config_args.append("--with-mpi=mpich3")
         elif spec.satisfies("^openmpi"):
             config_args.append("--with-mpi=openmpi")

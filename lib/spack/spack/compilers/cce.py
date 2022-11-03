@@ -17,7 +17,7 @@ class Cce(Compiler):
         # ``version_argument`` with the old value. Cannot be a property
         # as the new value is used in classmethods for path-based detection
         if not self.is_clang_based:
-            self.version_argument = '-V'
+            self.version_argument = "-V"
 
     # Subclasses use possible names of C compiler
     cc_names = ["craycc", "cc"]
