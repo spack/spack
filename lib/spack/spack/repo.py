@@ -1366,16 +1366,26 @@ class Repo(object):
             spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
         )
         overidden_attrs = getattr(cls, "overidden_attrs", {})
+        attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        # Clear any prior changes to class attributes in case the config has
+        # since changed
         for key, val in overidden_attrs.items():
             setattr(cls, key, val)
+        for key in attrs_exclusively_from_config:
+            delattr(cls, key)
+
         # Keep track of every class attribute that is overidden by the config:
         # if the config changes between calls to this method, we make sure to
         # restore the original config values (in case the new config no longer
         # sets attributes that it used to)
         new_overidden_attrs = {}
+        new_attrs_exclusively_from_config = set()
         for key, val in new_cfg_settings.items():
             if hasattr(cls, key):
                 new_overidden_attrs[key] = getattr(cls, key)
+            else:
+                new_attrs_exclusively_from_config.add(key)
+
             if isinstance(val, list):
                 raise spack.config.ConfigError("Unsupported attribute value: list")
             elif isinstance(val, dict):
@@ -1388,6 +1398,10 @@ class Repo(object):
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
         elif hasattr(cls, "overidden_attrs"):
             delattr(cls, "overidden_attrs")
+        if new_attrs_exclusively_from_config:
+            setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
+        elif hasattr(cls, "attrs_exclusively_from_config"):
+            delattr(cls, "attrs_exclusively_from_config")
 
         return cls
 
