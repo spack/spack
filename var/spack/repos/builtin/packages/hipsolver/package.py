@@ -95,9 +95,12 @@ class Hipsolver(CMakePackage):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
+            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
 
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+        if self.spec.satisfies("@5.3.0:"):
+            args.append(self.define("CMAKE_INSTALL_LIBDIR","lib"))
 
         return args
