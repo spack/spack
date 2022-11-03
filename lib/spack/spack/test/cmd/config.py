@@ -642,13 +642,13 @@ def test_config_prefer_upstream(
 
     # Make sure only the non-default variants are set.
     assert packages["boost"] == {
-        "compiler": ["gcc@4.5.0"],
+        "compiler": ["gcc@10.2.1"],
         "variants": "+debug +graph",
         "version": ["1.63.0"],
     }
-    assert packages["dependency-install"] == {"compiler": ["gcc@4.5.0"], "version": ["2.0"]}
+    assert packages["dependency-install"] == {"compiler": ["gcc@10.2.1"], "version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict
-    assert packages["hdf5"] == {"compiler": ["gcc@4.5.0"], "version": ["2.3"]}
+    assert packages["hdf5"] == {"compiler": ["gcc@10.2.1"], "version": ["2.3"]}
 
     # Make sure a message about the conflicting hdf5's was given.
     assert "- hdf5" in output

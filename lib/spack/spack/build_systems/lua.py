@@ -76,7 +76,7 @@ class LuaBuilder(spack.builder.Builder):
     def generate_luarocks_config(self, pkg, spec, prefix):
         spec = self.pkg.spec
         table_entries = []
-        for d in spec.traverse(deptypes=("build", "run"), deptype_query="run"):
+        for d in spec.traverse(deptype=("build", "run")):
             if d.package.extends(self.pkg.extendee_spec):
                 table_entries.append(self._generate_tree_line(d.name, d.prefix))
 
