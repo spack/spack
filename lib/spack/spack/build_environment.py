@@ -346,7 +346,7 @@ def set_compiler_environment_variables(pkg, env):
                 handler = pkg.flag_handler.__func__
             else:
                 handler = pkg.flag_handler.im_func
-        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag])
+        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
