@@ -198,7 +198,7 @@ class R(AutotoolsPackage):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
-        for d in dependent_spec.traverse(deptype=("build", "run"), deptype_query="run"):
+        for d in dependent_spec.traverse(deptype=("build", "run")):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 
