@@ -429,6 +429,7 @@ class Python(Package):
     # autodetection of (possibly broken) system components
     patch("tkinter-3.8.patch", when="@3.8:3.9 ~tkinter")
     patch("tkinter-3.10.patch", when="@3.10.0:3.10 ~tkinter")
+    patch("tkinter-3.11.patch", when="@3.11.0:3.11 ~tkinter")
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch("cray-rpath-2.3.patch", when="@2.3:3.0.1 platform=cray")
