@@ -14,8 +14,12 @@
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
-  enable:
-    - tcl
+  default:
+    enable:
+      - tcl
+    roots:
+      tcl: $user_cache_path/tcl
+      lmod: $user_cache_path/lmod
   prefix_inspections:
     bin:
       - PATH

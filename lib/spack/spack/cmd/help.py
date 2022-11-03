@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+
 from llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"
@@ -68,7 +69,7 @@ spec expression syntax:
       hdf5 @B{+mpi}                     hdf5 with mpi enabled
       hdf5 @r{~mpi}                     hdf5 with mpi disabled
       hdf5 @B{+mpi} ^mpich              hdf5 with mpi, using mpich
-      hdf5 @B{+mpi} ^openmpi@c{@1.7}        hdf5 wtih mpi, using openmpi 1.7
+      hdf5 @B{+mpi} ^openmpi@c{@1.7}        hdf5 with mpi, using openmpi 1.7
       boxlib @B{dim=2}                  boxlib built for 2 dimensions
       libdwarf @g{%intel} ^libelf@g{%gcc}
           libdwarf, built with intel compiler, linked to libelf built with gcc
@@ -78,24 +79,35 @@ spec expression syntax:
 
 
 guides = {
-    'spec': spec_guide,
+    "spec": spec_guide,
 }
 
 
 def setup_parser(subparser):
     help_cmd_group = subparser.add_mutually_exclusive_group()
-    help_cmd_group.add_argument('help_command', nargs='?', default=None,
-                                help='command to get help on')
+    help_cmd_group.add_argument(
+        "help_command", nargs="?", default=None, help="command to get help on"
+    )
 
     help_all_group = subparser.add_mutually_exclusive_group()
     help_all_group.add_argument(
-        '-a', '--all', action='store_const', const='long', default='short',
-        help='list all available commands and options')
+        "-a",
+        "--all",
+        action="store_const",
+        const="long",
+        default="short",
+        help="list all available commands and options",
+    )
 
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
-        '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='help on the package specification syntax')
+        "--spec",
+        action="store_const",
+        dest="guide",
+        const="spec",
+        default=None,
+        help="help on the package specification syntax",
+    )
 
 
 def help(parser, args):
@@ -105,6 +117,6 @@ def help(parser, args):
 
     if args.help_command:
         parser.add_command(args.help_command)
-        parser.parse_args([args.help_command, '-h'])
+        parser.parse_args([args.help_command, "-h"])
     else:
         sys.stdout.write(parser.format_help(level=args.all))

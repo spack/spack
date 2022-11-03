@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Bannergrab(MakefilePackage):
@@ -13,13 +13,11 @@ class Bannergrab(MakefilePackage):
     responses. Bannergrab defaults to sending triggers."""
 
     homepage = "https://github.com/johanburati/bannergrab"
-    git      = "https://github.com/johanburati/bannergrab.git"
+    git = "https://github.com/johanburati/bannergrab.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.man1)
-        make('BINPATH={0}'.format(prefix.bin),
-             'MANPATH={0}/'.format(prefix),
-             'install')
+        make("BINPATH={0}".format(prefix.bin), "MANPATH={0}/".format(prefix), "install")

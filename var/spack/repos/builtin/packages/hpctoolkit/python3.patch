@@ -1,0 +1,12 @@
+Some older revs call python instead of python3.
+
+diff --git a/src/tool/hpcstruct/stringify.py b/src/tool/hpcstruct/stringify.py
+index 954f87593..c31984d21 100755
+--- a/src/tool/hpcstruct/stringify.py
++++ b/src/tool/hpcstruct/stringify.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python3
+ 
+ import sys
+ import re

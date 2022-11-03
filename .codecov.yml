@@ -14,3 +14,21 @@ ignore:
   - share/spack/qa/.*
 
 comment: off
+
+# Inline codecov annotations make the code hard to read, and they add
+# annotations in files that seemingly have nothing to do with the PR.
+github_checks:
+    annotations: false
+
+# Attempt to fix "Missing base commit" messages in the codecov UI.
+# Because we do not run full tests on package PRs, package PRs' merge
+# commits on `develop` don't have coverage info.  It appears that
+# codecov will give you an error if the pseudo-base's coverage data
+# doesn't all apply properly to the real PR base.
+#
+# See here for docs:
+#   https://docs.codecov.com/docs/comparing-commits#pseudo-comparison
+# See here for another potential solution:
+#   https://community.codecov.com/t/2480/15
+codecov:
+  allow_coverage_offsets: true

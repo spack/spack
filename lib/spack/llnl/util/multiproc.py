@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,13 +10,13 @@ to pickle functions if they're passed indirectly as parameters.
 """
 from multiprocessing import Semaphore, Value
 
-__all__ = ['Barrier']
+__all__ = ["Barrier"]
 
 
 class Barrier:
     """Simple reusable semaphore barrier.
 
-    Python 2.6 doesn't have multiprocessing barriers so we implement this.
+    Python 2 doesn't have multiprocessing barriers so we implement this.
 
     See http://greenteapress.com/semaphores/downey08semaphores.pdf, p. 41.
     """
@@ -24,7 +24,7 @@ class Barrier:
     def __init__(self, n, timeout=None):
         self.n = n
         self.to = timeout
-        self.count = Value('i', 0)
+        self.count = Value("i", 0)
         self.mutex = Semaphore(1)
         self.turnstile1 = Semaphore(0)
         self.turnstile2 = Semaphore(1)

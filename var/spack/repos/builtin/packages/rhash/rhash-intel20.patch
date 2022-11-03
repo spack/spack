@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 59d432b..cadbffe 100755
+--- a/configure
++++ b/configure
+@@ -500,7 +500,7 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
+       cc_version="v. ?.??, bad"
+       cc_fail=yes
+       ;;
+-    10.1|11.1|12.*|13.*)
++    10.1|11.1|12.*|13.*|20*)
+       cc_version="$cc_version, ok"
+       ;;
+     *)

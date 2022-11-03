@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Pipework(Package):
@@ -13,9 +13,9 @@ class Pipework(Package):
     """
 
     homepage = "https://github.com/jpetazzo/pipework"
-    git      = "https://github.com/jpetazzo/pipework.git"
+    git = "https://github.com/jpetazzo/pipework.git"
 
-    version('master', branch='master')
+    version("master", branch="master")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

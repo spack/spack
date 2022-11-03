@@ -1,0 +1,11 @@
+--- a/gl/lib/malloc/dynarray-skeleton.c
++++ b/gl/lib/malloc/dynarray-skeleton.c
+@@ -85,6 +85,8 @@
+        (if DYNARRAY_FINAL_TYPE is not defined)
+ */
+ 
+ #include <malloc/dynarray.h>
++#undef __nonnull
++#define __nonnull(x)
+ 
+ #include <errno.h>

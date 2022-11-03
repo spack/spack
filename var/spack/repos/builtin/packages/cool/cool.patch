@@ -1,0 +1,19 @@
+--- src/PyCool/CMakeLists.txt.orig	2021-01-12 22:09:58.000000000 +0100
++++ src/PyCool/CMakeLists.txt	2021-04-01 10:35:53.129276400 +0200
+@@ -9,6 +9,7 @@
+ 
+ # Make PyCool_helpers.h visible verbatim in PyCoolDict.so (bug #103539)
+ # See http://stackoverflow.com/questions/13470499
++file(MAKE_DIRECTORY  ${CMAKE_BINARY_DIR}/python/PyCool/_internal)
+ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/python/PyCool/_internal/PyCool_headers_and_helpers.h COMMAND cat ${CMAKE_CURRENT_SOURCE_DIR}/../RelationalCool/src/PyCool_helpers.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/PyCool_headers.h > ${CMAKE_BINARY_DIR}/python/PyCool/_internal/PyCool_headers_and_helpers.h DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../RelationalCool/src/PyCool_helpers.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/PyCool_headers.h)
+ add_custom_target(PyCool_headers_and_helpers_h ALL DEPENDS ${CMAKE_BINARY_DIR}/python/PyCool/_internal/PyCool_headers_and_helpers.h)
+ install(FILES ${CMAKE_BINARY_DIR}/python/PyCool/_internal/PyCool_headers_and_helpers.h DESTINATION python/PyCool/_internal)
+--- src/RelationalCool/CMakeLists.txt.orig	2021-01-12 22:09:58.000000000 +0100
++++ src/RelationalCool/CMakeLists.txt	2021-04-01 11:31:30.241902600 +0200
+@@ -1,5 +1,5 @@
+ # Required external packages
+-find_package(Boost REQUIRED)
++find_package(Boost REQUIRED chrono system thread)
+ include_directories(${Boost_INCLUDE_DIRS})
+ find_package(CORAL REQUIRED RelationalAccess CoralKernel)
+ 

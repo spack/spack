@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,61 +24,78 @@ be called on any of the types::
   intersection
   concrete
 """
-import re
 import numbers
+import os
+import re
 from bisect import bisect_left
 from functools import wraps
+
 from six import string_types
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp, working_dir
+
+import spack.caches
 import spack.error
+import spack.paths
+import spack.util.executable
+import spack.util.spack_json as sjson
 from spack.util.spack_yaml import syaml_dict
 
-
-__all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
+__all__ = ["Version", "VersionRange", "VersionList", "ver"]
 
 # Valid version characters
-VALID_VERSION = re.compile(r'[A-Za-z0-9_.-]')
+VALID_VERSION = re.compile(r"^[A-Za-z0-9_.-][=A-Za-z0-9_.-]*$")
+
+# regex for a commit version
+COMMIT_VERSION = re.compile(r"^[a-f0-9]{40}$")
 
 # regex for version segments
-SEGMENT_REGEX = re.compile(r'[a-zA-Z]+|[0-9]+')
+SEGMENT_REGEX = re.compile(r"(?:(?P<num>[0-9]+)|(?P<str>[a-zA-Z]+))(?P<sep>[_.-]*)")
+
+# regular expression for semantic versioning
+SEMVER_REGEX = re.compile(
+    ".+(?P<semver>([0-9]+)[.]([0-9]+)[.]([0-9]+)"
+    "(?:-([0-9A-Za-z-]+(?:[.][0-9A-Za-z-]+)*))?"
+    "(?:[+][0-9A-Za-z-]+)?)"
+)
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
+infinity_versions = ["develop", "main", "master", "head", "trunk", "stable"]
 
-
-def int_if_int(string):
-    """Convert a string to int if possible.  Otherwise, return a string."""
-    try:
-        return int(string)
-    except ValueError:
-        return string
+iv_min_len = min(len(s) for s in infinity_versions)
 
 
 def coerce_versions(a, b):
     """
     Convert both a and b to the 'greatest' type between them, in this order:
-           Version < VersionRange < VersionList
+           VersionBase < GitVersion < VersionRange < VersionList
     This is used to simplify comparison operations below so that we're always
     comparing things that are of the same type.
     """
-    order = (Version, VersionRange, VersionList)
+    order = (VersionBase, GitVersion, VersionRange, VersionList)
     ta, tb = type(a), type(b)
 
     def check_type(t):
         if t not in order:
             raise TypeError("coerce_versions cannot be called on %s" % t)
+
     check_type(ta)
     check_type(tb)
 
     if ta == tb:
         return (a, b)
     elif order.index(ta) > order.index(tb):
-        if ta == VersionRange:
+        if ta == GitVersion:
+            return (a, GitVersion(b))
+        elif ta == VersionRange:
             return (a, VersionRange(b, b))
         else:
             return (a, VersionList([b]))
     else:
-        if tb == VersionRange:
+        if tb == GitVersion:
+            return (GitVersion(a), b)
+        elif tb == VersionRange:
             return (VersionRange(a, a), b)
         else:
             return (VersionList([a]), b)
@@ -86,6 +103,7 @@ def coerce_versions(a, b):
 
 def coerced(method):
     """Decorator that ensures that argument types of a method are coerced."""
+
     @wraps(method)
     def coercing_method(a, b, *args, **kwargs):
         if type(a) == type(b) or a is None or b is None:
@@ -93,29 +111,151 @@ def coerced(method):
         else:
             ca, cb = coerce_versions(a, b)
             return getattr(ca, method.__name__)(cb, *args, **kwargs)
+
     return coercing_method
 
 
-class Version(object):
-    """Class to represent versions"""
+class VersionStrComponent(object):
+    # NOTE: this is intentionally not a UserString, the abc instanceof
+    #       check is slow enough to eliminate all gains
+    __slots__ = ["inf_ver", "data"]
 
     def __init__(self, string):
+        self.inf_ver = None
+        self.data = string
+        if len(string) >= iv_min_len:
+            try:
+                self.inf_ver = infinity_versions.index(string)
+            except ValueError:
+                pass
+
+    def __hash__(self):
+        return hash(self.data)
+
+    def __str__(self):
+        return self.data
+
+    def __eq__(self, other):
+        if isinstance(other, VersionStrComponent):
+            return self.data == other.data
+        return self.data == other
+
+    def __lt__(self, other):
+        if isinstance(other, VersionStrComponent):
+            if self.inf_ver is not None:
+                if other.inf_ver is not None:
+                    return self.inf_ver > other.inf_ver
+                return False
+            if other.inf_ver is not None:
+                return True
+
+            return self.data < other.data
+
+        if self.inf_ver is not None:
+            return False
+
+        # Numbers are always "newer" than letters.
+        # This is for consistency with RPM.  See patch
+        # #60884 (and details) from bugzilla #50977 in
+        # the RPM project at rpm.org.  Or look at
+        # rpmvercmp.c if you want to see how this is
+        # implemented there.
+        if isinstance(other, int):
+            return True
+
+        if isinstance(other, str):
+            return self < VersionStrComponent(other)
+        # If we get here, it's an unsupported comparison
+
+        raise ValueError("VersionStrComponent can only be compared with itself, " "int and str")
+
+    def __gt__(self, other):
+        return not self.__lt__(other)
+
+
+def is_git_version(string):
+    if string.startswith("git."):
+        return True
+    elif len(string) == 40 and COMMIT_VERSION.match(string):
+        return True
+    elif "=" in string:
+        return True
+    return False
+
+
+def Version(string):  # capitalized for backwards compatibility
+    if not isinstance(string, str):
+        string = str(string)  # to handle VersionBase and GitVersion types
+
+    if is_git_version(string):
+        return GitVersion(string)
+    return VersionBase(string)
+
+
+class VersionBase(object):
+    """Class to represent versions
+
+    Versions are compared by converting to a tuple and comparing
+    lexicographically.
+
+    The most common Versions are alpha-numeric, and are parsed from strings
+    such as ``2.3.0`` or ``1.2-5``. These Versions are represented by
+    the tuples ``(2, 3, 0)`` and ``(1, 2, 5)`` respectively.
+
+    Versions are split on ``.``, ``-``, and
+    ``_`` characters, as well as any point at which they switch from
+    numeric to alphabetical or vice-versa. For example, the version
+    ``0.1.3a`` is represented by the tuple ``(0, 1, 3, 'a') and the
+    version ``a-5b`` is represented by the tuple ``('a', 5, 'b')``.
+
+    Spack versions may also be arbitrary non-numeric strings or git
+    commit SHAs. The following are the full rules for comparing
+    versions.
+
+    1. If the version represents a git reference (i.e. commit, tag, branch), see GitVersions.
+
+    2. The version is split into fields based on the delimiters ``.``,
+    ``-``, and ``_``, as well as alphabetic-numeric boundaries.
+
+    3. The following develop-like strings are greater (newer) than all
+    numbers and are ordered as ``develop > main > master > head >
+    trunk``.
+
+    4. All other non-numeric versions are less than numeric versions,
+    and are sorted alphabetically.
+
+    These rules can be summarized as follows:
+
+    ``develop > main > master > head > trunk > 999 > 0 > 'zzz' > 'a' >
+    ''``
+
+    """
+
+    __slots__ = [
+        "version",
+        "separators",
+        "string",
+    ]
+
+    def __init__(self, string):
+        # type: (str) -> None
         if not isinstance(string, str):
             string = str(string)
-
-        if not VALID_VERSION.match(string):
-            raise ValueError("Bad characters in version string: %s" % string)
 
         # preserve the original string, but trimmed.
         string = string.strip()
         self.string = string
 
-        # Split version into alphabetical and numeric segments
-        segments = SEGMENT_REGEX.findall(string)
-        self.version = tuple(int_if_int(seg) for seg in segments)
+        if string and not VALID_VERSION.match(string):
+            raise ValueError("Bad characters in version string: %s" % string)
 
-        # Store the separators from the original version string as well.
-        self.separators = tuple(SEGMENT_REGEX.split(string)[1:])
+        self.separators, self.version = self._generate_seperators_and_components(string)
+
+    def _generate_seperators_and_components(self, string):
+        segments = SEGMENT_REGEX.findall(string)
+        components = tuple(int(m[0]) if m[0] else VersionStrComponent(m[1]) for m in segments)
+        separators = tuple(m[2] for m in segments)
+        return separators, components
 
     @property
     def dotted(self):
@@ -129,7 +269,7 @@ class Version(object):
         Returns:
             Version: The version with separator characters replaced by dots
         """
-        return Version(self.string.replace('-', '.').replace('_', '.'))
+        return type(self)(self.string.replace("-", ".").replace("_", "."))
 
     @property
     def underscored(self):
@@ -144,7 +284,7 @@ class Version(object):
             Version: The version with separator characters replaced by
                 underscores
         """
-        return Version(self.string.replace('.', '_').replace('-', '_'))
+        return type(self)(self.string.replace(".", "_").replace("-", "_"))
 
     @property
     def dashed(self):
@@ -158,7 +298,7 @@ class Version(object):
         Returns:
             Version: The version with separator characters replaced by dashes
         """
-        return Version(self.string.replace('.', '-').replace('_', '-'))
+        return type(self)(self.string.replace(".", "-").replace("_", "-"))
 
     @property
     def joined(self):
@@ -172,8 +312,7 @@ class Version(object):
         Returns:
             Version: The version with separator characters removed
         """
-        return Version(
-            self.string.replace('.', '').replace('-', '').replace('_', ''))
+        return type(self)(self.string.replace(".", "").replace("-", "").replace("_", ""))
 
     def up_to(self, index):
         """The version up to the specified component.
@@ -222,7 +361,6 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-
         nself = len(self.version)
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
@@ -247,21 +385,24 @@ class Version(object):
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
 
-            string_arg.pop()  # We don't need the last separator
-            string_arg = ''.join(string_arg)
-            return cls(string_arg)
+            if string_arg:
+                string_arg.pop()  # We don't need the last separator
+                string_arg = "".join(string_arg)
+                return cls(string_arg)
+            else:
+                return VersionBase("")
 
-        message = '{cls.__name__} indices must be integers'
+        message = "{cls.__name__} indices must be integers"
         raise TypeError(message.format(cls=cls))
 
     def __repr__(self):
-        return 'Version(' + repr(self.string) + ')'
+        return "VersionBase(" + repr(self.string) + ")"
 
     def __str__(self):
         return self.string
 
     def __format__(self, format_spec):
-        return self.string.format(format_spec)
+        return str(self).format(format_spec)
 
     @property
     def concrete(self):
@@ -270,52 +411,23 @@ class Version(object):
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
-           does things.  If you need more complicated versions in installed
-           packages, you should override your package's version string to
-           express it more sensibly.
+        does things.  If you need more complicated versions in installed
+        packages, you should override your package's version string to
+        express it more sensibly.
         """
         if other is None:
             return False
 
-        # Coerce if other is not a Version
-        # simple equality test first.
-        if self.version == other.version:
-            return False
-
-        # Standard comparison of two numeric versions
-        for a, b in zip(self.version, other.version):
-            if a == b:
-                continue
-            else:
-                if a in infinity_versions:
-                    if b in infinity_versions:
-                        return (infinity_versions.index(a) >
-                                infinity_versions.index(b))
-                    else:
-                        return False
-                if b in infinity_versions:
-                    return True
-
-                # Neither a nor b is infinity
-                # Numbers are always "newer" than letters.
-                # This is for consistency with RPM.  See patch
-                # #60884 (and details) from bugzilla #50977 in
-                # the RPM project at rpm.org.  Or look at
-                # rpmvercmp.c if you want to see how this is
-                # implemented there.
-                if type(a) != type(b):
-                    return type(b) == int
-                else:
-                    return a < b
-
-        # If the common prefix is equal, the one
-        # with more segments is bigger.
-        return len(self.version) < len(other.version)
+        # Use tuple comparison assisted by VersionStrComponent for performance
+        return self.version < other.version
 
     @coerced
     def __eq__(self, other):
-        return (other is not None and
-                type(other) == Version and self.version == other.version)
+        # Cut out early if we don't have a version
+        if other is None or type(other) != VersionBase:
+            return False
+
+        return self.version == other.version
 
     @coerced
     def __ne__(self, other):
@@ -340,20 +452,24 @@ class Version(object):
     def __contains__(self, other):
         if other is None:
             return False
-        return other.version[:len(self.version)] == self.version
 
+        return other.version[: len(self.version)] == self.version
+
+    @coerced
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
-           That is, NO versions v exist such that:
-           (self < v < other and v not in self).
+        That is, NO non-git versions v exist such that:
+        (self < v < other and v not in self).
         """
-        if len(self.version) != len(other.version):
+        if self.version[:-1] != other.version[:-1]:
             return False
 
         sl = self.version[-1]
         ol = other.version[-1]
+        # TODO: extend this to consecutive letters, z/0, and infinity versions
         return type(sl) == int and type(ol) == int and (ol - sl == 1)
 
+    @coerced
     def is_successor(self, other):
         return other.is_predecessor(self)
 
@@ -380,8 +496,230 @@ class Version(object):
             return VersionList()
 
 
-class VersionRange(object):
+class GitVersion(VersionBase):
+    """Class to represent versions interpreted from git refs.
 
+    There are two distinct categories of git versions:
+
+    1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
+    2) GitVersions requiring commit lookups
+
+    Git ref versions that are not paired with a known version
+    are handled separately from all other version comparisons.
+    When Spack identifies a git ref version, it associates a
+    ``CommitLookup`` object with the version. This object
+    handles caching of information from the git repo. When executing
+    comparisons with a git ref version, Spack queries the
+    ``CommitLookup`` for the most recent version previous to this
+    git ref, as well as the distance between them expressed as a number
+    of commits. If the previous version is ``X.Y.Z`` and the distance
+    is ``D``, the git commit version is represented by the tuple ``(X,
+    Y, Z, '', D)``. The component ``''`` cannot be parsed as part of
+    any valid version, but is a valid component. This allows a git
+    ref version to be less than (older than) every Version newer
+    than its previous version, but still newer than its previous
+    version.
+
+    To find the previous version from a git ref version, Spack
+    queries the git repo for its tags. Any tag that matches a version
+    known to Spack is associated with that version, as is any tag that
+    is a known version prepended with the character ``v`` (i.e., a tag
+    ``v1.0`` is associated with the known version
+    ``1.0``). Additionally, any tag that represents a semver version
+    (X.Y.Z with X, Y, Z all integers) is associated with the version
+    it represents, even if that version is not known to Spack. Each
+    tag is then queried in git to see whether it is an ancestor of the
+    git ref in question, and if so the distance between the two. The
+    previous version is the version that is an ancestor with the least
+    distance from the git ref in question.
+
+    This procedure can be circumvented if the user supplies a known version
+    to associate with the GitVersion (e.g. ``[hash]=develop``).  If the user
+    prescribes the version then there is no need to do a lookup
+    and the standard version comparison operations are sufficient.
+
+    Non-git versions may be coerced to GitVersion for comparison, but no Spec will ever
+    have a GitVersion that is not actually referencing a version from git."""
+
+    def __init__(self, string):
+        if not isinstance(string, str):
+            string = str(string)  # In case we got a VersionBase or GitVersion object
+
+        # An object that can lookup git refs to compare them to versions
+        self.user_supplied_reference = False
+        self._ref_lookup = None
+        self.ref_version = None
+
+        git_prefix = string.startswith("git.")
+        pruned_string = string[4:] if git_prefix else string
+
+        if "=" in pruned_string:
+            self.ref, self.ref_version_str = pruned_string.split("=")
+            _, self.ref_version = self._generate_seperators_and_components(self.ref_version_str)
+            self.user_supplied_reference = True
+        else:
+            self.ref = pruned_string
+
+        self.is_commit = bool(len(self.ref) == 40 and COMMIT_VERSION.match(self.ref))
+        self.is_ref = git_prefix  # is_ref False only for comparing to VersionBase
+        self.is_ref |= bool(self.is_commit)
+
+        # ensure git.<hash> and <hash> are treated the same by dropping 'git.'
+        # unless we are assigning a version with =
+        canonical_string = self.ref if (self.is_commit and not self.ref_version) else string
+        super(GitVersion, self).__init__(canonical_string)
+
+    def _cmp(self, other_lookups=None):
+        # No need to rely on git comparisons for develop-like refs
+        if len(self.version) == 2 and self.isdevelop():
+            return self.version
+
+        # If we've already looked this version up, return cached value
+        if self.ref_version is not None:
+            return self.ref_version
+
+        ref_lookup = self.ref_lookup or other_lookups
+
+        if self.is_ref and ref_lookup:
+            ref_info = ref_lookup.get(self.ref)
+            if ref_info:
+                prev_version, distance = ref_info
+
+                # Extend previous version by empty component and distance
+                # If commit is exactly a known version, no distance suffix
+                prev_tuple = VersionBase(prev_version).version if prev_version else ()
+                dist_suffix = (VersionStrComponent(""), distance) if distance else ()
+                self.ref_version = prev_tuple + dist_suffix
+                return self.ref_version
+
+        return self.version
+
+    @coerced
+    def satisfies(self, other):
+        """A Version 'satisfies' another if it is at least as specific and has
+        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
+        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
+        a suitable compiler. In the case of two GitVersions we require the ref_versions
+        to satisfy one another and the versions to be an exact match.
+        """
+
+        self_cmp = self._cmp(other.ref_lookup)
+        other_cmp = other._cmp(self.ref_lookup)
+
+        if other.is_ref:
+            # if other is a ref then satisfaction requires an exact version match
+            # i.e. the GitRef must match this.version for satisfaction
+            # this creates an asymmetric comparison:
+            #  - 'foo@main'.satisfies('foo@git.hash=main') == False
+            #  - 'foo@git.hash=main'.satisfies('foo@main') == True
+            version_match = self.version == other.version
+        elif self.is_ref:
+            # other is not a ref then it is a version base and we need to compare
+            # this.ref
+            version_match = self.ref_version == other.version
+        else:
+            # neither is a git ref.  We shouldn't ever be here, but if we are this variable
+            # is not meaningful and defaults to true
+            version_match = True
+
+        # Do the final comparison
+        nself = len(self_cmp)
+        nother = len(other_cmp)
+        return nother <= nself and self_cmp[:nother] == other_cmp and version_match
+
+    def __repr__(self):
+        return "GitVersion(" + repr(self.string) + ")"
+
+    @coerced
+    def __lt__(self, other):
+        """Version comparison is designed for consistency with the way RPM
+        does things.  If you need more complicated versions in installed
+        packages, you should override your package's version string to
+        express it more sensibly.
+        """
+        if other is None:
+            return False
+
+        # If we haven't indexed yet, can't compare
+        # If we called this, we know at least one is a git ref
+        if not (self.ref_lookup or other.ref_lookup):
+            return False
+
+        # Use tuple comparison assisted by VersionStrComponent for performance
+        return self._cmp(other.ref_lookup) < other._cmp(self.ref_lookup)
+
+    @coerced
+    def __eq__(self, other):
+        # Cut out early if we don't have a git version
+        if other is None or type(other) != GitVersion:
+            return False
+
+        return self._cmp(other.ref_lookup) == other._cmp(self.ref_lookup)
+
+    def __hash__(self):
+        return hash(str(self))
+
+    @coerced
+    def __contains__(self, other):
+        if other is None:
+            return False
+
+        self_cmp = self._cmp(other.ref_lookup)
+        return other._cmp(self.ref_lookup)[: len(self_cmp)] == self_cmp
+
+    @coerced
+    def is_predecessor(self, other):
+        """True if the other version is the immediate predecessor of this one.
+        That is, NO non-commit versions v exist such that:
+        (self < v < other and v not in self).
+        """
+        self_cmp = self._cmp(self.ref_lookup)
+        other_cmp = other._cmp(other.ref_lookup)
+
+        if self_cmp[:-1] != other_cmp[:-1]:
+            return False
+
+        sl = self_cmp[-1]
+        ol = other_cmp[-1]
+        return type(sl) == int and type(ol) == int and (ol - sl == 1)
+
+    @property
+    def ref_lookup(self):
+        if self._ref_lookup:
+            # Get operation ensures dict is populated
+            self._ref_lookup.get(self.ref)
+            return self._ref_lookup
+
+    def generate_git_lookup(self, pkg_name):
+        """
+        Use the git fetcher to look up a version for a commit.
+
+        Since we want to optimize the clone and lookup, we do the clone once
+        and store it in the user specified git repository cache. We also need
+        context of the package to get known versions, which could be tags if
+        they are linked to Git Releases. If we are unable to determine the
+        context of the version, we cannot continue. This implementation is
+        alongside the GitFetcher because eventually the git repos cache will
+        be one and the same with the source cache.
+
+        Args:
+            fetcher: the fetcher to use.
+            versions: the known versions of the package
+        """
+
+        # Sanity check we have a commit
+        if not self.is_ref:
+            tty.die("%s is not a git version." % self)
+
+        # don't need a lookup if we already have a version assigned
+        if self.ref_version:
+            return
+
+        # Generate a commit looker-upper
+        self._ref_lookup = CommitLookup(pkg_name)
+
+
+class VersionRange(object):
     def __init__(self, start, end):
         if isinstance(start, string_types):
             start = Version(start)
@@ -390,7 +728,16 @@ class VersionRange(object):
 
         self.start = start
         self.end = end
-        if start and end and end < start:
+
+        # Unbounded ranges are not empty
+        if not start or not end:
+            return
+
+        # Do not allow empty ranges. We have to be careful about lexicographical
+        # ordering of versions here: 1.2 < 1.2.3 lexicographically, but 1.2.3:1.2
+        # means the range [1.2.3, 1.3), which is non-empty.
+        min_len = min(len(start), len(end))
+        if end.up_to(min_len) < start.up_to(min_len):
             raise ValueError("Invalid Version range: %s" % self)
 
     def lowest(self):
@@ -402,25 +749,26 @@ class VersionRange(object):
     @coerced
     def __lt__(self, other):
         """Sort VersionRanges lexicographically so that they are ordered first
-           by start and then by end.  None denotes an open range, so None in
-           the start position is less than everything except None, and None in
-           the end position is greater than everything but None.
+        by start and then by end.  None denotes an open range, so None in
+        the start position is less than everything except None, and None in
+        the end position is greater than everything but None.
         """
         if other is None:
             return False
 
         s, o = self, other
         if s.start != o.start:
-            return s.start is None or (
-                o.start is not None and s.start < o.start)
-        return (s.end != o.end and
-                o.end is None or (s.end is not None and s.end < o.end))
+            return s.start is None or (o.start is not None and s.start < o.start)
+        return s.end != o.end and o.end is None or (s.end is not None and s.end < o.end)
 
     @coerced
     def __eq__(self, other):
-        return (other is not None and
-                type(other) == VersionRange and
-                self.start == other.start and self.end == other.end)
+        return (
+            other is not None
+            and type(other) == VersionRange
+            and self.start == other.start
+            and self.end == other.end
+        )
 
     @coerced
     def __ne__(self, other):
@@ -447,71 +795,74 @@ class VersionRange(object):
         if other is None:
             return False
 
-        in_lower = (self.start == other.start or
-                    self.start is None or
-                    (other.start is not None and (
-                        self.start < other.start or
-                        other.start in self.start)))
+        in_lower = (
+            self.start == other.start
+            or self.start is None
+            or (
+                other.start is not None and (self.start < other.start or other.start in self.start)
+            )
+        )
         if not in_lower:
             return False
 
-        in_upper = (self.end == other.end or
-                    self.end is None or
-                    (other.end is not None and (
-                        self.end > other.end or
-                        other.end in self.end)))
+        in_upper = (
+            self.end == other.end
+            or self.end is None
+            or (other.end is not None and (self.end > other.end or other.end in self.end))
+        )
         return in_upper
 
     @coerced
     def satisfies(self, other):
-        """A VersionRange satisfies another if some version in this range
-        would satisfy some version in the other range.  To do this it must
-        either:
-
-        a) Overlap with the other range
-        b) The start of this range satisfies the end of the other range.
-
-        This is essentially the same as overlaps(), but overlaps assumes
-        that its arguments are specific.  That is, 4.7 is interpreted as
-        4.7.0.0.0.0... .  This function assumes that 4.7 would be satisfied
-        by 4.7.3.5, etc.
-
-        Rationale:
-
-        If a user asks for gcc@4.5:4.7, and a package is only compatible with
-        gcc@4.7.3:4.8, then that package should be able to build under the
-        constraints.  Just using overlaps() would not work here.
-
-        Note that we don't need to check whether the end of this range
-        would satisfy the start of the other range, because overlaps()
-        already covers that case.
-
-        Note further that overlaps() is a symmetric operation, while
-        satisfies() is not.
         """
-        return (self.overlaps(other) or
-                # if either self.start or other.end are None, then this can't
-                # satisfy, or overlaps() would've taken care of it.
-                self.start and other.end and self.start.satisfies(other.end))
+        x.satisfies(y) in general means that x and y have a
+        non-zero intersection. For VersionRange this means they overlap.
+
+        `satisfies` is a commutative binary operator, meaning that
+        x.satisfies(y) if and only if y.satisfies(x).
+
+        Note: in some cases we have the keyword x.satisfies(y, strict=True)
+        to mean strict set inclusion, which is not commutative. However, this
+        lacks in VersionRange for unknown reasons.
+
+        Examples
+        - 1:3 satisfies 2:4, as their intersection is 2:3.
+        - 1:2 does not satisfy 3:4, as their intersection is empty.
+        - 4.5:4.7 satisfies 4.7.2:4.8, as their intersection is 4.7.2:4.7
+        """
+        return self.overlaps(other)
 
     @coerced
     def overlaps(self, other):
-        return ((self.start is None or other.end is None or
-                 self.start <= other.end or
-                 other.end in self.start or self.start in other.end) and
-                (other.start is None or self.end is None or
-                 other.start <= self.end or
-                 other.start in self.end or self.end in other.start))
+        return (
+            self.start is None
+            or other.end is None
+            or self.start <= other.end
+            or other.end in self.start
+            or self.start in other.end
+        ) and (
+            other.start is None
+            or self.end is None
+            or other.start <= self.end
+            or other.start in self.end
+            or self.end in other.start
+        )
 
     @coerced
     def union(self, other):
         if not self.overlaps(other):
-            if (self.end is not None and other.start is not None and
-                    self.end.is_predecessor(other.start)):
+            if (
+                self.end is not None
+                and other.start is not None
+                and self.end.is_predecessor(other.start)
+            ):
                 return VersionRange(self.start, other.end)
 
-            if (other.end is not None and self.start is not None and
-                    other.end.is_predecessor(self.start)):
+            if (
+                other.end is not None
+                and self.start is not None
+                and other.end.is_predecessor(self.start)
+            ):
                 return VersionRange(other.start, self.end)
 
             return VersionList([self, other])
@@ -595,12 +946,11 @@ class VersionList(object):
                 else:
                     self.versions = [vlist]
             else:
-                vlist = list(vlist)
                 for v in vlist:
                     self.add(ver(v))
 
     def add(self, version):
-        if type(version) in (Version, VersionRange):
+        if type(version) in (VersionBase, GitVersion, VersionRange):
             # This normalizes single-value version ranges.
             if version.concrete:
                 version = version.concrete
@@ -651,9 +1001,7 @@ class VersionList(object):
 
     def highest_numeric(self):
         """Get the highest numeric version in the list."""
-        numeric_versions = list(filter(
-            lambda v: str(v) not in infinity_versions,
-            self.versions))
+        numeric_versions = list(filter(lambda v: str(v) not in infinity_versions, self.versions))
         if not any(numeric_versions):
             return None
         else:
@@ -684,34 +1032,30 @@ class VersionList(object):
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return syaml_dict([
-                ('version', str(self[0]))
-            ])
+            return syaml_dict([("version", str(self[0]))])
         else:
-            return syaml_dict([
-                ('versions', [str(v) for v in self])
-            ])
+            return syaml_dict([("versions", [str(v) for v in self])])
 
     @staticmethod
     def from_dict(dictionary):
         """Parse dict from to_dict."""
-        if 'versions' in dictionary:
-            return VersionList(dictionary['versions'])
-        elif 'version' in dictionary:
-            return VersionList([dictionary['version']])
+        if "versions" in dictionary:
+            return VersionList(dictionary["versions"])
+        elif "version" in dictionary:
+            return VersionList([dictionary["version"]])
         else:
             raise ValueError("Dict must have 'version' or 'versions' in it.")
 
     @coerced
     def satisfies(self, other, strict=False):
         """A VersionList satisfies another if some version in the list
-           would satisfy some version in the other list.  This uses
-           essentially the same algorithm as overlaps() does for
-           VersionList, but it calls satisfies() on member Versions
-           and VersionRanges.
+        would satisfy some version in the other list.  This uses
+        essentially the same algorithm as overlaps() does for
+        VersionList, but it calls satisfies() on member Versions
+        and VersionRanges.
 
-           If strict is specified, this version list must lie entirely
-           *within* the other in order to satisfy it.
+        If strict is specified, this version list must lie entirely
+        *within* the other in order to satisfy it.
         """
         if not other or not self:
             return False
@@ -756,7 +1100,7 @@ class VersionList(object):
         Return True if the spec changed as a result; False otherwise
         """
         isection = self.intersection(other)
-        changed = (isection.versions != self.versions)
+        changed = isection.versions != self.versions
         self.versions = isection.versions
         return changed
 
@@ -770,7 +1114,7 @@ class VersionList(object):
             if i == 0:
                 if version not in self[0]:
                     return False
-            elif all(version not in v for v in self[i - 1:]):
+            elif all(version not in v for v in self[i - 1 :]):
                 return False
 
         return True
@@ -826,15 +1170,15 @@ class VersionList(object):
 
 def _string_to_version(string):
     """Converts a string to a Version, VersionList, or VersionRange.
-       This is private.  Client code should use ver().
+    This is private.  Client code should use ver().
     """
-    string = string.replace(' ', '')
+    string = string.replace(" ", "")
 
-    if ',' in string:
-        return VersionList(string.split(','))
+    if "," in string:
+        return VersionList(string.split(","))
 
-    elif ':' in string:
-        s, e = string.split(':')
+    elif ":" in string:
+        s, e = string.split(":")
         start = Version(s) if s else None
         end = Version(e) if e else None
         return VersionRange(start, end)
@@ -845,7 +1189,7 @@ def _string_to_version(string):
 
 def ver(obj):
     """Parses a Version, VersionRange, or VersionList from a string
-       or list of strings.
+    or list of strings.
     """
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
@@ -853,7 +1197,7 @@ def ver(obj):
         return _string_to_version(obj)
     elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))
-    elif type(obj) in (Version, VersionRange, VersionList):
+    elif type(obj) in (VersionBase, GitVersion, VersionRange, VersionList):
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
@@ -865,3 +1209,206 @@ class VersionError(spack.error.SpackError):
 
 class VersionChecksumError(VersionError):
     """Raised for version checksum errors."""
+
+
+class VersionLookupError(VersionError):
+    """Raised for errors looking up git commits as versions."""
+
+
+class CommitLookup(object):
+    """An object for cached lookups of git commits
+
+    CommitLookup objects delegate to the misc_cache for locking.
+    CommitLookup objects may be attached to a GitVersion object for which
+    Version.is_ref returns True to allow for comparisons between git refs
+    and versions as represented by tags in the git repository.
+    """
+
+    def __init__(self, pkg_name):
+        self.pkg_name = pkg_name
+
+        self.data = {}
+
+        self._pkg = None
+        self._fetcher = None
+        self._cache_key = None
+        self._cache_path = None
+
+    # The following properties are used as part of a lazy reference scheme
+    # to avoid querying the package repository until it is necessary (and
+    # in particular to wait until after the configuration has been
+    # assembled)
+    @property
+    def cache_key(self):
+        if not self._cache_key:
+            key_base = "git_metadata"
+            if not self.repository_uri.startswith("/"):
+                key_base += "/"
+            self._cache_key = key_base + self.repository_uri
+
+            # Cache data in misc_cache
+            # If this is the first lazy access, initialize the cache as well
+            spack.caches.misc_cache.init_entry(self.cache_key)
+        return self._cache_key
+
+    @property
+    def cache_path(self):
+        if not self._cache_path:
+            self._cache_path = spack.caches.misc_cache.cache_path(self.cache_key)
+        return self._cache_path
+
+    @property
+    def pkg(self):
+        if not self._pkg:
+            self._pkg = spack.repo.path.get_pkg_class(self.pkg_name)
+        return self._pkg
+
+    @property
+    def fetcher(self):
+        if not self._fetcher:
+            # We require the full git repository history
+            import spack.fetch_strategy  # break cycle
+
+            fetcher = spack.fetch_strategy.GitFetchStrategy(git=self.pkg.git)
+            fetcher.get_full_repo = True
+            self._fetcher = fetcher
+        return self._fetcher
+
+    @property
+    def repository_uri(self):
+        """
+        Identifier for git repos used within the repo and metadata caches.
+
+        """
+        try:
+            components = [
+                str(c).lstrip("/") for c in spack.util.url.parse_git_url(self.pkg.git) if c
+            ]
+            return os.path.join(*components)
+        except ValueError:
+            # If it's not a git url, it's a local path
+            return os.path.abspath(self.pkg.git)
+
+    def save(self):
+        """
+        Save the data to file
+        """
+        with spack.caches.misc_cache.write_transaction(self.cache_key) as (old, new):
+            sjson.dump(self.data, new)
+
+    def load_data(self):
+        """
+        Load data if the path already exists.
+        """
+        if os.path.isfile(self.cache_path):
+            with spack.caches.misc_cache.read_transaction(self.cache_key) as cache_file:
+                self.data = sjson.load(cache_file)
+
+    def get(self, ref):
+        if not self.data:
+            self.load_data()
+
+        if ref not in self.data:
+            self.data[ref] = self.lookup_ref(ref)
+            self.save()
+
+        return self.data[ref]
+
+    def lookup_ref(self, ref):
+        """Lookup the previous version and distance for a given commit.
+
+        We use git to compare the known versions from package to the git tags,
+        as well as any git tags that are SEMVER versions, and find the latest
+        known version prior to the commit, as well as the distance from that version
+        to the commit in the git repo. Those values are used to compare Version objects.
+        """
+        dest = os.path.join(spack.paths.user_repos_cache_path, self.repository_uri)
+        if dest.endswith(".git"):
+            dest = dest[:-4]
+
+        # prepare a cache for the repository
+        dest_parent = os.path.dirname(dest)
+        if not os.path.exists(dest_parent):
+            mkdirp(dest_parent)
+
+        # Only clone if we don't have it!
+        if not os.path.exists(dest):
+            self.fetcher.clone(dest, bare=True)
+
+        # Lookup commit info
+        with working_dir(dest):
+            # TODO: we need to update the local tags if they changed on the
+            # remote instance, simply adding '-f' may not be sufficient
+            # (if commits are deleted on the remote, this command alone
+            # won't properly update the local rev-list)
+            self.fetcher.git("fetch", "--tags", output=os.devnull, error=os.devnull)
+
+            # Ensure ref is a commit object known to git
+            # Note the brackets are literals, the ref replaces the format string
+            try:
+                self.fetcher.git(
+                    "cat-file", "-e", "%s^{commit}" % ref, output=os.devnull, error=os.devnull
+                )
+            except spack.util.executable.ProcessError:
+                raise VersionLookupError("%s is not a valid git ref for %s" % (ref, self.pkg_name))
+
+            # List tags (refs) by date, so last reference of a tag is newest
+            tag_info = self.fetcher.git(
+                "for-each-ref",
+                "--sort=creatordate",
+                "--format",
+                "%(objectname) %(refname)",
+                "refs/tags",
+                output=str,
+            ).split("\n")
+
+            # Lookup of commits to spack versions
+            commit_to_version = {}
+
+            for entry in tag_info:
+                if not entry:
+                    continue
+                tag_commit, tag = entry.split()
+                tag = tag.replace("refs/tags/", "", 1)
+
+                # For each tag, try to match to a version
+                for v in [v.string for v in self.pkg.versions]:
+                    if v == tag or "v" + v == tag:
+                        commit_to_version[tag_commit] = v
+                        break
+                else:
+                    # try to parse tag to copare versions spack does not know
+                    match = SEMVER_REGEX.match(tag)
+                    if match:
+                        semver = match.groupdict()["semver"]
+                        commit_to_version[tag_commit] = semver
+
+            ancestor_commits = []
+            for tag_commit in commit_to_version:
+                self.fetcher.git("merge-base", "--is-ancestor", tag_commit, ref, ignore_errors=[1])
+                if self.fetcher.git.returncode == 0:
+                    distance = self.fetcher.git(
+                        "rev-list", "%s..%s" % (tag_commit, ref), "--count", output=str, error=str
+                    ).strip()
+                    ancestor_commits.append((tag_commit, int(distance)))
+
+            # Get nearest ancestor that is a known version
+            ancestor_commits.sort(key=lambda x: x[1])
+            if ancestor_commits:
+                prev_version_commit, distance = ancestor_commits[0]
+                prev_version = commit_to_version[prev_version_commit]
+            else:
+                # Get list of all commits, this is in reverse order
+                # We use this to get the first commit below
+                ref_info = self.fetcher.git("log", "--all", "--pretty=format:%H", output=str)
+                commits = [c for c in ref_info.split("\n") if c]
+
+                # No previous version and distance from first commit
+                prev_version = None
+                distance = int(
+                    self.fetcher.git(
+                        "rev-list", "%s..%s" % (commits[-1], ref), "--count", output=str, error=str
+                    ).strip()
+                )
+
+        return prev_version, distance

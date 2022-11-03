@@ -1,16 +1,22 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class REvd(RPackage):
-    """evd: Functions for Extreme Value Distributions"""
+    """Functions for Extreme Value Distributions.
 
-    homepage = "https://cloud.r-project.org/package=evd"
-    url      = "https://cloud.r-project.org/src/contrib/evd_2.3-3.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/evd"
+    Extends simulation, distribution, quantile and density functions to
+    univariate and multivariate parametric extreme value distributions, and
+    provides fitting functions which calculate maximum likelihood estimates for
+    univariate and bivariate maxima models, and for univariate and bivariate
+    threshold models."""
 
-    version('2.3-3', sha256='2fc5ef2e0c3a2a9392425ddd45914445497433d90fb80b8c363877baee4559b4')
+    cran = "evd"
+
+    version("2.3-6.1", sha256="662c592d3f5c5693dbf1c673d1137c4a60a347e330b71be1f3933f201d2c8971")
+    version("2.3-6", sha256="8edb8bc4f06d246c4343fd923bb5d5df99724d6db8821bfd996220343a834cb6")
+    version("2.3-3", sha256="2fc5ef2e0c3a2a9392425ddd45914445497433d90fb80b8c363877baee4559b4")

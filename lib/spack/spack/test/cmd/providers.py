@@ -1,51 +1,64 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import sys
+
 import pytest
 
 from spack.main import SpackCommand
 
-providers = SpackCommand('providers')
+providers = SpackCommand("providers")
+
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32", reason="Providers not currently supported on Windows"
+)
 
 
-@pytest.mark.parametrize('pkg', [
-    ('mpi',),
-    ('mpi@2',),
-    ('mpi', 'lapack'),
-    ('',)  # Lists all the available virtual packages
-])
+@pytest.mark.parametrize(
+    "pkg",
+    [("mpi",), ("mpi@2",), ("mpi", "lapack"), ("",)],  # Lists all the available virtual packages
+)
 def test_it_just_runs(pkg):
     providers(*pkg)
 
 
-@pytest.mark.parametrize('vpkg,provider_list', [
-    (('mpi',), ['intel-mpi',
-                'intel-parallel-studio',
-                'mpich',
-                'mpich@1:',
-                'mpich@3:',
-                'mpilander',
-                'mvapich2',
-                'openmpi',
-                'openmpi@1.6.5',
-                'openmpi@1.7.5:',
-                'openmpi@2.0.0:',
-                'spectrum-mpi']),
-    (('D', 'awk'), ['ldc', 'gawk', 'mawk'])  # Call 2 virtual packages at once
-])
+@pytest.mark.parametrize(
+    "vpkg,provider_list",
+    [
+        (
+            ("mpi",),
+            [
+                "intel-mpi",
+                "intel-parallel-studio",
+                "mpich",
+                "mpilander",
+                "mvapich2",
+                "openmpi",
+                "openmpi@1.6.5",
+                "openmpi@1.7.5:",
+                "openmpi@2.0.0:",
+                "spectrum-mpi",
+            ],
+        ),
+        (("D", "awk"), ["ldc", "gawk", "mawk"]),  # Call 2 virtual packages at once
+    ],
+)
 def test_provider_lists(vpkg, provider_list):
     output = providers(*vpkg)
     for item in provider_list:
         assert item in output
 
 
-@pytest.mark.parametrize('pkg,error_cls', [
-    ('zlib', ValueError),
-    ('foo', ValueError)  # Trying to call with a package that does not exist
-])
+@pytest.mark.parametrize(
+    "pkg,error_cls",
+    [
+        ("zlib", ValueError),
+        ("foo", ValueError),  # Trying to call with a package that does not exist
+    ],
+)
 def test_it_just_fails(pkg, error_cls):
     with pytest.raises(error_cls):
         providers(pkg)

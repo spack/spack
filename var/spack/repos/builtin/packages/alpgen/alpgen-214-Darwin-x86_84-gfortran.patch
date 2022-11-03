@@ -1,0 +1,15 @@
+diff --git a/compile.mk b/compile.mk
+index 3d2ce16..7e540ca 100755
+--- a/compile.mk
++++ b/compile.mk
+@@ -17,6 +17,10 @@ ifeq ($(shell uname),Darwin)
+      FFF = g77 -O1 -Wall -fno-automatic -Wno-globals -fno-backslash \
+ 	 -ffast-math
+   endif
++  ifeq ($(shell uname -m), x86_64)
++    FFF = gfortran -O1 -Wall -fno-automatic -fno-backslash -ffast-math
++    FF90 = gfortran -fno-automatic
++  endif
+   ifeq  ($(shell uname -m),i386) 
+      FFF = ifort -V -noautomatic -warn
+      FF90 = ifort -V -noautomatic -warn

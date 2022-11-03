@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,17 +25,17 @@ use Spack to build packages with the tools.
 The Spack Python class ``IntelOneapiPackage`` is a base class that is
 used by ``IntelOneapiCompilers``, ``IntelOneapiMkl``,
 ``IntelOneapiTbb`` and other classes to implement the oneAPI
-packages. See the :ref:<package-list> for the full list of available
+packages. See the :ref:`package-list` for the full list of available
 oneAPI packages or use::
 
   spack list -d oneAPI
 
 For more information on a specific package, do::
 
-  spack info <package-name>
+  spack info --all <package-name>
 
 Intel no longer releases new versions of Parallel Studio, which can be
-used in Spack via the :ref:<intelpackage>. All of its components can
+used in Spack via the :ref:`intelpackage`. All of its components can
 now be found in oneAPI. 
 
 Examples
@@ -84,8 +84,8 @@ build ``hdf5`` with Intel oneAPI MPI do::
 
   spack install hdf5 +mpi ^intel-oneapi-mpi
 
-Using an Externally Installed oneAPI
-====================================
+Using Externally Installed oneAPI Tools
+=======================================
 
 Spack can also use oneAPI tools that are manually installed with
 `Intel Installers`_.  The procedures for configuring Spack to use
@@ -110,7 +110,7 @@ Another option is to manually add the configuration to
 Libraries
 ---------
 
-If you want Spack to use MKL that you have installed without Spack in
+If you want Spack to use oneMKL that you have installed without Spack in
 the default location, then add the following to
 ``~/.spack/packages.yaml``, adjusting the version as appropriate::
 
@@ -139,17 +139,17 @@ You can also use Spack-installed libraries. For example::
   spack load intel-oneapi-mkl
 
 Will update your environment CPATH, LIBRARY_PATH, and other
-environment variables for building an application with MKL.
+environment variables for building an application with oneMKL.
 
 More information
 ================
 
 This section describes basic use of oneAPI, especially if it has
-changed compared to Parallel Studio. See :ref:<intelpackage> for more
-information on :ref:<intel-virtual-packages>,
-:ref:<intel-unrelated-packages>,
-:ref:<intel-integrating-external-libraries>, and
-:ref:<using-mkl-tips>.
+changed compared to Parallel Studio. See :ref:`intelpackage` for more
+information on :ref:`intel-virtual-packages`,
+:ref:`intel-unrelated-packages`,
+:ref:`intel-integrating-external-libraries`, and
+:ref:`using-mkl-tips`.
 
 
 .. _`Intel installers`: https://software.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top.html

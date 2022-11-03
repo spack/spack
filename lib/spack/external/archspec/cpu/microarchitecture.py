@@ -106,7 +106,7 @@ class Microarchitecture(object):
             self.name == other.name
             and self.vendor == other.vendor
             and self.features == other.features
-            and self.ancestors == other.ancestors
+            and self.parents == other.parents  # avoid ancestors here
             and self.compilers == other.compilers
             and self.generation == other.generation
         )
@@ -172,6 +172,12 @@ class Microarchitecture(object):
         assert len(roots) == 1, msg
 
         return roots.pop()
+
+    @property
+    def generic(self):
+        """Returns the best generic architecture that is compatible with self"""
+        generics = [x for x in [self] + self.ancestors if x.vendor == "generic"]
+        return max(generics, key=lambda x: len(x.ancestors))
 
     def to_dict(self, return_list_of_items=False):
         """Returns a dictionary representation of this object.

@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,13 +24,12 @@ avoids overly complicated rat nests of if statements.  Obviously,
 depending on the scenario, regular old conditionals might be clearer,
 so package authors should use their judgement.
 """
-
 import functools
 import inspect
 
 from llnl.util.lang import caller_locals
 
-import spack.architecture
+import spack.directives
 import spack.error
 from spack.spec import Spec
 
@@ -55,33 +54,33 @@ class MultiMethodMeta(type):
 
 class SpecMultiMethod(object):
     """This implements a multi-method for Spack specs.  Packages are
-       instantiated with a particular spec, and you may want to
-       execute different versions of methods based on what the spec
-       looks like.  For example, you might want to call a different
-       version of install() for one platform than you call on another.
+    instantiated with a particular spec, and you may want to
+    execute different versions of methods based on what the spec
+    looks like.  For example, you might want to call a different
+    version of install() for one platform than you call on another.
 
-       The SpecMultiMethod class implements a callable object that
-       handles method dispatch.  When it is called, it looks through
-       registered methods and their associated specs, and it tries
-       to find one that matches the package's spec.  If it finds one
-       (and only one), it will call that method.
+    The SpecMultiMethod class implements a callable object that
+    handles method dispatch.  When it is called, it looks through
+    registered methods and their associated specs, and it tries
+    to find one that matches the package's spec.  If it finds one
+    (and only one), it will call that method.
 
-       This is intended for use with decorators (see below).  The
-       decorator (see docs below) creates SpecMultiMethods and
-       registers method versions with them.
+    This is intended for use with decorators (see below).  The
+    decorator (see docs below) creates SpecMultiMethods and
+    registers method versions with them.
 
-       To register a method, you can do something like this:
-           mm = SpecMultiMethod()
-           mm.register("^chaos_5_x86_64_ib", some_method)
+    To register a method, you can do something like this:
+        mm = SpecMultiMethod()
+        mm.register("^chaos_5_x86_64_ib", some_method)
 
-       The object registered needs to be a Spec or some string that
-       will parse to be a valid spec.
+    The object registered needs to be a Spec or some string that
+    will parse to be a valid spec.
 
-       When the mm is actually called, it selects a version of the
-       method to call based on the sys_type of the object it is
-       called on.
+    When the mm is actually called, it selects a version of the
+    method to call based on the sys_type of the object it is
+    called on.
 
-       See the docs for decorators below for more details.
+    See the docs for decorators below for more details.
     """
 
     def __init__(self, default=None):
@@ -94,10 +93,10 @@ class SpecMultiMethod(object):
         """Register a version of a method for a particular spec."""
         self.method_list.append((spec, method))
 
-        if not hasattr(self, '__name__'):
+        if not hasattr(self, "__name__"):
             functools.update_wrapper(self, method)
         else:
-            assert(self.__name__ == method.__name__)
+            assert self.__name__ == method.__name__
 
     def __get__(self, obj, objtype):
         """This makes __call__ support instance methods."""
@@ -109,119 +108,126 @@ class SpecMultiMethod(object):
 
         # Call functools.wraps manually to get all the attributes
         # we need to be disguised as the wrapped_method
-        func = functools.wraps(wrapped_method)(
-            functools.partial(self.__call__, obj)
-        )
+        func = functools.wraps(wrapped_method)(functools.partial(self.__call__, obj))
         return func
 
     def _get_method_by_spec(self, spec):
         """Find the method of this SpecMultiMethod object that satisfies the
-           given spec, if one exists
+        given spec, if one exists
         """
         for condition, method in self.method_list:
             if spec.satisfies(condition):
                 return method
         return self.default or None
 
-    def __call__(self, package_self, *args, **kwargs):
+    def __call__(self, package_or_builder_self, *args, **kwargs):
         """Find the first method with a spec that matches the
-           package's spec.  If none is found, call the default
-           or if there is none, then raise a NoSuchMethodError.
+        package's spec.  If none is found, call the default
+        or if there is none, then raise a NoSuchMethodError.
         """
-        spec_method = self._get_method_by_spec(package_self.spec)
+        spec_method = self._get_method_by_spec(package_or_builder_self.spec)
         if spec_method:
-            return spec_method(package_self, *args, **kwargs)
+            return spec_method(package_or_builder_self, *args, **kwargs)
         # Unwrap the MRO of `package_self by hand. Note that we can't
         # use `super()` here, because using `super()` recursively
         # requires us to know the class of `package_self`, as well as
         # its superclasses for successive calls. We don't have that
         # information within `SpecMultiMethod`, because it is not
         # associated with the package class.
-        for cls in inspect.getmro(package_self.__class__)[1:]:
+        for cls in inspect.getmro(package_or_builder_self.__class__)[1:]:
             superself = cls.__dict__.get(self.__name__, None)
+
             if isinstance(superself, SpecMultiMethod):
                 # Check parent multimethod for method for spec.
-                superself_method = superself._get_method_by_spec(
-                    package_self.spec
-                )
+                superself_method = superself._get_method_by_spec(package_or_builder_self.spec)
                 if superself_method:
-                    return superself_method(package_self, *args, **kwargs)
+                    return superself_method(package_or_builder_self, *args, **kwargs)
             elif superself:
-                return superself(package_self, *args, **kwargs)
+                return superself(package_or_builder_self, *args, **kwargs)
 
         raise NoSuchMethodError(
-            type(package_self), self.__name__, package_self.spec,
-            [m[0] for m in self.method_list]
+            type(package_or_builder_self),
+            self.__name__,
+            package_or_builder_self.spec,
+            [m[0] for m in self.method_list],
         )
 
 
 class when(object):
-    """This annotation lets packages declare multiple versions of
-       methods like install() that depend on the package's spec.
-       For example:
-
-       .. code-block:: python
-
-          class SomePackage(Package):
-              ...
-
-              def install(self, prefix):
-                  # Do default install
-
-              @when('target=x86_64:')
-              def install(self, prefix):
-                  # This will be executed instead of the default install if
-                  # the package's target is in the x86_64 family.
-
-              @when('target=ppc64:')
-              def install(self, prefix):
-                  # This will be executed if the package's target is in
-                  # the ppc64 family
-
-       This allows each package to have a default version of install() AND
-       specialized versions for particular platforms.  The version that is
-       called depends on the architecutre of the instantiated package.
-
-       Note that this works for methods other than install, as well.  So,
-       if you only have part of the install that is platform specific, you
-       could do this:
-
-       .. code-block:: python
-
-          class SomePackage(Package):
-              ...
-              # virtual dependence on MPI.
-              # could resolve to mpich, mpich2, OpenMPI
-              depends_on('mpi')
-
-              def setup(self):
-                  # do nothing in the default case
-                  pass
-
-              @when('^openmpi')
-              def setup(self):
-                  # do something special when this is built with OpenMPI for
-                  # its MPI implementations.
-
-
-              def install(self, prefix):
-                  # Do common install stuff
-                  self.setup()
-                  # Do more common install stuff
-
-       Note that the default version of decorated methods must
-       *always* come first.  Otherwise it will override all of the
-       platform-specific versions.  There's not much we can do to get
-       around this because of the way decorators work.
-    """
-
     def __init__(self, condition):
+        """Can be used both as a decorator, for multimethods, or as a context
+        manager to group ``when=`` arguments together.
+
+        Examples are given in the docstrings below.
+
+        Args:
+            condition (str): condition to be met
+        """
         if isinstance(condition, bool):
             self.spec = Spec() if condition else None
         else:
             self.spec = Spec(condition)
 
     def __call__(self, method):
+        """This annotation lets packages declare multiple versions of
+        methods like install() that depend on the package's spec.
+
+        For example:
+
+           .. code-block:: python
+
+              class SomePackage(Package):
+                  ...
+
+                  def install(self, prefix):
+                      # Do default install
+
+                  @when('target=x86_64:')
+                  def install(self, prefix):
+                      # This will be executed instead of the default install if
+                      # the package's target is in the x86_64 family.
+
+                  @when('target=ppc64:')
+                  def install(self, prefix):
+                      # This will be executed if the package's target is in
+                      # the ppc64 family
+
+           This allows each package to have a default version of install() AND
+           specialized versions for particular platforms.  The version that is
+           called depends on the architecutre of the instantiated package.
+
+           Note that this works for methods other than install, as well.  So,
+           if you only have part of the install that is platform specific, you
+           could do this:
+
+           .. code-block:: python
+
+              class SomePackage(Package):
+                  ...
+                  # virtual dependence on MPI.
+                  # could resolve to mpich, mpich2, OpenMPI
+                  depends_on('mpi')
+
+                  def setup(self):
+                      # do nothing in the default case
+                      pass
+
+                  @when('^openmpi')
+                  def setup(self):
+                      # do something special when this is built with OpenMPI for
+                      # its MPI implementations.
+
+
+                  def install(self, prefix):
+                      # Do common install stuff
+                      self.setup()
+                      # Do more common install stuff
+
+           Note that the default version of decorated methods must
+           *always* come first.  Otherwise it will override all of the
+           platform-specific versions.  There's not much we can do to get
+           around this because of the way decorators work.
+        """
         # In Python 2, Get the first definition of the method in the
         # calling scope by looking at the caller's locals. In Python 3,
         # we handle this using MultiMethodMeta.__prepare__.
@@ -238,6 +244,32 @@ class when(object):
 
         return original_method
 
+    def __enter__(self):
+        """Inject the constraint spec into the `when=` argument of directives
+        in the context.
+
+        This context manager allows you to write:
+
+            with when('+nvptx'):
+                conflicts('@:6', msg='NVPTX only supported from gcc 7')
+                conflicts('languages=ada')
+                conflicts('languages=brig')
+
+        instead of writing:
+
+             conflicts('@:6', when='+nvptx', msg='NVPTX only supported from gcc 7')
+             conflicts('languages=ada', when='+nvptx')
+             conflicts('languages=brig', when='+nvptx')
+
+        Context managers can be nested (but this is not recommended for readability)
+        and add their constraint to whatever may be already present in the directive
+        `when=` argument.
+        """
+        spack.directives.DirectiveMeta.push_to_context(str(self.spec))
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        spack.directives.DirectiveMeta.pop_from_context()
+
 
 class MultiMethodError(spack.error.SpackError):
     """Superclass for multimethod dispatch errors"""
@@ -252,5 +284,5 @@ class NoSuchMethodError(spack.error.SpackError):
     def __init__(self, cls, method_name, spec, possible_specs):
         super(NoSuchMethodError, self).__init__(
             "Package %s does not support %s called with %s.  Options are: %s"
-            % (cls.__name__, method_name, spec,
-               ", ".join(str(s) for s in possible_specs)))
+            % (cls.__name__, method_name, spec, ", ".join(str(s) for s in possible_specs))
+        )

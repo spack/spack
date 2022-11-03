@@ -1,0 +1,11 @@
+--- a/etc/config/m4/acmpi.m4	2021-04-19 21:45:30.000000000 +0200
++++ b/etc/config/m4/acmpi.m4	2021-07-06 09:53:06.100076241 +0200
+@@ -296,7 +296,7 @@
+            test -n "$MPICC" && ff_mpicshow=`$MPICC -show` 2>/dev/null
+            test -n "$MPIFC" && ff_mpifcshow=`$MPIFC -show` 2>/dev/null
+ 	    if test "$with_mpilibs" = no -o -z "$with_mpilibs" ; then
+-		[ff_MPI_INCLUDE=`echo $ff_mpishow|tr ' ' '\n'| grep -E '^[-/][^WLlOgp]|^-Wp,'|tr '\n' ' '`]
++		[ff_MPI_INCLUDE=`echo $ff_mpishow|tr ' ' '\n' | sed '1 d'| grep -E '^[-/][^WLlOgpf]|^-Wp,'|tr '\n' ' '`]
+ 		ff_MPI_LIB_DIRS=""
+ 		[ff_MPI_LIB=`echo $ff_mpishow|tr ' ' '\n'| grep -E '^-[Llp]|^-Wl,'|tr '\n' ' '`]
+ 		[ff_MPI_LIBC=`echo $ff_mpicshow|tr ' ' '\n'| grep -E '^-[Llp]|^-Wl,'|tr '\n' ' '`]

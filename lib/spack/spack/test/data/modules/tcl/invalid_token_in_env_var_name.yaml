@@ -2,8 +2,9 @@ enable:
   - tcl
 tcl:
   all:
+    autoload: none
     filter:
-      environment_blacklist':
+      environment_blacklist:
         - CMAKE_PREFIX_PATH
     environment:
       set:

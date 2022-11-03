@@ -1,17 +1,17 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
-class Nosource(BundlePackage):
-    """Simple bundle package with one dependency"""
+class Nosource(Package):
+    """Simple package with no source and one dependency"""
 
     homepage = "http://www.example.com"
 
-    version('1.0')
+    version("1.0")
 
-    depends_on('dependency-install')
+    depends_on("dependency-install")

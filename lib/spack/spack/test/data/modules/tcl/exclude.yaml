@@ -1,0 +1,10 @@
+enable:
+  - tcl
+tcl:
+  include:
+    - zmpi
+  exclude:
+    - callpath
+    - mpi
+  all:
+    autoload: direct

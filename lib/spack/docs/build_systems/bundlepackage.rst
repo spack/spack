@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _bundlepackage:
 
--------------
-BundlePackage
--------------
+------
+Bundle
+------
 
 ``BundlePackage`` represents a set of packages that are expected to work well
 together, such as a collection of commonly used software libraries.  The

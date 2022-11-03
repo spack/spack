@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Agrep(MakefilePackage):
@@ -13,11 +13,11 @@ class Agrep(MakefilePackage):
     Developed 1989-1991 by Udi Manber, Sun Wu et al. at the University
     of Arizona."""
 
-    homepage = "http://www.tgries.de/agrep"
-    url      = "https://www.tgries.de/agrep/agrep-3.41.tgz"
+    homepage = "https://www.tgries.de/agrep"
+    url = "https://www.tgries.de/agrep/agrep-3.41.tgz"
 
-    version('3.41', sha256='0508eafaf9725fc67cc955eb6d32ba4f50138443a4fea4275508d2c3f67a234e')
+    version("3.41", sha256="0508eafaf9725fc67cc955eb6d32ba4f50138443a4fea4275508d2c3f67a234e")
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('agrep', prefix.bin)
+        install("agrep", prefix.bin)

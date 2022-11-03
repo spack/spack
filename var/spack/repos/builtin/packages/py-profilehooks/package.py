@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyProfilehooks(PythonPackage):
@@ -12,9 +12,9 @@ class PyProfilehooks(PythonPackage):
     homepage = "https://mg.pov.lt/profilehooks/"
     pypi = "profilehooks/profilehooks-1.11.2.tar.gz"
 
-    git      = "https://github.com/mgedmin/profilehooks.git"
+    git = "https://github.com/mgedmin/profilehooks.git"
 
-    version('1.11.2', sha256='41a74c1abdc5eeaf7dec024e9e89627f70e158374d263a3098bef31a06d38ab2')
+    version("1.11.2", sha256="41a74c1abdc5eeaf7dec024e9e89627f70e158374d263a3098bef31a06d38ab2")
 
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

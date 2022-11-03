@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,10 @@
 
 #: Properties for inclusion in other schemas
 properties = {
-    'projections': {
-        'type': 'object',
-        'patternProperties': {
-            r'all|\w[\w-]*': {
-                'type': 'string'
-            },
+    "projections": {
+        "type": "object",
+        "patternProperties": {
+            r"all|\w[\w-]*": {"type": "string"},
         },
     },
 }
@@ -25,9 +23,9 @@ properties = {
 
 #: Full schema with metadata
 schema = {
-    '$schema': 'http://json-schema.org/schema#',
-    'title': 'Spack view projection configuration file schema',
-    'type': 'object',
-    'additionalProperties': False,
-    'properties': properties,
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Spack view projection configuration file schema",
+    "type": "object",
+    "additionalProperties": False,
+    "properties": properties,
 }

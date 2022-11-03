@@ -1,0 +1,105 @@
+diff -ruN spack-src/cmake/fc.cmake spack-src-patched/cmake/fc.cmake
+--- spack-src/cmake/fc.cmake	2022-02-20 16:35:05.000000000 -0500
++++ spack-src-patched/cmake/fc.cmake	2022-08-04 13:02:13.294697807 -0400
+@@ -221,3 +221,14 @@
+   set(TIMER "NONE")
+ endif ()
+ 
++if (${F_COMPILER} STREQUAL "CRAY")
++  set(CCOMMON_OPT "${CCOMMON_OPT} -DF_INTERFACE_INTEL")
++  set(FCOMMON_OPT "${FCOMMON_OPT} -hnopattern")
++  if (INTERFACE64)
++    set (FCOMMON_OPT "${FCOMMON_OPT} -s integer64")
++  endif ()
++  if (NOT USE_OPENMP)
++    set(FCOMMON_OPT "${FCOMMON_OPT} -O noomp")
++  endif ()
++endif ()
++
+diff -ruN spack-src/cmake/system.cmake spack-src-patched/cmake/system.cmake
+--- spack-src/cmake/system.cmake	2022-02-20 16:35:05.000000000 -0500
++++ spack-src-patched/cmake/system.cmake	2022-08-04 13:03:15.173843680 -0400
+@@ -552,6 +552,14 @@
+   endforeach ()
+ endif ()
+ 
++if ("${F_COMPILER}" STREQUAL "NAG" OR "${F_COMPILER}" STREQUAL "CRAY")
++  set(FILTER_FLAGS "-msse3;-mssse3;-msse4.1;-mavx;-mavx2,-mskylake-avx512")
++  foreach (FILTER_FLAG ${FILTER_FLAGS})
++    string(REPLACE ${FILTER_FLAG} "" LAPACK_FFLAGS ${LAPACK_FFLAGS})
++    string(REPLACE ${FILTER_FLAG} "" LAPACK_FPFLAGS ${LAPACK_FPFLAGS})
++  endforeach ()
++endif ()
++
+ if ("${F_COMPILER}" STREQUAL "GFORTRAN")
+   # lapack-netlib is rife with uninitialized warnings -hpa
+   set(LAPACK_FFLAGS "${LAPACK_FFLAGS} -Wno-maybe-uninitialized")
+diff -ruN spack-src/f_check spack-src-patched/f_check
+--- spack-src/f_check	2022-02-20 16:35:05.000000000 -0500
++++ spack-src-patched/f_check	2022-08-04 13:05:03.075337778 -0400
+@@ -34,7 +34,7 @@
+ 	      "pathf90", "pathf95",
+ 	      "pgf95", "pgf90", "pgf77", "pgfortran", "nvfortran",
+ 	      "flang", "egfortran",
+-              "ifort", "nagfor");
++              "ifort", "nagfor", "ftn", "crayftn");
+ 
+ OUTER:
+     foreach $lists (@lists) {
+@@ -76,6 +76,11 @@
+ 	    $vendor = FUJITSU;
+ 	    $openmp = "-Kopenmp";
+ 
++        } elsif ($data =~ /Cray/) {
++
++            $vendor = CRAY;
++	    $openmp = "-fopenmp";
++
+ 	} elsif ($data =~ /GNU/ || $data =~ /GCC/ ) {
+ 
+             $data =~ s/\(+.*?\)+//g;
+@@ -306,6 +311,10 @@
+ if ( $vendor eq "NAG") {
+ 	    $link = `$compiler $openmp -dryrun ftest2.f 2>&1 && rm -f a.out a.exe`;
+     }
++
++if ( $vendor eq "CRAY") {
++            $link = `$compiler $openmp -hnopattern ftest2.f 2>&1 && rm -f a.out a.exe`;
++    }
+ $linker_L = "";
+ $linker_l = "";
+ $linker_a = "";
+diff -ruN spack-src/Makefile.system spack-src-patched/Makefile.system
+--- spack-src/Makefile.system	2022-02-20 16:35:05.000000000 -0500
++++ spack-src-patched/Makefile.system	2022-08-04 13:01:53.413702690 -0400
+@@ -1271,6 +1271,19 @@
+ endif
+ endif
+ 
++ifeq ($(F_COMPILER), CRAY)
++CCOMMON_OPT += -DF_INTERFACE_INTEL
++FCOMMON_OPT += -hnopattern
++ifdef INTERFACE64
++ifneq ($(INTERFACE64), 0)
++FCOMMON_OPT += -s integer64
++endif
++endif
++ifneq ($(USE_OPENMP), 1)
++FCOMMON_OPT += -O noomp
++endif
++endif
++
+ ifdef BINARY64
+ ifdef INTERFACE64
+ ifneq ($(INTERFACE64), 0)
+@@ -1551,6 +1564,10 @@
+ ifeq ($(F_COMPILER),NAG)
+ LAPACK_FFLAGS := $(filter-out -msse3 -mssse3 -msse4.1 -mavx -mavx2 -mskylake-avx512 ,$(FFLAGS))
+ endif
++ifeq ($(F_COMPILER),CRAY)
++LAPACK_FFLAGS := $(filter-out -msse3 -mssse3 -msse4.1 -mavx -mavx2 -mskylake-avx512 ,$(FFLAGS))
++FFLAGS := $(filter-out -msse3 -mssse3 -msse4.1 -mavx -mavx2 -mskylake-avx512 ,$(FFLAGS))
++endif
+ 
+ LAPACK_CFLAGS = $(CFLAGS)
+ LAPACK_CFLAGS += -DHAVE_LAPACK_CONFIG_H

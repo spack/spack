@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,19 +13,21 @@ modifications to global state in memory that must be replicated in the
 child process.
 """
 
-from types import ModuleType
-
+import io
+import multiprocessing
 import pickle
 import pydoc
-import io
 import sys
-import multiprocessing
+from types import ModuleType
 
-import spack.architecture
 import spack.config
+import spack.environment
+import spack.main
+import spack.platforms
+import spack.repo
+import spack.store
 
-
-_serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
+_serialize = sys.platform == "win32" or (sys.version_info >= (3, 8) and sys.platform == "darwin")
 
 
 patches = None
@@ -55,30 +57,32 @@ class SpackTestProcess(object):
 
     def create(self):
         test_state = TestState()
-        return multiprocessing.Process(
-            target=self._restore_and_run,
-            args=(self.fn, test_state))
+        return multiprocessing.Process(target=self._restore_and_run, args=(self.fn, test_state))
 
 
 class PackageInstallContext(object):
     """Captures the in-memory process state of a package installation that
     needs to be transmitted to a child process.
     """
+
     def __init__(self, pkg):
         if _serialize:
             self.serialized_pkg = serialize(pkg)
+            self.serialized_env = serialize(spack.environment.active_environment())
         else:
             self.pkg = pkg
+            self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
-        if _serialize:
-            return pickle.load(self.serialized_pkg)
-        else:
-            return self.pkg
+        env = pickle.load(self.serialized_env) if _serialize else self.env
+        pkg = pickle.load(self.serialized_pkg) if _serialize else self.pkg
+        if env:
+            spack.environment.activate(env)
+        return pkg
 
 
 class TestState(object):
@@ -87,19 +91,20 @@ class TestState(object):
     applied to a subprocess. This isn't needed outside of a testing environment
     but this logic is designed to behave the same inside or outside of tests.
     """
+
     def __init__(self):
         if _serialize:
             self.repo_dirs = list(r.root for r in spack.repo.path.repos)
             self.config = spack.config.config
-            self.platform = spack.architecture.platform
+            self.platform = spack.platforms.host
             self.test_patches = store_patches()
             self.store_token = spack.store.store.serialize()
 
     def restore(self):
         if _serialize:
-            spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
-            spack.architecture.platform = self.platform
+            spack.repo.path = spack.repo._path(self.config)
+            spack.platforms.host = self.platform
 
             new_store = spack.store.Store.deserialize(self.store_token)
             spack.store.store = new_store
@@ -113,10 +118,8 @@ class TestState(object):
 
 class TestPatches(object):
     def __init__(self, module_patches, class_patches):
-        self.module_patches = list(
-            (x, y, serialize(z)) for (x, y, z) in module_patches)
-        self.class_patches = list(
-            (x, y, serialize(z)) for (x, y, z) in class_patches)
+        self.module_patches = list((x, y, serialize(z)) for (x, y, z) in module_patches)
+        self.class_patches = list((x, y, serialize(z)) for (x, y, z) in class_patches)
 
     def restore(self):
         for module_name, attr_name, value in self.module_patches:
@@ -135,16 +138,15 @@ def store_patches():
     class_patches = list()
     if not patches:
         return TestPatches(list(), list())
-    for patch in patches:
-        for target, name, _ in patches:
-            if isinstance(target, ModuleType):
-                new_val = getattr(target, name)
-                module_name = target.__name__
-                module_patches.append((module_name, name, new_val))
-            elif isinstance(target, type):
-                new_val = getattr(target, name)
-                class_fqn = '.'.join([target.__module__, target.__name__])
-                class_patches.append((class_fqn, name, new_val))
+    for target, name, _ in patches:
+        if isinstance(target, ModuleType):
+            new_val = getattr(target, name)
+            module_name = target.__name__
+            module_patches.append((module_name, name, new_val))
+        elif isinstance(target, type):
+            new_val = getattr(target, name)
+            class_fqn = ".".join([target.__module__, target.__name__])
+            class_patches.append((class_fqn, name, new_val))
 
     return TestPatches(module_patches, class_patches)
 

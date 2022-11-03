@@ -1,0 +1,23 @@
+bootstrap:
+  # If set to false Spack will not bootstrap missing software,
+  # but will instead raise an error.
+  enable: true
+  # Root directory for bootstrapping work. The software bootstrapped
+  # by Spack is installed in a "store" subfolder of this root directory
+  root: $user_cache_path/bootstrap
+  # Methods that can be used to bootstrap software. Each method may or
+  # may not be able to bootstrap all the software that Spack needs,
+  # depending on its type.
+  sources:
+  - name: 'github-actions-v0.4'
+    metadata: $spack/share/spack/bootstrap/github-actions-v0.4
+  - name: 'github-actions-v0.3'
+    metadata: $spack/share/spack/bootstrap/github-actions-v0.3
+  - name: 'spack-install'
+    metadata: $spack/share/spack/bootstrap/spack-install
+  trusted:
+    # By default we trust bootstrapping from sources and from binaries
+    # produced on Github via the workflow
+    github-actions-v0.4: true
+    github-actions-v0.3: true
+    spack-install: true

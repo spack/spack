@@ -3,4 +3,4 @@ enable:
 tcl:
   verbose: true
   all:
-    autoload: 'all'
+    autoload: all

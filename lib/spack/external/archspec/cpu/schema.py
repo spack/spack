@@ -11,7 +11,7 @@ import os.path
 try:
     from collections.abc import MutableMapping  # novm
 except ImportError:
-    from collections import MutableMapping
+    from collections import MutableMapping  # pylint: disable=deprecated-class
 
 
 class LazyDictionary(MutableMapping):
@@ -56,7 +56,7 @@ def _load_json_file(json_file):
 
     def _factory():
         filename = os.path.join(json_dir, json_file)
-        with open(filename, "r") as file:
+        with open(filename, "r") as file:  # pylint: disable=unspecified-encoding
             return json.load(file)
 
     return _factory

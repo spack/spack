@@ -61,7 +61,7 @@ def proc_cpuinfo():
     ``/proc/cpuinfo``
     """
     info = {}
-    with open("/proc/cpuinfo") as file:
+    with open("/proc/cpuinfo") as file:  # pylint: disable=unspecified-encoding
         for line in file:
             key, separator, value = line.partition(":")
 
@@ -80,26 +80,46 @@ def proc_cpuinfo():
 
 
 def _check_output(args, env):
-    output = subprocess.Popen(args, stdout=subprocess.PIPE, env=env).communicate()[0]
+    output = subprocess.Popen(  # pylint: disable=consider-using-with
+        args, stdout=subprocess.PIPE, env=env
+    ).communicate()[0]
     return six.text_type(output.decode("utf-8"))
+
+
+def _machine():
+    """ "Return the machine architecture we are on"""
+    operating_system = platform.system()
+
+    # If we are not on Darwin, trust what Python tells us
+    if operating_system != "Darwin":
+        return platform.machine()
+
+    # On Darwin it might happen that we are on M1, but using an interpreter
+    # built for x86_64. In that case "platform.machine() == 'x86_64'", so we
+    # need to fix that.
+    #
+    # See: https://bugs.python.org/issue42704
+    output = _check_output(
+        ["sysctl", "-n", "machdep.cpu.brand_string"], env=_ensure_bin_usrbin_in_path()
+    ).strip()
+
+    if "Apple" in output:
+        # Note that a native Python interpreter on Apple M1 would return
+        # "arm64" instead of "aarch64". Here we normalize to the latter.
+        return "aarch64"
+
+    return "x86_64"
 
 
 @info_dict(operating_system="Darwin")
 def sysctl_info_dict():
     """Returns a raw info dictionary parsing the output of sysctl."""
-    # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
-    # usually found there
-    child_environment = dict(os.environ.items())
-    search_paths = child_environment.get("PATH", "").split(os.pathsep)
-    for additional_path in ("/sbin", "/usr/sbin"):
-        if additional_path not in search_paths:
-            search_paths.append(additional_path)
-    child_environment["PATH"] = os.pathsep.join(search_paths)
+    child_environment = _ensure_bin_usrbin_in_path()
 
     def sysctl(*args):
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
-    if platform.machine() == "x86_64":
+    if _machine() == "x86_64":
         flags = (
             sysctl("-n", "machdep.cpu.features").lower()
             + " "
@@ -123,6 +143,18 @@ def sysctl_info_dict():
             "model name": sysctl("-n", "machdep.cpu.brand_string"),
         }
     return info
+
+
+def _ensure_bin_usrbin_in_path():
+    # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
+    # usually found there
+    child_environment = dict(os.environ.items())
+    search_paths = child_environment.get("PATH", "").split(os.pathsep)
+    for additional_path in ("/sbin", "/usr/sbin"):
+        if additional_path not in search_paths:
+            search_paths.append(additional_path)
+    child_environment["PATH"] = os.pathsep.join(search_paths)
+    return child_environment
 
 
 def adjust_raw_flags(info):
@@ -184,12 +216,7 @@ def compatible_microarchitectures(info):
     Args:
         info (dict): dictionary containing information on the host cpu
     """
-    architecture_family = platform.machine()
-    # On Apple M1 platform.machine() returns "arm64" instead of "aarch64"
-    # so we should normalize the name here
-    if architecture_family == "arm64":
-        architecture_family = "aarch64"
-
+    architecture_family = _machine()
     # If a tester is not registered, be conservative and assume no known
     # target is compatible with the host
     tester = COMPATIBILITY_CHECKS.get(architecture_family, lambda x, y: False)
@@ -206,11 +233,26 @@ def host():
     # Get a list of possible candidates for this micro-architecture
     candidates = compatible_microarchitectures(info)
 
+    # Sorting criteria for candidates
+    def sorting_fn(item):
+        return len(item.ancestors), len(item.features)
+
+    # Get the best generic micro-architecture
+    generic_candidates = [c for c in candidates if c.vendor == "generic"]
+    best_generic = max(generic_candidates, key=sorting_fn)
+
+    # Filter the candidates to be descendant of the best generic candidate.
+    # This is to avoid that the lack of a niche feature that can be disabled
+    # from e.g. BIOS prevents detection of a reasonably performant architecture
+    candidates = [c for c in candidates if c > best_generic]
+
+    # If we don't have candidates, return the best generic micro-architecture
+    if not candidates:
+        return best_generic
+
     # Reverse sort of the depth for the inheritance tree among only targets we
     # can use. This gets the newest target we satisfy.
-    return sorted(
-        candidates, key=lambda t: (len(t.ancestors), len(t.features)), reverse=True
-    )[0]
+    return max(candidates, key=sorting_fn)
 
 
 def compatibility_check(architecture_family):
@@ -229,12 +271,7 @@ def compatibility_check(architecture_family):
         architecture_family = (architecture_family,)
 
     def decorator(func):
-        # pylint: disable=fixme
-        # TODO: on removal of Python 2.6 support this can be re-written as
-        # TODO: an update +  a dict comprehension
-        for arch_family in architecture_family:
-            COMPATIBILITY_CHECKS[arch_family] = func
-
+        COMPATIBILITY_CHECKS.update({family: func for family in architecture_family})
         return func
 
     return decorator
@@ -245,7 +282,13 @@ def compatibility_check_for_power(info, target):
     """Compatibility check for PPC64 and PPC64LE architectures."""
     basename = platform.machine()
     generation_match = re.search(r"POWER(\d+)", info.get("cpu", ""))
-    generation = int(generation_match.group(1))
+    try:
+        generation = int(generation_match.group(1))
+    except AttributeError:
+        # There might be no match under emulated environments. For instance
+        # emulating a ppc64le with QEMU and Docker still reports the host
+        # /proc/cpuinfo and not a Power
+        generation = 0
 
     # We can use a target if it descends from our machine type and our
     # generation (9 for POWER9, etc) is at least its generation.
@@ -267,7 +310,7 @@ def compatibility_check_for_x86_64(info, target):
     arch_root = TARGETS[basename]
     return (
         (target == arch_root or arch_root in target.ancestors)
-        and (target.vendor == vendor or target.vendor == "generic")
+        and target.vendor in (vendor, "generic")
         and target.features.issubset(features)
     )
 
@@ -282,6 +325,26 @@ def compatibility_check_for_aarch64(info, target):
     arch_root = TARGETS[basename]
     return (
         (target == arch_root or arch_root in target.ancestors)
-        and (target.vendor == vendor or target.vendor == "generic")
-        and target.features.issubset(features)
+        and target.vendor in (vendor, "generic")
+        # On macOS it seems impossible to get all the CPU features with syctl info
+        and (target.features.issubset(features) or platform.system() == "Darwin")
+    )
+
+
+@compatibility_check(architecture_family="riscv64")
+def compatibility_check_for_riscv64(info, target):
+    """Compatibility check for riscv64 architectures."""
+    basename = "riscv64"
+    uarch = info.get("uarch")
+
+    # sifive unmatched board
+    if uarch == "sifive,u74-mc":
+        uarch = "u74mc"
+    # catch-all for unknown uarchs
+    else:
+        uarch = "riscv64"
+
+    arch_root = TARGETS[basename]
+    return (target == arch_root or arch_root in target.ancestors) and (
+        target == uarch or target.vendor == "generic"
     )

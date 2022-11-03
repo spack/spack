@@ -1,0 +1,37 @@
+diff -Naur tmp/alplib/alpgen.f tmp1/alplib/alpgen.f
+--- alplib/alpgen.f	2011-03-28 08:19:18.000000000 +0200
++++ alplib/alpgen.f	2014-03-31 15:37:15.000000000 +0200
+@@ -4647,9 +4647,9 @@
+ c     
+       IMPLICIT NONE
+       integer time
+-      character*24 CTIME,now
+-c      now='Day Mon XX hh:mm:ss yyyy'
+-      now=ctime(time())
++      character*25 now
++      now='Day Mon XX hh:mm:ss yyyy'
++c      now=ctime(time())
+       end
+ 
+ 
+diff -Naur tmp/alplib/alputi.f tmp1/alplib/alputi.f
+--- alplib/alputi.f	2010-12-14 09:03:41.000000000 +0100
++++ alplib/alputi.f	2014-03-28 16:37:36.000000000 +0100
+@@ -785,7 +785,7 @@
+      &,NBIN(200),IHIS(200,100),IUSCORE(200),IOSCORE(200)
+      &,IENT(200),HAVG(200),HINT(200),HSIG(200),BOOK(200),TITLE(200)
+      &,NHIST                                                      
+-      CHARACTER TITLE*25,BOOK*3,NOW*24
++      CHARACTER TITLE*25,BOOK*3,NOW*25
+       CHARACTER*(*) LTIT,BTIT,SCALE
+       double precision hist
+       DATA INI/0/
+@@ -841,7 +841,7 @@
+      &,NBIN(200),IHIS(200,100),IUSCORE(200),IOSCORE(200)
+      &,IENT(200),HAVG(200),HINT(200),HSIG(200),BOOK(200),TITLE(200)
+      &,NHIST                                                      
+-      CHARACTER TITLE*25,BOOK*3,SCALE*3,NOW*24
++      CHARACTER TITLE*25,BOOK*3,SCALE*3,NOW*25
+       CHARACTER*(*) LTIT,BTIT,SCA
+       double precision hist
+       CHARACTER*7  PLOT(4)

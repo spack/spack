@@ -1,0 +1,36 @@
+From 46c3b8e08fceaaf29cc0aba9a42d7a203a2379f8 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Mon, 11 Apr 2022 08:43:19 +0200
+Subject: [PATCH] Makefile: remove `ldconfig -n`.
+
+`ldconfig` can't be assumed to be available.
+
+```
+ldconfig -n /tmp/spack-stage/spack-stage-gdrcopy-2.3-lxw353euu26enjkcctzbux6n6cj3wjgt/spack-src/src
+make[1]: ldconfig: Command not found
+make[1]: *** [Makefile:60: libgdrapi.so.2.3] Error 127
+```
+
+```
+cat /etc/os-release
+NAME="SLES"
+VERSION="15-SP2"
+VERSION_ID="15.2"
+PRETTY_NAME="SUSE Linux Enterprise Server 15 SP2"
+```
+---
+ src/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/Makefile b/src/Makefile
+index 8a861d3..1bcec4c 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -57,7 +57,6 @@ lib: $(LIB)
+ $(LIBOBJS): CFLAGS+=-fPIC
+ $(LIB): $(LIBOBJS)
+ 	$(CC) -shared -Wl,-soname,$(LIB_SONAME) -o $@ $^
+-	ldconfig -n $(PWD)
+ 	ln -sf $(LIB_DYNAMIC) $(LIB_SONAME)
+ 	ln -sf $(LIB_SONAME) $(LIB_BASENAME)
+ 

@@ -1,0 +1,11 @@
+--- spack-src/bblas_src/batched_blas_fp16.h.orig	2022-02-16 17:15:22.000000000 +0900
++++ spack-src/bblas_src/batched_blas_fp16.h	2022-02-16 17:15:31.000000000 +0900
+@@ -13,8 +13,6 @@
+ #  if BF_NMANT>7 || BF_NMANT<=1
+ #    error "too large or small mantissa for BFLIKE_FLOAT"
+ #  endif
+-#elif defined(__AVX2__)
+-#  define FP16_AVX2_EMULATION
+ #elif defined(__clang__) && __clang_major__ >= 8
+ #  define FP16_AUTO_PROMOTION
+ #else

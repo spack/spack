@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,11 @@ from six import string_types
 
 import spack.spec
 
-
 #: The types of dependency relationships that Spack understands.
-all_deptypes = ('build', 'link', 'run', 'test')
+all_deptypes = ("build", "link", "run", "test")
 
 #: Default dependency type if none is specified
-default_deptype = ('build', 'link')
+default_deptype = ("build", "link")
 
 
 def deptype_chars(*type_tuples):
@@ -34,7 +33,7 @@ def deptype_chars(*type_tuples):
         if t:
             types.update(t)
 
-    return ''.join(t[0] if t in types else ' ' for t in all_deptypes)
+    return "".join(t[0] if t in types else " " for t in all_deptypes)
 
 
 def canonical_deptype(deptype):
@@ -46,22 +45,21 @@ def canonical_deptype(deptype):
             builtin function ``all`` or the string 'all', which result in
             a tuple of all dependency types known to Spack.
     """
-    if deptype in ('all', all):
+    if deptype in ("all", all):
         return all_deptypes
 
     elif isinstance(deptype, string_types):
         if deptype not in all_deptypes:
-            raise ValueError('Invalid dependency type: %s' % deptype)
+            raise ValueError("Invalid dependency type: %s" % deptype)
         return (deptype,)
 
     elif isinstance(deptype, (tuple, list, set)):
         bad = [d for d in deptype if d not in all_deptypes]
         if bad:
-            raise ValueError(
-                'Invalid dependency types: %s' % ','.join(str(t) for t in bad))
-        return tuple(sorted(deptype))
+            raise ValueError("Invalid dependency types: %s" % ",".join(str(t) for t in bad))
+        return tuple(sorted(set(deptype)))
 
-    raise ValueError('Invalid dependency type: %s' % repr(deptype))
+    raise ValueError("Invalid dependency type: %s" % repr(deptype))
 
 
 class Dependency(object):
@@ -90,6 +88,7 @@ class Dependency(object):
     the dependency package can coexist with the patched version.
 
     """
+
     def __init__(self, pkg, spec, type=default_deptype):
         """Create a new Dependency.
 
@@ -125,11 +124,11 @@ class Dependency(object):
         # concatenate patch lists, or just copy them in
         for cond, p in other.patches.items():
             if cond in self.patches:
-                self.patches[cond].extend(other.patches[cond])
+                current_list = self.patches[cond]
+                current_list.extend(p for p in other.patches[cond] if p not in current_list)
             else:
                 self.patches[cond] = other.patches[cond]
 
     def __repr__(self):
         types = deptype_chars(self.type)
-        return '<Dependency: %s -> %s [%s]>' % (
-            self.pkg.name, self.spec, types)
+        return "<Dependency: %s -> %s [%s]>" % (self.pkg.name, self.spec, types)

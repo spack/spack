@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _build-settings:
 
-===================
-Build Customization
-===================
+================================
+Package Settings (packages.yaml)
+================================
 
 Spack allows you to customize how your software is built through the
 ``packages.yaml`` file.  Using it, you can make Spack prefer particular
@@ -49,9 +49,8 @@ packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
 that should be used instead of Spack building its own MPI.
 
-External packages are configured through the ``packages.yaml`` file found
-in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
-directory. Here's an example of an external configuration:
+External packages are configured through the ``packages.yaml`` file.
+Here's an example of an external configuration:
 
 .. code-block:: yaml
 
@@ -97,11 +96,14 @@ Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not ever be built.
 
-The packages configuration can tell Spack to use an external location
-for certain package versions, but it does not restrict Spack to using
-external packages.  In the above example, since newer versions of OpenMPI
-are available, Spack will choose to start building and linking with the
-latest version rather than continue using the pre-installed OpenMPI versions.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Prevent packages from being built from sources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Adding an external spec in ``packages.yaml`` allows Spack to use an external location,
+but it does not prevent Spack from building packages from sources. In the above example,
+Spack might choose for many valid reasons to start building and linking with the
+latest version of OpenMPI rather than continue using the pre-installed OpenMPI versions.
 
 To prevent this, the ``packages.yaml`` configuration also allows packages
 to be flagged as non-buildable.  The previous example could be modified to
@@ -121,9 +123,15 @@ be:
        buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
-its own version of OpenMPI, and it will instead always rely on a pre-built
-OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
-a package name.
+its own version of OpenMPI from sources, and it will instead always rely on a pre-built
+OpenMPI.
+
+.. note::
+
+   If ``concretizer:reuse`` is on (see :ref:`concretizer-options` for more information on that flag)
+   pre-built specs include specs already available from a local store, an upstream store, a registered
+   buildcache or specs marked as externals in ``packages.yaml``. If ``concretizer:reuse`` is off, only
+   external specs in ``packages.yaml`` are included in the list of pre-built specs.
 
 If an external module is specified as not buildable, then Spack will load the
 external module into the build environment which can be used for linking.
@@ -131,6 +139,10 @@ external module into the build environment which can be used for linking.
 The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Non-buildable virtual packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Virtual packages in Spack can also be specified as not buildable, and
 external implementations can be provided. In the example above,
@@ -153,21 +165,37 @@ but more conveniently:
        - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
          prefix: /opt/openmpi-1.6.5-intel
 
-Implementations can also be listed immediately under the virtual they provide:
+Spack can then use any of the listed external implementations of MPI
+to satisfy a dependency, and will choose depending on the compiler and
+architecture.
+
+In cases where the concretizer is configured to reuse specs, and other ``mpi`` providers
+(available via stores or buildcaches) are not wanted, Spack can be configured to require
+specs matching only the available externals:
 
 .. code-block:: yaml
 
    packages:
      mpi:
        buildable: False
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64: /opt/openmpi-1.4.3
-         openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug: /opt/openmpi-1.4.3-debug
-         openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64: /opt/openmpi-1.6.5-intel
-         mpich@3.3 %clang@9.0.0 arch=linux-debian7-x86_64: /opt/mpich-3.3-intel
+       require:
+       - one_of: [
+           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64",
+           "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug",
+           "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         ]
+     openmpi:
+       externals:
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.4.3
+       - spec: "openmpi@1.4.3%gcc@4.4.7 arch=linux-debian7-x86_64+debug"
+         prefix: /opt/openmpi-1.4.3-debug
+       - spec: "openmpi@1.6.5%intel@10.1 arch=linux-debian7-x86_64"
+         prefix: /opt/openmpi-1.6.5-intel
 
-Spack can then use any of the listed external implementations of MPI
-to satisfy a dependency, and will choose depending on the compiler and
-architecture.
+This configuration prevents any spec using MPI and originating from stores or buildcaches to be reused,
+unless it matches the requirements under ``packages:mpi:require``. For more information on requirements see
+:ref:`package-requirements`.
 
 .. _cmd-spack-external-find:
 
@@ -194,11 +222,6 @@ Specific limitations include:
 * Packages are not discoverable by default: For a package to be
   discoverable with ``spack external find``, it needs to add special
   logic. See :ref:`here <make-package-findable>` for more details.
-* The current implementation only collects and examines executable files,
-  so it is typically only useful for build/run dependencies (in some cases
-  if a library package also provides an executable, it may be possible to
-  extract a meaningful Spec by running the executable - for example the
-  compiler wrappers in MPI implementations).
 * The logic does not search through module files, it can only detect
   packages with executables defined in ``PATH``; you can help Spack locate
   externals which use module files by loading any associated modules for
@@ -209,11 +232,81 @@ Specific limitations include:
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
 
-.. _concretization-preferences:
+.. _concretizer-options:
 
---------------------------
-Concretization Preferences
---------------------------
+----------------------
+Concretizer options
+----------------------
+
+``packages.yaml`` gives the concretizer preferences for specific packages,
+but you can also use ``concretizer.yaml`` to customize aspects of the
+algorithm it uses to select the dependencies you install:
+
+.. literalinclude:: _spack_root/etc/spack/defaults/concretizer.yaml
+   :language: yaml
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reuse already installed packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``reuse`` attribute controls whether Spack will prefer to use installed packages (``true``), or
+whether it will do a "fresh" installation and prefer the latest settings from
+``package.py`` files and ``packages.yaml`` (``false``).
+You can use:
+
+.. code-block:: console
+
+   % spack install --reuse <spec>
+
+to enable reuse for a single installation, and you can use:
+
+.. code-block:: console
+
+   spack install --fresh <spec>
+
+to do a fresh install if ``reuse`` is enabled by default.
+``reuse: true`` is the default.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Selection of the target microarchitectures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The options under the ``targets`` attribute control which targets are considered during a solve.
+Currently the options in this section are only configurable from the ``concretization.yaml`` file
+and there are no corresponding command line arguments to enable them for a single solve.
+
+The ``granularity`` option can take two possible values: ``microarchitectures`` and ``generic``.
+If set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: microarchitectures
+
+Spack will consider all the microarchitectures known to ``archspec`` to label nodes for
+compatibility. If instead the option is set to:
+
+.. code-block:: yaml
+
+   concretizer:
+     targets:
+       granularity: generic
+
+Spack will consider only generic microarchitectures. For instance, when running on an
+Haswell node, Spack will consider ``haswell`` as the best target in the former case and
+``x86_64_v3`` as the best target in the latter case.
+
+The ``host_compatible`` option is a Boolean option that determines whether or not the
+microarchitectures considered during the solve are constrained to be compatible with the
+host Spack is currently running on. For instance, if this option is set to ``true``, a
+user cannot concretize for ``target=icelake`` while running on an Haswell node.
+
+.. _package-preferences:
+
+-------------------
+Package Preferences
+-------------------
 
 Spack can be configured to prefer certain compilers, package
 versions, dependencies, and variants during concretization.
@@ -268,6 +361,127 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
 dependency.
+
+.. _package-requirements:
+
+--------------------
+Package Requirements
+--------------------
+
+You can use the configuration to force the concretizer to choose
+specific properties for packages when building them. Like preferences,
+these are only applied when the package is required by some other
+request (e.g. if the package is needed as a dependency of a
+request to ``spack install``).
+
+An example of where this is useful is if you have a package that
+is normally built as a dependency but only under certain circumstances
+(e.g. only when a variant on a dependent is active): you can make
+sure that it always builds the way you want it to; this distinguishes
+package configuration requirements from constraints that you add to
+``spack install`` or to environments (in those cases, the associated
+packages are always built).
+
+The following is an example of how to enforce package properties in
+``packages.yaml``:
+
+.. code-block:: yaml
+
+   packages:
+     libfabric:
+       require: "@1.13.2"
+     openmpi:
+       require:
+       - any_of: ["~cuda", "%gcc"]
+     mpich:
+      require:
+      - one_of: ["+cuda", "+rocm"]
+
+Requirements are expressed using Spec syntax (the same as what is provided
+to ``spack install``). In the simplest case, you can specify attributes
+that you always want the package to have by providing a single spec to
+``require``; in the above example, ``libfabric`` will always build
+with version 1.13.2.
+
+You can provide a more-relaxed constraint and allow the concretizer to
+choose between a set of options using ``any_of`` or ``one_of``:
+
+* ``any_of`` is a list of specs. One of those specs must be satisfied
+  and it is also allowed for the concretized spec to match more than one.
+  In the above example, that means you could build ``openmpi+cuda%gcc``,
+  ``openmpi~cuda%clang`` or ``openmpi~cuda%gcc`` (in the last case,
+  note that both specs in the ``any_of`` for ``openmpi`` are
+  satisfied).
+* ``one_of`` is also a list of specs, and the final concretized spec
+  must match exactly one of them.  In the above example, that means
+  you could build ``mpich+cuda`` or ``mpich+rocm`` but not
+  ``mpich+cuda+rocm`` (note the current package definition for
+  ``mpich`` already includes a conflict, so this is redundant but
+  still demonstrates the concept).
+
+.. note::
+
+   For ``any_of`` and ``one_of``, the order of specs indicates a
+   preference: items that appear earlier in the list are preferred
+   (note that these preferences can be ignored in favor of others).
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting default requirements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can also set default requirements for all packages under ``all``
+like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+
+which means every spec will be required to use ``clang`` as a compiler.
+
+Note that in this case ``all`` represents a *default set of requirements* -
+if there are specific package requirements, then the default requirements
+under ``all`` are disregarded. For example, with a configuration like this:
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       require: '%clang'
+     cmake:
+       require: '%gcc'
+
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
+to use ``clang``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Setting requirements on virtual specs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A requirement on a virtual spec applies whenever that virtual is present in the DAG. This
+can be useful for fixing which virtual provider you want to use:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+
+With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+
+Requirements on the virtual spec and on the specific provider are both applied, if present. For
+instance with a configuration like:
+
+.. code-block:: yaml
+
+   packages:
+     mpi:
+       require: 'mvapich2 %gcc'
+     mvapich2:
+       require: '~cuda'
+
+you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
 .. _package_permissions:
 

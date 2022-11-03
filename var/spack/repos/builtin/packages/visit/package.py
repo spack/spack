@@ -1,27 +1,18 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os
+
+from spack.package import *
 
 
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
-       animation and analysis tool. See comments in VisIt's package.py
-       for tips about building VisIt with spack. Building VisIt with
-       Spack is still experimental and many standard features are likely
-       disabled
-       LINUX-------------------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0
-       LINUX-W/O-OPENGL--------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
-       ^mesa+opengl
-       MACOS-------------------------------------------------------------------
-       spack install visit ^python+shared ^glib@2.56.3 ^py-setuptools@44.1.0 \\
-       ^qt~framework
-
+    animation and analysis tool.
     """
+
     ############################
     # Suggestions for building:
     ############################
@@ -55,228 +46,285 @@ class Visit(CMakePackage):
     #
     ############################
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
-    git      = "https://github.com/visit-dav/visit.git"
-    url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
+    git = "https://github.com/visit-dav/visit.git"
+    url = "https://github.com/visit-dav/visit/releases/download/v3.2.1/visit3.2.1.tar.gz"
 
-    maintainers = ['cyrush']
+    tags = ["radiuss"]
+
+    maintainers = ["cyrush"]
 
     extendable = True
 
-    version('develop', branch='develop')
-    version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
-    version('3.0.1', sha256='a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd')
-    version('2.13.3', sha256='cf0b3d2e39e1cd102dd886d3ef6da892733445e362fc28f24d9682012cccf2e5')
-    version('2.13.0', sha256='716644b8e78a00ff82691619d4d1e7a914965b6535884890b667b97ba08d6a0f')
-    version('2.12.3', sha256='2dd351a291ee3e79926bc00391ca89b202cfa4751331b0fdee1b960c7922161f')
-    version('2.12.2', sha256='55897d656ac2ea4eb87a30118b2e3963d6c8a391dda0790268426a73e4b06943')
-    version('2.10.3', sha256='05018215c4727eb42d47bb5cc4ff937b2a2ccaca90d141bc7fa426a0843a5dbc')
-    version('2.10.2', sha256='89ecdfaf197ef431685e31b75628774deb6cd75d3e332ef26505774403e8beff')
-    version('2.10.1', sha256='6b53dea89a241fd03300a7a3a50c0f773e2fb8458cd3ad06816e9bd2f0337cd8')
+    executables = ["^visit$"]
 
-    variant('gui',    default=True, description='Enable VisIt\'s GUI')
-    variant('adios2', default=False, description='Enable ADIOS2 file format')
-    variant('hdf5',   default=True, description='Enable HDF5 file format')
-    variant('silo',   default=True, description='Enable Silo file format')
-    variant('python', default=True, description='Enable Python support')
-    variant('mpi',    default=True, description='Enable parallel engine')
+    version("develop", branch="develop")
+    version(
+        "3.3.0",
+        sha256="1a7485146133ac5f1e330d9029697750046ef8d9e9de23a6c2a3685c1c5f4aac",
+        deprecated=True,
+    )
+    version("3.2.2", sha256="d19ac24c622a3bc0a71bc9cd6e5c9860e43f39e3279672129278b6ebce8d0ead")
+    version("3.2.1", sha256="779d59564c63f31fcbfeff24b14ddd6ac941b3bb7d671d31765a770d193f02e8")
+    version("3.1.1", sha256="0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0")
+    version("3.0.1", sha256="a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd")
 
-    patch('spack-changes-3.1.patch', when="@3.1.0:,develop")
-    patch('spack-changes-3.0.1.patch', when="@3.0.1")
-    patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
-    patch('parallel-hdf5.patch', when='+hdf5+mpi')
+    root_cmakelists_dir = "src"
+    generator = "Ninja"
 
-    #############################################
-    # Full List of dependencies from build_visit
-    #############################################
-    # cyrush note:
-    #  I added these here to give folks details
-    #  to help eventually build up to full
-    #  support for visit
-    #############################################
-    # =====================================
-    # core:
-    # =====================================
-    #  cmake (build)
-    #  vtk
-    #  qt
-    #  qwt
-    #  python
-    #  mpi
-    #
-    # =====================================
-    # rendering (optional):
-    # =====================================
-    # icet
-    # vtk-m
-    # vtk-h
-    # llvm
-    # mesagl
-    # osmesa
-    # tbb
-    # embree
-    # ispc
-    # ospray
-    #
-    # =====================================
-    # python modules:
-    # =====================================
-    # numpy
-    # pillow
-    # mpi4py
-    # seedme
-    # sphinx (build, docs)
-    # sphinx rtd theme (build, docs)
-    # pyqt (visit support deprecated)
-    # pyside (note: we want pyside 2)
-    #
-    # =====================================
-    # testing related:
-    # =====================================
-    # p7zip (build, test)
-    #
-    # =====================================
-    # io libs:
-    # =====================================
-    # adios
-    # adios2
-    # advio
-    # boost
-    # boxlib
-    # cfitsio
-    # cgns
-    # conduit
-    # damaris
-    # fastbit
-    # fastquery
-    # gdal
-    # h5part
-    # hdf4
-    # hdf5
-    # mdsplus
-    # mfem
-    # mili
-    # moab
-    # mxml
-    # nektarpp
-    # netcdf
-    # openexr
-    # pidx
-    # silo
-    # stripack
-    # szip
-    # tbb
-    # uintah
-    # xdmf
-    # xercesc
-    # xsd
-    # zlib
-    #
-    # =====================================
+    variant("gui", default=True, description="Enable VisIt's GUI")
+    variant("osmesa", default=False, description="Use OSMesa for off-screen CPU rendering")
+    variant("adios2", default=True, description="Enable ADIOS2 file format")
+    variant("hdf5", default=True, description="Enable HDF5 file format")
+    variant("silo", default=True, description="Enable Silo file format")
+    variant("python", default=True, description="Enable Python support")
+    variant("mpi", default=True, description="Enable parallel engine")
+    variant("vtkm", default=False, description="Enable VTK-m support")
+    variant("conduit", default=True, description="Enable Conduit support")
+    variant("mfem", default=True, description="Enable MFEM support")
+    variant("plugins", default=True, description="Enable plugin development (xml2cmake)")
 
-    depends_on('cmake@3.0:', type='build')
-    # https://github.com/visit-dav/visit/issues/3498
-    depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
-    depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
-    depends_on('glu', when='platform=linux')
-    depends_on('vtk@6.1.0~opengl2', when='@:2.999')
-    depends_on('vtk+python', when='+python @3.0:,develop')
-    depends_on('vtk~mpi', when='~mpi')
-    depends_on('vtk+qt', when='+gui')
-    depends_on('qt+gui@4.8.6:4.999', when='+gui @:2.999')
-    depends_on('qt+gui@5.10:', when='+gui @3.0:,develop')
-    depends_on('qwt', when='+gui')
-    depends_on('python@2.6:2.8', when='+python')
+    patch("spack-changes-3.1.patch", when="@3.1.0:3.2.2")
+    patch("spack-changes-3.0.1.patch", when="@3.0.1")
+    patch("nonframework-qwt.patch", when="^qt~framework platform=darwin")
+    patch("parallel-hdf5.patch", when="@3.0.1:3.2.2+hdf5+mpi")
+    patch("parallel-hdf5-3.3.patch", when="@3.3.0:+hdf5+mpi")
+    patch("cmake-findvtkh-3.3.patch", when="@3.3.0:+vtkm")
+    patch("cmake-findjpeg.patch", when="@3.1.0:3.2.2")
+    patch("cmake-findjpeg-3.3.patch", when="@3.3.0:")
+
+    # Fix pthread and librt link errors
+    patch("visit32-missing-link-libs.patch", when="@3.2")
+
+    # Exactly one of 'gui' or 'osmesa' has to be enabled
+    conflicts("+gui", when="+osmesa")
+
+    depends_on("cmake@3.14.7:", type="build")
+    depends_on("ninja", type="build")
+
+    depends_on("mpi", when="+mpi")
+
+    # VTK flavors
+    depends_on("vtk@8.1:8 +opengl2")
+    depends_on("vtk +osmesa", when="+osmesa")
+    depends_on("vtk +qt", when="+gui")
+    depends_on("vtk +python", when="+python")
+    depends_on("vtk +mpi", when="+mpi")
+    depends_on("vtk ~mpi", when="~mpi")
+
+    # Necessary VTK patches
+    depends_on("vtk", patches=[patch("vtk_compiler_visibility.patch")], when="^vtk@8")
+    depends_on(
+        "vtk",
+        patches=[patch("vtk_rendering_opengl2_x11.patch")],
+        when="~osmesa platform=linux ^vtk@8",
+    )
+    depends_on("vtk", patches=[patch("vtk_wrapping_python_x11.patch")], when="+python ^vtk@8")
+
+    depends_on("glu")
+
+    # VisIt doesn't work with later versions of qt.
+    depends_on("qt+gui+opengl@5:5.14", when="+gui")
+    depends_on("qwt", when="+gui")
+
+    # python@3.8 doesn't work with VisIt.
+    depends_on("python@3.2:3.7", when="+python")
+    extends("python", when="+python")
+
+    # VisIt uses the hdf5 1.8 api
+    # set the API version later on down in setup_build_environment
+    depends_on("hdf5@1.8:", when="+hdf5")
+    depends_on("hdf5+mpi", when="+hdf5+mpi")
+    depends_on("hdf5~mpi", when="+hdf5~mpi")
+
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
     # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
-    depends_on('silo@4.10:+shared', when='+silo')
-    depends_on('silo~mpi', when='+silo~mpi')
-    depends_on('silo+mpi', when='+silo+mpi')
-    depends_on('hdf5~mpi', when='+hdf5~mpi')
-    depends_on('hdf5+mpi', when='+hdf5+mpi')
-    depends_on('mpi', when='+mpi')
-    depends_on('adios2', when='+adios2')
+    depends_on("silo@4.10: +shared", when="+silo")
+    depends_on("silo+hdf5", when="+silo+hdf5")
+    depends_on("silo~hdf5", when="+silo~hdf5")
+    depends_on("silo+mpi", when="+silo+mpi")
+    depends_on("silo~mpi", when="+silo~mpi")
 
-    conflicts('+adios2', when='@:2.999')
-    conflicts('+hdf5', when='~gui @:2.999')
-    conflicts('+silo', when='~gui @:2.999')
+    depends_on("conduit@0.8.3:", when="+conduit")
+    depends_on("conduit+python", when="+conduit")
+    depends_on("conduit+hdf5", when="+conduit+hdf5")
+    depends_on("conduit~hdf5", when="+conduit~hdf5")
+    depends_on("conduit+mpi", when="+conduit+mpi")
+    depends_on("conduit~mpi", when="+conduit~mpi")
 
-    root_cmakelists_dir = 'src'
+    depends_on("mfem@4.4:", when="+mfem")
+    depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
+    depends_on("libfms@0.2:", when="+mfem")
 
-    @when('@3.0.0:3.999,develop')
+    depends_on("adios2@2.6:", when="+adios2")
+    depends_on("adios2+hdf5", when="+adios2+hdf5")
+    depends_on("adios2~hdf5", when="+adios2~hdf5")
+    depends_on("adios2+mpi", when="+adios2+mpi")
+    depends_on("adios2~mpi", when="+adios2~mpi")
+    depends_on("adios2+python", when="+adios2+python")
+    depends_on("adios2~python", when="+adios2~python")
+
+    # vtk-m also requires vtk-h. Disabling cuda since that requires
+    # later versions of vtk-m and vtk-h. The patch prevents vtk-m from
+    # throwing an exception whenever any vtk-m operations are performed.
+    depends_on("vtk-m@1.7.0+testlib~cuda", when="+vtkm")
+    depends_on("vtk-h@0.8.1+shared~mpi~openmp~cuda", when="+vtkm")
+
+    depends_on("vtk-m", patches=[patch("vtk-m_transport_tag_topology_field_in.patch")])
+
+    depends_on("zlib")
+
+    @when("@3:,develop")
     def patch(self):
         # Some of VTK's targets don't create explicit libraries, so there is no
         # 'vtktiff'. Instead, replace with the library variable defined from
         # VTK's module flies (e.g. lib/cmake/vtk-8.1/Modules/vtktiff.cmake)
-        for filename in find('src', 'CMakeLists.txt'):
-            filter_file(r'\bvtk(tiff|jpeg|png)', r'${vtk\1_LIBRARIES}',
-                        filename)
+        for filename in find("src", "CMakeLists.txt"):
+            filter_file(r"\bvtk(tiff|jpeg|png)", r"${vtk\1_LIBRARIES}", filename)
+
+    def flag_handler(self, name, flags):
+        if name in ("cflags", "cxxflags"):
+            # NOTE: This is necessary in order to allow VisIt to compile a couple
+            # of lines of code with 'const char*' to/from 'char*' conversions.
+            if "@3:%gcc" in self.spec:
+                flags.append("-fpermissive")
+
+            # VisIt still uses the hdf5 1.8 api
+            if "+hdf5" in self.spec and "@1.10:" in self.spec["hdf5"]:
+                flags.append("-DH5_USE_18_API")
+
+        elif name == "ldlibs":
+            # Python support is missing a pthread dependency
+            if "@3 +python" in self.spec:
+                flags.append("-lpthread")
+
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
 
-        cxx_flags = [self.compiler.cxx_pic_flag]
-        cc_flags = [self.compiler.cc_pic_flag]
-
-        # NOTE: This is necessary in order to allow VisIt to compile a couple
-        # of lines of code with 'const char*' to/from 'char*' conversions.
-        if spec.satisfies('@3:%gcc'):
-            cxx_flags.append('-fpermissive')
-            cc_flags.append('-fpermissive')
-
         args = [
-            '-DVTK_MAJOR_VERSION=' + str(spec['vtk'].version[0]),
-            '-DVTK_MINOR_VERSION=' + str(spec['vtk'].version[1]),
-            '-DVISIT_VTK_DIR:PATH=' + spec['vtk'].prefix,
-            '-DVISIT_ZLIB_DIR:PATH=' + spec['zlib'].prefix,
-            '-DVISIT_USE_GLEW=OFF',
-            '-DCMAKE_CXX_FLAGS=' + ' '.join(cxx_flags),
-            '-DCMAKE_C_FLAGS=' + ' '.join(cc_flags),
+            self.define("CMAKE_SKIP_COMPATIBILITY_TESTS", True),
+            self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
+            self.define("VTK_MAJOR_VERSION", spec["vtk"].version[0]),
+            self.define("VTK_MINOR_VERSION", spec["vtk"].version[1]),
+            self.define("VISIT_VTK_DIR", spec["vtk"].prefix),
+            self.define("VISIT_ZLIB_DIR", spec["zlib"].prefix),
+            self.define("VISIT_JPEG_DIR", spec["jpeg"].prefix),
+            self.define("VISIT_USE_GLEW", False),
+            self.define("VISIT_CONFIG_SITE", "NONE"),
         ]
 
         # Provide the plugin compilation environment so as to extend VisIt
-        args.append('-DVISIT_INSTALL_THIRD_PARTY=ON')
+        args.append(self.define_from_variant("VISIT_INSTALL_THIRD_PARTY", "plugins"))
 
-        if spec.satisfies('@3.1:'):
-            args.append('-DFIXUP_OSX=OFF')
+        if "@3.1: platform=darwin" in spec:
+            args.append(self.define("FIXUP_OSX", False))
 
-        if '+python' in spec:
-            args.append('-DVISIT_PYTHON_SCRIPTING=ON')
-            # keep this off, we have an openssl + python linking issue
-            # that appears in spack
-            args.append('-DVISIT_PYTHON_FILTERS=OFF')
-            args.append('-DPYTHON_DIR:PATH={0}'.format(spec['python'].home))
+        if "+python" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_PYTHON_FILTERS", True),
+                    self.define("VISIT_PYTHON_SCRIPTING", True),
+                    self.define("PYTHON_DIR", spec["python"].home),
+                ]
+            )
         else:
-            args.append('-DVISIT_PYTHON_SCRIPTING=OFF')
-            # keep this off, we have an openssl + python linking issue
-            # that appears in spack
-            args.append('-DVISIT_PYTHON_FILTERS=OFF')
+            args.extend(
+                [
+                    self.define("VISIT_PYTHON_FILTERS", False),
+                    self.define("VISIT_PYTHON_SCRIPTING", False),
+                ]
+            )
 
-        if '+gui' in spec:
-            qt_bin = spec['qt'].prefix.bin
-            args.extend([
-                '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake'.format(qt_bin),
-                '-DVISIT_QT_DIR:PATH=' + spec['qt'].prefix,
-                '-DVISIT_QWT_DIR:PATH=' + spec['qwt'].prefix
-            ])
+        if "+gui" in spec:
+            qt_bin = spec["qt"].prefix.bin
+            qmake_exe = os.path.join(qt_bin, "qmake")
+            args.extend(
+                [
+                    self.define("VISIT_SERVER_COMPONENTS_ONLY", False),
+                    self.define("VISIT_ENGINE_ONLY", False),
+                    self.define("VISIT_LOC_QMAKE_EXE", qmake_exe),
+                    self.define("VISIT_QT_DIR", spec["qt"].prefix),
+                    self.define("VISIT_QWT_DIR", spec["qwt"].prefix),
+                ]
+            )
         else:
-            args.append('-DVISIT_SERVER_COMPONENTS_ONLY=ON')
-            args.append('-DVISIT_ENGINE_ONLY=ON')
+            args.extend(
+                [
+                    self.define("VISIT_SERVER_COMPONENTS_ONLY", True),
+                    self.define("VISIT_ENGINE_ONLY", True),
+                ]
+            )
 
-        if '+hdf5' in spec:
-            args.append(
-                '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix))
-            if '+mpi' in spec:
-                args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
-                    spec['hdf5'].prefix))
+        # OpenGL args
+        args.extend(
+            [
+                self.define("VISIT_USE_X", "glx" in spec),
+                self.define("VISIT_MESAGL_DIR", "IGNORE"),
+                self.define("VISIT_OPENGL_DIR", "IGNORE"),
+                self.define("VISIT_OSMESA_DIR", "IGNORE"),
+                self.define("OpenGL_GL_PREFERENCE", "LEGACY"),
+                self.define("OPENGL_INCLUDE_DIR", spec["gl"].headers.directories[0]),
+                self.define("OPENGL_glu_LIBRARY", spec["glu"].libs[0]),
+            ]
+        )
+        if "+osmesa" in spec:
+            args.extend(
+                [
+                    self.define("HAVE_OSMESA", True),
+                    self.define("OSMESA_LIBRARIES", spec["osmesa"].libs[0]),
+                    self.define("OPENGL_gl_LIBRARY", spec["osmesa"].libs[0]),
+                ]
+            )
+        else:
+            args.append(self.define("OPENGL_gl_LIBRARY", spec["gl"].libs[0]))
 
-        if '+silo' in spec:
-            args.append(
-                '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix))
+        if "+hdf5" in spec:
+            args.append(self.define("HDF5_DIR", spec["hdf5"].prefix))
+            if "+mpi" in spec and "+mpi" in spec["hdf5"]:
+                args.append(self.define("VISIT_HDF5_MPI_DIR", spec["hdf5"].prefix))
 
-        if '+mpi' in spec:
-            args.append('-DVISIT_PARALLEL=ON')
-            args.append('-DVISIT_C_COMPILER={0}'.format(spec['mpi'].mpicc))
-            args.append('-DVISIT_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
-            args.append('-DVISIT_MPI_COMPILER={0}'.format(spec['mpi'].mpicxx))
+        if "+silo" in spec:
+            args.append(self.define("VISIT_SILO_DIR", spec["silo"].prefix))
+
+        if "+conduit" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_CONDUIT_DIR", spec["conduit"].prefix),
+                    self.define("CONDUIT_VERSION", spec["conduit"].version),
+                ]
+            )
+
+        if "+mfem" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_MFEM_DIR", spec["mfem"].prefix),
+                    self.define("VISIT_FMS_DIR", spec["libfms"].prefix),
+                    self.define("VISIT_MFEM_INCDEP", "CONDUIT_INCLUDE_DIR;FMS_INCLUDE_DIR"),
+                ]
+            )
+
+        if "+mpi" in spec:
+            args.extend(
+                [
+                    self.define("VISIT_PARALLEL", True),
+                    self.define("VISIT_MPI_COMPILER", spec["mpi"].mpicxx),
+                ]
+            )
+        else:
+            args.append(self.define("VISIT_PARALLEL", False))
+
+        if "+vtkm" in spec:
+            args.append(self.define("VISIT_VTKM_DIR", spec["vtk-m"].prefix))
+            args.append(self.define("VISIT_VTKH_DIR", spec["vtk-h"].prefix))
 
         return args
+
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=executables#making-a-package-discoverable-with-spack-external-find
+    # Here we are only able to determine the latest version
+    # despite VisIt may have multiple versions
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("-version", output=str, error=str)
+        match = re.search(r"\s*(\d[\d\.]+)\.", output)
+        return match.group(1) if match else None

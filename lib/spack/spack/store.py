@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,30 +16,25 @@ Spack.  The simplest store could just contain prefixes named by DAG hash,
 but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
-The directory layout is currently hard-coded to be a YAMLDirectoryLayout,
-so called because it stores build metadata within each prefix, in
-`spec.yaml` files. In future versions of Spack we may consider allowing
-install trees to define their own layouts with some per-tree
-configuration.
-
 """
 import contextlib
 import os
 import re
+
 import six
 
 import llnl.util.lang
 import llnl.util.tty as tty
 
-import spack.paths
 import spack.config
-import spack.util.path
 import spack.database
 import spack.directory_layout
-
+import spack.error
+import spack.paths
+import spack.util.path
 
 #: default installation root, relative to the Spack install path
-default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
+default_install_tree_root = os.path.join(spack.paths.opt_path, "spack")
 
 
 def parse_install_tree(config_dict):
@@ -71,7 +66,7 @@ def parse_install_tree(config_dict):
     #     projections:
     #       all: '{name}-{version}'
 
-    install_tree = config_dict.get('install_tree', {})
+    install_tree = config_dict.get("install_tree", {})
 
     padded_length = False
     if isinstance(install_tree, six.string_types):
@@ -80,38 +75,39 @@ def parse_install_tree(config_dict):
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
-            'install_path_scheme',
-            spack.directory_layout.default_projections['all'])
+            "install_path_scheme", spack.directory_layout.default_projections["all"]
+        )
 
-        projections = {'all': all_projection}
+        projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get('root', default_install_tree_root)
+        unpadded_root = install_tree.get("root", default_install_tree_root)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
-        padded_length = install_tree.get('padded_length', False)
+        padded_length = install_tree.get("padded_length", False)
         if padded_length is True:
             padded_length = spack.util.path.get_system_path_max()
             padded_length -= spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
 
-        projections = install_tree.get(
-            'projections', spack.directory_layout.default_projections)
+        projections = install_tree.get("projections", spack.directory_layout.default_projections)
 
-        path_scheme = config_dict.get('install_path_scheme', None)
+        path_scheme = config_dict.get("install_path_scheme", None)
         if path_scheme:
-            tty.warn("Deprecated config value 'install_path_scheme' ignored"
-                     " when using new install_tree syntax")
+            tty.warn(
+                "Deprecated config value 'install_path_scheme' ignored"
+                " when using new install_tree syntax"
+            )
 
     # Handle backwards compatibility for padding
-    old_pad = re.search(r'\$padding(:\d+)?|\${padding(:\d+)?}', unpadded_root)
+    old_pad = re.search(r"\$padding(:\d+)?|\${padding(:\d+)?}", unpadded_root)
     if old_pad:
         if padded_length:
             msg = "Ignoring deprecated padding option in install_tree root "
             msg += "because new syntax padding is present."
             tty.warn(msg)
         else:
-            unpadded_root = unpadded_root.replace(old_pad.group(0), '')
+            unpadded_root = unpadded_root.replace(old_pad.group(0), "")
             if old_pad.group(1) or old_pad.group(2):
-                length_group = 2 if '{' in old_pad.group(0) else 1
+                length_group = 2 if "{" in old_pad.group(0) else 1
                 padded_length = int(old_pad.group(length_group)[1:])
             else:
                 padded_length = spack.util.path.get_system_path_max()
@@ -153,17 +149,16 @@ class Store(object):
         hash_length (int): length of the hashes used in the directory
             layout; spec hash suffixes will be truncated to this length
     """
-    def __init__(
-            self, root, unpadded_root=None, projections=None, hash_length=None
-    ):
+
+    def __init__(self, root, unpadded_root=None, projections=None, hash_length=None):
         self.root = root
         self.unpadded_root = unpadded_root or root
         self.projections = projections
         self.hash_length = hash_length
-        self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
-        self.layout = spack.directory_layout.YamlDirectoryLayout(
-            root, projections=projections, hash_length=hash_length)
+        self.db = spack.database.Database(root, upstream_dbs=retrieve_upstream_dbs())
+        self.layout = spack.directory_layout.DirectoryLayout(
+            root, projections=projections, hash_length=hash_length
+        )
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
@@ -173,9 +168,7 @@ class Store(object):
         """Return a pickle-able object that can be used to reconstruct
         a store.
         """
-        return (
-            self.root, self.unpadded_root, self.projections, self.hash_length
-        )
+        return (self.root, self.unpadded_root, self.projections, self.hash_length)
 
     @staticmethod
     def deserialize(token):
@@ -193,23 +186,27 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    config_dict = spack.config.get('config')
+    import spack.bootstrap
+
+    config_dict = spack.config.get("config")
     root, unpadded_root, projections = parse_install_tree(config_dict)
-    hash_length = spack.config.get('config:install_hash_length')
+    hash_length = spack.config.get("config:install_hash_length")
 
     # Check that the user is not trying to install software into the store
     # reserved by Spack to bootstrap its own dependencies, since this would
     # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
     # user installed software)
-    if spack.paths.user_bootstrap_store == root:
-        msg = ('please change the install tree root "{0}" in your '
-               'configuration [path reserved for Spack internal use]')
+    enable_bootstrap = spack.config.get("bootstrap:enable", True)
+    if enable_bootstrap and spack.bootstrap.store_path() == root:
+        msg = (
+            'please change the install tree root "{0}" in your '
+            "configuration [path reserved for Spack internal use]"
+        )
         raise ValueError(msg.format(root))
 
-    return Store(root=root,
-                 unpadded_root=unpadded_root,
-                 projections=projections,
-                 hash_length=hash_length)
+    return Store(
+        root=root, unpadded_root=unpadded_root, projections=projections, hash_length=hash_length
+    )
 
 
 #: Singleton store instance
@@ -240,40 +237,119 @@ layout = llnl.util.lang.LazyReference(_store_layout)
 
 
 def reinitialize():
-    """Restore globals to the same state they would have at start-up"""
+    """Restore globals to the same state they would have at start-up. Return a token
+    containing the state of the store before reinitialization.
+    """
     global store
     global root, unpadded_root, db, layout
 
-    store = llnl.util.lang.Singleton(_store)
+    token = store, root, unpadded_root, db, layout
 
+    store = llnl.util.lang.Singleton(_store)
     root = llnl.util.lang.LazyReference(_store_root)
     unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
     db = llnl.util.lang.LazyReference(_store_db)
     layout = llnl.util.lang.LazyReference(_store_layout)
 
+    return token
+
+
+def restore(token):
+    """Restore the environment from a token returned by reinitialize"""
+    global store
+    global root, unpadded_root, db, layout
+    store, root, unpadded_root, db, layout = token
+
 
 def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get('upstreams', {})
+    other_spack_instances = spack.config.get("upstreams", {})
 
     install_roots = []
     for install_properties in other_spack_instances.values():
-        install_roots.append(install_properties['install_tree'])
+        install_roots.append(install_properties["install_tree"])
 
     return _construct_upstream_dbs_from_install_roots(install_roots)
 
 
-def _construct_upstream_dbs_from_install_roots(
-        install_roots, _test=False):
+def _construct_upstream_dbs_from_install_roots(install_roots, _test=False):
     accumulated_upstream_dbs = []
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs)
+            install_root, is_upstream=True, upstream_dbs=upstream_dbs
+        )
         next_db._fail_when_missing_deps = _test
         next_db._read()
         accumulated_upstream_dbs.insert(0, next_db)
 
     return accumulated_upstream_dbs
+
+
+def find(constraints, multiple=False, query_fn=None, **kwargs):
+    """Return a list of specs matching the constraints passed as inputs.
+
+    At least one spec per constraint must match, otherwise the function
+    will error with an appropriate message.
+
+    By default, this function queries the current store, but a custom query
+    function can be passed to hit any other source of concretized specs
+    (e.g. a binary cache).
+
+    The query function must accept a spec as its first argument.
+
+    Args:
+        constraints (List[spack.spec.Spec]): specs to be matched against
+            installed packages
+        multiple (bool): if True multiple matches per constraint are admitted
+        query_fn (Callable): query function to get matching specs. By default,
+            ``spack.store.db.query``
+        **kwargs: keyword arguments forwarded to the query function
+
+    Return:
+        List of matching specs
+    """
+    # Normalize input to list of specs
+    if isinstance(constraints, six.string_types):
+        constraints = [spack.spec.Spec(constraints)]
+
+    matching_specs, errors = [], []
+    query_fn = query_fn or spack.store.db.query
+    for spec in constraints:
+        current_matches = query_fn(spec, **kwargs)
+
+        # For each spec provided, make sure it refers to only one package.
+        if not multiple and len(current_matches) > 1:
+            msg_fmt = '"{0}" matches multiple packages: [{1}]'
+            errors.append(msg_fmt.format(spec, ", ".join([m.format() for m in current_matches])))
+
+        # No installed package matches the query
+        if len(current_matches) == 0 and spec is not any:
+            msg_fmt = '"{0}" does not match any installed packages'
+            errors.append(msg_fmt.format(spec))
+
+        matching_specs.extend(current_matches)
+
+    if errors:
+        raise MatchError(
+            message="errors occurred when looking for specs in the store",
+            long_message="\n".join(errors),
+        )
+
+    return matching_specs
+
+
+def specfile_matches(filename, **kwargs):
+    """Same as find but reads the query from a spec file.
+
+    Args:
+        filename (str): YAML or JSON file from which to read the query.
+        **kwargs: keyword arguments forwarded to "find"
+
+    Return:
+        List of matches
+    """
+    query = [spack.spec.Spec.from_specfile(filename)]
+    return spack.store.find(query, **kwargs)
 
 
 @contextlib.contextmanager
@@ -299,9 +375,14 @@ def use_store(store_or_path):
     db, layout = store.db, store.layout
     root, unpadded_root = store.root, store.unpadded_root
 
-    yield temporary_store
+    try:
+        yield temporary_store
+    finally:
+        # Restore the original store
+        store = original_store
+        db, layout = original_store.db, original_store.layout
+        root, unpadded_root = original_store.root, original_store.unpadded_root
 
-    # Restore the original store
-    store = original_store
-    db, layout = original_store.db, original_store.layout
-    root, unpadded_root = original_store.root, original_store.unpadded_root
+
+class MatchError(spack.error.SpackError):
+    """Error occurring when trying to match specs in store against a constraint"""

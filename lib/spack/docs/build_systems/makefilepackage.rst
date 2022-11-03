@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _makefilepackage:
 
----------------
-MakefilePackage
----------------
+--------
+Makefile
+--------
 
 The most primitive build system a package can use is a plain Makefile.
 Makefiles are simple to write for small projects, but they usually
@@ -18,7 +18,7 @@ variables.
 Phases
 ^^^^^^
 
-The ``MakefilePackage`` base class comes with 3 phases:
+The ``MakefileBuilder`` and ``MakefilePackage`` base classes come with 3 phases:
 
 #. ``edit`` - edit the Makefile
 #. ``build`` - build the project
@@ -147,8 +147,10 @@ and a ``filter_file`` method to help with this. For example:
    def edit(self, spec, prefix):
        makefile = FileFilter('Makefile')
 
-       makefile.filter('CC = gcc',  'CC = cc')
-       makefile.filter('CXX = g++', 'CC = c++')
+       makefile.filter(r'^\s*CC\s*=.*',  'CC = '  + spack_cc)
+       makefile.filter(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx)
+       makefile.filter(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77)
+       makefile.filter(r'^\s*FC\s*=.*',  'FC = '  + spack_fc)
 
 
 `stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_

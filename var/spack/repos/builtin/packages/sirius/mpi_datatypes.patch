@@ -1,0 +1,22 @@
+diff --git a/src/mpi/communicator.hpp b/src/mpi/communicator.hpp
+index 709e56cfc..a05375bda 100644
+--- a/src/mpi/communicator.hpp
++++ b/src/mpi/communicator.hpp
+@@ -111,7 +111,7 @@ struct mpi_type_wrapper<std::complex<double>>
+ {
+     static MPI_Datatype kind()
+     {
+-        return MPI_CXX_DOUBLE_COMPLEX;
++        return MPI_C_DOUBLE_COMPLEX;
+     }
+ };
+ 
+@@ -174,7 +174,7 @@ struct mpi_type_wrapper<bool>
+ {
+     static MPI_Datatype kind()
+     {
+-        return MPI_CXX_BOOL;
++        return MPI_C_BOOL;
+     }
+ };
+ 

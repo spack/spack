@@ -1,0 +1,25 @@
+From 9b7edb39207cb040093ffdd7d99c9d6e56807c95 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Wed, 21 Jul 2021 12:00:52 +0200
+Subject: [PATCH] C to C++ includes, fix build issue with gcc 9
+
+---
+ test/ctrl/test_kernel.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/test/ctrl/test_kernel.h b/test/ctrl/test_kernel.h
+index 95da162..596d029 100644
+--- a/test/ctrl/test_kernel.h
++++ b/test/ctrl/test_kernel.h
+@@ -23,8 +23,9 @@ THE SOFTWARE.
+ #ifndef TEST_CTRL_TEST_KERNEL_H_
+ #define TEST_CTRL_TEST_KERNEL_H_
+ 
+-#include <string.h>
+-#include <stdint.h>
++#include <string>
++#include <cstdlib>
++#include <cstdint>
+ #include <map>
+ 
+ // Class implements kernel test

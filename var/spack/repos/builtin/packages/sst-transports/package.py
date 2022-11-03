@@ -1,21 +1,21 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class SstTransports(CMakePackage):
     """Provides transports like uGNI and verbs
-       that run in the simulator"""
+    that run in the simulator"""
 
     homepage = "https://github.com/sstsimulator"
     git = "https://github.com/jjwilke/sst-transports.git"
 
-    maintainers = ['jjwilke']
+    maintainers = ["jjwilke"]
 
-    version('master',  branch='master')
+    version("master", branch="master")
 
     depends_on("sst-macro")
 

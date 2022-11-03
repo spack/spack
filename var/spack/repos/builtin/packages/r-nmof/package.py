@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RNmof(RPackage):
-    """Numerical Methods and Optimization in Finance
+    """Numerical Methods and Optimization in Finance.
 
     Functions, examples and data from the book "Numerical Methods and
     Optimization in Finance" by M. Gilli, D. Maringer and E. Schumann (2011),
@@ -17,11 +17,12 @@ class RNmof(RPackage):
     financial instruments, such as bonds and options, and functions that help
     with stochastic simulations."""
 
-    homepage = "http://nmof.net/"
-    url      = "https://cloud.r-project.org/src/contrib/NMOF_1.6-0.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/NMOF"
+    cran = "NMOF"
 
-    version('2.2-2', sha256='e64472f89023f0d779a35df753747d750174ce89644a9142312a1d2dc6f24642')
-    version('1.6-0', sha256='5484cd43c28aaf23d560c2dde8bcd8dd440a205d2214eb50e02fe0bb42ec2755')
+    version("2.7-0", sha256="11eeda730262418f22d24d8f72d363a05ac4c3c1130b88f4eafb1b8d81c83160")
+    version("2.5-1", sha256="0468ba72364cbdf90781824dfb1a60324203e2248d93cb6f1ffd6eb0d271f390")
+    version("2.5-0", sha256="f44914c86d86c62f74cbc026179a694f0b3c2e3341b076acaf5de01de194a3c7")
+    version("2.2-2", sha256="e64472f89023f0d779a35df753747d750174ce89644a9142312a1d2dc6f24642")
+    version("1.6-0", sha256="5484cd43c28aaf23d560c2dde8bcd8dd440a205d2214eb50e02fe0bb42ec2755")
 
-    depends_on('r@2.14:', type=('build', 'run'))
+    depends_on("r@2.14:", type=("build", "run"))

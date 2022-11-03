@@ -1,22 +1,24 @@
 packages:
   all:
     providers:
-      mpi: [openmpi, mpich]
+      mpi: [openmpi, mpich, zmpi]
+      lapack: [openblas-with-lapack]
+      blas: [openblas]
   externaltool:
     buildable: False
     externals:
-    - spec: externaltool@1.0%gcc@4.5.0
+    - spec: externaltool@1.0%gcc@10.2.1
       prefix: /path/to/external_tool
-    - spec: externaltool@0.9%gcc@4.5.0
+    - spec: externaltool@0.9%gcc@10.2.1
       prefix: /usr
-    - spec: externaltool@0_8%gcc@4.5.0
+    - spec: externaltool@0_8%gcc@10.2.1
       prefix: /usr
   externalvirtual:
     buildable: False
     externals:
-    - spec: externalvirtual@2.0%clang@3.3
+    - spec: externalvirtual@2.0%clang@12.0.0
       prefix: /path/to/external_virtual_clang
-    - spec: externalvirtual@1.0%gcc@4.5.0
+    - spec: externalvirtual@1.0%gcc@10.2.1
       prefix: /path/to/external_virtual_gcc
   externalmodule:
     buildable: False
@@ -46,3 +48,5 @@ packages:
     externals:
       - spec: external-non-default-variant@3.8.7~foo~bar
         prefix: /usr
+  version-test-dependency-preferred:
+    version: ['5.2.5']

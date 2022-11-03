@@ -1,0 +1,39 @@
+--- a/tcltk/BUILD_DIR/configure	2021-12-20 12:05:17.000000000 -0600
++++ b/tcltk/BUILD_DIR/configure	2022-03-31 17:53:13.981092533 -0500
+@@ -6816,36 +6816,6 @@
+       x_includes="/usr/local/include"
+     fi
+   fi
+-  # AC_PATH_X checks for Xlib.h, but somehow a missing X11/Xlib.h can
+-  # still get past it and cause problems later in the build (tk.h), so
+-  # try an additional test here just to make sure that it's installed:
+-  if test "x$x_includes" = "x"; then
+-    as_fn_error $? "No X11 include directory found. Please specify location using --x-includes option." "$LINENO" 5
+-  else
+-    xlib_h="$x_includes/X11/Xlib.h"
+-    xintrinsic_h="$x_includes/X11/Intrinsic.h"
+-    xstringdefs_h="$x_includes/X11/StringDefs.h"
+-    if test -f $xlib_h; then
+-      if test -f $xintrinsic_h; then
+-        if test -f $xstringdefs_h; then
+-          XINCLUDES="-I$x_includes"
+-          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Found $xlib_h" >&5
+-printf "%s\n" "Found $xlib_h" >&6; }
+-          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: Using $x_includes for X11 header files" >&5
+-printf "%s\n" "Using $x_includes for X11 header files" >&6; }
+-        else
+-          as_fn_error $? "Required header X11/StringDefs.h not found in $x_includes" "$LINENO" 5
+-          as_fn_error $? "X11 Development package is required in order to build HEASOFT" "$LINENO" 5
+-        fi
+-      else
+-        as_fn_error $? "Required header X11/Intrinsic.h not found in $x_includes" "$LINENO" 5
+-        as_fn_error $? "X11 Development package is required in order to build HEASOFT" "$LINENO" 5
+-      fi
+-    else
+-      as_fn_error $? "Required header X11/Xlib.h not found in $x_includes" "$LINENO" 5
+-      as_fn_error $? "X11 Development package is required in order to build HEASOFT" "$LINENO" 5
+-    fi
+-  fi
+ 
+   # X11 libraries: Having a -L path for libX11 is not always necessary,
+   # but when passing a value for x_includes to external packages (e.g.

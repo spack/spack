@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPypeflow(PythonPackage):
@@ -11,9 +11,9 @@ class PyPypeflow(PythonPackage):
     library written in Python."""
 
     homepage = "https://github.com/PacificBiosciences/pypeFLOW"
-    git      = "https://github.com/PacificBiosciences/pypeFLOW.git"
+    git = "https://github.com/PacificBiosciences/pypeFLOW.git"
 
-    version('2017-05-04', commit='f23a1b290876bbdf130611000934ae4247158073')
+    version("2017-05-04", commit="f23a1b290876bbdf130611000934ae4247158073")
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-networkx@1.7:1.11', type=['build', 'run'])
+    depends_on("py-setuptools", type="build")
+    depends_on("py-networkx@1.7:1.11", type=["build", "run"])

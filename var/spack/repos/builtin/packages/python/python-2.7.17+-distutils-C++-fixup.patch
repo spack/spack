@@ -1,0 +1,120 @@
+This patch fixes a regression intoduced by python-2.7.17+-distutils-C++.patch
+and updates the distutils testsuite to pass with 2.7.16:2.7.18:
+
+This how the test suite would have to change when the bug is not fixed:
+
+         self.assertEqual(comp.exes['compiler'],
+-                         'env_cc --sc-cflags --env-cflags --env-cppflags')
++                         'env_cc  --env-cflags --env-cppflags')
+         self.assertEqual(comp.exes['compiler_so'],
+-                         ('env_cc --sc-cflags '
++                         ('env_cc  '
+                           '--env-cflags ''--env-cppflags --sc-ccshared'))
+         self.assertEqual(comp.exes['compiler'],
+-                         'sc_cc --sc-cflags')
++                         'sc_cc ')
+         self.assertEqual(comp.exes['compiler_so'],
+-                         'sc_cc --sc-cflags --sc-ccshared')
++                         'sc_cc  --sc-ccshared')
+         self.assertEqual(comp.exes['compiler_cxx'],
+-                         'sc_cxx')
++                         'sc_cxx ')
+
+As shown, it removes the default, builtin cflags when calling the pure
+C compiler CC, which is wrong, introducing a regression.
+
+The cause is that the patch removes reading the python distutils cflags
+value and sets both empty.
+
+-        (cc, cxx, cflags, ccshared, ldshared, so_ext, ar, ar_flags) = \
+-            get_config_vars('CC', 'CXX', 'CFLAGS',
+-                            'CCSHARED', 'LDSHARED', 'SO', 'AR',
+-                            'ARFLAGS')
++        (cc, cxx, ccshared, ldshared, ldcxxshared, so_ext, ar, ar_flags) = \
++            get_config_vars('CC', 'CXX', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED',
++                            'SO', 'AR', 'ARFLAGS')
++        cflags = ''
++        cxxflags = ''
+
+The fix is obvious when comparing it with python-3.7.4+-distutils-C++.patch
+
+-        (cc, cxx, cflags, ccshared, ldshared, shlib_suffix, ar, ar_flags) = \
+-            get_config_vars('CC', 'CXX', 'CFLAGS',
+-                            'CCSHARED', 'LDSHARED', 'SHLIB_SUFFIX', 'AR', 'ARFLAGS')
++        (cc, cxx, cflags, ccshared, ldshared, ldcxxshared, shlib_suffix, ar, ar_flags) = \
++            get_config_vars('CC', 'CXX', 'CFLAGS', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED',
++                            'SHLIB_SUFFIX', 'AR', 'ARFLAGS')
++
++        cxxflags = cflags
+
+When handling CFLAGS the same as in python-3.7.4+-distutils-C++.patch,
+the issue is fixed.
+
+--- a/Lib/distutils/sysconfig.py
++++ b/Lib/distutils/sysconfig.py
+@@ -181,12 +181,11 @@
+                 _osx_support.customize_compiler(_config_vars)
+                 _config_vars['CUSTOMIZED_OSX_COMPILER'] = 'True'
+ 
+-        (cc, cxx, ccshared, ldshared, ldcxxshared, so_ext, ar, ar_flags) = \
+-            get_config_vars('CC', 'CXX', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED',
++        (cc, cxx, cflags, ccshared, ldshared, ldcxxshared, so_ext, ar, ar_flags) = \
++            get_config_vars('CC', 'CXX', 'CFLAGS', 'CCSHARED', 'LDSHARED', 'LDCXXSHARED',
+                             'SO', 'AR', 'ARFLAGS')
+ 
+-        cflags = ''
+-        cxxflags = ''
++        cxxflags = cflags
+ 
+         if 'CC' in os.environ:
+             newcc = os.environ['CC']
+--- a/Lib/distutils/tests/test_sysconfig.py
++++ b/Lib/distutils/tests/test_sysconfig.py
+@@ -65,6 +65,7 @@
+             'CXX': 'sc_cxx',
+             'ARFLAGS': '--sc-arflags',
+             'CFLAGS': '--sc-cflags',
++            'CPPFLAGS': '--sc-cppflags',
+             'CCSHARED': '--sc-ccshared',
+             'LDSHARED': 'sc_ldshared',
+             'SO': 'sc_shutil_suffix',
+@@ -94,11 +95,12 @@
+         os.environ['AR'] = 'env_ar'
+         os.environ['CC'] = 'env_cc'
+         os.environ['CPP'] = 'env_cpp'
+-        os.environ['CXX'] = 'env_cxx --env-cxx-flags'
++        os.environ['CXX'] = 'env_cxx'
+         os.environ['LDSHARED'] = 'env_ldshared'
+         os.environ['LDFLAGS'] = '--env-ldflags'
+         os.environ['ARFLAGS'] = '--env-arflags'
+         os.environ['CFLAGS'] = '--env-cflags'
++        os.environ['CXXFLAGS'] = '--env-cxxflags'
+         os.environ['CPPFLAGS'] = '--env-cppflags'
+ 
+         comp = self.customize_compiler()
+@@ -112,7 +114,7 @@
+                          ('env_cc --sc-cflags '
+                           '--env-cflags ''--env-cppflags --sc-ccshared'))
+         self.assertEqual(comp.exes['compiler_cxx'],
+-                         'env_cxx --env-cxx-flags')
++                         'env_cxx --sc-cflags --env-cxxflags --env-cppflags')
+         self.assertEqual(comp.exes['linker_exe'],
+                          'env_cc')
+         self.assertEqual(comp.exes['linker_so'],
+@@ -128,6 +130,7 @@
+         del os.environ['LDFLAGS']
+         del os.environ['ARFLAGS']
+         del os.environ['CFLAGS']
++        del os.environ['CXXFLAGS']
+         del os.environ['CPPFLAGS']
+ 
+         comp = self.customize_compiler()
+@@ -140,7 +143,7 @@
+         self.assertEqual(comp.exes['compiler_so'],
+                          'sc_cc --sc-cflags --sc-ccshared')
+         self.assertEqual(comp.exes['compiler_cxx'],
+-                         'sc_cxx')
++                         'sc_cxx --sc-cflags')
+         self.assertEqual(comp.exes['linker_exe'],
+                          'sc_cc')
+         self.assertEqual(comp.exes['linker_so'],

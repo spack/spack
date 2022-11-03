@@ -1,0 +1,98 @@
+diff -ru a/configure b/configure
+--- a/configure	2021-11-15 13:13:34.000000000 -0600
++++ b/configure	2021-12-07 15:08:23.118115118 -0600
+@@ -3673,43 +3673,15 @@
+         with_hdf5="no"
+         with_hdf5_fortran="no"
+     else
+-                HDF5_SHOW=$(eval $H5CC -show)
+ 
+-                HDF5_CC=$(eval $H5CC -show | $AWK '{print $1}')
+-        if test "$HDF5_CC" = "ccache"; then
+-            HDF5_CC=$(eval $H5CC -show | $AWK '{print $2}')
+-        fi
+-
+-
+-                HDF5_VERSION=$(eval $H5CC -showconfig | $GREP 'HDF5 Version:' \
+-            | $AWK '{print $3}')
++                HDF5_VERSION=$(eval pkg-config --modversion hdf5)
+         HDF5_MAJOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. '{print $1}')
+         HDF5_MINOR_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $2'})
+         HDF5_REVISION_VERSION=$(echo $HDF5_VERSION | $AWK -F \. {'print $3'})
+ 
+-                                                                                HDF5_tmp_flags=$(eval $H5CC -showconfig \
+-            | $GREP 'FLAGS\|Extra libraries:' \
+-            | $AWK -F: '{printf("%s "), $2}' )
+-
+-                HDF5_tmp_inst=$(eval $H5CC -showconfig \
+-            | $GREP 'Installation point:' \
+-            | $AWK '{print $NF}' )
+-
+-                HDF5_CPPFLAGS="-I${HDF5_tmp_inst}/include"
+-
+-                for arg in $HDF5_SHOW $HDF5_tmp_flags ; do
+-          case "$arg" in
+-            -I*) echo $HDF5_CPPFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+-                  || HDF5_CPPFLAGS="$arg $HDF5_CPPFLAGS"
+-              ;;
+-            -L*) echo $HDF5_LDFLAGS | $GREP -e "$arg" 2>&1 >/dev/null \
+-                  || HDF5_LDFLAGS="$arg $HDF5_LDFLAGS"
+-              ;;
+-            -l*) echo $HDF5_LIBS | $GREP -e "$arg" 2>&1 >/dev/null \
+-                  || HDF5_LIBS="$arg $HDF5_LIBS"
+-              ;;
+-          esac
+-        done
++
++                HDF5_CPPFLAGS=$(eval pkg-config --cflags hdf5)
++                HDF5_LDFLAGS=$(eval pkg-config --libs hdf5)
+ 
+         HDF5_LIBS="$HDF5_LIBS -lhdf5"
+         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (version $HDF5_VERSION)" >&5
+@@ -3725,7 +3697,6 @@
+         ax_lib_hdf5_save_CPPFLAGS=$CPPFLAGS
+         ax_lib_hdf5_save_LIBS=$LIBS
+         ax_lib_hdf5_save_LDFLAGS=$LDFLAGS
+-        CC=$HDF5_CC
+         CPPFLAGS=$HDF5_CPPFLAGS
+         LIBS=$HDF5_LIBS
+         LDFLAGS=$HDF5_LDFLAGS
+@@ -3893,20 +3864,6 @@
+             with_hdf5_fortran="yes"
+ 
+ 
+-                        for arg in `$H5FC -show`
+-            do
+-              case "$arg" in #(
+-                -I*) echo $HDF5_FFLAGS | $GREP -e "$arg" >/dev/null \
+-                      || HDF5_FFLAGS="$arg $HDF5_FFLAGS"
+-                  ;;#(
+-                -L*) echo $HDF5_FFLAGS | $GREP -e "$arg" >/dev/null \
+-                      || HDF5_FFLAGS="$arg $HDF5_FFLAGS"
+-                                                               echo $HDF5_FFLAGS | $GREP -e "-I${arg#-L}" >/dev/null \
+-                      || HDF5_FFLAGS="-I${arg#-L} $HDF5_FFLAGS"
+-                  ;;
+-              esac
+-            done
+-
+                         for arg in $HDF5_LIBS
+             do
+               case "$arg" in #(
+@@ -4384,8 +4341,6 @@
+     as_fn_error $? "${GREP} does not support option -o" "$LINENO" 5
+   fi
+ 
+-  LIBS=`${H5CC} -show | ${GREP} -o " \-[lL][^[:space:]]\+" | tr "\n" " "`
+-
+ 
+     HDF5R_LIBS="${LIBS} -L. -lhdf5_hl -lhdf5 -lz -lm"
+ 
+@@ -4447,8 +4402,6 @@
+ 
+ 
+ 
+-  HDF5R_CPPFLAGS=`${H5CC} -show -c myconftest.c | ${GREP} -o "\-I[^[:space:]]\+" | tr "\n" " "`
+-
+   rm -f myconftest.c
+ fi
+ 

@@ -1,0 +1,14 @@
+diff -u ./Wrapping/Python/CMakeLists.txt.orig ./Wrapping/Python/CMakeLists.txt
+--- ./Wrapping/Python/CMakeLists.txt.orig	2021-11-03 14:33:41.413950000 -0700
++++ ./Wrapping/Python/CMakeLists.txt	2021-11-03 14:37:03.634738000 -0700
+@@ -23,6 +23,10 @@
+ 
+ get_property(VTK_PYTHON_MODULES GLOBAL PROPERTY VTK_PYTHON_WRAPPED)
+ 
++include_directories(${X11_Xlib_INCLUDE_PATH})
++include_directories(${X11_X11_INCLUDE_PATH})
++include_directories(${X11_Xt_INCLUDE_PATH})
++
+ # Get the include directories for the module and all its dependencies.
+ macro(vtk_include_recurse module)
+   _vtk_module_config_recurse("${module}_PYTHON" ${module})

@@ -1,0 +1,57 @@
+diff --git a/skopt/space/space.py b/skopt/space/space.py
+old mode 100644
+new mode 100755
+index 329b0c1..bed1e05
+--- a/skopt/space/space.py
++++ b/skopt/space/space.py
+@@ -244,13 +244,13 @@ class Real(Dimension):
+     name : str or None
+         Name associated with the dimension, e.g., "learning rate".
+ 
+-    dtype : str or dtype, default=float
++    dtype : str or dtype, default=np.float
+         float type which will be used in inverse_transform,
+         can be float.
+ 
+     """
+     def __init__(self, low, high, prior="uniform", base=10, transform=None,
+-                 name=None, dtype=float):
++                 name=None, dtype=np.float, optimize=True):
+         if high <= low:
+             raise ValueError("the lower bound {} has to be less than the"
+                              " upper bound {}".format(low, high))
+@@ -267,6 +267,7 @@ class Real(Dimension):
+         self._rvs = None
+         self.transformer = None
+         self.transform_ = transform
++        self.optimize = optimize
+         if isinstance(self.dtype, str) and self.dtype\
+                 not in ['float', 'float16', 'float32', 'float64']:
+             raise ValueError("dtype must be 'float', 'float16', 'float32'"
+@@ -346,7 +347,8 @@ class Real(Dimension):
+                                 self.low, self.high).astype(self.dtype)
+         if self.dtype == float or self.dtype == 'float':
+             # necessary, otherwise the type is converted to a numpy type
+-            return getattr(inv_transform, "tolist", lambda: value)()
++            inv_transform = getattr(inv_transform, "tolist", lambda: value)()
++            return [round(val, 6) for val in inv_transform]
+         else:
+             return inv_transform
+ 
+@@ -435,7 +437,7 @@ class Integer(Dimension):
+ 
+     """
+     def __init__(self, low, high, prior="uniform", base=10, transform=None,
+-                 name=None, dtype=np.int64):
++                 name=None, dtype=np.int64, optimize=True):
+         if high <= low:
+             raise ValueError("the lower bound {} has to be less than the"
+                              " upper bound {}".format(low, high))
+@@ -450,6 +452,7 @@ class Integer(Dimension):
+         self.name = name
+         self.dtype = dtype
+         self.transform_ = transform
++        self.optimize = optimize
+         self._rvs = None
+         self.transformer = None
+ 

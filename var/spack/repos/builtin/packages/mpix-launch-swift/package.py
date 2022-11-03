@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class MpixLaunchSwift(MakefilePackage):
@@ -12,14 +12,14 @@ class MpixLaunchSwift(MakefilePackage):
     """
 
     homepage = "https://bitbucket.org/kshitijvmehta/mpix_launch_swift"
-    git      = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
+    git = "https://kshitijvmehta@bitbucket.org/kshitijvmehta/mpix_launch_swift.git"
 
-    version('develop', branch='envs')
+    version("develop", branch="envs")
 
-    depends_on('stc')
-    depends_on('tcl')
-    depends_on('mpi')
-    depends_on('swig', type='build')
+    depends_on("stc")
+    depends_on("tcl")
+    depends_on("mpi")
+    depends_on("swig", type="build")
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
+        install_tree(".", prefix)

@@ -9,4 +9,7 @@ if [ -z "$SPACK_ROOT" ]; then
     exit 1
 fi
 
-kcov "$SPACK_ROOT/coverage" "$@"
+# Using a -- to separate the script to be tested from kcov is not documented
+# as of v38, but seems to work. The same is true for the "--debug-force-bash-stderr"
+# option, see https://github.com/SimonKagstrom/kcov/issues/61
+kcov --debug-force-bash-stderr "$SPACK_ROOT/coverage" -- "$@"

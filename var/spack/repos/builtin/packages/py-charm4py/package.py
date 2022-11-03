@@ -1,10 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from spack.package import *
 
 
 class PyCharm4py(PythonPackage):
@@ -21,26 +21,25 @@ class PyCharm4py(PythonPackage):
 
     # Add a list of GitHub accounts to
     # notify when the package is updated.
-    maintainers = ['payerle']
+    maintainers = ["payerle"]
 
-    # Get errors passing --mpi to build* phases of setup.py
-    phases = ['install']
+    version("1.0", sha256="8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc")
 
-    version('1.0', sha256='8ddb9f021b7379fde94b28c31f4ab6a60ced2c2a207a2d75ce57cb91b6be92bc')
-
-    variant('mpi', default=True,
-            description='build Charm++ library with the MPI instead of TCP'
-            ' communication layer')
+    variant(
+        "mpi",
+        default=True,
+        description="build Charm++ library with the MPI instead of TCP" " communication layer",
+    )
 
     # Builds its own charm++, so no charmpp dependency
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-cffi@1.7:', type='build')
-    depends_on('py-numpy@1.10.0:', type=('build', 'run'))
-    depends_on('py-greenlet', type=('build', 'run'))
-    depends_on('cuda')
-    depends_on('mpi', when='+mpi')
+    depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-cython", type="build")
+    depends_on("py-cffi@1.7:", type="build")
+    depends_on("py-numpy@1.10.0:", type=("build", "run"))
+    depends_on("py-greenlet", type=("build", "run"))
+    depends_on("cuda")
+    depends_on("mpi", when="+mpi")
 
     # setup.py builds its own charm++, but libcharm.so
     # ends up with a cuda dependency causing unresolved symbol errors
@@ -55,18 +54,16 @@ class PyCharm4py(PythonPackage):
     #
     # The patch to the Makefile adds SPACK_CHARM4PY_EXTRALIBS to the link
     # arguments.  This needs to be set in the environment to be effective.
-    patch('py-charm4py.makefile.patch', when='@1.0')
+    patch("py-charm4py.makefile.patch", when="@1.0")
 
     # This sets the SPACK_CHARM4PY_EXTRALIBS env var which the
     # py-charm4py.makefile.patch adds to the build/link command for
     # libcharm.so.
     def setup_build_environment(self, env):
-        env.set('SPACK_CHARM4PY_EXTRALIBS',
-                self.spec['cuda'].libs.ld_flags)
+        env.set("SPACK_CHARM4PY_EXTRALIBS", self.spec["cuda"].libs.ld_flags)
 
-    def install_args(self, spec, prefix):
-        # Have the parent class version set prefix
-        args = super().install_args(spec, prefix)
-        if '+mpi' in spec:
-            args.append('--mpi')
+    def install_options(self, spec, prefix):
+        args = []
+        if "+mpi" in spec:
+            args.append("--mpi")
         return args

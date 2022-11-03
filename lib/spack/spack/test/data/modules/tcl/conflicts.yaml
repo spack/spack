@@ -4,6 +4,7 @@ tcl:
   projections:
     all: '{name}/{version}-{compiler.name}'
   all:
+    autoload: none
     conflict:
       - '{name}'
       - 'intel/14.0.1'

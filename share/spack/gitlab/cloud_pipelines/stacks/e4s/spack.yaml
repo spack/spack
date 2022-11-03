@@ -1,8 +1,12 @@
 spack:
   view: false
-  concretization: separately
+
+  concretizer:
+    reuse: false
+    unify: false
 
   config:
+    concretizer: clingo
     install_tree:
       root: /home/software/spack
       padded_length: 512
@@ -11,141 +15,461 @@ spack:
 
   packages:
     all:
-      target: [x86_64]
+      compiler: [gcc@11.1.0]
       providers:
-        blas:
-        - openblas
-        mpi:
-        - mpich
+        blas: [openblas]
+        mpi: [mpich]
+      target: [x86_64]
       variants: +mpi
+    tbb:
+      require: "intel-tbb"
     binutils:
-      variants: +gold+headers+libiberty~nls
-      version:
-      - 2.33.1
-    cmake:
-      version: [3.18.4]
+      variants: +ld +gold +headers +libiberty ~nls
+    cuda:
+      version: [11.7.0]
+    elfutils:
+      variants: +bzip2 ~nls +xz
     hdf5:
-      variants: +fortran
+      variants: +fortran +hl +shared
+    libfabric:
+      variants: fabrics=sockets,tcp,udp,rxm
+    libunwind:
+      variants: +pic +xz
     mpich:
       variants: ~wrapperrpath
+    ncurses:
+      variants: +termlib
     openblas:
-      version: [0.3.10]
-    slepc:
-      version: [3.14.0]
-
-  definitions:
-  - e4s:
-    # - adios
-    # - adios2
-    # - aml
-    # - amrex
-    # - arborx
-    - argobots
-    # - ascent
-    # - axom
-    # - bolt
-    # - caliper
-    # - darshan-runtime
-    - darshan-util
-    # - dyninst
-    # - faodel
-    # - flecsi+cinch
-    # - flit
-    # - gasnet
-    # - ginkgo
-    # - globalarrays
-    # - gotcha
-    # - hdf5
-    # - hpctoolkit
-    # - hpx
-    # - hypre
-    # - kokkos-kernels+openmp
-    # - kokkos+openmp
-    # - legion
-    # - libnrm
-    # - libquo
-    # - magma cuda_arch=70 ^cuda@10.2.89
-    # - mercury
-    # - mfem
-    # - mpifileutils@develop~xattr
-    # - ninja
-    # - omega-h
-    # - openmpi
-    # - openpmd-api
-    # - papi
-    # - papyrus@1.0.1
-    # - parallel-netcdf
-    # - pdt
-    # - petsc
-    # - phist
-    # - plasma
-    # - precice
-    # - pumi
-    # - py-jupyterhub
-    # - py-libensemble
-    # - py-petsc4py
-    # - qthreads scheduler=distrib
-    # - raja
-    # - rempi
-    # - scr
-    # - slate ^openblas@0.3.6 threads=openmp ^cuda@10.2.89
-    # - slepc
-    # - stc
-    # - strumpack ~slate ^openblas@0.3.6 threads=openmp
-    # - sundials
-    # - superlu
-    # - superlu-dist
-    - swig
-    # - sz
-    # - tasmanian
-    # - tau
-    # - trilinos
-    # - turbine
-    # - umap
-    # - umpire
-    # - unifyfs
-    # - upcxx
-    # - veloc
-    # - zfp
-  - arch:
-    - '%gcc@7.5.0 arch=linux-ubuntu18.04-x86_64'
+      variants: threads=openmp
+    python:
+      version: [3.8.13]
+    trilinos:
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    xz:
+      variants: +pic
+    mesa:
+      version: [21.3.8]
 
   specs:
-  - matrix:
-    - - $e4s
-    - - $arch
+  # CPU
+  - adios
+  - adios2
+  - alquimia
+  - aml
+  - amrex
+  - arborx
+  - archer
+  - argobots
+  - ascent
+  - axom
+  - bolt
+  - bricks
+  - butterflypack
+  - cabana
+  - caliper
+  - chai ~benchmarks ~tests
+  - charliecloud
+  - conduit
+  - darshan-runtime
+  - darshan-util
+  - datatransferkit
+  - dyninst
+  - exaworks
+  - faodel
+  - flecsi
+  - flit
+  - flux-core
+  - fortrilinos
+  - gasnet
+  - ginkgo
+  - globalarrays
+  - gmp
+  - gotcha
+  - gptune
+  - h5bench
+  - hdf5 +fortran +hl +shared
+  - hdf5-vol-async
+  - heffte +fftw
+  - hpctoolkit
+  - hpx networking=mpi
+  - hypre
+  - kokkos +openmp
+  - kokkos-kernels +openmp
+  - lammps
+  - legion
+  - libnrm
+  - libquo
+  - libunwind
+  - mercury
+  - metall
+  - mfem
+  - mpark-variant
+  - mpifileutils ~xattr
+  - nccmp
+  - nco
+  - netlib-scalapack
+  - nrm
+  - nvhpc
+  - omega-h
+  - openmpi
+  - openpmd-api
+  - papi
+  - papyrus
+  - parallel-netcdf
+  - parsec ~cuda
+  - pdt
+  - petsc
+  - phist
+  - plasma
+  - plumed
+  - precice
+  - pumi
+  - py-cinemasci
+  - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
+  - py-warpx ^warpx dims=2
+  - py-warpx ^warpx dims=3
+  - py-warpx ^warpx dims=rz
+  - qthreads scheduler=distrib
+  - quantum-espresso
+  - raja
+  - scr
+  - slate ~cuda
+  - slepc
+  - stc
+  - strumpack ~slate
+  - sundials
+  - superlu
+  - superlu-dist
+  - swig
+  - swig@4.0.2-fortran
+  - sz
+  - tasmanian
+  - tau +mpi +python
+  - trilinos@13.0.1 +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack
+    +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro
+    +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko
+    +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - turbine
+  - umap
+  - umpire
+  - unifyfs
+  - upcxx
+  - variorum
+  - veloc
+  - vtk-m
+  - wannier90
+  - zfp
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s-new-cluster" }
+  # CUDA
+  - adios2 +cuda cuda_arch=80
+  - amrex +cuda cuda_arch=80
+  - arborx +cuda cuda_arch=80 ^kokkos@3.6.00 +wrapper
+  - ascent +cuda cuda_arch=80
+  - bricks +cuda
+  - cabana +cuda ^kokkos@3.6.00 +wrapper +cuda_lambda +cuda cuda_arch=80
+  - caliper +cuda cuda_arch=80
+  - chai ~benchmarks ~tests +cuda cuda_arch=80 ^umpire@6.0.0 ~shared
+  - dealii +cuda cuda_arch=80
+  - flecsi +cuda cuda_arch=80
+  - flux-core +cuda
+  - ginkgo +cuda cuda_arch=80
+  - heffte +cuda cuda_arch=80
+  - hpctoolkit +cuda
+  - hpx +cuda cuda_arch=80
+  - hypre +cuda cuda_arch=80
+  - kokkos +wrapper +cuda cuda_arch=80
+  - kokkos-kernels +cuda cuda_arch=80 ^kokkos +wrapper +cuda cuda_arch=80
+  - magma +cuda cuda_arch=80
+  - mfem +cuda cuda_arch=80
+  - omega-h +cuda cuda_arch=80
+  - papi +cuda
+  - petsc +cuda cuda_arch=80
+  - py-torch +cuda cuda_arch=80
+  - raja +cuda cuda_arch=80
+  - slate +cuda cuda_arch=80
+  - slepc +cuda cuda_arch=80
+  - strumpack ~slate +cuda cuda_arch=80
+  - sundials +cuda cuda_arch=80
+  - superlu-dist +cuda cuda_arch=80
+  - tasmanian +cuda cuda_arch=80
+  - tau +mpi +cuda
+  - trilinos@13.4.0 +cuda cuda_arch=80
+  - umpire ~shared +cuda cuda_arch=80
+  - vtk-m +cuda cuda_arch=80
+  - zfp +cuda cuda_arch=80
+
+  # ROCm
+  - amrex +rocm amdgpu_target=gfx90a
+  - arborx +rocm amdgpu_target=gfx90a
+  - cabana +rocm
+  - caliper +rocm amdgpu_target=gfx90a
+  - chai ~benchmarks +rocm amdgpu_target=gfx90a
+  - gasnet +rocm amdgpu_target=gfx90a
+  - ginkgo +rocm amdgpu_target=gfx90a
+  - heffte +rocm amdgpu_target=gfx90a
+  - hpctoolkit +rocm
+  - hpx +rocm amdgpu_target=gfx90a
+  - hypre +rocm amdgpu_target=gfx90a
+  - kokkos +rocm amdgpu_target=gfx90a
+  - magma ~cuda +rocm amdgpu_target=gfx90a
+  - mfem +rocm amdgpu_target=gfx90a
+  - papi +rocm amdgpu_target=gfx90a
+  - petsc +rocm amdgpu_target=gfx90a
+  - raja ~openmp +rocm amdgpu_target=gfx90a
+  - slate +rocm amdgpu_target=gfx90a
+  - slepc +rocm amdgpu_target=gfx90a ^petsc +rocm amdgpu_target=gfx90a
+  - strumpack ~slate +rocm amdgpu_target=gfx90a
+  - sundials +rocm amdgpu_target=gfx90a
+  - superlu-dist +rocm amdgpu_target=gfx90a
+  - tasmanian ~openmp +rocm amdgpu_target=gfx90a
+  - tau +mpi +rocm
+  - trilinos@13.4.0 +amesos +amesos2 +anasazi +aztec ~belos +boost +epetra +epetraext
+    +ifpack ~ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+    +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu ~stokhos +stratimikos
+    +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    +rocm amdgpu_target=gfx90a
+  - umpire +rocm amdgpu_target=gfx90a
+  - upcxx +rocm amdgpu_target=gfx90a
+  - vtk-m ~openmp +rocm amdgpu_target=gfx90a
+
+  # CPU failures
+  #- geopm                                        # /usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error:'__builtin_strncpy' specified bound 512 equals destination size [-Werror=stringop-truncation]
+  #- loki                                         # ../include/loki/Singleton.h:158:14: warning: 'template<class> class std::auto_ptr' is deprecated: use 'std::unique_ptr' instead [-Wdeprecated-declarations]
+  #- paraview +qt                                 # llvm@14
+  #- pruners-ninja                                # test/ninja_test_util.c:34: multiple definition of `a';
+  #- rempi                                        # rempi_message_manager.h:53:3: error: 'string' does not name a type
+
+  # CUDA failures
+  #- parsec +cuda cuda_arch=80                    # parsec/mca/device/cuda/transfer.c:168: multiple definition of `parsec_CUDA_d2h_max_flows';
+
+  # ROCm failures
+  #- raja ~openmp +rocm amdgpu_target=gfx90a      # cmake: Could NOT find ROCPRIM (missing: ROCPRIM_INCLUDE_DIRS)
+  #- umpire +rocm amdgpu_target=gfx90a            # Target "blt_hip" INTERFACE_INCLUDE_DIRECTORIES property contains path: "/tmp/root/spack-stage/spack-stage-umpire-2022.03.1-by6rldnpdowaaoqgxkeqejwyx5uxo2sv/spack-src/HIP_CLANG_INCLUDE_PATH-NOTFOUND/.." which is prefixed in the source directory.
+
+  mirrors: { "mirror": "s3://spack-binaries/develop/e4s" }
 
   gitlab-ci:
+
     script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.x86_64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf 'fef1f59e56d2d11e6d700ba22d3444b6e583c663d6883fd0a4f63ab8bd280f0f gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
-      - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
+      - spack arch
+      - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
-      - spack -d ci rebuild
+      - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
+      - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
+      - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
+      - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
+      - spack --color=always --backtrace ci rebuild --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+    
+    broken-tests-packages:
+      - gptune
+
+    match_behavior: first
     mappings:
-      - match: [cuda, dyninst, hpx, precice, strumpack, sundials, trilinos, vtk-h, vtk-m]
+      - match:
+          - hipblas
+          - llvm
+          - llvm-amdgpu
+          - rocblas
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
-          tags: ["spack", "public", "xlarge", "x86_64"]
-      - match: ['os=ubuntu18.04']
+          tags: [ "spack", "huge", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: huge
+            KUBERNETES_CPU_REQUEST: 11000m
+            KUBERNETES_MEMORY_REQUEST: 42G
+
+      - match:
+          - cuda
+          - dyninst
+          - ginkgo
+          - hpx
+          - kokkos-kernels
+          - kokkos-nvcc-wrapper
+          - magma
+          - mfem
+          - mpich
+          - openturns
+          - precice
+          - raja
+          - rust
+          - slate
+          - trilinos
+          - vtk-m
+          - warpx
         runner-attributes:
-          image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
-          tags: ["spack", "public", "large", "x86_64"]
-    temporary-storage-url-prefix: "s3://spack-binaries-prs/pipeline-storage"
+          tags: [ "spack", "large", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: large
+            KUBERNETES_CPU_REQUEST: 8000m
+            KUBERNETES_MEMORY_REQUEST: 12G
+
+      - match:
+          - adios2
+          - amrex
+          - archer
+          - ascent
+          - axom
+          - binutils
+          - blaspp
+          - boost
+          - butterflypack
+          - cabana
+          - caliper
+          - camp
+          - chai
+          - conduit
+          - datatransferkit
+          - faodel
+          - ffmpeg
+          - fftw
+          - fortrilinos
+          - gperftools
+          - gptune
+          - hdf5
+          - heffte
+          - hpctoolkit
+          - hwloc
+          - hypre
+          - kokkos
+          - lammps
+          - lapackpp
+          - legion
+          - libzmq
+          - llvm-openmp-ompt
+          - mbedtls
+          - netlib-scalapack
+          - omega-h
+          - openmpi
+          - openpmd-api
+          - pagmo2
+          - papyrus
+          - parsec
+          - pdt
+          - petsc
+          - pumi
+          - py-ipython-genutils
+          - py-petsc4py
+          - py-scipy
+          - py-statsmodels
+          - py-warlock
+          - py-warpx
+          - pygmo
+          - slepc
+          - slurm
+          - strumpack
+          - sundials
+          - superlu-dist
+          - tasmanian
+          - tau
+          - upcxx
+          - vtk-h
+          - zfp
+        runner-attributes:
+          tags: [ "spack", "medium", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "medium"
+            KUBERNETES_CPU_REQUEST: "2000m"
+            KUBERNETES_MEMORY_REQUEST: "4G"
+
+      - match:
+          - alsa-lib
+          - ant
+          - antlr
+          - argobots
+          - automake
+          - berkeley-db
+          - bison
+          - blt
+          - cmake
+          - curl
+          - darshan-util
+          - diffutils
+          - exmcutils
+          - expat
+          - flit
+          - freetype
+          - gdbm
+          - gotcha
+          - hpcviewer
+          - jansson
+          - json-c
+          - libbsd
+          - libevent
+          - libjpeg-turbo
+          - libnrm
+          - libpng
+          - libunistring
+          - lua-luaposix
+          - m4
+          - mpfr
+          - ncurses
+          - openblas
+          - openjdk
+          - papi
+          - parallel-netcdf
+          - pcre2
+          - perl-data-dumper
+          - pkgconf
+          - py-alembic
+          - py-idna
+          - py-testpath
+          - qhull
+          - snappy
+          - swig
+          - tar
+          - tcl
+          - texinfo
+          - unzip
+          - util-linux-uuid
+          - util-macros
+          - yaml-cpp
+          - zlib
+          - zstd
+        runner-attributes:
+          tags: [ "spack", "small", "x86_64" ]
+          variables:
+            CI_JOB_SIZE: "small"
+            KUBERNETES_CPU_REQUEST: "500m"
+            KUBERNETES_MEMORY_REQUEST: "500M"
+
+      - match: ['os=ubuntu20.04']
+        runner-attributes:
+          tags: ["spack", "x86_64"]
+          variables:
+            CI_JOB_SIZE: "default"
+
+    broken-specs-url: "s3://spack-binaries/broken-specs"
+
     service-job-attributes:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
-        - spack env activate --without-view .
-      image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
-      tags: ["spack", "public", "medium", "x86_64"]
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+      tags: ["spack", "public", "x86_64"]
+
+    signing-job-attributes:
+      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      tags: ["spack", "aws"]
+      script:
+        - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache /tmp
+        - /sign.sh
+        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_REMOTE_MIRROR_OVERRIDE}/build_cache
 
   cdash:
-    build-group: New PR testing workflow
+    build-group: E4S
     url: https://cdash.spack.io
     project: Spack Testing
     site: Cloud Gitlab Infrastructure
-

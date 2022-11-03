@@ -1,0 +1,95 @@
+diff --git a/test/test_install/test_install.cpp b/test/test_install/test_install.cpp
+index fb9f479c06..cd2ac76855 100644
+--- a/test/test_install/test_install.cpp
++++ b/test/test_install/test_install.cpp
+@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <chrono>
+ #include <cmath>
++#include <cstdlib>
+ #include <fstream>
+ #include <iostream>
+ #include <map>
+@@ -93,8 +94,7 @@ void check_solver(std::shared_ptr<gko::Executor> exec,
+                   const gko::matrix::Dense<> *b, gko::matrix::Dense<> *x)
+ {
+     using Mtx = gko::matrix::Csr<>;
+-    auto A =
+-        gko::share(Mtx::create(exec, std::make_shared<Mtx::load_balance>()));
++    auto A = gko::share(Mtx::create(exec, std::make_shared<Mtx::classical>()));
+ 
+     auto num_iters = 20u;
+     double reduction_factor = 1e-7;
+@@ -117,8 +117,8 @@ void check_solver(std::shared_ptr<gko::Executor> exec,
+ #if defined(HAS_HIP) || defined(HAS_CUDA)
+     // If we are on a device, we need to run a reference test to compare against
+     auto exec_ref = exec->get_master();
+-    auto A_ref = gko::share(
+-        Mtx::create(exec_ref, std::make_shared<Mtx::load_balance>()));
++    auto A_ref =
++        gko::share(Mtx::create(exec_ref, std::make_shared<Mtx::classical>()));
+     A_ref->read(A_raw);
+     auto solver_gen_ref =
+         Solver::build()
+@@ -147,13 +147,35 @@ class PolymorphicObjectTest : public gko::PolymorphicObject {};
+ int main()
+ {
+ #if defined(HAS_CUDA)
+-    auto exec = gko::CudaExecutor::create(0, gko::ReferenceExecutor::create());
++    auto extra_info = "(CUDA)";
++    using exec_type = gko::CudaExecutor;
+ #elif defined(HAS_HIP)
+-    auto exec = gko::HipExecutor::create(0, gko::ReferenceExecutor::create());
++    auto extra_info = "(HIP)";
++    using exec_type = gko::HipExecutor;
+ #else
+-    auto exec = gko::ReferenceExecutor::create();
++    auto extra_info = "(REFERENCE)";
++    using exec_type = gko::ReferenceExecutor;
+ #endif
+ 
++    std::shared_ptr<exec_type> exec;
++    try {
++#if defined(HAS_CUDA) || defined(HAS_HIP)
++        exec = exec_type::create(0, gko::ReferenceExecutor::create());
++#else
++        exec = exec_type::create();
++#endif
++        // We also try to to synchronize to ensure we really have an available
++        // device
++        exec->synchronize();
++    } catch (gko::Error &e) {
++        // Exit gracefully to not trigger CI errors. We only skip the tests in
++        // this setting
++        std::cerr
++            << "test_install" << extra_info
++            << ": a compatible device could not be found. Skipping test.\n";
++        std::exit(0);
++    }
++
+     using vec = gko::matrix::Dense<>;
+ #if HAS_REFERENCE
+     auto b = gko::read<vec>(std::ifstream("data/b.mtx"), exec);
+@@ -329,7 +351,7 @@ int main()
+     // core/matrix/csr.hpp
+     {
+         using Mtx = gko::matrix::Csr<>;
+-        auto test = Mtx::create(exec, std::make_shared<Mtx::load_balance>());
++        auto test = Mtx::create(exec, std::make_shared<Mtx::classical>());
+     }
+ 
+     // core/matrix/dense.hpp
+@@ -491,13 +513,6 @@ int main()
+                 .with_criteria(std::move(time), std::move(iteration))
+                 .on(exec);
+     }
+-#if defined(HAS_CUDA)
+-    auto extra_info = "(CUDA)";
+-#elif defined(HAS_HIP)
+-    auto extra_info = "(HIP)";
+-#else
+-    auto extra_info = "(REFERENCE)";
+-#endif
+     std::cout << "test_install" << extra_info
+               << ": the Ginkgo installation was correctly detected "
+                  "and is complete."
