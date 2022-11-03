@@ -140,6 +140,7 @@ class TestFlagHandlers(object):
         def test_flag_handler(self, name, flags):
             flags.append("-foo")
             return (flags, None, None)
+
         s = spack.spec.Spec("cmake-client").concretized()
         s.package.flag_handler = test_flag_handler
         spack.build_environment.setup_package(s.package, False)
