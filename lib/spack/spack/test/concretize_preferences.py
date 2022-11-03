@@ -180,8 +180,7 @@ class TestConcretizePreferences(object):
         assert "zmpi" in spec
 
     def test_config_set_pkg_property_url(self, mutable_mock_repo):
-        """Test setting an attribute that is explicitly-handled in the schema
-        """
+        """Test setting an attribute that is explicitly-handled in the schema"""
         update_packages(
             "mpileaks",
             "package_attributes",
