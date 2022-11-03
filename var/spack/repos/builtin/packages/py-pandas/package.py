@@ -17,6 +17,8 @@ class PyPandas(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("1.5.1", sha256="249cec5f2a5b22096440bd85c33106b6102e0672204abd2d5c014106459804ee")
+    version("1.5.0", sha256="3ee61b881d2f64dd90c356eb4a4a4de75376586cd3c9341c6c0fcaae18d52977")
     version("1.4.4", sha256="ab6c0d738617b675183e5f28db32b5148b694ad9bba0a40c3ea26d96b431db67")
     version("1.4.3", sha256="2ff7788468e75917574f080cd4681b27e1a7bf36461fe968b49a87b5a54d007c")
     version("1.4.2", sha256="92bc1fc585f1463ca827b45535957815b7deb218c549b7c18402c322c7549a12")
@@ -67,7 +69,6 @@ class PyPandas(PythonPackage):
     depends_on("python@3.7.1:", type=("build", "run"), when="@1.2:")
     depends_on("python@3.6.1:", type=("build", "run"), when="@1:")
     depends_on("python@3.5.3:", type=("build", "run"), when="@0.25:")
-    # https://pandas.pydata.org/docs/whatsnew/v1.0.0.html#build-changes
     depends_on("py-cython@0.29.13:2", type="build", when="@1:")
     depends_on("py-cython@0.29.16:2", type="build", when="@1.1:")
     depends_on("py-cython@0.29.21:2", type="build", when="@1.1.3:")
@@ -85,6 +86,7 @@ class PyPandas(PythonPackage):
     depends_on("py-numpy@1.16.5:", type=("build", "run"), when="@1.2:")
     depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@1.3:")
     depends_on("py-numpy@1.18.5:", type=("build", "run"), when="@1.4:")
+    depends_on("py-numpy@1.20.3:", type=("build", "run"), when="@1.5:")
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-python-dateutil@2.6.1:", type=("build", "run"), when="@0.25:")
     depends_on("py-python-dateutil@2.7.3:", type=("build", "run"), when="@1.1:")
@@ -100,9 +102,11 @@ class PyPandas(PythonPackage):
     depends_on("py-numexpr@2.6.8:", type=("build", "run"), when="@1.2:")
     depends_on("py-numexpr@2.7.0:", type=("build", "run"), when="@1.3:")
     depends_on("py-numexpr@2.7.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-numexpr@2.7.3:", type=("build", "run"), when="@1.5:")
     depends_on("py-bottleneck", type=("build", "run"))
     depends_on("py-bottleneck@1.2.1:", type=("build", "run"), when="@0.25:")
     depends_on("py-bottleneck@1.3.1:", type=("build", "run"), when="@1.4:")
+    depends_on("py-bottleneck@1.3.2:", type=("build", "run"), when="@1.5:")
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies

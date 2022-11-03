@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+from textwrap import dedent
 
 import pytest
 
@@ -126,6 +127,19 @@ def test_namespaces_shown_correctly(database):
 
     out = find("--namespace")
     assert "builtin.mock.zmpi" in out
+
+
+@pytest.mark.db
+def test_find_cli_output_format(database, mock_tty_stdout):
+    out = find("zmpi")
+    assert out.endswith(
+        dedent(
+            """\
+    zmpi@1.0
+    ==> 1 installed package
+    """
+        )
+    )
 
 
 def _check_json_output(spec_list):
@@ -308,7 +322,7 @@ def test_find_very_long(database, config):
 @pytest.mark.db
 def test_find_show_compiler(database, config):
     output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@4.5.0" in output
+    assert "mpileaks@2.3%gcc@10.2.1" in output
 
 
 @pytest.mark.db

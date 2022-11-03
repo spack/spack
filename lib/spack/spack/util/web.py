@@ -444,7 +444,8 @@ def url_exists(url, curl=None):
     try:
         read_from_url(url)
         return True
-    except (SpackWebError, URLError):
+    except (SpackWebError, URLError) as e:
+        tty.debug("Failure reading URL: " + str(e))
         return False
 
 
@@ -783,7 +784,7 @@ def find_versions_of_archive(
         list_depth (int): max depth to follow links on list_url pages.
             Defaults to 0.
         concurrency (int): maximum number of concurrent requests
-        reference_package (spack.package_base.Package or None): a spack package
+        reference_package (spack.package_base.PackageBase or None): a spack package
             used as a reference for url detection.  Uses the url_for_version
             method on the package to produce reference urls which, if found,
             are preferred.

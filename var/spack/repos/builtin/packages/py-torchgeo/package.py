@@ -7,10 +7,10 @@ from spack.package import *
 
 
 class PyTorchgeo(PythonPackage):
-    """TorchGeo: datasets, transforms, and models for geospatial data.
+    """TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data.
 
-    TorchGeo is a PyTorch domain library, similar to torchvision, that provides
-    datasets, transforms, samplers, and pre-trained models specific to geospatial data.
+    TorchGeo is a PyTorch domain library, similar to torchvision, providing datasets, samplers,
+    transforms, and pre-trained models specific to geospatial data.
     """
 
     homepage = "https://github.com/microsoft/torchgeo"
@@ -20,6 +20,7 @@ class PyTorchgeo(PythonPackage):
     maintainers = ["adamjstewart", "calebrob6"]
 
     version("main", branch="main")
+    version("0.3.1", sha256="ba7a716843575d173abab383c6cc2d5fc8faf5834472f16a4abe1b932040ece5")
     version("0.3.0", sha256="3d98fd58e6678555592a596bd079ed5a8b4959996ff7718d7caa48d47815b6b0")
     version("0.2.1", sha256="218bd5aed7680244688dbf0f1398f5251ad243267eb19a6a7332668ac779a1cc")
     version("0.2.0", sha256="968c4bf68c7e487bf495f2f306d8bb0f5824eb67e24b26772a510e753e04ba4c")
@@ -34,7 +35,8 @@ class PyTorchgeo(PythonPackage):
     # Required dependencies
     depends_on("python@3.7:3+bz2", when="@0.3:", type=("build", "run"))
     depends_on("python@3.6:3+bz2", when="@:0.2", type=("build", "run"))
-    depends_on("py-setuptools@42:63", type="build")
+    depends_on("py-setuptools@42:65", when="@0.3.1:", type="build")
+    depends_on("py-setuptools@42:63", when="@:0.3.0", type="build")
     depends_on("py-dataclasses", when="@0.2 ^python@3.6", type=("build", "run"))
     depends_on("py-einops@0.3:0.4", type=("build", "run"))
     depends_on("py-fiona@1.8:1", when="@0.3:", type=("build", "run"))
@@ -58,7 +60,8 @@ class PyTorchgeo(PythonPackage):
     depends_on("py-rtree@0.5:1", when="@:0.2.0", type=("build", "run"))
     depends_on("py-scikit-learn@0.21:1", when="@0.3:", type=("build", "run"))
     depends_on("py-scikit-learn@0.18:1", when="@:0.2", type=("build", "run"))
-    depends_on("py-segmentation-models-pytorch@0.2", type=("build", "run"))
+    depends_on("py-segmentation-models-pytorch@0.2:0.3", when="@0.3.1:", type=("build", "run"))
+    depends_on("py-segmentation-models-pytorch@0.2", when="@:0.3.0", type=("build", "run"))
     depends_on("py-shapely@1.3:1", type=("build", "run"))
     depends_on("py-timm@0.4.12:0.4", type=("build", "run"))
     depends_on("py-torch@1.9:1", when="@0.2:", type=("build", "run"))
@@ -74,6 +77,7 @@ class PyTorchgeo(PythonPackage):
     with when("+datasets"):
         depends_on("py-h5py@2.6:3", type="run")
         depends_on("py-laspy@2", when="@0.2:", type="run")
+        depends_on("gdal+openjpeg", when="@0.3.1:", type="run")
         depends_on("libtiff+jpeg+zlib", type="run")
         depends_on("open3d@0.11.2:0.14+python", when="@0.2:", type="run")
         depends_on("opencv@3.4.2.17:4+python3+imgcodecs+tiff+jpeg+png", type="run")
@@ -87,7 +91,8 @@ class PyTorchgeo(PythonPackage):
         depends_on("py-zipfile-deflate64@0.2", when="@0.2.1:", type="run")
 
     with when("+docs"):
-        depends_on("py-ipywidgets@7", type="run")
+        depends_on("py-ipywidgets@7:8", when="@0.3.1:", type="run")
+        depends_on("py-ipywidgets@7", when="@:0.3.0", type="run")
         depends_on("py-nbsphinx@0.8.5:0.8", type="run")
         depends_on("py-pytorch-sphinx-theme", type="run")
         depends_on("py-sphinx@4:5", type="run")
@@ -95,12 +100,16 @@ class PyTorchgeo(PythonPackage):
     with when("+style"):
         depends_on("py-black@21.8:22+jupyter", when="@0.3:", type="run")
         depends_on("py-black@21:22", when="@:0.2", type="run")
-        depends_on("py-flake8@3.8:4", type="run")
+        depends_on("py-flake8@3.8:5", when="@0.3.1:", type="run")
+        depends_on("py-flake8@3.8:4", when="@:0.3.0", type="run")
         depends_on("py-isort@5.8:5+colors", type="run")
         depends_on("py-pydocstyle@6.1:6+toml", type="run")
+        depends_on("py-pyupgrade@1.24:2", when="@0.3:", type="run")
 
     with when("+tests"):
-        depends_on("py-mypy@0.900:0.961", type="run")
-        depends_on("py-nbmake@0.1:1.1", type="run")
+        depends_on("py-mypy@0.900:0.971", when="@0.3.1:", type="run")
+        depends_on("py-mypy@0.900:0.961", when="@:0.3.0", type="run")
+        depends_on("py-nbmake@0.1:1", when="@0.3.1:", type="run")
+        depends_on("py-nbmake@0.1:1.1", when="@:0.3.0", type="run")
         depends_on("py-pytest@6.1.2:7", type="run")
         depends_on("py-pytest-cov@2.4:3", type="run")

@@ -14,6 +14,7 @@ class RAnnotationforge(RPackage):
 
     bioc = "AnnotationForge"
 
+    version("1.38.1", commit="2dcedf353bc57bf80818e6adb1f7129c21886f6b")
     version("1.38.0", commit="1f77750562ea3a01f0f1a46c299184fc31196ffd")
     version("1.36.0", commit="523b5f0c3ffb77e59e1568e5f36a5a470bfeeae5")
     version("1.32.0", commit="3d17c2a945951c02fe152e5a8a8e9c6cb41e30f7")

@@ -17,6 +17,11 @@ class Stat(AutotoolsPackage):
 
     version("develop", branch="develop")
     version(
+        "4.2.1",
+        sha256="137529889ec5b5f9b9bae3a0864a385c5814e989d0074228dd3500e3e713801d",
+        url="https://github.com/LLNL/STAT/releases/download/v4.2.1/stat-4.2.1.tar.gz",
+    )
+    version(
         "4.2.0",
         sha256="d244d53585b0949e308354eb024f7a89ee3467fd2866b818e8aa6c8b5d372ced",
         url="https://github.com/LLNL/STAT/releases/download/v4.2.0/stat-4.2.0.tar.gz",
@@ -76,9 +81,10 @@ class Stat(AutotoolsPackage):
     variant("gui", default=True, description="enable GUI")
 
     depends_on("autoconf", type="build")
-    depends_on("automake@:1.15", type="build")
+    depends_on("automake", type="build")
     depends_on("libtool", type="build")
-    depends_on("dyninst@:11.9", when="~dysect")
+    depends_on("dyninst", when="@4.2.1:")
+    depends_on("dyninst@:11.9", when="~dysect @:4.2.0")
     depends_on("dyninst@:9", when="@:4.0.1")
     depends_on("dyninst@8.2.1+stat_dysect", when="+dysect")
     # we depend on fgfs@master to avoid seg faults with fgfs 1.1

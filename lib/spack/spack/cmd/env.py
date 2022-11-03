@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import shutil
 import sys
@@ -15,6 +16,8 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
+import spack.cmd
+import spack.cmd.common
 import spack.cmd.common.arguments
 import spack.cmd.common.arguments as arguments
 import spack.cmd.install
@@ -24,6 +27,8 @@ import spack.config
 import spack.environment as ev
 import spack.environment.shell
 import spack.schema.env
+import spack.tengine
+import spack.traverse as traverse
 import spack.util.string as string
 from spack.util.environment import EnvironmentModifications
 
@@ -599,6 +604,15 @@ def env_depfile_setup_parser(subparser):
         help="disable POSIX jobserver support.",
     )
     subparser.add_argument(
+        "--use-buildcache",
+        dest="use_buildcache",
+        type=arguments.use_buildcache,
+        default="package:auto,dependencies:auto",
+        metavar="[{auto,only,never},][package:{auto,only,never},][dependencies:{auto,only,never}]",
+        help="When using `only`, redundant build dependencies are pruned from the DAG. "
+        "This flag is passed on to the generated spack install commands.",
+    )
+    subparser.add_argument(
         "-o",
         "--output",
         default=None,
@@ -612,16 +626,70 @@ def env_depfile_setup_parser(subparser):
         choices=("make",),
         help="specify the depfile type. Currently only make is supported.",
     )
+    subparser.add_argument(
+        metavar="specs",
+        dest="specs",
+        nargs=argparse.REMAINDER,
+        default=None,
+        help="generate a depfile only for matching specs in the environment",
+    )
+
+
+def _deptypes(use_buildcache):
+    """What edges should we follow for a given node? If it's a cache-only
+    node, then we can drop build type deps."""
+    return ("link", "run") if use_buildcache == "only" else ("build", "link", "run")
+
+
+class MakeTargetVisitor(object):
+    """This visitor produces an adjacency list of a (reduced) DAG, which
+    is used to generate Makefile targets with their prerequisites."""
+
+    def __init__(self, target, pkg_buildcache, deps_buildcache):
+        """
+        Args:
+            target: function that maps dag_hash -> make target string
+            pkg_buildcache (str): "only", "never", "auto": when "only",
+                redundant build deps of roots are dropped
+            deps_buildcache (str): same as pkg_buildcache, but for non-root specs.
+        """
+        self.adjacency_list = []
+        self.target = target
+        self.pkg_buildcache = pkg_buildcache
+        self.deps_buildcache = deps_buildcache
+        self.deptypes_root = _deptypes(pkg_buildcache)
+        self.deptypes_deps = _deptypes(deps_buildcache)
+
+    def neighbors(self, node):
+        """Produce a list of spec to follow from node"""
+        deptypes = self.deptypes_root if node.depth == 0 else self.deptypes_deps
+        return traverse.sort_edges(node.edge.spec.edges_to_dependencies(deptype=deptypes))
+
+    def build_cache_flag(self, depth):
+        setting = self.pkg_buildcache if depth == 0 else self.deps_buildcache
+        if setting == "only":
+            return "--use-buildcache=only"
+        elif setting == "never":
+            return "--use-buildcache=never"
+        return ""
+
+    def accept(self, node):
+        dag_hash = node.edge.spec.dag_hash()
+        spec_str = node.edge.spec.format(
+            "{name}{@version}{%compiler}{variants}{arch=architecture}"
+        )
+        buildcache_flag = self.build_cache_flag(node.depth)
+        prereqs = " ".join([self.target(dep.spec.dag_hash()) for dep in self.neighbors(node)])
+        self.adjacency_list.append((dag_hash, spec_str, buildcache_flag, prereqs))
+
+        # We already accepted this
+        return True
 
 
 def env_depfile(args):
     # Currently only make is supported.
     spack.cmd.require_active_env(cmd_name="env depfile")
     env = ev.active_environment()
-
-    # Maps each hash in the environment to a string of install prereqs
-    hash_to_prereqs = {}
-    hash_to_spec = {}
 
     if args.make_target_prefix is None:
         target_prefix = os.path.join(env.env_subdir_path, "makedeps")
@@ -641,90 +709,56 @@ def env_depfile(args):
     def get_install_target(name):
         return os.path.join(target_prefix, ".install", name)
 
-    for _, spec in env.concretized_specs():
-        for s in spec.traverse(root=True):
-            hash_to_spec[s.dag_hash()] = s
-            hash_to_prereqs[s.dag_hash()] = [
-                get_install_target(dep.dag_hash()) for dep in s.dependencies()
-            ]
+    def get_install_deps_target(name):
+        return os.path.join(target_prefix, ".install-deps", name)
 
-    root_dags = [s.dag_hash() for _, s in env.concretized_specs()]
+    # What things do we build when running make? By default, we build the
+    # root specs. If specific specs are provided as input, we build those.
+    if args.specs:
+        abstract_specs = spack.cmd.parse_specs(args.specs)
+        roots = [env.matching_spec(s) for s in abstract_specs]
+    else:
+        roots = [s for _, s in env.concretized_specs()]
+
+    # We produce a sub-DAG from the DAG induced by roots, where we drop build
+    # edges for those specs that are installed through a binary cache.
+    pkg_buildcache, dep_buildcache = args.use_buildcache
+    make_targets = MakeTargetVisitor(get_install_target, pkg_buildcache, dep_buildcache)
+    traverse.traverse_breadth_first_with_visitor(
+        roots, traverse.CoverNodesVisitor(make_targets, key=lambda s: s.dag_hash())
+    )
 
     # Root specs without deps are the prereqs for the environment target
-    root_install_targets = [get_install_target(h) for h in root_dags]
+    root_install_targets = [get_install_target(h.dag_hash()) for h in roots]
 
-    # All package install targets, not just roots.
-    all_install_targets = [get_install_target(h) for h in hash_to_spec.keys()]
+    # Cleanable targets...
+    cleanable_targets = [get_install_target(h) for h, _, _, _ in make_targets.adjacency_list]
+    cleanable_targets.extend(
+        [get_install_deps_target(h) for h, _, _, _ in make_targets.adjacency_list]
+    )
 
     buf = six.StringIO()
 
-    buf.write(
-        """SPACK ?= spack
+    template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
 
-.PHONY: {} {}
-
-{}: {}
-
-{}: {}
-\t@touch $@
-
-{}:
-\t@mkdir -p {}
-
-{}: | {}
-\t$(info Installing $(SPEC))
-\t{}$(SPACK) -e '{}' install $(SPACK_INSTALL_FLAGS) --only-concrete --only=package \
---no-add /$(notdir $@) && touch $@
-
-""".format(
-            get_target("all"),
-            get_target("clean"),
-            get_target("all"),
-            get_target("env"),
-            get_target("env"),
-            " ".join(root_install_targets),
-            get_target("dirs"),
-            get_target(".install"),
-            get_target(".install/%"),
-            get_target("dirs"),
-            "+" if args.jobserver else "",
-            env.path,
-        )
+    rendered = template.render(
+        {
+            "all_target": get_target("all"),
+            "env_target": get_target("env"),
+            "clean_target": get_target("clean"),
+            "cleanable_targets": " ".join(cleanable_targets),
+            "root_install_targets": " ".join(root_install_targets),
+            "dirs_target": get_target("dirs"),
+            "environment": env.path,
+            "install_target": get_target(".install"),
+            "install_deps_target": get_target(".install-deps"),
+            "any_hash_target": get_target("%"),
+            "jobserver_support": "+" if args.jobserver else "",
+            "adjacency_list": make_targets.adjacency_list,
+        }
     )
 
-    # Targets are of the form <prefix>/<name>: [<prefix>/<depname>]...,
-    # The prefix can be an empty string, in that case we don't add the `/`.
-    # The name is currently the dag hash of the spec. In principle it
-    # could be the package name in case of `concretization: together` so
-    # it can be more easily referred to, but for now we don't special case
-    # this.
-    fmt = "{name}{@version}{%compiler}{variants}{arch=architecture}"
-
-    # Set SPEC for each hash
-    buf.write("# Set the human-readable spec for each target\n")
-    for dag_hash in hash_to_prereqs.keys():
-        formatted_spec = hash_to_spec[dag_hash].format(fmt)
-        buf.write("{}: SPEC = {}\n".format(get_target("%/" + dag_hash), formatted_spec))
-    buf.write("\n")
-
-    # Set install dependencies
-    buf.write("# Install dependencies\n")
-    for parent, children in hash_to_prereqs.items():
-        if not children:
-            continue
-        buf.write("{}: {}\n".format(get_install_target(parent), " ".join(children)))
-    buf.write("\n")
-
-    # Clean target: remove target files but not their folders, cause
-    # --make-target-prefix can be any existing directory we do not control,
-    # including empty string (which means deleting the containing folder
-    # would delete the folder with the Makefile)
-    buf.write(
-        "{}:\n\trm -f -- {} {}\n".format(
-            get_target("clean"), get_target("env"), " ".join(all_install_targets)
-        )
-    )
-
+    buf.write(rendered)
     makefile = buf.getvalue()
 
     # Finally write to stdout/file.

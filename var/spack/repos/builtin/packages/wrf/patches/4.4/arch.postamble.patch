@@ -1,6 +1,8 @@
---- a/arch/postamble	2022-04-26 19:33:44.000000000 +0000
-+++ b/arch/postamble	2022-08-10 20:09:45.000000000 +0000
-@@ -54,6 +54,7 @@
+diff --git a/arch/postamble b/arch/postamble
+index 33bd572b..dc4f9b6c 100644
+--- a/arch/postamble
++++ b/arch/postamble
+@@ -54,6 +54,7 @@ INCLUDE_MODULES =    $(MODULE_SRCH_FLAG) \
                        -I$(WRF_SRC_ROOT_DIR)/wrftladj \
                        -I$(WRF_SRC_ROOT_DIR)/chem -I$(WRF_SRC_ROOT_DIR)/inc \
                        -I$(NETCDFPATH)/include \
@@ -8,7 +10,15 @@
                        CONFIGURE_RTTOV_INC CONFIGURE_CTSM_INC
  REGISTRY        =    Registry
  CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
-@@ -94,18 +95,18 @@
+@@ -63,6 +64,7 @@ LDFLAGS         =    $(OMP) $(FCFLAGS) $(LDFLAGS_LOCAL) CONFIGURE_LDFLAGS
+ ENVCOMPDEFS     =    CONFIGURE_COMPILEFLAGS
+ CPPFLAGS        =    $(ARCHFLAGS) $(ENVCOMPDEFS) -I$(LIBINCLUDE) $(TRADFLAG) CONFIGURE_COMMS_INCLUDE
+ NETCDFPATH      =    CONFIGURE_NETCDF_PATH
++NETCDFFPATH     =    CONFIGURE_NETCDFF_PATH
+ HDF5PATH        =    CONFIGURE_HDF5_PATH
+ WRFPLUSPATH     =    CONFIGURE_WRFPLUS_PATH
+ RTTOVPATH       =    CONFIGURE_RTTOV_PATH
+@@ -94,18 +96,18 @@ module_dm_rsllite :
  
  wrfio_nf : 
  	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \

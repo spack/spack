@@ -582,6 +582,19 @@ libraries. Make sure not to add modules/packages containing the word
 "test", as these likely won't end up in the installation directory,
 or may require test dependencies like pytest to be installed.
 
+Instead of defining the ``import_modules`` explicity, only the subset
+of module names to be skipped can be defined by using ``skip_modules``.
+If a defined module has submodules, they are skipped as well, e.g.,
+in case the ``plotting`` modules should be excluded from the
+automatically detected ``import_modules`` ``['nilearn', 'nilearn.surface',
+'nilearn.plotting', 'nilearn.plotting.data']`` set:
+
+.. code-block:: python
+
+        skip_modules = ['nilearn.plotting']
+
+This will set ``import_modules`` to ``['nilearn', 'nilearn.surface']``
+
 Import tests can be run during the installation using ``spack install
 --test=root`` or at any time after the installation using
 ``spack test run``.

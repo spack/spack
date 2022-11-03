@@ -20,6 +20,8 @@ class Octopus(Package, CudaPackage):
 
     maintainers = ["fangohr", "RemiLacroix-IDRIS"]
 
+    version("12.1", sha256="e2214e958f1e9631dbe6bf020c39f1fe4d71ab0b6118ea9bd8dc38f6d7a7959a")
+    version("12.0", sha256="70beaf08573d394a766f10346a708219b355ad725642126065d12596afbc0dcc")
     version("11.4", sha256="73bb872bff8165ddd8efc5b891f767cb3fe575b5a4b518416c834450a4492da7")
     version("11.3", sha256="0c98417071b5e38ba6cbdd409adf917837c387a010e321c0a7f94d9bd9478930")
     version("11.1", sha256="d943cc2419ca409dda7459b7622987029f2af89984d0d5f39a6b464c3fc266da")

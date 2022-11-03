@@ -47,6 +47,7 @@ import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
+import spack.util.path
 import spack.util.timer
 import spack.variant
 import spack.version
@@ -299,18 +300,6 @@ def extend_flag_list(flag_list, new_flags):
         if flag in flag_list:
             flag_list.remove(flag)
         flag_list.append(flag)
-
-
-def check_same_flags(flag_dict_1, flag_dict_2):
-    """Return True if flag dicts contain the same flags regardless of order."""
-    types = set(flag_dict_1.keys()).union(set(flag_dict_2.keys()))
-    for t in types:
-        values1 = set(flag_dict_1.get(t, []))
-        values2 = set(flag_dict_2.get(t, []))
-        error_msg = "Internal Error: A mismatch in flags has occurred:"
-        error_msg += "\n\tvalues1: {v1}\n\tvalues2: {v2}".format(v1=values1, v2=values2)
-        error_msg += "\n Please report this as an issue to the spack maintainers"
-        assert values1 == values2, error_msg
 
 
 def check_packages_exist(specs):
@@ -722,6 +711,7 @@ class PyclingoDriver(object):
         if output.timers:
             timer.write_tty()
             print()
+
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
@@ -1358,6 +1348,8 @@ class SpackSolverSetup(object):
             node_compiler = fn.node_compiler_set
             node_compiler_version = fn.node_compiler_version_set
             node_flag = fn.node_flag_set
+            node_flag_propagate = fn.node_flag_propagate
+            variant_propagate = fn.variant_propagate
 
         class Body(object):
             node = fn.node
@@ -1369,6 +1361,8 @@ class SpackSolverSetup(object):
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
             node_flag = fn.node_flag
+            node_flag_propagate = fn.node_flag_propagate
+            variant_propagate = fn.variant_propagate
 
         f = Body if body else Head
 
@@ -1416,6 +1410,9 @@ class SpackSolverSetup(object):
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 
+                if variant.propagate:
+                    clauses.append(f.variant_propagate(spec.name, vname, value, spec.name))
+
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
                 # can't enumerate the valid values
@@ -1442,9 +1439,14 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
+                if not spec.concrete and flag.propagate is True:
+                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
         # dependencies
         if spec.concrete:
+            # older specs do not have package hashes, so we have to do this carefully
+            if getattr(spec, "_package_hash", None):
+                clauses.append(fn.package_hash(spec.name, spec._package_hash))
             clauses.append(fn.hash(spec.name, spec.dag_hash()))
 
         # add all clauses from dependencies
@@ -1516,8 +1518,10 @@ class SpackSolverSetup(object):
             # specs will be computed later
             version_preferences = packages_yaml.get(pkg_name, {}).get("version", [])
             for idx, v in enumerate(version_preferences):
+                # v can be a string so force it into an actual version for comparisons
+                ver = spack.version.Version(v)
                 self.declared_versions[pkg_name].append(
-                    DeclaredVersion(version=v, idx=idx, origin=version_provenance.packages_yaml)
+                    DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
         for spec in specs:
@@ -2095,10 +2099,10 @@ class SpecBuilder(object):
         self._flag_compiler_defaults.add(pkg)
 
     def node_flag(self, pkg, flag_type, flag):
-        self._specs[pkg].compiler_flags.setdefault(flag_type, []).append(flag)
+        self._specs[pkg].compiler_flags.add_flag(flag_type, flag, False)
 
-    def node_flag_source(self, pkg, source):
-        self._flag_sources[pkg].add(source)
+    def node_flag_source(self, pkg, flag_type, source):
+        self._flag_sources[(pkg, flag_type)].add(source)
 
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
@@ -2145,15 +2149,24 @@ class SpecBuilder(object):
         for pkg in self._flag_compiler_defaults:
             spec = self._specs[pkg]
             compiler_flags = compilers[spec.compiler].flags
-            check_same_flags(spec.compiler_flags, compiler_flags)
-            spec.compiler_flags.update(compiler_flags)
+            for key in spec.compiler_flags:
+                spec_compiler_flags_set = set(spec.compiler_flags.get(key, []))
+                compiler_flags_set = set(compiler_flags.get(key, []))
 
+                assert spec_compiler_flags_set == compiler_flags_set, "%s does not equal %s" % (
+                    spec_compiler_flags_set,
+                    compiler_flags_set,
+                )
+
+                spec.compiler_flags[key] = compiler_flags.get(key, [])
         # index of all specs (and deps) from the command line by name
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         # iterate through specs with specified flags
-        for pkg, sources in self._flag_sources.items():
+        for key, sources in self._flag_sources.items():
+            pkg, flag_type = key
             spec = self._specs[pkg]
+            compiler_flags = spec.compiler_flags.get(flag_type, [])
 
             # order is determined by the DAG.  A spec's flags come after
             # any from its ancestors on the compile line.
@@ -2163,14 +2176,16 @@ class SpecBuilder(object):
             sorted_sources = sorted(sources, key=lambda s: order.index(s))
 
             # add flags from each source, lowest to highest precedence
-            flags = collections.defaultdict(lambda: [])
+            flags = []
             for source_name in sorted_sources:
                 source = cmd_specs[source_name]
-                for name, flag_list in source.compiler_flags.items():
-                    extend_flag_list(flags[name], flag_list)
+                extend_flag_list(flags, source.compiler_flags.get(flag_type, []))
 
-            check_same_flags(spec.compiler_flags, flags)
-            spec.compiler_flags.update(flags)
+            assert set(compiler_flags) == set(flags), "%s does not equal %s" % (
+                set(compiler_flags),
+                set(flags),
+            )
+            spec.compiler_flags.update({flag_type: source.compiler_flags[flag_type]})
 
     def deprecated(self, pkg, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
@@ -2181,12 +2196,14 @@ class SpecBuilder(object):
         name = function_tuple[0]
         if name == "error":
             priority = function_tuple[1][0]
-            return (-4, priority)
+            return (-5, priority)
         elif name == "hash":
-            return (-3, 0)
+            return (-4, 0)
         elif name == "node":
-            return (-2, 0)
+            return (-3, 0)
         elif name == "node_compiler":
+            return (-2, 0)
+        elif name == "node_flag":
             return (-1, 0)
         else:
             return (0, 0)
@@ -2281,7 +2298,7 @@ def _develop_specs_from_env(spec, env):
     if not dev_info:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info["path"]))
+    path = spack.util.path.canonicalize_path(dev_info["path"], default_wd=env.path)
 
     if "dev_path" in spec.variants:
         error_msg = (

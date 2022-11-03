@@ -13,6 +13,7 @@ class RHtmltools(RPackage):
 
     cran = "htmltools"
 
+    version("0.5.3", sha256="2c451b369ea8918358e2b280f548816664fe0143222c609e6bfb1f9cd2f7324f")
     version("0.5.2", sha256="7dc7d50436e5a82a5801f85bcd2f572a06a98b4027d71aa17b4854ec9b2767fb")
     version("0.5.1.1", sha256="f0bfe72ffe330f3d6c9ead5857f3a4aef80e002e32558074a3e643f2ab67a4ba")
     version("0.5.1", sha256="6ac82e4451f9558ceb541ea659a736b2ab3245827832b44d3661e7a4d91f6307")

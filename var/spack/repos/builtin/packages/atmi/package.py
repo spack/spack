@@ -20,6 +20,8 @@ class Atmi(CMakePackage):
 
     maintainers = ["srekolam", "renjithravindrankannath"]
 
+    version("5.2.3", sha256="5f66c59e668cf968e86b556a0a52ee0202d1b370d8406e291a874cbfd200ee17")
+    version("5.2.1", sha256="6b33445aa67444c038cd756f855a58a72dd35db57e7b63da37fe78a8585b982b")
     version("5.2.0", sha256="33e77905a607734157d46c736c924c7c50b6b13f2b2ddbf711cb08e37f2efa4f")
     version("5.1.3", sha256="a43448d77705b2b07e1758ffe8035aa6ba146abc2167984e8cb0f1615797b341")
     version("5.1.0", sha256="6a758f5a8332e6774cd8e14a4e5ce05e43b1e05298d817b4068c35fa1793d333")
@@ -106,6 +108,8 @@ class Atmi(CMakePackage):
         "5.1.0",
         "5.1.3",
         "5.2.0",
+        "5.2.1",
+        "5.2.3",
     ]:
         depends_on("comgr@" + ver, type="link", when="@" + ver)
         depends_on("hsa-rocr-dev@" + ver, type="link", when="@" + ver)
@@ -117,7 +121,11 @@ class Atmi(CMakePackage):
     # Removing direct reference to /usr/bin/rysnc for rsync command.
     patch("0002-Remove-usr-bin-rsync-reference.patch", when="@4.0.0:5.0.0")
     # Reset the installation path and remove direct reference to rsync.
-    patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:")
+    patch("0002-Remove-usr-bin-rsync-reference-5.2.0.patch", when="@5.0.2:5.2.0")
+    # Remove direct reference to /usr/bin/rsync path for rsync command
+    patch(
+        "0002-Remove-direct-reference-to-usr-bin-rysnc-for-rsync-cmd-5.2.1.patch", when="@5.2.1:"
+    )
 
     def cmake_args(self):
         args = [self.define("ROCM_VERSION", self.spec.version)]

@@ -247,16 +247,23 @@ class TestSpecSematics(object):
 
     def test_satisfies_matching_variant(self):
         check_satisfies("mpich+foo", "mpich+foo")
+        check_satisfies("mpich++foo", "mpich++foo")
         check_satisfies("mpich~foo", "mpich~foo")
+        check_satisfies("mpich~~foo", "mpich~~foo")
         check_satisfies("mpich foo=1", "mpich foo=1")
+        check_satisfies("mpich foo==1", "mpich foo==1")
 
         # confirm that synonymous syntax works correctly
         check_satisfies("mpich+foo", "mpich foo=True")
+        check_satisfies("mpich++foo", "mpich foo=True")
         check_satisfies("mpich foo=true", "mpich+foo")
+        check_satisfies("mpich foo==true", "mpich++foo")
         check_satisfies("mpich~foo", "mpich foo=FALSE")
+        check_satisfies("mpich~~foo", "mpich foo=FALSE")
         check_satisfies("mpich foo=False", "mpich~foo")
+        check_satisfies("mpich foo==False", "mpich~foo")
         check_satisfies("mpich foo=*", "mpich~foo")
-        check_satisfies("mpich +foo", "mpich foo=*")
+        check_satisfies("mpich+foo", "mpich foo=*")
 
     def test_satisfies_multi_value_variant(self):
         # Check quoting
@@ -295,6 +302,7 @@ class TestSpecSematics(object):
         # Assert that an autospec generated from a literal
         # gives the right result for a single valued variant
         assert "foobar=bar" in a
+        assert "foobar==bar" in a
         assert "foobar=baz" not in a
         assert "foobar=fee" not in a
 
@@ -415,21 +423,32 @@ class TestSpecSematics(object):
         check_satisfies("mpich", "mpich+foo", False)
         check_satisfies("mpich", "mpich~foo", False)
         check_satisfies("mpich", "mpich foo=1", False)
+        check_satisfies("mpich", "mpich++foo", False)
+        check_satisfies("mpich", "mpich~~foo", False)
+        check_satisfies("mpich", "mpich foo==1", False)
 
         # 'mpich' is concrete:
         check_unsatisfiable("mpich", "mpich+foo", True)
         check_unsatisfiable("mpich", "mpich~foo", True)
         check_unsatisfiable("mpich", "mpich foo=1", True)
+        check_unsatisfiable("mpich", "mpich++foo", True)
+        check_unsatisfiable("mpich", "mpich~~foo", True)
+        check_unsatisfiable("mpich", "mpich foo==1", True)
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
         check_unsatisfiable("mpich~foo", "mpich+foo")
         check_unsatisfiable("mpich+foo", "mpich~foo")
         check_unsatisfiable("mpich foo=True", "mpich foo=False")
+        check_unsatisfiable("mpich~~foo", "mpich++foo")
+        check_unsatisfiable("mpich++foo", "mpich~~foo")
+        check_unsatisfiable("mpich foo==True", "mpich foo==False")
 
     def test_satisfies_matching_compiler_flag(self):
         check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
         check_satisfies('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
+        check_satisfies('mpich cppflags=="-O3"', 'mpich cppflags=="-O3"')
+        check_satisfies('mpich cppflags=="-O3 -Wall"', 'mpich cppflags=="-O3 -Wall"')
 
     def test_satisfies_unconstrained_compiler_flag(self):
         # only asked for mpich, no constraints.  Any will do.
@@ -453,8 +472,9 @@ class TestSpecSematics(object):
             assert copy[s.name].satisfies(s)
 
     def test_unsatisfiable_compiler_flag_mismatch(self):
-        # No matchi in specs
+        # No match in specs
         check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
+        check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags=="-O3"')
 
     def test_satisfies_virtual(self):
         # Don't use check_satisfies: it checks constrain() too, and
@@ -554,6 +574,12 @@ class TestSpecSematics(object):
         check_constrain("libelf+debug~foo", "libelf+debug", "libelf~foo")
         check_constrain("libelf+debug~foo", "libelf+debug", "libelf+debug~foo")
 
+        check_constrain("libelf++debug++foo", "libelf++debug", "libelf+debug+foo")
+        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf foo=1")
+        check_constrain("libelf debug==2 foo==1", "libelf debug==2", "libelf debug=2 foo=1")
+
+        check_constrain("libelf++debug~~foo", "libelf++debug", "libelf++debug~foo")
+
     def test_constrain_multi_value_variant(self):
         check_constrain(
             'multivalue-variant foo="bar,baz"',
@@ -580,6 +606,17 @@ class TestSpecSematics(object):
             'libelf cflags="-O3" cppflags="-Wall"',
             'libelf cflags="-O3"',
             'libelf cflags="-O3" cppflags="-Wall"',
+        )
+
+        check_constrain(
+            'libelf cflags="-O3" cppflags=="-Wall"',
+            'libelf cppflags=="-Wall"',
+            'libelf cflags="-O3"',
+        )
+        check_constrain(
+            'libelf cflags=="-O3" cppflags=="-Wall"',
+            'libelf cflags=="-O3"',
+            'libelf cflags=="-O3" cppflags=="-Wall"',
         )
 
     def test_constrain_architecture(self):
@@ -620,6 +657,7 @@ class TestSpecSematics(object):
         check_constrain_changed("libelf", "~debug")
         check_constrain_changed("libelf", "debug=2")
         check_constrain_changed("libelf", 'cppflags="-O3"')
+        check_constrain_changed("libelf", 'cppflags=="-O3"')
 
         platform = spack.platforms.host()
         check_constrain_changed("libelf", "target=" + platform.target("default_target").name)
@@ -636,6 +674,7 @@ class TestSpecSematics(object):
         check_constrain_not_changed("libelf debug=2", "debug=2")
         check_constrain_not_changed("libelf debug=2", "debug=*")
         check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
+        check_constrain_not_changed('libelf cppflags=="-O3"', 'cppflags=="-O3"')
 
         platform = spack.platforms.host()
         default_target = platform.target("default_target").name
@@ -791,7 +830,7 @@ class TestSpecSematics(object):
                 spec.format(fmt_str)
 
     def test_spec_deprecated_formatting(self):
-        spec = Spec("libelf cflags=-O2")
+        spec = Spec("libelf cflags==-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
@@ -841,7 +880,7 @@ class TestSpecSematics(object):
         # Spack was assembling flags in a manner that could result in
         # different orderings for repeated concretizations of the same
         # spec and config
-        spec_str = "libelf %gcc@4.7.2 os=redhat6"
+        spec_str = "libelf %gcc@11.1.0 os=redhat6"
         for _ in range(25):
             s = Spec(spec_str).concretized()
             assert all(
@@ -1257,3 +1296,25 @@ def test_concretize_partial_old_dag_hash_spec(mock_packages, config):
 def test_unsupported_compiler():
     with pytest.raises(UnsupportedCompilerError):
         Spec("gcc%fake-compiler").validate_or_raise()
+
+
+def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
+    a1 = Spec("a").concretized()
+    a2 = Spec("a").concretized()
+
+    assert hash(a1) == hash(a2)
+    assert a1.dag_hash() == a2.dag_hash()
+    assert a1.process_hash() == a2.process_hash()
+
+    a1.clear_cached_hashes()
+    a2.clear_cached_hashes()
+
+    # tweak the dag hash of one of these specs
+    new_hash = "00000000000000000000000000000000"
+    if new_hash == a1._package_hash:
+        new_hash = "11111111111111111111111111111111"
+    a1._package_hash = new_hash
+
+    assert hash(a1) != hash(a2)
+    assert a1.dag_hash() != a2.dag_hash()
+    assert a1.process_hash() != a2.process_hash()

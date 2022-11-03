@@ -109,6 +109,7 @@ class Root(CMakePackage):
     # options are or are not supported, and why.
 
     variant("aqua", default=False, description="Enable Aqua interface")
+    variant("arrow", default=False, description="Enable Arrow interface")
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -169,6 +170,12 @@ class Root(CMakePackage):
         "veccore", default=False, description="Enable support for VecCore SIMD abstraction library"
     )
     variant("vmc", default=False, description="Enable the Virtual Monte Carlo interface")
+    variant(
+        "webgui",
+        default=True,
+        description="Enable web-based UI components of ROOT",
+        when="+root7",
+    )
     variant("x", default=True, description="Enable set of graphical options")
     variant("xml", default=True, description="Enable XML parser interface")
     variant("xrootd", default=False, description="Build xrootd file server and its client")
@@ -211,11 +218,11 @@ class Root(CMakePackage):
     depends_on("libsm", when="+x")
 
     # OpenGL
-    depends_on("ftgl@2.4.0:", when="+x+opengl")
-    depends_on("glew", when="+x+opengl")
-    depends_on("gl", when="+x+opengl")
-    depends_on("glu", when="+x+opengl")
-    depends_on("gl2ps", when="+x+opengl")
+    depends_on("ftgl@2.4.0:", when="+opengl")
+    depends_on("glew", when="+opengl")
+    depends_on("gl2ps", when="+opengl")
+    depends_on("gl", when="+opengl")
+    depends_on("glu", when="+opengl")
 
     # Qt4
     depends_on("qt@:4", when="+qt4")
@@ -229,6 +236,7 @@ class Root(CMakePackage):
     depends_on("py-numpy", type=("build", "run"), when="@6.20.00:6.20.05 +python")
 
     # Optional dependencies
+    depends_on("arrow", when="+arrow")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -287,7 +295,8 @@ class Root(CMakePackage):
     conflicts("target=ppc64le:", when="@:6.24")
 
     # Incompatible variants
-    conflicts("+opengl", when="~x", msg="OpenGL requires X")
+    if sys.platform != "darwin":
+        conflicts("+opengl", when="~x", msg="OpenGL requires X")
     conflicts("+tmva", when="~gsl", msg="TVMA requires GSL")
     conflicts("+tmva", when="~mlp", msg="TVMA requires MLP")
     conflicts("cxxstd=11", when="+root7", msg="root7 requires at least C++14")
@@ -334,6 +343,8 @@ class Root(CMakePackage):
             v.append("cxxstd=14")
         elif "cxx17" in f:
             v.append("cxxstd=17")
+        elif "cxx20" in f:
+            v.append("cxxstd=20")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
@@ -374,8 +385,8 @@ class Root(CMakePackage):
         _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
-        _add_variant(v, f, ("root7", "webgui"), "+root7")  # for root version >= 6.18.00
-        _add_variant(v, f, ("root7", "webui"), "+root7")  # for root version <= 6.17.02
+        _add_variant(v, f, ("root7", "webgui"), "+webgui")  # for root version >= 6.18.00
+        _add_variant(v, f, ("root7", "webui"), "+webgui")  # for root version <= 6.17.02
         _add_variant(v, f, "rpath", "+rpath")
         _add_variant(v, f, "shadowpw", "+shadow")
         _add_variant(v, f, "spectrum", "+spectrum")
@@ -428,8 +439,11 @@ class Root(CMakePackage):
 
         # Options related to ROOT's ability to download and build its own
         # dependencies. Per Spack convention, this should generally be avoided.
+
+        afterimage_enabled = ("+x" in self.spec) if "platform=darwin" not in self.spec else True
+
         options += [
-            define_from_variant("builtin_afterimage", "x"),
+            define("builtin_afterimage", afterimage_enabled),
             define("builtin_cfitsio", False),
             define("builtin_davix", False),
             define("builtin_fftw3", False),
@@ -459,7 +473,7 @@ class Root(CMakePackage):
             define("afdsmrgd", False),
             define("afs", False),
             define("alien", False),
-            define("arrow", False),
+            define_from_variant("arrow"),
             define("asimage", True),
             define("astiff", True),
             define("bonjour", False),
@@ -534,9 +548,9 @@ class Root(CMakePackage):
         # Necessary due to name change of variant (webui->webgui)
         # https://github.com/root-project/root/commit/d631c542909f2f793ca7b06abc622e292dfc4934
         if self.spec.satisfies("@:6.17.02"):
-            options.append(define_from_variant("webui", "root7"))
+            options.append(define_from_variant("webui", "webgui"))
         if self.spec.satisfies("@6.18.00:"):
-            options.append(define_from_variant("webgui", "root7"))
+            options.append(define_from_variant("webgui", "webgui"))
 
         # Some special features
         if self.spec.satisfies("@6.20.02:"):
@@ -602,7 +616,7 @@ class Root(CMakePackage):
             add_include_path("fontconfig")
             add_include_path("libx11")
             add_include_path("xproto")
-        if "+opengl" in spec:
+        if "+opengl" in spec and "platform=darwin" not in spec:
             add_include_path("glew")
             add_include_path("mesa-glu")
         if "platform=darwin" in spec:

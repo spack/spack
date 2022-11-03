@@ -46,6 +46,8 @@ class Vasp(MakefilePackage):
         "https://github.com/henniggroup/VASPsol",
     )
 
+    variant("shmem", default=True, description="Enable use_shmem build flag")
+
     depends_on("rsync", type="build")
     depends_on("blas")
     depends_on("lapack")
@@ -151,8 +153,11 @@ class Vasp(MakefilePackage):
             "-Davoidalloc",
             "-Duse_bse_te",
             "-Dtbdyn",
-            "-Duse_shmem",
         ]
+
+        if "+shmem" in spec:
+            cpp_options.append("-Duse_shmem")
+
         if "%nvhpc" in self.spec:
             cpp_options.extend(['-DHOST=\\"LinuxPGI\\"', "-DPGI16", "-Dqd_emulate"])
         elif "%aocc" in self.spec:

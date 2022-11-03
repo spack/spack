@@ -46,6 +46,8 @@ import spack.version
 #: Name of the file containing metadata about the bootstrapping source
 METADATA_YAML_FILENAME = "metadata.yaml"
 
+is_windows = sys.platform == "win32"
+
 #: Map a bootstrapper type to the corresponding class
 _bootstrap_methods = {}
 
@@ -89,6 +91,14 @@ def _try_import_from_store(module, query_spec, query_info=None):
             os.path.join(candidate_spec.prefix, pkg.platlib),
         ]  # type: list[str]
         path_before = list(sys.path)
+
+        # Python 3.8+ on Windows does not search dependent DLLs in PATH,
+        # so we need to manually add it using os.add_dll_directory
+        # https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
+        if sys.version_info[:2] >= (3, 8) and sys.platform == "win32":
+            if os.path.isdir(candidate_spec.prefix.bin):
+                os.add_dll_directory(candidate_spec.prefix.bin)  # novermin
+
         # NOTE: try module_paths first and last, last allows an existing version in path
         # to be picked up and used, possibly depending on something in the store, first
         # allows the bootstrap version to work when an incompatible version is in
@@ -655,6 +665,8 @@ def _add_externals_if_missing():
         # GnuPG
         spack.repo.path.get_pkg_class("gawk"),
     ]
+    if is_windows:
+        search_list.append(spack.repo.path.get_pkg_class("winbison"))
     detected_packages = spack.detection.by_executable(search_list)
     spack.detection.update_configuration(detected_packages, scope="bootstrap")
 

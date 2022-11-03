@@ -22,9 +22,9 @@ import six
 from llnl.util import tty
 from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
-from llnl.util.symlink import symlink
+from llnl.util.symlink import islink, symlink
 
-from spack.util.executable import Executable
+from spack.util.executable import CommandNotFoundError, Executable, which
 from spack.util.path import path_to_os_path, system_path_filter
 
 is_windows = _platform == "win32"
@@ -113,6 +113,69 @@ def path_contains_subdirectory(path, root):
     return norm_path.startswith(norm_root)
 
 
+@memoized
+def file_command(*args):
+    """Creates entry point to `file` system command with provided arguments"""
+    try:
+        file_cmd = which("file", required=True)
+    except CommandNotFoundError as e:
+        if is_windows:
+            raise CommandNotFoundError("`file` utility is not available on Windows")
+        else:
+            raise e
+    for arg in args:
+        file_cmd.add_default_arg(arg)
+    return file_cmd
+
+
+@memoized
+def _get_mime_type():
+    """Generate method to call `file` system command to aquire mime type
+    for a specified path
+    """
+    return file_command("-b", "-h", "--mime-type")
+
+
+@memoized
+def _get_mime_type_compressed():
+    """Same as _get_mime_type but attempts to check for
+    compression first
+    """
+    mime_uncompressed = _get_mime_type()
+    mime_uncompressed.add_default_arg("-Z")
+    return mime_uncompressed
+
+
+def mime_type(filename):
+    """Returns the mime type and subtype of a file.
+
+    Args:
+        filename: file to be analyzed
+
+    Returns:
+        Tuple containing the MIME type and subtype
+    """
+    output = _get_mime_type()(filename, output=str, error=str).strip()
+    tty.debug("==> " + output)
+    type, _, subtype = output.partition("/")
+    return type, subtype
+
+
+def compressed_mime_type(filename):
+    """Same as mime_type but checks for type that has been compressed
+
+    Args:
+        filename (str): file to be analyzed
+
+    Returns:
+        Tuple containing the MIME type and subtype
+    """
+    output = _get_mime_type_compressed()(filename, output=str, error=str).strip()
+    tty.debug("==> " + output)
+    type, _, subtype = output.partition("/")
+    return type, subtype
+
+
 #: This generates the library filenames that may appear on any OS.
 library_extensions = ["a", "la", "so", "tbd", "dylib"]
 
@@ -170,9 +233,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
     Keyword Arguments:
         string (bool): Treat regex as a plain string. Default it False
-        backup (bool): Make backup file(s) suffixed with ``~``. Default is True
+        backup (bool): Make backup file(s) suffixed with ``~``. Default is False
         ignore_absent (bool): Ignore any files that don't exist.
             Default is False
+        start_at (str): Marker used to start applying the replacements. If a
+            text line matches this marker filtering is started at the next line.
+            All contents before the marker and the marker itself are copied
+            verbatim. Default is to start filtering from the first line of the
+            file.
         stop_at (str): Marker used to stop scanning the file further. If a text
             line matches this marker filtering is stopped and the rest of the
             file is copied verbatim. Default is to filter until the end of the
@@ -181,6 +249,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
     string = kwargs.get("string", False)
     backup = kwargs.get("backup", False)
     ignore_absent = kwargs.get("ignore_absent", False)
+    start_at = kwargs.get("start_at", None)
     stop_at = kwargs.get("stop_at", None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
@@ -229,6 +298,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             # reached or we found a marker in the line if it was specified
             with open(tmp_filename, mode="r", **extra_kwargs) as input_file:
                 with open(filename, mode="w", **extra_kwargs) as output_file:
+                    do_filtering = start_at is None
                     # Using iter and readline is a workaround needed not to
                     # disable input_file.tell(), which will happen if we call
                     # input_file.next() implicitly via the for loop
@@ -238,8 +308,12 @@ def filter_file(regex, repl, *filenames, **kwargs):
                             if stop_at == line.strip():
                                 output_file.write(line)
                                 break
-                        filtered_line = re.sub(regex, repl, line)
-                        output_file.write(filtered_line)
+                        if do_filtering:
+                            filtered_line = re.sub(regex, repl, line)
+                            output_file.write(filtered_line)
+                        else:
+                            do_filtering = start_at == line.strip()
+                            output_file.write(line)
                     else:
                         current_position = None
 
@@ -431,8 +505,15 @@ def group_ids(uid=None):
 
     if uid is None:
         uid = getuid()
-    user = pwd.getpwuid(uid).pw_name
-    return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
+
+    pwd_entry = pwd.getpwuid(uid)
+    user = pwd_entry.pw_name
+
+    # user's primary group id may not be listed in grp (i.e. /etc/group)
+    # you have to check pwd for that, so start the list with that
+    gids = [pwd_entry.pw_gid]
+
+    return sorted(set(gids + [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]))
 
 
 @system_path_filter(arg_slice=slice(1))
@@ -637,7 +718,11 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                 if symlinks:
                     target = os.readlink(s)
                     if os.path.isabs(target):
-                        new_target = re.sub(abs_src, abs_dest, target)
+
+                        def escaped_path(path):
+                            return path.replace("\\", r"\\")
+
+                        new_target = re.sub(escaped_path(abs_src), escaped_path(abs_dest), target)
                         if new_target != target:
                             tty.debug("Redirecting link {0} to {1}".format(target, new_target))
                             target = new_target
@@ -1005,7 +1090,11 @@ def temp_cwd():
         with working_dir(tmp_dir):
             yield tmp_dir
     finally:
-        shutil.rmtree(tmp_dir)
+        kwargs = {}
+        if is_windows:
+            kwargs["ignore_errors"] = False
+            kwargs["onerror"] = readonly_file_handler(ignore_errors=True)
+        shutil.rmtree(tmp_dir, **kwargs)
 
 
 @contextmanager
@@ -1903,7 +1992,11 @@ class LibraryList(FileList):
                 name = x[3:]
 
             # Valid extensions include: ['.dylib', '.so', '.a']
-            for ext in [".dylib", ".so", ".a"]:
+            # on non Windows platform
+            # Windows valid library extensions are:
+            # ['.dll', '.lib']
+            valid_exts = [".dll", ".lib"] if is_windows else [".dylib", ".so", ".a"]
+            for ext in valid_exts:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
@@ -2013,7 +2106,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recursive=False):
+def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -2034,6 +2127,10 @@ def find_libraries(libraries, root, shared=True, recursive=False):
             otherwise for static. Defaults to True.
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
+        runtime (bool): Windows only option, no-op elsewhere. If true,
+            search for runtime shared libs (.DLL), otherwise, search
+            for .Lib files. If shared is false, this has no meaning.
+            Defaults to True.
 
     Returns:
         LibraryList: The libraries that have been found
@@ -2046,15 +2143,25 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         message = message.format(find_libraries.__name__, type(libraries))
         raise TypeError(message)
 
+    if is_windows:
+        static_ext = "lib"
+        # For linking (runtime=False) you need the .lib files regardless of
+        # whether you are doing a shared or static link
+        shared_ext = "dll" if runtime else "lib"
+    else:
+        # Used on both Linux and macOS
+        static_ext = "a"
+        shared_ext = "so"
+
     # Construct the right suffix for the library
     if shared:
         # Used on both Linux and macOS
-        suffixes = ["so"]
+        suffixes = [shared_ext]
         if sys.platform == "darwin":
             # Only used on macOS
             suffixes.append("dylib")
     else:
-        suffixes = ["a"]
+        suffixes = [static_ext]
 
     # List of libraries we are searching with suffixes
     libraries = ["{0}.{1}".format(lib, suffix) for lib in libraries for suffix in suffixes]
@@ -2067,7 +2174,11 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # perform first non-recursive search in root/lib then in root/lib64 and
     # finally search all of root recursively. The search stops when the first
     # match is found.
-    for subdir in ("lib", "lib64"):
+    common_lib_dirs = ["lib", "lib64"]
+    if is_windows:
+        common_lib_dirs.extend(["bin", "Lib"])
+
+    for subdir in common_lib_dirs:
         dirname = join_path(root, subdir)
         if not os.path.isdir(dirname):
             continue
@@ -2078,6 +2189,147 @@ def find_libraries(libraries, root, shared=True, recursive=False):
         found_libs = find(root, libraries, True)
 
     return LibraryList(found_libs)
+
+
+def find_all_shared_libraries(root, recursive=False, runtime=True):
+    """Convenience function that returns the list of all shared libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+    return find_libraries("*", root=root, shared=True, recursive=recursive, runtime=runtime)
+
+
+def find_all_static_libraries(root, recursive=False):
+    """Convenience function that returns the list of all static libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+    return find_libraries("*", root=root, shared=False, recursive=recursive)
+
+
+def find_all_libraries(root, recursive=False):
+    """Convenience function that returns the list of all libraries found
+    in the directory passed as argument.
+
+    See documentation for `llnl.util.filesystem.find_libraries` for more information
+    """
+
+    return find_all_shared_libraries(root, recursive=recursive) + find_all_static_libraries(
+        root, recursive=recursive
+    )
+
+
+class WindowsSimulatedRPath(object):
+    """Class representing Windows filesystem rpath analog
+
+    One instance of this class is associated with a package (only on Windows)
+    For each lib/binary directory in an associated package, this class introduces
+    a symlink to any/all dependent libraries/binaries. This includes the packages
+    own bin/lib directories, meaning the libraries are linked to the bianry directory
+    and vis versa.
+    """
+
+    def __init__(self, package, link_install_prefix=True):
+        """
+        Args:
+            package (spack.package_base.PackageBase): Package requiring links
+            link_install_prefix (bool): Link against package's own install or stage root.
+                Packages that run their own executables during build and require rpaths to
+                the build directory during build time require this option. Default: install
+                root
+        """
+        self.pkg = package
+        self._addl_rpaths = set()
+        self.link_install_prefix = link_install_prefix
+        self._additional_library_dependents = set()
+
+    @property
+    def library_dependents(self):
+        """
+        Set of directories where package binaries/libraries are located.
+        """
+        return set([self.pkg.prefix.bin]) | self._additional_library_dependents
+
+    def add_library_dependent(self, *dest):
+        """
+        Add paths to directories or libraries/binaries to set of
+        common paths that need to link against other libraries
+
+        Specified paths should fall outside of a package's common
+        link paths, i.e. the bin
+        directories.
+        """
+        for pth in dest:
+            if os.path.isfile(pth):
+                self._additional_library_dependents.add(os.path.dirname)
+            else:
+                self._additional_library_dependents.add(pth)
+
+    @property
+    def rpaths(self):
+        """
+        Set of libraries this package needs to link against during runtime
+        These packages will each be symlinked into the packages lib and binary dir
+        """
+        dependent_libs = []
+        for path in self.pkg.rpath:
+            dependent_libs.extend(list(find_all_shared_libraries(path, recursive=True)))
+        for extra_path in self._addl_rpaths:
+            dependent_libs.extend(list(find_all_shared_libraries(extra_path, recursive=True)))
+        return set(dependent_libs)
+
+    def add_rpath(self, *paths):
+        """
+        Add libraries found at the root of provided paths to runtime linking
+
+        These are libraries found outside of the typical scope of rpath linking
+        that require manual inclusion in a runtime linking scheme.
+        These links are unidirectional, and are only
+        intended to bring outside dependencies into this package
+
+        Args:
+            *paths (str): arbitrary number of paths to be added to runtime linking
+        """
+        self._addl_rpaths = self._addl_rpaths | set(paths)
+
+    def _link(self, path, dest):
+        file_name = os.path.basename(path)
+        dest_file = os.path.join(dest, file_name)
+        if os.path.exists(dest):
+            try:
+                symlink(path, dest_file)
+            # For py2 compatibility, we have to catch the specific Windows error code
+            # associate with trying to create a file that already exists (winerror 183)
+            except OSError as e:
+                if e.winerror == 183:
+                    # We have either already symlinked or we are encoutering a naming clash
+                    # either way, we don't want to overwrite existing libraries
+                    already_linked = islink(dest_file)
+                    tty.debug(
+                        "Linking library %s to %s failed, " % (path, dest_file) + "already linked."
+                        if already_linked
+                        else "library with name %s already exists at location %s."
+                        % (file_name, dest)
+                    )
+                    pass
+                else:
+                    raise e
+
+    def establish_link(self):
+        """
+        (sym)link packages to runtime dependencies based on RPath configuration for
+        Windows heuristics
+        """
+        # from build_environment.py:463
+        # The top-level package is always RPATHed. It hasn't been installed yet
+        # so the RPATHs are added unconditionally
+
+        # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
+        # install a symlink to each dependent library
+        for library, lib_dir in itertools.product(self.rpaths, self.library_dependents):
+            self._link(library, lib_dir)
 
 
 @system_path_filter

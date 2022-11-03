@@ -14,6 +14,7 @@ class RTibble(RPackage):
 
     cran = "tibble"
 
+    version("3.1.8", sha256="acf30e075d18d2f61de53ca20a13c502bb32abb8083089b0bb9172a0cb5cedea")
     version("3.1.7", sha256="e1a50891f476803526960b4c4d736a72e7d9c3d366946744a02d6347f591c872")
     version("3.1.6", sha256="5b33d909f146ebad38e262f6a57cb91ab70bfe240c2af01004beec11b3898292")
     version("3.1.5", sha256="da6387ba683a67cd7fc2a111f6b62468e480a8078bc1867d433a40c5460edbe7")
@@ -29,8 +30,6 @@ class RTibble(RPackage):
 
     depends_on("r@3.1.2:", type=("build", "run"))
     depends_on("r@3.1.0:", type=("build", "run"), when="@1.3.0:")
-    depends_on("r-ellipsis@0.2.0:", type=("build", "run"), when="@3.0.5:")
-    depends_on("r-ellipsis@0.3.2:", type=("build", "run"), when="@3.1.2:")
     depends_on("r-fansi@0.4.0:", type=("build", "run"), when="@2.0.0:")
     depends_on("r-lifecycle@0.2.0:", type=("build", "run"), when="@3.0.5:")
     depends_on("r-lifecycle@1.0.0:", type=("build", "run"), when="@3.1.5:")
@@ -44,6 +43,7 @@ class RTibble(RPackage):
     depends_on("r-rlang@0.3.0:", type=("build", "run"), when="@1.3.1:")
     depends_on("r-rlang@0.4.3:", type=("build", "run"), when="@3.0.5:")
     depends_on("r-rlang@1.0.1:", type=("build", "run"), when="@3.1.7:")
+    depends_on("r-rlang@1.0.2:", type=("build", "run"), when="@3.1.8:")
     depends_on("r-vctrs@0.3.2:", type=("build", "run"), when="@3.0.5:")
     depends_on("r-vctrs@0.3.8:", type=("build", "run"), when="@3.1.2:")
 
@@ -52,3 +52,6 @@ class RTibble(RPackage):
     depends_on("r-assertthat", type=("build", "run"), when="@:1.3.1")
     depends_on("r-lazyeval@0.1.10:", type=("build", "run"), when="@:1.3.0")
     depends_on("r-rcpp@0.12.3:", type=("build", "run"), when="@:1.3.4")
+    depends_on("r-ellipsis@0.2.0:", type=("build", "run"), when="@3.0.5:")
+    depends_on("r-ellipsis@0.3.2:", type=("build", "run"), when="@3.1.2:")
+    depends_on("r-ellipsis", when="@:3.1.7")

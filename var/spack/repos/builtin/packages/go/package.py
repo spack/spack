@@ -152,14 +152,13 @@ class Go(Package):
     # aarch64 machines (including Macs with Apple silicon) can't use
     # go-bootstrap because it pre-dates aarch64 support in Go.  These machines
     # have to rely on Go support in gcc (which may require compiling a version
-    # of gcc with Go support just to satisfy this requirement).  However,
-    # there's also a bug in some versions of GCC's Go front-end that prevents
-    # these versions from properly bootstrapping Go.  (See issue #47771
-    # https://github.com/golang/go/issues/47771 )  On the 10.x branch, we need
-    # at least 10.4.  On the 11.x branch, we need at least 11.3.
+    # of gcc with Go support just to satisfy this requirement) or external go:
 
-    if platform.machine() == "aarch64":
-        depends_on("gcc@10.4.0:10,11.3.0: languages=go", type="build")
+    # #27769: On M1/MacOS, platform.machine() may return arm64:
+    if platform.machine() in ["arm64", "aarch64"]:
+        # Use an external go compiler from packages.yaml/`spack external find go-bootstrap`,
+        # but fallback to build go-bootstrap@1.4 or to gcc with languages=go (for aarch64):
+        depends_on("go-external-or-gccgo-bootstrap", type="build")
     else:
         depends_on("go-bootstrap", type="build")
 

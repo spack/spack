@@ -16,6 +16,7 @@ class PyAbslPy(PythonPackage):
 
     pypi = "absl-py/absl-py-0.7.0.tar.gz"
 
+    version("1.2.0", sha256="f568809938c49abbda89826223c992b630afd23c638160ad7840cfe347710d97")
     version("1.1.0", sha256="3aa39f898329c2156ff525dfa69ce709e42d77aab18bf4917719d6f260aa6a08")
     version("0.13.0", sha256="6953272383486044699fd0e9f00aad167a27e08ce19aae66c6c4b10e7e767793")
     version("0.12.0", sha256="b44f68984a5ceb2607d135a615999b93924c771238a63920d17d3387b0d229d5")

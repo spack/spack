@@ -27,6 +27,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("6.4.1", sha256="7bf10a8d2920591af3fba2db92548e91ad60eb7241ab23350a9b1bc51e05e8d0")
+    version("6.4.0", sha256="0aff803a12c6d298d05b56839197dd09858631864017e255ed89e28b49b652f1")
     version("6.3.0", sha256="89a22bea820ff250aa7239f634ab07fa34efe1d2dcfde29cc8d3af11455ba2a7")
     version("6.2.0", sha256="195d5593772fc483f63f08794d79e4bab30c2ec58e6ce4b0fb6bcc0e0c48f31d")
     version("6.1.1", sha256="cfaf637b792c330396a25ef787eb59d58726c35918ebbc08e33466e45d50470c")
@@ -122,9 +124,17 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         when="@6.0.0: +profiling",
         description="Enable Caliper instrumentation/profiling",
     )
+    variant("ginkgo", default=False, when="@6.4.0:", description="Enable Ginkgo interfaces")
     variant("hypre", default=False, when="@2.7.0:", description="Enable Hypre MPI parallel vector")
-    variant("lapack", default=False, description="Enable LAPACK direct solvers")
+    variant("kokkos", default=False, when="@6.4.0:", description="Enable Kokkos vector")
+    variant(
+        "kokkos-kernels",
+        default=False,
+        when="@6.4.0:",
+        description="Enable KokkosKernels based matrix and linear solver",
+    )
     variant("klu", default=False, description="Enable KLU sparse, direct solver")
+    variant("lapack", default=False, description="Enable LAPACK direct solvers")
     variant("petsc", default=False, when="@2.7.0:", description="Enable PETSc interfaces")
     variant("magma", default=False, when="@5.7.0:", description="Enable MAGMA interface")
     variant("superlu-mt", default=False, description="Enable SuperLU_MT sparse, direct solver")
@@ -205,6 +215,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     # Build dependencies
     depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.18:", when="+cuda", type="build")
 
     # MPI related dependencies
     depends_on("mpi", when="+mpi")
@@ -219,6 +230,23 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     # External libraries
     depends_on("caliper", when="+caliper")
+    depends_on("ginkgo@1.5.0:", when="+ginkgo")
+    depends_on("kokkos", when="+kokkos")
+    depends_on("kokkos-kernels", when="+kokkos-kernels")
+    for cuda_arch in CudaPackage.cuda_arch_values:
+        depends_on(
+            "kokkos+cuda+cuda_lambda+cuda_constexpr cuda_arch=%s" % cuda_arch,
+            when="+kokkos +cuda cuda_arch=%s" % cuda_arch,
+        )
+        depends_on(
+            "kokkos-kernels+cuda cuda_arch=%s" % cuda_arch,
+            when="+kokkos-kernels +cuda cuda_arch=%s" % cuda_arch,
+        )
+    for rocm_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "kokkos+rocm amdgpu_target=%s" % rocm_arch,
+            when="+kokkos +rocm amdgpu_target=%s" % rocm_arch,
+        )
     depends_on("lapack", when="+lapack")
     depends_on("hypre+mpi~int64", when="@5.7.1: +hypre ~int64")
     depends_on("hypre+mpi+int64", when="@5.7.1: +hypre +int64")
@@ -228,7 +256,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc+mpi", when="+petsc")
     depends_on("suite-sparse", when="+klu")
     depends_on("superlu-dist@6.1.1:", when="@:5.4.0 +superlu-dist")
-    depends_on("superlu-dist@6.3.0:", when="@5.5.0: +superlu-dist")
+    depends_on("superlu-dist@6.3.0:", when="@5.5.0:6.3 +superlu-dist")
+    depends_on("superlu-dist@7:", when="@6.4: +superlu-dist")
     depends_on("trilinos+tpetra", when="+trilinos")
 
     # Require that external libraries built with the same precision
@@ -265,7 +294,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
-        define = CMakePackage.define
+        define = self.define
         from_variant = self.define_from_variant
 
         # List of CMake arguments
@@ -337,6 +366,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 from_variant("SUPERLUMT_ENABLE", "superlu-mt"),
                 from_variant("SUPERLUDIST_ENABLE", "superlu-dist"),
                 from_variant("Trilinos_ENABLE", "trilinos"),
+                from_variant("ENABLE_KOKKOS", "kokkos"),
+                from_variant("ENABLE_KOKKOS_KERNELS", "kokkos-kernels"),
                 from_variant("EXAMPLES_INSTALL", "examples-install"),
             ]
         )
@@ -367,6 +398,25 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
                 ]
             )
 
+        # Building with Ginkgo
+        if "+ginkgo" in spec:
+            gko_backends = ["REF"]
+            if "+openmp" in spec["ginkgo"] and "+openmp" in spec:
+                gko_backends.append("OMP")
+            if "+cuda" in spec["ginkgo"] and "+cuda" in spec:
+                gko_backends.append("CUDA")
+            if "+rocm" in spec["ginkgo"] and "+rocm" in spec:
+                gko_backends.append("HIP")
+            if "+oneapi" in spec["ginkgo"] and "+sycl" in spec:
+                gko_backends.append("DPCPP")
+            args.extend(
+                [
+                    from_variant("ENABLE_GINKGO", "ginkgo"),
+                    define("Ginkgo_DIR", spec["ginkgo"].prefix),
+                    define("SUNDIALS_GINKGO_BACKENDS", ";".join(gko_backends)),
+                ]
+            )
+
         # Building with Hypre
         if "+hypre" in spec:
             args.extend(
@@ -378,6 +428,12 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             if not spec["hypre"].variants["shared"].value:
                 hypre_libs = spec["blas"].libs + spec["lapack"].libs
                 args.extend([define("HYPRE_LIBRARIES", hypre_libs.joined(";"))])
+
+        # Building with Kokkos and KokkosKernels
+        if "+kokkos" in spec:
+            args.extend([define("Kokkos_DIR", spec["kokkos"].prefix)])
+        if "+kokkos-kernels" in spec:
+            args.extend([define("KokkosKernels_DIR", spec["kokkos-kernels"].prefix)])
 
         # Building with KLU
         if "+klu" in spec:
@@ -404,6 +460,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+petsc" in spec:
             if spec.version >= Version("5"):
                 args.append(define("PETSC_DIR", spec["petsc"].prefix))
+                if "+kokkos" in spec["petsc"]:
+                    args.append(define("Kokkos_DIR", spec["kokkos"].prefix))
+                    args.append(define("KokkosKernels_DIR", spec["kokkos-kernels"].prefix))
             else:
                 args.extend(
                     [
@@ -438,15 +497,22 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         # Building with SuperLU_DIST
         if "+superlu-dist" in spec:
-            args.extend(
-                [
-                    define("OPENMP_ENABLE", "^superlu-dist+openmp" in spec),
-                    define("SUPERLUDIST_INCLUDE_DIR", spec["superlu-dist"].prefix.include),
-                    define("SUPERLUDIST_LIBRARY_DIR", spec["superlu-dist"].prefix.lib),
-                    define("SUPERLUDIST_LIBRARIES", spec["blas"].libs),
-                    define("SUPERLUDIST_OpenMP", "^superlu-dist+openmp" in spec),
-                ]
-            )
+            if spec.satisfies("@6.4.0:"):
+                args.extend(
+                    [
+                        define("SUPERLUDIST_DIR", spec["superlu-dist"].prefix),
+                        define("SUPERLUDIST_OpenMP", "^superlu-dist+openmp" in spec),
+                    ]
+                )
+            else:
+                args.extend(
+                    [
+                        define("SUPERLUDIST_INCLUDE_DIR", spec["superlu-dist"].prefix.include),
+                        define("SUPERLUDIST_LIBRARY_DIR", spec["superlu-dist"].prefix.lib),
+                        define("SUPERLUDIST_LIBRARIES", spec["blas"].libs),
+                        define("SUPERLUDIST_OpenMP", "^superlu-dist+openmp" in spec),
+                    ]
+                )
 
         # Building with Trilinos
         if "+trilinos" in spec:

@@ -30,6 +30,12 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.2.0",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18933/l_onednn_p_2022.2.0.8750_offline.sh",
+            sha256="920833cd1f05f2fdafb942c96946c3925eb734d4458d52f22f2cc755133cb9e0",
+            expand=False,
+        )
+        version(
             "2022.1.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18725/l_onednn_p_2022.1.0.132_offline.sh",
             sha256="0b9a7efe8dd0f0b5132b353a8ee99226f75bae4bab188a453817263a0684cc93",

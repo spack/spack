@@ -24,6 +24,8 @@ spack:
           - openmpi
           - mpich
       variants: +mpi
+    tbb:
+      require: "intel-tbb"
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
       version:
@@ -69,12 +71,6 @@ spack:
     # Licensing OK?
     # - intel-oneapi-compilers@2022.1
     # - nvhpc
-
-  - cuda_specs:
-    # Depends on ctffind which embeds fsincos (x86-specific asm) within code. Will not build on ARM
-    #- relion +cuda cuda_arch=70
-    - raja +cuda cuda_arch=70
-    - mfem +cuda cuda_arch=70
 
   - app_specs:
     - bwa
@@ -134,11 +130,6 @@ spack:
   specs:
 
   - matrix:
-    - - $cuda_specs
-    - - $compiler
-    - - $target
-
-  - matrix:
     - - $app_specs
     - - $compiler
     - - $target
@@ -159,17 +150,24 @@ spack:
   gitlab-ci:
 
     script:
+      - uname -a || true
+      - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+      - curl -Lfs 'https://github.com/JuliaBinaryWrappers/GNUMake_jll.jl/releases/download/GNUMake-v4.3.0+1/GNUMake.v4.3.0.aarch64-linux-gnu.tar.gz' -o gmake.tar.gz
+      - printf '2322c175fb092b426f9eb6c24ee22d94ffa6759c3d0c260b74d81abd8120122b gmake.tar.gz' | sha256sum --check --strict --quiet
+      - tar -xzf gmake.tar.gz -C /usr bin/make 2> /dev/null
       - . "./share/spack/setup-env.sh"
       - spack --version
+      - spack arch
       - cd ${SPACK_CONCRETE_ENV_DIR}
       - spack env activate --without-view .
       - spack config add "config:install_tree:projections:${SPACK_JOB_SPEC_PKG_NAME}:'morepadding/{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}'"
       - mkdir -p ${SPACK_ARTIFACTS_ROOT}/user_data
       - if [[ -r /mnt/key/intermediate_ci_signing_key.gpg ]]; then spack gpg trust /mnt/key/intermediate_ci_signing_key.gpg; fi
       - if [[ -r /mnt/key/spack_public_key.gpg ]]; then spack gpg trust /mnt/key/spack_public_key.gpg; fi
-      - spack -d ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - spack --color=always --backtrace ci rebuild > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
 
     image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
+    match_behavior: first
     mappings:
       - match:
         - llvm

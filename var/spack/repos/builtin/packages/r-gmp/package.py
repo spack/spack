@@ -15,6 +15,7 @@ class RGmp(RPackage):
 
     cran = "gmp"
 
+    version("0.6-6", sha256="87fa95a8084855d2137b3863b6b8f3c277280dbe3a6a230e359cf32c3bed2793")
     version("0.6-5", sha256="8ae76f3d17542eab3e7468341dabeebe28b11da8c1b4b3f7bbdb00d379689e52")
     version("0.6-2.1", sha256="c458026346c12093a22e627e2d5707a929fe95f4de3281894db4ab988d8747d6")
     version("0.6-2", sha256="6bfcb45b3f1e7da27d8773f911027355cab371d150c3dabf7dbaf8fba85b7f0e")

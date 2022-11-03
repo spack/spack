@@ -150,8 +150,14 @@ with '-Wl,-commons,use_dylibs' and without
 
     filter_compiler_wrappers("mpicc", "mpicxx", "mpif77", "mpif90", "mpifort", relative_root="bin")
 
-    # https://github.com/spack/spack/issues/31678
-    patch("mpich-oneapi-config-rpath.patch", when="@4.0.2 %oneapi")
+    # Set correct rpath flags for Intel Fortran Compiler (%oneapi)
+    # See https://github.com/pmodels/mpich/pull/5824
+    # and https://github.com/spack/spack/issues/31678
+    # We do not fetch the patch from the upstream repo because it cannot be applied to older
+    # versions.
+    with when("%oneapi"):
+        patch("mpich-oneapi-config-rpath/step1.patch", when="@:4.0.2")
+        patch("mpich-oneapi-config-rpath/step2.patch", when="@3.1.1:4.0.2")
 
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
@@ -198,6 +204,7 @@ with '-Wl,-commons,use_dylibs' and without
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on("libfabric@:1.6", when="device=ch3 netmod=ofi")
+    depends_on("libfabric@1.5:", when="@3.4: device=ch4 netmod=ofi")
 
     depends_on("ucx", when="netmod=ucx")
     depends_on("mxm", when="netmod=mxm")
@@ -507,7 +514,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         if "+cuda" in spec:
             config_args.append("--with-cuda={0}".format(spec["cuda"].prefix))
-        elif spec.satisfies("@:3.3,3.4.4:"):
+        elif not spec.satisfies("@3.4:3.4.3"):
             # Versions from 3.4 to 3.4.3 cannot handle --without-cuda
             # (see https://github.com/pmodels/mpich/pull/5060):
             config_args.append("--without-cuda")
