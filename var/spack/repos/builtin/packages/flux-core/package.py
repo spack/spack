@@ -111,7 +111,7 @@ class FluxCore(AutotoolsPackage):
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
 
     depends_on("libarchive", when="@0.38.0:")
-    depends_on("ncurses@6.2", when="@0.32.0:")
+    depends_on("ncurses@6.2:", when="@0.32.0:")
     depends_on("libzmq@4.0.4:")
     depends_on("czmq@3.0.1:")
     depends_on("hwloc@1.11.1:1", when="@:0.17.0")
