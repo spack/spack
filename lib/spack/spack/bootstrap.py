@@ -675,6 +675,11 @@ def _add_externals_if_missing():
 _REF_COUNT = 0
 
 
+def is_bootstrapping():
+    global _REF_COUNT
+    return _REF_COUNT > 0
+
+
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     # The context manager is reference counted to ensure we don't swap multiple

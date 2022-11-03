@@ -606,6 +606,14 @@ def check_config_updated(data):
     assert data["install_tree"]["projections"] == {"all": "{name}-{version}"}
 
 
+def test_config_update_shared_linking(mutable_config):
+    # Old syntax: config:shared_linking:rpath/runpath
+    # New syntax: config:shared_linking:{type:rpath/runpath,bind:True/False}
+    with spack.config.override("config:shared_linking", "runpath"):
+        assert spack.config.get("config:shared_linking:type") == "runpath"
+        assert not spack.config.get("config:shared_linking:bind")
+
+
 def test_config_prefer_upstream(
     tmpdir_factory, install_mockery, mock_fetch, mutable_config, gen_mock_layout, monkeypatch
 ):
