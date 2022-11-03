@@ -317,7 +317,7 @@ def set_compiler_environment_variables(pkg, env):
     env.set("SPACK_LINKER_ARG", compiler.linker_arg)
 
     # Check whether we want to force RPATH or RUNPATH
-    if spack.config.get("config:shared_linking") == "rpath":
+    if spack.config.get("config:shared_linking:type") == "rpath":
         env.set("SPACK_DTAGS_TO_STRIP", compiler.enable_new_dtags)
         env.set("SPACK_DTAGS_TO_ADD", compiler.disable_new_dtags)
     else:
