@@ -289,6 +289,7 @@ class Conduit(CMakePackage):
         print("Checking Conduit installation...")
         spec = self.spec
         install_prefix = spec.prefix
+        test_stage_dir = self.test_suite.stage
         #####
         # using-with-cmake
         #####
@@ -297,7 +298,7 @@ class Conduit(CMakePackage):
                                     "conduit",
                                     "using-with-cmake")
         print("Checking using-with-cmake example...")
-        with working_dir(join_path(self.install_test_root,
+        with working_dir(join_path(test_stage_dir,
                                    "check-post-conduit-using-with-cmake-example"),
                          create=True):
             opts = ["-DCONDUIT_DIR={0}".format(install_prefix), example_src_dir]
@@ -305,15 +306,14 @@ class Conduit(CMakePackage):
             #######
             # TODO
             #######
-            # how do we properly locate 'cmake' and 'make' in the
+            #  How do we properly locate 'cmake' and 'make' in the
             # `spack test run` environment ?
-            # We are using a shared hack for cmake
+            #
+            # For now we are using a shared hack to locate cmake
+            # ( see cmake_bin def ) and assuming make is available.
             self.run_test(self.cmake_bin(False), opts)
             self.run_test("make", purpose="build example")
             self.run_test("conduit_example", purpose="run example")
-        # clean up build spack for this test
-        shutil.rmtree(join_path(self.install_test_root,
-                                "check-post-conduit-using-with-make-example"))
         #####
         # using-with-make
         #####
@@ -323,7 +323,7 @@ class Conduit(CMakePackage):
                                     "conduit",
                                     "using-with-make")
         example_files = glob.glob(join_path(example_src_dir, "*"))
-        with working_dir(join_path(self.install_test_root,
+        with working_dir(join_path(test_stage_dir,
                                    "check-post-conduit-using-with-cmake-example"),
                          create=True):
             for example_file in example_files:
@@ -334,11 +334,9 @@ class Conduit(CMakePackage):
             #######
             # how do we properly locate 'make' in the
             # `spack test run` environment ?
+            # For now we are assuming make is available.
             self.run_test('make', opts, purpose="build example")
             self.run_test('./conduit_example', purpose="build example")
-        # clean up build spack for this test
-        shutil.rmtree(join_path(self.install_test_root,
-                                "check-post-conduit-using-with-make-example"))
 
     def _get_host_config_path(self, spec):
         sys_type = spec.architecture
