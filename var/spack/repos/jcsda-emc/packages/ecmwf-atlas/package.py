@@ -46,6 +46,7 @@ class EcmwfAtlas(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    variant('openmp', default=True, description='Use OpenMP?')
     variant("shared", default=True)
 
     variant("trans", default=False)
@@ -59,6 +60,7 @@ class EcmwfAtlas(CMakePackage):
 
     def cmake_args(self):
         res = [
+            self.define_from_variant('ENABLE_OMP', 'openmp'),
             self.define_from_variant("ENABLE_FCKIT", "fckit"),
             self.define_from_variant("ENABLE_TRANS", "trans"),
             self.define_from_variant("ENABLE_EIGEN", "eigen"),
