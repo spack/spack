@@ -151,7 +151,7 @@ def update(data):
     if isinstance(shared_linking, six.string_types):
         # deprecated short-form shared_linking: rpath/runpath
         # add value as `type` in updated shared_linking
-        data["shared_linking"] = {"type": shared_linking}
+        data["shared_linking"] = {"type": shared_linking, "bind": False}
         changed = True
 
     return changed

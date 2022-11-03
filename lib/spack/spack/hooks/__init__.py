@@ -46,9 +46,9 @@ class _HookRunner(object):
         # Lazily populate the list of hooks
         cls._hooks = []
 
-        # Since the order is important, we just fix it here, it's not like
-        # hooks get added every other day.
         relative_names = list(list_modules(spack.paths.hooks_path))
+
+        # Ensure that write_install_manifest comes last
         ensure_last(relative_names, "absolutify_elf_sonames", "write_install_manifest")
 
         for name in relative_names:

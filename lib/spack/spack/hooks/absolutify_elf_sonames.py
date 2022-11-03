@@ -121,6 +121,17 @@ def patch_sonames(patchelf, root, rel_paths):
     return fixed
 
 
+def find_and_patch_sonames(prefix, exclude_list, patchelf):
+    # Locate all shared libraries in the prefix dir of the spec, excluding
+    # the ones set in the non_bindable_shared_objects property.
+    visitor = SharedLibrariesVisitor(exclude_list)
+    visit_directory_tree(prefix, visitor)
+
+    # Patch all sonames.
+    relative_paths = visitor.get_shared_libraries_relative_paths()
+    return patch_sonames(patchelf, prefix, relative_paths)
+
+
 def post_install(spec):
     # Skip if disabled
     if not spack.config.get("config:shared_linking:bind", False):
@@ -144,14 +155,7 @@ def post_install(spec):
         return
     patchelf = Executable(patchelf_path)
 
-    # Locate all shared libraries in the prefix dir of the spec, excluding
-    # the ones set in the non_bindable_shared_objects property.
-    visitor = SharedLibrariesVisitor(spec.package.non_bindable_shared_objects)
-    visit_directory_tree(spec.prefix, visitor)
-
-    # Patch all sonames.
-    relative_paths = visitor.get_shared_libraries_relative_paths()
-    fixes = patch_sonames(patchelf, spec.prefix, relative_paths)
+    fixes = find_and_patch_sonames(spec.prefix, spec.package.non_bindable_shared_objects, patchelf)
 
     if not fixes:
         return
