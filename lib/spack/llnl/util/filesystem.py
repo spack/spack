@@ -505,8 +505,15 @@ def group_ids(uid=None):
 
     if uid is None:
         uid = getuid()
-    user = pwd.getpwuid(uid).pw_name
-    return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
+
+    pwd_entry = pwd.getpwuid(uid)
+    user = pwd_entry.pw_name
+
+    # user's primary group id may not be listed in grp (i.e. /etc/group)
+    # you have to check pwd for that, so start the list with that
+    gids = [pwd_entry.pw_gid]
+
+    return sorted(set(gids + [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]))
 
 
 @system_path_filter(arg_slice=slice(1))

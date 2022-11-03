@@ -175,9 +175,10 @@ class ProviderIndex(_IndexBase):
 
         pkg_provided = self.repository.get_pkg_class(spec.name).provided
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
-            for provider_spec in provider_specs:
+            for provider_spec_readonly in provider_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags
+                provider_spec = provider_spec_readonly.copy()
                 provider_spec.compiler_flags = spec.compiler_flags.copy()
 
                 if spec.satisfies(provider_spec, deps=False):
