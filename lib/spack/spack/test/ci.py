@@ -442,13 +442,16 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     touched = ["libdwarf"]
 
     # traversing both directions from libdwarf in the graphs depicted
-    # above results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
-    # specs are mpich, plus hypre and it's dependencies.
+    # above (and additionally including dependencies of dependents of
+    # libdwarf) results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
+    # Unaffected specs are hypre and it's dependencies.
 
     affected_specs = ci.get_spec_filter_list(e1, touched)
     affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(["mpileaks", "callpath", "dyninst", "libdwarf", "libelf"])
+    expected_affected_pkg_names = set(
+        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
+    )
 
     assert affected_pkg_names == expected_affected_pkg_names
 
