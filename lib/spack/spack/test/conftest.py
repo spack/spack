@@ -591,14 +591,14 @@ def linux_os():
     return LinuxOS(name=name, version=version)
 
 
-@pytest.fixture(scope="function")
-def debug_output():
-    saved = tty.debug_level()
-    tty.set_debug(2)
+@pytest.fixture
+def ensure_debug(monkeypatch):
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
 
     yield
 
-    tty.set_debug(saved)
+    tty.set_debug(current_debug_level)
 
 
 @pytest.fixture(autouse=is_windows, scope="session")

@@ -20,16 +20,6 @@ def _true(*args, **kwargs):
     return True
 
 
-@pytest.fixture
-def ensure_debug(monkeypatch):
-    current_debug_level = tty.debug_level()
-    tty.set_debug(1)
-
-    yield
-
-    tty.set_debug(current_debug_level)
-
-
 def ensure_results(filename, expected):
     assert os.path.exists(filename)
     with open(filename, "r") as fd:
