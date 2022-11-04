@@ -549,7 +549,7 @@ down the problem:
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
 built in and are not overridden by a configuration file. The
-``verify_ssl`` setting comes from the ``--insceure`` option on the
+``verify_ssl`` setting comes from the ``--insecure`` option on the
 command line. ``dirty`` and ``install_tree`` come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.
