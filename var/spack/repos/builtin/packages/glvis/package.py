@@ -110,18 +110,26 @@ class Glvis(MakefilePackage):
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-    def edit(self, pkg, spec, prefix):
+    @property
+    def build_targets(self):
+        return self.common_args()
 
-        args = [
+    @property
+    def install_targets(self):
+        return ["install"] + self.common_args()
+
+    def common_args(self):
+        spec = self.spec
+        result = [
             "CC={0}".format(env["CC"]),
-            "PREFIX={0}".format(prefix.bin),
+            "PREFIX={0}".format(self.spec.prefix.bin),
             "MFEM_DIR={0}".format(self.spec["mfem"].prefix),
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
         if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
             # TODO: glu and fontconfig dirs
-            args += [
+            result += [
                 "GLM_DIR={0}".format(spec["glm"].prefix),
                 "SDL_DIR={0}".format(spec["sdl2"].prefix),
                 "GLEW_DIR={0}".format(spec["glew"].prefix),
@@ -132,7 +140,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         else:
             gl_libs = spec["glu"].libs + spec["gl"].libs + spec["libx11"].libs
 
-            args += [
+            result += [
                 "GL_OPTS=-I{0} -I{1} -I{2}".format(
                     spec["libx11"].prefix.include,
                     spec["gl"].home.include,
@@ -140,27 +148,30 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 ),
                 "GL_LIBS={0}".format(gl_libs.ld_flags),
             ]
+            result.extend(self.fonts_args())
 
-            args.append("USE_FREETYPE={0}".format("YES" if self.spec.satisfies("+fonts") else "NO"))
-            if "+fonts" in spec:
-                args += [
-                    "FT_OPTS=-DGLVIS_USE_FREETYPE {0} -I{1}".format(
-                        spec["freetype"].headers.include_flags, spec["fontconfig"].prefix.include
-                    ),
-                    "FT_LIBS={0} {1}".format(
-                        spec["freetype"].libs.ld_flags, spec["fontconfig"].libs.ld_flags
-                    ),
-                ]
-
-        if "screenshots=png" in spec:
-            args.extend(self.png_args())
-        elif "screenshots=tiff" in spec:
-            args.extend(self.tiff_args())
+        if self.spec.satisfies("screenshots=png"):
+            result.extend(self.png_args())
+        elif self.spec.satisfies("screenshots=tiff"):
+            result.extend(self.tiff_args())
         else:
-            args.extend(self.xwd_args())
+            result.extend(self.xwd_args())
 
-        self.build_targets = args
-        self.install_targets += args
+        return result
+
+    def fonts_args(self):
+        if not self.spec.satisfies("+fonts"):
+            return ["USE_FREETYPE=NO"]
+
+        freetype = self.spec["freetype"]
+        fontconfig = self.spec["fontconfig"]
+        return [
+            "USE_FREETYPE=YES",
+            "FT_OPTS=-DGLVIS_USE_FREETYPE {0} -I{1}".format(
+                freetype.headers.include_flags, fontconfig.prefix.include
+            ),
+            "FT_LIBS={0} {1}".format(freetype.libs.ld_flags, fontconfig.libs.ld_flags),
+        ]
 
     def xwd_args(self):
         if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
