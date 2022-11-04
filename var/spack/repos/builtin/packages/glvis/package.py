@@ -133,15 +133,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             else []
         )
 
-        tiff_args = (
-            [
-                "TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}".format(spec["libtiff"].prefix.include),
-                "TIFF_LIBS={0}".format(spec["libtiff"].libs.ld_flags),
-            ]
-            if "screenshots=tiff" in spec
-            else []
-        )
-
         if "@4.0:" in spec or "@develop" in spec:
             # TODO: glu and fontconfig dirs
             args += [
@@ -157,7 +148,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 args.extend(png_args)
             elif "screenshots=tiff" in spec:
                 args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
-                args.extend(tiff_args)
+                args.extend(self.tiff_args())
             else:
                 args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=NO"]
 
@@ -178,7 +169,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 args.extend(png_args)
             elif "screenshots=tiff" in spec:
                 args += ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
-                args.extend(tiff_args)
+                args.extend(self.tiff_args())
             else:
                 args += ["USE_LIBPNG=NO", "USE_LIBTIFF=NO"]
 
@@ -195,3 +186,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         self.build_targets = args
         self.install_targets += args
+
+    def tiff_args(self):
+        if not self.spec("screenshots=tiff"):
+            return []
+
+        libtiff = self.spec["libtiff"]
+        return [
+            "TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}".format(libtiff.prefix.include),
+            "TIFF_LIBS={0}".format(libtiff.libs.ld_flags),
+        ]
