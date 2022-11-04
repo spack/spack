@@ -79,3 +79,8 @@ class PyPytorchLightning(PythonPackage):
     depends_on("py-pydeprecate@0.3.1:0.3", when="@1.6:1.6.3", type=("build", "run"))
     depends_on("py-pydeprecate@0.3.1", when="@1.4:1.5", type=("build", "run"))
     depends_on("py-pydeprecate@0.3.0", when="@1.3", type=("build", "run"))
+
+    # https://github.com/Lightning-AI/lightning/issues/15494
+    conflicts("^py-torch~distributed", when="@1.8.0")
+    # https://github.com/Lightning-AI/lightning/issues/10348
+    conflicts("^py-torch~distributed", when="@1.5.0:1.5.2")
