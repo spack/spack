@@ -79,4 +79,5 @@ class Ninja(Package):
         module.ninja = MakeExecutable(
             which_string(name, path=[self.spec.prefix.bin], required=True),
             determine_number_of_jobs(parallel=self.parallel),
+            supports_jobserver=self.spec.version == ver("kitware"),
         )

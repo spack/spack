@@ -53,24 +53,24 @@ class MakeExecutableTest(unittest.TestCase):
 
     def test_make_one_job(self):
         make = MakeExecutable("make", 1)
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        self.assertEqual(make(output=str).strip(), "-j1")
+        self.assertEqual(make("install", output=str).strip(), "-j1 install")
 
     def test_make_parallel_false(self):
         make = MakeExecutable("make", 8)
-        self.assertEqual(make(parallel=False, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=False, output=str).strip(), "install")
+        self.assertEqual(make(parallel=False, output=str).strip(), "-j1")
+        self.assertEqual(make("install", parallel=False, output=str).strip(), "-j1 install")
 
     def test_make_parallel_disabled(self):
         make = MakeExecutable("make", 8)
 
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "true"
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        self.assertEqual(make(output=str).strip(), "-j1")
+        self.assertEqual(make("install", output=str).strip(), "-j1 install")
 
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "1"
-        self.assertEqual(make(output=str).strip(), "")
-        self.assertEqual(make("install", output=str).strip(), "install")
+        self.assertEqual(make(output=str).strip(), "-j1")
+        self.assertEqual(make("install", output=str).strip(), "-j1 install")
 
         # These don't disable (false and random string)
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "false"
@@ -88,12 +88,12 @@ class MakeExecutableTest(unittest.TestCase):
 
         # These should work
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "true"
-        self.assertEqual(make(parallel=True, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "install")
+        self.assertEqual(make(parallel=True, output=str).strip(), "-j1")
+        self.assertEqual(make("install", parallel=True, output=str).strip(), "-j1 install")
 
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "1"
-        self.assertEqual(make(parallel=True, output=str).strip(), "")
-        self.assertEqual(make("install", parallel=True, output=str).strip(), "install")
+        self.assertEqual(make(parallel=True, output=str).strip(), "-j1")
+        self.assertEqual(make("install", parallel=True, output=str).strip(), "-j1 install")
 
         # These don't disable (false and random string)
         os.environ["SPACK_NO_PARALLEL_MAKE"] = "false"
@@ -113,3 +113,17 @@ class MakeExecutableTest(unittest.TestCase):
             make(output=str, jobs_env="MAKE_PARALLELISM", _dump_env=dump_env).strip(), "-j8"
         )
         self.assertEqual(dump_env["MAKE_PARALLELISM"], "8")
+
+    def test_make_jobserver(self):
+        make = MakeExecutable("make", 8)
+        os.environ["MAKEFLAGS"] = "--jobserver-auth=X,Y"
+        self.assertEqual(make(output=str).strip(), "")
+        self.assertEqual(make(parallel=False, output=str).strip(), "-j1")
+        del os.environ["MAKEFLAGS"]
+
+    def test_make_jobserver_not_supported(self):
+        make = MakeExecutable("make", 8, supports_jobserver=False)
+        os.environ["MAKEFLAGS"] = "--jobserver-auth=X,Y"
+        # Currently fallback on default job count, Maybe it should force -j1 ?
+        self.assertEqual(make(output=str).strip(), "-j8")
+        del os.environ["MAKEFLAGS"]
