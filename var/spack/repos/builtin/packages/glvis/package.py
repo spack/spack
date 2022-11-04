@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.makefile
 from spack.package import *
 
 
@@ -108,7 +108,7 @@ class Glvis(MakefilePackage):
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
-    def edit(self, spec, prefix):
+    def edit(self, pkg, spec, prefix):
         def yes_no(s):
             return "YES" if self.spec.satisfies(s) else "NO"
 
