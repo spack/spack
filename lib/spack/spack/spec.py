@@ -3571,8 +3571,7 @@ class Spec(object):
     def direct_dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
         mine = set(dname for dname in self._dependencies)
-        mine.difference_update(
-            dname for dname in other._dependencies)
+        mine.difference_update(dname for dname in other._dependencies)
         return mine
 
     def _autospec(self, spec_like):
