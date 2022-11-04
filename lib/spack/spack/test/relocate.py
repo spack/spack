@@ -563,7 +563,7 @@ def test_ordered_replacement():
 
     # Null terminated within the lookahead window, common suffix too short,
     # shortening doesn't leave space for 7 bytes, sad!
-    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
         b"/old-spack/opt/specific-package",
         b"/snacks/specific-XXXXXge",
         b"/old-spack/opt/specific-package/sub",
@@ -593,7 +593,7 @@ def test_ordered_replacement():
     )
 
     # Too short matching suffix, identical string length
-    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
         b"pkg-gwixwaxlgczp6",
         b"pkg-zkesfrzlgczp6",
         b"pkg-gwixwaxlgczp6",
@@ -610,7 +610,7 @@ def test_ordered_replacement():
     # it should find the first null byte in the window. In this test we put one null
     # at a distance where we cant keep a long enough suffix, and one where we can,
     # so we should expect failure when the first null is used.
-    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+    error_msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
         b"pkg-abcdef",
         b"pkg-xyzabc",
         b"pkg-abcdef",

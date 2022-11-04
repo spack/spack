@@ -69,7 +69,7 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 class CannotGrowString(BinaryTextReplaceError):
     def __init__(self, old, new):
-        msg = "Cannot replace {} with {} because the new prefix is longer.".format(old, new)
+        msg = "Cannot replace {!r} with {!r} because the new prefix is longer.".format(old, new)
         super(CannotGrowString, self).__init__(msg)
 
 
@@ -79,7 +79,9 @@ class CannotShrinkCString(BinaryTextReplaceError):
         # unicode, which would be really bad user experience: error in error.
         # We have no clue if we actually deal with a real C-string nor what
         # encoding it has.
-        msg = "Cannot replace {} with {} in the C-string {}.".format(old, new, full_old_string)
+        msg = "Cannot replace {!r} with {!r} in the C-string {!r}.".format(
+            old, new, full_old_string
+        )
         super(CannotShrinkCString, self).__init__(msg)
 
 
