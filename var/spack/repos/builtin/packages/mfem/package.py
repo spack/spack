@@ -1049,7 +1049,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             with working_dir("config"):
                 os.rename("config.mk", "config.mk.orig")
                 copy(str(self.config_mk), "config.mk")
+                # Add '/mfem' to MFEM_INC_DIR for miniapps that include directly
+                # headers like "general/forall.hpp":
+                filter_file("(MFEM_INC_DIR.*)$", "\\1/mfem", "config.mk")
                 shutil.copystat("config.mk.orig", "config.mk")
+                # TODO: miniapps linking to libmfem-common.* will not work.
 
         prefix_share = join_path(prefix, "share", "mfem")
 
