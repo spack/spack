@@ -294,7 +294,7 @@ class TestSpecSyntax(object):
         self.check_parse("x ^y", "x@: ^y@:")
 
     def test_parse_redundant_deps(self):
-        self.check_parse('x ^y@foo', 'x ^y@foo ^y@foo')
+        self.check_parse("x ^y@foo", "x ^y@foo ^y@foo")
 
     def test_parse_errors(self):
         errors = ["x@@1.2", "x ^y@@1.2", "x@1.2::", "x::"]
