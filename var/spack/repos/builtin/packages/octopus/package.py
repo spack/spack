@@ -5,12 +5,13 @@
 
 import os
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 from spack.package import *
 
 
-class Octopus(Package, CudaPackage):
+class Octopus(AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -55,10 +56,10 @@ class Octopus(Package, CudaPackage):
     variant("nlopt", default=False, description="Compile with nlopt")
     variant("debug", default=False, description="Compile with debug flags")
 
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("m4", type="build")
+    depends_on("autoconf", type="build", when="@develop")
+    depends_on("automake", type="build", when="@develop")
+    depends_on("libtool", type="build", when="@develop")
+    depends_on("m4", type="build", when="@develop")
 
     depends_on("blas")
     depends_on("gsl@1.9:")
@@ -90,7 +91,8 @@ class Octopus(Package, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         args = []
@@ -211,12 +213,7 @@ class Octopus(Package, CudaPackage):
                 args.append(fcflags)
                 args.append(fflags)
 
-        autoreconf("-i")
-        configure(*args)
-        make()
-        # short tests take forever...
-        # make('check-short')
-        make("install")
+        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
@@ -279,7 +276,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run Octopus recipe example"
         with working_dir("example-recipe", create=True):
             print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
             self.run_test(
                 exe,
                 options=options,
@@ -305,7 +302,7 @@ class Octopus(Package, CudaPackage):
         purpose = "Run tiny calculation for He"
         with working_dir("example-he", create=True):
             print("Current working directory (in example-he)")
-            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
+            fs.copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
             self.run_test(
                 exe,
                 options=options,
