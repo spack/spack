@@ -189,5 +189,5 @@ class Glvis(MakefilePackage):
                     ),
                 ]
 
-        self.build_targets = args
-        self.install_targets += args
+        self.builder.build_targets = args
+        self.builder.install_targets += args
