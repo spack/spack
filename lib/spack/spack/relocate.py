@@ -483,7 +483,7 @@ def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
     in common with its original value.
     If there *is* a null terminator we can do the same as long as the replacement
     has a sufficiently long common suffix with the original prefix.
-    As a last restort when the replacement does not have a long enough common suffix,
+    As a last resort when the replacement does not have a long enough common suffix,
     we can try to shorten the string, but this only works if the new length is
     sufficiently short (typically the case when going from large padding -> normal path)
     If the replacement string is longer, or all of the above fails, we error out.
