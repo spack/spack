@@ -1634,7 +1634,11 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-        if "elf" in platform.binary_formats:
+        elif "elf" in platform.binary_formats and not rel:
+            # The new ELF dynamic section relocation logic only handles absolute to
+            # absolute relocation.
+            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
+        elif "elf" in platform.binary_formats and rel:
             relocate.relocate_elf_binaries(
                 files_to_relocate,
                 old_layout_root,
