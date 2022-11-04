@@ -87,28 +87,8 @@ properties = {
                     "package_attributes": {
                         "type": "object",
                         "additionalProperties": False,
-                        "properties": {
-                            "git": {
-                                "type": "string",
-                            },
-                            "url": {
-                                "type": "string",
-                            },
-                            "submodules": {
-                                "type": "boolean",
-                            },
-                        },
                         "patternProperties": {
-                            r"\w+": {
-                                "oneOf": [
-                                    {"type": "string"},
-                                    {"type": "array", "items": {"type": "string"}},
-                                    {
-                                        "type": "object",
-                                        "patternProperties": {r"\w+": {"type": "string"}},
-                                    },
-                                ]
-                            },
+                            r"\w+": {},
                         },
                     },
                     "providers": {

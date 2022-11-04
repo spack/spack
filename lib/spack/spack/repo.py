@@ -1365,6 +1365,7 @@ class Repo(object):
         new_cfg_settings = (
             spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
         )
+
         overidden_attrs = getattr(cls, "overidden_attrs", {})
         attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
         # Clear any prior changes to class attributes in case the config has
@@ -1390,9 +1391,7 @@ class Repo(object):
                 raise spack.config.ConfigError("Unsupported attribute value: list")
             elif isinstance(val, dict):
                 raise spack.config.ConfigError("Unsupported attribute value: dict")
-            if key not in ["git", "url", "submodules"]:
-                # Infer type
-                val = yaml.load(val)
+
             setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
