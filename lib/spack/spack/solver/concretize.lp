@@ -44,6 +44,8 @@ node_flag_set(Package, Flag, Value)  :- attr("node_flag_set", Package, Flag, Val
 
 node_compiler_version_set(Package, Compiler, Version)
   :- attr("node_compiler_version_set", Package, Compiler, Version).
+node_compiler_set(Package, Compiler)
+  :- attr("node_compiler_set", Package, Compiler).
 
 variant_default_value_from_cli(Package, Variant, Value)
   :- attr("variant_default_value_from_cli", Package, Variant, Value).
