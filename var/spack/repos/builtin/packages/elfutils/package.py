@@ -106,20 +106,11 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         spec = self.spec
         args = []
 
-        if "+bzip2" in spec:
-            args.append("--with-bzlib=%s" % spec["bzip2"].prefix)
-        else:
-            args.append("--without-bzlib")
+        args.extend(self.with_or_without("bzip2", activation_value="prefix"))
+        args.extend(self.with_or_without("xz", activation_value="prefix"))
 
-        if "+xz" in spec:
-            args.append("--with-lzma=%s" % spec["xz"].prefix)
-        else:
-            args.append("--without-lzma")
-
-        if "+zstd" in spec:
-            args.append("--with-zstd=%s" % spec["zstd"].prefix)
-        else:
-            args.append("--without-zstd")
+        with when("zstd"):  # zstd variant is available
+            args.extend(self.with_or_without("zstd", activation_value="prefix"))
 
         # zlib is required
         args.append("--with-zlib=%s" % spec["zlib"].prefix)
