@@ -194,24 +194,6 @@ def test_file_is_relocatable_errors(tmpdir):
 
 
 @pytest.mark.parametrize(
-    "patchelf_behavior,expected",
-    [
-        ("echo ", []),
-        ("echo /opt/foo/lib:/opt/foo/lib64", ["/opt/foo/lib", "/opt/foo/lib64"]),
-        ("exit 1", []),
-    ],
-)
-def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
-    # Here we are mocking an executable that is always called "patchelf"
-    # because that will skip the part where we try to build patchelf
-    # by ourselves. The executable will output some rpaths like
-    # `patchelf --print-rpath` would.
-    path = mock_patchelf(patchelf_behavior)
-    rpaths = spack.relocate._elf_rpaths_for(path)
-    assert rpaths == expected
-
-
-@pytest.mark.parametrize(
     "start_path,path_root,paths,expected",
     [
         (

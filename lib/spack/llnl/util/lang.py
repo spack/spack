@@ -1022,6 +1022,14 @@ def stable_partition(
     return true_items, false_items
 
 
+def ensure_last(lst, *elements):
+    """Performs a stable partition of lst, ensuring that ``elements``
+    occur at the end of ``lst`` in specified order. Mutates ``lst``.
+    Raises ``ValueError`` if any ``elements`` are not already in ``lst``."""
+    for elt in elements:
+        lst.append(lst.pop(lst.index(elt)))
+
+
 class TypedMutableSequence(MutableSequence):
     """Base class that behaves like a list, just with a different type.
 

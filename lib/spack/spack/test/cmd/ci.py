@@ -1837,8 +1837,8 @@ spack:
             yaml_contents = syaml.load(contents)
 
             for ci_key in yaml_contents.keys():
-                if "archive-files" in ci_key or "mpich" in ci_key:
-                    print("Error: archive-files and mpich should have been pruned")
+                if "archive-files" in ci_key:
+                    print("Error: archive-files should have been pruned")
                     assert False
 
 
