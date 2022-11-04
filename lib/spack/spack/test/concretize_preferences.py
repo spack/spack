@@ -349,18 +349,20 @@ mpi:
         assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_buildable_false_virtual_true_pacakge(self):
-        conf = syaml.load_config("""\
+        conf = syaml.load_config(
+            """\
 mpi:
   buildable: false
 mpich:
   buildable: true
-""")
-        spack.config.set('packages', conf, scope='concretize')
+"""
+        )
+        spack.config.set("packages", conf, scope="concretize")
 
-        spec = Spec('zmpi')
+        spec = Spec("zmpi")
         assert not spack.package_prefs.is_spec_buildable(spec)
 
-        spec = Spec('mpich')
+        spec = Spec("mpich")
         assert spack.package_prefs.is_spec_buildable(spec)
 
     def test_config_permissions_from_all(self, configure_permissions):

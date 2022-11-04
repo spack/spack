@@ -204,8 +204,10 @@ def is_spec_buildable(spec):
         return pkg_cls(s)
 
     # check whether any providers for this package override the default
-    if any(_package(spec).provides(name) and entry.get("buildable", so_far) != so_far
-           for name, entry in allpkgs.items()):
+    if any(
+        _package(spec).provides(name) and entry.get("buildable", so_far) != so_far
+        for name, entry in allpkgs.items()
+    ):
         so_far = not so_far
 
     spec_buildable = allpkgs.get(spec.name, {}).get("buildable", so_far)
