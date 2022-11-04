@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import os
 import os.path
 import re
@@ -484,43 +485,140 @@ def test_ordered_replacement(tmpdir):
     # This tests whether binary text replacement respects order, so that
     # a long package prefix is replaced before a shorter sub-prefix like
     # the root of the spack store (as a fallback).
-    def replace_and_expect(prefix_map, before, after):
-        file = str(tmpdir.join("file"))
-        with open(file, "wb") as f:
-            f.write(before)
-        spack.relocate._replace_prefix_bin(file, prefix_map)
-        with open(file, "rb") as f:
-            assert f.read() == after
+    def replace_and_expect(prefix_map, before, after=None, suffix_safety_size=7):
+        f = io.BytesIO(before)
+        spack.relocate.apply_binary_replacements(f, OrderedDict(prefix_map), suffix_safety_size)
+        f.seek(0)
+        assert f.read() == after
 
+    # The case of having a non-null terminated common suffix.
     replace_and_expect(
-        OrderedDict(
-            [
-                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-                (b"/old-spack/opt", b"/sec/spack/opt"),
-            ]
-        ),
+        [
+            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+            (b"/old-spack/opt", b"/sec/spack/opt"),
+        ],
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
         b"Binary with /////////first/specific-package and /sec/spack/opt",
+        suffix_safety_size=7,
     )
 
+    # The case of having a direct null terminated common suffix.
     replace_and_expect(
-        OrderedDict(
-            [
-                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-                (b"/old-spack/opt", b"/sec/spack/opt"),
-            ]
-        ),
+        [
+            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+            (b"/old-spack/opt", b"/sec/spack/opt"),
+        ],
         b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
-        b"Binary with /first/specific-package\x00package\x00 and /sec/spack/opt\x00",
+        b"Binary with /////////first/specific-package\0 and /sec/spack/opt\0",
+        suffix_safety_size=7,
     )
 
+    # Testing the order of operations (not null terminated, long enough common suffix)
     replace_and_expect(
-        OrderedDict(
-            [
-                (b"/old-spack/opt", b"/s/spack/opt"),
-                (b"/old-spack/opt/specific-package", b"/first/specific-package"),
-            ]
-        ),
+        [
+            (b"/old-spack/opt", b"/s/spack/opt"),
+            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+        ],
         b"Binary with /old-spack/opt/specific-package and /old-spack/opt",
         b"Binary with ///s/spack/opt/specific-package and ///s/spack/opt",
+        suffix_safety_size=7,
     )
+
+    # Testing the order of operations (null terminated, long enough common suffix)
+    replace_and_expect(
+        [
+            (b"/old-spack/opt", b"/s/spack/opt"),
+            (b"/old-spack/opt/specific-package", b"/first/specific-package"),
+        ],
+        b"Binary with /old-spack/opt/specific-package\0 and /old-spack/opt\0",
+        b"Binary with ///s/spack/opt/specific-package\0 and ///s/spack/opt\0",
+        suffix_safety_size=7,
+    )
+
+    # Null terminated within the lookahead window, common suffix long enough
+    replace_and_expect(
+        [(b"/old-spack/opt/specific-package", b"/opt/specific-XXXXage")],
+        b"Binary with /old-spack/opt/specific-package/sub\0 data",
+        b"Binary with ///////////opt/specific-XXXXage/sub\0 data",
+        suffix_safety_size=7,
+    )
+
+    # Null terminated within the lookahead window, common suffix too short, but
+    # shortening is enough to spare more than 7 bytes of old suffix.
+    replace_and_expect(
+        [(b"/old-spack/opt/specific-package", b"/opt/specific-XXXXXge")],
+        b"Binary with /old-spack/opt/specific-package/sub\0 data",
+        b"Binary with /opt/specific-XXXXXge/sub\0ckage/sub\0 data",  # ckage/sub = 9 bytes
+        suffix_safety_size=7,
+    )
+
+    # Null terminated within the lookahead window, common suffix too short,
+    # shortening leaves exactly 7 suffix bytes untouched, amazing!
+    replace_and_expect(
+        [(b"/old-spack/opt/specific-package", b"/spack/specific-XXXXXge")],
+        b"Binary with /old-spack/opt/specific-package/sub\0 data",
+        b"Binary with /spack/specific-XXXXXge/sub\0age/sub\0 data",  # age/sub = 7 bytes
+        suffix_safety_size=7,
+    )
+
+    # Null terminated within the lookahead window, common suffix too short,
+    # shortening doesn't leave space for 7 bytes, sad!
+    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+        b"/old-spack/opt/specific-package",
+        b"/snacks/specific-XXXXXge",
+        b"/old-spack/opt/specific-package/sub",
+    )
+    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
+        replace_and_expect(
+            [(b"/old-spack/opt/specific-package", b"/snacks/specific-XXXXXge")],
+            b"Binary with /old-spack/opt/specific-package/sub\0 data",
+            # expect failure!
+            suffix_safety_size=7,
+        )
+
+    # Check that it works when changing suffix_safety_size.
+    replace_and_expect(
+        [(b"/old-spack/opt/specific-package", b"/snacks/specific-XXXXXXe")],
+        b"Binary with /old-spack/opt/specific-package/sub\0 data",
+        b"Binary with /snacks/specific-XXXXXXe/sub\0ge/sub\0 data",
+        suffix_safety_size=6,
+    )
+
+    # Finally check the case of no shortening but a long enough common suffix.
+    replace_and_expect(
+        [(b"pkg-gwixwaalgczp6", b"pkg-zkesfralgczp6")],
+        b"Binary with pkg-gwixwaalgczp6/config\0 data",
+        b"Binary with pkg-zkesfralgczp6/config\0 data",
+        suffix_safety_size=7,
+    )
+
+    # Too short matching suffix, identical string length
+    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+        b"pkg-gwixwaxlgczp6",
+        b"pkg-zkesfrzlgczp6",
+        b"pkg-gwixwaxlgczp6",
+    )
+    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
+        replace_and_expect(
+            [(b"pkg-gwixwaxlgczp6", b"pkg-zkesfrzlgczp6")],
+            b"Binary with pkg-gwixwaxlgczp6\0 data",
+            # expect failure
+            suffix_safety_size=7,
+        )
+
+    # Finally, make sure that the regex is not greedily finding the LAST null byte
+    # it should find the first null byte in the window. In this test we put one null
+    # at a distance where we cant keep a long enough suffix, and one where we can,
+    # so we should expect failure when the first null is used.
+    error_msg = "Cannot replace {} with {} in the C-string {}.".format(
+        b"pkg-abcdef",
+        b"pkg-xyzabc",
+        b"pkg-abcdef",
+    )
+    with pytest.raises(spack.relocate.CannotShrinkCString, match=error_msg):
+        replace_and_expect(
+            [(b"pkg-abcdef", b"pkg-xyzabc")],
+            b"Binary with pkg-abcdef\0/xx\0",  # def\0/xx is 7 bytes.
+            # expect failure
+            suffix_safety_size=7,
+        )
