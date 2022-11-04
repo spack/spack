@@ -565,7 +565,7 @@ def _replace_prefix_bin(filename, prefix_to_prefix):
         filename (str): target binary file
         byte_prefixes (OrderedDict): ordered dictionary where the keys are
             bytes representing the old prefixes and the values are the new
-        prefixes (all bytes utf-8 encoded)
+            prefixes (all bytes utf-8 encoded)
     """
 
     with open(filename, "rb+") as f:
