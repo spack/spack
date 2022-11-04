@@ -24,6 +24,10 @@ class ArmForge(Package):
 
     if platform.machine() == "aarch64":
         version(
+            "22.1.1", sha256="f352625659a5319ca26130b633cbe8cc8e5fda312c50a8cd81145051eb66855c"
+        )
+        version("22.1", sha256="c0e2639051f75be77a440fd00f049ffd42a932a6c2459372e64657a8e5b78779")
+        version(
             "22.0.4", sha256="f770781d3c5e2fccb341f6b6ea7ddbe106e26168d4bad4cad3296b2eef65cb76"
         )
         version(
@@ -58,6 +62,10 @@ class ArmForge(Package):
         version("21.0", sha256="2bcc745d0049d6b25c77c97b2d7bad7b4f804180972a2306a8599ce41f6a4573")
     elif platform.machine() == "ppc64le":
         version(
+            "22.1.1", sha256="c160779ad7217582ced9924a2af90330626af34385d07f4c39b827f929f89508"
+        )
+        version("22.1", sha256="b94a7923360a76a431b29b939191bce1d2076bc6bc0bc698f24191055328952c")
+        version(
             "22.0.4", sha256="f4cb5bcbaa67f9209299fe4653186a2829760b8b16a2883913aa43766375b04c"
         )
         version(
@@ -91,6 +99,10 @@ class ArmForge(Package):
         )
         version("21.0", sha256="60cfa7dd1cd131ec85e67cb660f2f84cf30bb700d8979cae1f5f88af658fd249")
     elif platform.machine() == "x86_64":
+        version(
+            "22.1.1", sha256="392a7b0b4a212c506dc600ca2c37001cf85780ea2248fc47701953f12ef35300"
+        )
+        version("22.1", sha256="3a1346ec10ff1871de7a013bacc21911976f97640297fc8d88136c4f91092e69")
         version(
             "22.0.4", sha256="a2c8c1da38b9684d7c4656a98b3fc42777b03fd474cd0bf969324804f47587e5"
         )
