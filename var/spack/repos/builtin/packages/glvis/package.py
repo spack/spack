@@ -111,20 +111,15 @@ class Glvis(MakefilePackage):
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def edit(self, pkg, spec, prefix):
-        def yes_no(s):
-            return "YES" if self.spec.satisfies(s) else "NO"
-
-        mfem = spec["mfem"]
-        config_mk = mfem.package.config_mk
 
         args = [
             "CC={0}".format(env["CC"]),
             "PREFIX={0}".format(prefix.bin),
-            "MFEM_DIR={0}".format(mfem.prefix),
-            "CONFIG_MK={0}".format(config_mk),
+            "MFEM_DIR={0}".format(self.spec["mfem"].prefix),
+            "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
-        if "@4.0:" in spec or "@develop" in spec:
+        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
             # TODO: glu and fontconfig dirs
             args += [
                 "GLM_DIR={0}".format(spec["glm"].prefix),
@@ -146,7 +141,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "GL_LIBS={0}".format(gl_libs.ld_flags),
             ]
 
-            args.append("USE_FREETYPE={0}".format(yes_no("+fonts")))
+            args.append("USE_FREETYPE={0}".format("YES" if self.spec.satisfies("+fonts") else "NO"))
             if "+fonts" in spec:
                 args += [
                     "FT_OPTS=-DGLVIS_USE_FREETYPE {0} -I{1}".format(
