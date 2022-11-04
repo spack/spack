@@ -121,18 +121,18 @@ else:
 stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
-def should_set_parallel_jobs(jobserver_support=False):
-    """Returns true in general, except when:
-    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
-    - jobserver_support is enabled, and a jobserver was found.
-    """
-    if (
-        jobserver_support
-        and "MAKEFLAGS" in os.environ
-        and "--jobserver" in os.environ["MAKEFLAGS"]
-    ):
-        return False
-    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+def jobserver_enabled():
+    """Returns true if a posix jobserver (make) is detected."""
+    return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
+
+
+def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
+    """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
+    if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
+        return 1
+    if supports_jobserver and jobserver_enabled():
+        return None
+    return jobs
 
 
 class MakeExecutable(Executable):
@@ -147,26 +147,33 @@ class MakeExecutable(Executable):
     """
 
     def __init__(self, name, jobs, **kwargs):
+        supports_jobserver = kwargs.pop("supports_jobserver", True)
         super(MakeExecutable, self).__init__(name, **kwargs)
+        self.supports_jobserver = supports_jobserver
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-        # TODO: figure out how to check if we are using a jobserver-supporting ninja,
-        # the two split ninja packages make this very difficult right now
-        parallel = should_set_parallel_jobs(jobserver_support=True) and kwargs.pop(
-            "parallel", self.jobs > 1
-        )
+        parallel = kwargs.pop("parallel", True)
+        jobs_env = kwargs.pop("jobs_env", None)
+        jobs_env_supports_jobserver = kwargs.pop("jobs_env_supports_jobserver", False)
 
-        if parallel:
-            args = ("-j{0}".format(self.jobs),) + args
-            jobs_env = kwargs.pop("jobs_env", None)
-            if jobs_env:
-                # Caller wants us to set an environment variable to
-                # control the parallelism.
-                kwargs["extra_env"] = {jobs_env: str(self.jobs)}
+        jobs = get_effective_jobs(
+            self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
+        )
+        if jobs is not None:
+            args = ("-j{0}".format(jobs),) + args
+
+        if jobs_env:
+            # Caller wants us to set an environment variable to
+            # control the parallelism.
+            jobs_env_jobs = get_effective_jobs(
+                self.jobs, parallel=parallel, supports_jobserver=jobs_env_supports_jobserver
+            )
+            if jobs_env_jobs is not None:
+                kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -547,7 +554,7 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
-    m.ninja = MakeExecutable("ninja", jobs)
+    m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
 
     # easy shortcut to os.environ
     m.env = os.environ
