@@ -292,14 +292,10 @@ class Conduit(CMakePackage):
         #####
         # using-with-cmake
         #####
-        example_src_dir = join_path(install_prefix,
-                                    "examples",
-                                    "conduit",
-                                    "using-with-cmake")
+        example_src_dir = join_path(install_prefix, "examples", "conduit", "using-with-cmake")
         print("Checking using-with-cmake example...")
-        with working_dir(join_path(test_stage_dir,
-                                   "check-post-conduit-using-with-cmake-example"),
-                         create=True):
+        with working_dir(
+            join_path(test_stage_dir, "check-post-conduit-using-with-cmake-example"), create=True):
             opts = ["-DCONDUIT_DIR={0}".format(install_prefix), example_src_dir]
             opts += self.std_cmake_args
             #######
@@ -317,14 +313,10 @@ class Conduit(CMakePackage):
         # using-with-make
         #####
         print("Checking using-with-make example...")
-        example_src_dir = join_path(install_prefix,
-                                    "examples",
-                                    "conduit",
-                                    "using-with-make")
+        example_src_dir = join_path(install_prefix, "examples", "conduit", "using-with-make")
         example_files = glob.glob(join_path(example_src_dir, "*"))
-        with working_dir(join_path(test_stage_dir,
-                                   "check-post-conduit-using-with-cmake-example"),
-                         create=True):
+        with working_dir(
+            join_path(test_stage_dir, "check-post-conduit-using-with-cmake-example"), create=True):
             for example_file in example_files:
                 shutil.copy(example_file, ".")
             opts = ["CONDUIT_DIR={0}".format(install_prefix)]
@@ -334,8 +326,8 @@ class Conduit(CMakePackage):
             # how do we properly locate 'make' in the
             # `spack test run` environment ?
             # For now we are assuming make is available.
-            self.run_test('make', opts, purpose="build example")
-            self.run_test('./conduit_example', purpose="build example")
+            self.run_test("make", opts, purpose="build example")
+            self.run_test("./conduit_example", purpose="build example")
 
     def _get_host_config_path(self, spec):
         sys_type = spec.architecture
