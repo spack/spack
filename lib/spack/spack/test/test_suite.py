@@ -7,8 +7,6 @@ import sys
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.install_test
 import spack.spec
 
