@@ -191,13 +191,13 @@ class PyScipy(PythonPackage):
             or spec["blas"].name == "intel-parallel-studio"
             or spec["blas"].name == "intel-oneapi-mkl"
         ):
-            blas = "mkl-dynamic-lp64-iomp"
+            blas = "mkl-dynamic-lp64-seq"
         if (
             spec["lapack"].name == "intel-mkl"
             or spec["lapack"].name == "intel-parallel-studio"
             or spec["lapack"].name == "intel-oneapi-mkl"
         ):
-            lapack = "mkl-dynamic-lp64-iomp"
+            lapack = "mkl-dynamic-lp64-seq"
 
         args = [
             "setup",
