@@ -106,6 +106,8 @@ class Glvis(MakefilePackage):
 
     depends_on("uuid", when="platform=linux")
 
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def edit(self, spec, prefix):
         def yes_no(s):
             return "YES" if self.spec.satisfies(s) else "NO"
@@ -189,5 +191,5 @@ class Glvis(MakefilePackage):
                     ),
                 ]
 
-        self.builder.build_targets = args
-        self.builder.install_targets += args
+        self.build_targets = args
+        self.install_targets += args
