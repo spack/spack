@@ -803,13 +803,15 @@ class PackageInstaller(object):
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
         for (comp_pkg, is_compiler) in packages:
-            if package_id(comp_pkg) not in self.build_tasks:
+            pkgid = package_id(comp_pkg)
+            if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
             elif is_compiler:
-                # Requeue ensuring we treat it as a compiler
+                # Modify task ensuring we treat it as a compiler
                 for i, tup in enumerate(self.build_pq):
                     key, task = tup
-                    if task.pkg_id == package_id(comp_pkg):
+                    if task.pkg_id == pkgid:
+                        tty.debug("Modifying task for {0} to treat it as a compiler".format(pkgid), level=2)
                         task.compiler = True
                         self.build_pq[i] = (key, task)
 
