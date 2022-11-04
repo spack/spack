@@ -108,7 +108,7 @@ version_origin_fields = [
     "external",
     "packages_yaml",
     "package_py",
-    "installed"
+    "installed",
 ]
 
 #: Look up version precedence strings by enum id
@@ -1957,12 +1957,14 @@ class SpackSolverSetup(object):
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
         env = ev.active_environment()
-        dev_specs = tuple(
-            spack.spec.Spec(info['spec']).constrained(
-                'dev_path=%s' % info['path']
+        dev_specs = (
+            tuple(
+                spack.spec.Spec(info["spec"]).constrained("dev_path=%s" % info["path"])
+                for name, info in env.dev_specs.items()
             )
-            for name, info in env.dev_specs.items()
-        ) if env else tuple()
+            if env
+            else tuple()
+        )
         specs = tuple(specs)  # ensure compatible types to add
 
         # get possible compilers
@@ -2006,9 +2008,7 @@ class SpackSolverSetup(object):
 
         # Inject dev_path from environment
         for ds in dev_specs:
-            self.condition(
-                spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name
-            )
+            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
