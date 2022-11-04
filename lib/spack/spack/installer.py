@@ -811,7 +811,10 @@ class PackageInstaller(object):
                 for i, tup in enumerate(self.build_pq):
                     key, task = tup
                     if task.pkg_id == pkgid:
-                        tty.debug("Modifying task for {0} to treat it as a compiler".format(pkgid), level=2)
+                        tty.debug(
+                            "Modifying task for {0} to treat it as a compiler".format(pkgid),
+                            level=2,
+                        )
                         task.compiler = True
                         self.build_pq[i] = (key, task)
 
