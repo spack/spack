@@ -134,13 +134,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "OPENGL_DIR={0}".format(spec["gl"].home),
             ]
 
-            if "screenshots=png" in spec:
-                args.extend(self.png_args())
-            elif "screenshots=tiff" in spec:
-                args.extend(self.tiff_args())
-            else:
-                args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=NO"]
-
         else:
             gl_libs = spec["glu"].libs + spec["gl"].libs + spec["libx11"].libs
 
@@ -153,13 +146,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "GL_LIBS={0}".format(gl_libs.ld_flags),
             ]
 
-            if "screenshots=png" in spec:
-                args.extend(self.png_args())
-            elif "screenshots=tiff" in spec:
-                args.extend(self.tiff_args())
-            else:
-                args += ["USE_LIBPNG=NO", "USE_LIBTIFF=NO"]
-
             args.append("USE_FREETYPE={0}".format(yes_no("+fonts")))
             if "+fonts" in spec:
                 args += [
@@ -171,13 +157,22 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                     ),
                 ]
 
+        if "screenshots=png" in spec:
+            args.extend(self.png_args())
+        elif "screenshots=tiff" in spec:
+            args.extend(self.tiff_args())
+        else:
+            args.extend(self.xwd_args())
+
         self.build_targets = args
         self.install_targets += args
 
-    def png_args(self):
-        if not self.spec("screenshots=png"):
-            return []
+    def xwd_args(self):
+        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+            return ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=NO"]
+        return ["USE_LIBPNG=NO", "USE_LIBTIFF=NO"]
 
+    def png_args(self):
         prefix_args = ["USE_LIBPNG=YES", "USE_LIBTIFF=NO"]
         if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
             prefix_args = ["GLVIS_USE_LIBPNG=YES", "GLVIS_USE_LIBTIFF=NO"]
@@ -189,9 +184,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         ]
 
     def tiff_args(self):
-        if not self.spec("screenshots=tiff"):
-            return []
-
         prefix_args = ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
         if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
             prefix_args = ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
