@@ -1016,6 +1016,11 @@ compiler_mismatch(Package, Dependency)
      not node_compiler_set(Dependency, _),
      not compiler_match(Package, Dependency).
 
+compiler_mismatch_required(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_set(Dependency, _),
+     not compiler_match(Package, Dependency).
+
 #defined node_compiler_set/2.
 #defined node_compiler_version_set/3.
 #defined compiler_supports_os/3.
@@ -1285,12 +1290,21 @@ opt_criterion(45, "preferred providers (non-roots)").
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(40, "compiler mismatches").
+opt_criterion(40, "compiler mismatches that are not from CLI").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
     1@40+Priority,Package,Dependency
     : compiler_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
+
+opt_criterion(39, "compiler mismatches that are not from CLI").
+#minimize{ 0@239: #true }.
+#minimize{ 0@39: #true }.
+#minimize{
+    1@39+Priority,Package,Dependency
+    : compiler_mismatch_required(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
