@@ -135,10 +135,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             ]
 
             if "screenshots=png" in spec:
-                args += ["GLVIS_USE_LIBPNG=YES", "GLVIS_USE_LIBTIFF=NO"]
                 args.extend(self.png_args())
             elif "screenshots=tiff" in spec:
-                args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
                 args.extend(self.tiff_args())
             else:
                 args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=NO"]
@@ -156,10 +154,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             ]
 
             if "screenshots=png" in spec:
-                args += ["USE_LIBPNG=YES", "USE_LIBTIFF=NO"]
                 args.extend(self.png_args())
             elif "screenshots=tiff" in spec:
-                args += ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
                 args.extend(self.tiff_args())
             else:
                 args += ["USE_LIBPNG=NO", "USE_LIBTIFF=NO"]
@@ -182,8 +178,12 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if not self.spec("screenshots=png"):
             return []
 
+        prefix_args = ["USE_LIBPNG=YES", "USE_LIBTIFF=NO"]
+        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+            prefix_args = ["GLVIS_USE_LIBPNG=YES", "GLVIS_USE_LIBTIFF=NO"]
+
         libpng = self.spec["libpng"]
-        return [
+        return prefix_args + [
             "PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}".format(libpng.prefix.include),
             "PNG_LIBS={0}".format(libpng.libs.ld_flags),
         ]
@@ -192,8 +192,12 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         if not self.spec("screenshots=tiff"):
             return []
 
+        prefix_args = ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
+        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+            prefix_args = ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
+
         libtiff = self.spec["libtiff"]
-        return [
+        return prefix_args + [
             "TIFF_OPTS=-DGLVIS_USE_LIBTIFF -I{0}".format(libtiff.prefix.include),
             "TIFF_LIBS={0}".format(libtiff.libs.ld_flags),
         ]
