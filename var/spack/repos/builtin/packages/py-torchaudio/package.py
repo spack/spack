@@ -55,6 +55,8 @@ class PyTorchaudio(PythonPackage):
     depends_on("ninja", when="@0.8:", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-pybind11", when="@0.12:", type=("build", "link"))
+    depends_on("pkgconfig", type="build")
+    depends_on("sox")
 
     # https://github.com/pytorch/audio#dependencies
     depends_on("py-torch@master", when="@main", type=("build", "link", "run"))
