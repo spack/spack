@@ -1,0 +1,27 @@
+diff --git a/src/INTEL/dihedral_charmm_intel.h b/src/INTEL/dihedral_charmm_intel.h
+index a4f9109aa1..4047e7c07f 100644
+--- a/src/INTEL/dihedral_charmm_intel.h
++++ b/src/INTEL/dihedral_charmm_intel.h
+@@ -67,7 +67,7 @@ class DihedralCharmmIntel : public DihedralCharmm {
+     fc_packed3 *fc;
+     flt_t *weight;
+ 
+-    ForceConst() : ljp(nullptr), fc(nullptr), _npairtypes(0), _ndihderaltypes(0) {}
++    ForceConst() : ljp(nullptr), fc(nullptr), weight(nullptr), _npairtypes(0), _ndihderaltypes(0) {}
+     ~ForceConst() { set_ntypes(0, 0, nullptr); }
+ 
+     void set_ntypes(const int npairtypes, const int ndihderaltypes, Memory *memory);
+diff --git a/src/INTEL/intel_preprocess.h b/src/INTEL/intel_preprocess.h
+index 7ff8f7d099..4a6a9ff1f6 100644
+--- a/src/INTEL/intel_preprocess.h
++++ b/src/INTEL/intel_preprocess.h
+@@ -134,6 +134,9 @@ enum {TIME_PACK, TIME_HOST_NEIGHBOR, TIME_HOST_PAIR, TIME_OFFLOAD_NEIGHBOR,
+ #undef INTEL_VECTOR_WIDTH
+ #define INTEL_VECTOR_WIDTH 1
+ #define INTEL_COMPILE_WIDTH 1
++#if defined(__AVX512F__) && !defined(INTEL_VMASK)
++#define INTEL_VMASK 1
++#endif
+ 
+ #endif
+ 
