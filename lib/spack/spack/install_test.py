@@ -43,12 +43,15 @@ def get_escaped_text_output(filename):
 
 
 def get_test_stage_dir():
+    """Returns the path to the configured test stage root directory or
+    the default path if one is not configured."""
     return spack.util.path.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
     )
 
 
 def get_all_test_suites():
+    """Returns a list of all TestSuites that have a test_suite_filename."""
     stage_root = get_test_stage_dir()
     if not os.path.isdir(stage_root):
         return []
@@ -77,6 +80,8 @@ def get_named_test_suites(name):
 
 
 def get_test_suite(name):
+    """Return the name if there is only one test suite of the provided name;
+    otherwise, raise a TestSuiteNameError exception."""
     names = get_named_test_suites(name)
     if len(names) > 1:
         raise TestSuiteNameError('Too many suites named "{0}".  May shadow hash.'.format(name))
@@ -87,12 +92,14 @@ def get_test_suite(name):
 
 
 def write_test_suite_file(suite):
-    """Write the test suite to its lock file."""
+    """Write the test suite to its (JSON) lock file."""
     with open(suite.stage.join(test_suite_filename), "w") as f:
         sjson.dump(suite.to_dict(), stream=f)
 
 
 def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
+    """Write a well formatted summary of the totals for each relevant status
+    category."""
     failed = "{0} failed, ".format(num_failed) if num_failed else ""
     skipped = "{0} skipped, ".format(num_skipped) if num_skipped else ""
     no_tests = "{0} no-tests, ".format(num_untested) if num_untested else ""
@@ -108,6 +115,8 @@ def write_test_summary(num_failed, num_skipped, num_untested, num_specs):
 
 
 class TestSuite(object):
+    """The class that manages specs for ``spack test run`` execution."""
+
     def __init__(self, specs, alias=None):
         # copy so that different test suites have different package objects
         # even if they contain the same spec
@@ -122,10 +131,12 @@ class TestSuite(object):
 
     @property
     def name(self):
+        """The name (alias or hash) of the test suite."""
         return self.alias if self.alias else self.content_hash
 
     @property
     def content_hash(self):
+        """The hash used to uniquely identify the test suite."""
         if not self._hash:
             json_text = sjson.dump(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
@@ -212,20 +223,23 @@ class TestSuite(object):
             raise TestSuiteFailure(self.fails)
 
     def ensure_stage(self):
+        """Ensure the test suite stage directory exists."""
         if not os.path.exists(self.stage):
             fs.mkdirp(self.stage)
 
     @property
     def stage(self):
+        """The test suite root stage directory."""
         return spack.util.prefix.Prefix(os.path.join(get_test_stage_dir(), self.content_hash))
 
     @property
     def results_file(self):
+        """The path to the results summary file."""
         return self.stage.join(results_filename)
 
     @classmethod
     def test_pkg_id(cls, spec):
-        """Build the standard install test package identifier
+        """The standard install test package identifier.
 
         Args:
         spec (Spec): instance of the spec under test
@@ -237,23 +251,64 @@ class TestSuite(object):
 
     @classmethod
     def test_log_name(cls, spec):
+        """The standard log filename for a spec.
+
+        Args:
+        spec (Spec): instance of the spec under test
+
+        Returns:
+        (str): the spec's log filename
+        """
         return "%s-test-out.txt" % cls.test_pkg_id(spec)
 
     def log_file_for_spec(self, spec):
+        """The test log file path for the provided spec.
+
+        Args:
+        spec (Spec): instance of the spec under test
+
+        Returns:
+        (str): the path to the spec's log file
+        """
         return self.stage.join(self.test_log_name(spec))
 
     def test_dir_for_spec(self, spec):
+        """The path to the test stage directory for the provided spec.
+
+        Args:
+        spec (Spec): instance of the spec under test
+
+        Returns:
+        (str): the spec's test stage directory path
+        """
         return self.stage.join(self.test_pkg_id(spec))
 
     @classmethod
     def tested_file_name(cls, spec):
+        """The standard test status filename for the spec.
+
+        Args:
+        spec (Spec): instance of the spec under test
+
+        Returns:
+        (str): the spec's test status filename
+        """
         return "%s-tested.txt" % cls.test_pkg_id(spec)
 
     def tested_file_for_spec(self, spec):
+        """The test status file path for the spec.
+
+        Args:
+        spec (Spec): instance of the spec under test
+
+        Returns:
+        (str): the spec's test status file path
+        """
         return self.stage.join(self.tested_file_name(spec))
 
     @property
     def current_test_cache_dir(self):
+        """The path to the current spec's staged, cached build-time files."""
         if not (self.current_test_spec and self.current_base_spec):
             raise TestSuiteSpecError("Unknown test cache directory: no specs being tested")
 
@@ -263,6 +318,7 @@ class TestSuite(object):
 
     @property
     def current_test_data_dir(self):
+        """The path to the current spec's staged custome package (data) files."""
         if not (self.current_test_spec and self.current_base_spec):
             raise TestSuiteSpecError("Unknown test data directory: no specs being tested")
 
@@ -270,13 +326,13 @@ class TestSuite(object):
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
 
-    def add_failure(self, exc, msg):
-        current_hash = self.current_base_spec.dag_hash()
-        current_failures = self.failures.get(current_hash, [])
-        current_failures.append((exc, msg))
-        self.failures[current_hash] = current_failures
-
     def write_test_result(self, spec, result):
+        """Write the spec's test result to the test suite results file.
+
+        Args:
+            spec (Spec): instance of the spec under test
+            result (str): result from the spec's test execution (e.g, PASSED)
+        """
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
         _add_msg_to_file(self.results_file, msg)
 
@@ -295,6 +351,14 @@ class TestSuite(object):
         write_test_suite_file(self)
 
     def to_dict(self):
+        """Build a dictionary for the test suite.
+
+        Returns:
+        (dict): The dictionary contains entries for up to two keys:
+
+            specs: list of the test suite's specs in dictionary form
+            alias: the alias, or name, given to the test suite if provided
+        """
         specs = [s.to_dict() for s in self.specs]
         d = {"specs": specs}
         if self.alias:
@@ -303,12 +367,29 @@ class TestSuite(object):
 
     @staticmethod
     def from_dict(d):
+        """Instantiates a TestSuite based on a dictionary specs and an
+        optional alias:
+
+            specs: list of the test suite's specs in dictionary form
+            alias: the test suite alias
+
+
+        Returns:
+        (TestSuite): Instance of TestSuite created from the specs
+        """
         specs = [Spec.from_dict(spec_dict) for spec_dict in d["specs"]]
         alias = d.get("alias", None)
         return TestSuite(specs, alias)
 
     @staticmethod
     def from_file(filename):
+        """Instantiate a TestSuite using the specs and optional alias
+        provided in the given file.
+
+        Args:
+            filename (str): The path to the JSON file containing the test
+                suite specs and optional alias.
+        """
         try:
             with open(filename, "r") as f:
                 data = sjson.load(f)
