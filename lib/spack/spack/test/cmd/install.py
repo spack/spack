@@ -771,7 +771,7 @@ def test_install_only_dependencies_in_env(
         dep = Spec("dependency-install").concretized()
         root = Spec("dependent-install").concretized()
 
-        install('-v', '--only', 'dependencies', '--add', 'dependent-install')
+        install("-v", "--only", "dependencies", "--add", "dependent-install")
 
         assert os.path.exists(dep.prefix)
         assert not os.path.exists(root.prefix)
@@ -847,21 +847,21 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     # Activate the environment
     with e:
         # Assert using --no-add with a spec not in the env fails
-        inst_out = install('boost', fail_on_error=False, output=str)
+        inst_out = install("boost", fail_on_error=False, output=str)
 
-        assert('did not also specify --add' in inst_out)
+        assert "did not also specify --add" in inst_out
 
         # Without --add, ensure that install fails if the spec matches more
         # than one root
         with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install('a', output=str)
+            inst_out = install("a", output=str)
 
         assert "a matches multiple specs in the env" in str(err)
 
         # Install an unambiguous dependency spec (that already exists as a dep
         # in the environment) and make sure it gets installed (w/ deps),
         # but is not added to the environment.
-        install('dyninst')
+        install("dyninst")
 
         find_output = find("-l", output=str)
         assert "dyninst" in find_output
@@ -878,7 +878,7 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         with open(mpi_spec_json_path.strpath, "w") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install('-f', mpi_spec_json_path.strpath)
+        install("-f", mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)
@@ -889,14 +889,14 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # root of the environment as well as installed.
         assert b_spec not in e.roots()
 
-        install('--add', 'b')
+        install("--add", "b")
 
         assert b_spec in e.roots()
         assert b_spec not in e.uninstalled_specs()
 
         # Install a novel spec with --add and make sure it is added  as a root
         # and installed.
-        install('--add', 'bowtie')
+        install("--add", "bowtie")
 
         assert any([s.name == "bowtie" for s in e.roots()])
         assert not any([s.name == "bowtie" for s in e.uninstalled_specs()])

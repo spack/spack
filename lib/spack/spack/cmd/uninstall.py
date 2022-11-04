@@ -62,9 +62,12 @@ def setup_parser(subparser):
         help="remove regardless of whether other packages or environments " "depend on this one",
     )
     subparser.add_argument(
-         '--remove', action='store_true', dest='remove',
-         help="if in an environment, then the spec should also be removed from "
-         "the environment description")
+        "--remove",
+        action="store_true",
+        dest="remove",
+        help="if in an environment, then the spec should also be removed from "
+        "the environment description",
+    )
     arguments.add_common_arguments(
         subparser, ["recurse_dependents", "yes_to_all", "installed_specs"]
     )
@@ -275,22 +278,21 @@ def do_uninstall(env, specs, force):
 
 def get_uninstall_list(args, specs, env):
     """Returns uninstall_list and remove_list: these may overlap (some things
-       may be both uninstalled and removed from the current environment).
+    may be both uninstalled and removed from the current environment).
 
-       It is assumed we are in an environment if --remove is specified (this
-       method raises an exception otherwise).
+    It is assumed we are in an environment if --remove is specified (this
+    method raises an exception otherwise).
 
-       uninstall_list is topologically sorted: dependents come before
-       dependencies (so if a user uninstalls specs in the order provided,
-       the dependents will always be uninstalled first).
+    uninstall_list is topologically sorted: dependents come before
+    dependencies (so if a user uninstalls specs in the order provided,
+    the dependents will always be uninstalled first).
     """
     if args.remove and not env:
-         raise ValueError("Can only use --remove when in an environment")
+        raise ValueError("Can only use --remove when in an environment")
 
     # Gets the list of installed specs that match the ones given via cli
     # args.all takes care of the case where '-a' is given in the cli
-    base_uninstall_specs = set(
-        find_matching_specs(env, specs, args.all, args.force))
+    base_uninstall_specs = set(find_matching_specs(env, specs, args.all, args.force))
 
     active_dpts, outside_dpts = installed_dependents(base_uninstall_specs, env)
     # It will be useful to track the unified set of specs with dependents, as
@@ -351,11 +353,10 @@ def get_uninstall_list(args, specs, env):
             envs = spec_to_other_envs.get(spec)
             if envs:
                 if env:
-                    env_context_qualifier = ' other'
+                    env_context_qualifier = " other"
                 else:
-                    env_context_qualifier = ''
-                print('It is used by the following{0} environments:'
-                      .format(env_context_qualifier))
+                    env_context_qualifier = ""
+                print("It is used by the following{0} environments:".format(env_context_qualifier))
                 colify([e.name for e in envs], indent=4)
 
         msgs = []
@@ -388,9 +389,7 @@ def get_uninstall_list(args, specs, env):
     all_uninstall_specs -= remove_only
     # Inefficient topological sort: uninstall dependents before dependencies
     all_uninstall_specs = sorted(
-        all_uninstall_specs,
-        key=lambda x: sum(1 for i in x.traverse()),
-        reverse=True
+        all_uninstall_specs, key=lambda x: sum(1 for i in x.traverse()), reverse=True
     )
 
     return list(all_uninstall_specs), list(remove_specs)
