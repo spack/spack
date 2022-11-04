@@ -43,15 +43,24 @@ def get_escaped_text_output(filename):
 
 
 def get_test_stage_dir():
-    """Returns the path to the configured test stage root directory or
-    the default path if one is not configured."""
+    """Retrieves the ``config:test_stage`` path to the configured test stage
+    root directory
+
+    Returns:
+        str: absolute path to the configured test stage root or, if none,
+            the default test stage path
+    """
     return spack.util.path.canonicalize_path(
         spack.config.get("config:test_stage", spack.paths.default_test_path)
     )
 
 
 def get_all_test_suites():
-    """Returns a list of all TestSuites that have a test_suite_filename."""
+    """Retrieves all validly staged TestSuites
+
+    Returns:
+        list: a list of TestSuite objects, which may be empty if there are none
+    """
     stage_root = get_test_stage_dir()
     if not os.path.isdir(stage_root):
         return []
@@ -71,7 +80,14 @@ def get_all_test_suites():
 
 
 def get_named_test_suites(name):
-    """Return a list of the names of any test suites with that name."""
+    """Retrieves test suites with the provided name.
+
+    Returns:
+        list: a list of matching TestSuite instances, which may be empty if none
+
+    Raises:
+        TestSuiteNameError: If no name is provided
+    """
     if not name:
         raise TestSuiteNameError("Test suite name is required.")
 
@@ -80,8 +96,14 @@ def get_named_test_suites(name):
 
 
 def get_test_suite(name):
-    """Return the name if there is only one test suite of the provided name;
-    otherwise, raise a TestSuiteNameError exception."""
+    """Ensure there is only one matching test suite with the provided name.
+
+    Returns:
+        str or None: the name if one matching test suite, else None
+
+    Raises:
+        TestSuiteNameError: If there is more than one matching TestSuite
+    """
     names = get_named_test_suites(name)
     if len(names) > 1:
         raise TestSuiteNameError('Too many suites named "{0}".  May shadow hash.'.format(name))
@@ -131,7 +153,7 @@ class TestSuite(object):
 
     @property
     def name(self):
-        """The name (alias or hash) of the test suite."""
+        """The name (alias or, if none, hash) of the test suite."""
         return self.alias if self.alias else self.content_hash
 
     @property
@@ -229,7 +251,7 @@ class TestSuite(object):
 
     @property
     def stage(self):
-        """The test suite root stage directory."""
+        """The root test suite stage directory."""
         return spack.util.prefix.Prefix(os.path.join(get_test_stage_dir(), self.content_hash))
 
     @property
@@ -242,10 +264,10 @@ class TestSuite(object):
         """The standard install test package identifier.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the install test package identifier
+            str: the install test package identifier
         """
         return spec.format("{name}-{version}-{hash:7}")
 
@@ -254,10 +276,10 @@ class TestSuite(object):
         """The standard log filename for a spec.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the spec's log filename
+            str: the spec's log filename
         """
         return "%s-test-out.txt" % cls.test_pkg_id(spec)
 
@@ -265,10 +287,10 @@ class TestSuite(object):
         """The test log file path for the provided spec.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the path to the spec's log file
+            str: the path to the spec's log file
         """
         return self.stage.join(self.test_log_name(spec))
 
@@ -276,10 +298,10 @@ class TestSuite(object):
         """The path to the test stage directory for the provided spec.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the spec's test stage directory path
+            str: the spec's test stage directory path
         """
         return self.stage.join(self.test_pkg_id(spec))
 
@@ -288,10 +310,10 @@ class TestSuite(object):
         """The standard test status filename for the spec.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the spec's test status filename
+            str: the spec's test status filename
         """
         return "%s-tested.txt" % cls.test_pkg_id(spec)
 
@@ -299,16 +321,24 @@ class TestSuite(object):
         """The test status file path for the spec.
 
         Args:
-        spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
 
         Returns:
-        (str): the spec's test status file path
+            str: the spec's test status file path
         """
         return self.stage.join(self.tested_file_name(spec))
 
     @property
     def current_test_cache_dir(self):
-        """The path to the current spec's staged, cached build-time files."""
+        """Path to the test stage directory where the current spec's cached
+        build-time files were automatically copied.
+
+        Returns:
+            str: path to the current spec's staged, cached build-time files.
+
+        Raises:
+            TestSuiteSpecError: If there is no spec being tested
+        """
         if not (self.current_test_spec and self.current_base_spec):
             raise TestSuiteSpecError("Unknown test cache directory: no specs being tested")
 
@@ -318,7 +348,15 @@ class TestSuite(object):
 
     @property
     def current_test_data_dir(self):
-        """The path to the current spec's staged custome package (data) files."""
+        """Path to the test stage directory where the current spec's custom
+        package (data) files were automatically copied.
+
+        Returns:
+            str: path to the current spec's staged, custom package (data) files
+
+        Raises:
+            TestSuiteSpecError: If there is no spec being tested
+        """
         if not (self.current_test_spec and self.current_base_spec):
             raise TestSuiteSpecError("Unknown test data directory: no specs being tested")
 
@@ -330,7 +368,7 @@ class TestSuite(object):
         """Write the spec's test result to the test suite results file.
 
         Args:
-            spec (Spec): instance of the spec under test
+            spec (spack.spec.Spec): instance of the spec under test
             result (str): result from the spec's test execution (e.g, PASSED)
         """
         msg = "{0} {1}".format(self.test_pkg_id(spec), result)
@@ -354,10 +392,10 @@ class TestSuite(object):
         """Build a dictionary for the test suite.
 
         Returns:
-        (dict): The dictionary contains entries for up to two keys:
+            dict: The dictionary contains entries for up to two keys:
 
-            specs: list of the test suite's specs in dictionary form
-            alias: the alias, or name, given to the test suite if provided
+                specs: list of the test suite's specs in dictionary form
+                alias: the alias, or name, given to the test suite if provided
         """
         specs = [s.to_dict() for s in self.specs]
         d = {"specs": specs}
@@ -375,7 +413,7 @@ class TestSuite(object):
 
 
         Returns:
-        (TestSuite): Instance of TestSuite created from the specs
+            TestSuite: Instance of TestSuite created from the specs
         """
         specs = [Spec.from_dict(spec_dict) for spec_dict in d["specs"]]
         alias = d.get("alias", None)
@@ -405,7 +443,7 @@ class TestSuite(object):
 
 
 def _add_msg_to_file(filename, msg):
-    """Add the message to the specified file
+    """Append the message to the specified file.
 
     Args:
         filename (str): path to the file
