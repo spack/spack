@@ -80,6 +80,9 @@ class PyTorchaudio(PythonPackage):
     depends_on("py-torch@1.4.1", when="@0.4.0", type=("build", "link", "run"))
 
     def setup_build_environment(self, env):
+        # tools/setup_helpers/extension.py
+        env.set("BUILD_SOX", 0)
+
         if "+cuda" in self.spec["py-torch"]:
             env.set("USE_CUDA", 1)
             torch_cuda_arch_list = ";".join(
