@@ -5,6 +5,7 @@
 
 
 import io
+from collections import OrderedDict
 
 import pytest
 
@@ -22,15 +23,6 @@ def skip_unless_linux(f):
         str(spack.platforms.real_host()) != "linux",
         reason="implementation currently requires linux",
     )(f)
-
-
-@pytest.mark.requires_executables("gcc")
-@skip_unless_linux
-def test_elf_get_rpaths(binary_with_rpaths):
-    # Compile an "Hello world!" executable and set RPATHs
-    long_rpaths = ["/very/long/prefix/x", "/very/long/prefix/y"]
-    executable = str(binary_with_rpaths(rpaths=long_rpaths))
-    assert elf.get_rpaths(executable) == long_rpaths
 
 
 @pytest.mark.requires_executables("gcc")
@@ -128,3 +120,48 @@ def test_parser_doesnt_deal_with_nonzero_offset():
     elf_at_offset_one.read(1)
     with pytest.raises(elf.ElfParsingError, match="Cannot parse at a nonzero offset"):
         elf.parse_elf(elf_at_offset_one)
+
+
+@pytest.mark.requires_executables("gcc")
+@skip_unless_linux
+def test_elf_get_and_replace_rpaths(binary_with_rpaths):
+    long_rpaths = ["/very/long/prefix-a/x", "/very/long/prefix-b/y"]
+    executable = str(binary_with_rpaths(rpaths=long_rpaths))
+
+    # Before
+    assert elf.get_rpaths(executable) == long_rpaths
+
+    replacements = OrderedDict(
+        [
+            (b"/very/long/prefix-a", b"/short-a"),
+            (b"/very/long/prefix-b", b"/short-b"),
+            (b"/very/long", b"/dont"),
+        ]
+    )
+
+    # Replace once: should modify the file.
+    assert elf.replace_rpath_in_place_or_raise(executable, replacements)
+
+    # Replace twice: nothing to be done.
+    assert not elf.replace_rpath_in_place_or_raise(executable, replacements)
+
+    # Verify the rpaths were modified correctly
+    assert elf.get_rpaths(executable) == ["/short-a/x", "/short-b/y"]
+
+    # Going back to long rpaths should fail, since we've added trailing \0
+    # bytes, and replacement can't assume it can write back in repeated null
+    # bytes -- it may correspond to zero-length strings for example.
+    with pytest.raises(
+        elf.ElfDynamicSectionUpdateFailed,
+        match="New rpath /very/long/prefix-a/x:/very/long/prefix-b/y is "
+        "longer than old rpath /short-a/x:/short-b/y",
+    ):
+        elf.replace_rpath_in_place_or_raise(
+            executable,
+            OrderedDict(
+                [
+                    (b"/short-a", b"/very/long/prefix-a"),
+                    (b"/short-b", b"/very/long/prefix-b"),
+                ]
+            ),
+        )
