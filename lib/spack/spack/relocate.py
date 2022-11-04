@@ -508,8 +508,8 @@ def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
     )
 
     # We *could* read binary data in chunks to avoid loading all in memory,
-    # but it's nasty to deal with matches on an overlapping section, so let's
-    # stick to something simple.
+    # but it's nasty to deal with matches across boundaries, so let's stick to
+    # something simple.
 
     for match in regex.finditer(f.read()):
         # The matching prefix (old) and its replacement (new)
