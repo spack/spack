@@ -356,7 +356,7 @@ def test_find_prefix_in_env(
     """Test `find` formats requiring concrete specs work in environments."""
     env("create", "test")
     with ev.read("test"):
-        install("mpileaks")
+        install('--add', 'mpileaks')
         find("-p")
         find("-l")
         find("-L")
