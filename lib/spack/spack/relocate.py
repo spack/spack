@@ -7,6 +7,7 @@ import multiprocessing.pool
 import os
 import re
 import shutil
+from collections import OrderedDict
 
 import macholib.mach_o
 import macholib.MachO
@@ -21,6 +22,7 @@ import spack.bootstrap
 import spack.platforms
 import spack.repo
 import spack.spec
+import spack.util.elf as elf
 import spack.util.executable as executable
 
 is_macos = str(spack.platforms.real_host()) == "darwin"
@@ -93,27 +95,15 @@ def _patchelf():
 def _elf_rpaths_for(path):
     """Return the RPATHs for an executable or a library.
 
-    The RPATHs are obtained by ``patchelf --print-rpath PATH``.
-
     Args:
         path (str): full path to the executable or library
 
     Return:
-        RPATHs as a list of strings.
+        RPATHs as a list of strings. Returns an empty array
+        on ELF parsing errors, or when the ELF file simply
+        has no rpaths.
     """
-    # If we're relocating patchelf itself, use it
-    patchelf_path = path if path.endswith("/bin/patchelf") else _patchelf()
-    patchelf = executable.Executable(patchelf_path)
-
-    output = ""
-    try:
-        output = patchelf("--print-rpath", path, output=str, error=str)
-        output = output.strip("\n")
-    except executable.ProcessError as e:
-        msg = "patchelf --print-rpath {0} produced an error [{1}]"
-        tty.warn(msg.format(path, str(e)))
-
-    return output.split(":") if output else []
+    return elf.get_rpaths(path) or []
 
 
 def _make_relative(reference_file, path_root, paths):
@@ -384,15 +374,13 @@ def _set_elf_rpaths(target, rpaths):
     """Replace the original RPATH of the target with the paths passed
     as arguments.
 
-    This function uses ``patchelf`` to set RPATHs.
-
     Args:
         target: target executable. Must be an ELF object.
         rpaths: paths to be set in the RPATH
 
     Returns:
         A string concatenating the stdout and stderr of the call
-        to ``patchelf``
+        to ``patchelf`` if it was invoked
     """
     # Join the paths using ':' as a separator
     rpaths_str = ":".join(rpaths)
@@ -593,6 +581,23 @@ def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
                 if new_rpath not in new_rpaths:
                     new_rpaths.append(new_rpath)
     return new_rpaths
+
+
+def new_relocate_elf_binaries(binaries, prefix_to_prefix):
+    """Take a list of binaries, and an ordered dictionary of
+    prefix to prefix mapping, and update the rpaths accordingly."""
+
+    # Transform to binary string
+    prefix_to_prefix = OrderedDict(
+        (k.encode("utf-8"), v.encode("utf-8")) for (k, v) in prefix_to_prefix.items()
+    )
+
+    for path in binaries:
+        try:
+            elf.replace_rpath_in_place_or_raise(path, prefix_to_prefix)
+        except elf.ElfDynamicSectionUpdateFailed as e:
+            # Fall back to the old `patchelf --set-rpath` method.
+            _set_elf_rpaths(path, e.new.decode("utf-8").split(":"))
 
 
 def relocate_elf_binaries(
