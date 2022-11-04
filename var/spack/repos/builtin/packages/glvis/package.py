@@ -93,17 +93,19 @@ class Glvis(MakefilePackage):
     depends_on("glu")
     depends_on("libx11", when="@:3.5")
 
-    depends_on("sdl2", when="@4.0:,develop")
-    depends_on("glm", when="@4.0:,develop")
-    depends_on("glew", when="@4.0:,develop")
+    with when("@4.0:,develop"):
+        depends_on("sdl2")
+        depends_on("glm")
+        depends_on("glew")
+        depends_on("freetype")
+        depends_on("fontconfig")
+
+    with when("+fonts"):
+        depends_on("freetype")
+        depends_on("fontconfig")
 
     depends_on("libpng", when="screenshots=png")
     depends_on("libtiff", when="screenshots=tiff")
-    depends_on("freetype", when="+fonts")
-    depends_on("freetype", when="@4.0:,develop")
-    depends_on("fontconfig", when="+fonts")
-    depends_on("fontconfig", when="@4.0:,develop")
-
     depends_on("uuid", when="platform=linux")
 
 
