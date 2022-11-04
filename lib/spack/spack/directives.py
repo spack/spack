@@ -20,6 +20,9 @@ The available directives are:
   * ``build_system``
   * ``conflicts``
   * ``depends_on``
+  * ``drop_conflict``
+  * ``drop_dependency``
+  * ``drop_patch``
   * ``extends``
   * ``patch``
   * ``provides``
@@ -61,6 +64,9 @@ __all__ = [
     "patch",
     "variant",
     "resource",
+    "drop_dependency",
+    "drop_patch",
+    "drop_conflict",
     "build_system",
 ]
 
@@ -788,9 +794,9 @@ def drop_patch(name):
 
     def _execute_drop_patch(pkg):
         def filter_func(p):
-            if isinstance(p, spack.FilePatch):
+            if isinstance(p, spack.patch.FilePatch):
                 return p.relative_path != name
-            elif isinstance(p, spack.UrlPatch):
+            elif isinstance(p, spack.patch.UrlPatch):
                 return p.url != name
             else:
                 raise RuntimeError("Unknown package type: " + str(type(p)))

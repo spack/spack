@@ -60,3 +60,14 @@ def test_extends_spec(config, mock_packages):
 
     assert extender.dependencies
     assert extender.package.extends(extendee)
+
+
+def test_replace_dependency(mock_packages):
+    pkg_cls = spack.repo.path.get_pkg_class("remove-replace-dependency")
+
+    assert pkg_cls.dependencies
+    assert "things" not in pkg_cls.dependencies
+    assert spack.spec.Spec() in pkg_cls.dependencies["stuff"]
+
+    assert not pkg_cls.conflicts
+    assert not pkg_cls.patches
