@@ -5260,6 +5260,16 @@ where each argument has the following meaning:
   will run.
 
   The default of ``None`` corresponds to the current directory (``'.'``).
+  Each call starts with the working directory set to the spec's test stage
+  directory (i.e., ``self.test_suite.test_dir_for_spec(self.spec)``).
+
+.. warning::
+
+   Use of the package spec's installation directory for building and running
+   tests is **strongly** discouraged. Doing so has caused permission errors
+   for shared spack instances *and* for facilities that install the software
+   in read-only file systems or directories.
+
 
 """""""""""""""""""""""""""""""""""""""""
 Accessing package- and test-related files
@@ -5267,10 +5277,10 @@ Accessing package- and test-related files
 
 You may need to access files from one or more locations when writing
 stand-alone tests. This can happen if the software's repository does not
-include test source files or includes files but no way to build the
-executables using the installed headers and libraries. In these
-cases, you may need to reference the files relative to one or more
-root directory. The properties containing package- and test-related
+include test source files or includes files but has no way to build the
+executables using the installed headers and libraries. In these cases,
+you may need to reference the files relative to one or more root
+directory. The properties containing package- (or spec-) and test-related
 directory paths are provided in the table below.
 
 .. list-table:: Directory-to-property mapping
@@ -5279,19 +5289,22 @@ directory paths are provided in the table below.
    * - Root Directory
      - Package Property
      - Example(s)
-   * - Package Installation Files
+   * - Package (Spec) Installation
      - ``self.prefix``
      - ``self.prefix.include``, ``self.prefix.lib``
-   * - Package Dependency's Files
+   * - Dependency Installation
      - ``self.spec['<dependency-package>'].prefix``
      - ``self.spec['trilinos'].prefix.include``
-   * - Test Suite Stage Files
+   * - Test Suite Stage
      - ``self.test_suite.stage``
      - ``join_path(self.test_suite.stage, 'results.txt')``
-   * - Staged Cached Build-time Files
+   * - Spec's Test Stage
+     - ``self.test_suite.test_dir_for_spec``
+     - ``self.test_suite.test_dir_for_spec(self.spec)``
+   * - Current Spec's Build-time Files
      - ``self.test_suite.current_test_cache_dir``
      - ``join_path(self.test_suite.current_test_cache_dir, 'examples', 'foo.c')``
-   * - Staged Custom Package Files
+   * - Current Spec's Custom Test Files
      - ``self.test_suite.current_test_data_dir``
      - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
 
