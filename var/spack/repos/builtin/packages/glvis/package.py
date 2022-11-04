@@ -124,15 +124,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CONFIG_MK={0}".format(config_mk),
         ]
 
-        png_args = (
-            [
-                "PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}".format(spec["libpng"].prefix.include),
-                "PNG_LIBS={0}".format(spec["libpng"].libs.ld_flags),
-            ]
-            if "screenshots=png" in spec
-            else []
-        )
-
         if "@4.0:" in spec or "@develop" in spec:
             # TODO: glu and fontconfig dirs
             args += [
@@ -145,7 +136,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             if "screenshots=png" in spec:
                 args += ["GLVIS_USE_LIBPNG=YES", "GLVIS_USE_LIBTIFF=NO"]
-                args.extend(png_args)
+                args.extend(self.png_args())
             elif "screenshots=tiff" in spec:
                 args += ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
                 args.extend(self.tiff_args())
@@ -166,7 +157,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
             if "screenshots=png" in spec:
                 args += ["USE_LIBPNG=YES", "USE_LIBTIFF=NO"]
-                args.extend(png_args)
+                args.extend(self.png_args())
             elif "screenshots=tiff" in spec:
                 args += ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
                 args.extend(self.tiff_args())
@@ -186,6 +177,16 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         self.build_targets = args
         self.install_targets += args
+
+    def png_args(self):
+        if not self.spec("screenshots=png"):
+            return []
+
+        libpng = self.spec["libpng"]
+        return [
+            "PNG_OPTS=-DGLVIS_USE_LIBPNG -I{0}".format(libpng.prefix.include),
+            "PNG_LIBS={0}".format(libpng.libs.ld_flags),
+        ]
 
     def tiff_args(self):
         if not self.spec("screenshots=tiff"):
