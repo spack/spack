@@ -481,7 +481,7 @@ def test_utf8_paths_to_single_binary_regex():
     assert regex.search(string).group(0) == b"/safe/[a-z]/file"
 
 
-def test_ordered_replacement(tmpdir):
+def test_ordered_replacement():
     # This tests whether binary text replacement respects order, so that
     # a long package prefix is replaced before a shorter sub-prefix like
     # the root of the spack store (as a fallback).
