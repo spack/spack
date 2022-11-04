@@ -470,9 +470,9 @@ def _replace_prefix_text(filename, compiled_prefixes):
 
 def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
     """
-    A generator that produces offsets and replacement strings to be written there,
-    given binary data and an ordered dictionary of prefix to prefix mappings. This
-    generates takes special care of null-terminated C-strings. C-string constants
+    Given a file opened in rb+ mode, apply the string replacements as
+    specified by an ordered dictionary of prefix to prefix mappings. This
+    method takes special care of null-terminated C-strings. C-string constants
     are problematic because compilers and linkers optimize readonly strings for
     space by aliasing those that share a common suffix (only suffix since all
     of them are null terminated). See https://github.com/spack/spack/pull/31739
@@ -494,8 +494,6 @@ def apply_binary_replacements(f, prefix_to_prefix, suffix_safety_size=7):
             bytes representing the old prefixes and the values are the new
         suffix_safety_size (int): in case of null terminated strings, what size
             of the suffix should remain to avoid aliasing issues?
-
-    Yields: tuple of the form (offset, binary replacement)
     """
     assert suffix_safety_size >= 0
     assert f.tell() == 0
