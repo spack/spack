@@ -34,6 +34,7 @@ class SimModel(Package):
 
     variant('coreneuron',  default=False, description="Enable CoreNEURON Support")
     variant('profile',     default=False, description="Enable profiling using Tau")
+    variant('caliper',     default=False, description="Enable Caliper instrumentation")
 
     # neuron/corenrn get linked automatically when using nrnivmodl[-core]
     # Dont duplicate the link dependency (only 'build' and 'run')
@@ -42,6 +43,8 @@ class SimModel(Package):
     depends_on('neuron+profile', when='+profile', type=('build', 'run'))
     depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
     depends_on('tau', when='+profile')
+    depends_on('neuron+caliper', when='+caliper', type=('build', 'run'))
+    depends_on('coreneuron+caliper', when='+coreneuron+caliper', type=('build', 'run'))
     depends_on('gettext', when='^neuron+binary')
 
     conflicts('^neuron~python', when='+coreneuron')
@@ -219,6 +222,30 @@ class SimModel(Package):
         if os.path.isdir(self.prefix.lib.python):
             env.prepend_path('PYTHONPATH', self.prefix.lib.python)
         env.set('{}_ROOT'.format(self.name.upper().replace("-", "_")), self.prefix)
+
+        # ENV variables to enable Caliper with certain settings
+        if '+caliper' in self.spec:
+            env.set('NEURODAMUS_CALI_ENABLED', "true")  # Needed for slurm.taskprolog
+            env.set('CALI_MPIREPORT_FILENAME', "/dev/null")  # Prevents 'stdout' output
+            env.set('CALI_CHANNEL_FLUSH_ON_EXIT', "true")
+            env.set('CALI_MPIREPORT_LOCAL_CONFIG', "SELECT sum(sum#time.duration), \
+                                                        inclusive_sum(sum#time.duration) \
+                                                    GROUP BY prop:nested")
+            env.set('CALI_MPIREPORT_CONFIG',
+                    "SELECT annotation, \
+                        mpi.function, \
+                        min(sum#sum#time.duration) as exclusive_time_rank_min, \
+                        max(sum#sum#time.duration) as exclusive_time_rank_max, \
+                        avg(sum#sum#time.duration) as exclusive_time_rank_avg, \
+                        min(inclusive#sum#time.duration) AS inclusive_time_rank_min, \
+                        max(inclusive#sum#time.duration) AS inclusive_time_rank_max, \
+                        avg(inclusive#sum#time.duration) AS inclusive_time_rank_avg, \
+                        percent_total(sum#sum#time.duration) AS exclusive_time_pct, \
+                        inclusive_percent_total(sum#sum#time.duration) AS inclusive_time_pct \
+                    GROUP BY prop:nested FORMAT json")
+            env.set('CALI_SERVICES_ENABLE', "aggregate,event,mpi,mpireport,timestamp")
+            env.set('CALI_MPI_BLACKLIST',
+                    "MPI_Comm_rank,MPI_Comm_size,MPI_Wtick,MPI_Wtime")  # Ignore
 
     def setup_build_environment(self, env):
         self._setup_build_environment_common(env)

@@ -40,15 +40,15 @@ spack:
     - nest@2.20.1
     - neurodamus-core~common%intel
     - neurodamus-core+common
-    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper
-    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper+knl
-    - neurodamus-mousify+coreneuron%intel^coreneuron+caliper
-    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
-    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
-    - neurodamus-neocortex+coreneuron+plasticity%intel^coreneuron+caliper
-    - neurodamus-neocortex+ngv+metabolism%intel
-    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
-    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-hippocampus+coreneuron+caliper%intel
+    - neurodamus-hippocampus+coreneuron+caliper%intel^coreneuron+knl
+    - neurodamus-mousify+coreneuron+caliper%intel
+    - neurodamus-neocortex+coreneuron+caliper%intel
+    - neurodamus-neocortex+coreneuron+caliper%intel^coreneuron+knl
+    - neurodamus-neocortex+plasticity+coreneuron+caliper%intel
+    - neurodamus-neocortex+ngv+metabolism+caliper%intel
+    - neurodamus-thalamus+coreneuron+caliper%intel
+    - neurodamus-thalamus+coreneuron+caliper%intel^coreneuron+knl
     - neuron%intel+coreneuron+tests
     - neuron%nvhpc+coreneuron+tests ^coreneuron+gpu~shared
     - neuron%intel+debug
