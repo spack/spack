@@ -795,16 +795,17 @@ def drop_patch(name):
     def _execute_drop_patch(pkg):
         def filter_func(p):
             if isinstance(p, spack.patch.FilePatch):
-                return p.relative_path != name
+                return p.relative_path == name
             elif isinstance(p, spack.patch.UrlPatch):
-                return p.url != name
+                return p.url == name
             else:
-                raise RuntimeError("Unknown package type: " + str(type(p)))
+                # Future-proofing
+                raise RuntimeError("Unknown patch type: " + str(type(p)))
 
         old_patches = copy.deepcopy(pkg.patches)
         new_patches = {}
         for spec, patches in old_patches.items():
-            filtered_patches = [p for p in patches if filter_func(p)]
+            filtered_patches = [p for p in patches if not filter_func(p)]
             if filtered_patches:
                 new_patches[spec] = filtered_patches
 

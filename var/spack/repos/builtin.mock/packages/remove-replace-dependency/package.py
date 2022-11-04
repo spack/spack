@@ -26,4 +26,14 @@ class RemoveReplaceDependency(Package):
     drop_conflict("%gcc")
 
     patch("foo.patch")
+    patch("bar.patch")
+    patch(
+        "http://example.com/baz.patch",
+        sha256="ea8fac7c65fb589b0d53560f5251f74f9e9b243478dcb6b3ea79b5e36449c8d9",
+    )
+    patch(
+        "http://example.com/bing.patch",
+        sha256="ea8fac7c65fb589b0d53560f5251f74f9e9b243478dcb6b3ea79b5e36449c8d9",
+    )
     drop_patch("foo.patch")
+    drop_patch("http://example.com/baz.patch")
