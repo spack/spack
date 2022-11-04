@@ -673,6 +673,8 @@ variant_not_default(Package, Variant, Value)
     not variant_default_value(Package, Variant, Value),
     % variants set explicitly on the CLI don't count as non-default
     not variant_set(Package, Variant, Value),
+    % variant values forced by propagation don't count as non-default
+    not variant_propagate(Package, Variant, Value, _),
     % variants set on externals that we could use don't count as non-default
     % this makes spack prefer to use an external over rebuilding with the
     % default configuration
