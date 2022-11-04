@@ -1715,7 +1715,7 @@ class TestConcretize(object):
             result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
 
         for spec in result.specs:
-            assert 'zmpi' in spec
+            assert "zmpi" in spec
 
     @pytest.mark.regression("30864")
     def test_misleading_error_message_on_version(self, mutable_database):
