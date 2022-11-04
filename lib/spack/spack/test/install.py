@@ -444,7 +444,9 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages, capfd,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_nosource_bundle_pkg_install(install_mockery, mock_fetch, mock_packages, capfd, ensure_debug):
+def test_nosource_bundle_pkg_install(
+    install_mockery, mock_fetch, mock_packages, capfd, ensure_debug
+):
     """Test install phases with the nosource-bundle package."""
     spec = Spec("nosource-bundle").concretized()
     pkg = spec.package
