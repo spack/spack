@@ -14,6 +14,14 @@ class PyModin(PythonPackage):
 
     version("0.16.2", sha256="8e3f4cb478ae08dcc71b5a345781d57f29d6b95bc6ce1dc5c14d597a382f1354")
 
+    variant(
+        "engine",
+        default="ray",
+        values=["ray", "dask", "python", "native"],
+        description="Default distribution engine. All engines are installed and "
+        "functional as long as dependencies are found at run-time",
+    )
+
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-pandas@1.5.1", when="^python@3.8:", type=("build", "run"))
@@ -22,3 +30,17 @@ class PyModin(PythonPackage):
     depends_on("py-numpy@1.18.5:", type=("build", "run"))
     depends_on("py-fsspec", type=("build", "run"))
     depends_on("py-psutil", type=("build", "run"))
+
+    with when("engine=ray"):
+        depends_on("py-ray@1.4:+default", type=("build", "run"))
+        depends_on("py-pyarrow@4.0.1:", type=("build", "run"))
+        depends_on("py-redis@3.5:3", type=("build", "run"))
+
+    with when("engine=dask"):
+        depends_on("py-dask@2.22:", type=("build", "run"))
+        depends_on("py-distributed@2.22:", type=("build", "run"))
+        depends_on("py-pickle5", when="^python@:3.7", type=("build", "run"))
+
+    def setup_run_environment(self, env):
+        # modin/config/envvars.py
+        env.set("MODIN_ENGINE", self.spec.variants["engine"].value)
