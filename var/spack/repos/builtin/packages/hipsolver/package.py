@@ -95,7 +95,6 @@ class Hipsolver(CMakePackage):
         args = [
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
-            self.define("BUILD_CLIENTS_TESTS", self.run_tests),
         ]
 
         if self.spec.satisfies("@5.2.0:"):

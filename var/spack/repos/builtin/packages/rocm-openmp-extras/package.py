@@ -259,7 +259,7 @@ class RocmOpenmpExtras(Package):
         env.set("HIP_DEVICE_LIB_PATH", "{0}/amdgcn/bitcode".format(devlibs_prefix))
         env.prepend_path("CPATH", "{0}/include".format(openmp_extras_prefix))
         env.prepend_path("LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
-        if self.spec.version >= Version("5.3.0"):
+        if self.spec.satisfies("@5.3.0:"):
             env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
             env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(hsa_prefix))
         if self.spec.version < Version("4.1.0"):
@@ -500,7 +500,7 @@ class RocmOpenmpExtras(Package):
         else:
             openmp_common_args += ["-DHSA_INCLUDE={0}/include/hsa".format(hsa_prefix)]
 
-        if self.spec.version >= Version("5.3.0"):
+        if self.spec.satisfies("@5.3.0:"):
             openmp_common_args += ["-DLIBOMPTARGET_ENABLE_DEBUG=ON"]
 
         components["openmp"] = ["../rocm-openmp-extras/llvm-project/openmp"]
