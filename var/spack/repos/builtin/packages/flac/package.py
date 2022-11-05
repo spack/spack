@@ -10,7 +10,7 @@ class Flac(AutotoolsPackage):
     """Encoder/decoder for the Free Lossless Audio Codec"""
 
     homepage = "https://xiph.org/flac/index.html"
-    url = "https://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
+    url = "http://downloads.xiph.org/releases/flac/flac-1.3.2.tar.xz"
 
     version("1.4.2", sha256="e322d58a1f48d23d9dd38f432672865f6f79e73a6f9cc5a5f57fcaa83eb5a8e4")
     version("1.3.3", sha256="213e82bd716c9de6db2f98bcadbc4c24c7e2efe8c75939a1a84e28539c4e1748")
