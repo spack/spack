@@ -49,7 +49,7 @@ _compiler_to_pkg = {
     "clang": "llvm+clang",
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
-    "intel@2020:": "intel-oneapi-compilers-classic"
+    "intel@2020:": "intel-oneapi-compilers-classic",
 }
 
 

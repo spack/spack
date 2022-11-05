@@ -39,8 +39,7 @@ class IntelOneapiCompilersClassic(Package):
     @property
     def oneapi_compiler_prefix(self):
         oneapi_version = self.spec["intel-oneapi-compilers"].version
-        return self.spec["intel-oneapi-compilers"].prefix.compiler.join(
-            str(oneapi_version))
+        return self.spec["intel-oneapi-compilers"].prefix.compiler.join(str(oneapi_version))
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
