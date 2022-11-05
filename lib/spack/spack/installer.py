@@ -808,7 +808,7 @@ class PackageInstaller(object):
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
             elif is_compiler:
                 # ensure it's queued as a compiler
-                self._modify_existing_task(pkgid, 'compiler', True)
+                self._modify_existing_task(pkgid, "compiler", True)
 
     def _modify_existing_task(self, pkgid, attr, value):
         """
