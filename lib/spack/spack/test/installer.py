@@ -477,6 +477,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     # monkeypatch to make the list of compilers be what we test
     def fake_package_list(compiler, architecture, pkgs):
         return [(spec.package, True)]
+
     monkeypatch.setattr(inst, "_packages_needed_to_bootstrap_compiler", fake_package_list)
 
     installer._add_bootstrap_compilers("fake", "fake", "fake", None, {})
@@ -484,6 +485,7 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     # Check that the only task is now a compiler task
     assert len(installer.build_pq) == 1
     assert installer.build_pq[0][1].compiler
+
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
