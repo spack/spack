@@ -1387,11 +1387,6 @@ class Repo(object):
             else:
                 new_attrs_exclusively_from_config.add(key)
 
-            if isinstance(val, list):
-                raise spack.config.ConfigError("Unsupported attribute value: list")
-            elif isinstance(val, dict):
-                raise spack.config.ConfigError("Unsupported attribute value: dict")
-
             setattr(cls, key, val)
         if new_overidden_attrs:
             setattr(cls, "overidden_attrs", dict(new_overidden_attrs))
