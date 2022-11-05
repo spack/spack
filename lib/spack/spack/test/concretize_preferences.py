@@ -195,20 +195,36 @@ class TestConcretizePreferences(object):
 
     def test_config_set_pkg_property_new(self, mutable_mock_repo):
         """Test that you can set arbitrary attributes on the Package class"""
-        update_packages(
-            "mpileaks",
-            "package_attributes",
-            {"x": 1, "y": True, "z": "yesterday"},
+        conf = syaml.load_config(
+            """\
+mpileaks:
+  package_attributes:
+    v1: 1
+    v2: true
+    v4: yesterday
+    v5: "true"
+    v6:
+      x: 1
+      y: 2
+    v7:
+    - 1
+    - 2
+"""
         )
+        spack.config.set("packages", conf, scope="concretize")
+
         spec = concretize("mpileaks")
-        assert spec.package.x == 1
-        assert spec.package.y is True
-        assert spec.package.z == "yesterday"
+        assert spec.package.v1 == 1
+        assert spec.package.v2 is True
+        assert spec.package.v4 == "yesterday"
+        assert spec.package.v5 == "true"
+        assert dict(spec.package.v6) == {"x": 1, "y": 2}
+        assert list(spec.package.v7) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
         with pytest.raises(AttributeError):
-            spec.package.x
+            spec.package.v1
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
