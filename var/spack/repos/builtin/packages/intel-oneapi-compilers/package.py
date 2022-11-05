@@ -138,54 +138,9 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def component_dir(self):
         return "compiler"
 
-    def _ld_library_path(self):
-        dirs = [
-            "lib",
-            join_path("lib", "x64"),
-            join_path("lib", "emu"),
-            join_path("lib", "oclfpga", "host", "linux64", "lib"),
-            join_path("lib", "oclfpga", "linux64", "lib"),
-            join_path("compiler", "lib", "intel64_lin"),
-            join_path("compiler", "lib"),
-        ]
-        for dir in dirs:
-            yield join_path(self.component_path, "linux", dir)
-
     @property
     def compiler_search_prefix(self):
         return self.prefix.compiler.join(str(self.version)).linux.bin
-
-    def install(self, spec, prefix):
-        # install cpp
-        # Copy instead of install to speed up debugging
-        # subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
-        super(IntelOneapiCompilers, self).install(spec, prefix)
-
-        # install fortran
-        super(IntelOneapiCompilers, self).install(
-            spec, prefix, installer_path=glob.glob(join_path("fortran-installer", "*"))[0]
-        )
-
-        # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(join_path(self.component_path, "linux", "bin", "intel64", "ifort")):
-            raise RuntimeError("install failed")
-
-        # set rpath so "spack compiler add" can check version strings
-        # without setting LD_LIBRARY_PATH
-        rpath = ":".join(self._ld_library_path())
-        patch_dirs = [
-            join_path("lib"),
-            join_path("compiler", "lib", "intel64_lin"),
-            join_path("compiler", "lib", "intel64"),
-            "bin",
-        ]
-        for pd in patch_dirs:
-            patchables = glob.glob(join_path(self.component_path, "linux", pd, "*"))
-            patchables.append(join_path(self.component_path, "linux", "lib", "icx-lto.so"))
-            for file in patchables:
-                # Try to patch all files, patchelf will do nothing if
-                # file should not be patched
-                subprocess.call(["patchelf", "--set-rpath", rpath, file])
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
