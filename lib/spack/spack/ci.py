@@ -17,7 +17,7 @@ import tempfile
 import time
 import zipfile
 
-from six import iteritems
+from six import iteritems, string_types
 from six.moves.urllib.error import HTTPError, URLError
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import HTTPHandler, Request, build_opener
@@ -515,38 +515,36 @@ def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
     return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True):
-    """Given a list of package names, and assuming an active and
-       concretized environment, return a set of concrete specs from
-       the environment corresponding to any of the affected pkgs (or
-       optionally to any of their dependencies/dependents).
+def get_spec_filter_list(env, affected_pkgs):
+    """Given a list of package names and an active/concretized
+       environment, return the set of all concrete specs from the
+       environment that could have been affected by changing the
+       list of packages.
 
     Arguments:
 
         env (spack.environment.Environment): Active concrete environment
         affected_pkgs (List[str]): Affected package names
-        dependencies (bool): Include dependencies of affected packages
-        dependents (bool): Include dependents of affected pacakges
 
     Returns:
 
-        A list of concrete specs from the active environment including
-        those associated with affected packages, and possible their
-        dependencies and dependents as well.
+        A set of concrete specs from the active environment including
+        those associated with affected packages, their dependencies and
+        dependents, as well as their dependents dependencies.
     """
     affected_specs = set()
     all_concrete_specs = env.all_specs()
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
-    for pkg in affected_pkgs:
-        env_matches = [s for s in all_concrete_specs if s.name == pkg]
-        for match in env_matches:
-            affected_specs.add(match)
-            if dependencies:
-                affected_specs.update(match.traverse(direction="children", root=False))
-            if dependents:
-                affected_specs.update(match.traverse(direction="parents", root=False))
+    env_matches = [s for s in all_concrete_specs if s.name in frozenset(affected_pkgs)]
+    visited = set()
+    dag_hash = lambda s: s.dag_hash()
+    for match in env_matches:
+        for parent in match.traverse(direction="parents", key=dag_hash):
+            affected_specs.update(
+                parent.traverse(direction="children", visited=visited, key=dag_hash)
+            )
     return affected_specs
 
 
@@ -625,7 +623,7 @@ def generate_gitlab_ci_yaml(
                 affected_specs = get_spec_filter_list(env, affected_pkgs)
                 tty.debug("all affected specs:")
                 for s in affected_specs:
-                    tty.debug("  {0}".format(s.name))
+                    tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -848,7 +846,11 @@ def generate_gitlab_ci_yaml(
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
-                        tty.debug("Pruning {0}, untouched by change.".format(release_spec.name))
+                        tty.debug(
+                            "Pruning {0}/{1}, untouched by change.".format(
+                                release_spec.name, release_spec.dag_hash()[:7]
+                            )
+                        )
                         spec_record["needs_rebuild"] = False
                         continue
 
@@ -1936,26 +1938,35 @@ def reproduce_ci_job(url, work_dir):
     print("".join(inst_list))
 
 
-def process_command(cmd, cmd_args, repro_dir):
+def process_command(name, commands, repro_dir):
     """
     Create a script for and run the command. Copy the script to the
     reproducibility directory.
 
     Arguments:
-        cmd (str): name of the command being processed
-        cmd_args (list): string arguments to pass to the command
+        name (str): name of the command being processed
+        commands (list): list of arguments for single command or list of lists of
+            arguments for multiple commands. No shell escape is performed.
         repro_dir (str): Job reproducibility directory
 
     Returns: the exit code from processing the command
     """
-    tty.debug("spack {0} arguments: {1}".format(cmd, cmd_args))
+    tty.debug("spack {0} arguments: {1}".format(name, commands))
+
+    if len(commands) == 0 or isinstance(commands[0], string_types):
+        commands = [commands]
+
+    # Create a string [command 1] && [command 2] && ... && [command n] with commands
+    # quoted using double quotes.
+    args_to_string = lambda args: " ".join('"{}"'.format(arg) for arg in args)
+    full_command = " && ".join(map(args_to_string, commands))
 
     # Write the command to a shell script
-    script = "{0}.sh".format(cmd)
+    script = "{0}.sh".format(name)
     with open(script, "w") as fd:
-        fd.write("#!/bin/bash\n\n")
-        fd.write("\n# spack {0} command\n".format(cmd))
-        fd.write(" ".join(['"{0}"'.format(i) for i in cmd_args]))
+        fd.write("#!/bin/sh\n\n")
+        fd.write("\n# spack {0} command\n".format(name))
+        fd.write(full_command)
         fd.write("\n")
 
     st = os.stat(script)
@@ -1967,15 +1978,15 @@ def process_command(cmd, cmd_args, repro_dir):
     # Run the generated install.sh shell script as if it were being run in
     # a login shell.
     try:
-        cmd_process = subprocess.Popen(["bash", "./{0}".format(script)])
+        cmd_process = subprocess.Popen(["/bin/sh", "./{0}".format(script)])
         cmd_process.wait()
         exit_code = cmd_process.returncode
     except (ValueError, subprocess.CalledProcessError, OSError) as err:
-        tty.error("Encountered error running {0} script".format(cmd))
+        tty.error("Encountered error running {0} script".format(name))
         tty.error(err)
         exit_code = 1
 
-    tty.debug("spack {0} exited {1}".format(cmd, exit_code))
+    tty.debug("spack {0} exited {1}".format(name, exit_code))
     return exit_code
 
 

@@ -8,6 +8,7 @@ import os.path
 import platform
 import shutil
 import tempfile
+import warnings
 
 import llnl.util.filesystem
 import llnl.util.tty
@@ -29,7 +30,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.2/bootstrap-buildcache.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.4/bootstrap-buildcache.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -49,8 +50,8 @@ BINARY_METADATA = {
     },
 }
 
-CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/clingo.json"
-GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.2/gnupg.json"
+CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/clingo.json"
+GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/gnupg.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -92,9 +93,11 @@ def setup_parser(subparser):
 
     enable = sp.add_parser("enable", help="enable bootstrapping")
     _add_scope_option(enable)
+    enable.add_argument("name", help="name of the source to be enabled", nargs="?", default=None)
 
     disable = sp.add_parser("disable", help="disable bootstrapping")
     _add_scope_option(disable)
+    disable.add_argument("name", help="name of the source to be disabled", nargs="?", default=None)
 
     reset = sp.add_parser("reset", help="reset bootstrapping configuration to Spack defaults")
     spack.cmd.common.arguments.add_common_arguments(reset, ["yes_to_all"])
@@ -108,11 +111,11 @@ def setup_parser(subparser):
     list = sp.add_parser("list", help="list all the sources of software to bootstrap Spack")
     _add_scope_option(list)
 
-    trust = sp.add_parser("trust", help="trust a bootstrapping source")
+    trust = sp.add_parser("trust", help="(DEPRECATED) trust a bootstrapping source")
     _add_scope_option(trust)
     trust.add_argument("name", help="name of the source to be trusted")
 
-    untrust = sp.add_parser("untrust", help="untrust a bootstrapping source")
+    untrust = sp.add_parser("untrust", help="(DEPRECATED) untrust a bootstrapping source")
     _add_scope_option(untrust)
     untrust.add_argument("name", help="name of the source to be untrusted")
 
@@ -140,9 +143,21 @@ def setup_parser(subparser):
 
 
 def _enable_or_disable(args):
-    # Set to True if we called "enable", otherwise set to false
     value = args.subcommand == "enable"
-    spack.config.set("bootstrap:enable", value, scope=args.scope)
+    if args.name is None:
+        # Set to True if we called "enable", otherwise set to false
+        old_value = spack.config.get("bootstrap:enable", scope=args.scope)
+        if old_value == value:
+            llnl.util.tty.msg("Bootstrapping is already {}d".format(args.subcommand))
+        else:
+            spack.config.set("bootstrap:enable", value, scope=args.scope)
+            llnl.util.tty.msg("Bootstrapping has been {}d".format(args.subcommand))
+        return
+
+    if value is True:
+        _trust(args)
+    else:
+        _untrust(args)
 
 
 def _reset(args):
@@ -173,6 +188,8 @@ def _reset(args):
         if os.path.exists(bootstrap_yaml):
             shutil.move(bootstrap_yaml, backup_file)
 
+        spack.config.config.clear_caches()
+
 
 def _root(args):
     if args.path:
@@ -197,30 +214,41 @@ def _list(args):
             header_fmt = "@*b{{{0}:}} {1}"
             color.cprint(header_fmt.format(header, content))
 
-        trust_str = "@*y{UNKNOWN}"
+        trust_str = "@*y{DISABLED}"
         if trusted is True:
-            trust_str = "@*g{TRUSTED}"
+            trust_str = "@*g{ENABLED}"
         elif trusted is False:
-            trust_str = "@*r{UNTRUSTED}"
+            trust_str = "@*r{DISABLED}"
 
         fmt("Name", source["name"] + " " + trust_str)
         print()
-        fmt("  Type", source["type"])
-        print()
+        if trusted is True or args.verbose:
+            fmt("  Type", source["type"])
+            print()
 
-        info_lines = ["\n"]
-        for key, value in source.get("info", {}).items():
-            info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
-        if len(info_lines) > 1:
-            fmt("  Info", "".join(info_lines))
+            info_lines = ["\n"]
+            for key, value in source.get("info", {}).items():
+                info_lines.append(" " * 4 + "@*{{{0}}}: {1}\n".format(key, value))
+            if len(info_lines) > 1:
+                fmt("  Info", "".join(info_lines))
 
-        description_lines = ["\n"]
-        for line in source["description"].split("\n"):
-            description_lines.append(" " * 4 + line + "\n")
+            description_lines = ["\n"]
+            for line in source["description"].split("\n"):
+                description_lines.append(" " * 4 + line + "\n")
 
-        fmt("  Description", "".join(description_lines))
+            fmt("  Description", "".join(description_lines))
 
     trusted = spack.config.get("bootstrap:trusted", {})
+
+    def sort_fn(x):
+        x_trust = trusted.get(x["name"], None)
+        if x_trust is True:
+            return 0
+        elif x_trust is None:
+            return 1
+        return 2
+
+    sources = sorted(sources, key=sort_fn)
     for s in sources:
         _print_method(s, trusted.get(s["name"], None))
 
@@ -252,15 +280,27 @@ def _write_trust_state(args, value):
     spack.config.add("bootstrap:trusted:{0}:{1}".format(name, str(value)), scope=scope)
 
 
+def _deprecate_command(deprecated_cmd, suggested_cmd):
+    msg = (
+        "the 'spack bootstrap {} ...' command is deprecated and will be "
+        "removed in v0.20, use 'spack bootstrap {} ...' instead"
+    )
+    warnings.warn(msg.format(deprecated_cmd, suggested_cmd))
+
+
 def _trust(args):
+    if args.subcommand == "trust":
+        _deprecate_command("trust", "enable")
     _write_trust_state(args, value=True)
-    msg = '"{0}" is now trusted for bootstrapping'
+    msg = '"{0}" is now enabled for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
 
 def _untrust(args):
+    if args.subcommand == "untrust":
+        _deprecate_command("untrust", "disable")
     _write_trust_state(args, value=False)
-    msg = '"{0}" is now untrusted and will not be used for bootstrapping'
+    msg = '"{0}" is now disabled and will not be used for bootstrapping'
     llnl.util.tty.msg(msg.format(args.name))
 
 
@@ -409,10 +449,10 @@ def _mirror(args):
 
 def _now(args):
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_clingo_importable_or_raise()
-        spack.bootstrap.ensure_gpg_in_path_or_raise()
         if platform.system().lower() == "linux":
             spack.bootstrap.ensure_patchelf_in_path_or_raise()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
+        spack.bootstrap.ensure_gpg_in_path_or_raise()
 
 
 def bootstrap(parser, args):

@@ -98,6 +98,9 @@ class Unifyfs(AutotoolsPackage):
             if "-g" in flags:
                 self.debug_build = True
         if name == "cflags":
+            if self.spec.satisfies("%oneapi@2022.2.0:"):
+                flags.append("-Wno-error=deprecated-non-prototype")
+                flags.append("-Wno-error=unused-function")
             if self.spec.satisfies("%gcc@4"):
                 flags.append("-std=gnu99")
         return (None, None, flags)

@@ -442,13 +442,16 @@ def test_get_spec_filter_list(mutable_mock_env_path, config, mutable_mock_repo):
     touched = ["libdwarf"]
 
     # traversing both directions from libdwarf in the graphs depicted
-    # above results in the following possibly affected env specs:
-    # mpileaks, callpath, dyninst, libdwarf, and libelf.  Unaffected
-    # specs are mpich, plus hypre and it's dependencies.
+    # above (and additionally including dependencies of dependents of
+    # libdwarf) results in the following possibly affected env specs:
+    # mpileaks, callpath, dyninst, libdwarf, libelf, and mpich.
+    # Unaffected specs are hypre and it's dependencies.
 
     affected_specs = ci.get_spec_filter_list(e1, touched)
     affected_pkg_names = set([s.name for s in affected_specs])
-    expected_affected_pkg_names = set(["mpileaks", "callpath", "dyninst", "libdwarf", "libelf"])
+    expected_affected_pkg_names = set(
+        ["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"]
+    )
 
     assert affected_pkg_names == expected_affected_pkg_names
 
@@ -467,7 +470,7 @@ def test_affected_specs_on_first_concretization(mutable_mock_env_path, config):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_process_command(tmpdir):
     repro_dir = tmpdir.join("repro_dir").strpath
@@ -479,7 +482,7 @@ def test_ci_process_command(tmpdir):
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_process_command_fail(tmpdir, monkeypatch):
     import subprocess
@@ -526,7 +529,7 @@ def test_ci_run_standalone_tests_missing_requirements(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_junit(
     tmpdir, working_env, config, mock_packages, mock_test_stage, capfd
@@ -547,7 +550,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Reliance on bash script ot supported on Windows"
+    sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_cdash(
     tmpdir, working_env, config, mock_packages, mock_test_stage, capfd

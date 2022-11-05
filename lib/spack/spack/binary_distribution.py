@@ -42,7 +42,7 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.caches import misc_cache_location
-from spack.relocate import utf8_path_to_binary_regex
+from spack.relocate import utf8_paths_to_single_binary_regex
 from spack.spec import Spec
 from spack.stage import Stage
 
@@ -107,7 +107,8 @@ class BinaryCacheIndex(object):
         # cache (_mirrors_for_spec)
         self._specs_already_associated = set()
 
-        # mapping from mirror urls to the time.time() of the last index fetch.
+        # mapping from mirror urls to the time.time() of the last index fetch and a bool indicating
+        # whether the fetch succeeded or not.
         self._last_fetch_times = {}
 
         # _mirrors_for_spec is a dictionary mapping DAG hashes to lists of
@@ -346,21 +347,25 @@ class BinaryCacheIndex(object):
                     with_cooldown
                     and ttl > 0
                     and cached_mirror_url in self._last_fetch_times
-                    and now - self._last_fetch_times[cached_mirror_url] < ttl
+                    and now - self._last_fetch_times[cached_mirror_url][0] < ttl
                 ):
-                    # The fetch worked last time, so don't error
-                    all_methods_failed = False
+                    # We're in the cooldown period, don't try to fetch again
+                    # If the fetch succeeded last time, consider this update a success, otherwise
+                    # re-report the error here
+                    if self._last_fetch_times[cached_mirror_url][1]:
+                        all_methods_failed = False
                 else:
                     # May need to fetch the index and update the local caches
                     try:
                         needs_regen = self._fetch_and_cache_index(
                             cached_mirror_url, expect_hash=cached_index_hash
                         )
-                        self._last_fetch_times[cached_mirror_url] = now
+                        self._last_fetch_times[cached_mirror_url] = (now, True)
                         all_methods_failed = False
                     except FetchCacheError as fetch_error:
                         needs_regen = False
                         fetch_errors.extend(fetch_error.errors)
+                        self._last_fetch_times[cached_mirror_url] = (now, False)
                     # The need to regenerate implies a need to clear as well.
                     spec_cache_clear_needed |= needs_regen
                     spec_cache_regenerate_needed |= needs_regen
@@ -392,11 +397,12 @@ class BinaryCacheIndex(object):
                 # Need to fetch the index and update the local caches
                 try:
                     needs_regen = self._fetch_and_cache_index(mirror_url)
-                    self._last_fetch_times[mirror_url] = now
+                    self._last_fetch_times[mirror_url] = (now, True)
                     all_methods_failed = False
                 except FetchCacheError as fetch_error:
                     fetch_errors.extend(fetch_error.errors)
                     needs_regen = False
+                    self._last_fetch_times[mirror_url] = (now, False)
                 # Generally speaking, a new mirror wouldn't imply the need to
                 # clear the spec cache, so leave it as is.
                 if needs_regen:
@@ -688,13 +694,10 @@ class BuildManifestVisitor(BaseDirectoryVisitor):
         return False
 
 
-def file_matches_any_binary_regex(path, regexes):
+def file_matches(path, regex):
     with open(path, "rb") as f:
         contents = f.read()
-    for regex in regexes:
-        if regex.search(contents):
-            return True
-    return False
+    return bool(regex.search(contents))
 
 
 def get_buildfile_manifest(spec):
@@ -728,8 +731,8 @@ def get_buildfile_manifest(spec):
     prefixes.append(spack.hooks.sbang.sbang_install_path())
     prefixes.append(str(spack.store.layout.root))
 
-    # Create a list regexes matching collected prefixes
-    compiled_prefixes = [utf8_path_to_binary_regex(prefix) for prefix in prefixes]
+    # Create a giant regex that matches all prefixes
+    regex = utf8_paths_to_single_binary_regex(prefixes)
 
     # Symlinks.
 
@@ -761,10 +764,9 @@ def get_buildfile_manifest(spec):
                 data["binary_to_relocate_fullpath"].append(abs_path)
                 continue
 
-        elif relocate.needs_text_relocation(m_type, m_subtype):
-            if file_matches_any_binary_regex(abs_path, compiled_prefixes):
-                data["text_to_relocate"].append(rel_path)
-                continue
+        elif relocate.needs_text_relocation(m_type, m_subtype) and file_matches(abs_path, regex):
+            data["text_to_relocate"].append(rel_path)
+            continue
 
         data["other"].append(abs_path)
 
@@ -948,13 +950,13 @@ def generate_package_index(cache_prefix):
     .json) under cache_prefix.
     """
     try:
-        file_list = (
+        file_list = [
             entry
             for entry in web_util.list_url(cache_prefix)
             if entry.endswith(".yaml")
             or entry.endswith("spec.json")
             or entry.endswith("spec.json.sig")
-        )
+        ]
     except KeyError as inst:
         msg = "No packages at {0}: {1}".format(cache_prefix, inst)
         tty.warn(msg)
@@ -966,6 +968,14 @@ def generate_package_index(cache_prefix):
         msg = "Encountered problem listing packages at {0}: {1}".format(cache_prefix, err)
         tty.warn(msg)
         return
+
+    if any(x.endswith(".yaml") for x in file_list):
+        msg = (
+            "The mirror in '{}' contains specs in the deprecated YAML format.\n\n\tSupport for "
+            "this format will be removed in v0.20, please regenerate the build cache with a "
+            "recent Spack\n"
+        ).format(cache_prefix)
+        warnings.warn(msg)
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
@@ -1155,7 +1165,11 @@ def _build_tarball(
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, "w:gz")) as tar:
+    # On AMD Ryzen 3700X and an SSD disk, we have the following on compression speed:
+    # compresslevel=6 gzip default: llvm takes 4mins, roughly 2.1GB
+    # compresslevel=9 python default: llvm takes 12mins, roughly 2.1GB
+    # So we follow gzip.
+    with closing(tarfile.open(tarfile_path, "w:gz", compresslevel=6)) as tar:
         tar.add(name="%s" % workdir, arcname="%s" % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
@@ -1430,6 +1444,13 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     #     the remaining mirrors, looking for one we can use.
                     tarball_stage = try_fetch(spackfile_url)
                     if tarball_stage:
+                        if ext == "yaml":
+                            msg = (
+                                "Reading {} from mirror.\n\n\tThe YAML format for buildcaches is "
+                                "deprecated and will be removed in v0.20\n"
+                            ).format(spackfile_url)
+                            warnings.warn(msg)
+
                         return {
                             "tarball_stage": tarball_stage,
                             "specfile_stage": local_specfile_stage,
@@ -1579,13 +1600,19 @@ def relocate_package(spec, allow_root):
         install_path = spack.hooks.sbang.sbang_install_path()
         prefix_to_prefix_text[old_sbang_install_path] = install_path
 
+    # First match specific prefix paths. Possibly the *local* install prefix
+    # of some dependency is in an upstream, so we cannot assume the original
+    # spack store root can be mapped uniformly to the new spack store root.
+    for orig_prefix, hash in prefix_to_hash.items():
+        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
+        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
+    # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix
     prefix_to_prefix_text[old_layout_root] = new_layout_root
     prefix_to_prefix_bin[old_layout_root] = new_layout_root
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
     # This is vestigial code for the *old* location of sbang. Previously,
     # sbang was a bash script, and it lived in the spack prefix. It is
     # now a POSIX script that lives in the install prefix. Old packages
@@ -1628,7 +1655,11 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-        if "elf" in platform.binary_formats:
+        elif "elf" in platform.binary_formats and not rel:
+            # The new ELF dynamic section relocation logic only handles absolute to
+            # absolute relocation.
+            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
+        elif "elf" in platform.binary_formats and rel:
             relocate.relocate_elf_binaries(
                 files_to_relocate,
                 old_layout_root,
@@ -1638,27 +1669,15 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-            # Relocate links to the new install prefix
-            links = [link for link in buildinfo.get("relocate_links", [])]
-            relocate.relocate_links(links, old_layout_root, old_prefix, new_prefix)
+
+        # Relocate links to the new install prefix
+        links = [os.path.join(workdir, f) for f in buildinfo.get("relocate_links", [])]
+        relocate.relocate_links(links, prefix_to_prefix_bin)
 
         # For all buildcaches
         # relocate the install prefixes in text files including dependencies
         relocate.unsafe_relocate_text(text_names, prefix_to_prefix_text)
 
-        paths_to_relocate = [old_prefix, old_layout_root]
-        paths_to_relocate.extend(prefix_to_hash.keys())
-        files_to_relocate = list(
-            filter(
-                lambda pathname: not relocate.file_is_relocatable(
-                    pathname, paths_to_relocate=paths_to_relocate
-                ),
-                map(
-                    lambda filename: os.path.join(workdir, filename),
-                    buildinfo["relocate_binaries"],
-                ),
-            )
-        )
         # relocate the install prefixes in binary files including dependencies
         relocate.unsafe_relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 

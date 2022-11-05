@@ -31,6 +31,7 @@ opt_criterion(300, "number of input specs not concretized").
 attr(Name, A1)         :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
 attr(Name, A1, A2)     :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
 attr(Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
+attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
 
 % For these two atoms we only need implications in one direction
 root(Package)         :- attr("root", Package).
@@ -52,6 +53,7 @@ variant_default_value_from_cli(Package, Variant, Value)
 #defined literal/3.
 #defined literal/4.
 #defined literal/5.
+#defined literal/6.
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -175,18 +177,20 @@ node_version_satisfies(Package, Constraint)
 % corresponding spec attributes hold.
 condition_holds(ID) :-
   condition(ID, _);
-  attr(Name, A1)         : condition_requirement(ID, Name, A1);
-  attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
-  attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
+  attr(Name, A1)             : condition_requirement(ID, Name, A1);
+  attr(Name, A1, A2)         : condition_requirement(ID, Name, A1, A2);
+  attr(Name, A1, A2, A3)     : condition_requirement(ID, Name, A1, A2, A3);
+  attr(Name, A1, A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4).
 
 % condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
 % is derived. This allows imposed constraints to be canceled in special cases.
 impose(ID) :- condition_holds(ID), not do_not_impose(ID).
 
 % conditions that hold impose constraints on other specs
-attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
-attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
-attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- node(Package), hash(Package, Hash),
@@ -202,9 +206,11 @@ attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.
+#defined condition_requirement/6.
 #defined imposed_constraint/3.
 #defined imposed_constraint/4.
 #defined imposed_constraint/5.
+#defined imposed_constraint/6.
 
 %-----------------------------------------------------------------------------
 % Concrete specs
@@ -378,6 +384,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 #defined required_provider_condition/3.
 #defined required_provider_condition/4.
 #defined required_provider_condition/5.
+#defined required_provider_condition/6.
 
 %-----------------------------------------------------------------------------
 % Spec Attributes
@@ -400,6 +407,7 @@ node_target(Package, Target)           :- attr("node_target", Package, Target).
 node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
 variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
 variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
+variant_propagate(Package, Variant, Value, Source)    :- attr("variant_propagate", Package, Variant, Value, Source).
 node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
 node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
 depends_on(Package, Dependency, Type)  :- attr("depends_on", Package, Dependency, Type).
@@ -407,6 +415,8 @@ node_compiler_version(Package, Compiler, Version)
   :- attr("node_compiler_version", Package, Compiler, Version).
 node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
+node_flag_propagate(Package, FlagType)
+  :- attr("node_flag_propagate", Package, FlagType).
 
 attr("node", Package)                          :- node(Package).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
@@ -419,6 +429,7 @@ attr("node_target", Package, Target)           :- node_target(Package, Target).
 attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
 attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
 attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
+attr("variant_propagate", Package, Variant, Value, Source)    :- variant_propagate(Package, Variant, Value, Source).
 attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
 attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
 attr("depends_on", Package, Dependency, Type)  :- depends_on(Package, Dependency, Type).
@@ -426,6 +437,8 @@ attr("node_compiler_version", Package, Compiler, Version)
   :- node_compiler_version(Package, Compiler, Version).
 attr("node_compiler_version_satisfies", Package, Compiler, Version)
   :- node_compiler_version_satisfies(Package, Compiler, Version).
+attr("node_flag_propagate", Package, FlagType)
+  :- node_flag_propagate(Package, FlagType).
 
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
@@ -503,6 +516,7 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 #defined external_spec_condition/3.
 #defined external_spec_condition/4.
 #defined external_spec_condition/5.
+#defined external_spec_condition/6.
 
 %-----------------------------------------------------------------------------
 % Config required semantics
@@ -558,6 +572,24 @@ error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
 % and that condition holds
 variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
+
+variant_propagate(Package, Variant, Value, Source) :-
+  node(Package),
+  depends_on(Parent, Package),
+  variant_propagate(Parent, Variant, Value, Source),
+  not variant_set(Package, Variant).
+
+variant_value(Package, Variant, Value) :-
+  node(Package),
+  variant(Package, Variant),
+  variant_propagate(Package, Variant, Value, _),
+  variant_possible_value(Package, Variant, Value).
+
+error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
+  variant_propagate(Package, Variant, Value1, Source1),
+  variant_propagate(Package, Variant, Value2, Source2),
+  variant(Package, Variant),
+  Value1 != Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -641,6 +673,8 @@ variant_not_default(Package, Variant, Value)
     not variant_default_value(Package, Variant, Value),
     % variants set explicitly on the CLI don't count as non-default
     not variant_set(Package, Variant, Value),
+    % variant values forced by propagation don't count as non-default
+    not variant_propagate(Package, Variant, Value, _),
     % variants set on externals that we could use don't count as non-default
     % this makes spack prefer to use an external over rebuilding with the
     % default configuration
@@ -703,6 +737,7 @@ variant_single_value(Package, "dev_path")
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
 #defined variant_sticky/2.
+#defined variant_propagate/4.
 #defined variant_set/3.
 #defined variant_condition/3.
 #defined variant_single_value/2.
@@ -1005,37 +1040,48 @@ compiler_weight(Package, 100)
 %-----------------------------------------------------------------------------
 % Compiler flags
 %-----------------------------------------------------------------------------
-% propagate flags when compilers match
-inherit_flags(Package, Dependency)
+
+% propagate flags when compiler match
+can_inherit_flags(Package, Dependency, FlagType)
  :- depends_on(Package, Dependency),
     node_compiler(Package, Compiler),
     node_compiler(Dependency, Compiler),
+    not node_flag_set(Dependency, FlagType, _),
     compiler(Compiler), flag_type(FlagType).
-node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_set(Package, FlagType, Flag), inherit_flags(Package, Dependency).
-node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_inherited(Package, FlagType, Flag),
-    inherit_flags(Package, Dependency).
 
-% node with flags set to anythingg is "set"
-node_flag_set(Package) :- node_flag_set(Package, _, _).
+node_flag_inherited(Dependency, FlagType, Flag)
+ :- node_flag_set(Package, FlagType, Flag), can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
+% Ensure propagation
+:- node_flag_inherited(Package, FlagType, Flag),
+    can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
+
+error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
+  depends_on(Source1, Package),
+  depends_on(Source2, Package),
+  node_flag_propagate(Source1, FlagType),
+  node_flag_propagate(Source2, FlagType),
+  can_inherit_flags(Source1, Package, FlagType),
+  can_inherit_flags(Source2, Package, FlagType),
+  Source1 != Source2.
 
 % remember where flags came from
-node_flag_source(Package, Package) :- node_flag_set(Package).
-node_flag_source(Dependency, Q)
- :- node_flag_source(Package, Q), inherit_flags(Package, Dependency).
+node_flag_source(Package, FlagType, Package) :- node_flag_set(Package, FlagType, _).
+node_flag_source(Dependency, FlagType, Q)
+ :- node_flag_source(Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _),
+    node_flag_propagate(Package, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 node_flag(Package, FlagType, Flag)
- :- not node_flag_set(Package),
-    compiler_version_flag(Compiler, Version, FlagType, Flag),
+ :- compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
     compiler_version(Compiler, Version).
 
 node_flag_compiler_default(Package)
- :- not node_flag_set(Package),
+ :- not node_flag_set(Package, FlagType, _),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
@@ -1054,6 +1100,7 @@ no_flags(Package, FlagType)
 #defined compiler_version_flag/4.
 #defined node_flag/3.
 #defined node_flag_set/3.
+#defined node_flag_propagate/2.
 
 
 %-----------------------------------------------------------------------------

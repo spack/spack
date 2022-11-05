@@ -107,6 +107,9 @@ required_command_properties = ["level", "section", "description"]
 spack_working_dir = None
 spack_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
 
+#: Whether to print backtraces on error
+SHOW_BACKTRACE = False
+
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
@@ -569,6 +572,8 @@ def setup_main_options(args):
 
     if args.debug or args.backtrace:
         spack.error.debug = True
+        global SHOW_BACKTRACE
+        SHOW_BACKTRACE = True
 
     if args.debug:
         spack.util.debug.register_interrupt_handler()
@@ -1002,7 +1007,7 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
@@ -1012,12 +1017,12 @@ def main(argv=None):
             return signal.SIGINT
 
     except SystemExit as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         tty.error(e)
         return 3
