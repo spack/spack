@@ -548,7 +548,8 @@ You can assign class-level attributes in the configuration:
       x: 1
 
 Attributes set this way will be accessible to any method executed
-in the package.py file (e.g. the ``install()`` method).
+in the package.py file (e.g. the ``install()`` method). Values for these
+attributes may be any value parseable by yaml.
 
 These can only be applied to specific packages, not "all" or
 virtual packages.
