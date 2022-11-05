@@ -186,7 +186,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(["patchelf", "--set-rpath", rpath, file])
->>>>>>> make bootstrapped compilers detectable in non-standard locations
 
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
