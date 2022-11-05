@@ -113,7 +113,18 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
     dav_sdk_depends_on("faodel+shared+mpi network=libfabric", when="+faodel", propagate=["hdf5"])
 
     dav_sdk_depends_on("hdf5@1.12: +shared+mpi", when="+hdf5", propagate=["fortran"])
-    dav_sdk_depends_on("hdf5-vfd-gds@1.0.2:", when="+cuda+hdf5", propagate=cuda_arch_variants)
+    # hdf5-vfd-gds needs cuda@11.7.1 or later, only enable when 11.7.1+ available.
+    depends_on(
+        "hdf5-vfd-gds@1.0.2:",
+        when="+cuda+hdf5^cuda@11.7.1:",
+    )
+    for cuda_arch in cuda_arch_variants:
+        depends_on(
+            "hdf5-vfd-gds@1.0.2: {0}".format(cuda_arch),
+            when="+cuda+hdf5 {0} ^cuda@11.7.1:".format(cuda_arch),
+        )
+    conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
+    conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 

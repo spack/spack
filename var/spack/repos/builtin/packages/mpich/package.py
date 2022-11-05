@@ -390,8 +390,7 @@ with '-Wl,-commons,use_dylibs' and without
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = self.spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             # This is intended to support external MPICH instances registered
             # by Spack on Cray machines prior to a879c87; users defining an
             # external MPICH entry for Cray should generally refer to the
@@ -420,8 +419,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = spec.external_modules
-        if external_modules and "cray" in external_modules[0]:
+        if self.spec.satisfies("platform=cray"):
             spec.mpicc = spack_cc
             spec.mpicxx = spack_cxx
             spec.mpifc = spack_fc

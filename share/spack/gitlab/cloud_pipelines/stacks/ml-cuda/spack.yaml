@@ -26,6 +26,9 @@ spack:
     # Horovod
     - py-horovod
 
+    # Hugging Face
+    - py-transformers
+
     # JAX
     # https://github.com/google/jax/issues/12614
     # - py-jax
