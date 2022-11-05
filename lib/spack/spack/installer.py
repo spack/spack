@@ -1241,6 +1241,12 @@ class PackageInstaller(object):
         fail_fast = request.install_args.get("fail_fast")
         self.fail_fast = self.fail_fast or fail_fast
 
+    def _add_compiler_package_to_config(self, pkg):
+        compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
+        spack.compilers.add_compilers_to_config(
+            spack.compilers.find_compilers([compiler_search_prefix])
+        )
+
     def _install_task(self, task):
         """
         Perform the installation of the requested spec and/or dependency
@@ -1266,10 +1272,7 @@ class PackageInstaller(object):
         if use_cache and _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             if task.compiler:
-                compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-                spack.compilers.add_compilers_to_config(
-                    spack.compilers.find_compilers([compiler_search_prefix])
-                )
+                self._add_compiler_package_to_config(pkg)
             return
 
         pkg.run_tests = tests is True or tests and pkg.name in tests
@@ -1297,10 +1300,7 @@ class PackageInstaller(object):
 
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
-                compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
-                spack.compilers.add_compilers_to_config(
-                    spack.compilers.find_compilers([compiler_search_prefix])
-                )
+                self._add_compiler_package_to_config(pkg)
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -1719,12 +1719,7 @@ class PackageInstaller(object):
 
                     # It's an already installed compiler, add it to the config
                     if task.compiler:
-                        compiler_search_prefix = getattr(
-                            pkg, "compiler_search_prefix", pkg.spec.prefix
-                        )
-                        spack.compilers.add_compilers_to_config(
-                            spack.compilers.find_compilers([compiler_search_prefix])
-                        )
+                        self._add_compiler_package_to_config(pkg)
 
                 else:
                     # At this point we've failed to get a write or a read
