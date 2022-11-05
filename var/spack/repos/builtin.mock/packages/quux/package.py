@@ -97,7 +97,12 @@ const int quux_version_minor = %s;
             f.write(quux_h)
         with open("%s/quux/quuxifier.cc" % self.stage.source_path, "w") as f:
             f.write(quuxifier_cc)
-        gpp = which("/usr/bin/g++")
+        gpp = which(
+            "g++",
+            path=":".join(
+                [s for s in os.environ["PATH"].split(os.pathsep) if "lib/spack/env" not in s]
+            ),
+        )
         if sys.platform == "darwin":
             gpp = which("/usr/bin/clang++")
         gpp(
