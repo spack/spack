@@ -205,8 +205,8 @@ class Go(Package):
         install_tree(wd, prefix)
 
     def setup_build_environment(self, env):
-        env.set('GOROOT', None)
-        env.set('GOROOT_FINAL', self.spec.prefix)
+        env.set("GOROOT", None)
+        env.set("GOROOT_FINAL", self.spec.prefix)
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
         env.set("CC_FOR_TARGET", self.compiler.cc)

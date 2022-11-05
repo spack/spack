@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Wiggle(MakefilePackage):
@@ -16,9 +16,7 @@ class Wiggle(MakefilePackage):
 
     maintainers = ["trws"]
 
-    version(
-        "1.3", sha256="ff92cf0133c1f4dce33563e263cb30e7ddb6f4abdf86d427b1ec1490bec25afa"
-    )
+    version("1.3", sha256="ff92cf0133c1f4dce33563e263cb30e7ddb6f4abdf86d427b1ec1490bec25afa")
     depends_on("groff")
 
     def edit(self, spec, prefix):
