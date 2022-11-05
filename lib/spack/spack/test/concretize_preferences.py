@@ -180,7 +180,7 @@ class TestConcretizePreferences(object):
         assert "zmpi" in spec
 
     def test_config_set_pkg_property_url(self, mutable_mock_repo):
-        """Test setting an attribute that is explicitly-handled in the schema"""
+        """Test setting an existing attribute in the package class"""
         update_packages(
             "mpileaks",
             "package_attributes",
@@ -209,12 +209,6 @@ class TestConcretizePreferences(object):
         spec = concretize("mpileaks")
         with pytest.raises(AttributeError):
             spec.package.x
-
-    def test_config_set_pkg_property_collection_unsupported(self, mutable_mock_repo):
-        """Test that an error is raised if you attempt to assign a list value"""
-        update_packages("mpileaks", "package_attributes", {"x": ["a", "b"]})
-        with pytest.raises(ConfigError):
-            concretize("mpileaks")
 
     def test_preferred(self):
         """ "Test packages with some version marked as preferred=True"""
