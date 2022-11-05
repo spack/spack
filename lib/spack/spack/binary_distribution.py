@@ -950,13 +950,13 @@ def generate_package_index(cache_prefix):
     .json) under cache_prefix.
     """
     try:
-        file_list = (
+        file_list = [
             entry
             for entry in web_util.list_url(cache_prefix)
             if entry.endswith(".yaml")
             or entry.endswith("spec.json")
             or entry.endswith("spec.json.sig")
-        )
+        ]
     except KeyError as inst:
         msg = "No packages at {0}: {1}".format(cache_prefix, inst)
         tty.warn(msg)
@@ -968,6 +968,14 @@ def generate_package_index(cache_prefix):
         msg = "Encountered problem listing packages at {0}: {1}".format(cache_prefix, err)
         tty.warn(msg)
         return
+
+    if any(x.endswith(".yaml") for x in file_list):
+        msg = (
+            "The mirror in '{}' contains specs in the deprecated YAML format.\n\n\tSupport for "
+            "this format will be removed in v0.20, please regenerate the build cache with a "
+            "recent Spack\n"
+        ).format(cache_prefix)
+        warnings.warn(msg)
 
     tty.debug("Retrieving spec descriptor files from {0} to build index".format(cache_prefix))
 
@@ -1436,6 +1444,13 @@ def download_tarball(spec, unsigned=False, mirrors_for_spec=None):
                     #     the remaining mirrors, looking for one we can use.
                     tarball_stage = try_fetch(spackfile_url)
                     if tarball_stage:
+                        if ext == "yaml":
+                            msg = (
+                                "Reading {} from mirror.\n\n\tThe YAML format for buildcaches is "
+                                "deprecated and will be removed in v0.20\n"
+                            ).format(spackfile_url)
+                            warnings.warn(msg)
+
                         return {
                             "tarball_stage": tarball_stage,
                             "specfile_stage": local_specfile_stage,
@@ -1585,13 +1600,19 @@ def relocate_package(spec, allow_root):
         install_path = spack.hooks.sbang.sbang_install_path()
         prefix_to_prefix_text[old_sbang_install_path] = install_path
 
+    # First match specific prefix paths. Possibly the *local* install prefix
+    # of some dependency is in an upstream, so we cannot assume the original
+    # spack store root can be mapped uniformly to the new spack store root.
+    for orig_prefix, hash in prefix_to_hash.items():
+        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
+        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
+    # Only then add the generic fallback of install prefix -> install prefix.
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix
     prefix_to_prefix_text[old_layout_root] = new_layout_root
     prefix_to_prefix_bin[old_layout_root] = new_layout_root
-    for orig_prefix, hash in prefix_to_hash.items():
-        prefix_to_prefix_text[orig_prefix] = hash_to_prefix.get(hash, None)
-        prefix_to_prefix_bin[orig_prefix] = hash_to_prefix.get(hash, None)
+
     # This is vestigial code for the *old* location of sbang. Previously,
     # sbang was a bash script, and it lived in the spack prefix. It is
     # now a POSIX script that lives in the install prefix. Old packages
@@ -1634,7 +1655,11 @@ def relocate_package(spec, allow_root):
                 old_prefix,
                 new_prefix,
             )
-        if "elf" in platform.binary_formats:
+        elif "elf" in platform.binary_formats and not rel:
+            # The new ELF dynamic section relocation logic only handles absolute to
+            # absolute relocation.
+            relocate.new_relocate_elf_binaries(files_to_relocate, prefix_to_prefix_bin)
+        elif "elf" in platform.binary_formats and rel:
             relocate.relocate_elf_binaries(
                 files_to_relocate,
                 old_layout_root,

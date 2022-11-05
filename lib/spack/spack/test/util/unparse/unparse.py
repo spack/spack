@@ -178,16 +178,14 @@ async def f():
 """
 
 
-def assertASTEqual(ast1, ast2):
-    ast.dump(ast1) == ast.dump(ast2)
-
-
 def check_ast_roundtrip(code1, filename="internal", mode="exec"):
     ast1 = compile(str(code1), filename, mode, ast.PyCF_ONLY_AST)
     code2 = spack.util.unparse.unparse(ast1)
 
     ast2 = compile(code2, filename, mode, ast.PyCF_ONLY_AST)
-    assertASTEqual(ast1, ast2)
+
+    error_msg = "Failed to roundtrip {} [mode={}]".format(filename, mode)
+    assert ast.dump(ast1) == ast.dump(ast2), error_msg
 
 
 def test_core_lib_files():

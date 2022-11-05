@@ -310,11 +310,20 @@ class Cmake(Package):
         args = []
         self.generator = make
 
+        if self.spec.satisfies("platform=windows"):
+            args.append("-GNinja")
+            self.generator = ninja
+
         if not sys.platform == "win32":
             args.append("--prefix={0}".format(self.prefix))
 
-            if spack.build_environment.should_set_parallel_jobs(jobserver_support=True):
-                args.append("--parallel={0}".format(make_jobs))
+            jobs = spack.build_environment.get_effective_jobs(
+                make_jobs,
+                parallel=self.parallel,
+                supports_jobserver=self.generator.supports_jobserver,
+            )
+            if jobs is not None:
+                args.append("--parallel={0}".format(jobs))
 
             if "+ownlibs" in spec:
                 # Build and link to the CMake-provided third-party libraries
@@ -341,9 +350,7 @@ class Cmake(Package):
             args.append("--")
         else:
             args.append("-DCMAKE_INSTALL_PREFIX=%s" % self.prefix)
-        if self.spec.satisfies("platform=windows"):
-            args.append("-GNinja")
-            self.generator = ninja
+
         args.append("-DCMAKE_BUILD_TYPE={0}".format(self.spec.variants["build_type"].value))
 
         # Install CMake correctly, even if `spack install` runs

@@ -1904,11 +1904,11 @@ class TestConcretize(object):
             pytest.xfail("Use case not supported by the original concretizer")
 
         # Configuration to be added to packages.yaml
-        external_conf = {"all": {"require": "target=x86_64"}}
+        external_conf = {"all": {"require": "target=%s" % spack.platforms.test.Test.front_end}}
         spack.config.set("packages", external_conf)
 
         with spack.config.override("concretizer:reuse", False):
             spec = Spec("mpich").concretized()
 
         for s in spec.traverse():
-            assert s.satisfies("target=x86_64")
+            assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
