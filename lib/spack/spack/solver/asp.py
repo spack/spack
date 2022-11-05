@@ -1959,7 +1959,10 @@ class SpackSolverSetup(object):
         env = ev.active_environment()
         dev_specs = (
             tuple(
-                spack.spec.Spec(info["spec"]).constrained("dev_path=%s" % info["path"])
+                spack.spec.Spec(info["spec"]).constrained(
+                    "dev_path=%s"
+                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                )
                 for name, info in env.dev_specs.items()
             )
             if env
@@ -2331,8 +2334,7 @@ def _develop_specs_from_env(spec, env):
             "Internal Error: The dev_path for spec {name} is not connected to a valid environment"
             "path. Please note that develop specs can only be used inside an environment"
             "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
-        )
-        error_msg.format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
+        ).format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
 
         assert spec.variants["dev_path"].value == path, error_msg
     else:
