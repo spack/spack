@@ -343,17 +343,21 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar="COMMAND", dest="command")
 
-        # each command module implements a parser() function, to which we
-        # pass its subparser for setup.
-        module = spack.cmd.get_module(cmd_name)
+        if cmd_name not in self.subparsers._name_parser_map:
+            # each command module implements a parser() function, to which we
+            # pass its subparser for setup.
+            module = spack.cmd.get_module(cmd_name)
 
-        # build a list of aliases
-        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+            # build a list of aliases
+            alias_list = [k for k, v in aliases.items() if v == cmd_name]
 
-        subparser = self.subparsers.add_parser(
-            cmd_name, aliases=alias_list, help=module.description, description=module.description
-        )
-        module.setup_parser(subparser)
+            subparser = self.subparsers.add_parser(
+                cmd_name,
+                aliases=alias_list,
+                help=module.description,
+                description=module.description,
+            )
+            module.setup_parser(subparser)
 
         # return the callable function for the command
         return spack.cmd.get_command(cmd_name)

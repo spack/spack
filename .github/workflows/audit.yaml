@@ -25,7 +25,7 @@ jobs:
         python-version: ${{inputs.python_version}}
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools pytest codecov 'coverage[toml]<=6.2'
+        pip install --upgrade pip six setuptools pytest codecov coverage[toml]
     - name: Package audits (with coverage)
       if: ${{ inputs.with_coverage == 'true' }}
       run: |
