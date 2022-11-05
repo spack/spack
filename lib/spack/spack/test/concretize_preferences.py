@@ -201,12 +201,12 @@ mpileaks:
   package_attributes:
     v1: 1
     v2: true
-    v4: yesterday
-    v5: "true"
-    v6:
+    v3: yesterday
+    v4: "true"
+    v5:
       x: 1
       y: 2
-    v7:
+    v6:
     - 1
     - 2
 """
@@ -216,10 +216,10 @@ mpileaks:
         spec = concretize("mpileaks")
         assert spec.package.v1 == 1
         assert spec.package.v2 is True
-        assert spec.package.v4 == "yesterday"
-        assert spec.package.v5 == "true"
-        assert dict(spec.package.v6) == {"x": 1, "y": 2}
-        assert list(spec.package.v7) == [1, 2]
+        assert spec.package.v3 == "yesterday"
+        assert spec.package.v4 == "true"
+        assert dict(spec.package.v5) == {"x": 1, "y": 2}
+        assert list(spec.package.v6) == [1, 2]
 
         update_packages("mpileaks", "package_attributes", {})
         spec = concretize("mpileaks")
