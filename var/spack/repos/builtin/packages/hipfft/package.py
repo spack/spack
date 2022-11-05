@@ -102,5 +102,5 @@ class Hipfft(CMakePackage):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         if self.spec.satisfies("@5.3.0:"):
-            args.append(self.define("CMAKE_INSTALL_LIBDIR","lib"))
+            args.append(self.define("CMAKE_INSTALL_LIBDIR", "lib"))
         return args
