@@ -531,3 +531,24 @@ directories inside the install prefix. This will ensure that even
 manually placed files within the install prefix are owned by the
 assigned group. If no group is assigned, Spack will allow the OS
 default behavior to go as expected.
+
+----------------------------
+Assigning Package Attributes
+----------------------------
+
+You can assign class-level attributes in the configuration:
+
+.. code-block:: yaml
+
+  packages:
+    mpileaks:
+      # Override existing attributes
+      url: http://www.somewhereelse.com/mpileaks-1.0.tar.gz
+      # ... or add new ones
+      x: 1
+
+Attributes set this way will be accessible to any method executed
+in the package.py file (e.g. the ``install()`` method).
+
+These can only be applied to specific packages, not "all" or
+virtual packages.
