@@ -34,7 +34,7 @@ spack:
     # editors
     - emacs #+native would be nice
     - vim+python+lua+perl+cscope features=huge
-    - neovim
+    - neovim~no_luajit
     - py-pynvim
     - py-neovim-remote
 
