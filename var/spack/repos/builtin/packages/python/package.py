@@ -58,10 +58,7 @@ class Python(Package):
     version("3.10.2", sha256="3c0ede893011319f9b0a56b44953a3d52c7abf9657c23fb4bc9ced93b86e9c97")
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
-    version(
-        "3.9.15",
-        sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8",
-    )
+    version("3.9.15", sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8")
     version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
     version("3.9.13", sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44")
     version("3.9.12", sha256="70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
@@ -419,15 +416,21 @@ class Python(Package):
     # C/C++ modules, consider installing a Spack-managed Python with
     # this patch instead. For more information, see:
     # https://github.com/spack/spack/pull/16856
+    #
+    # NOTE: distutils was deprecated in 3.10, so we don't add new patches
+    # for 3.11. If packages still require distutils patches, restrict them
+    # to python@:3.10.
     patch("python-2.7.8-distutils-C++.patch", when="@2.7.8:2.7.16")
     patch("python-2.7.17+-distutils-C++.patch", when="@2.7.17:2.7.18")
     patch("python-2.7.17+-distutils-C++-fixup.patch", when="@2.7.17:2.7.18")
     patch("python-3.6.8-distutils-C++.patch", when="@3.6.8,3.7.2")
     patch("python-3.7.3-distutils-C++.patch", when="@3.7.3")
     patch("python-3.7.4+-distutils-C++.patch", when="@3.7.4:3.10")
-    patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:")
+    patch("python-3.7.4+-distutils-C++-testsuite.patch", when="@3.7.4:3.10")
+
     patch("cpython-windows-externals.patch", when="@:3.9.6 platform=windows")
     patch("tkinter.patch", when="@:2.8,3.3:3.7 platform=darwin")
+
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
     patch("tkinter-3.8.patch", when="@3.8:3.9 ~tkinter")
