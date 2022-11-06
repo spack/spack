@@ -14,6 +14,7 @@ class Z3(CMakePackage):
     homepage = "https://github.com/Z3Prover/z3/wiki"
     url = "https://github.com/Z3Prover/z3/archive/z3-4.5.0.tar.gz"
 
+    version("4.11.2", sha256="e3a82431b95412408a9c994466fad7252135c8ed3f719c986cd75c8c5f234c7e")
     version("4.8.16", sha256="75f95e09f3f35fef746e571d5ec88a4efba27f1bc8f1a0ef1117167486ec3dc6")
     version("4.8.15", sha256="2abe7f5ecb7c8023b712ffba959c55b4515f4978522a6882391de289310795ac")
     version("4.8.14", sha256="96a1f49a7701120cc38bfa63c02ff93be4d64c7926cea41977dedec7d87a1364")
