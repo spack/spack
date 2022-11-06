@@ -241,7 +241,8 @@ class Conduit(CMakePackage):
         install_prefix = spec.prefix
         example_src_dir = join_path(install_prefix, "examples", "conduit", "using-with-cmake")
         print("Checking using-with-cmake example...")
-        with working_dir("check-conduit-using-with-cmake-example", create=True):
+        with working_dir("check-conduit-using-with-cmake-example", create=True
+        ):
             cmake_args = ["-DCONDUIT_DIR={0}".format(install_prefix), example_src_dir]
             cmake(*cmake_args)
             make()
@@ -250,7 +251,8 @@ class Conduit(CMakePackage):
         print("Checking using-with-make example...")
         example_src_dir = join_path(install_prefix, "examples", "conduit", "using-with-make")
         example_files = glob.glob(join_path(example_src_dir, "*"))
-        with working_dir("check-conduit-using-with-make-example", create=True):
+        with working_dir("check-conduit-using-with-make-example", create=True
+        ):
             for example_file in example_files:
                 shutil.copy(example_file, ".")
             make("CONDUIT_DIR={0}".format(install_prefix))
