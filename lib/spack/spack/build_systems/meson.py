@@ -142,15 +142,17 @@ class MesonBuilder(BaseBuilder):
             default_library = "shared"
 
         args = [
-            "--prefix={0}".format(pkg.prefix),
+            "-Dprefix={0}".format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
             # like lib/x86_64-linux-gnu, which causes problems when trying to
             # find libraries and pkg-config files.
             # See https://github.com/mesonbuild/meson/issues/2197
-            "--libdir={0}".format(pkg.prefix.lib),
+            "-Dlibdir={0}".format(pkg.prefix.lib),
             "-Dbuildtype={0}".format(build_type),
             "-Dstrip={0}".format(strip),
             "-Ddefault_library={0}".format(default_library),
+            # Do not automatically download and install dependencies
+            "-Dwrap_mode=nodownload",
         ]
 
         return args
