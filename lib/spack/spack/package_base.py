@@ -1647,7 +1647,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 from_local_sources = env and env.is_develop(self.spec)
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
-                    tty.warn(message.format(s=self))
+                    tty.debug(message.format(s=self))
                 hash_content.append("".encode("utf-8"))
             else:
                 hash_content.append(source_id.encode("utf-8"))

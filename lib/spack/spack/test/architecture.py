@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
@@ -214,3 +216,27 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result, m
         spec.concretize()
 
     assert str(spec).count("arch=test-debian6-%s" % result) == 2
+
+
+@pytest.mark.parametrize(
+    "versions,default,expected",
+    [
+        (["21.11", "21.9"], "21.11", False),
+        (["21.11", "21.9"], "21.9", True),
+        (["21.11", "21.9"], None, False),
+    ],
+)
+def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
+    ex_path = str(tmpdir.join("fake_craype_dir"))
+    fs.mkdirp(ex_path)
+
+    with fs.working_dir(ex_path):
+        for version in versions:
+            fs.touch(version)
+        if default:
+            os.symlink(default, "default")
+
+    monkeypatch.setattr(spack.platforms.cray, "_ex_craype_dir", ex_path)
+    os.environ["MODULEPATH"] = "/opt/cray/pe"
+
+    assert spack.platforms.cray.Cray.detect() == expected

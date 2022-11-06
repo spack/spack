@@ -1741,7 +1741,12 @@ class Spec(object):
             return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         json_text = sjson.dump(node_dict)
-        return spack.util.hash.b32_hash(json_text)
+        # This implements "frankenhashes", preserving the last 7 characters of the
+        # original hash when splicing so that we can avoid relocation issues
+        out = spack.util.hash.b32_hash(json_text)
+        if self.build_spec is not self:
+            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
+        return out
 
     def _cached_hash(self, hash, length=None, force=False):
         """Helper function for storing a cached hash on the spec.
@@ -2755,7 +2760,9 @@ class Spec(object):
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        self.architecture.target.optimization_flags(self.compiler)
+        # No need on platform=cray because of the targeting modules
+        if not self.satisfies("platform=cray"):
+            self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
