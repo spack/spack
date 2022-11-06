@@ -424,8 +424,8 @@ build_systems-protected-build:
 dev-tools-pr-generate:
   extends: [ ".dev-tools", ".pr-generate"]
 
-dev-tools-develop-generate:
-  extends: [ ".dev-tools", ".develop-generate"]
+dev-tools-protected-generate:
+  extends: [ ".dev-tools", ".protected-generate"]
 
 dev-tools-pr-build:
   extends: [ ".dev-tools", ".pr-build" ]
@@ -438,16 +438,16 @@ dev-tools-pr-build:
     - artifacts: True
       job: dev-tools-pr-generate
 
-dev-tools-develop-build:
-  extends: [ ".dev-tools", ".develop-build" ]
+dev-tools-protected-build:
+  extends: [ ".dev-tools", ".protected-build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: dev-tools-develop-generate
+        job: dev-tools-protected-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: dev-tools-develop-generate
+      job: dev-tools-protected-generate
 
 #########################################
 # RADIUSS
