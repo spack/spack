@@ -148,7 +148,9 @@ class PyDask(PythonPackage):
     depends_on("py-distributed@1.21:2021.8.0", type=("build", "run"), when="@0.17.0: +distributed")
     depends_on("py-distributed@1.22:2021.8.0", type=("build", "run"), when="@0.18.0: +distributed")
     depends_on("py-distributed@2.0:2021.8.0", type=("build", "run"), when="@2.0.0: +distributed")
-    depends_on("py-distributed@2020.12.0:2021.8.0", type=("build", "run"), when="@2020.12.0: +distributed")
+    depends_on(
+        "py-distributed@2020.12.0:2021.8.0", type=("build", "run"), when="@2020.12.0: +distributed"
+    )
     depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed")
 
     # Requirements for dask.diagnostics
