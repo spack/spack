@@ -1335,7 +1335,10 @@ class Environment(object):
             # "Enhance" the error message for multiple root specs, suggest a less strict
             # form of concretization.
             if len(self.user_specs) > 1:
-                e.message += ". It may help to reduce the strictness of the concretizer by setting `concretizer:unify` to `when_possible` or `false`."
+                e.message += (
+                    ". Consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to relax the concretizer strictness."
+                )
             raise
 
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
