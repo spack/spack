@@ -803,8 +803,34 @@ class PackageInstaller(object):
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
         for (comp_pkg, is_compiler) in packages:
-            if package_id(comp_pkg) not in self.build_tasks:
+            pkgid = package_id(comp_pkg)
+            if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
+            elif is_compiler:
+                # ensure it's queued as a compiler
+                self._modify_existing_task(pkgid, "compiler", True)
+
+    def _modify_existing_task(self, pkgid, attr, value):
+        """
+        Update a task in-place to modify its behavior.
+
+        Currently used to update the ``compiler`` field on tasks
+        that were originally created as a dependency of a compiler,
+        but are compilers in their own right.
+
+        For example, ``intel-oneapi-compilers-classic`` depends on
+        ``intel-oneapi-compilers``, which can cause the latter to be
+        queued first as a non-compiler, and only later as a compiler.
+        """
+        for i, tup in enumerate(self.build_pq):
+            key, task = tup
+            if task.pkg_id == pkgid:
+                tty.debug(
+                    "Modifying task for {0} to treat it as a compiler".format(pkgid),
+                    level=2,
+                )
+                setattr(task, attr, value)
+                self.build_pq[i] = (key, task)
 
     def _add_init_task(self, pkg, request, is_compiler, all_deps):
         """

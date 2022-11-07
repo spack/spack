@@ -107,6 +107,9 @@ required_command_properties = ["level", "section", "description"]
 spack_working_dir = None
 spack_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
 
+#: Whether to print backtraces on error
+SHOW_BACKTRACE = False
+
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
@@ -340,17 +343,21 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar="COMMAND", dest="command")
 
-        # each command module implements a parser() function, to which we
-        # pass its subparser for setup.
-        module = spack.cmd.get_module(cmd_name)
+        if cmd_name not in self.subparsers._name_parser_map:
+            # each command module implements a parser() function, to which we
+            # pass its subparser for setup.
+            module = spack.cmd.get_module(cmd_name)
 
-        # build a list of aliases
-        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+            # build a list of aliases
+            alias_list = [k for k, v in aliases.items() if v == cmd_name]
 
-        subparser = self.subparsers.add_parser(
-            cmd_name, aliases=alias_list, help=module.description, description=module.description
-        )
-        module.setup_parser(subparser)
+            subparser = self.subparsers.add_parser(
+                cmd_name,
+                aliases=alias_list,
+                help=module.description,
+                description=module.description,
+            )
+            module.setup_parser(subparser)
 
         # return the callable function for the command
         return spack.cmd.get_command(cmd_name)
@@ -569,6 +576,8 @@ def setup_main_options(args):
 
     if args.debug or args.backtrace:
         spack.error.debug = True
+        global SHOW_BACKTRACE
+        SHOW_BACKTRACE = True
 
     if args.debug:
         spack.util.debug.register_interrupt_handler()
@@ -1007,7 +1016,7 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
@@ -1017,12 +1026,12 @@ def main(argv=None):
             return signal.SIGINT
 
     except SystemExit as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         tty.error(e)
         return 3

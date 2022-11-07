@@ -140,11 +140,30 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def add_search_paths(self, *path):
-        """Add additional rpaths that are not implicitly included in the search
-        scheme
+    def win_add_library_dependent(self):
+        """Return extra set of directories that require linking for package
+
+        This method should be overridden by packages that produce
+        binaries/libraries/python extension modules/etc that are installed into
+        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        but still require linking against one of the packages dependencies, or
+        other components of the package itself. No-op otherwise.
+
+        Returns:
+            List of additional directories that require linking
         """
-        self.win_rpath.include_additional_link_paths(*path)
+        return []
+
+    def win_add_rpath(self):
+        """Return extra set of rpaths for package
+
+        This method should be overridden by packages needing to
+        include additional paths to be searched by rpath. No-op otherwise
+
+        Returns:
+            List of additional rpaths
+        """
+        return []
 
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
@@ -152,6 +171,8 @@ class WindowsRPathMeta(object):
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
+            self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
+            self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
 
 
@@ -542,6 +563,15 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
     #: for immediate dependencies.
     transitive_rpaths = True
+
+    #: List of shared objects that should be replaced with a different library at
+    #: runtime. Typically includes stub libraries like libcuda.so. When linking
+    #: against a library listed here, the dependent will only record its soname
+    #: or filename, not its absolute path, so that the dynamic linker will search
+    #: for it. Note: accepts both file names and directory names, for example
+    #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
+    #: stubs directory are not bound by path."""
+    non_bindable_shared_objects = []  # type: List[str]
 
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
@@ -1617,7 +1647,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 from_local_sources = env and env.is_develop(self.spec)
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
-                    tty.warn(message.format(s=self))
+                    tty.debug(message.format(s=self))
                 hash_content.append("".encode("utf-8"))
             else:
                 hash_content.append(source_id.encode("utf-8"))
@@ -2571,12 +2601,17 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
-        rpaths = [self.prefix.lib, self.prefix.lib64]
         deps = self.spec.dependencies(deptype="link")
-        rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+
+        # on Windows, libraries of runtime interest are typically
+        # stored in the bin directory
         if is_windows:
+            rpaths = [self.prefix.bin]
             rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+        else:
+            rpaths = [self.prefix.lib, self.prefix.lib64]
+            rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
+            rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
         return rpaths
 
     @property

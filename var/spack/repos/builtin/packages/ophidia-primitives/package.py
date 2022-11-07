@@ -21,7 +21,7 @@ class OphidiaPrimitives(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
 
     depends_on("boost@1.79.0")
     depends_on("mysql")

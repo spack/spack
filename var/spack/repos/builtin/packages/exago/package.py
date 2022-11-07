@@ -13,7 +13,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://gitlab.pnnl.gov/exasgd/frameworks/exago"
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
-    maintainers = ["ashermancinelli", "CameronRutherford", "pelesh"]
+    maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
 
     version(
         "1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True, preferred=True
@@ -46,7 +46,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("~hiop~ipopt", msg="ExaGO needs at least one solver enabled")
 
-    # Dependencides
+    # Dependencies
     depends_on("pkgconfig", type="build")
     depends_on("mpi", when="+mpi")
     depends_on("blas")
@@ -61,6 +61,40 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("umpire+cuda~shared", when="+raja+cuda")
 
     depends_on("cmake@3.18:", type="build")
+
+    # Profiling
+    depends_on(
+        "hiop+deepchecking build_type=RelWithDebInfo", when="+hiop build_type=RelWithDebInfo"
+    )
+    depends_on("hiop~deepchecking  build_type=Release ", when="+hiop build_type=Release ")
+
+    # Control the package's build-type depending on the release or debug flag
+    for pkg in [
+        ("raja", "raja"),
+        ("umpire", "raja"),
+        ("magma", "hiop+cuda"),
+        ("magma", "hiop+rocm"),
+        ("camp", "raja"),
+    ]:
+        depends_on(
+            "{0} build_type=Release".format(pkg[0]), when="+{0} build_type=Release".format(pkg[1])
+        )
+        depends_on(
+            "{0} build_type=RelWithDebInfo".format(pkg[0]),
+            when="+{0} build_type=RelWithDebInfo".format(pkg[1]),
+        )
+
+    depends_on(
+        "{0} build_type=Release".format("hiop+ginkgo ^ginkgo"),
+        when="+{0} build_type=Release".format("hiop ^hiop+ginkgo"),
+    )
+    depends_on(
+        "{0} build_type=Debug".format("hiop+ginkgo ^ginkgo"),
+        when="+{0} build_type=RelWithDebInfo".format("hiop ^hiop+ginkgo"),
+    )
+    # depends_on("hpctoolkit", when="with_profiling=hpctoolkit")
+    # depends_on("tau", when="with_profiling=tau")
+    # ^ need to depend when both hpctoolkit and tau
 
     # HiOp dependency logic
     depends_on("hiop+raja", when="+hiop+raja")
@@ -101,6 +135,17 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         args = []
         spec = self.spec
+
+        if "~mpi" in self.spec:
+            args.append(self.define("CMAKE_C_COMPILER", os.environ["CC"]))
+            args.append(self.define("CMAKE_CXX_COMPILER", os.environ["CXX"]))
+        else:
+            args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("CMAKE_CXX_COMPILER", spec["mpi"].mpicxx))
+            args.append(self.define("MPI_C_COMPILER", spec["mpi"].mpicc))
+            args.append(self.define("MPI_CXX_COMPILER", spec["mpi"].mpicxx))
+            if "+cuda" in spec:
+                args.append(self.define("MPI_CXX_HEADER_DIR", spec["mpi"].prefix.include))
 
         # NOTE: If building with spack develop on a cluster, you may want to
         # change the ctest launch command to use your job scheduler like so:

@@ -469,7 +469,7 @@ class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
     """
 
     #: Sequence of phases. Must be defined in derived classes
-    phases = None  # type: Optional[Tuple[str, ...]]
+    phases = ()  # type: Tuple[str, ...]
     #: Build system name. Must also be defined in derived classes.
     build_system = None  # type: Optional[str]
 
