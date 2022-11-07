@@ -193,12 +193,21 @@ which is useful for CI pipeline troubleshooting""",
         default=False,
         help="(with environment) only install already concretized specs",
     )
-    subparser.add_argument(
+
+    updateenv_group = subparser.add_mutually_exclusive_group()
+    updateenv_group.add_argument(
         "--add",
         action="store_true",
         default=False,
         help="""(with environment) add spec to the environment as a root.""",
     )
+    updateenv_group.add_argument(
+        "--no-add",
+        action="store_false",
+        dest="add",
+        help="""(with environment) do not add spec to the environment as a root (the default behavior).""",
+    )
+
     subparser.add_argument(
         "-f",
         "--file",
@@ -289,9 +298,10 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
 
         if not m_spec and not cli_args.add:
             msg = (
-                "You asked to install {0} without adding it (--no-add), but no such spec "
-                "exists in environment"
-            ).format(abstract.name)
+                "Cannot install '{0}' because it is not in the current environment."
+                " You can add it to the environment with 'spack add {0}', or as part"
+                " of the install command with 'spack install --add {0}'"
+            ).format(str(abstract))
             tty.die(msg)
 
         if not m_spec:

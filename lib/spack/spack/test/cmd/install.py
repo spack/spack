@@ -847,9 +847,9 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
     # Activate the environment
     with e:
         # Assert using --no-add with a spec not in the env fails
-        inst_out = install("boost", fail_on_error=False, output=str)
+        inst_out = install("--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "did not also specify --add" in inst_out
+        assert "You can add it to the environment with 'spack add " in inst_out
 
         # Without --add, ensure that install fails if the spec matches more
         # than one root
