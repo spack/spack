@@ -232,9 +232,11 @@ class TestUninstallFromEnv(object):
                 assert not concretized_spec.package.installed
 
         # Everything in e2 depended on dt-diamond-bottom, so should also
-        # have been uninstalled
+        # have been uninstalled. The roots should be unchanged though.
         e2 = spack.environment.read("e2")
         with e2:
+            assert set(root.name for (root, _) in e2.concretized_specs()) ==\
+                set(["dt-diamond-right", "dt-diamond-bottom"])
             for _, concretized_spec in e2.concretized_specs():
                 assert not concretized_spec.package.installed
 
@@ -260,3 +262,24 @@ class TestUninstallFromEnv(object):
                 set(["dt-diamond-right", "dt-diamond-bottom"])
             for _, concretized_spec in e2.concretized_specs():
                 assert concretized_spec.package.installed
+
+    def test_uninstall_force_and_remove_dependency_shared_between_envs(self, environment_setup):
+        """If you "spack uninstall -f --dependents --remove dt-diamond-bottom" from
+           e1, then all packages should be uninstalled and removed from e1.
+           All packages will also be uninstalled from e2, but the roots will
+           remain unchanged.
+        """
+        e1 = spack.environment.read("e1")
+        with e1:
+            dtdiamondleft, = (
+                y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left")
+            uninstall("-f", "-y", "--dependents", "--remove", "dt-diamond-bottom")
+            assert not list(e1.roots())
+            assert not dtdiamondleft.package.installed
+
+        e2 = spack.environment.read("e2")
+        with e2:
+            assert set(root.name for (root, _) in e2.concretized_specs()) ==\
+                set(["dt-diamond-right", "dt-diamond-bottom"])
+            for _, concretized_spec in e2.concretized_specs():
+                assert not concretized_spec.package.installed
