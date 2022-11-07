@@ -7,11 +7,6 @@ import inspect
 
 from spack.package import *
 
-try:
-    from spack.build_systems.perl import PerlBuilder as builder
-except ImportError:
-    from spack.build_systems.perl import PerlPackage as builder
-
 
 class PerlBioperl(PerlPackage):
     """BioPerl is the product of a community effort to produce Perl code which
@@ -83,8 +78,8 @@ class PerlBioperl(PerlPackage):
     def configure(self, spec, prefix):
         # Overriding default configure method in order to cater to interactive
         # Build.pl
-        builder.build_method = "Build.PL"
-        builder.build_executable = Executable(join_path(self.stage.source_path, "Build"))
+        PerlBuilder.build_method = "Build.PL"
+        PerlBuilder.build_executable = Executable(join_path(self.stage.source_path, "Build"))
 
         # Config questions consist of:
         #    Do you want to run the Bio::DB::GFF or Bio::DB::SeqFeature::Store
