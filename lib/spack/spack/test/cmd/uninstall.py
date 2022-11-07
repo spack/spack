@@ -280,14 +280,9 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
-            # FAILURE: this attempts to emulate tests in cmd/install.py but
-            # according to logic in main.py, none of the output printed by
-            # a command will be included in the exception
-            with pytest.raises(
-                spack.error.SpackError,
-                match=r".*Will not uninstall.*There are still dependents.*use `spack env remove`",
-            ):
-                uninstall("-y", "--dependents", "dt-diamond-bottom")
+            output = uninstall("-y", "--dependents", "dt-diamond-bottom", fail_on_error=False)
+            assert "There are still dependents." in output
+            assert "use `spack env remove`" in output
 
         # The environment should be unchanged and nothing should have been
         # uninstalled
