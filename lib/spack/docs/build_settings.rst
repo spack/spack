@@ -319,11 +319,11 @@ or not. Another use case is specifying constraints that should apply
 to all root specs in an environment, without having to repeat the
 constraint everywhere.
 
-Apart from that, the requirements config is more flexible than
-constraints on the command line, because they can specify constraints
-on packages *when they occur* as a dependency. In contrast, when just
-using the command line, it is not possible to specify constraints on
-dependencies while also keeping those depenencies optional.
+Apart from that, requirements config is more flexible than constraints
+on the command line, because it can specify constraints on packages
+*when they occur* as a dependency. In contrast, on the command line it
+is not possible to specify constraints on dependencies while also keeping
+those dependencies optional.
 
 The package requirements configuration is specified in ``packages.yaml``
 keyed by package name:
