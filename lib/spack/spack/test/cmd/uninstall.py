@@ -223,6 +223,10 @@ class TestUninstallFromEnv(object):
         with e1:
             uninstall("-f", "-y", "--dependents", "dt-diamond-bottom")
 
+            # The specs should still be in the environment, since
+            # --remove was not specified
+            assert set(root.name for (root, _) in e1.concretized_specs()) == set(['dt-diamond-left', 'dt-diamond-bottom'])
+
             for _, concretized_spec in e1.concretized_specs():
                 assert not concretized_spec.package.installed
 
