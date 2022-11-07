@@ -253,8 +253,10 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
-            (dtdiamondleft,) = (
-                y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left"
+            dtdiamondleft = next(
+                concrete
+                for (_, concrete) in e1.concretized_specs()
+                if concrete.name == "dt-diamond-left"
             )
             output = uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
             assert "The following specs will be removed but not uninstalled" in output
@@ -303,8 +305,10 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
-            (dtdiamondleft,) = (
-                y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left"
+            dtdiamondleft = next(
+                concrete
+                for (_, concrete) in e1.concretized_specs()
+                if concrete.name == "dt-diamond-left"
             )
             uninstall("-f", "-y", "--dependents", "--remove", "dt-diamond-bottom")
             assert not list(e1.roots())
@@ -326,8 +330,10 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
-            (dtdiamondleft,) = (
-                y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left"
+            dtdiamondleft = next(
+                concrete
+                for (_, concrete) in e1.concretized_specs()
+                if concrete.name == "dt-diamond-left"
             )
             uninstall("-f", "-y", "--remove", "dt-diamond-bottom")
             # dt-diamond-bottom was removed from the list of roots (note that
@@ -340,11 +346,15 @@ class TestUninstallFromEnv(object):
             assert set(root.name for (root, _) in e2.concretized_specs()) == set(
                 ["dt-diamond-right", "dt-diamond-bottom"]
             )
-            (dtdiamondright,) = (
-                y for (x, y) in e2.concretized_specs() if y.name == "dt-diamond-right"
+            dtdiamondright = next(
+                concrete
+                for (_, concrete) in e2.concretized_specs()
+                if concrete.name == "dt-diamond-right"
             )
             assert dtdiamondright.package.installed
-            (dtdiamondbottom,) = (
-                y for (x, y) in e2.concretized_specs() if y.name == "dt-diamond-bottom"
+            dtdiamondbottom = next(
+                concrete
+                for (_, concrete) in e2.concretized_specs()
+                if concrete.name == "dt-diamond-bottom"
             )
             assert not dtdiamondbottom.package.installed
