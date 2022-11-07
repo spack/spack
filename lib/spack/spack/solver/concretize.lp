@@ -75,7 +75,8 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 :- version_declared(Package, Version, Weight, "installed"),
    version(Package, Version),
    version_weight(Package, Weight),
-   not hash(Package, _).
+   not hash(Package, _),
+   internal_error("Reuse version weight used for built package").
 
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
@@ -121,19 +122,22 @@ possible_version_weight(Package, Weight)
 :- version(Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "external"),
-   not external(Package).
+   not external(Package),
+   internal_error("External weight used for built package").
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 :- version(Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "installed"),
-   build(Package).
+   build(Package),
+   internal_error("Reuse version weight used for build package").
 
 :- version(Package, Version),
    version_weight(Package, Weight),
    not version_declared(Package, Version, Weight, "installed"),
-   not build(Package).
+   not build(Package),
+   internal_error("Build version weight used for reused package").
 
 1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- version(Package, Version),
@@ -197,12 +201,14 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
 % we cannot have additional variant values when we are working with concrete specs
 :- node(Package), hash(Package, Hash),
    variant_value(Package, Variant, Value),
-   not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
+   not imposed_constraint(Hash, "variant_value", Package, Variant, Value),
+   internal_error("imposed hash without imposing all variant values").
 
 % we cannot have additional flag values when we are working with concrete specs
 :- node(Package), hash(Package, Hash),
    node_flag(Package, FlagType, Flag),
-   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag).
+   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
+   internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
 #defined condition_requirement/3.
@@ -837,7 +843,8 @@ os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
 % for which we can build software. We need a cardinality constraint
 % since we might have more than one "buildable_os(OS)" fact.
 :- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
-   node_os(Package, ReusedOS).
+   node_os(Package, ReusedOS),
+   internal_error("Reused OS incompatible with build OS").
 
 % If an OS is set explicitly respect the value
 node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
@@ -962,10 +969,15 @@ error(2, "'{0}' compiler constraints '%{1}@{2}' and '%{3}@{4}' are incompatible"
 node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 
 % We can't have a compiler be enforced and select the version from another compiler
-:- node_compiler(Package, Compiler1),
-   node_compiler_version(Package, Compiler2, _),
-   Compiler1 != Compiler2,
-   internal_error("Mismatch between selected compiler and compiler version").
+error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
+ :- node_compiler_version(Package, C1, V1),
+    node_compiler_version(Package, C2, V2),
+    (C1, V1) != (C2, V2).
+
+error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
+ :- node_compiler(Package, Compiler1),
+    node_compiler_version(Package, Compiler2, Version),
+    Compiler1 != Compiler2.
 
 % If the compiler of a node cannot be satisfied, raise
 error(1, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
@@ -1040,7 +1052,8 @@ compiler_weight(Package, 100)
     not default_compiler_preference(Compiler, Version, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
-:- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
+error(2, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
+ :- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
