@@ -254,7 +254,8 @@ class TestUninstallFromEnv(object):
             (dtdiamondleft,) = (
                 y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left"
             )
-            uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
+            output = uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
+            assert "The following specs will be removed but not uninstalled" in output
             assert not list(e1.roots())
             assert not dtdiamondleft.package.installed
 
