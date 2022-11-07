@@ -81,6 +81,15 @@ class TestLmod(object):
         else:
             assert repetitions == 1
 
+    def test_compilers_provided_different_name(self, factory, module_configuration):
+        module_configuration("complex_hierarchy")
+        module, spec = factory("intel-oneapi-compilers%clang@3.3")
+
+        provides = module.conf.provides
+
+        assert "compiler" in provides
+        assert provides["compiler"] == spack.spec.CompilerSpec("oneapi@3.0")
+
     def test_simple_case(self, modulefile_content, module_configuration):
         """Tests the generation of a simple TCL module file."""
 

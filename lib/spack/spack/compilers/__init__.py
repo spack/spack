@@ -52,6 +52,11 @@ _compiler_to_pkg = {
     "intel@2020:": "intel-oneapi-compilers-classic",
 }
 
+package_name_to_compiler_name = {
+    spack.spec.Spec(pspec).name: spack.spec.Spec(cspec).name
+    for cspec, pspec in _compiler_to_pkg.items()
+}
+
 
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
