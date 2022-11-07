@@ -33,7 +33,7 @@ spack:
   - default_specs:
     # editors
     - emacs #+native would be nice
-    - vim+python+lua+perl+cscope features=huge
+    - vim+python~lua+perl+cscope features=huge # lua must be off for luajit below
     - neovim~no_luajit
     - py-pynvim
     - py-neovim-remote

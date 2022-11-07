@@ -33,7 +33,7 @@ spack:
   - default_specs:
     # editors
     - emacs #+native would be nice
-    - vim+python+lua+perl+cscope features=huge
+    - vim+python~lua+perl+cscope features=huge # lua must be off for luajit below
     - neovim~no_luajit
     - py-pynvim
     - py-neovim-remote
@@ -45,7 +45,7 @@ spack:
 
     ## c/c++
     ### clangd, clang-format, lldb etc.
-    - llvm+llvm_dylib+link_llvm_dylib+gold build_type=MinSizeRel 
+    - llvm+llvm_dylib+link_llvm_dylib+gold build_type=MinSizeRel
     - gdb+python+source-highlight+gold+tui
     ### styling and lints
     - astyle
