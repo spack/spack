@@ -54,7 +54,7 @@ class Rust(Package):
     )
 
     depends_on("python@2.7:", type="build")
-    depends_on("python@2.7:2.8", when="@:1.43", type="build")
+    depends_on("python@2.7:2.8", when="@0:1.43", type="build")
     depends_on("gmake@3.81:", type="build")
     depends_on("cmake@3.4.3:", type="build")
     depends_on("ninja", when="@1.48.0:", type="build")
@@ -63,7 +63,7 @@ class Rust(Package):
     depends_on("openssl@:1")
     depends_on("libssh2")
     # https://github.com/rust-lang/cargo/issues/10446
-    depends_on("libgit2@:1.3", when="@:1.60")
+    depends_on("libgit2@:1.3", when="@0:1.60")
     depends_on("libgit2")
 
     # Pre-release Versions
