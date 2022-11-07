@@ -6,7 +6,6 @@
 import argparse
 import json
 import os
-import sys
 from textwrap import dedent
 
 import pytest
@@ -24,7 +23,6 @@ env = SpackCommand("env")
 install = SpackCommand("install")
 
 base32_alphabet = "abcdefghijklmnopqrstuvwxyz234567"
-
 
 
 @pytest.fixture(scope="module")
