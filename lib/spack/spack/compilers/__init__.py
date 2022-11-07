@@ -57,7 +57,7 @@ package_name_to_compiler_name = {
     "llvm": "clang",
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
-    "intel-oneapi-compilers-classic": "intel"
+    "intel-oneapi-compilers-classic": "intel",
 }
 
 
