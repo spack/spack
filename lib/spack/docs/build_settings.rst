@@ -433,7 +433,12 @@ Package Preferences
 -------------------
 
 In some cases package requirements can be too strong, and package
-preferences are the better option.
+preferences are the better option. Package preferences do not impose
+constraints on packages for particular versions or variants values,
+they rather only set defaults -- the concretizer is free to change
+them if it must due to other constraints. Also note that package
+preferences are of lower priority than reuse of already installed
+packages.
 
 Here's an example ``packages.yaml`` file that sets preferred packages:
 
