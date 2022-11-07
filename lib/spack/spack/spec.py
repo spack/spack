@@ -96,7 +96,6 @@ import llnl.util.tty.color as clr
 from llnl.util.compat import Mapping
 
 import spack.compiler
-import spack.compilers
 import spack.config
 import spack.dependency as dp
 import spack.error
@@ -2859,6 +2858,7 @@ class Spec(object):
     @staticmethod
     def ensure_external_path_if_external(external_spec):
         if external_spec.external_modules and not external_spec.external_path:
+            import spack.compilers  # break cycle
             compiler = spack.compilers.compiler_for_spec(
                 external_spec.compiler, external_spec.architecture
             )
@@ -3381,6 +3381,7 @@ class Spec(object):
 
             # validate compiler in addition to the package name.
             if spec.compiler:
+                import spack.compilers  # break cycle
                 if not spack.compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
