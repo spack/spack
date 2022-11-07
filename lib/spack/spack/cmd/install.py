@@ -205,7 +205,8 @@ which is useful for CI pipeline troubleshooting""",
         "--no-add",
         action="store_false",
         dest="add",
-        help="""(with environment) do not add spec to the environment as a root (the default behavior).""",
+        help="""(with environment) do not add spec to the environment as a
+root (the default behavior).""",
     )
 
     subparser.add_argument(
