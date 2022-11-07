@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
+import collections.abc
 import contextlib
 import errno
 import functools
@@ -31,7 +32,6 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
 import spack.caches
@@ -357,7 +357,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping):
+class FastPackageChecker(collections.abc.Mapping):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 

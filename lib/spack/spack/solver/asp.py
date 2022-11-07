@@ -5,6 +5,7 @@
 from __future__ import division, print_function
 
 import collections
+import collections.abc
 import copy
 import itertools
 import os
@@ -16,8 +17,6 @@ import warnings
 from six import string_types
 
 import archspec.cpu
-
-from llnl.util.compat import Sequence
 
 try:
     import clingo  # type: ignore[import]
@@ -216,7 +215,7 @@ def build_criteria_names(costs, tuples):
 def issequence(obj):
     if isinstance(obj, string_types):
         return False
-    return isinstance(obj, (Sequence, types.GeneratorType))
+    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
 
 
 def listify(args):

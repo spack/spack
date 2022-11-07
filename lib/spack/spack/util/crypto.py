@@ -81,7 +81,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     """Returns a hex digest of the filename generated using an
     algorithm from hashlib.
     """
-    block_size = kwargs.get("block_size", 2 ** 20)
+    block_size = kwargs.get("block_size", 2**20)
     hasher = hashlib_algo()
     with open(filename, "rb") as file:
         while True:
@@ -115,7 +115,7 @@ class Checker(object):
     """
 
     def __init__(self, hexdigest, **kwargs):
-        self.block_size = kwargs.get("block_size", 2 ** 20)
+        self.block_size = kwargs.get("block_size", 2**20)
         self.hexdigest = hexdigest
         self.sum = None
         self.hash_fun = hash_fun_for_digest(hexdigest)

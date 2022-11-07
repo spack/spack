@@ -80,6 +80,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import collections
+import collections.abc
 import itertools
 import os
 import re
@@ -93,7 +94,6 @@ import llnl.util.filesystem as fs
 import llnl.util.lang as lang
 import llnl.util.tty as tty
 import llnl.util.tty.color as clr
-from llnl.util.compat import Mapping
 
 import spack.compiler
 import spack.compilers
@@ -894,7 +894,7 @@ EdgeDirection = lang.enum(parent=0, child=1)
 
 
 @lang.lazy_lexicographic_ordering
-class _EdgeMap(Mapping):
+class _EdgeMap(collections.abc.Mapping):
     """Represent a collection of edges (DependencySpec objects) in the DAG.
 
     Objects of this class are used in Specs to track edges that are
@@ -2542,7 +2542,7 @@ class Spec(object):
         msg = 'cannot validate "{0}" since it was not created ' "using Spec.from_detection".format(
             self
         )
-        assert isinstance(self.extra_attributes, Mapping), msg
+        assert isinstance(self.extra_attributes, collections.abc.Mapping), msg
 
         # Validate the spec calling a package specific method
         pkg_cls = spack.repo.path.get_pkg_class(self.name)
