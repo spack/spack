@@ -2,6 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import sys
+
 import spack.build_systems.makefile
 from spack.package import *
 
@@ -105,14 +108,20 @@ class Glvis(MakefilePackage):
     depends_on("mfem@3.2", when="@3.2")
     depends_on("mfem@3.1", when="@3.1")
 
-    depends_on("gl")
-    depends_on("glu", when="@:3")
-    depends_on("libx11", when="@:3")
+    with when("@:3"):
+        depends_on("gl")
+        depends_on("glu")
+        depends_on("libx11")
 
     with when("@4.0:"):
+        # On Mac, we use the OpenGL framework
+        if sys.platform.startswith("linux"):
+            depends_on("gl")
         depends_on("sdl2")
         depends_on("glm")
+        # On Mac, use external glew, e.g. from Homebrew
         depends_on("glew")
+        # On Mac, use external freetype and fontconfig, e.g. from /opt/X11
         depends_on("freetype")
         depends_on("fontconfig")
         depends_on("xxd", type="build")
