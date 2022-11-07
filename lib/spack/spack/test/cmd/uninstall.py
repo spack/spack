@@ -250,8 +250,8 @@ class TestUninstallFromEnv(object):
             assert not list(e1.roots())
             assert not dtdiamondleft.package.installed
 
-        # Everything in e2 depended on dt-diamond-bottom, so should also
-        # have been uninstalled
+        # Since -f was not specified, all specs in e2 should still be installed
+        # (and e2 should be unchanged)
         e2 = spack.environment.read("e2")
         with e2:
             assert set(root.name for (root, _) in e2.concretized_specs()) == set(['dt-diamond-right', 'dt-diamond-bottom'])
