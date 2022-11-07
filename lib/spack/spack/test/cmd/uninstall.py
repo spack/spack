@@ -177,6 +177,13 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
 pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
 class TestUninstallFromEnv(object):
 # fmt: on
+    """Tests an installation with two environments e1 and e2, which each have
+    shared package installations:
+
+    e1 has dt-diamond-left -> dt-diamond-bottom
+
+    e2 has dt-diamond-right -> dt-diamond-bottom
+    """
     env = SpackCommand("env")
     add = SpackCommand("add")
     concretize = SpackCommand("concretize")
@@ -208,6 +215,10 @@ class TestUninstallFromEnv(object):
                     assert concretized_spec.package.installed
 
     def test_uninstall_force_dependency_shared_between_envs(self, environment_setup):
+        """If you "spack uninstall -f --dependents dt-diamond-bottom" from
+           e1, then all packages should be uninstalled (but not removed) from
+           both e1 and e2.
+        """
         e1 = spack.environment.read("e1")
         with e1:
             uninstall("-f", "-y", "--dependents", "dt-diamond-bottom")
@@ -221,3 +232,22 @@ class TestUninstallFromEnv(object):
         with e2:
             for _, concretized_spec in e2.concretized_specs():
                 assert not concretized_spec.package.installed
+
+    def test_uninstall_remove_dependency_shared_between_envs(self, environment_setup):
+        """If you "spack uninstall --dependents --remove dt-diamond-bottom" from
+           e1, then all packages are removed from e1 (it is now empty);
+           dt-diamond-left is also uninstalled (since only e1 needs it) but
+           dt-diamond-bottom is not uninstalled (since e2 needs it).
+        """
+        e1 = spack.environment.read("e1")
+        with e1:
+            uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
+            assert not list(e1.roots())
+
+        # Everything in e2 depended on dt-diamond-bottom, so should also
+        # have been uninstalled
+        e2 = spack.environment.read("e2")
+        with e2:
+            assert set(root.name for (root, _) in e2.concretized_specs()) == set(['dt-diamond-right', 'dt-diamond-bottom'])
+            for _, concretized_spec in e2.concretized_specs():
+                assert concretized_spec.package.installed
