@@ -6,7 +6,7 @@ spack:
     unify: when_possible
 
   config:
-    build_jobs: 256
+    build_jobs: 32
     concretizer: clingo
     install_tree:
       root: /home/software/spack
