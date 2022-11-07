@@ -52,8 +52,8 @@ class PerlIoSocketSsl(PerlPackage):
     depends_on("perl-net-ssleay@1.46:", type="run")  # AUTO-CPAN2Spack
 
     def configure(self, spec, prefix):
-        self.build_method = "Makefile.PL"
-        self.build_executable = inspect.getmodule(self).make
+        PerlBuilder.build_method = "Makefile.PL"
+        PerlBuilder.build_executable = inspect.getmodule(self).make
         # Should I do external tests?
         config_answers = ["n\n"]
         config_answers_filename = "spack-config.in"

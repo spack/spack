@@ -50,8 +50,8 @@ class PerlNetSsleay(PerlPackage):
     depends_on("perl-scalar-util", type=("build", "test"))  # AUTO-CPAN2Spack
 
     def configure(self, spec, prefix):
-        self.build_method = "Makefile.PL"
-        self.build_executable = inspect.getmodule(self).make
+        PerlBuilder.build_method = "Makefile.PL"
+        PerlBuilder.build_executable = inspect.getmodule(self).make
         # Do you want to run external tests?
         config_answers = ["\n"]
         config_answers_filename = "spack-config.in"
