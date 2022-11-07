@@ -52,9 +52,12 @@ _compiler_to_pkg = {
     "intel@2020:": "intel-oneapi-compilers-classic",
 }
 
+# TODO: generating this from the previous dict causes docs errors
 package_name_to_compiler_name = {
-    spack.spec.Spec(pspec).name: spack.spec.Spec(cspec).name
-    for cspec, pspec in _compiler_to_pkg.items()
+    "llvm": "clang",
+    "intel-oneapi-compilers": "oneapi",
+    "llvm-amdgpu": "rocmcc",
+    "intel-oneapi-compilers-classic": "intel"
 }
 
 
