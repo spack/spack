@@ -78,8 +78,8 @@ class PerlBioperl(PerlPackage):
     def configure(self, spec, prefix):
         # Overriding default configure method in order to cater to interactive
         # Build.pl
-        self.build_method = "Build.PL"
-        self.build_executable = Executable(join_path(self.stage.source_path, "Build"))
+        PerlBuilder.build_method = "Build.PL"
+        PerlBuilder.build_executable = Executable(join_path(self.stage.source_path, "Build"))
 
         # Config questions consist of:
         #    Do you want to run the Bio::DB::GFF or Bio::DB::SeqFeature::Store
