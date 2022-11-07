@@ -519,27 +519,33 @@ available from the yaml file.
 ^^^^^^^^^^^^^^^^^^^
 Spec concretization
 ^^^^^^^^^^^^^^^^^^^
-An environment can be concretized in three different modes and the behavior active under any environment
-is determined by the ``concretizer:unify`` property. By default specs are concretized *separately*, one after the other:
+An environment can be concretized in three different modes and the behavior active under
+any environment is determined by the ``concretizer:unify`` configuration option.
+
+The *default* mode is to unify all specs:
 
 .. code-block:: yaml
 
    spack:
        specs:
-         - hdf5~mpi
          - hdf5+mpi
          - zlib@1.2.8
        concretizer:
-         unify: false
+         unify: true
 
-This mode of operation permits to deploy a full software stack where multiple configurations of the same package
-need to be installed alongside each other using the best possible selection of transitive dependencies. The downside
-is that redundancy of installations is disregarded completely, and thus environments might be more bloated than
-strictly needed. In the example above, for instance, if a version of ``zlib`` newer than ``1.2.8`` is known to Spack,
-then it will be used for both ``hdf5`` installations.
+This means that any package in the environment corresponds to a single concrete spec. In
+the above example, when ``hdf5`` depends down the line of ``zlib``, it is required to
+take ``zlib@1.2.8`` instead of a newer version. This mode of concretization is
+particularly useful when environment views are used: if every package occurs in
+only one flavor, it is usually possible to merge all install directories into a view.
 
-If redundancy of the environment is a concern, Spack provides a way to install it *together where possible*,
-i.e. trying to maximize reuse of dependencies across different specs:
+A downside of unified concretization is that it can be overly strict. For example, a
+concretization error would happen when both ``hdf5+mpi`` and ``hdf5~mpi`` are specified
+in an environment.
+
+The second mode is to *unify when possible*: this makes concretization of root specs
+more independendent. Instead of requiring reuse of dependencies across different root
+specs, it is only maximized:
 
 .. code-block:: yaml
 
@@ -551,26 +557,27 @@ i.e. trying to maximize reuse of dependencies across different specs:
        concretizer:
          unify: when_possible
 
-Also in this case Spack allows having multiple configurations of the same package, but privileges the reuse of
-specs over other factors. Going back to our example, this means that both ``hdf5`` installations will use
-``zlib@1.2.8`` as a dependency even if newer versions of that library are available.
-Central installations done at HPC centers by system administrators or user support groups are a common case
-that fits either of these two modes.
+This means that both ``hdf5`` installations will use ``zlib@1.2.8`` as a dependency even
+if newer versions of that library are available.
 
-Environments can also be configured to concretize all the root specs *together*, in a self-consistent way, to
-ensure that each package in the environment comes with a single configuration:
+The third mode of operation is to concretize root specs entirely independently by
+disabling unified concretization:
 
 .. code-block:: yaml
 
    spack:
        specs:
+         - hdf5~mpi
          - hdf5+mpi
          - zlib@1.2.8
        concretizer:
-         unify: true
+         unify: false
 
-This mode of operation is usually what is required by software developers that want to deploy their development
-environment and have a single view of it in the filesystem.
+In this example ``hdf5`` is concretized separately, and does not consider ``zlib@1.2.8``
+as a constraint or preference. Instead, it will take the latest possible version.
+
+The last two concretization options are typically useful for system administrators and
+user support groups providing a large software stack for their HPC center.
 
 .. note::
 
@@ -581,10 +588,10 @@ environment and have a single view of it in the filesystem.
 
 .. admonition:: Re-concretization of user specs
 
-   When concretizing specs *together* or *together where possible* the entire set of specs will be
+   When using *unified* concretization (when possible), the entire set of specs will be
    re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead the specs are concretized
-   separately only the new specs will be re-concretized after any addition.
+   the environment remains consistent / minimal. When instead unified concretization is
+   disabled, only the new specs will be concretized after any addition.
 
 ^^^^^^^^^^^^^
 Spec Matrices
