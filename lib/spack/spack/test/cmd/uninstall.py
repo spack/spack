@@ -241,8 +241,10 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
+            dtdiamondleft, = (y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left")
             uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
             assert not list(e1.roots())
+            assert not dtdiamondleft.package.installed
 
         # Everything in e2 depended on dt-diamond-bottom, so should also
         # have been uninstalled
