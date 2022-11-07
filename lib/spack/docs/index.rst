@@ -56,7 +56,6 @@ or refer to the full manual below.
    basic_usage
    Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    replace_conda_homebrew
-   known_issues
 
 .. toctree::
    :maxdepth: 2
