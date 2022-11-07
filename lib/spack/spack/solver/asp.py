@@ -1491,7 +1491,7 @@ class SpackSolverSetup(object):
 
         return clauses
 
-    def build_version_dict(self, possible_pkgs, specs, dev_specs):
+    def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
@@ -1532,9 +1532,9 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
-        # enumerate so we can determine which list it came from
-        # cast to list to ensure addable types
-        for i, spec in enumerate(specs + dev_specs):
+    def add_concrete_versions_from_specs(self, specs, origin):
+        """Add concrete versions to possible versions from lists of CLI/dev specs."""
+        for spec in specs:
             for dep in spec.traverse():
                 if not dep.versions.concrete:
                     continue
@@ -1556,11 +1556,6 @@ class SpackSolverSetup(object):
                 # if there is a concrete version on the CLI *that we know nothing
                 # about*, add it to the known versions. Use idx=0, which is the
                 # best possible, so they're guaranteed to be used preferentially.
-                if i < len(specs):
-                    origin = version_provenance.spec
-                else:
-                    origin = version_provenance.dev_spec
-
                 self.declared_versions[dep.name].append(
                     DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
@@ -1956,25 +1951,25 @@ class SpackSolverSetup(object):
         # Calculate develop specs
         # they will be used in addition to command line specs
         # in determining known versions/targets/os
+        dev_specs = ()
         env = ev.active_environment()
-        dev_specs = (
-            tuple(
+        if env:
+            dev_specs = tuple(
                 spack.spec.Spec(info["spec"]).constrained(
                     "dev_path=%s"
                     % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
                 )
                 for name, info in env.dev_specs.items()
             )
-            if env
-            else tuple()
-        )
         specs = tuple(specs)  # ensure compatible types to add
 
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible, specs, dev_specs)
+        self.build_version_dict(possible)
+        self.add_concrete_versions_from_specs(specs, version_provenance.spec)
+        self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
