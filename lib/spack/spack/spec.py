@@ -1558,24 +1558,24 @@ class Spec(object):
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
-        if spec.name in self._dependencies:
-            # Keep the intersection of constraints when a dependency is added
-            # multiple times. Currently we only allow identical edge types.
-            orig = self._dependencies[spec.name]
-            try:
-                dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
-            except StopIteration:
-                raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
+        if spec.name not in self._dependencies:
+            self.add_dependency_edge(spec, deptypes)
+            return
 
-            try:
-                dspec.spec.constrain(spec)
-            except spack.error.UnsatisfiableSpecError:
-                raise DuplicateDependencyError(
-                    "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
-                )
+        # Keep the intersection of constraints when a dependency is added
+        # multiple times. Currently we only allow identical edge types.
+        orig = self._dependencies[spec.name]
+        try:
+            dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
+        except StopIteration:
+            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
 
-        # create an edge and add to parent and child
-        self.add_dependency_edge(spec, deptypes)
+        try:
+            dspec.spec.constrain(spec)
+        except spack.error.UnsatisfiableSpecError:
+            raise DuplicateDependencyError(
+                "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
+            )
 
     def add_dependency_edge(self, dependency_spec, deptype):
         """Add a dependency edge to this spec.
