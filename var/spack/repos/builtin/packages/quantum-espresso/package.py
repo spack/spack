@@ -73,6 +73,7 @@ class QuantumEspresso(CMakePackage, Package):
         depends_on("amdfftw+openmp", when="^amdfftw")
         depends_on("openblas threads=openmp", when="^openblas")
         depends_on("amdblis threads=openmp", when="^amdblis")
+        depends_on("intel-mkl threads=openmp", when="^intel-mkl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
