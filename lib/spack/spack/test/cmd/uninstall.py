@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+import sys
 
 import llnl.util.tty as tty
 
@@ -166,3 +167,53 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
     monkeypatch.setattr(tty, "warn", _warn)
     # Now try to uninstall and check this doesn't trigger warnings
     uninstall("-y", "-a")
+
+
+import spack.environment
+
+pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
+class TestUninstallFromEnv(object):
+    env = SpackCommand("env")
+    add = SpackCommand("add")
+    concretize = SpackCommand("concretize")
+    find = SpackCommand("find")
+
+    @pytest.fixture
+    def environment_setup(self, mutable_mock_env_path, config, mock_packages, mutable_database):
+        TestUninstallFromEnv.env("create", "e1")
+        e1 = spack.environment.read("e1")
+        with e1:
+            TestUninstallFromEnv.add("dt-diamond-left")
+            TestUninstallFromEnv.add("dt-diamond-bottom")
+            TestUninstallFromEnv.concretize()
+            install("--fake")
+
+        TestUninstallFromEnv.env("create", "e2")
+        e2 = spack.environment.read("e2")
+        with e2:
+            TestUninstallFromEnv.add("dt-diamond-right")
+            TestUninstallFromEnv.add("dt-diamond-bottom")
+            TestUninstallFromEnv.concretize()
+            install("--fake")
+
+    def test_basic_env_sanity(self, environment_setup):
+        for env_name in ["e1", "e2"]:
+            e = spack.environment.read(env_name)
+            with e:
+                for _, concretized_spec in e.concretized_specs():
+                    assert concretized_spec.package.installed
+
+    def test_uninstall_force_dependency_shared_between_envs(self, environment_setup):
+        e1 = spack.environment.read("e1")
+        with e1:
+            uninstall("-f", "-y", "--dependents", "dt-diamond-bottom")
+
+            for _, concretized_spec in e1.concretized_specs():
+                assert not concretized_spec.package.installed
+
+        # Everything in e2 depended on dt-diamond-bottom, so should also
+        # have been uninstalled
+        e2 = spack.environment.read("e2")
+        with e2:
+            for _, concretized_spec in e2.concretized_specs():
+                assert not concretized_spec.package.installed
