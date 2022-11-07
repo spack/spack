@@ -225,7 +225,8 @@ class TestUninstallFromEnv(object):
 
             # The specs should still be in the environment, since
             # --remove was not specified
-            assert set(root.name for (root, _) in e1.concretized_specs()) == set(['dt-diamond-left', 'dt-diamond-bottom'])
+            assert set(root.name for (root, _) in e1.concretized_specs()) ==\
+                set(["dt-diamond-left", "dt-diamond-bottom"])
 
             for _, concretized_spec in e1.concretized_specs():
                 assert not concretized_spec.package.installed
@@ -245,7 +246,8 @@ class TestUninstallFromEnv(object):
         """
         e1 = spack.environment.read("e1")
         with e1:
-            dtdiamondleft, = (y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left")
+            dtdiamondleft, = (
+                y for (x, y) in e1.concretized_specs() if y.name == "dt-diamond-left")
             uninstall("-y", "--dependents", "--remove", "dt-diamond-bottom")
             assert not list(e1.roots())
             assert not dtdiamondleft.package.installed
@@ -254,6 +256,7 @@ class TestUninstallFromEnv(object):
         # (and e2 should be unchanged)
         e2 = spack.environment.read("e2")
         with e2:
-            assert set(root.name for (root, _) in e2.concretized_specs()) == set(['dt-diamond-right', 'dt-diamond-bottom'])
+            assert set(root.name for (root, _) in e2.concretized_specs()) ==\
+                set(["dt-diamond-right", "dt-diamond-bottom"])
             for _, concretized_spec in e2.concretized_specs():
                 assert concretized_spec.package.installed
