@@ -13,7 +13,7 @@ class Glvis(MakefilePackage):
     git = "https://github.com/glvis/glvis.git"
     tags = ["radiuss"]
 
-    maintainers = ["goxberry", "v-dobrev", "tzanio", "tomstitt"]
+    maintainers = ["v-dobrev", "tzanio", "tomstitt", "goxberry"]
 
     # glvis (like mfem) is downloaded from a URL shortener at request
     # of upstream author Tzanio Kolev <tzanio@llnl.gov>.  See here:
@@ -38,6 +38,20 @@ class Glvis(MakefilePackage):
     # a serial mfem: `spack install glvis ^mfem~mpi~metis'
 
     version("develop", branch="master")
+
+    version(
+        "4.2",
+        sha256="314fb04040cd0a8128d6dac62ba67d7067c2c097364e5747182ee8371049b42a",
+        url="https://bit.ly/glvis-4-2",
+        extension=".tar.gz",
+    )
+
+    version(
+        "4.1",
+        sha256="7542c2942167533eec10d59b8331d18241798bbd86a7efbe51dc479db4127407",
+        url="https://bit.ly/glvis-4-1",
+        extension=".tar.gz",
+    )
 
     version(
         "4.0",
@@ -83,6 +97,8 @@ class Glvis(MakefilePackage):
     variant("fonts", default=True, description="Use antialiased fonts via freetype & fontconfig")
 
     depends_on("mfem@develop", when="@develop")
+    depends_on("mfem@4.4.0:", when="@4.2")
+    depends_on("mfem@4.3.0:", when="@4.1")
     depends_on("mfem@4.0.0:", when="@4.0")
     depends_on("mfem@3.4.0", when="@3.4")
     depends_on("mfem@3.3", when="@3.3")
@@ -90,15 +106,16 @@ class Glvis(MakefilePackage):
     depends_on("mfem@3.1", when="@3.1")
 
     depends_on("gl")
-    depends_on("glu")
-    depends_on("libx11", when="@:3.5")
+    depends_on("glu", when="@:3")
+    depends_on("libx11", when="@:3")
 
-    with when("@4.0:,develop"):
+    with when("@4.0:"):
         depends_on("sdl2")
         depends_on("glm")
         depends_on("glew")
         depends_on("freetype")
         depends_on("fontconfig")
+        depends_on("xxd", type="build")
 
     with when("+fonts"):
         depends_on("freetype")
@@ -106,7 +123,6 @@ class Glvis(MakefilePackage):
 
     depends_on("libpng", when="screenshots=png")
     depends_on("libtiff", when="screenshots=tiff")
-    depends_on("uuid", when="platform=linux")
 
 
 class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
@@ -127,15 +143,20 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             "CONFIG_MK={0}".format(self.spec["mfem"].package.config_mk),
         ]
 
-        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
-            # TODO: glu and fontconfig dirs
+        if self.spec.satisfies("@4.0:"):
+            # Spack will inject the necessary include dirs and link paths via
+            # its compiler wrapper, so we can skip them:
             result += [
-                "GLM_DIR={0}".format(spec["glm"].prefix),
-                "SDL_DIR={0}".format(spec["sdl2"].prefix),
-                "GLEW_DIR={0}".format(spec["glew"].prefix),
-                "FREETYPE_DIR={0}".format(spec["freetype"].prefix),
-                "OPENGL_DIR={0}".format(spec["gl"].home),
+                "GLM_DIR=",
+                "SDL_DIR=",
+                "GLEW_DIR=",
+                "FREETYPE_DIR=",
+                "OPENGL_DIR=",
             ]
+            # Spack will not inject include dirs like /usr/include/freetype2,
+            # so we need to do it ourselves:
+            if spec["freetype"].external:
+                result += ["GL_OPTS={0}".format(spec["freetype"].headers.cpp_flags)]
 
         else:
             gl_libs = spec["glu"].libs + spec["gl"].libs + spec["libx11"].libs
@@ -174,13 +195,13 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         ]
 
     def xwd_args(self):
-        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+        if self.spec.satisfies("@4.0:"):
             return ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=NO"]
         return ["USE_LIBPNG=NO", "USE_LIBTIFF=NO"]
 
     def png_args(self):
         prefix_args = ["USE_LIBPNG=YES", "USE_LIBTIFF=NO"]
-        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+        if self.spec.satisfies("@4.0:"):
             prefix_args = ["GLVIS_USE_LIBPNG=YES", "GLVIS_USE_LIBTIFF=NO"]
 
         libpng = self.spec["libpng"]
@@ -191,7 +212,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
     def tiff_args(self):
         prefix_args = ["USE_LIBPNG=NO", "USE_LIBTIFF=YES"]
-        if self.spec.satisfies("@4.0:") or self.spec.satisfies("@develop"):
+        if self.spec.satisfies("@4.0:"):
             prefix_args = ["GLVIS_USE_LIBPNG=NO", "GLVIS_USE_LIBTIFF=YES"]
 
         libtiff = self.spec["libtiff"]
