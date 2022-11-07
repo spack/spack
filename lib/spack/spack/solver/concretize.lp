@@ -44,6 +44,8 @@ node_flag_set(Package, Flag, Value)  :- attr("node_flag_set", Package, Flag, Val
 
 node_compiler_version_set(Package, Compiler, Version)
   :- attr("node_compiler_version_set", Package, Compiler, Version).
+node_compiler_set(Package, Compiler)
+  :- attr("node_compiler_set", Package, Compiler).
 
 variant_default_value_from_cli(Package, Variant, Value)
   :- attr("variant_default_value_from_cli", Package, Variant, Value).
@@ -1011,6 +1013,12 @@ compiler_match(Package, Dependency)
 
 compiler_mismatch(Package, Dependency)
   :- depends_on(Package, Dependency),
+     not node_compiler_set(Dependency, _),
+     not compiler_match(Package, Dependency).
+
+compiler_mismatch_required(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_set(Dependency, _),
      not compiler_match(Package, Dependency).
 
 #defined node_compiler_set/2.
@@ -1282,12 +1290,21 @@ opt_criterion(45, "preferred providers (non-roots)").
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(40, "compiler mismatches").
+opt_criterion(40, "compiler mismatches that are not from CLI").
 #minimize{ 0@240: #true }.
 #minimize{ 0@40: #true }.
 #minimize{
     1@40+Priority,Package,Dependency
     : compiler_mismatch(Package, Dependency),
+      build_priority(Package, Priority)
+}.
+
+opt_criterion(39, "compiler mismatches that are not from CLI").
+#minimize{ 0@239: #true }.
+#minimize{ 0@39: #true }.
+#minimize{
+    1@39+Priority,Package,Dependency
+    : compiler_mismatch_required(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
