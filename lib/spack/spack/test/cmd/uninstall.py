@@ -336,7 +336,7 @@ class TestUninstallFromEnv(object):
             (dtdiamondright,) = (
                 y for (x, y) in e2.concretized_specs() if y.name == "dt-diamond-right"
             )
-            assert dtdiamondleft.package.installed
+            assert dtdiamondright.package.installed
             (dtdiamondbottom,) = (
                 y for (x, y) in e2.concretized_specs() if y.name == "dt-diamond-bottom"
             )
