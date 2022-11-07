@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import pytest
 import sys
+
+import pytest
 
 import llnl.util.tty as tty
 
+import spack.environment
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
@@ -169,10 +171,12 @@ def test_in_memory_consistency_when_uninstalling(mutable_database, monkeypatch):
     uninstall("-y", "-a")
 
 
-import spack.environment
-
+# Note: I want to use https://docs.pytest.org/en/7.1.x/how-to/skipping.html#skip-all-test-functions-of-a-class-or-module
+# the style formatter insists on separating these two lines.
+# fmt: off
 pytest.mark.skipif(sys.platform == "win32", reason="Envs unsupported on Windows")
 class TestUninstallFromEnv(object):
+# fmt: on
     env = SpackCommand("env")
     add = SpackCommand("add")
     concretize = SpackCommand("concretize")
