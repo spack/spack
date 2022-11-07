@@ -426,7 +426,7 @@ class Root(CMakePackage):
         spec = self.spec
         define = self.define
         define_from_variant = self.define_from_variant
-        options = ["--debug-find-pkg=OpenGL", "--trace-expand"]
+        options = []
 
         # ###################### Boolean Options ######################
         # For option list format see _process_opts(), below.
