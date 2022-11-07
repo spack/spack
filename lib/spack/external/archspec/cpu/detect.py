@@ -132,9 +132,15 @@ def sysctl_info_dict():
             "model name": sysctl("-n", "machdep.cpu.brand_string"),
         }
     else:
-        model = (
-            "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
-        )
+        model = "unknown"
+        model_str = sysctl("-n", "machdep.cpu.brand_string").lower()
+        if "m2" in model_str:
+            model = "m2"
+        elif "m1" in model_str:
+            model = "m1"
+        elif "apple" in model_str:
+            model = "m1"
+
         info = {
             "vendor_id": "Apple",
             "flags": [],
@@ -322,13 +328,25 @@ def compatibility_check_for_aarch64(info, target):
     features = set(info.get("Features", "").split())
     vendor = info.get("CPU implementer", "generic")
 
+    # At the moment it's not clear how to detect compatibility with
+    # a specific version of the architecture
+    if target.vendor == "generic" and target.name != "aarch64":
+        return False
+
     arch_root = TARGETS[basename]
-    return (
-        (target == arch_root or arch_root in target.ancestors)
-        and target.vendor in (vendor, "generic")
-        # On macOS it seems impossible to get all the CPU features with syctl info
-        and (target.features.issubset(features) or platform.system() == "Darwin")
+    arch_root_and_vendor = arch_root == target.family and target.vendor in (
+        vendor,
+        "generic",
     )
+
+    # On macOS it seems impossible to get all the CPU features
+    # with syctl info, but for ARM we can get the exact model
+    if platform.system() == "Darwin":
+        model_key = info.get("model", basename)
+        model = TARGETS[model_key]
+        return arch_root_and_vendor and (target == model or target in model.ancestors)
+
+    return arch_root_and_vendor and target.features.issubset(features)
 
 
 @compatibility_check(architecture_family="riscv64")
