@@ -285,6 +285,7 @@ def ci_rebuild(args):
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
     spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
+    shared_pr_mirror_url = get_env_var("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = get_env_var("SPACK_REBUILD_EVERYTHING")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -471,6 +472,10 @@ def ci_rebuild(args):
             # pipeline_mirror_url), which is also what we want.
             spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
         pipeline_mirrors.append(remote_mirror_override)
+
+    if spack_pipeline_type == "spack_pull_request":
+        if shared_pr_mirror_url != "None":
+            pipeline_mirrors.append(shared_pr_mirror_url)
 
     matches = (
         None
