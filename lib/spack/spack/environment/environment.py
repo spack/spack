@@ -1322,24 +1322,6 @@ class Environment(object):
         if user_specs_did_not_change:
             return []
 
-        # Check that user specs don't have duplicate packages
-        counter = collections.defaultdict(int)
-        for user_spec in self.user_specs:
-            counter[user_spec.name] += 1
-
-        duplicates = []
-        for name, count in counter.items():
-            if count > 1:
-                duplicates.append(name)
-
-        if duplicates:
-            msg = (
-                "environment that are configured to concretize specs"
-                " together cannot contain more than one spec for each"
-                " package [{0}]".format(", ".join(duplicates))
-            )
-            raise SpackEnvironmentError(msg)
-
         # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
