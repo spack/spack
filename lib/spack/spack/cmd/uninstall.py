@@ -372,7 +372,7 @@ def get_uninstall_list(args, specs, env):
     if args.remove and not args.force:
         remove_only.update(spec_to_other_envs)
     if remove_only:
-        tty.debug(
+        tty.info(
             "The following specs will be removed but not uninstalled because"
             " they are also used by another environment: {speclist}".format(
                 speclist=", ".join(x.name for x in remove_only)
