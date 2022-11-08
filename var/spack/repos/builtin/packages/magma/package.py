@@ -109,49 +109,44 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         define = self.define
         options = [
             define("CMAKE_INSTALL_PREFIX", self.prefix),
-            define("CMAKE_INSTALL_NAME_DIR:PATH", "%s/lib" % self.prefix),
-            define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")),
+            define("CMAKE_INSTALL_NAME_DIR:PATH", self.prefix.lib),
+            define("BLAS_LIBRARIES", [spec["blas"].libs]),
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
             # explicitly add blas to LAPACK_LIBRARIES.
-            define("LAPACK_LIBRARIES", (spec["lapack"].libs + spec["blas"].libs).joined(";")),
-            ]
-
-        options += define("BUILD_SHARED_LIBS", "ON" if ("+shared" in spec) else "OFF")
+            define("LAPACK_LIBRARIES", [spec["lapack"].libs, spec["blas"].libs]),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+        ]
 
         if spec.satisfies("%cce"):
-            options += define("CUDA_NVCC_FLAGS", "-allow-unsupported-compiler")
+            options.append(define("CUDA_NVCC_FLAGS", "-allow-unsupported-compiler"))
 
         if "+fortran" in spec:
-            options += define("USE_FORTRAN", "yes")
+            options.append(define("USE_FORTRAN", True))
             if spec.satisfies("%xl") or spec.satisfies("%xl_r"):
-                options += define("CMAKE_Fortran_COMPILER", self.compiler.f77)
-
+                options.append(define("CMAKE_Fortran_COMPILER", self.compiler.f77))
             if spec.satisfies("%cce"):
-                options += define("CMAKE_Fortran_FLAGS", "-ef")
+                options.append(define("CMAKE_Fortran_FLAGS", "-ef"))
 
         if spec.satisfies("^cuda"):
-            cuda_arch = self.spec.variants["cuda_arch"].value
-            if "@:2.2.0" in spec:
-                capabilities = " ".join("sm{0}".format(i) for i in cuda_arch)
-                options += define("GPU_TARGET", capabilities)
-            else:
-                capabilities = " ".join("sm_{0}".format(i) for i in cuda_arch)
-                options += define("GPU_TARGET", capabilities)
+            cuda_arch = spec.variants["cuda_arch"].value
+            sep = "" if "@:2.2.0" in spec else "_"
+            capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
+            options.append(define("GPU_TARGET", capabilities))
 
         if "@2.5.0" in spec:
-            options += define("MAGMA_SPARSE", "OFF")
+            options.append(define("MAGMA_SPARSE", False))
             if spec.compiler.name in ["xl", "xl_r"]:
-                options += define("CMAKE_DISABLE_FIND_PACKAGE_OpenMP", "TRUE")
+                options.append(define("CMAKE_DISABLE_FIND_PACKAGE_OpenMP", True))
 
         if "+rocm" in spec:
-            options += define("MAGMA_ENABLE_HIP", "ON")
-            options += define("CMAKE_CXX_COMPILER", "hipcc")
+            options.append(define("MAGMA_ENABLE_HIP", True))
+            options.append(define("CMAKE_CXX_COMPILER", spec["hipcc"].hipcc))
             # See https://github.com/ROCmSoftwarePlatform/rocFFT/issues/322
             if spec.satisfies("^cmake@3.21.0:3.21.2"):
-                options += define("__skip_rocmclang", "ON")
+                options.append(define("__skip_rocmclang", True))
         else:
-            options += define("MAGMA_ENABLE_CUDA", "ON")
+            options.append(define("MAGMA_ENABLE_CUDA", True))
 
         return options
 
