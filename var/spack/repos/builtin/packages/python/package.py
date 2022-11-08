@@ -416,10 +416,6 @@ class Python(Package):
     # C/C++ modules, consider installing a Spack-managed Python with
     # this patch instead. For more information, see:
     # https://github.com/spack/spack/pull/16856
-    #
-    # NOTE: distutils was deprecated in 3.10, so we don't add new patches
-    # for 3.11. If packages still require distutils patches, restrict them
-    # to python@:3.10.
     patch("python-2.7.8-distutils-C++.patch", when="@2.7.8:2.7.16")
     patch("python-2.7.17+-distutils-C++.patch", when="@2.7.17:2.7.18")
     patch("python-2.7.17+-distutils-C++-fixup.patch", when="@2.7.17:2.7.18")
