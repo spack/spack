@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
+from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Type  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -545,6 +545,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     # FIXME: this is a bad object-oriented design, should be moved to Clang.
     #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
+
+    #: Keep -Werror flags, matches config:flags:keep_werror to override config
+    keep_werror = None  # type: Optional[Literal['all', 'specific', 'none']]
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False

@@ -273,20 +273,6 @@ def clean_environment():
         # show useful matches.
         env.set("LC_ALL", build_lang)
 
-    keep_flags = set()
-    # set of pairs
-    replace_flags = set()  # type: Set[Tuple[str,str]]
-    if spack.config.get('config:flags:keep_werror') == 'all':
-        keep_flags.add('-Werror*')
-    else:
-        if spack.config.get('config:flags:keep_werror') == 'specific':
-            keep_flags.add('-Werror=*')
-        replace_flags.add(('-Werror', '-Wno-error'))
-    env.set('SPACK_COMPILER_FLAGS_KEEP', '|'.join(keep_flags))
-    env.set('SPACK_COMPILER_FLAGS_REPLACE', ' '.join([
-        '|'.join(item) for item in replace_flags
-    ]))
-
     # Remove any macports installs from the PATH.  The macports ld can
     # cause conflicts with the built-in linker on el capitan.  Solves
     # assembler issues, e.g.:
@@ -344,6 +330,25 @@ def set_compiler_environment_variables(pkg, env):
     else:
         env.set("SPACK_DTAGS_TO_STRIP", compiler.disable_new_dtags)
         env.set("SPACK_DTAGS_TO_ADD", compiler.enable_new_dtags)
+
+    if pkg.keep_werror is not None:
+        keep_werror = pkg.keep_werror
+    else:
+        keep_werror = spack.config.get('config:flags:keep_werror')
+
+    keep_flags = set()
+    # set of pairs
+    replace_flags = set()  # type: Set[Tuple[str,str]]
+    if keep_werror == 'all':
+        keep_flags.add('-Werror*')
+    else:
+        if keep_werror == 'specific':
+            keep_flags.add('-Werror=*')
+        replace_flags.add(('-Werror', '-Wno-error'))
+    env.set('SPACK_COMPILER_FLAGS_KEEP', '|'.join(keep_flags))
+    env.set('SPACK_COMPILER_FLAGS_REPLACE', ' '.join([
+        '|'.join(item) for item in replace_flags
+    ]))
 
     # Set the target parameters that the compiler will add
     # Don't set on cray platform because the targeting module handles this
