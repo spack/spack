@@ -107,3 +107,7 @@ class Mapl(CMakePackage):
             args.append(self.define("CMAKE_Fortran_FLAGS", " ".join(fflags)))
 
         return args
+
+    def patch(self):
+        filter_file(r"\s*(ecbuild_add_executable|TARGET|SOURCES|LIBS).*", "", "pfio/CMakeLists.txt", when="~buildexe")
+        filter_file(r".*\.x.*", "", "pfio/CMakeLists.txt", when="~buildexe")
