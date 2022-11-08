@@ -409,28 +409,22 @@ class Configuration(object):
     @_config_mutator
     def push_scope(self, scope):
         """Add a higher precedence scope to the Configuration."""
-        cmd_line_scope = None
-        if self.scopes:
-            highest_precedence_scope = list(self.scopes.values())[-1]
-            if highest_precedence_scope.name == "command_line":
-                # If the command-line scope is present, it should always
-                # be the scope of highest precedence
-                cmd_line_scope = self.pop_scope()
-
+        tty.debug("[CONFIGURATION: PUSH SCOPE]: {}".format(str(scope)), level=2)
         self.scopes[scope.name] = scope
-        if cmd_line_scope:
-            self.scopes["command_line"] = cmd_line_scope
 
     @_config_mutator
     def pop_scope(self):
         """Remove the highest precedence scope and return it."""
         name, scope = self.scopes.popitem(last=True)
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
         return scope
 
     @_config_mutator
     def remove_scope(self, scope_name):
         """Remove scope by name; has no effect when ``scope_name`` does not exist"""
-        return self.scopes.pop(scope_name, None)
+        scope = self.scopes.pop(scope_name, None)
+        tty.debug("[CONFIGURATION: POP SCOPE]: {}".format(str(scope)), level=2)
+        return scope
 
     @property
     def file_scopes(self):

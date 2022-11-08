@@ -32,7 +32,6 @@ from spack.schema.database_index import schema as db_idx_schema
 from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import CompilerSpec, Spec
 from spack.util.executable import which
-from spack.util.mock_package import MockPackageMultiRepo
 from spack.util.pattern import Bunch
 
 ci_cmd = spack.main.SpackCommand("ci")
@@ -92,7 +91,7 @@ testjob:
         yield repo_path
 
 
-def test_specs_staging(config):
+def test_specs_staging(config, tmpdir):
     """Make sure we achieve the best possible staging for the following
 spec DAG::
 
@@ -108,20 +107,17 @@ In this case, we would expect 'c', 'e', 'f', and 'g' to be in the first stage,
 and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 
 """
-    default = ("build", "link")
+    builder = repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("g")
+    builder.add_package("f")
+    builder.add_package("e")
+    builder.add_package("d", dependencies=[("f", None, None), ("g", None, None)])
+    builder.add_package("c")
+    builder.add_package("b", dependencies=[("d", None, None), ("e", None, None)])
+    builder.add_package("a", dependencies=[("b", None, None), ("c", None, None)])
 
-    mock_repo = MockPackageMultiRepo()
-    g = mock_repo.add_package("g", [], [])
-    f = mock_repo.add_package("f", [], [])
-    e = mock_repo.add_package("e", [], [])
-    d = mock_repo.add_package("d", [f, g], [default, default])
-    c = mock_repo.add_package("c", [], [])
-    b = mock_repo.add_package("b", [d, e], [default, default])
-    mock_repo.add_package("a", [b, c], [default, default])
-
-    with repo.use_repositories(mock_repo):
-        spec_a = Spec("a")
-        spec_a.concretize()
+    with repo.use_repositories(builder.root):
+        spec_a = Spec("a").concretized()
 
         spec_a_label = ci._spec_deps_key(spec_a)
         spec_b_label = ci._spec_deps_key(spec_a["b"])
@@ -190,6 +186,12 @@ spack:
     mappings:
       - match:
           - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+      - match:
+          - arch=test-debian6-m1
         runner-attributes:
           tags:
             - donotcare
@@ -274,10 +276,10 @@ def test_ci_generate_bootstrap_gcc(
 spack:
   definitions:
     - bootstrap:
-      - gcc@3.0
-      - gcc@2.0
+      - gcc@9.5
+      - gcc@9.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
@@ -287,6 +289,11 @@ spack:
     mappings:
       - match:
           - arch=test-debian6-x86_64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-aarch64
         runner-attributes:
           tags:
             - donotcare
@@ -342,9 +349,9 @@ def test_ci_generate_bootstrap_artifacts_buildcache(
 spack:
   definitions:
     - bootstrap:
-      - gcc@3.0
+      - gcc@9.5
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
@@ -354,6 +361,11 @@ spack:
     mappings:
       - match:
           - arch=test-debian6-x86_64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-aarch64
         runner-attributes:
           tags:
             - donotcare
@@ -889,7 +901,6 @@ def activate_rebuild_env(tmpdir, pkg_name, rebuild_env):
             "SPACK_CONCRETE_ENV_DIR": rebuild_env.env_dir.strpath,
             "CI_PIPELINE_ID": "7192",
             "SPACK_SIGNING_KEY": _signing_key(),
-            "SPACK_ROOT_SPEC": rebuild_env.root_spec_dag_hash,
             "SPACK_JOB_SPEC_DAG_HASH": rebuild_env.root_spec_dag_hash,
             "SPACK_JOB_SPEC_PKG_NAME": pkg_name,
             "SPACK_COMPILER_ACTION": "NONE",
@@ -921,11 +932,8 @@ def test_ci_rebuild_mock_success(
     pkg_name = "archive-files"
     rebuild_env = create_rebuild_env(tmpdir, pkg_name, broken_tests)
 
-    monkeypatch.setattr(
-        spack.cmd.ci,
-        "CI_REBUILD_INSTALL_BASE_ARGS",
-        ["echo"],
-    )
+    monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "echo")
+    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "echo")
 
     with rebuild_env.env_dir.as_cwd():
         activate_rebuild_env(tmpdir, pkg_name, rebuild_env)
@@ -970,7 +978,8 @@ def test_ci_rebuild(
 
         ci_cmd("rebuild", "--tests", fail_on_error=False)
 
-    monkeypatch.setattr(spack.cmd.ci, "CI_REBUILD_INSTALL_BASE_ARGS", ["notcommand"])
+    monkeypatch.setattr(spack.cmd.ci, "SPACK_COMMAND", "notcommand")
+    monkeypatch.setattr(spack.cmd.ci, "MAKE_COMMAND", "notcommand")
     monkeypatch.setattr(spack.cmd.ci, "INSTALL_FAIL_CODE", 127)
 
     with rebuild_env.env_dir.as_cwd():
@@ -1002,7 +1011,6 @@ def test_ci_rebuild(
 
         assert "--keep-stage" in install_parts
         assert "--no-check-signature" not in install_parts
-        assert "--no-add" in install_parts
         assert "-f" in install_parts
         flag_index = install_parts.index("-f")
         assert "archive-files.json" in install_parts[flag_index + 1]
@@ -1088,7 +1096,6 @@ spack:
                     "SPACK_JOB_TEST_DIR": "test_dir",
                     "SPACK_LOCAL_MIRROR_DIR": mirror_dir.strpath,
                     "SPACK_CONCRETE_ENV_DIR": tmpdir.strpath,
-                    "SPACK_ROOT_SPEC": root_spec_dag_hash,
                     "SPACK_JOB_SPEC_DAG_HASH": root_spec_dag_hash,
                     "SPACK_JOB_SPEC_PKG_NAME": "archive-files",
                     "SPACK_COMPILER_ACTION": "NONE",
@@ -1247,14 +1254,13 @@ spack:
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
         with ev.read("test") as env:
-            spec_map = ci.get_concrete_specs(env, "patchelf", "patchelf", "FIND_ANY")
-            concrete_spec = spec_map["patchelf"]
+            concrete_spec = Spec("patchelf").concretized()
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join("spec.json"))
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", json_path)
+            install_cmd("--add", "--keep-stage", json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
@@ -1362,8 +1368,15 @@ def test_push_mirror_contents_exceptions(monkeypatch, capsys):
     assert expect_msg in std_out
 
 
+@pytest.mark.parametrize("match_behavior", ["first", "merge"])
 def test_ci_generate_override_runner_attrs(
-    tmpdir, mutable_mock_env_path, install_mockery, mock_packages, monkeypatch, ci_base_environment
+    tmpdir,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    monkeypatch,
+    ci_base_environment,
+    match_behavior,
 ):
     """Test that we get the behavior we want with respect to the provision
     of runner attributes like tags, variables, and scripts, both when we
@@ -1382,6 +1395,7 @@ spack:
   gitlab-ci:
     tags:
       - toplevel
+      - toplevel2
     variables:
       ONE: toplevelvarone
       TWO: toplevelvartwo
@@ -1392,6 +1406,7 @@ spack:
       - main step
     after_script:
       - post step one
+    match_behavior: {0}
     mappings:
       - match:
           - flatten-deps
@@ -1404,10 +1419,12 @@ spack:
           - dependency-install
       - match:
           - a
+        remove-attributes:
+          tags:
+            - toplevel2
         runner-attributes:
           tags:
             - specific-a
-            - toplevel
           variables:
             ONE: specificvarone
             TWO: specificvartwo
@@ -1417,10 +1434,17 @@ spack:
             - custom main step
           after_script:
             - custom post step one
+      - match:
+          - a
+        runner-attributes:
+          tags:
+            - specific-a-2
     service-job-attributes:
       image: donotcare
       tags: [donotcare]
-"""
+""".format(
+                match_behavior
+            )
         )
 
     with tmpdir.as_cwd():
@@ -1453,9 +1477,12 @@ spack:
                     assert the_elt["variables"]["ONE"] == "specificvarone"
                     assert the_elt["variables"]["TWO"] == "specificvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == (2 if match_behavior == "first" else 3)
                     assert "specific-a" in the_elt["tags"]
+                    if match_behavior == "merge":
+                        assert "specific-a-2" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" not in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 1
                     assert the_elt["before_script"][0] == "custom pre step one"
                     assert len(the_elt["script"]) == 1
@@ -1470,8 +1497,9 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert "THREE" not in the_elt["variables"]
-                    assert len(the_elt["tags"]) == 1
-                    assert the_elt["tags"][0] == "toplevel"
+                    assert len(the_elt["tags"]) == 2
+                    assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
@@ -1488,9 +1516,10 @@ spack:
                     assert the_elt["variables"]["ONE"] == "toplevelvarone"
                     assert the_elt["variables"]["TWO"] == "toplevelvartwo"
                     assert the_elt["variables"]["THREE"] == "specificvarthree"
-                    assert len(the_elt["tags"]) == 2
+                    assert len(the_elt["tags"]) == 3
                     assert "specific-one" in the_elt["tags"]
                     assert "toplevel" in the_elt["tags"]
+                    assert "toplevel2" in the_elt["tags"]
                     assert len(the_elt["before_script"]) == 2
                     assert the_elt["before_script"][0] == "pre step one"
                     assert the_elt["before_script"][1] == "pre step two"
@@ -1510,12 +1539,12 @@ def test_ci_generate_with_workarounds(
             """\
 spack:
   specs:
-    - callpath%gcc@3.0
+    - callpath%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
     mappings:
-      - match: ['%gcc@3.0']
+      - match: ['%gcc@9.5']
         runner-attributes:
           tags:
             - donotcare
@@ -1586,15 +1615,14 @@ spack:
 
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
-        with ev.read("test") as env:
-            spec_map = ci.get_concrete_specs(env, "callpath", "callpath", "FIND_ANY")
-            concrete_spec = spec_map["callpath"]
+        with ev.read("test"):
+            concrete_spec = Spec("callpath").concretized()
             spec_json = concrete_spec.to_json(hash=ht.dag_hash)
             json_path = str(tmpdir.join("spec.json"))
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", "-f", json_path)
+            install_cmd("--add", "--keep-stage", "-f", json_path)
             buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
@@ -1626,28 +1654,28 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@10.1.0%gcc@4.5.0")
+    install_cmd("gcc@12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.1.0%gcc@4.5.0")
+    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
-    uninstall_cmd("-y", "gcc@10.1.0%gcc@4.5.0")
+    uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@10.1.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd("add", "test-mirror", mirror_url)
 
-    install_cmd("--no-check-signature", "a%gcc@10.1.0")
+    install_cmd("--no-check-signature", "b%gcc@12.2.0")
 
     # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "a%gcc@10.1.0")
+    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
 
     # Now uninstall the spec
-    uninstall_cmd("-y", "a%gcc@10.1.0")
+    uninstall_cmd("-y", "b%gcc@12.2.0")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1656,9 +1684,9 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@10.1.0%gcc@4.5.0
+      - gcc@12.2.0%gcc@10.2.1
   specs:
-    - a%gcc@10.1.0
+    - b%gcc@12.2.0
   mirrors:
     atestm: {0}
   gitlab-ci:
@@ -1673,6 +1701,16 @@ spack:
             - donotcare
       - match:
           - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - meh
+      - match:
+          - arch=test-debian6-aarch64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-m1
         runner-attributes:
           tags:
             - meh
@@ -1732,10 +1770,6 @@ spack:
                 "(bootstrap) gcc": [],
                 "(specs) b": [
                     "(bootstrap) gcc",
-                ],
-                "(specs) a": [
-                    "(bootstrap) gcc",
-                    "(specs) b",
                 ],
             }
 
@@ -1802,8 +1836,8 @@ spack:
             yaml_contents = syaml.load(contents)
 
             for ci_key in yaml_contents.keys():
-                if "archive-files" in ci_key or "mpich" in ci_key:
-                    print("Error: archive-files and mpich should have been pruned")
+                if "archive-files" in ci_key:
+                    print("Error: archive-files should have been pruned")
                     assert False
 
 
@@ -1963,12 +1997,15 @@ def test_ci_generate_read_broken_specs_url(
     spec_flattendeps.concretize()
     flattendeps_dag_hash = spec_flattendeps.dag_hash()
 
-    # Mark 'a' as broken (but not 'flatten-deps')
-    broken_spec_a_path = str(tmpdir.join(a_dag_hash))
-    with open(broken_spec_a_path, "w") as bsf:
-        bsf.write("")
-
     broken_specs_url = "file://{0}".format(tmpdir.strpath)
+
+    # Mark 'a' as broken (but not 'flatten-deps')
+    broken_spec_a_url = "{0}/{1}".format(broken_specs_url, a_dag_hash)
+    job_stack = "job_stack"
+    a_job_url = "a_job_url"
+    ci.write_broken_spec(
+        broken_spec_a_url, spec_a.name, job_stack, a_job_url, "pipeline_url", spec_a.to_dict()
+    )
 
     # Test that `spack ci generate` notices this broken spec and fails.
     filename = str(tmpdir.join("spack.yaml"))
@@ -2005,11 +2042,13 @@ spack:
             output = ci_cmd("generate", output=str, fail_on_error=False)
             assert "known to be broken" in output
 
-            ex = "({0})".format(a_dag_hash)
-            assert ex in output
+            expected = "{0}/{1} (in stack {2}) was reported broken here: {3}".format(
+                spec_a.name, a_dag_hash[:7], job_stack, a_job_url
+            )
+            assert expected in output
 
-            ex = "({0})".format(flattendeps_dag_hash)
-            assert ex not in output
+            not_expected = "flatten-deps/{0} (in stack".format(flattendeps_dag_hash[:7])
+            assert not_expected not in output
 
 
 def test_ci_generate_external_signing_job(
@@ -2119,34 +2158,30 @@ spack:
             shutil.copyfile(env.manifest_path, os.path.join(working_dir.strpath, "spack.yaml"))
             shutil.copyfile(env.lock_path, os.path.join(working_dir.strpath, "spack.lock"))
 
-            root_spec = None
             job_spec = None
 
             for h, s in env.specs_by_hash.items():
                 if s.name == "archive-files":
-                    root_spec = s
                     job_spec = s
 
             job_spec_json_path = os.path.join(working_dir.strpath, "archivefiles.json")
             with open(job_spec_json_path, "w") as fd:
                 fd.write(job_spec.to_json(hash=ht.dag_hash))
 
-            root_spec_json_path = os.path.join(working_dir.strpath, "root.json")
-            with open(root_spec_json_path, "w") as fd:
-                fd.write(root_spec.to_json(hash=ht.dag_hash))
-
             artifacts_root = os.path.join(working_dir.strpath, "scratch_dir")
             pipeline_path = os.path.join(artifacts_root, "pipeline.yml")
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            job_name = ci.get_job_name("specs", False, job_spec, "test-debian6-core2", None)
+            target_name = spack.platforms.test.Test.default
+            job_name = ci.get_job_name(
+                "specs", False, job_spec, "test-debian6-%s" % target_name, None
+            )
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {
                 "job_name": job_name,
                 "job_spec_json": "archivefiles.json",
-                "root_spec_json": "root.json",
                 "ci_project_dir": working_dir.strpath,
             }
             with open(repro_file, "w") as fd:

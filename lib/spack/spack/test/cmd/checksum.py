@@ -68,3 +68,13 @@ def test_checksum_versions(mock_packages, mock_fetch, mock_stage):
     output = spack_checksum("preferred-test", versions[0])
     assert "Found 1 version" in output
     assert "version(" in output
+
+
+def test_checksum_missing_version(mock_packages, mock_fetch, mock_stage):
+    output = spack_checksum("preferred-test", "99.99.99", fail_on_error=False)
+    assert "Could not find any remote versions" in output
+
+
+def test_checksum_deprecated_version(mock_packages, mock_fetch, mock_stage):
+    output = spack_checksum("deprecated-versions", "1.1.0", fail_on_error=False)
+    assert "Version 1.1.0 is deprecated" in output

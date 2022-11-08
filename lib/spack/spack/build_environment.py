@@ -52,6 +52,7 @@ from llnl.util.tty.log import MultiProcessFd
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+import spack.builder
 import spack.config
 import spack.install_test
 import spack.main
@@ -64,6 +65,7 @@ import spack.store
 import spack.subprocess_context
 import spack.user_environment
 import spack.util.path
+import spack.util.pattern
 from spack.error import NoHeadersError, NoLibrariesError
 from spack.installer import InstallError
 from spack.util.cpus import cpus_available
@@ -109,21 +111,28 @@ SPACK_SYSTEM_DIRS = "SPACK_SYSTEM_DIRS"
 
 
 # Platform-specific library suffix.
-dso_suffix = "dylib" if sys.platform == "darwin" else "so"
+if sys.platform == "darwin":
+    dso_suffix = "dylib"
+elif sys.platform == "win32":
+    dso_suffix = "dll"
+else:
+    dso_suffix = "so"
+
+stat_suffix = "lib" if sys.platform == "win32" else "a"
 
 
-def should_set_parallel_jobs(jobserver_support=False):
-    """Returns true in general, except when:
-    - The env variable SPACK_NO_PARALLEL_MAKE=1 is set
-    - jobserver_support is enabled, and a jobserver was found.
-    """
-    if (
-        jobserver_support
-        and "MAKEFLAGS" in os.environ
-        and "--jobserver" in os.environ["MAKEFLAGS"]
-    ):
-        return False
-    return not env_flag(SPACK_NO_PARALLEL_MAKE)
+def jobserver_enabled():
+    """Returns true if a posix jobserver (make) is detected."""
+    return "MAKEFLAGS" in os.environ and "--jobserver" in os.environ["MAKEFLAGS"]
+
+
+def get_effective_jobs(jobs, parallel=True, supports_jobserver=False):
+    """Return the number of jobs, or None if supports_jobserver and a jobserver is detected."""
+    if not parallel or jobs <= 1 or env_flag(SPACK_NO_PARALLEL_MAKE):
+        return 1
+    if supports_jobserver and jobserver_enabled():
+        return None
+    return jobs
 
 
 class MakeExecutable(Executable):
@@ -138,26 +147,33 @@ class MakeExecutable(Executable):
     """
 
     def __init__(self, name, jobs, **kwargs):
+        supports_jobserver = kwargs.pop("supports_jobserver", True)
         super(MakeExecutable, self).__init__(name, **kwargs)
+        self.supports_jobserver = supports_jobserver
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
         """parallel, and jobs_env from kwargs are swallowed and used here;
         remaining arguments are passed through to the superclass.
         """
-        # TODO: figure out how to check if we are using a jobserver-supporting ninja,
-        # the two split ninja packages make this very difficult right now
-        parallel = should_set_parallel_jobs(jobserver_support=True) and kwargs.pop(
-            "parallel", self.jobs > 1
-        )
+        parallel = kwargs.pop("parallel", True)
+        jobs_env = kwargs.pop("jobs_env", None)
+        jobs_env_supports_jobserver = kwargs.pop("jobs_env_supports_jobserver", False)
 
-        if parallel:
-            args = ("-j{0}".format(self.jobs),) + args
-            jobs_env = kwargs.pop("jobs_env", None)
-            if jobs_env:
-                # Caller wants us to set an environment variable to
-                # control the parallelism.
-                kwargs["extra_env"] = {jobs_env: str(self.jobs)}
+        jobs = get_effective_jobs(
+            self.jobs, parallel=parallel, supports_jobserver=self.supports_jobserver
+        )
+        if jobs is not None:
+            args = ("-j{0}".format(jobs),) + args
+
+        if jobs_env:
+            # Caller wants us to set an environment variable to
+            # control the parallelism.
+            jobs_env_jobs = get_effective_jobs(
+                self.jobs, parallel=parallel, supports_jobserver=jobs_env_supports_jobserver
+            )
+            if jobs_env_jobs is not None:
+                kwargs["extra_env"] = {jobs_env: str(jobs_env_jobs)}
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
@@ -193,6 +209,8 @@ def clean_environment():
 
     env.unset("CMAKE_PREFIX_PATH")
     env.unset("PYTHONPATH")
+    env.unset("R_HOME")
+    env.unset("R_ENVIRON")
 
     # Affects GNU make, can e.g. indirectly inhibit enabling parallel build
     # env.unset('MAKEFLAGS')
@@ -306,7 +324,7 @@ def set_compiler_environment_variables(pkg, env):
     env.set("SPACK_LINKER_ARG", compiler.linker_arg)
 
     # Check whether we want to force RPATH or RUNPATH
-    if spack.config.get("config:shared_linking") == "rpath":
+    if spack.config.get("config:shared_linking:type") == "rpath":
         env.set("SPACK_DTAGS_TO_STRIP", compiler.enable_new_dtags)
         env.set("SPACK_DTAGS_TO_ADD", compiler.disable_new_dtags)
     else:
@@ -314,7 +332,11 @@ def set_compiler_environment_variables(pkg, env):
         env.set("SPACK_DTAGS_TO_ADD", compiler.enable_new_dtags)
 
     # Set the target parameters that the compiler will add
-    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    # Don't set on cray platform because the targeting module handles this
+    if spec.satisfies("platform=cray"):
+        isa_arg = ""
+    else:
+        isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set("SPACK_TARGET_ARGS", isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -335,7 +357,7 @@ def set_compiler_environment_variables(pkg, env):
                 handler = pkg.flag_handler.__func__
             else:
                 handler = pkg.flag_handler.im_func
-        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag])
+        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag][:])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -536,7 +558,7 @@ def _set_variables_for_single_module(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make = MakeExecutable("make", jobs)
     m.gmake = MakeExecutable("gmake", jobs)
-    m.ninja = MakeExecutable("ninja", jobs)
+    m.ninja = MakeExecutable("ninja", jobs, supports_jobserver=False)
 
     # easy shortcut to os.environ
     m.env = os.environ
@@ -548,9 +570,9 @@ def _set_variables_for_single_module(pkg, module):
     if sys.platform == "win32":
         m.nmake = Executable("nmake")
     # Standard CMake arguments
-    m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
-    m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)
-    m.std_pip_args = spack.build_systems.python.PythonPackage._std_args(pkg)
+    m.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
+    m.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
+    m.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.paths.build_env_path
@@ -717,38 +739,6 @@ def get_rpaths(pkg):
     return list(dedupe(filter_system_paths(rpaths)))
 
 
-def get_std_cmake_args(pkg):
-    """List of standard arguments used if a package is a CMakePackage.
-
-    Returns:
-        list: standard arguments that would be used if this
-        package were a CMakePackage instance.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package under consideration
-
-    Returns:
-        list: arguments for cmake
-    """
-    return spack.build_systems.cmake.CMakePackage._std_args(pkg)
-
-
-def get_std_meson_args(pkg):
-    """List of standard arguments used if a package is a MesonPackage.
-
-    Returns:
-        list: standard arguments that would be used if this
-        package were a MesonPackage instance.
-
-    Args:
-        pkg (spack.package_base.PackageBase): package under consideration
-
-    Returns:
-        list: arguments for meson
-    """
-    return spack.build_systems.meson.MesonPackage._std_args(pkg)
-
-
 def parent_class_modules(cls):
     """
     Get list of superclass modules that descend from spack.package_base.PackageBase
@@ -809,7 +799,8 @@ def setup_package(pkg, dirty, context="build"):
     platform.setup_platform_environment(pkg, env_mods)
 
     if context == "build":
-        pkg.setup_build_environment(env_mods)
+        builder = spack.builder.create(pkg)
+        builder.setup_build_environment(env_mods)
 
         if (not dirty) and (not env_mods.is_unset("CPATH")):
             tty.debug(
@@ -986,10 +977,27 @@ def modifications_from_dependencies(
             dpkg = dep.package
             if set_package_py_globals:
                 set_module_variables_for_package(dpkg)
+
             # Allow dependencies to modify the module
-            dpkg.setup_dependent_package(spec.package.module, spec)
+            # Get list of modules that may need updating
+            modules = []
+            for cls in inspect.getmro(type(spec.package)):
+                module = cls.module
+                if module == spack.package_base:
+                    break
+                modules.append(module)
+
+            # Execute changes as if on a single module
+            # copy dict to ensure prior changes are available
+            changes = spack.util.pattern.Bunch()
+            dpkg.setup_dependent_package(changes, spec)
+
+            for module in modules:
+                module.__dict__.update(changes.__dict__)
+
             if context == "build":
-                dpkg.setup_dependent_build_environment(env, spec)
+                builder = spack.builder.create(dpkg)
+                builder.setup_dependent_build_environment(env, spec)
             else:
                 dpkg.setup_dependent_run_environment(env, spec)
 
@@ -1091,8 +1099,20 @@ def _setup_pkg_and_run(
                 pkg.test_suite.stage, spack.install_test.TestSuite.test_log_name(pkg.spec)
             )
 
+        error_msg = str(exc)
+        if isinstance(exc, (spack.multimethod.NoSuchMethodError, AttributeError)):
+            error_msg = (
+                "The '{}' package cannot find an attribute while trying to build "
+                "from sources. This might be due to a change in Spack's package format "
+                "to support multiple build-systems for a single package. You can fix this "
+                "by updating the build recipe, and you can also report the issue as a bug. "
+                "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
+            ).format(pkg.name)
+            error_msg = colorize("@*R{{{}}}".format(error_msg))
+            error_msg = "{}\n\n{}".format(str(exc), error_msg)
+
         # make a pickleable exception to send to parent.
-        msg = "%s: %s" % (exc_type.__name__, str(exc))
+        msg = "%s: %s" % (exc_type.__name__, error_msg)
 
         ce = ChildError(
             msg,

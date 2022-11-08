@@ -2,13 +2,14 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
 
+import spack.build_systems.cmake
+import spack.build_systems.python
 from spack.package import *
 
 
-class PyPybind11(CMakePackage, PythonPackage):
+class PyPybind11(CMakePackage, PythonExtension):
     """pybind11 -- Seamless operability between C++11 and Python.
 
     pybind11 is a lightweight header-only library that exposes C++ types in
@@ -16,7 +17,8 @@ class PyPybind11(CMakePackage, PythonPackage):
     code. Its goals and syntax are similar to the excellent Boost.Python
     library by David Abrahams: to minimize boilerplate code in traditional
     extension modules by inferring type information using compile-time
-    introspection."""
+    introspection.
+    """
 
     homepage = "https://pybind11.readthedocs.io"
     url = "https://github.com/pybind/pybind11/archive/v2.6.2.tar.gz"
@@ -25,6 +27,8 @@ class PyPybind11(CMakePackage, PythonPackage):
     maintainers = ["ax3l"]
 
     version("master", branch="master")
+    version("2.10.0", sha256="eacf582fa8f696227988d08cfc46121770823839fe9e301a20fbce67e7cd70ec")
+    version("2.9.2", sha256="6bd528c4dbe2276635dc787b6b1f2e5316cf6b49ee3e150264e455a0d68d19c1")
     version("2.9.1", sha256="c6160321dc98e6e1184cc791fbeadd2907bb4a0ce0e447f2ea4ff8ab56550913")
     version("2.9.0", sha256="057fb68dafd972bc13afb855f3b0d8cf0fa1a78ef053e815d9af79be7ff567cb")
     version("2.8.1", sha256="f1bcc07caa568eb312411dde5308b1e250bd0e1bc020fae855bf9f43209940cc")
@@ -44,28 +48,24 @@ class PyPybind11(CMakePackage, PythonPackage):
     version("2.1.1", sha256="f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540")
     version("2.1.0", sha256="2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0")
 
-    depends_on("ninja", type="build")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-pytest", type="test")
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
-    depends_on("cmake@3.13:", type="build")
-    depends_on("cmake@3.18:", type="build", when="@2.6.0:")
+    depends_on("python@3.6:", when="@2.10.0:", type=("build", "run"))
+
+    depends_on("py-pip", type="build")
+    depends_on("py-wheel", type="build")
+    extends("python")
+
+    with when("build_system=cmake"):
+        depends_on("ninja", type="build")
+        depends_on("cmake@3.13:", type="build")
+        depends_on("cmake@3.18:", type="build", when="@2.6.0:")
 
     # compiler support
     conflicts("%gcc@:4.7")
     conflicts("%clang@:3.2")
     conflicts("%intel@:16")
-
-    build_directory = "."
-
-    def cmake_args(self):
-        args = []
-        args.append("-DPYTHON_EXECUTABLE:FILEPATH=%s" % self.spec["python"].command.path)
-        args += [self.define("PYBIND11_TEST", self.run_tests)]
-        return args
-
-    def setup_build_environment(self, env):
-        env.set("PYBIND11_USE_CMAKE", 1)
 
     # https://github.com/pybind/pybind11/pull/1995
     @when("@:2.4")
@@ -78,13 +78,27 @@ class PyPybind11(CMakePackage, PythonPackage):
             string=True,
         )
 
-    def install(self, spec, prefix):
-        CMakePackage.install(self, spec, prefix)
-        PythonPackage.install(self, spec, prefix)
+
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define("PYTHON_EXECUTABLE:FILEPATH", self.spec["python"].command.path),
+            self.define("PYBIND11_TEST", self.pkg.run_tests),
+        ]
+
+    def install(self, pkg, spec, prefix):
+        super(CMakeBuilder, self).install(pkg, spec, prefix)
+        python_builder = spack.build_systems.python.PythonPipBuilder(pkg)
+        python_builder.install(pkg, spec, prefix)
+
+    def setup_build_environment(self, env):
+        env.set("PYBIND11_USE_CMAKE", 1)
 
     @run_after("install")
-    @on_package_attributes(run_tests=True)
     def install_test(self):
+        if not self.pkg.run_tests:
+            return
+
         with working_dir("spack-test", create=True):
             # test include helper points to right location
             python = self.spec["python"].command

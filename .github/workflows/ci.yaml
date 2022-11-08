@@ -41,12 +41,12 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
-      - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # @v2
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # @v2
         if: ${{ github.event_name == 'push' }}
         with:
           fetch-depth: 0
             # For pull requests it's not necessary to checkout the code
-      - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
         id: filter
         with:
           # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below

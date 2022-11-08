@@ -190,7 +190,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("datatransferkit@3.1-rc2", when="@0.6.0 +trilinos +datatransferkit")
 
     xsdk_depends_on("petsc +trilinos", when="+trilinos @:0.6.0")
-    xsdk_depends_on("petsc +batch", when="platform=cray @0.5.0:")
+    xsdk_depends_on("petsc +batch", when="@0.5.0: ^cray-mpich")
     xsdk_depends_on(
         "petsc@main+mpi+hypre+superlu-dist+metis+hdf5~mumps+double~int64",
         when="@develop",
@@ -398,7 +398,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
     xsdk_depends_on("py-libensemble@0.5.2+petsc4py", when="@0.5.0 +libensemble")
     xsdk_depends_on("py-petsc4py@3.12.0", when="@0.5.0 +libensemble")
 
-    xsdk_depends_on("precice ~petsc", when="platform=cray +precice")
+    xsdk_depends_on("precice ~petsc", when="+precice ^cray-mpich")
     xsdk_depends_on("precice@develop", when="@develop +precice")
     xsdk_depends_on("precice@2.3.0", when="@0.7.0 +precice")
     xsdk_depends_on("precice@2.1.1", when="@0.6.0 +precice")

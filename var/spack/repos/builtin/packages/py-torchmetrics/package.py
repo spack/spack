@@ -14,6 +14,9 @@ class PyTorchmetrics(PythonPackage):
 
     maintainers = ["adamjstewart"]
 
+    version("0.10.2", sha256="daa29d96bff5cff04d80eec5b9f5076993d6ac9c2d2163e88b6b31f8d38f7c25")
+    version("0.10.1", sha256="e892ecd413e6bf63950329d1317c70f697d81d0f7e386152238062e322c8f1f3")
+    version("0.10.0", sha256="990bafc7f76d7442894533771d0ba7492dbca2bbf2989fb32de7e9c68eb3d133")
     version("0.9.3", sha256="4ebfd2466021db26397636966ee1a195d3b340ba5d71bb258e764340dfc2476f")
     version("0.9.2", sha256="8178c9242e243318093d9b7237738a504535193d2006da6e58b0ed4003e318d2")
     version("0.9.0", sha256="3aa32ea575915b313d872d3460996c0f12a7bb37e6ce3da0e8d80865603b89f6")
@@ -31,4 +34,4 @@ class PyTorchmetrics(PythonPackage):
     depends_on("py-torch@1.3.1:", type=("build", "run"))
     depends_on("py-pydeprecate@0.3", when="@0.7:0.8", type=("build", "run"))
     depends_on("py-packaging", when="@0.3:", type=("build", "run"))
-    depends_on("py-typing-extensions", when="@0.9: ^python@:3.7", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@0.9: ^python@:3.8", type=("build", "run"))

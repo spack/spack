@@ -27,16 +27,37 @@ is_windows = sys.platform == "win32"
 __all__ = ["substitute_config_variables", "substitute_path_variables", "canonicalize_path"]
 
 
+def architecture():
+    # break circular import
+    import spack.platforms
+    import spack.spec
+
+    host_platform = spack.platforms.host()
+    host_os = host_platform.operating_system("default_os")
+    host_target = host_platform.target("default_target")
+
+    return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
+
+
 # Substitutions to perform
 def replacements():
     # break circular import from spack.util.executable
     import spack.paths
+
+    arch = architecture()
 
     return {
         "spack": spack.paths.prefix,
         "user": getpass.getuser(),
         "tempdir": tempfile.gettempdir(),
         "user_cache_path": spack.paths.user_cache_path,
+        "architecture": str(arch),
+        "arch": str(arch),
+        "platform": str(arch.platform),
+        "operating_system": str(arch.os),
+        "os": str(arch.os),
+        "target": str(arch.target),
+        "target_family": str(arch.target.microarchitecture.family),
     }
 
 
@@ -245,6 +266,13 @@ def substitute_config_variables(path):
     - $tempdir           Default temporary directory returned by tempfile.gettempdir()
     - $user              The current user's username
     - $user_cache_path   The user cache directory (~/.spack, unless overridden)
+    - $architecture      The spack architecture triple for the current system
+    - $arch              The spack architecture triple for the current system
+    - $platform          The spack platform for the current system
+    - $os                The OS of the current system
+    - $operating_system  The OS of the current system
+    - $target            The ISA target detected for the system
+    - $target_family     The family of the target detected for the system
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
@@ -314,8 +342,12 @@ def add_padding(path, length):
     return os.path.join(path, padding)
 
 
-def canonicalize_path(path):
+def canonicalize_path(path, default_wd=None):
     """Same as substitute_path_variables, but also take absolute path.
+
+    If the string is a yaml object with file annotations, make absolute paths
+    relative to that file's directory.
+    Otherwise, use ``default_wd`` if specified, otherwise ``os.getcwd()``
 
     Arguments:
         path (str): path being converted as needed
@@ -335,8 +367,9 @@ def canonicalize_path(path):
         if filename:
             path = os.path.join(filename, path)
         else:
-            path = os.path.abspath(path)
-            tty.debug("Using current working directory as base for abspath")
+            base = default_wd or os.getcwd()
+            path = os.path.join(base, path)
+            tty.debug("Using working directory %s as base for abspath" % base)
 
     return os.path.normpath(path)
 

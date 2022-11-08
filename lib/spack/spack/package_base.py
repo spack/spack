@@ -33,7 +33,7 @@ import six
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty, match_predicate, memoized, nullcontext
+from llnl.util.lang import classproperty, memoized, nullcontext
 from llnl.util.link_tree import LinkTree
 
 import spack.compilers
@@ -100,89 +100,35 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 is_windows = sys.platform == "win32"
 
 
+def deprecated_version(pkg, version):
+    """Return True if the version is deprecated, False otherwise.
+
+    Arguments:
+        pkg (PackageBase): The package whose version is to be checked.
+        version (str or spack.version.VersionBase): The version being checked
+    """
+    if not isinstance(version, VersionBase):
+        version = Version(version)
+
+    for k, v in pkg.versions.items():
+        if version == k and v.get("deprecated", False):
+            return True
+
+    return False
+
+
 def preferred_version(pkg):
     """
     Returns a sorted list of the preferred versions of the package.
 
     Arguments:
-        pkg (Package): The package whose versions are to be assessed.
+        pkg (PackageBase): The package whose versions are to be assessed.
     """
     # Here we sort first on the fact that a version is marked
     # as preferred in the package, then on the fact that the
     # version is not develop, then lexicographically
     key_fn = lambda v: (pkg.versions[v].get("preferred", False), not v.isdevelop(), v)
     return sorted(pkg.versions, key=key_fn).pop()
-
-
-class InstallPhase(object):
-    """Manages a single phase of the installation.
-
-    This descriptor stores at creation time the name of the method it should
-    search for execution. The method is retrieved at __get__ time, so that
-    it can be overridden by subclasses of whatever class declared the phases.
-
-    It also provides hooks to execute arbitrary callbacks before and after
-    the phase.
-    """
-
-    def __init__(self, name):
-        self.name = name
-        self.run_before = []
-        self.run_after = []
-
-    def __get__(self, instance, owner):
-        # The caller is a class that is trying to customize
-        # my behavior adding something
-        if instance is None:
-            return self
-        # If instance is there the caller wants to execute the
-        # install phase, thus return a properly set wrapper
-        phase = getattr(instance, self.name)
-
-        @functools.wraps(phase)
-        def phase_wrapper(spec, prefix):
-            # Check instance attributes at the beginning of a phase
-            self._on_phase_start(instance)
-            # Execute phase pre-conditions,
-            # and give them the chance to fail
-            for callback in self.run_before:
-                callback(instance)
-            phase(spec, prefix)
-            # Execute phase sanity_checks,
-            # and give them the chance to fail
-            for callback in self.run_after:
-                callback(instance)
-            # Check instance attributes at the end of a phase
-            self._on_phase_exit(instance)
-
-        return phase_wrapper
-
-    def _on_phase_start(self, instance):
-        # If a phase has a matching stop_before_phase attribute,
-        # stop the installation process raising a StopPhase
-        if getattr(instance, "stop_before_phase", None) == self.name:
-            from spack.build_environment import StopPhase
-
-            raise StopPhase("Stopping before '{0}' phase".format(self.name))
-
-    def _on_phase_exit(self, instance):
-        # If a phase has a matching last_phase attribute,
-        # stop the installation process raising a StopPhase
-        if getattr(instance, "last_phase", None) == self.name:
-            from spack.build_environment import StopPhase
-
-            raise StopPhase("Stopping at '{0}' phase".format(self.name))
-
-    def copy(self):
-        try:
-            return copy.deepcopy(self)
-        except TypeError:
-            # This bug-fix was not back-ported in Python 2.6
-            # http://bugs.python.org/issue1515
-            other = InstallPhase(self.name)
-            other.run_before.extend(self.run_before)
-            other.run_after.extend(self.run_after)
-            return other
 
 
 class WindowsRPathMeta(object):
@@ -194,11 +140,30 @@ class WindowsRPathMeta(object):
     they would a genuine RPATH, i.e. adding directories that contain
     runtime library dependencies"""
 
-    def add_search_paths(self, *path):
-        """Add additional rpaths that are not implicitly included in the search
-        scheme
+    def win_add_library_dependent(self):
+        """Return extra set of directories that require linking for package
+
+        This method should be overridden by packages that produce
+        binaries/libraries/python extension modules/etc that are installed into
+        directories outside a package's `bin`, `lib`, and `lib64` directories,
+        but still require linking against one of the packages dependencies, or
+        other components of the package itself. No-op otherwise.
+
+        Returns:
+            List of additional directories that require linking
         """
-        self.win_rpath.include_additional_link_paths(*path)
+        return []
+
+    def win_add_rpath(self):
+        """Return extra set of rpaths for package
+
+        This method should be overridden by packages needing to
+        include additional paths to be searched by rpath. No-op otherwise
+
+        Returns:
+            List of additional rpaths
+        """
+        return []
 
     def windows_establish_runtime_linkage(self):
         """Establish RPATH on Windows
@@ -206,6 +171,8 @@ class WindowsRPathMeta(object):
         Performs symlinking to incorporate rpath dependencies to Windows runtime search paths
         """
         if is_windows:
+            self.win_rpath.add_library_dependent(*self.win_add_library_dependent())
+            self.win_rpath.add_rpath(*self.win_add_rpath())
             self.win_rpath.establish_link()
 
 
@@ -351,23 +318,18 @@ class DetectablePackageMeta(object):
 
 
 class PackageMeta(
+    spack.builder.PhaseCallbacksMeta,
     DetectablePackageMeta,
     spack.directives.DirectiveMeta,
-    spack.mixins.PackageMixinsMeta,
     spack.multimethod.MultiMethodMeta,
 ):
     """
     Package metaclass for supporting directives (e.g., depends_on) and phases
     """
 
-    phase_fmt = "_InstallPhase_{0}"
-
-    # These are accessed only through getattr, by name
-    _InstallPhase_run_before = {}  # type: Dict[str, List[Callable]]
-    _InstallPhase_run_after = {}  # type: Dict[str, List[Callable]]
-
     def __new__(cls, name, bases, attr_dict):
         """
+        FIXME: REWRITE
         Instance creation is preceded by phase attribute transformations.
 
         Conveniently transforms attributes to permit extensible phases by
@@ -375,69 +337,9 @@ class PackageMeta(
         InstallPhase attributes in the class that will be initialized in
         __init__.
         """
-        if "phases" in attr_dict:
-            # Turn the strings in 'phases' into InstallPhase instances
-            # and add them as private attributes
-            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict["phases"]]
-            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict["phases"]):
-                attr_dict[phase_name] = InstallPhase(callback_name)
-            attr_dict["_InstallPhase_phases"] = _InstallPhase_phases
-
-        def _flush_callbacks(check_name):
-            # Name of the attribute I am going to check it exists
-            check_attr = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, check_attr)
-            if checks:
-                for phase_name, funcs in checks.items():
-                    phase_attr = PackageMeta.phase_fmt.format(phase_name)
-                    try:
-                        # Search for the phase in the attribute dictionary
-                        phase = attr_dict[phase_attr]
-                    except KeyError:
-                        # If it is not there it's in the bases
-                        # and we added a check. We need to copy
-                        # and extend
-                        for base in bases:
-                            phase = getattr(base, phase_attr, None)
-                            if phase is not None:
-                                break
-
-                        phase = attr_dict[phase_attr] = phase.copy()
-                    getattr(phase, check_name).extend(funcs)
-                # Clear the attribute for the next class
-                setattr(cls, check_attr, {})
-
-        _flush_callbacks("run_before")
-        _flush_callbacks("run_after")
-
-        # Reset names for packages that inherit from another
-        # package with a different name
         attr_dict["_name"] = None
 
         return super(PackageMeta, cls).__new__(cls, name, bases, attr_dict)
-
-    @staticmethod
-    def register_callback(check_type, *phases):
-        def _decorator(func):
-            attr_name = PackageMeta.phase_fmt.format(check_type)
-            check_list = getattr(PackageMeta, attr_name)
-            for item in phases:
-                checks = check_list.setdefault(item, [])
-                checks.append(func)
-            setattr(PackageMeta, attr_name, check_list)
-            return func
-
-        return _decorator
-
-
-def run_before(*phases):
-    """Registers a method of a package to be run before a given phase"""
-    return PackageMeta.register_callback("run_before", *phases)
-
-
-def run_after(*phases):
-    """Registers a method of a package to be run after a given phase"""
-    return PackageMeta.register_callback("run_after", *phases)
 
 
 def on_package_attributes(**attr_dict):
@@ -458,7 +360,9 @@ def on_package_attributes(**attr_dict):
             has_all_attributes = all([hasattr(instance, key) for key in attr_dict])
             if has_all_attributes:
                 has_the_right_values = all(
-                    [getattr(instance, key) == value for key, value in attr_dict.items()]
+                    [
+                        getattr(instance, key) == value for key, value in attr_dict.items()
+                    ]  # NOQA: ignore=E501
                 )
                 if has_the_right_values:
                     func(instance, *args, **kwargs)
@@ -660,6 +564,15 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: for immediate dependencies.
     transitive_rpaths = True
 
+    #: List of shared objects that should be replaced with a different library at
+    #: runtime. Typically includes stub libraries like libcuda.so. When linking
+    #: against a library listed here, the dependent will only record its soname
+    #: or filename, not its absolute path, so that the dynamic linker will search
+    #: for it. Note: accepts both file names and directory names, for example
+    #: ``["libcuda.so", "stubs"]`` will ensure libcuda.so and all libraries in the
+    #: stubs directory are not bound by path."""
+    non_bindable_shared_objects = []  # type: List[str]
+
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
     #: sanity checks fail.
@@ -669,13 +582,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
     sanity_check_is_dir = []  # type: List[str]
-
-    #: List of glob expressions. Each expression must either be
-    #: absolute or relative to the package source path.
-    #: Matching artifacts found at the end of the build process will be
-    #: copied in the same directory tree as _spack_build_logfile and
-    #: _spack_build_envfile.
-    archive_files = []  # type: List[str]
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
@@ -1021,7 +927,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
             version (spack.version.Version): the version for which a URL is sought
         """
         uf = None
-        if type(self).url_for_version != Package.url_for_version:
+        if type(self).url_for_version != PackageBase.url_for_version:
             uf = self.url_for_version
         return self._implement_all_urls_for_version(version, uf)
 
@@ -1741,7 +1647,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 from_local_sources = env and env.is_develop(self.spec)
                 if self.has_code and not self.spec.external and not from_local_sources:
                     message = "Missing a source id for {s.name}@{s.version}"
-                    tty.warn(message.format(s=self))
+                    tty.debug(message.format(s=self))
                 hash_content.append("".encode("utf-8"))
             else:
                 hash_content.append(source_id.encode("utf-8"))
@@ -1942,9 +1848,9 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                 even with exceptions.
             restage (bool): Force spack to restage the package source.
             skip_patch (bool): Skip patch stage of build if True.
-            stop_before (InstallPhase): stop execution before this
+            stop_before (str): stop execution before this
                 installation phase (or None)
-            stop_at (InstallPhase): last installation phase to be executed
+            stop_at (str): last installation phase to be executed
                 (or None)
             tests (bool or list or set): False to run no tests, True to test
                 all packages, or a list of package names to run tests for some
@@ -2174,46 +2080,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         return True
 
-    def sanity_check_prefix(self):
-        """This function checks whether install succeeded."""
-
-        def check_paths(path_list, filetype, predicate):
-            if isinstance(path_list, six.string_types):
-                path_list = [path_list]
-
-            for path in path_list:
-                abs_path = os.path.join(self.prefix, path)
-                if not predicate(abs_path):
-                    raise InstallError(
-                        "Install failed for %s. No such %s in prefix: %s"
-                        % (self.name, filetype, path)
-                    )
-
-        check_paths(self.sanity_check_is_file, "file", os.path.isfile)
-        check_paths(self.sanity_check_is_dir, "directory", os.path.isdir)
-
-        ignore_file = match_predicate(spack.store.layout.hidden_file_regexes)
-        if all(map(ignore_file, os.listdir(self.prefix))):
-            raise InstallError("Install failed for %s.  Nothing was installed!" % self.name)
-
-    def apply_macos_rpath_fixups(self):
-        """On Darwin, make installed libraries more easily relocatable.
-
-        Some build systems (handrolled, autotools, makefiles) can set their own
-        rpaths that are duplicated by spack's compiler wrapper. This fixup
-        interrogates, and postprocesses if necessary, all libraries installed
-        by the code.
-
-        It should be added as a @run_after to packaging systems (or individual
-        packages) that do not install relocatable libraries by default.
-        """
-        if "platform=darwin" not in self.spec:
-            return
-
-        from spack.relocate import fixup_macos_rpaths
-
-        fixup_macos_rpaths(self.spec)
-
     @property
     def build_log_path(self):
         """
@@ -2251,19 +2117,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         return None, None, flags
 
-    def setup_build_environment(self, env):
-        """Sets up the build environment for a package.
-
-        This method will be called before the current package prefix exists in
-        Spack's store.
-
-        Args:
-            env (spack.util.environment.EnvironmentModifications): environment
-                modifications to be applied when the package is built. Package authors
-                can call methods on it to alter the build environment.
-        """
-        pass
-
     def setup_run_environment(self, env):
         """Sets up the run environment for a package.
 
@@ -2271,37 +2124,6 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
             env (spack.util.environment.EnvironmentModifications): environment
                 modifications to be applied when the package is run. Package authors
                 can call methods on it to alter the run environment.
-        """
-        pass
-
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        """Sets up the build environment of packages that depend on this one.
-
-        This is similar to ``setup_build_environment``, but it is used to
-        modify the build environments of packages that *depend* on this one.
-
-        This gives packages like Python and others that follow the extension
-        model a way to implement common environment or compile-time settings
-        for dependencies.
-
-        This method will be called before the dependent package prefix exists
-        in Spack's store.
-
-        Examples:
-            1. Installing python modules generally requires ``PYTHONPATH``
-            to point to the ``lib/pythonX.Y/site-packages`` directory in the
-            module's install prefix. This method could be used to set that
-            variable.
-
-        Args:
-            env (spack.util.environment.EnvironmentModifications): environment
-                modifications to be applied when the dependent package is built.
-                Package authors can call methods on it to alter the build environment.
-
-            dependent_spec (spack.spec.Spec): the spec of the dependent package
-                about to be built. This allows the extendee (self) to query
-                the dependent's state. Note that *this* package's spec is
-                available as ``self.spec``
         """
         pass
 
@@ -2491,7 +2313,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     def do_uninstall(self, force=False):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
-        Package.uninstall_by_spec(self.spec, force)
+        PackageBase.uninstall_by_spec(self.spec, force)
 
     def do_deprecate(self, deprecator, link_fn):
         """Deprecate this package in favor of deprecator spec"""
@@ -2543,7 +2365,7 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
             deprecated.package.do_deprecate(deprecator, link_fn)
 
         # Now that we've handled metadata, uninstall and replace with link
-        Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+        PackageBase.uninstall_by_spec(spec, force=True, deprecator=deprecator)
         link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
@@ -2779,12 +2601,17 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
-        rpaths = [self.prefix.lib, self.prefix.lib64]
         deps = self.spec.dependencies(deptype="link")
-        rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+
+        # on Windows, libraries of runtime interest are typically
+        # stored in the bin directory
         if is_windows:
+            rpaths = [self.prefix.bin]
             rpaths.extend(d.prefix.bin for d in deps if os.path.isdir(d.prefix.bin))
+        else:
+            rpaths = [self.prefix.lib, self.prefix.lib64]
+            rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
+            rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
         return rpaths
 
     @property
@@ -2794,21 +2621,25 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    def _run_test_callbacks(self, method_names, callback_type="install"):
+    @property
+    def builder(self):
+        return spack.builder.create(self)
+
+    @staticmethod
+    def run_test_callbacks(builder, method_names, callback_type="install"):
         """Tries to call all of the listed methods, returning immediately
         if the list is None."""
-        if method_names is None:
+        if not builder.pkg.run_tests or method_names is None:
             return
 
         fail_fast = spack.config.get("config:fail_fast", False)
-
-        with self._setup_test(verbose=False, externals=False) as logger:
+        with builder.pkg._setup_test(verbose=False, externals=False) as logger:
             # Report running each of the methods in the build log
             print_test_message(logger, "Running {0}-time tests".format(callback_type), True)
 
             for name in method_names:
                 try:
-                    fn = getattr(self, name)
+                    fn = getattr(builder, name)
 
                     msg = ("RUN-TESTS: {0}-time tests [{1}]".format(callback_type, name),)
                     print_test_message(logger, msg, True)
@@ -2818,27 +2649,13 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
                     msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
                     print_test_message(logger, msg, True)
 
-                    self.test_failures.append((e, msg))
+                    builder.pkg.test_failures.append((e, msg))
                     if fail_fast:
                         break
 
             # Raise any collected failures here
-            if self.test_failures:
-                raise TestFailure(self.test_failures)
-
-    @on_package_attributes(run_tests=True)
-    def _run_default_build_time_test_callbacks(self):
-        """Tries to call all the methods that are listed in the attribute
-        ``build_time_test_callbacks`` if ``self.run_tests is True``.
-        """
-        self._run_test_callbacks(self.build_time_test_callbacks, "build")
-
-    @on_package_attributes(run_tests=True)
-    def _run_default_install_time_test_callbacks(self):
-        """Tries to call all the methods that are listed in the attribute
-        ``install_time_test_callbacks`` if ``self.run_tests is True``.
-        """
-        self._run_test_callbacks(self.install_time_test_callbacks, "install")
+            if builder.pkg.test_failures:
+                raise TestFailure(builder.pkg.test_failures)
 
 
 def has_test_method(pkg):
@@ -2960,37 +2777,6 @@ def test_process(pkg, kwargs):
 inject_flags = PackageBase.inject_flags
 env_flags = PackageBase.env_flags
 build_system_flags = PackageBase.build_system_flags
-
-
-class BundlePackage(PackageBase):
-    """General purpose bundle, or no-code, package class."""
-
-    #: There are no phases by default but the property is required to support
-    #: post-install hooks (e.g., for module generation).
-    phases = []  # type: List[str]
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
-    build_system_class = "BundlePackage"
-
-    #: Bundle packages do not have associated source or binary code.
-    has_code = False
-
-
-class Package(PackageBase):
-    """General purpose class with a single ``install``
-    phase that needs to be coded by packagers.
-    """
-
-    #: The one and only phase
-    phases = ["install"]
-    #: This attribute is used in UI queries that require to know which
-    #: build-system class we are using
-    build_system_class = "Package"
-    # This will be used as a registration decorator in user
-    # packages, if need be
-    run_after("install")(PackageBase.sanity_check_prefix)
-    # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    run_after("install")(PackageBase.apply_macos_rpath_fixups)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

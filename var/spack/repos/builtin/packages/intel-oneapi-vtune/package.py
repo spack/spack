@@ -29,6 +29,12 @@ class IntelOneapiVtune(IntelOneApiPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.4.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19027/l_oneapi_vtune_p_2022.4.1.16919_offline.sh",
+            sha256="eb4b4da61eea52c08fc139dbf4630e2c52cbcfaea8f1376c545c0863839366d1",
+            expand=False,
+        )
+        version(
             "2022.4.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18888/l_oneapi_vtune_p_2022.4.0.8705_offline.sh",
             sha256="8c5a144ed61ef9addaa41abe7fbfceeedb6a8fe1c5392e3e265aada1f545b0fe",

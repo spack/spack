@@ -20,7 +20,7 @@ from llnl.util.filesystem import (
 )
 from llnl.util.lang import dedupe, match_predicate
 
-from spack.build_environment import dso_suffix
+from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
@@ -44,6 +44,8 @@ class Python(Package):
     install_targets = ["install"]
     build_targets = []  # type: List[str]
 
+    version("3.10.8", sha256="f400c3fb394b8bef1292f6dc1292c5fadc3533039a5bc0c3e885f3e16738029a")
+    version("3.10.7", sha256="1b2e4e2df697c52d36731666979e648beeda5941d0f95740aafbf4163e5cc126")
     version("3.10.6", sha256="848cb06a5caa85da5c45bd7a9221bb821e33fc2bdcba088c127c58fad44e6343")
     version("3.10.5", sha256="18f57182a2de3b0be76dfc39fdcfd28156bb6dd23e5f08696f7492e9e3d0bf2d")
     version("3.10.4", sha256="f3bcc65b1d5f1dc78675c746c98fcee823c038168fc629c5935b044d0911ad28")
@@ -52,10 +54,12 @@ class Python(Package):
     version("3.10.1", sha256="b76117670e7c5064344b9c138e141a377e686b9063f3a8a620ff674fa8ec90d3")
     version("3.10.0", sha256="c4e0cbad57c90690cb813fb4663ef670b4d0f587d8171e2c42bd4c9245bd2758")
     version(
-        "3.9.13",
-        sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44",
+        "3.9.15",
+        sha256="48d1ccb29d5fbaf1fb8f912271d09f7450e426d4dfe95978ef6aaada70ece4d8",
         preferred=True,
     )
+    version("3.9.14", sha256="9201836e2c16361b2b7408680502393737d44f227333fe2e5729c7d5f6041675")
+    version("3.9.13", sha256="829b0d26072a44689a6b0810f5b4a3933ee2a0b8a4bfc99d7c5893ffd4f97c44")
     version("3.9.12", sha256="70e08462ebf265012bd2be88a63d2149d880c73e53f1712b7bbbe93750560ae8")
     version("3.9.11", sha256="3442400072f582ac2f0df30895558f08883b416c8c7877ea55d40d00d8a93112")
     version("3.9.10", sha256="1aa9c0702edbae8f6a2c95f70a49da8420aaa76b7889d3419c186bfc8c0e571e")
@@ -69,6 +73,8 @@ class Python(Package):
     version("3.9.2", sha256="7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519")
     version("3.9.1", sha256="29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117")
     version("3.9.0", sha256="df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8")
+    version("3.8.15", sha256="924d46999df82aa2eaa1de5ca51d6800ffb56b4bf52486a28f40634e3362abc4")
+    version("3.8.14", sha256="41f959c480c59211feb55d5a28851a56c7e22d02ef91035606ebb21011723c31")
     version("3.8.13", sha256="903b92d76354366b1d9c4434d0c81643345cef87c1600adfa36095d7b00eede4")
     version("3.8.12", sha256="316aa33f3b7707d041e73f246efedb297a70898c4b91f127f66dc8d80c596f1a")
     version("3.8.11", sha256="b77464ea80cec14581b86aeb7fb2ff02830e0abc7bcdc752b7b4bdfcd8f3e393")
@@ -83,6 +89,8 @@ class Python(Package):
     version("3.8.2", sha256="e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561")
     version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
     version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
+    version("3.7.15", sha256="cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436")
+    version("3.7.14", sha256="82b2abf8978caa61a9011d166eede831b32de9cbebc0db8162900fa23437b709")
     version("3.7.13", sha256="e405417f50984bc5870c7e7a9f9aeb93e9d270f5ac67f667a0cd3a09439682b5")
     version("3.7.12", sha256="33b4daaf831be19219659466d12645f87ecec6eb21d4d9f9711018a7b66cce46")
     version("3.7.11", sha256="b4fba32182e16485d0a6022ba83c9251e6a1c14676ec243a9a07d3722cd4661a")
@@ -791,7 +799,7 @@ class Python(Package):
 
         if "+dbm" in spec:
             # Default order is ndbm:gdbm:bdb
-            config_args.append("--with-dbmliborder=gdbm:bdb:ndbm")
+            config_args.append("--with-dbmliborder=gdbm")
         else:
             config_args.append("--with-dbmliborder=")
 
@@ -1105,10 +1113,12 @@ config.update(get_paths())
         )
 
         dag_hash = self.spec.dag_hash()
-
+        lib_prefix = "lib" if not is_windows else ""
         if dag_hash not in self._config_vars:
             # Default config vars
             version = self.version.up_to(2)
+            if is_windows:
+                version = str(version).split(".")[0]
             config = {
                 # get_config_vars
                 "BINDIR": self.prefix.bin,
@@ -1121,8 +1131,8 @@ config.update(get_paths())
                 "LIBPL": self.prefix.lib.join("python{0}")
                 .join("config-{0}-{1}")
                 .format(version, sys.platform),
-                "LDLIBRARY": "libpython{}.{}".format(version, dso_suffix),
-                "LIBRARY": "libpython{}.a".format(version),
+                "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
+                "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
                 "LDCXXSHARED": "c++",
                 "PYTHONFRAMEWORKPREFIX": "/System/Library/Frameworks",
@@ -1210,8 +1220,16 @@ config.update(get_paths())
 
         # Windows libraries are installed directly to BINDIR
         win_bin_dir = self.config_vars["BINDIR"]
+        win_root_dir = self.config_vars["prefix"]
 
-        directories = [libdir, libpl, frameworkprefix, macos_developerdir, win_bin_dir]
+        directories = [
+            libdir,
+            libpl,
+            frameworkprefix,
+            macos_developerdir,
+            win_bin_dir,
+            win_root_dir,
+        ]
 
         # The Python shipped with Xcode command line tools isn't in any of these locations
         for subdir in ["lib", "lib64"]:
@@ -1226,17 +1244,36 @@ config.update(get_paths())
     @property
     def libs(self):
         py_version = self.version.up_to(2)
-
+        if is_windows:
+            py_version = str(py_version).replace(".", "")
+        lib_prefix = "lib" if not is_windows else ""
         # The values of LDLIBRARY and LIBRARY aren't reliable. Intel Python uses a
         # static binary but installs shared libraries, so sysconfig reports
         # libpythonX.Y.a but only libpythonX.Y.so exists. So we add our own paths, too.
-        shared_libs = [
-            self.config_vars["LDLIBRARY"],
-            "libpython{}.{}".format(py_version, dso_suffix),
+
+        # With framework python on macOS, self.config_vars["LDLIBRARY"] can point
+        # to a library that is not linkable because it does not have the required
+        # suffix of a shared library (it is called "Python" without extention).
+        # The linker then falls back to libPython.tbd in the default macOS
+        # software tree, which security settings prohibit to link against
+        # (your binary is not an allowed client of /path/to/libPython.tbd).
+        # To avoid this, we replace the entry in config_vars with a default value.
+        file_extension_shared = os.path.splitext(self.config_vars["LDLIBRARY"])[-1]
+        if file_extension_shared == "":
+            shared_libs = []
+        else:
+            shared_libs = [self.config_vars["LDLIBRARY"]]
+        shared_libs += [
+            "{}python{}.{}".format(lib_prefix, py_version, dso_suffix),
         ]
-        static_libs = [
-            self.config_vars["LIBRARY"],
-            "libpython{}.a".format(py_version),
+        # Like LDLIBRARY for Python on Mac OS, LIBRARY may refer to an un-linkable object
+        file_extension_static = os.path.splitext(self.config_vars["LIBRARY"])[-1]
+        if file_extension_static == "":
+            static_libs = []
+        else:
+            static_libs = [self.config_vars["LIBRARY"]]
+        static_libs += [
+            "{}python{}.{}".format(lib_prefix, py_version, stat_suffix),
         ]
 
         # The +shared variant isn't reliable, as `spack external find` currently can't
@@ -1246,6 +1283,7 @@ config.update(get_paths())
             candidates = shared_libs + static_libs
         else:
             candidates = static_libs + shared_libs
+
         candidates = dedupe(candidates)
 
         for candidate in candidates:

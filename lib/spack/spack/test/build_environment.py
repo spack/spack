@@ -177,6 +177,14 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
     assert os.environ["ANOTHER_VAR"] == "THIS_IS_SET"
 
 
+def test_setup_dependent_package_inherited_modules(
+    config, working_env, mock_packages, install_mockery, mock_fetch
+):
+    # This will raise on regression
+    s = spack.spec.Spec("cmake-client-inheritor").concretized()
+    s.package.do_install()
+
+
 @pytest.mark.parametrize(
     "initial,modifications,expected",
     [
@@ -457,7 +465,7 @@ def test_setting_dtags_based_on_config(config_setting, expected_flag, config, mo
     pkg = s.package
 
     env = EnvironmentModifications()
-    with spack.config.override("config:shared_linking", config_setting):
+    with spack.config.override("config:shared_linking", {"type": config_setting, "bind": False}):
         spack.build_environment.set_compiler_environment_variables(pkg, env)
         modifications = env.group_by_name()
         assert "SPACK_DTAGS_TO_STRIP" in modifications

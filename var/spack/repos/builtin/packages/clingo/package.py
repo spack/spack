@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.compiler import UnsupportedCompilerFlag
 from spack.package import *
 
@@ -45,16 +47,26 @@ class Clingo(CMakePackage):
 
     with when("@spack,master"):
         depends_on("re2c@0.13:", type="build")
-        depends_on("bison@2.5:", type="build")
+        depends_on("bison@2.5:", type="build", when="platform=linux")
+        depends_on("bison@2.5:", type="build", when="platform=darwin")
+        depends_on("bison@2.5:", type="build", when="platform=cray")
+
+    with when("platform=windows"):
+        depends_on("re2c@0.13:", type="build")
+        depends_on("winbison@2.4.12:")
 
     with when("+python"):
         extends("python")
         depends_on("python", type=("build", "link", "run"))
         # Clingo 5.5.0 supports Python 3.6 or later and needs CFFI
         depends_on("python@3.6.0:", type=("build", "link", "run"), when="@5.5.0:")
-        depends_on("py-cffi", type=("build", "run"), when="@5.5.0:")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=darwin")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=linux")
+        depends_on("py-cffi", type=("build", "run"), when="@5.5.0: platform=cray")
 
     patch("python38.patch", when="@5.3:5.4.0")
+    patch("size-t.patch", when="%msvc")
+    patch("vs2022.patch", when="%msvc@19.30:")
 
     def patch(self):
         # Doxygen is optional but can't be disabled with a -D, so patch
@@ -109,3 +121,9 @@ class Clingo(CMakePackage):
             args += ["-DCLINGO_BUILD_WITH_PYTHON=OFF"]
 
         return args
+
+    def win_add_library_dependent(self):
+        if "+python" in self.spec:
+            return [os.path.join(self.prefix, self.spec["python"].package.platlib)]
+        else:
+            return []
