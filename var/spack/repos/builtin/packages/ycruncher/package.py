@@ -5,6 +5,7 @@
 
 from spack.package import *
 
+
 class Ycruncher(Package):
     """
     y-cruncher is a program that can compute Pi and other constants to
