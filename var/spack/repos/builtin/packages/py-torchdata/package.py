@@ -24,7 +24,7 @@ class PyTorchdata(PythonPackage):
     # https://github.com/pytorch/data#version-compatibility
     depends_on("python@3.7:3.10", type=("build", "run"))
     depends_on("py-torch@master", when="@main", type=("build", "run"))
-    depends_on("py-torch@1.12.1", when="@0.5.0", type=("build", "run"))  # ?
+    depends_on("py-torch@1.13.0", when="@0.5.0", type=("build", "run"))
     depends_on("py-torch@1.12.1", when="@0.4.1", type=("build", "run"))
     depends_on("py-torch@1.12.0", when="@0.4.0", type=("build", "run"))
     depends_on("py-torch@1.11.0", when="@0.3.0", type=("build", "run"))
