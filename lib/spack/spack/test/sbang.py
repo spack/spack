@@ -268,6 +268,13 @@ def test_shebang_handles_non_writable_files(script_dir, sbang_line):
 
 @pytest.fixture(scope="function")
 def configure_group_perms():
+    # On systems with remote groups, the primary user group may be remote
+    # and grp does not act on remote groups.
+    # To ensure we find a group we can operate on, we get take the first group
+    # listed which has the current user as a member.
+    gid = fs.group_ids(os.getuid())[0]
+    group_name = grp.getgrgid(gid).gr_name
+
     conf = syaml.load_config(
         """\
 all:
@@ -276,7 +283,7 @@ all:
     write: group
     group: {0}
 """.format(
-            grp.getgrgid(os.getegid()).gr_name
+            group_name
         )
     )
     spack.config.set("packages", conf, scope="user")

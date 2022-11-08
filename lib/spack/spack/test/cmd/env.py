@@ -18,6 +18,7 @@ import llnl.util.link_tree
 import spack.cmd.env
 import spack.environment as ev
 import spack.environment.shell
+import spack.error
 import spack.modules
 import spack.paths
 import spack.repo
@@ -2403,7 +2404,9 @@ def test_duplicate_packages_raise_when_concretizing_together():
     e.add("mpileaks~opt")
     e.add("mpich")
 
-    with pytest.raises(ev.SpackEnvironmentError, match=r"cannot contain more"):
+    with pytest.raises(
+        spack.error.UnsatisfiableSpecError, match=r"relax the concretizer strictness"
+    ):
         e.concretize()
 
 

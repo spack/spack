@@ -19,7 +19,7 @@ new Spack packages for.
 Phases
 ^^^^^^
 
-The ``RPackage`` base class has a single phase:
+The ``RBuilder`` and ``RPackage`` base classes have a single phase:
 
 #. ``install`` - install the package
 

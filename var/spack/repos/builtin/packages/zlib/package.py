@@ -9,10 +9,12 @@
 import glob
 import os
 
+import spack.build_systems.generic
+import spack.build_systems.makefile
 from spack.package import *
 
 
-class Zlib(Package):
+class Zlib(MakefilePackage, Package):
     """A free, general-purpose, legally unencumbered lossless
     data-compression library.
     """
@@ -43,9 +45,13 @@ class Zlib(Package):
         deprecated=True,
     )
 
+    build_system("makefile", conditional("generic", when="platform=windows"), default="makefile")
+
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enables the build of shared libraries.")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+
+    conflicts("build_system=makefile", when="platform=windows")
 
     patch("w_patch.patch", when="@1.2.11%cce")
     patch("configure-cc.patch", when="@1.2.12")
@@ -55,11 +61,31 @@ class Zlib(Package):
         shared = "+shared" in self.spec
         return find_libraries(["libz"], root=self.prefix, recursive=True, shared=shared)
 
-    def win_install(self):
-        build_dir = self.stage.source_path
-        install_tree = {}
-        install_tree["bin"] = glob.glob(os.path.join(build_dir, "*.dll"))
-        install_tree["lib"] = glob.glob(os.path.join(build_dir, "*.lib"))
+
+class SetupEnvironment(object):
+    def setup_build_environment(self, env):
+        if "+pic" in self.spec:
+            env.append_flags("CFLAGS", self.pkg.compiler.cc_pic_flag)
+        if "+optimize" in self.spec:
+            env.append_flags("CFLAGS", "-O2")
+
+
+class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
+    def edit(self, pkg, spec, prefix):
+        config_args = []
+        if "~shared" in self.spec:
+            config_args.append("--static")
+        configure("--prefix={0}".format(prefix), *config_args)
+
+
+class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):
+    def install(self, spec, prefix):
+        nmake("-f" "win32\\Makefile.msc")
+        build_dir = self.pkg.stage.source_path
+        install_tree = {
+            "bin": glob.glob(os.path.join(build_dir, "*.dll")),
+            "lib": glob.glob(os.path.join(build_dir, "*.lib")),
+        }
         compose_src_path = lambda x: os.path.join(build_dir, x)
         install_tree["include"] = [compose_src_path("zlib.h"), compose_src_path("zconf.h")]
         # Windows path seps are fine here as this method is Windows specific.
@@ -76,24 +102,3 @@ class Zlib(Package):
                     install(file, install_dst)
 
         installtree(self.prefix, install_tree)
-
-    def setup_build_environment(self, env):
-        if "+pic" in self.spec:
-            env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
-        if "+optimize" in self.spec:
-            env.append_flags("CFLAGS", "-O2")
-
-    def install(self, spec, prefix):
-        if "platform=windows" in self.spec:
-            nmake("-f" "win32\\Makefile.msc")
-            self.win_install()
-        else:
-            config_args = []
-            if "~shared" in spec:
-                config_args.append("--static")
-            configure("--prefix={0}".format(prefix), *config_args)
-
-            make()
-            if self.run_tests:
-                make("check")
-            make("install")
