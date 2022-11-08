@@ -62,6 +62,7 @@ class Mapl(CMakePackage):
     variant("shared", default=True)
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=False, description="Use ExtData2G")
+    variant("buildexe", default=True, description="Build pfio test executables")
 
     depends_on("cmake@3.17:")
     depends_on("mpi")
