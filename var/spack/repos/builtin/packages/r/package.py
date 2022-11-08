@@ -107,8 +107,6 @@ class R(AutotoolsPackage):
         url = "https://cloud.r-project.org/src/base"
         return url + "/R-%s/R-%s.tar.gz" % (version.up_to(1), version)
 
-    filter_compiler_wrappers("Makeconf", relative_root=os.path.join("rlib", "R", "etc"))
-
     @property
     def etcdir(self):
         return join_path(prefix, "rlib", "R", "etc")
@@ -186,6 +184,9 @@ class R(AutotoolsPackage):
         src_makeconf = join_path(self.etcdir, "Makeconf")
         dst_makeconf = join_path(self.etcdir, "Makeconf.spack")
         install(src_makeconf, dst_makeconf)
+
+    # To respect order of execution, we should filter after we made the copy above
+    filter_compiler_wrappers("Makeconf", relative_root=os.path.join("rlib", "R", "etc"))
 
     # ========================================================================
     # Set up environment to make install easy for R extensions.
