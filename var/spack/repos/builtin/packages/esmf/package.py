@@ -98,6 +98,7 @@ class Esmf(MakefilePackage):
     depends_on("lapack@3:", when="+external-lapack")
     depends_on("netcdf-c@3.6:", when="+netcdf")
     depends_on("netcdf-fortran@3.6:", when="+netcdf")
+    depends_on("hdf5+hl", when="+netcdf^netcdf-fortran~shared")
     depends_on("parallel-netcdf@1.2.0:", when="+pnetcdf")
     depends_on("xerces-c@3.1.0:", when="+xerces")
     depends_on("parallelio@2.5.8:", when="+parallelio")
@@ -310,6 +311,14 @@ class Esmf(MakefilePackage):
             # NetCDF format.
             os.environ["ESMF_NETCDF"] = "nc-config"
             os.environ["ESMF_NFCONFIG"] = "nf-config"
+
+            if spec["hdf5"].satisfies("~shared"):
+                ESMF_NETCDF_LIBS = [spec["netcdf-c"].libs.link_flags]
+                ESMF_NETCDF_LIBS.append(spec["netcdf-fortran"].libs.link_flags)
+                ESMF_NETCDF_LIBS.append(spec["hdf5"].libs.link_flags)
+                ESMF_NETCDF_LIBS.append(spec["hdf5:hl"].libs.link_flags)
+                ESMF_NETCDF_LIBS.append(spec["zlib"].libs.link_flags)
+                os.environ["ESMF_NETCDF_LIBS"] = " ".join(ESMF_NETCDF_LIBS)
 
         ###################
         # Parallel-NetCDF #
