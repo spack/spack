@@ -35,5 +35,5 @@ class PyMkdocs(PythonPackage):
     depends_on("py-importlib-metadata@4.3:", type=("build", "run"))
     depends_on("py-packaging@20.5:", type=("build", "run"))
     depends_on("py-mergedeep@1.3.4:", type=("build", "run"))
-    depends_on("py-colorama@0.4:", type=("build", "run"), when="platform=win32")
+    depends_on("py-colorama@0.4:", type=("build", "run"), when="platform=windows")
     depends_on("py-babel@2.9.0:", type=("build", "run"), when="@1.4.2:")
