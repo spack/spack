@@ -761,8 +761,6 @@ def test_keep_and_remove(wrapper_environment):
 def test_flag_modification(cfg_override, initial, expected, must_be_gone):
     spack.config.add(cfg_override)
     env = spack.build_environment.clean_environment()
-    s = spack.spec.Spec("zlib")
-    s.concretize()
 
     keep_werror = spack.config.get("config:flags:keep_werror")
     spack.build_environment._add_werror_handling(keep_werror, env)
