@@ -302,88 +302,31 @@ microarchitectures considered during the solve are constrained to be compatible 
 host Spack is currently running on. For instance, if this option is set to ``true``, a
 user cannot concretize for ``target=icelake`` while running on an Haswell node.
 
-.. _package-preferences:
-
--------------------
-Package Preferences
--------------------
-
-Spack can be configured to prefer certain compilers, package
-versions, dependencies, and variants during concretization.
-The preferred configuration can be controlled via the
-``~/.spack/packages.yaml`` file for user configurations, or the
-``etc/spack/packages.yaml`` site configuration.
-
-Here's an example ``packages.yaml`` file that sets preferred packages:
-
-.. code-block:: yaml
-
-   packages:
-     opencv:
-       compiler: [gcc@4.9]
-       variants: +debug
-     gperftools:
-       version: [2.2, 2.4, 2.3]
-     all:
-       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
-       target: [sandybridge]
-       providers:
-         mpi: [mvapich2, mpich, openmpi]
-
-At a high level, this example is specifying how packages should be
-concretized.  The opencv package should prefer using GCC 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich2 for
-its MPI and GCC 4.4.7 (except for opencv, which overrides this by preferring GCC 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
-
-Each ``packages.yaml`` file begins with the string ``packages:`` and
-package names are specified on the next level. The special string ``all``
-applies settings to *all* packages. Underneath each package name is one
-or more components: ``compiler``, ``variants``, ``version``,
-``providers``, and ``target``.  Each component has an ordered list of
-spec ``constraints``, with earlier entries in the list being preferred
-over later entries.
-
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depend_on`` (e.g, MPI) and a list of rules for fulfilling that
-dependency.
-
 .. _package-requirements:
 
 --------------------
 Package Requirements
 --------------------
 
-You can use the configuration to force the concretizer to choose
-specific properties for packages when building them. Like preferences,
-these are only applied when the package is required by some other
-request (e.g. if the package is needed as a dependency of a
-request to ``spack install``).
+Spack can be configured to always use certain compilers, package
+versions, and variants during concretization through package
+requirements.
 
-An example of where this is useful is if you have a package that
-is normally built as a dependency but only under certain circumstances
-(e.g. only when a variant on a dependent is active): you can make
-sure that it always builds the way you want it to; this distinguishes
-package configuration requirements from constraints that you add to
-``spack install`` or to environments (in those cases, the associated
-packages are always built).
+Package requirements are useful when you find yourself repeatedly
+specifying the same constraints on the command line, and wish that
+Spack respects these constraints whether you mention them explicitly
+or not. Another use case is specifying constraints that should apply
+to all root specs in an environment, without having to repeat the
+constraint everywhere.
 
-The following is an example of how to enforce package properties in
-``packages.yaml``:
+Apart from that, requirements config is more flexible than constraints
+on the command line, because it can specify constraints on packages
+*when they occur* as a dependency. In contrast, on the command line it
+is not possible to specify constraints on dependencies while also keeping
+those dependencies optional.
+
+The package requirements configuration is specified in ``packages.yaml``
+keyed by package name:
 
 .. code-block:: yaml
 
@@ -452,15 +395,15 @@ under ``all`` are disregarded. For example, with a configuration like this:
      cmake:
        require: '%gcc'
 
-Spack requires ``cmake`` to use ``gcc`` and all other nodes (including cmake dependencies)
-to use ``clang``.
+Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
+dependencies) to use ``clang``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting requirements on virtual specs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A requirement on a virtual spec applies whenever that virtual is present in the DAG. This
-can be useful for fixing which virtual provider you want to use:
+A requirement on a virtual spec applies whenever that virtual is present in the DAG.
+This can be useful for fixing which virtual provider you want to use:
 
 .. code-block:: yaml
 
@@ -470,8 +413,8 @@ can be useful for fixing which virtual provider you want to use:
 
 With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
 
-Requirements on the virtual spec and on the specific provider are both applied, if present. For
-instance with a configuration like:
+Requirements on the virtual spec and on the specific provider are both applied, if
+present. For instance with a configuration like:
 
 .. code-block:: yaml
 
@@ -482,6 +425,66 @@ instance with a configuration like:
        require: '~cuda'
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
+
+.. _package-preferences:
+
+-------------------
+Package Preferences
+-------------------
+
+In some cases package requirements can be too strong, and package
+preferences are the better option. Package preferences do not impose
+constraints on packages for particular versions or variants values,
+they rather only set defaults -- the concretizer is free to change
+them if it must due to other constraints. Also note that package
+preferences are of lower priority than reuse of already installed
+packages.
+
+Here's an example ``packages.yaml`` file that sets preferred packages:
+
+.. code-block:: yaml
+
+   packages:
+     opencv:
+       compiler: [gcc@4.9]
+       variants: +debug
+     gperftools:
+       version: [2.2, 2.4, 2.3]
+     all:
+       compiler: [gcc@4.4.7, 'gcc@4.6:', intel, clang, pgi]
+       target: [sandybridge]
+       providers:
+         mpi: [mvapich2, mpich, openmpi]
+
+At a high level, this example is specifying how packages are preferably
+concretized.  The opencv package should prefer using GCC 4.9 and
+be built with debug options.  The gperftools package should prefer version
+2.2 over 2.4.  Every package on the system should prefer mvapich2 for
+its MPI and GCC 4.4.7 (except for opencv, which overrides this by preferring GCC 4.9).
+These options are used to fill in implicit defaults.  Any of them can be overwritten
+on the command line if explicitly requested.
+
+Package preferences accept the follow keys or components under
+the specific package (or ``all``) section: ``compiler``, ``variants``,
+``version``, ``providers``, and ``target``.  Each component has an
+ordered list of spec ``constraints``, with earlier entries in the
+list being preferred over later entries.
+
+Sometimes a package installation may have constraints that forbid
+the first concretization rule, in which case Spack will use the first
+legal concretization rule.  Going back to the example, if a user
+requests gperftools 2.3 or later, then Spack will install version 2.4
+as the 2.4 version of gperftools is preferred over 2.3.
+
+An explicit concretization rule in the preferred section will always
+take preference over unlisted concretizations.  In the above example,
+xlc isn't listed in the compiler list.  Every listed compiler from
+gcc to pgi will thus be preferred over the xlc compiler.
+
+The syntax for the ``provider`` section differs slightly from other
+concretization rules.  A provider lists a value that packages may
+``depends_on`` (e.g, MPI) and a list of rules for fulfilling that
+dependency.
 
 .. _package_permissions:
 
