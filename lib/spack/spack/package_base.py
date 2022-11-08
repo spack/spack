@@ -27,7 +27,7 @@ import time
 import traceback
 import types
 import warnings
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Type  # novm
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -547,7 +547,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     use_xcode = False
 
     #: Keep -Werror flags, matches config:flags:keep_werror to override config
-    keep_werror = None  # type: Optional[Literal['all', 'specific', 'none']]
+    # NOTE: should be type Optional[Literal['all', 'specific', 'none']] in 3.8+
+    keep_werror = None  # type: Optional[str]
 
     #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False

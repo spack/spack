@@ -285,6 +285,20 @@ def clean_environment():
     return env
 
 
+def _add_werror_handling(keep_werror, env):
+    keep_flags = set()
+    # set of pairs
+    replace_flags = set()  # type: Set[Tuple[str,str]]
+    if keep_werror == "all":
+        keep_flags.add("-Werror*")
+    else:
+        if keep_werror == "specific":
+            keep_flags.add("-Werror=*")
+        replace_flags.add(("-Werror", "-Wno-error"))
+    env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
+    env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
+
+
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
@@ -334,21 +348,9 @@ def set_compiler_environment_variables(pkg, env):
     if pkg.keep_werror is not None:
         keep_werror = pkg.keep_werror
     else:
-        keep_werror = spack.config.get('config:flags:keep_werror')
+        keep_werror = spack.config.get("config:flags:keep_werror")
 
-    keep_flags = set()
-    # set of pairs
-    replace_flags = set()  # type: Set[Tuple[str,str]]
-    if keep_werror == 'all':
-        keep_flags.add('-Werror*')
-    else:
-        if keep_werror == 'specific':
-            keep_flags.add('-Werror=*')
-        replace_flags.add(('-Werror', '-Wno-error'))
-    env.set('SPACK_COMPILER_FLAGS_KEEP', '|'.join(keep_flags))
-    env.set('SPACK_COMPILER_FLAGS_REPLACE', ' '.join([
-        '|'.join(item) for item in replace_flags
-    ]))
+    _add_werror_handling(keep_werror, env)
 
     # Set the target parameters that the compiler will add
     # Don't set on cray platform because the targeting module handles this

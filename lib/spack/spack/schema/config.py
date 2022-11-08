@@ -18,13 +18,10 @@ properties = {
         "type": "object",
         "default": {},
         "properties": {
-            'flags': {
-                'type': 'object',
-                'properties': {
-                    'keep_werror': {
-                        'type': 'string',
-                        'enum': ['all', 'specific', 'none']
-                    },
+            "flags": {
+                "type": "object",
+                "properties": {
+                    "keep_werror": {"type": "string", "enum": ["all", "specific", "none"]},
                 },
             },
             "shared_linking": {
