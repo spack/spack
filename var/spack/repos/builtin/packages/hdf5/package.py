@@ -46,6 +46,11 @@ class Hdf5(CMakePackage):
     version("develop-1.8", branch="hdf5_1_8")
 
     # Odd versions are considered experimental releases
+    # NOTE: retain version 1.13.2 until:
+    # 1. hdf5-vol-async, hdf5-vol-cache, and hdf5-vol-log are ready to build off
+    #    hdf5@1.13.3+ (VOL struct underwent breaking changes).
+    # 2. New versions for each package are ready to be tagged and updated in spack.
+    # 4. The ecp-data-vis-sdk maintainers are ready to abandon 1.13.2.
     version("1.13.2", sha256="01643fa5b37dba7be7c4db6bbf3c5d07adf5c1fa17dbfaaa632a279b1b2f06da")
 
     # Even versions are maintenance versions

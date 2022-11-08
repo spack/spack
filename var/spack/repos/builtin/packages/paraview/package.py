@@ -299,7 +299,7 @@ class Paraview(CMakePackage, CudaPackage):
             elif self.spec.satisfies("@5.10: +hdf5"):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
-        return (flags, None, None)
+        return (None, None, flags)
 
     def setup_run_environment(self, env):
         # paraview 5.5 and later

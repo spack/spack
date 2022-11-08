@@ -21,11 +21,14 @@ class Hdf5VolLog(AutotoolsPackage):
     version("1.2.0", tag="logvol.1.2.0")
     version("1.1.0", tag="logvol.1.1.0")
 
-    depends_on("hdf5@1.13.2:")
+    depends_on("hdf5@1.13:1.13.2", when="@:1.3.0")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
+
+    def setup_run_environment(self, env):
+        env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
     def configure_args(self):
         args = []

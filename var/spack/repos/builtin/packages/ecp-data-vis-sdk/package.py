@@ -125,6 +125,9 @@ class EcpDataVisSdk(BundlePackage, CudaPackage, ROCmPackage):
         )
     conflicts("~cuda", when="^hdf5-vfd-gds@1.0.2:")
     conflicts("~hdf5", when="^hdf5-vfd-gds@1.0.2:")
+    dav_sdk_depends_on("hdf5-vol-async", when="+hdf5")
+    dav_sdk_depends_on("hdf5-vol-cache", when="+hdf5")
+    dav_sdk_depends_on("hdf5-vol-log", when="+hdf5")
 
     dav_sdk_depends_on("parallel-netcdf+shared", when="+pnetcdf", propagate=["fortran"])
 
