@@ -149,6 +149,10 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def component_dir(self):
         return "compiler"
 
+    @property
+    def compiler_search_prefix(self):
+        return self.prefix.compiler.join(str(self.version)).linux.bin
+
     def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
 
@@ -169,7 +173,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
-        # install_tree('/opt/intel/oneapi/compiler', self.prefix)
+        # install_tree("/opt/intel/oneapi/compiler", self.prefix)
 
         # install cpp
         super(IntelOneapiCompilers, self).install(spec, prefix)

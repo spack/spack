@@ -487,6 +487,17 @@ def test_update_tasks_for_compiler_packages_as_compiler(mock_packages, config, m
     assert installer.build_pq[0][1].compiler
 
 
+def test_bootstrapping_compilers_with_different_names_from_spec(
+    install_mockery, mutable_config, mock_fetch
+):
+    with spack.config.override("config:install_missing_compilers", True):
+        with spack.concretize.disable_compiler_existence_check():
+            spec = spack.spec.Spec("trivial-install-test-package%oneapi@22.2.0").concretized()
+            spec.package.do_install()
+
+            assert spack.spec.CompilerSpec("oneapi@22.2.0") in spack.compilers.all_compiler_specs()
+
+
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_packages):
     """Test happy path for dump_packages with dependencies."""
 

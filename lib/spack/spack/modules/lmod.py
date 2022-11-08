@@ -184,22 +184,10 @@ class LmodConfiguration(BaseConfiguration):
         # If it is in the list of supported compilers family -> compiler
         if self.spec.name in spack.compilers.supported_compilers():
             provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
-        # Special case for llvm
-        if self.spec.name == "llvm":
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
-            provides["compiler"].name = "clang"
-        # Special case for llvm-amdgpu
-        if self.spec.name == "llvm-amdgpu":
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
-            provides["compiler"].name = "rocmcc"
-        # Special case for oneapi
-        if self.spec.name == "intel-oneapi-compilers":
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
-            provides["compiler"].name = "oneapi"
-        # Special case for oneapi classic
-        if self.spec.name == "intel-oneapi-compilers-classic":
-            provides["compiler"] = spack.spec.CompilerSpec(str(self.spec))
-            provides["compiler"].name = "intel"
+        elif self.spec.name in spack.compilers.package_name_to_compiler_name:
+            # If it is the package for a supported compiler, but of a different name
+            cname = spack.compilers.package_name_to_compiler_name[self.spec.name]
+            provides["compiler"] = spack.spec.CompilerSpec("%s@%s" % (cname, self.spec.version))
 
         # All the other tokens in the hierarchy must be virtual dependencies
         for x in self.hierarchy_tokens:
