@@ -1284,7 +1284,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         conflicts('~tpetra', when='+trilinosinstalltests')
     # Spack logic auto-generated from Tribits ENDS here (no manual modifications)
 
-
     # Internal package options (alphabetical order)
     variant("basker", default=False, description="Compile with the Basker solver in Amesos2")
     variant("epetraextbtf", default=False, description="Compile with BTF in EpetraExt")
@@ -1349,6 +1348,11 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
 
     # ###################### Conflicts ##########################
+
+    # Known requirements from tribits dependencies
+    conflicts("+aztec", when="~fortran")
+    conflicts("+minitensor", when="~boost")
+    conflicts("+basker", when="~amesos2")
 
     # Only allow DTK with Trilinos 12.14, 12.18
     conflicts("+dtk", when="~boost")
