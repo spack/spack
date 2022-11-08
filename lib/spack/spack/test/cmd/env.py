@@ -221,7 +221,7 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
 
     e = ev.read("test")
     with e:
-        install("cmake-client")
+        install("--add", "cmake-client")
 
     e = ev.read("test")
     assert e.user_specs[0].name == "cmake-client"
@@ -256,7 +256,7 @@ def test_env_modifications_error_on_activate(install_mockery, mock_fetch, monkey
 
     e = ev.read("test")
     with e:
-        install("cmake-client")
+        install("--add", "cmake-client")
 
     def setup_error(pkg, env):
         raise RuntimeError("cmake-client had issues!")
@@ -277,7 +277,7 @@ def test_activate_adds_transitive_run_deps_to_path(install_mockery, mock_fetch, 
 
     e = ev.read("test")
     with e:
-        install("depends-on-run-env")
+        install("--add", "depends-on-run-env")
 
     env_variables = {}
     spack.environment.shell.activate(e).apply_modifications(env_variables)
@@ -290,7 +290,7 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     e = ev.read("test")
     with e:
         # The first installation outputs the package prefix, updates the view
-        out = install("cmake-client")
+        out = install("--add", "cmake-client")
         assert "Updating view at" in out
 
         # The second installation reports all packages already installed
@@ -449,7 +449,7 @@ def test_env_status_broken_view(
 ):
     env_dir = str(tmpdir)
     with ev.Environment(env_dir):
-        install("trivial-install-test-package")
+        install("--add", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and warns the user
@@ -468,7 +468,7 @@ def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_custom_repository, install_mockery
 ):
     with ev.create("test"):
-        install("trivial-install-test-package")
+        install("--add", "trivial-install-test-package")
 
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
@@ -1057,7 +1057,9 @@ def test_roots_display_with_variants():
     assert "boost +shared" in out
 
 
-def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
+    # 'spack uninstall' without --remove should not change the environment
+    # spack.yaml file, just uninstall specs
     env("create", "test")
     with ev.read("test"):
         add("mpileaks")
@@ -1065,11 +1067,31 @@ def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
         install("--fake")
 
     test = ev.read("test")
-    assert any(s.name == "mpileaks" for s in test.specs_by_hash.values())
-    assert any(s.name == "libelf" for s in test.specs_by_hash.values())
+    # Save this spec to check later if it is still in the env
+    (mpileaks_hash,) = list(x for x, y in test.specs_by_hash.items() if y.name == "mpileaks")
+    orig_user_specs = test.user_specs
+    orig_concretized_specs = test.concretized_order
 
     with ev.read("test"):
         uninstall("-ya")
+
+    test = ev.read("test")
+    assert test.concretized_order == orig_concretized_specs
+    assert test.user_specs.specs == orig_user_specs.specs
+    assert mpileaks_hash in test.specs_by_hash
+    assert not test.specs_by_hash[mpileaks_hash].package.installed
+
+
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+    # 'spack uninstall --remove' should update the environment
+    env("create", "test")
+    with ev.read("test"):
+        add("mpileaks")
+        add("libelf")
+        install("--fake")
+
+    with ev.read("test"):
+        uninstall("-y", "-a", "--remove")
 
     test = ev.read("test")
     assert not test.specs_by_hash
@@ -1256,7 +1278,7 @@ def test_env_updates_view_install_package(tmpdir, mock_stage, mock_fetch, instal
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        install("--fake", "mpileaks")
+        install("--fake", "--add", "mpileaks")
 
     assert os.path.exists(str(view_dir.join(".spack/mpileaks")))
 
@@ -1276,7 +1298,7 @@ def test_env_updates_view_uninstall(tmpdir, mock_stage, mock_fetch, install_mock
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        install("--fake", "mpileaks")
+        install("--fake", "--add", "mpileaks")
 
     check_mpileaks_and_deps_in_view(view_dir)
 
@@ -1325,7 +1347,7 @@ def test_env_updates_view_force_remove(tmpdir, mock_stage, mock_fetch, install_m
     view_dir = tmpdir.join("view")
     env("create", "--with-view=%s" % view_dir, "test")
     with ev.read("test"):
-        install("--fake", "mpileaks")
+        install("--add", "--fake", "mpileaks")
 
     check_mpileaks_and_deps_in_view(view_dir)
 

@@ -193,14 +193,22 @@ which is useful for CI pipeline troubleshooting""",
         default=False,
         help="(with environment) only install already concretized specs",
     )
-    subparser.add_argument(
-        "--no-add",
+
+    updateenv_group = subparser.add_mutually_exclusive_group()
+    updateenv_group.add_argument(
+        "--add",
         action="store_true",
         default=False,
-        help="""(with environment) partially install an environment, limiting
-to concrete specs in the environment matching the arguments.
-Non-roots remain installed implicitly.""",
+        help="""(with environment) add spec to the environment as a root.""",
     )
+    updateenv_group.add_argument(
+        "--no-add",
+        action="store_false",
+        dest="add",
+        help="""(with environment) do not add spec to the environment as a
+root (the default behavior).""",
+    )
+
     subparser.add_argument(
         "-f",
         "--file",
@@ -289,11 +297,12 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
         # the matches.  Getting to this point means there were either
         # no matches or exactly one match.
 
-        if not m_spec and cli_args.no_add:
+        if not m_spec and not cli_args.add:
             msg = (
-                "You asked to install {0} without adding it (--no-add), but no such spec "
-                "exists in environment"
-            ).format(abstract.name)
+                "Cannot install '{0}' because it is not in the current environment."
+                " You can add it to the environment with 'spack add {0}', or as part"
+                " of the install command with 'spack install --add {0}'"
+            ).format(str(abstract))
             tty.die(msg)
 
         if not m_spec:
@@ -303,14 +312,16 @@ def install_specs_inside_environment(specs, install_kwargs, cli_args):
 
         tty.debug("exactly one match for {0} in env -> {1}".format(m_spec.name, m_spec.dag_hash()))
 
-        if m_spec in env.roots() or cli_args.no_add:
-            # either the single match is a root spec (and --no-add is
-            # the default for roots) or --no-add was stated explicitly
+        if m_spec in env.roots() or not cli_args.add:
+            # either the single match is a root spec (in which case
+            # the spec is not added to the env again), or the user did
+            # not specify --add (in which case it is assumed we are
+            # installing already-concretized specs in the env)
             tty.debug("just install {0}".format(m_spec.name))
             specs_to_install.append(m_spec)
         else:
             # the single match is not a root (i.e. it's a dependency),
-            # and --no-add was not specified, so we'll add it as a
+            # and --add was specified, so we'll add it as a
             # root before installing
             tty.debug("add {0} then install it".format(m_spec.name))
             specs_to_add.append((abstract, concrete))
