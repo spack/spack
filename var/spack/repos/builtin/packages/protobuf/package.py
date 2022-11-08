@@ -9,12 +9,13 @@ import spack.util.web
 from spack.package import *
 
 
-class Protobuf(Package):
+class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
     url = "https://github.com/protocolbuffers/protobuf/archive/v3.18.0.tar.gz"
 
+    version("3.21.7", sha256="ce2fbea3c78147a41b2a922485d283137845303e5e1b6cbd7ece94b96ade7031")
     version("3.21.5", sha256="d7d204a59fd0d2d2387bd362c2155289d5060f32122c4d1d922041b61191d522")
     version("3.21.4", sha256="85d42d4485f36f8cec3e475a3b9e841d7d78523cd775de3a86dba77081f4ca25")
     version("3.21.3", sha256="c29d8b4b79389463c546f98b15aa4391d4ed7ec459340c47bffe15db63eb9126")
@@ -65,11 +66,6 @@ class Protobuf(Package):
     version("3.2.0", sha256="a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f")
     version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
     version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
-    version(
-        "2.5.0",
-        sha256="c2665a7aa2ac1a206e61b28e014486e3de59009ea2be2bde9182e0847f38b62f",
-        deprecated=True,
-    )
 
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(
@@ -79,12 +75,7 @@ class Protobuf(Package):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
-    depends_on("cmake", when="@3.0.2:", type="build")
     depends_on("zlib")
-    depends_on("autoconf", type="build", when="@2.5.0")
-    depends_on("automake", type="build", when="@2.5.0")
-    depends_on("libtool", type="build", when="@2.5.0")
-    depends_on("m4", type="build", when="@2.5.0")
 
     conflicts("%gcc@:4.6", when="@3.6.0:")  # Requires c++11
     conflicts("%gcc@:4.6", when="@3.2.0:3.3.0")  # Breaks
@@ -96,12 +87,6 @@ class Protobuf(Package):
 
     # See https://github.com/protocolbuffers/protobuf/pull/7197
     patch("intel-v2.patch", when="@3.7:3.11.4 %intel")
-
-    patch(
-        "protoc2.5.0_aarch64.patch",
-        sha256="7b44fcdb794f421174d619f83584e00a36012a16da09079e2fad9c12f7337451",
-        when="@2.5.0 target=aarch64:",
-    )
 
     # See https://github.com/protocolbuffers/protobuf/issues/9916
     patch(
@@ -133,28 +118,9 @@ class Protobuf(Package):
             args.extend(["-DCMAKE_MACOSX_RPATH=ON"])
         return args
 
-    @when("@3.0.2:")
-    def install(self, spec, prefix):
-        args = self.cmake_args()
-        args.extend(std_cmake_args)
-
-        source_directory = join_path(self.stage.source_path, "cmake")
-        build_directory = join_path(source_directory, "build")
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *args)
-            make()
-            make("install")
-
-    def configure_args(self):
-        args = []
-        args.append("--prefix=%s" % self.prefix)
-        return args
-
-    @when("@2.5.0")
-    def install(self, spec, prefix):
-        args = self.configure_args()
-        autoreconf("-ifv")
-        configure(*args)
-        make()
-        make("install")
+    @property
+    def root_cmakelists_dir(self):
+        if self.spec.satisfies("@:3.20"):
+            return join_path(self.stage.source_path, "cmake")
+        else:
+            return self.stage.source_path
