@@ -26,6 +26,12 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2021.7.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19041/l_tbb_oneapi_p_2021.7.1.15005_offline.sh",
+            sha256="f13a8e740d69347b5985c1be496a3259a86d64ec94933b3d26100dbc2f059fd4",
+            expand=False,
+        )
+        version(
             "2021.7.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18901/l_tbb_oneapi_p_2021.7.0.8712_offline.sh",
             sha256="879bd2004b8e93bc12c53c43eab44cd843433e3da7a976baa8bf07a1069a87c5",

@@ -28,6 +28,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.2.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19038/l_onemkl_p_2022.2.1.16993_offline.sh",
+            sha256="eedd4b795720de776b1fc5f542ae0fac37ec235cdb567f7c2ee3182e73e3e59d",
+            expand=False,
+        )
+        version(
             "2022.2.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18898/l_onemkl_p_2022.2.0.8748_offline.sh",
             sha256="07d7caedd4b9f025c6fd439a0d2c2f279b18ecbbb63cadb864f6c63c1ed942db",
