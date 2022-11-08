@@ -82,6 +82,15 @@ properties = {
                             },
                         },
                     },
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "package_attributes": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "patternProperties": {
+                            r"\w+": {},
+                        },
+                    },
                     "providers": {
                         "type": "object",
                         "default": {},

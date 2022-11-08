@@ -10,6 +10,7 @@ import pytest
 
 import spack.util.spack_yaml as s_yaml
 from spack.main import SpackCommand
+from spack.spec import Spec
 
 activate = SpackCommand("activate")
 extensions = SpackCommand("extensions")
@@ -261,3 +262,34 @@ def test_view_fails_with_missing_projections_file(tmpdir):
     projection_file = os.path.join(str(tmpdir), "nonexistent")
     with pytest.raises(SystemExit):
         view("symlink", "--projection-file", projection_file, viewpath, "foo")
+
+
+@pytest.mark.parametrize("with_projection", [False, True])
+@pytest.mark.parametrize("cmd", ["symlink", "copy"])
+def test_view_files_not_ignored(
+    tmpdir, mock_packages, mock_archive, mock_fetch, config, install_mockery, cmd, with_projection
+):
+    spec = Spec("view-not-ignored").concretized()
+    pkg = spec.package
+    pkg.do_install()
+    pkg.assert_installed(spec.prefix)
+
+    install("view-dir-file")  # Arbitrary package to add noise
+
+    viewpath = str(tmpdir.mkdir("view_{0}".format(cmd)))
+
+    if with_projection:
+        proj = str(tmpdir.join("proj.yaml"))
+        with open(proj, "w") as f:
+            f.write('{"projections":{"all":"{name}"}}')
+        prefix_in_view = os.path.join(viewpath, "view-not-ignored")
+        args = ["--projection-file", proj]
+    else:
+        prefix_in_view = viewpath
+        args = []
+
+    view(cmd, *(args + [viewpath, "view-not-ignored", "view-dir-file"]))
+    pkg.assert_installed(prefix_in_view)
+
+    view("remove", viewpath, "view-not-ignored")
+    pkg.assert_not_installed(prefix_in_view)

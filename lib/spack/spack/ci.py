@@ -1167,7 +1167,14 @@ def generate_gitlab_ci_yaml(
         "after_script",
     ]
 
-    service_job_retries = {"max": 2, "when": ["runner_system_failure", "stuck_or_timeout_failure"]}
+    service_job_retries = {
+        "max": 2,
+        "when": [
+            "runner_system_failure",
+            "stuck_or_timeout_failure",
+            "script_failure",
+        ],
+    }
 
     if job_id > 0:
         if temp_storage_url_prefix:
