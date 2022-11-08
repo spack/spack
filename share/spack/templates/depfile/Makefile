@@ -14,22 +14,24 @@ SPACK ?= spack
 # spack -e my_env --no-add --only=package --only=concrete /hash
 # This is an involved way of expressing that Spack should only install
 # an individual concrete spec from the environment without deps.
-{{ install_target }}/%: {{ install_deps_target }}/% | {{ dirs_target }}
-	{{ jobserver_support }}$(SPACK) -e '{{ environment }}' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package --no-add /$(notdir $@) # $(SPEC)
+{{ install_target }}/%: | {{ dirs_target }}
+	{{ jobserver_support }}$(SPACK) -e '{{ environment }}' install $(SPACK_BUILDCACHE_FLAG) $(SPACK_INSTALL_FLAGS) --only-concrete --only=package --no-add /$(HASH) # $(SPEC)
 	@touch $@
 
 {{ install_deps_target }}/%: | {{ dirs_target }}
 	@touch $@
 
 # Set a human-readable SPEC variable for each target that has a hash
-{% for (parent, name, build_cache, _) in adjacency_list -%}
+{% for (parent, _, hash, name, build_cache) in adjacency_list -%}
+{{ any_hash_target }}/{{ parent }}: HASH = {{ hash }}
 {{ any_hash_target }}/{{ parent }}: SPEC = {{ name }}
 {{ any_hash_target }}/{{ parent }}: SPACK_BUILDCACHE_FLAG = {{ build_cache }}
 {% endfor %}
 
 # The Spack DAG expressed in targets:
-{% for (parent, _, _, prereqs) in adjacency_list -%}
-{{ install_deps_target }}/{{ parent }}: {{prereqs}}
+{% for (parent, prereqs, _, _, _) in adjacency_list -%}
+{{ install_target }}/{{ parent }}: {{ install_deps_target }}/{{ parent }}
+{{ install_deps_target }}/{{ parent }}: {{ prereqs }}
 {% endfor %}
 
 {{ clean_target }}:
