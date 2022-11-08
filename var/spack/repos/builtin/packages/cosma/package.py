@@ -100,4 +100,3 @@ class Cosma(CMakePackage):
             self.define("COSMA_SCALAPACK", self.cosma_scalapack_cmake_arg()),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
-        return args
