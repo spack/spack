@@ -57,13 +57,13 @@ class Cosma(CMakePackage):
 
     def cosma_blas_cmake_arg(self):
         query_to_cmake_arg = [
+            ("+cuda", "CUDA"),
+            ("+rocm", "ROCM"),
             ("^intel-mkl", "MKL"),
             ("^intel-oneapi-mkl", "MKL"),
             ("^cray-libsci", "CRAY_LIBSCI"),
             ("^netlib-lapack", "CUSTOM"),
             ("^openblas", "OPENBLAS"),
-            ("+cuda", "CUDA"),
-            ("+rocm", "ROCM"),
         ]
 
         if self.version >= Version("2.4.0"):
