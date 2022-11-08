@@ -49,16 +49,29 @@ class PerlNetSsleay(PerlPackage):
     depends_on("perl-extutils-makemaker", type="build")  # AUTO-CPAN2Spack
     depends_on("perl-scalar-util", type=("build", "test"))  # AUTO-CPAN2Spack
 
-    def configure(self, spec, prefix):
-        PerlBuilder.build_method = "Makefile.PL"
-        PerlBuilder.build_executable = inspect.getmodule(self).make
-        # Do you want to run external tests?
-        config_answers = ["\n"]
-        config_answers_filename = "spack-config.in"
 
-        with open(config_answers_filename, "w") as f:
-            f.writelines(config_answers)
+class PerlBuilder(spack.build_systems.perl.PerlBuilder):
+    class _WrappedExecutable(Executable):
+        def __init__(self, executable):
+            super(PerlBuilder._WrappedExecutable, self).__init__(executable.path)
 
-        with open(config_answers_filename, "r") as f:
-            env["OPENSSL_PREFIX"] = self.spec["openssl"].prefix
-            inspect.getmodule(self).perl("Makefile.PL", "INSTALL_BASE={0}".format(prefix), input=f)
+        def __call__(self, *args, **kwargs):
+            # Do you want to run external tests?
+            config_answers = ["\n"]
+            config_answers_filename = "spack-config.in"
+
+            with open(config_answers_filename, "w") as f:
+                f.writelines(config_answers)
+
+            with open(config_answers_filename, "r") as f:
+                super(PerlBuilder._WrappedExecutable, self).__call__(*args, **kwargs, input=f)
+
+    def configure(self, pkg, spec, prefix):
+        env["OPENSSL_PREFIX"] = self.spec["openssl"].prefix
+        perl_safe = inspect.getmodule(self).perl
+        inspect.getmodule(self).perl = PerlBuilder._WrappedExecutable(perl_safe)
+
+        try:
+            super(PerlBuilder, self).configure(pkg, spec, prefix)
+        finally:
+            inspect.getmodule(self).perl = perl_safe
