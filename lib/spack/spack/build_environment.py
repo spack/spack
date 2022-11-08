@@ -45,7 +45,7 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.tty.log import MultiProcessFd
@@ -445,60 +445,53 @@ def set_wrapper_variables(pkg, env):
             raise RuntimeError("No ccache binary found in PATH")
         env.set(SPACK_CCACHE_BINARY, ccache)
 
-    # Gather information about various types of dependencies
-    link_deps = set(pkg.spec.traverse(root=False, deptype=("link")))
-    rpath_deps = get_rpath_deps(pkg)
-
     link_dirs = []
     include_dirs = []
-    rpath_dirs = []
-
-    def _prepend_all(list_to_modify, items_to_add):
-        # Update the original list (creating a new list would be faster but
-        # may not be convenient)
-        for item in reversed(list(items_to_add)):
-            list_to_modify.insert(0, item)
-
-    def update_compiler_args_for_dep(dep):
-        if dep in link_deps and (not is_system_path(dep.prefix)):
-            query = pkg.spec[dep.name]
-            dep_link_dirs = list()
-            try:
-                dep_link_dirs.extend(query.libs.directories)
-            except NoLibrariesError:
-                tty.debug("No libraries found for {0}".format(dep.name))
-
-            for default_lib_dir in ["lib", "lib64"]:
-                default_lib_prefix = os.path.join(dep.prefix, default_lib_dir)
-                if os.path.isdir(default_lib_prefix):
-                    dep_link_dirs.append(default_lib_prefix)
-
-            _prepend_all(link_dirs, dep_link_dirs)
-            if dep in rpath_deps:
-                _prepend_all(rpath_dirs, dep_link_dirs)
-
-            try:
-                _prepend_all(include_dirs, query.headers.directories)
-            except NoHeadersError:
-                tty.debug("No headers found for {0}".format(dep.name))
-
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if dspec.external:
-            update_compiler_args_for_dep(dspec)
-
-    # Just above, we prepended entries for -L/-rpath for externals. We
-    # now do this for non-external packages so that Spack-built packages
-    # are searched first for libraries etc.
-    for dspec in pkg.spec.traverse(root=False, order="post"):
-        if not dspec.external:
-            update_compiler_args_for_dep(dspec)
 
     # The top-level package is always RPATHed. It hasn't been installed yet
     # so the RPATHs are added unconditionally (e.g. even though lib64/ may
     # not be created for the install).
-    for libdir in ["lib64", "lib"]:
-        lib_path = os.path.join(pkg.prefix, libdir)
-        rpath_dirs.insert(0, lib_path)
+    rpath_deps = set(get_rpath_deps(pkg))
+    rpath_dirs = [pkg.prefix.lib, pkg.prefix.lib64]
+
+    def update_compiler_args_for_dep(dep):
+        # We assume that preprocessors, linkers and dynamic linkers have system
+        # paths among their default paths, so we don't add flags for those.
+        if is_system_path(dep.prefix):
+            return
+
+        query = pkg.spec[dep.name]
+
+        # Package specific include dirs
+        try:
+            include_dirs.extend(query.headers.directories)
+        except NoHeadersError:
+            tty.debug("No headers found for {}".format(dep.name))
+
+        dep_link_dirs = []
+
+        # Package specific library dirs
+        try:
+            dep_link_dirs.extend(query.libs.directories)
+        except NoLibrariesError:
+            tty.debug("No libraries found for {}".format(dep.name))
+
+        # Add default dirs <prefix>/lib(64)?
+        for subdir in ("lib", "lib64"):
+            path = os.path.join(dep.prefix, subdir)
+            if os.path.isdir(path):
+                dep_link_dirs.append(path)
+
+        link_dirs.extend(dep_link_dirs)
+        if dep in rpath_deps:
+            rpath_dirs.extend(dep_link_dirs)
+
+    # Get all link type deps in partitioned by [not external | external] and
+    # each partition ordered breadth-first.
+    deps = pkg.spec.traverse(root=False, order="breadth", deptype="link")
+    external_deps, normal_deps = stable_partition(deps, lambda s: s.external)
+    for dep in normal_deps + external_deps:
+        update_compiler_args_for_dep(dep)
 
     link_dirs = list(dedupe(filter_system_paths(link_dirs)))
     include_dirs = list(dedupe(filter_system_paths(include_dirs)))
@@ -719,19 +712,28 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None, **kwa
 
 
 def get_rpath_deps(pkg):
-    """Return immediate or transitive RPATHs depending on the package."""
+    """Return immediate or transitive RPATHs depending on the package, paritioned
+    by spack installed packages first and externals next, each partition in breadth-
+    first order."""
     if pkg.transitive_rpaths:
-        return [d for d in pkg.spec.traverse(root=False, deptype=("link"))]
+        generator = pkg.spec.traverse(root=False, order="breadth", deptype="link")
     else:
-        return pkg.spec.dependencies(deptype="link")
+        generator = pkg.spec.dependencies(deptype="link")
+
+    # Prioritize Spack installed packages over externals.
+    externals, spack_installed = stable_partition(generator, lambda s: s.external)
+    return spack_installed + externals
 
 
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    deps = get_rpath_deps(pkg)
-    rpaths.extend(d.prefix.lib for d in deps if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in deps if os.path.isdir(d.prefix.lib64))
+    for spec in get_rpath_deps(pkg):
+        for subdir in ("lib", "lib64"):
+            path = os.path.join(spec.prefix, subdir)
+            if os.path.isdir(path):
+                rpaths.append(path)
+
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
