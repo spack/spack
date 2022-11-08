@@ -1,0 +1,25 @@
+From a49e95e44961a0b6703ef9cb577d2ae5334c4a62 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Thu, 3 Nov 2022 13:54:00 +0100
+Subject: [PATCH] disable tkinter explicitly
+
+---
+ setup.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/setup.py b/setup.py
+index 15d0d45..642adb3 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1358,7 +1358,7 @@ class PyBuildExt(build_ext):
+         self.detect_decimal()
+         self.detect_ctypes()
+         self.detect_multiprocessing()
+-        self.detect_tkinter()
++        # self.detect_tkinter()
+         self.detect_uuid()
+ 
+         # Uncomment the next line if you want to play with xxmodule.c
+-- 
+2.38.1
+
