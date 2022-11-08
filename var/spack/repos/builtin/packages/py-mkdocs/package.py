@@ -25,7 +25,7 @@ class PyMkdocs(PythonPackage):
     depends_on("py-click@7.0:", type=("build", "run"), when="@1.4.2:")
     depends_on("py-jinja2@2.10.2:", type=("build", "run"))
     depends_on("py-jinja2@2.11.1:", type=("build", "run"), when="@1.4.2:")
-    depends_on("py-markdown@3.2.1:3.3", type=("build", "run"))
+    depends_on("py-markdown@3.2.1:3.3", when="@:1.3", type=("build", "run"))
     depends_on("py-markdown@3.2.1:3.4", type=("build", "run"), when="@1.4.2:")
     depends_on("py-pyyaml@3.10:", type=("build", "run"))
     depends_on("py-pyyaml@5.1:", type=("build", "run"), when="@1.4.2:")
