@@ -97,6 +97,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("rocsparse", when="+rocm")
     depends_on("rocthrust", when="+rocm")
     depends_on("rocrand", when="+rocm")
+    depends_on("rocprim", when="+rocm")
     depends_on("umpire", when="+umpire")
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on(
