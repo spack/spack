@@ -15,6 +15,7 @@ class Ffmpeg(AutotoolsPackage):
 
     maintainers = ["xjrc"]
 
+    version("5.1.2", sha256="39a0bcc8d98549f16c570624678246a6ac736c066cebdb409f9502e915b22f2b")
     version("4.4.1", sha256="8fc9f20ac5ed95115a9e285647add0eedd5cc1a98a039ada14c132452f98ac42")
     version("4.3.2", sha256="ab3a6d6a70358ba0a5f67f37f91f6656b7302b02e98e5b8c846c16763c99913a")
     version("4.2.2", sha256="b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c")
@@ -113,6 +114,7 @@ class Ffmpeg(AutotoolsPackage):
     conflicts("+libssh", when="@2.1:")
     conflicts("+libzmq", when="@:1")
     conflicts("%nvhpc")
+    conflicts("+avresample", when="@5.0:")
 
     @property
     def libs(self):
@@ -173,13 +175,14 @@ class Ffmpeg(AutotoolsPackage):
             "libvorbis",
             "libvpx",
             "libx264",
-            "avresample",
             "nonfree",
             "openssl",
             "shared",
             "version3",
         ]
 
+        if spec.satisfies("@:4.4"):
+            variant_opts.append("avresample")
         if spec.satisfies("@2.0:"):
             variant_opts.append("libzmq")
         if spec.satisfies("@2.1:"):
