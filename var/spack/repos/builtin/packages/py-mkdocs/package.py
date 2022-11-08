@@ -19,7 +19,7 @@ class PyMkdocs(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("python@3.7:", type=("build", "run"), when="@1.4.2:")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", when="@:1.3", type="build")
     depends_on("py-hatchling", type="build", when="@1.4.2:")
     depends_on("py-click@3.3:", type=("build", "run"))
     depends_on("py-click@7.0:", type=("build", "run"), when="@1.4.2:")
