@@ -881,7 +881,7 @@ class TestSpecSematics(object):
         # different orderings for repeated concretizations of the same
         # spec and config
         spec_str = "libelf %gcc@11.1.0 os=redhat6"
-        for _ in range(25):
+        for _ in range(7):
             s = Spec(spec_str).concretized()
             assert all(
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
@@ -1166,12 +1166,11 @@ class TestSpecSematics(object):
 
 
 @pytest.mark.regression("3887")
-@pytest.mark.parametrize("spec_str", ["git", "hdf5", "py-flake8"])
-def test_is_extension_after_round_trip_to_dict(config, spec_str):
+@pytest.mark.parametrize("spec_str", ["py-extension2", "extension1", "perl-extension"])
+def test_is_extension_after_round_trip_to_dict(config, mock_packages, spec_str):
     # x is constructed directly from string, y from a
     # round-trip to dict representation
-    x = Spec(spec_str)
-    x.concretize()
+    x = Spec(spec_str).concretized()
     y = Spec.from_dict(x.to_dict())
 
     # Using 'y' since the round-trip make us lose build dependencies
@@ -1231,7 +1230,7 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
     assert s == Spec(expected)
 
 
-def test_spec_installed(install_mockery, database):
+def test_spec_installed(database):
     """Test whether Spec.installed works."""
     # a known installed spec should say that it's installed
     specs = database.query()
