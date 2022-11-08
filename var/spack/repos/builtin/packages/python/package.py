@@ -426,7 +426,6 @@ class Python(Package):
     patch("python-3.11-distutils-C++.patch", when="@3.11.0:3.11")
     patch("cpython-windows-externals.patch", when="@:3.9.6 platform=windows")
     patch("tkinter.patch", when="@:2.8,3.3:3.7 platform=darwin")
-
     # Patch the setup script to deny that tcl/x11 exists rather than allowing
     # autodetection of (possibly broken) system components
     patch("tkinter-3.8.patch", when="@3.8:3.9 ~tkinter")
