@@ -719,9 +719,8 @@ class TestSpecSematics(object):
         with pytest.raises(ValueError):
             Spec("libelf foo")
 
-    def test_spec_formatting(self):
-        spec = Spec("multivalue-variant cflags=-O2")
-        spec.concretize()
+    def test_spec_formatting(self, mock_concretize):
+        spec = mock_concretize("multivalue-variant cflags=-O2")
 
         # Since the default is the full spec see if the string rep of
         # spec is the same as the output of spec.format()
@@ -797,9 +796,8 @@ class TestSpecSematics(object):
             actual = spec.format(named_str)
             assert expected == actual
 
-    def test_spec_formatting_escapes(self):
-        spec = Spec("multivalue-variant cflags=-O2")
-        spec.concretize()
+    def test_spec_formatting_escapes(self, mock_concretize):
+        spec = mock_concretize("multivalue-variant cflags=-O2")
 
         sigil_mismatches = [
             "{@name}",
@@ -881,7 +879,7 @@ class TestSpecSematics(object):
         # different orderings for repeated concretizations of the same
         # spec and config
         spec_str = "libelf %gcc@11.1.0 os=redhat6"
-        for _ in range(7):
+        for _ in range(3):
             s = Spec(spec_str).concretized()
             assert all(
                 s.compiler_flags[x] == ["-O0", "-g"] for x in ("cflags", "cxxflags", "fflags")
@@ -954,13 +952,11 @@ class TestSpecSematics(object):
         assert spec.target < "broadwell"
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice(self, transitive):
+    def test_splice(self, transitive, mock_concretize):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
 
         # Sanity checking that these are not the same thing.
         assert dep.dag_hash() != spec["splice-h"].dag_hash()
@@ -993,11 +989,9 @@ class TestSpecSematics(object):
         assert out.spliced
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_with_cached_hashes(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_with_cached_hashes(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
 
         # monkeypatch hashes so we can test that they are cached
         spec._hash = "aaaaaa"
@@ -1014,9 +1008,9 @@ class TestSpecSematics(object):
         assert out["splice-z"].dag_hash() == out_z_expected.dag_hash()
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_input_unchanged(self, transitive):
-        spec = Spec("splice-t").concretized()
-        dep = Spec("splice-h+foo").concretized()
+    def test_splice_input_unchanged(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
         orig_spec_hash = spec.dag_hash()
         orig_dep_hash = dep.dag_hash()
         spec.splice(dep, transitive)
@@ -1026,16 +1020,13 @@ class TestSpecSematics(object):
         assert dep.dag_hash() == orig_dep_hash
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_subsequent(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_subsequent(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Now we attempt a second splice.
-        dep = Spec("splice-z+bar")
-        dep.concretize()
+        dep = mock_concretize("splice-z+bar")
 
         # Transitivity shouldn't matter since Splice Z has no dependencies.
         out2 = out.splice(dep, transitive)
@@ -1046,11 +1037,9 @@ class TestSpecSematics(object):
         assert out2.spliced
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_dict(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1065,11 +1054,9 @@ class TestSpecSematics(object):
         assert len(build_spec_nodes) == 1
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_dict_roundtrip(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-h+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_dict_roundtrip(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-h+foo")
         out = spec.splice(dep, transitive)
 
         # Sanity check all hashes are unique...
@@ -1132,21 +1119,17 @@ class TestSpecSematics(object):
         assert s.satisfies("mpileaks ^zmpi ^fake", strict=True)
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-a+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_swap_names(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-a+foo")
         out = spec.splice(dep, transitive)
         assert dep.name in out
         assert transitive == ("+foo" in out["splice-z"])
 
     @pytest.mark.parametrize("transitive", [True, False])
-    def test_splice_swap_names_mismatch_virtuals(self, transitive):
-        spec = Spec("splice-t")
-        dep = Spec("splice-vh+foo")
-        spec.concretize()
-        dep.concretize()
+    def test_splice_swap_names_mismatch_virtuals(self, mock_concretize, transitive):
+        spec = mock_concretize("splice-t")
+        dep = mock_concretize("splice-vh+foo")
         with pytest.raises(spack.spec.SpliceError, match="will not provide the same virtuals."):
             spec.splice(dep, transitive)
 
@@ -1230,7 +1213,7 @@ def test_merge_anonymous_spec_with_named_spec(anonymous, named, expected):
     assert s == Spec(expected)
 
 
-def test_spec_installed(database):
+def test_spec_installed(mock_concretize, database):
     """Test whether Spec.installed works."""
     # a known installed spec should say that it's installed
     specs = database.query()
@@ -1243,14 +1226,14 @@ def test_spec_installed(database):
     assert not spec.installed
 
     # 'a' is not in the mock DB and is not installed
-    spec = Spec("a").concretized()
+    spec = mock_concretize("a")
     assert not spec.installed
 
 
 @pytest.mark.regression("30678")
-def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, config):
+def test_call_dag_hash_on_old_dag_hash_spec(mock_packages, mock_concretize):
     # create a concrete spec
-    a = Spec("a").concretized()
+    a = mock_concretize("a")
     dag_hashes = {spec.name: spec.dag_hash() for spec in a.traverse()}
 
     # make it look like an old DAG hash spec with no package hash on the spec.
@@ -1297,9 +1280,9 @@ def test_unsupported_compiler():
         Spec("gcc%fake-compiler").validate_or_raise()
 
 
-def test_package_hash_affects_dunder_and_dag_hash(mock_packages, config):
-    a1 = Spec("a").concretized()
-    a2 = Spec("a").concretized()
+def test_package_hash_affects_dunder_and_dag_hash(mock_packages, mock_concretize):
+    a1 = mock_concretize("a")
+    a2 = mock_concretize("a")
 
     assert hash(a1) == hash(a2)
     assert a1.dag_hash() == a2.dag_hash()
