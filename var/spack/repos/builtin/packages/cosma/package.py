@@ -91,14 +91,13 @@ class Cosma(CMakePackage):
         return "CUSTOM"
 
     def cmake_args(self):
-        args = [
-            self.define("COSMA_WITH_TESTS", "OFF"),
-            self.define("COSMA_WITH_APPS", "OFF"),
-            self.define("COSMA_WITH_PROFILING", "OFF"),
-            self.define("COSMA_WITH_BENCHMARKS", "OFF"),
+        return [
+            self.define("COSMA_WITH_TESTS", False),
+            self.define("COSMA_WITH_APPS", False),
+            self.define("COSMA_WITH_PROFILING", False),
+            self.define("COSMA_WITH_BENCHMARKS", False),
             self.define("COSMA_BLAS", self.cosma_blas_cmake_arg()),
             self.define("COSMA_SCALAPACK", self.cosma_scalapack_cmake_arg()),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
-        if "+shared" in self.spec:
-            args += ["-DBUILD_SHARED_LIBS=ON"]
         return args
