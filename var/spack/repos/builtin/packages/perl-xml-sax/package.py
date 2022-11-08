@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import inspect
+
 from spack.package import *
 
 
@@ -18,3 +20,29 @@ class PerlXmlSax(PerlPackage):
 
     depends_on("perl-xml-namespacesupport", type=("build", "run"))
     depends_on("perl-xml-sax-base", type=("build", "run"))
+
+
+class PerlBuilder(spack.build_systems.perl.PerlBuilder):
+    class _WrappedExecutable(Executable):
+        def __init__(self, executable):
+            super(PerlBuilder._WrappedExecutable, self).__init__(executable.path)
+
+        def __call__(self, *args, **kwargs):
+            # Do you want to run external tests?
+            config_answers = ["\n"]
+            config_answers_filename = "spack-config.in"
+
+            with open(config_answers_filename, "w") as f:
+                f.writelines(config_answers)
+
+            with open(config_answers_filename, "r") as f:
+                super(PerlBuilder._WrappedExecutable, self).__call__(*args, **kwargs, input=f)
+
+    def configure(self, pkg, spec, prefix):
+        perl_safe = inspect.getmodule(self).perl
+        inspect.getmodule(self).perl = PerlBuilder._WrappedExecutable(perl_safe)
+
+        try:
+            super(PerlBuilder, self).configure(pkg, spec, prefix)
+        finally:
+            inspect.getmodule(self).perl = perl_safe

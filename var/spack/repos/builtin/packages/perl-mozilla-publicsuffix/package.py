@@ -10,18 +10,6 @@ from llnl.util.filesystem import filter_file
 from spack.package import *
 
 
-class _WrappedExecutable(Executable):
-    def __init__(self, executable):
-        super(_WrappedExecutable, self).__init__(executable.path)
-
-    def __call__(self, *args, **kwargs):
-        spack_answers_filename = "common_sense_answer.txt"
-        with open(spack_answers_filename, "w") as f:
-            f.writelines("N\n")
-        with open(spack_answers_filename, "r") as f:
-            super(_WrappedExecutable, self).__call__(*args, **kwargs, input=f)
-
-
 class PerlMozillaPublicsuffix(PerlPackage):
     """Get a domain name's public suffix via the Mozilla Public Suffix List."""  # AUTO-CPAN2Spack
 
@@ -43,11 +31,27 @@ class PerlMozillaPublicsuffix(PerlPackage):
         """HTTP::Tiny has a bad interaction with Errno.pm for Perl <5.22"""
         filter_file(r"^use HTTP::Tiny;$", "", "Build.PL", stop_at="^my", backup=False)
 
-    def configure(self, spec, prefix):
+
+class PerlBuilder(spack.build_systems.perl.PerlBuilder):
+    class _WrappedExecutable(Executable):
+        def __init__(self, executable):
+            super(PerlBuilder._WrappedExecutable, self).__init__(executable.path)
+
+        def __call__(self, *args, **kwargs):
+            config_answers = ["N\n"]
+            config_answers_filename = "spack-config.in"
+
+            with open(config_answers_filename, "w") as f:
+                f.writelines(config_answers)
+
+            with open(config_answers_filename, "r") as f:
+                super(PerlBuilder._WrappedExecutable, self).__call__(*args, **kwargs, input=f)
+
+    def configure(self, pkg, spec, prefix):
         perl_safe = inspect.getmodule(self).perl
-        inspect.getmodule(self).perl = _WrappedExecutable(perl_safe)
+        inspect.getmodule(self).perl = PerlBuilder._WrappedExecutable(perl_safe)
 
         try:
-            super(PerlMozillaPublicsuffix, self).configure(spec, prefix)
+            super(PerlBuilder, self).configure(pkg, spec, prefix)
         finally:
             inspect.getmodule(self).perl = perl_safe
