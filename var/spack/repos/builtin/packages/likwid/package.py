@@ -210,11 +210,13 @@ class Likwid(Package):
         if "accessmode=accessdaemon" in self.spec:
             perm_script = "spack_perms_fix.sh"
             perm_script_path = join_path(self.spec.prefix, perm_script)
-            daemons = ["sbin/likwid-accessD", "sbin/likwid-setFreq"]
+            daemons = glob.glob(join_path(self.spec.prefix, "sbin", "*"))
             with open(perm_script_path, "w") as f:
                 env = spack.tengine.make_environment(dirs=self.package_dir)
                 t = env.get_template(perm_script + ".j2")
-                f.write(t.render({"prefix": self.spec.prefix, "daemons": daemons}))
+                f.write(
+                    t.render({"prefix": self.spec.prefix, "chowns": daemons, "chmods": daemons})
+                )
             tty.warn(
                 """
             For full functionality, you'll need to chown and chmod some files
