@@ -88,6 +88,7 @@ class Esmf(MakefilePackage):
         when="@8.3.0b09",
     )
     variant("debug", default=False, description="Make a debuggable version of the library")
+    variant("caplinks", default=False, description="Create symlinks libESMF.{a,so}")
 
     # Required dependencies
     depends_on("zlib")
@@ -368,6 +369,12 @@ class Esmf(MakefilePackage):
     @run_after("install")
     def install_findesmf(self):
         install_tree("cmake", self.prefix.cmake)
+
+    @run_after("install")
+    def install_caplinks(self):
+        if "+caplinks" in self.spec:
+            os.symlink(f"{self.prefix.lib}/libesmf.so",f"{self.prefix.lib}/libESMF.so")
+            os.symlink(f"{self.prefix.lib}/libesmf.a",f"{self.prefix.lib}/libESMF.a")
 
     def check(self):
         make("check", parallel=False)
