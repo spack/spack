@@ -39,12 +39,12 @@ def architecture():
     return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
 
-
 def get_user():
     # User pwd where available because it accounts for effective uids when using ksu and similar
     try:
         # user pwd for unix systems
         import pwd
+
         return pwd.getpwuid(os.geteuid()).pw_name
     except ImportError:
         # fallback on getpass
