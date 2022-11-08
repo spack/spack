@@ -3,25 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install ycruncher
-#
-# You can edit this file again by typing:
-#
-#     spack edit ycruncher
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack.package import *
-
 
 class Ycruncher(Package):
     """
@@ -30,7 +12,6 @@ class Ycruncher(Package):
     and scalable to multi-core systems
     """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.numberworld.org/y-cruncher/"
     url = "http://www.numberworld.org/y-cruncher/y-cruncher%20v0.7.10.9513-static.tar.xz"
     maintainers = ["saqibkh"]
