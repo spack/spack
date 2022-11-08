@@ -293,7 +293,10 @@ def _add_werror_handling(keep_werror, env):
         keep_flags.add("-Werror*")
     else:
         if keep_werror == "specific":
+            keep_flags.add("-Werror-*")
             keep_flags.add("-Werror=*")
+        # This extra case is to handle -Werror-implicit-function-declaration
+        replace_flags.add(("-Werror-", "-Wno-error="))
         replace_flags.add(("-Werror", "-Wno-error"))
     env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
     env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))

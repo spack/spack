@@ -710,7 +710,7 @@ def test_no_ccache_prepend_for_fc(wrapper_environment):
     )
 
 
-def test_keep_and_remove(wrapper_environment):
+def test_keep_and_replace(wrapper_environment):
     werror_specific = ["-Werror=meh"]
     werror = ["-Werror"]
     werror_all = werror_specific + werror
@@ -754,6 +754,25 @@ def test_keep_and_remove(wrapper_environment):
             ["-Werror", "-Werror=specific", "-bah"],
             ["-bah"],
             ["-Werror", "-Werror=specific"],
+        ),
+        # check non-standard -Werror opts like -Werror-implicit-function-declaration
+        (
+            "config:flags:keep_werror:all",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            [],
+        ),
+        (
+            "config:flags:keep_werror:specific",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror"],
+        ),
+        (
+            "config:flags:keep_werror:none",
+            ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
+            ["-bah"],
+            ["-Werror", "-Werror-implicit-function-declaration"],
         ),
     ],
 )
