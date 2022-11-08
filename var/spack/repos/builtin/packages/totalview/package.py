@@ -46,35 +46,35 @@ class Totalview(Package):
     # Version 2022.3.6
     resource(
         name="crayx86",
-        url="file://{0}/totalview_2022.3.6_linux_x86-64.tar".format(os.getcwd()),
+        url="file://totalview_2022.3.6_linux_x86-64.tar",
         destination=".",
         sha256="a2639c52bfd4c7484b728d6a0158239074ff0e0c52208a5452b12b878016a519",
         when="@2022.3.6 platform=cray target=x86_64:",
     )
     resource(
         name="x86-64",
-        url="file://{0}/totalview.2022.3.6-linux-x86-64.tar".format(os.getcwd()),
+        url="file://totalview.2022.3.6-linux-x86-64.tar",
         destination=".",
         sha256="a2639c52bfd4c7484b728d6a0158239074ff0e0c52208a5452b12b878016a519",
         when="@2022.3.6 platform=linux target=x86_64:",
     )
     resource(
         name="ppcle",
-        url="file://{0}/totalview_2022.3.6_linux_powerle.tar".format(os.getcwd()),
+        url="file://totalview_2022.3.6_linux_powerle.tar",
         destination=".",
         sha256="93771a6ce99cff6d11e8172ff57da16aed76ab8ad1804e1d18186fba6de945f7",
         when="@2022.3.6 platform=linux target=ppc64le:",
     )
     resource(
         name="aarch64",
-        url="file://{0}/totalview_2022.3.6_linux_arm64.tar".format(os.getcwd()),
+        url="file://totalview_2022.3.6_linux_arm64.tar",
         destination=".",
         sha256="5c18a9a187196980f9bd0fbbb77bb8e5c1d51442188ca44d58a9c49329c98783",
         when="@2022.3.6 platform=linux target=aarch64:",
     )
     resource(
         name="darwinx86",
-        url="file://{0}/totalview.2022.3.6-darwin-x86.tar".format(os.getcwd()),
+        url="file://totalview.2022.3.6-darwin-x86.tar",
         destination=".",
         sha256="f558877f7debbeeef200f587edf4cbba41b6bc8db5a0166757445cc652de8a33",
         when="@2022.3.6 platform=darwin target=x86_64:",
@@ -83,35 +83,35 @@ class Totalview(Package):
     # Version 2022.2.13
     resource(
         name="crayx86",
-        url="file://{0}/totalview_2022.2.13_linux_x86-64.tar".format(os.getcwd()),
+        url="file://totalview_2022.2.13_linux_x86-64.tar",
         destination=".",
         sha256="aebd11b837ce18b8200859ea762caa56e2cea346daa114f2841aa0f05a422309",
         when="@2022.2.13 platform=cray target=x86_64:",
     )
     resource(
         name="x86-64",
-        url="file://{0}/totalview.2022.2.13-linux-x86-64.tar".format(os.getcwd()),
+        url="file://totalview.2022.2.13-linux-x86-64.tar",
         destination=".",
         sha256="aebd11b837ce18b8200859ea762caa56e2cea346daa114f2841aa0f05a422309",
         when="@2022.2.13 platform=linux target=x86_64:",
     )
     resource(
         name="ppcle",
-        url="file://{0}/totalview_2022.2.13_linux_powerle.tar".format(os.getcwd()),
+        url="file://totalview_2022.2.13_linux_powerle.tar",
         destination=".",
         sha256="0136be160576b51b03e6409b06d6cc22b5535380894e0fdc6569e2238e12120e",
         when="@2022.2.13 platform=linux target=ppc64le:",
     )
     resource(
         name="aarch64",
-        url="file://{0}/totalview_2022.2.13_linux_arm64.tar".format(os.getcwd()),
+        url="file://totalview_2022.2.13_linux_arm64.tar",
         destination=".",
         sha256="d82154222e1ae5fce0bb7abd19b6782494ecb1f76a9a5f38a19e9dcd40bd42aa",
         when="@2022.2.13 platform=linux target=aarch64:",
     )
     resource(
         name="darwinx86",
-        url="file://{0}/totalview.2022.2.13-darwin-x86.tar".format(os.getcwd()),
+        url="file://totalview.2022.2.13-darwin-x86.tar",
         destination=".",
         sha256="abcad08e80967959f556cb9f2a7d6dfa7f38e33213fe56f7f3198ff94cd9f3fe",
         when="@2022.2.13 platform=darwin target=x86_64:",
@@ -120,35 +120,35 @@ class Totalview(Package):
     # Version 2022.1.11
     resource(
         name="crayx86",
-        url="file://{0}/totalview_2022.1.11_linux_x86-64.tar".format(os.getcwd()),
+        url="file://totalview_2022.1.11_linux_x86-64.tar",
         destination=".",
         sha256="3ec9a7d702572dbbafa41726a036c94b549f9a5911ed6fd6aa55f7b377554bac",
         when="@2022.1.11 platform=cray target=x86_64:",
     )
     resource(
         name="x86-64",
-        url="file://{0}/totalview.2022.1.11-linux-x86-64.tar".format(os.getcwd()),
+        url="file://totalview.2022.1.11-linux-x86-64.tar",
         destination=".",
         sha256="3ec9a7d702572dbbafa41726a036c94b549f9a5911ed6fd6aa55f7b377554bac",
         when="@2022.1.11 platform=linux target=x86_64:",
     )
     resource(
         name="ppcle",
-        url="file://{0}/totalview_2022.1.11_linux_powerle.tar".format(os.getcwd()),
+        url="file://totalview_2022.1.11_linux_powerle.tar",
         destination=".",
         sha256="4c49546508f7e0b1a91bea3ea8d71f6f9dc76989c69a4fd78012a4ae8fa44aa6",
         when="@2022.1.11 platform=linux target=ppc64le:",
     )
     resource(
         name="aarch64",
-        url="file://{0}/totalview_2022.1.11_linux_arm64.tar".format(os.getcwd()),
+        url="file://totalview_2022.1.11_linux_arm64.tar",
         destination=".",
         sha256="89407c043679d161b6e204fc4ad5686b7ac18742081a045f19388c7294e5ddbe",
         when="@2022.1.11 platform=linux target=aarch64:",
     )
     resource(
         name="darwinx86",
-        url="file://{0}/totalview.2022.1.11-darwin-x86.tar".format(os.getcwd()),
+        url="file://totalview.2022.1.11-darwin-x86.tar",
         destination=".",
         sha256="3a99eda8b7be225e0b7596b3c52032809378c86ea736c88e915c0a0e8efedbe4",
         when="@2022.1.11 platform=darwin target=x86_64:",
@@ -157,35 +157,35 @@ class Totalview(Package):
     # Version 2021.4.10
     resource(
         name="crayx86",
-        url="file://{0}/totalview_2021.4.10_linux_x86-64.tar".format(os.getcwd()),
+        url="file://totalview_2021.4.10_linux_x86-64.tar",
         destination=".",
         sha256="7e5509b2cfb219100b0032304bdad7d422657c0736c386ba64bdb1bf11d10a1d",
         when="@2021.4.10 platform=cray target=x86_64:",
     )
     resource(
         name="x86-64",
-        url="file://{0}/totalview.2021.4.10-linux-x86-64.tar".format(os.getcwd()),
+        url="file://totalview.2021.4.10-linux-x86-64.tar",
         destination=".",
         sha256="7e5509b2cfb219100b0032304bdad7d422657c0736c386ba64bdb1bf11d10a1d",
         when="@2021.4.10 platform=linux target=x86_64:",
     )
     resource(
         name="ppcle",
-        url="file://{0}/totalview_2021.4.10_linux_powerle.tar".format(os.getcwd()),
+        url="file://totalview_2021.4.10_linux_powerle.tar",
         destination=".",
         sha256="79e812d1cd600172c5ea29c4aa6fb660d293300683419af36dd0e52cd7e15d56",
         when="@2021.4.10 platform=linux target=ppc64le:",
     )
     resource(
         name="aarch64",
-        url="file://{0}/totalview_2021.4.10_linux_arm64.tar".format(os.getcwd()),
+        url="file://totalview_2021.4.10_linux_arm64.tar",
         destination=".",
         sha256="46faaae1f33b4f4a20de345611092fbc65cd5759511c1fcf86ca71a0811c76fd",
         when="@2021.4.10 platform=linux target=aarch64:",
     )
     resource(
         name="darwinx86",
-        url="file://{0}/totalview.2021.4.10-darwin-x86.tar".format(os.getcwd()),
+        url="file://totalview.2021.4.10-darwin-x86.tar",
         destination=".",
         sha256="adbf95f86763e3cc5ec51fd504f3172bdcbb42a7f1f4e73b17cacca002729ad2",
         when="@2021.4.10 platform=darwin target=x86_64:",
@@ -194,14 +194,14 @@ class Totalview(Package):
     # Version 2021.3
     resource(
         name="x86_64",
-        url="file://{0}/totalview_2021.3.9_linux_x86-64.tar".format(os.getcwd()),
+        url="file://totalview_2021.3.9_linux_x86-64.tar",
         destination=".",
         sha256="6315ca855e1bee14678c640c3c9c8207b4f66c91714dcedd4aed592354112b48",
         when="@2021.3.9 platform=linux target=x86_64:",
     )
     resource(
         name="ppcle",
-        url="file://{0}/totalview_2021.3.9_linux_powerle.tar".format(os.getcwd()),
+        url="file://totalview_2021.3.9_linux_powerle.tar",
         destination=".",
         sha256="a7657b61895805024f5d4e7550796a485f98ce297a585583cdd20fe0b9b30bbb",
         when="@2021.3.9 platform=linux target=ppc64le:",
