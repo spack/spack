@@ -45,7 +45,7 @@ from six import iteritems
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, rename
+from llnl.util.filesystem import mkdirp, write_tmp_and_move
 
 import spack.compilers
 import spack.paths
@@ -287,10 +287,8 @@ class SingleFileScope(ConfigScope):
             parent = os.path.dirname(self.path)
             mkdirp(parent)
 
-            tmp = os.path.join(parent, ".%s.tmp" % os.path.basename(self.path))
-            with open(tmp, "w") as f:
+            with write_tmp_and_move(self.path) as f:
                 syaml.dump_config(data_to_write, stream=f, default_flow_style=False)
-            rename(tmp, self.path)
 
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError("Error writing to config file: '%s'" % str(e))
