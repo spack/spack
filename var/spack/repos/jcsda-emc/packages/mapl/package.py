@@ -62,6 +62,7 @@ class Mapl(CMakePackage):
     variant("shared", default=True)
     variant("debug", default=False, description="Make a debuggable version of the library")
     variant("extdata2g", default=False, description="Use ExtData2G")
+    variant("pnetcdf", default=True, description="Use parallel netCDF")
     variant("buildexe", default=True, description="Build pfio test executables")
 
     depends_on("cmake@3.17:")
@@ -69,6 +70,7 @@ class Mapl(CMakePackage):
     depends_on("hdf5")
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
+    depends_on("parallel-netcdf", when="+pnetcdf")
     depends_on("esmf@8.3:", when="@2.22:")
     depends_on("esmf", when="@:2.12.99")
     depends_on("esmf~debug", when="~debug")
