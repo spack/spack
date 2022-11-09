@@ -1463,26 +1463,3 @@ def test_environment_errors_if_root_missing(mutable_config, tmpdir):
 
     with pytest.raises(ev.SpackEnvironmentError, match=env_dir):
         env("create", "test")
-
-
-def test_environment_cant_modify_environments_root(tmpdir):
-    filename = tmpdir.join("spack.yaml")
-    with open(filename, "w") as f:
-        f.write(
-            """\
-spack:
-  config:
-    environments_root: /a/black/hole
-  view: false
-  specs: []
-"""
-        )
-    with tmpdir.as_cwd():
-        with pytest.raises(ev.SpackEnvironmentError):
-            # Why does this raise?
-            e = ev.Environment(tmpdir.strpath)
-            ev.activate(e)
-        with pytest.raises(ev.SpackEnvironmentError):
-            # When this does not?
-            env("create", "-d", tmpdir.strpath)
-            env("activate", "-d", tmpdir.strpath)

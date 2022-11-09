@@ -106,6 +106,24 @@ def test_env_change_spec_in_matrix_raises_error(
     assert "Cannot directly change specs in matrices" in str(error)
 
 
+def test_environment_cant_modify_environments_root(tmpdir):
+    filename = tmpdir.join("spack.yaml")
+    with open(filename, "w") as f:
+        f.write(
+            """\
+spack:
+  config:
+    environments_root: /a/black/hole
+  view: false
+  specs: []
+"""
+        )
+    with tmpdir.as_cwd():
+        with pytest.raises(ev.SpackEnvironmentError):
+            e = ev.Environment(tmpdir.strpath)
+            ev.activate(e)
+
+
 def test_activate_should_require_an_env():
     with pytest.raises(TypeError):
         ev.activate(env="name")
