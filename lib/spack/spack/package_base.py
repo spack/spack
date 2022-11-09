@@ -919,6 +919,12 @@ class PackageBase(six.with_metaclass(PackageMeta, WindowsRPathMeta, PackageViewM
         """
         return self._implement_all_urls_for_version(version)[0]
 
+    def update_external_dependencies(self):
+        """
+        Method to override in package classes to handle external dependencies
+        """
+        pass
+
     def all_urls_for_version(self, version):
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
