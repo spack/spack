@@ -78,6 +78,10 @@ class Sz(CMakePackage, AutotoolsPackage):
 
     patch("ctags-only-if-requested.patch", when="@2.1.8.1:2.1.8.3")
 
+    def setup_run_environment(self, env):
+        if "+hdf5" in self.spec:
+            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
+
     def _test_2d_float(self):
         """This test performs simple 2D compression/decompression (float)"""
         test_data_dir = self.test_suite.current_test_data_dir

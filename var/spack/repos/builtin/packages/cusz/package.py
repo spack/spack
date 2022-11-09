@@ -14,12 +14,16 @@ class Cusz(CMakePackage, CudaPackage):
     url = "https://github.com/szcompressor/cuSZ/archive/refs/tags/v0.3.tar.gz"
 
     maintainers = ["jtian0", "dingwentao"]
+    tags = ["e4s"]
 
     conflicts("~cuda")
     conflicts("cuda_arch=none", when="+cuda")
 
     version("develop", branch="develop")
     version("0.3", sha256="0feb4f7fd64879fe147624dd5ad164adf3983f79b2e0383d35724f8d185dcb11")
+
+    # these version of Cuda provide the CUB headers, but not CUB cmake configuration that we use.
+    conflicts("cuda@11.0.2:11.2.2")
 
     depends_on("cub", when="^ cuda@:10.2.89")
 
