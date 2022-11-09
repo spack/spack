@@ -114,7 +114,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
             # explicitly add blas to LAPACK_LIBRARIES.
-            define("LAPACK_LIBRARIES", [spec["lapack"].libs, spec["blas"].libs]),
+            define("LAPACK_LIBRARIES", spec["lapack"].libs + spec["blas"].libs),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
         ]
 
