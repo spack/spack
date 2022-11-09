@@ -75,9 +75,10 @@ def executables_in_path(path_hints=None):
     return path_to_exe
 
 
-def libraries_in_ld_library_path(path_hints=None):
+def libraries_in_ld_and_system_library_path(path_hints=None):
     """Get the paths of all libraries available from LD_LIBRARY_PATH,
-    LIBRARY_PATH, DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH.
+    LIBRARY_PATH, DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH, and
+    standard system library paths.
 
     For convenience, this is constructed as a dictionary where the keys are
     the library paths and the values are the names of the libraries
@@ -90,7 +91,7 @@ def libraries_in_ld_library_path(path_hints=None):
         path_hints (list): list of paths to be searched. If None the list will be
             constructed based on the set of LD_LIBRARY_PATH, LIBRARY_PATH,
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
-            variables.
+            variables as well as the standard system library paths.
     """
     path_hints = path_hints or spack.util.environment.get_path(
         "LIBRARY_PATH"
@@ -98,7 +99,7 @@ def libraries_in_ld_library_path(path_hints=None):
         "DYLD_LIBRARY_PATH"
     ) + spack.util.environment.get_path(
         "DYLD_FALLBACK_LIBRARY_PATH"
-    )
+    ) + llnl.util.filesystem.system_library_search_locations
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
@@ -129,14 +130,17 @@ def by_library(packages_to_check, path_hints=None):
     # Other libraries could use the strings function to extract it as described
     # in https://unix.stackexchange.com/questions/58846/viewing-linux-library-executable-version-info
     """Return the list of packages that have been detected on the system,
-    searching by LD_LIBRARY_PATH.
+    searching by LD_LIBRARY_PATH, LIBRARY_PATH, DYLD_LIBRARY_PATH,
+    DYLD_FALLBACK_LIBRARY_PATH, and standard system library paths.
 
     Args:
         packages_to_check (list): list of packages to be detected
         path_hints (list): list of paths to be searched. If None the list will be
-            constructed based on the LD_LIBRARY_PATH environment variable.
+            constructed based on the LD_LIBRARY_PATH, LIBRARY_PATH,
+            DYLD_LIBRARY_PATH, DYLD_FALLBACK_LIBRARY_PATH environment variables
+            and standard system library paths.
     """
-    path_to_lib_name = libraries_in_ld_library_path(path_hints=path_hints)
+    path_to_lib_name = libraries_in_ld_and_system_library_path(path_hints=path_hints)
     lib_pattern_to_pkgs = collections.defaultdict(list)
     for pkg in packages_to_check:
         if hasattr(pkg, "libraries"):
