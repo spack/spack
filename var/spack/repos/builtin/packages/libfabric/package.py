@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
+
 from spack.package import *
 
 
@@ -14,6 +16,8 @@ class Libfabric(AutotoolsPackage):
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git = "https://github.com/ofiwg/libfabric.git"
     maintainers = ["rajachan"]
+
+    executables = ["^fi_info$"]
 
     version("main", branch="main")
     version("1.16.1", sha256="53f992d33f9afe94b8a4ea3d105504887f4311cf4b68cea99a24a85fcc39193f")
@@ -44,6 +48,7 @@ class Libfabric(AutotoolsPackage):
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
     fabrics = (
+        "cxi",
         "efa",
         "gni",
         "mlx",
@@ -106,6 +111,30 @@ class Libfabric(AutotoolsPackage):
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"libfabric: (\d+\.\d+\.\d+)(\D*\S*)", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = []
+            output = Executable(exe)("--list", output=str, error=str)
+            # fabrics
+            fabrics = get_options_from_variant(cls, "fabrics")
+            used_fabrics = []
+            for fabric in fabrics:
+                match = re.search(r"^%s:.*\n.*version: (\S+)" % fabric, output, re.MULTILINE)
+                if match:
+                    used_fabrics.append(fabric)
+            if used_fabrics:
+                variants.append("fabrics=" + ",".join(used_fabrics))
+            results.append(" ".join(variants))
+        return results
+
     def setup_build_environment(self, env):
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
@@ -136,3 +165,11 @@ class Libfabric(AutotoolsPackage):
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
+
+# This code gets all the fabric names from the variants list
+# Idea taken from the AutotoolsPackage source.
+def get_options_from_variant(self, name):
+    values = self.variants[name][0].values
+    if getattr(values, "feature_values", None):
+        values = values.feature_values
+    return values
