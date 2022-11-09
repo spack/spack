@@ -1,4 +1,4 @@
-#!/scratch/psakiev/spack/share/spack/qa/bashcov
+#!/bin/sh
 #
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # sbang project developers. See the top-level COPYRIGHT file for details.
@@ -15,7 +15,7 @@
 # To use, put the long shebang on the second line of your script, and
 # make sbang the interpreter, like this:
 #
-#     #!/scratch/psakiev/spack/share/spack/qa/bashcov /path/to/sbang
+#     #!/bin/sh /path/to/sbang
 #     #!/long/path/to/real/interpreter with arguments
 #
 # `sbang` will run the real interpreter with the script as its argument.
