@@ -379,6 +379,17 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
 
+    # test architecture information is in replacements
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$platform", "bar")
+    ) == os.path.abspath(os.path.join("foo", "test", "bar"))
+
+    host_target = spack.platforms.host().target("default_target")
+    host_target_family = str(host_target.microarchitecture.family)
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$target_family", "bar")
+    ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
+
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
 

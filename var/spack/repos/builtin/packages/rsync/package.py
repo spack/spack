@@ -14,6 +14,9 @@ class Rsync(AutotoolsPackage):
     homepage = "https://rsync.samba.org"
     url = "https://download.samba.org/pub/rsync/src/rsync-3.2.4.tar.gz"
 
+    version("3.2.7", sha256="4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb")
+    version("3.2.6", sha256="fb3365bab27837d41feaf42e967c57bd3a47bc8f10765a3671efd6a3835454d3")
+    version("3.2.5", sha256="2ac4d21635cdf791867bc377c35ca6dda7f50d919a58be45057fd51600c69aba")
     version("3.2.4", sha256="6f761838d08052b0b6579cf7f6737d93e47f01f4da04c5d24d3447b7f2a5fad1")
     version("3.2.3", sha256="becc3c504ceea499f4167a260040ccf4d9f2ef9499ad5683c179a697146ce50e")
     version("3.2.2", sha256="644bd3841779507665211fd7db8359c8a10670c57e305b4aab61b4e40037afa8")

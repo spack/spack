@@ -102,7 +102,7 @@ class DirectoryLayout(object):
 
     @property
     def hidden_file_regexes(self):
-        return (re.escape(self.metadata_dir),)
+        return ("^{0}$".format(re.escape(self.metadata_dir)),)
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
