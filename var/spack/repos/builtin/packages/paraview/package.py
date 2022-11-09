@@ -73,6 +73,7 @@ class Paraview(CMakePackage, CudaPackage):
     variant("pagosa", default=False, description="Build the pagosa adaptor")
     variant("eyedomelighting", default=False, description="Enable Eye Dome Lighting feature")
     variant("adios2", default=False, description="Enable ADIOS2 support", when="@5.8:")
+    variant("visitbridge", default=False, description="Enable VisItBridge support")
     variant("catalyst", default=False, description="Enable Catalyst 1", when="@5.7:")
     variant(
         "libcatalyst",
@@ -104,6 +105,7 @@ class Paraview(CMakePackage, CudaPackage):
         ' "on" or "off" will always override the build_edition.',
     )
 
+    conflicts("~hdf5", when="+visitbridge")
     conflicts("+adios2", when="@:5.10 ~mpi")
     conflicts("+python", when="+python3")
     # Python 2 support dropped with 5.9.0
@@ -199,6 +201,10 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on("hdf5@1.10:", when="+hdf5 @5.10:")
     depends_on("adios2+mpi", when="+adios2+mpi")
     depends_on("adios2~mpi", when="+adios2~mpi")
+    depends_on("silo", when="+visitbridge")
+    depends_on("silo+mpi", when="+visitbridge+mpi")
+    depends_on("silo~mpi", when="+visitbridge~mpi")
+    depends_on("boost", when="+visitbridge")
     depends_on("jpeg")
     depends_on("jsoncpp")
     depends_on("libogg")
@@ -385,6 +391,8 @@ class Paraview(CMakePackage, CudaPackage):
             "-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s" % includes,
             "-DBUILD_TESTING:BOOL=OFF",
             "-DOpenGL_GL_PREFERENCE:STRING=LEGACY",
+            self.define_from_variant("PARAVIEW_ENABLE_VISITBRIDGE", "visitbridge"),
+            self.define_from_variant("VISIT_BUILD_READER_Silo", "visitbridge"),
         ]
 
         if spec.satisfies("@5.11:"):
