@@ -4402,6 +4402,9 @@ class Spec(object):
         """Helper for tree to print DB install status."""
         if not self.concrete:
             return None
+
+        if self.external:
+            return "external"
         try:
             record = spack.store.db.get_record(self)
             return record.installed
@@ -4452,7 +4455,9 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if node.installed_upstream:
+                if status == "external":
+                    out += clr.colorize("@g{[<]}  ", color=color)  # external
+                elif node.installed_upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
                 elif status is None:
                     out += clr.colorize("@K{ - }  ", color=color)  # !installed
