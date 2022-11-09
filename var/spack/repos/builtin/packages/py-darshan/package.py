@@ -30,7 +30,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-matplotlib@3.4", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
-    depends_on("py-pytest", type=("build", "run"))
+    depends_on("py-pytest", type="test")
     # NOTE: lxml is test-only indirect dependency via pandas
     #       It will become optional in the next release 
     depends_on("py-lxml", type=("test"))
