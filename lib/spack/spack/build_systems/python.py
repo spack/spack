@@ -218,6 +218,22 @@ class PythonPackage(PythonExtension):
             name = cls.pypi.split("/")[0]
             return "https://pypi.org/simple/" + name + "/"
 
+    def update_external_dependencies(self):
+        """
+        Ensure all external python packages have a python dependency
+        """
+        # TODO: Include this in the solve, rather than instantiating post-concretization
+        if "python" not in self.spec:
+            if "python" in self.spec.root:
+                python = self.spec.root["python"]
+            else:
+                python = Spec("python")
+                repo = spack.repo.path.repo_for_pkg(python)
+                python.namespace = repo.namespace
+                python._mark_concrete()
+                python.external_path = self.prefix
+            self.spec.add_dependency_edge(python, ("build", "link", "run"))
+
     @property
     def headers(self):
         """Discover header files in platlib."""

@@ -2324,7 +2324,7 @@ class SpecBuilder(object):
         for root in self._specs.values():
             for dep in root.traverse():
                 if dep.external:
-                    dep.update_external_dependencies()
+                    dep.package.update_external_dependencies()
 
         return self._specs
 
