@@ -114,6 +114,7 @@ class Mesa(MesonPackage):
         depends_on("libllvm@6:")
         depends_on("libllvm@:11", when="@:20")
         depends_on("libllvm@:12", when="@:21")
+        depends_on("libllvm@:15", when="@:22.1")
     depends_on("libx11", when="+glx")
     depends_on("libxcb", when="+glx")
     depends_on("libxext", when="+glx")
@@ -147,6 +148,7 @@ class Mesa(MesonPackage):
     # on development versions of LLVM 13 may or may not have it. Use SFINAE to detect
     # the existence of the function and call it only if it is available.
     patch("handle_missing_set_override_stack_alignment.patch", when="@21.2.3:")
+    patch("disable-gallivm-coroutine-for-libllvm15.patch", when="@22.1.2:")
 
     # Explicitly use the llvm-config tool
     def patch(self):
