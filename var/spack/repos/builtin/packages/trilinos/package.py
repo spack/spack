@@ -21,27 +21,28 @@ from spack.pkg.builtin.kokkos import Kokkos
 # relevant documentation/examples:
 # https://github.com/trilinos/Trilinos/issues/175
 
-# Hints and tips on installation:
-# ------------------------------------------------------------------------------
-# Trilinos contains a large number of packages, so installing Trilinos directly
-# as a spec needs to have some intention of the packages required.
-# For instance, `spack install trilinos` will install Trilinos with no packages. 
-# However, `spack install trilinos+muelu` will install Trilinos along with all
-# packages needed to build MueLu in Trilinos. If you are installing the 
-# Trilinos spec directly, this is probably all that you will need for choosing 
-# packages in Trilinos that you want to enable (along with optional packages that
-# those packages rely on). 
-#
-# tldr; only use +variant for Trilinos packages that you know you NEED (you don't have to
-# worry about their other required package dependencies, it will be handled for you), and 
-# do NOT use ~variant to indicate not installing a package, as the package would have 
-# only been installed if it was needed.
-
 class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     """The Trilinos Project is an effort to develop algorithms and enabling
     technologies within an object-oriented software framework for the solution
     of large-scale, complex multi-physics engineering and scientific problems.
     A unique design feature of Trilinos is its focus on packages.
+
+    Hints and tips on installation:
+    --------------------------------------------------------------------------
+    Trilinos contains a large number of packages, so installing Trilinos 
+    directly as a spec needs to have some intention of the packages required.
+    For instance, `spack install trilinos` will install Trilinos with no 
+    packages. However, `spack install trilinos+muelu` will install Trilinos 
+    along with all packages needed to build MueLu in Trilinos. If you are 
+    installing the Trilinos spec directly, this is probably all that you will 
+    need for choosing packages in Trilinos that you want to enable (along with 
+    optional packages that those packages rely on). 
+
+    tldr; only use +variant for Trilinos packages that you know you NEED (you 
+    don't have to worry about their other required package dependencies, it 
+    will be handled for you), and do NOT use ~variant to indicate not 
+    installing a package, as the package would have only been installed if it 
+    was needed.
     """
 
     homepage = "https://trilinos.org/"
