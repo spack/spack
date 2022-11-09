@@ -128,7 +128,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
             if spec.satisfies("%cce"):
                 options.append(define("CMAKE_Fortran_FLAGS", "-ef"))
 
-        if spec.satisfies("^cuda"):
+        if "+cuda" in spec:
             cuda_arch = spec.variants["cuda_arch"].value
             sep = "" if "@:2.2.0" in spec else "_"
             capabilities = " ".join("sm{0}{1}".format(sep, i) for i in cuda_arch)
