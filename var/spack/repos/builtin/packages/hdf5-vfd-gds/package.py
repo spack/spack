@@ -23,6 +23,9 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
 
     # Dependencies
     conflicts("~cuda")
+    # Although cuFILE predates 11.7.0, it is not installed in a location the build
+    # system can obtaion via `find_library`.  Packaging issues fixed in 11.7.1.
+    conflicts("^cuda@:11.7.0")
     depends_on("cmake@3.12:", type="build")
     depends_on("hdf5@1.13.0:")
 

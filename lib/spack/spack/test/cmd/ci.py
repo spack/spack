@@ -1011,7 +1011,6 @@ def test_ci_rebuild(
 
         assert "--keep-stage" in install_parts
         assert "--no-check-signature" not in install_parts
-        assert "--no-add" in install_parts
         assert "-f" in install_parts
         flag_index = install_parts.index("-f")
         assert "archive-files.json" in install_parts[flag_index + 1]
@@ -1261,7 +1260,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", json_path)
+            install_cmd("--add", "--keep-stage", json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
@@ -1623,7 +1622,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", "-f", json_path)
+            install_cmd("--add", "--keep-stage", "-f", json_path)
             buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
@@ -1837,8 +1836,8 @@ spack:
             yaml_contents = syaml.load(contents)
 
             for ci_key in yaml_contents.keys():
-                if "archive-files" in ci_key or "mpich" in ci_key:
-                    print("Error: archive-files and mpich should have been pruned")
+                if "archive-files" in ci_key:
+                    print("Error: archive-files should have been pruned")
                     assert False
 
 

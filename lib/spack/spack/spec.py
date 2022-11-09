@@ -1558,10 +1558,24 @@ class Spec(object):
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
-        if spec.name in self._dependencies:
+        if spec.name not in self._dependencies:
+            self.add_dependency_edge(spec, deptypes)
+            return
+
+        # Keep the intersection of constraints when a dependency is added
+        # multiple times. Currently we only allow identical edge types.
+        orig = self._dependencies[spec.name]
+        try:
+            dspec = next(dspec for dspec in orig if deptypes == dspec.deptypes)
+        except StopIteration:
             raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
 
-        self.add_dependency_edge(spec, deptypes)
+        try:
+            dspec.spec.constrain(spec)
+        except spack.error.UnsatisfiableSpecError:
+            raise DuplicateDependencyError(
+                "Cannot depend on incompatible specs '%s' and '%s'" % (dspec.spec, spec)
+            )
 
     def add_dependency_edge(self, dependency_spec, deptype):
         """Add a dependency edge to this spec.
@@ -1741,7 +1755,12 @@ class Spec(object):
             return hash.override(self)
         node_dict = self.to_node_dict(hash=hash)
         json_text = sjson.dump(node_dict)
-        return spack.util.hash.b32_hash(json_text)
+        # This implements "frankenhashes", preserving the last 7 characters of the
+        # original hash when splicing so that we can avoid relocation issues
+        out = spack.util.hash.b32_hash(json_text)
+        if self.build_spec is not self:
+            return out[:-7] + self.build_spec.spec_hash(hash)[-7:]
+        return out
 
     def _cached_hash(self, hash, length=None, force=False):
         """Helper function for storing a cached hash on the spec.
@@ -2732,6 +2751,11 @@ class Spec(object):
         # If any spec in the DAG is deprecated, throw an error
         Spec.ensure_no_deprecated(self)
 
+        # Update externals as needed
+        for dep in self.traverse():
+            if dep.external:
+                dep.package.update_external_dependencies()
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #
@@ -2755,7 +2779,9 @@ class Spec(object):
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        self.architecture.target.optimization_flags(self.compiler)
+        # No need on platform=cray because of the targeting modules
+        if not self.satisfies("platform=cray"):
+            self.architecture.target.optimization_flags(self.compiler)
 
     def _patches_assigned(self):
         """Whether patches have been assigned to this spec by the concretizer."""
@@ -3545,7 +3571,9 @@ class Spec(object):
                 )
 
         # Update with additional constraints from other spec
-        for name in other.dep_difference(self):
+        # operate on direct dependencies only, because a concrete dep
+        # represented by hash may have structure that needs to be preserved
+        for name in other.direct_dep_difference(self):
             dep_spec_copy = other._get_dependency(name)
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
@@ -3566,10 +3594,10 @@ class Spec(object):
         clone.constrain(other, deps)
         return clone
 
-    def dep_difference(self, other):
+    def direct_dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
-        mine = set(s.name for s in self.traverse(root=False))
-        mine.difference_update(s.name for s in other.traverse(root=False))
+        mine = set(dname for dname in self._dependencies)
+        mine.difference_update(dname for dname in other._dependencies)
         return mine
 
     def _autospec(self, spec_like):
@@ -4848,7 +4876,7 @@ def merge_abstract_anonymous_specs(*abstract_specs):
             merged_spec[name].constrain(current_spec_constraint[name], deps=False)
 
         # Update with additional constraints from other spec
-        for name in current_spec_constraint.dep_difference(merged_spec):
+        for name in current_spec_constraint.direct_dep_difference(merged_spec):
             edge = next(iter(current_spec_constraint.edges_to_dependencies(name)))
             merged_spec._add_dependency(edge.spec.copy(), edge.deptypes)
 

@@ -352,6 +352,17 @@ class TestConcretize(object):
         assert set(spec.compiler_flags["cflags"]) == set(["-g"])
         assert spec.satisfies("^openblas cflags='-O3'")
 
+    def test_mixing_compilers_only_affects_subdag(self):
+        spack.config.set("packages:all:compiler", ["clang", "gcc"])
+        spec = Spec("dt-diamond%gcc ^dt-diamond-bottom%clang").concretized()
+        for dep in spec.traverse():
+            assert ("%clang" in dep) == (dep.name == "dt-diamond-bottom")
+
+    def test_compiler_inherited_upwards(self):
+        spec = Spec("dt-diamond ^dt-diamond-bottom%clang").concretized()
+        for dep in spec.traverse():
+            assert "%clang" in dep
+
     def test_architecture_inheritance(self):
         """test_architecture_inheritance is likely to fail with an
         UnavailableCompilerVersionError if the architecture is concretized
@@ -1695,6 +1706,28 @@ class TestConcretize(object):
                 counter += 1
         assert counter == occurances, concrete_specs
 
+    def test_coconcretize_reuse_and_virtuals(self):
+        import spack.solver.asp
+
+        if spack.config.get("config:concretizer") == "original":
+            pytest.skip("Original concretizer cannot reuse")
+
+        reusable_specs = []
+        for s in ["mpileaks ^mpich", "zmpi"]:
+            reusable_specs.extend(spack.spec.Spec(s).concretized().traverse(root=True))
+
+        root_specs = [spack.spec.Spec("mpileaks"), spack.spec.Spec("zmpi")]
+
+        import spack.solver.asp
+
+        with spack.config.override("concretizer:reuse", True):
+            solver = spack.solver.asp.Solver()
+            setup = spack.solver.asp.SpackSolverSetup()
+            result, _, _ = solver.driver.solve(setup, root_specs, reuse=reusable_specs)
+
+        for spec in result.specs:
+            assert "zmpi" in spec
+
     @pytest.mark.regression("30864")
     def test_misleading_error_message_on_version(self, mutable_database):
         # For this bug to be triggered we need a reusable dependency
@@ -1904,11 +1937,26 @@ class TestConcretize(object):
             pytest.xfail("Use case not supported by the original concretizer")
 
         # Configuration to be added to packages.yaml
-        external_conf = {"all": {"require": "target=x86_64"}}
+        external_conf = {"all": {"require": "target=%s" % spack.platforms.test.Test.front_end}}
         spack.config.set("packages", external_conf)
 
         with spack.config.override("concretizer:reuse", False):
             spec = Spec("mpich").concretized()
 
         for s in spec.traverse():
-            assert s.satisfies("target=x86_64")
+            assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
+
+    def test_external_python_extensions_have_dependency(self):
+        """Test that python extensions have access to a python dependency"""
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [{"spec": "py-extension1@2.0", "prefix": "/fake"}],
+            }
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension2").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"] == spec["py-extension1"]["python"]

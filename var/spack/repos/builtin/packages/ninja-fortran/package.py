@@ -86,3 +86,12 @@ class NinjaFortran(Package):
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):
             symlink("ninja", "ninja-build")
+
+    def setup_dependent_package(self, module, dspec):
+        name = "ninja"
+
+        module.ninja = MakeExecutable(
+            which_string(name, path=[self.spec.prefix.bin], required=True),
+            determine_number_of_jobs(parallel=self.parallel),
+            supports_jobserver=True,  # This fork supports jobserver
+        )
