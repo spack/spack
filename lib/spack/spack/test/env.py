@@ -107,7 +107,7 @@ def test_env_change_spec_in_matrix_raises_error(
 
 
 def test_environment_cant_modify_environments_root(tmpdir):
-    filename = tmpdir.join("spack.yaml")
+    filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
         f.write(
             """\
