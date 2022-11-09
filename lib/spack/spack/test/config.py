@@ -1478,6 +1478,11 @@ spack:
 """
         )
     with tmpdir.as_cwd():
-        env("create", "-d", tmpdir.strpath)
         with pytest.raises(ev.SpackEnvironmentError):
+            # Why does this raise?
+            e = ev.Environment(tmpdir.strpath)
+            ev.activate(e)
+        with pytest.raises(ev.SpackEnvironmentError):
+            # When this does not?
+            env("create", "-d", tmpdir.strpath)
             env("activate", "-d", tmpdir.strpath)
