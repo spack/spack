@@ -1,4 +1,5 @@
 SPACK ?= spack
+SPACK_INSTALL_FLAGS ?=
 
 .PHONY: {{ all_target }} {{ clean_target }}
 
