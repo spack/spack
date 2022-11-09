@@ -99,6 +99,7 @@ def check_disallowed_env_config_mods(scopes):
                 spack.config.print_section("config")
     return scopes
 
+
 def default_manifest_yaml():
     """default spack.yaml file to put in new environments"""
     return """\
