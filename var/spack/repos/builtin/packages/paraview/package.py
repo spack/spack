@@ -23,7 +23,7 @@ class Paraview(CMakePackage, CudaPackage):
     list_depth = 1
     git = "https://gitlab.kitware.com/paraview/paraview.git"
 
-    maintainers = ["chuckatkins", "danlipsa", "vicentebolea"]
+    maintainers = ["danlipsa", "vicentebolea", "kwryankrattiger"]
     tags = ["e4s"]
 
     version("master", branch="master", submodules=True)
