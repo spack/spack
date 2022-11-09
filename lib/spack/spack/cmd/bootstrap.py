@@ -52,6 +52,7 @@ BINARY_METADATA = {
 
 CLINGO_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/clingo.json"
 GNUPG_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/gnupg.json"
+PATCHELF_JSON = "$spack/share/spack/bootstrap/github-actions-v0.4/patchelf.json"
 
 # Metadata for a generated source mirror
 SOURCE_METADATA = {
@@ -443,6 +444,7 @@ def _mirror(args):
         abs_directory, rel_directory = write_metadata(subdir="binaries", metadata=BINARY_METADATA)
         shutil.copy(spack.util.path.canonicalize_path(CLINGO_JSON), abs_directory)
         shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
+        shutil.copy(spack.util.path.canonicalize_path(PATCHELF_JSON), abs_directory)
         instructions += cmd.format("local-binaries", rel_directory)
     print(instructions)
 
