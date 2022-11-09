@@ -32,7 +32,7 @@ class PyDarshan(PythonPackage):
     depends_on("py-mako", type=("build", "run"))
     depends_on("py-pytest", type="test")
     # NOTE: lxml is test-only indirect dependency via pandas
-    #       It will become optional in the next release 
+    #       It will become optional in the next release
     depends_on("py-lxml", type=("test"))
 
     depends_on("darshan-util", type=("build", "run"))
