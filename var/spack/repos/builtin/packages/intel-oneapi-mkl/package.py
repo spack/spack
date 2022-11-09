@@ -8,7 +8,6 @@ import platform
 
 from spack.package import *
 
-
 @IntelOneApiPackage.update_description
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI Math Kernel Library (Intel oneMKL; formerly Intel Math
@@ -87,13 +86,20 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     variant(
         "cluster", default=False, description="Build with cluster support: scalapack, blacs, etc"
     )
+    variant(
+        "threads",
+        default="none",
+        description="Multithreading support",
+        values=("openmp", "tbb", "none"),
+        multi=False,
+    )
 
     depends_on("intel-oneapi-tbb")
     # cluster libraries need mpi
     depends_on("mpi", when="+cluster")
 
     provides("fftw-api@3")
-    provides("scalapack", when="+cluster")
+    provides("scalapack")
     provides("mkl")
     provides("lapack")
     provides("blas")
@@ -140,13 +146,27 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     def _find_mkl_libs(self, shared):
         libs = []
 
-        if "+cluster" in self.spec:
-            libs.extend([self._xlp64_lib("libmkl_scalapack"), "libmkl_cdft_core"])
+        # intel-mkl adds cluster libs when spec contains mpi
+        cluster = "+cluster" in self.spec or "^mpi" in self.spec.root
+        if cluster:
+            libs.append(self._xlp64_lib("libmkl_scalapack"))
+            libs.append("libmkl_cdft_core")
+        libs.append(self._xlp64_lib("libmkl_intel"))
 
-        libs.extend([self._xlp64_lib("libmkl_intel"), "libmkl_sequential", "libmkl_core"])
+        if "threads=tbb" in self.spec:
+            libs.append("libmkl_tbb_thread")
+        elif "threads=openmp" in self.spec:
+            libs.append("libmkl_intel_thread")
+        else:
+            libs.append("libmkl_sequential")
 
-        if "+cluster" in self.spec:
-            libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
+        libs.append("libmkl_core")
+
+        if cluster:
+            if "openmpi" in self.spec:
+                libs.append(self._xlp64_lib("libmkl_blacs_openmpi"))
+            else:
+                libs.append(self._xlp64_lib("libmkl_blacs_intelmpi"))
 
         return find_libraries(libs, self.component_prefix.lib.intel64, shared=shared)
 
