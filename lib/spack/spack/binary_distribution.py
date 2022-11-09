@@ -267,7 +267,11 @@ class BinaryCacheIndex(object):
         """
         if find_hash not in self._mirrors_for_spec:
             # Not found in the cached index, pull the latest from the server.
-            self.update(with_cooldown=True)
+            # If that fails, don't propagate the error
+            try:
+                self.update(with_cooldown=True)
+            except FetchCacheError:
+                pass
         if find_hash not in self._mirrors_for_spec:
             return None
         results = self._mirrors_for_spec[find_hash]
