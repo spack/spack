@@ -11,6 +11,10 @@ SPACK_INSTALL_FLAGS ?=
 {{ dirs_target }}:
 	@mkdir -p {{ install_target }} {{ install_deps_target }}
 
+{% if phony_convenience_targets %}
+.PHONY: {{ phony_convenience_targets }}
+{% endif %}
+
 # The spack install commands are of the form:
 # spack -e my_env --no-add --only=package --only=concrete /hash
 # This is an involved way of expressing that Spack should only install
@@ -33,7 +37,11 @@ SPACK_INSTALL_FLAGS ?=
 {% for (parent, prereqs, _, _, _) in adjacency_list -%}
 {{ install_target }}/{{ parent }}: {{ install_deps_target }}/{{ parent }}
 {{ install_deps_target }}/{{ parent }}: {{ prereqs }}
+{% if phony_convenience_targets %}
+install/{{ parent }}: {{ install_target }}/{{ parent }}
+install-deps/{{ parent }}: {{ install_deps_target }}/{{ parent }}
+{% endif %}
 {% endfor %}
 
 {{ clean_target }}:
-	rm -rf {{ env_target }} {{ cleanable_targets }}
+	rm -rf {{ env_target }} {{ all_install_related_targets }}

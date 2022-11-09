@@ -694,6 +694,8 @@ def env_depfile(args):
     spack.cmd.require_active_env(cmd_name="env depfile")
     env = ev.active_environment()
 
+    # Special make targets are useful when including a makefile in another, and you
+    # need to "namespace" the targets to avoid conflicts.
     if args.make_target_prefix is None:
         target_prefix = os.path.join(env.env_subdir_path, "makedeps")
     else:
@@ -734,11 +736,20 @@ def env_depfile(args):
     # Root specs without deps are the prereqs for the environment target
     root_install_targets = [get_install_target(h.format("{name}-{version}-{hash}")) for h in roots]
 
-    # Cleanable targets...
-    cleanable_targets = [get_install_target(h) for h, _, _, _, _ in make_targets.adjacency_list]
-    cleanable_targets.extend(
-        [get_install_deps_target(h) for h, _, _, _, _ in make_targets.adjacency_list]
-    )
+    # All install and install-deps targets
+    all_install_related_targets = []
+
+    # Convenience shortcuts: ensure that `make install/pkg-version-hash` triggers
+    # <absolute path to env>/.spack-env/makedeps/install/pkg-version-hash in case
+    # we don't have a custom make target prefix.
+    phony_convenience_targets = []
+
+    for tgt, _, _, _, _ in make_targets.adjacency_list:
+        all_install_related_targets.append(get_install_target(tgt))
+        all_install_related_targets.append(get_install_deps_target(tgt))
+        if args.make_target_prefix is None:
+            phony_convenience_targets.append(os.path.join("install", tgt))
+            phony_convenience_targets.append(os.path.join("install-deps", tgt))
 
     buf = six.StringIO()
 
@@ -749,7 +760,7 @@ def env_depfile(args):
             "all_target": get_target("all"),
             "env_target": get_target("env"),
             "clean_target": get_target("clean"),
-            "cleanable_targets": " ".join(cleanable_targets),
+            "all_install_related_targets": " ".join(all_install_related_targets),
             "root_install_targets": " ".join(root_install_targets),
             "dirs_target": get_target("dirs"),
             "environment": env.path,
@@ -758,6 +769,8 @@ def env_depfile(args):
             "any_hash_target": get_target("%"),
             "jobserver_support": "+" if args.jobserver else "",
             "adjacency_list": make_targets.adjacency_list,
+            "phony_convenience_targets": " ".join(phony_convenience_targets),
+            "target_prefix": target_prefix,
         }
     )
 
