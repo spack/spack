@@ -18,6 +18,7 @@ from llnl.util.filesystem import getuid, join_path, mkdirp, touch, touchp
 import spack.config
 import spack.environment as ev
 import spack.main
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.schema.compilers
@@ -380,6 +381,17 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     assert spack_path.canonicalize_path(path) == os.path.normpath(
         os.path.join(mock_low_high_config.scopes["low"].path, os.path.join("foo", "bar", "baz"))
     )
+
+    # test architecture information is in replacements
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$platform", "bar")
+    ) == os.path.abspath(os.path.join("foo", "test", "bar"))
+
+    host_target = spack.platforms.host().target("default_target")
+    host_target_family = str(host_target.microarchitecture.family)
+    assert spack_path.canonicalize_path(
+        os.path.join("foo", "$target_family", "bar")
+    ) == os.path.abspath(os.path.join("foo", host_target_family, "bar"))
 
 
 packages_merge_low = {"packages": {"foo": {"variants": ["+v1"]}, "bar": {"variants": ["+v2"]}}}
@@ -1174,13 +1186,13 @@ def test_license_dir_config(mutable_config, mock_packages):
     """Ensure license directory is customizable"""
     expected_dir = spack.paths.default_license_dir
     assert spack.config.get("config:license_dir") == expected_dir
-    assert spack.package.Package.global_license_dir == expected_dir
+    assert spack.package_base.PackageBase.global_license_dir == expected_dir
     assert spack.repo.path.get_pkg_class("a").global_license_dir == expected_dir
 
     rel_path = os.path.join(os.path.sep, "foo", "bar", "baz")
     spack.config.set("config:license_dir", rel_path)
     assert spack.config.get("config:license_dir") == rel_path
-    assert spack.package.Package.global_license_dir == rel_path
+    assert spack.package_base.PackageBase.global_license_dir == rel_path
     assert spack.repo.path.get_pkg_class("a").global_license_dir == rel_path
 
 

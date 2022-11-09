@@ -13,10 +13,11 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.build_systems.autotools
+import spack.build_systems.cmake
 import spack.environment
 import spack.platforms
 import spack.repo
-from spack.build_environment import ChildError, get_std_cmake_args, setup_package
+from spack.build_environment import ChildError, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
 
@@ -144,7 +145,7 @@ class TestAutotoolsPackage(object):
 
         # Assert the libtool archive is not there and we have
         # a log of removed files
-        assert not os.path.exists(s.package.libtool_archive_file)
+        assert not os.path.exists(s.package.builder.libtool_archive_file)
         search_directory = os.path.join(s.prefix, ".spack")
         libtool_deletion_log = fs.find(search_directory, "removed_la_files.txt", recursive=True)
         assert libtool_deletion_log
@@ -155,11 +156,11 @@ class TestAutotoolsPackage(object):
         # Install a package that creates a mock libtool archive,
         # patch its package to preserve the installation
         s = Spec("libtool-deletion").concretized()
-        monkeypatch.setattr(s.package, "install_libtool_archives", True)
+        monkeypatch.setattr(type(s.package.builder), "install_libtool_archives", True)
         s.package.do_install(explicit=True)
 
         # Assert libtool archives are installed
-        assert os.path.exists(s.package.libtool_archive_file)
+        assert os.path.exists(s.package.builder.libtool_archive_file)
 
     def test_autotools_gnuconfig_replacement(self, mutable_database):
         """
@@ -203,11 +204,12 @@ class TestAutotoolsPackage(object):
             assert "gnuconfig version of config.guess" not in f.read()
 
     @pytest.mark.disable_clean_stage_check
-    def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database):
+    def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """
         Tests whether a useful error message is shown when patch_config_files is
         enabled, but gnuconfig is not listed as a direct build dependency.
         """
+        monkeypatch.setattr(spack.platforms.test.Test, "default", "x86_64")
         s = Spec("autotools-config-replacement +patch_config_files ~gnuconfig")
         s.concretize()
 
@@ -253,22 +255,23 @@ class TestCMakePackage(object):
     def test_cmake_std_args(self):
         # Call the function on a CMakePackage instance
         s = Spec("cmake-client").concretized()
-        assert s.package.std_cmake_args == get_std_cmake_args(s.package)
+        expected = spack.build_systems.cmake.CMakeBuilder.std_args(s.package)
+        assert s.package.builder.std_cmake_args == expected
 
         # Call it on another kind of package
         s = Spec("mpich").concretized()
-        assert get_std_cmake_args(s.package)
+        assert spack.build_systems.cmake.CMakeBuilder.std_args(s.package)
 
-    def test_cmake_bad_generator(self):
+    def test_cmake_bad_generator(self, monkeypatch):
         s = Spec("cmake-client").concretized()
-        s.package.generator = "Yellow Sticky Notes"
+        monkeypatch.setattr(type(s.package), "generator", "Yellow Sticky Notes", raising=False)
         with pytest.raises(spack.package_base.InstallError):
-            get_std_cmake_args(s.package)
+            s.package.builder.std_cmake_args
 
     def test_cmake_secondary_generator(config, mock_packages):
         s = Spec("cmake-client").concretized()
         s.package.generator = "CodeBlocks - Unix Makefiles"
-        assert get_std_cmake_args(s.package)
+        assert s.package.builder.std_cmake_args
 
     def test_define(self):
         s = Spec("cmake-client").concretized()
@@ -361,7 +364,7 @@ def test_autotools_args_from_conditional_variant(config, mock_packages):
     is not met. When this is the case, the variant is not set in the spec."""
     s = Spec("autotools-conditional-variants-test").concretized()
     assert "example" not in s.variants
-    assert len(s.package._activate_or_not("example", "enable", "disable")) == 0
+    assert len(s.package.builder._activate_or_not("example", "enable", "disable")) == 0
 
 
 def test_autoreconf_search_path_args_multiple(config, mock_packages, tmpdir):

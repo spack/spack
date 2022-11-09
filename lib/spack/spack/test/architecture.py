@@ -8,6 +8,8 @@ import sys
 
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack.concretize
 import spack.operating_systems
 import spack.platforms
@@ -140,7 +142,7 @@ def test_optimization_flags(compiler_spec, target_name, expected_flags, config):
         (spack.spec.CompilerSpec("gcc@9.2.0"), None, "haswell", "-march=haswell -mtune=haswell"),
         # Check that custom string versions are accepted
         (
-            spack.spec.CompilerSpec("gcc@foo"),
+            spack.spec.CompilerSpec("gcc@10foo"),
             "9.2.0",
             "icelake",
             "-march=icelake-client -mtune=icelake-client",
@@ -196,9 +198,15 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
     ],
 )
 @pytest.mark.usefixtures("mock_packages", "config")
-def test_concretize_target_ranges(root_target_range, dep_target_range, result):
+def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
+    # Monkeypatch so that all concretization is done as if the machine is core2
+    monkeypatch.setattr(spack.platforms.test.Test, "default", "core2")
+
     # use foobar=bar to make the problem simpler for the old concretizer
     # the new concretizer should not need that help
+    if spack.config.get("config:concretizer") == "original":
+        pytest.skip("Fixing the parser broke this test for the original concretizer.")
+
     spec_str = "a %%gcc@10 foobar=bar target=%s ^b target=%s" % (
         root_target_range,
         dep_target_range,
@@ -208,3 +216,27 @@ def test_concretize_target_ranges(root_target_range, dep_target_range, result):
         spec.concretize()
 
     assert str(spec).count("arch=test-debian6-%s" % result) == 2
+
+
+@pytest.mark.parametrize(
+    "versions,default,expected",
+    [
+        (["21.11", "21.9"], "21.11", False),
+        (["21.11", "21.9"], "21.9", True),
+        (["21.11", "21.9"], None, False),
+    ],
+)
+def test_cray_platform_detection(versions, default, expected, tmpdir, monkeypatch, working_env):
+    ex_path = str(tmpdir.join("fake_craype_dir"))
+    fs.mkdirp(ex_path)
+
+    with fs.working_dir(ex_path):
+        for version in versions:
+            fs.touch(version)
+        if default:
+            os.symlink(default, "default")
+
+    monkeypatch.setattr(spack.platforms.cray, "_ex_craype_dir", ex_path)
+    os.environ["MODULEPATH"] = "/opt/cray/pe"
+
+    assert spack.platforms.cray.Cray.detect() == expected

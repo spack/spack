@@ -77,7 +77,7 @@ class Grid(AutotoolsPackage):
                 args.append("--enable-mkl")
         else:
             if "+fftw" in spec:
-                args.append("--with-fftw={0}".format(self.spec["fftw"].prefix))
+                args.append("--with-fftw={0}".format(self.spec["fftw-api"].prefix))
             if "+lapack" in spec:
                 args.append("--enable-lapack={0}".format(self.spec["lapack"].prefix))
                 # lapack is searched only as `-llapack`, so anything else

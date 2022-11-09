@@ -106,8 +106,11 @@ class Dealii(CMakePackage, CudaPackage):
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
     # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
     # adopt https://github.com/boostorg/serialization/pull/105 as a fix
+    #
+    # dealii does not build with Boost 1.80.0
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -115,7 +118,7 @@ class Dealii(CMakePackage, CudaPackage):
         when="~python",
     )
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams+python",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),

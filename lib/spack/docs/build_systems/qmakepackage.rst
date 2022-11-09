@@ -5,9 +5,9 @@
 
 .. _qmakepackage:
 
-------------
-QMakePackage
-------------
+-----
+QMake
+-----
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's
@@ -29,7 +29,7 @@ variables or edit ``*.pro`` files to get things working properly.
 Phases
 ^^^^^^
 
-The ``QMakePackage`` base class comes with the following phases:
+The ``QMakeBuilder`` and ``QMakePackage`` base classes come with the following phases:
 
 #. ``qmake`` - generate Makefiles
 #. ``build`` - build the project

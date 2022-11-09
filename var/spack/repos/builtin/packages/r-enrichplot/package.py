@@ -16,6 +16,7 @@ class REnrichplot(RPackage):
 
     bioc = "enrichplot"
 
+    version("1.16.2", commit="eeb21345288d96c116ac308649fa772d03760259")
     version("1.16.1", commit="cff77b622b2312be546714ec437aa4bc585bac87")
     version("1.14.1", commit="ccf3a6d9b7cd9cffd8de6d6263efdffe59d2ec36")
     version("1.10.2", commit="77ee04f60a07cc31151f8f47f8ee64f3a43c9760")
@@ -49,5 +50,5 @@ class REnrichplot(RPackage):
     depends_on("r-europepmc", type=("build", "run"), when="@1.2.0:1.4.0")
     depends_on("r-ggplotify", type=("build", "run"), when="@1.2.0:1.4.0")
     depends_on("r-gridextra", type=("build", "run"), when="@1.2.0:1.4.0")
-
     depends_on("r-cowplot", type=("build", "run"))
+    depends_on("r-cowplot", when="@:1.16.1")

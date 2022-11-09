@@ -520,27 +520,33 @@ available from the yaml file.
 ^^^^^^^^^^^^^^^^^^^
 Spec concretization
 ^^^^^^^^^^^^^^^^^^^
-An environment can be concretized in three different modes and the behavior active under any environment
-is determined by the ``concretizer:unify`` property. By default specs are concretized *separately*, one after the other:
+An environment can be concretized in three different modes and the behavior active under
+any environment is determined by the ``concretizer:unify`` configuration option.
+
+The *default* mode is to unify all specs:
 
 .. code-block:: yaml
 
    spack:
        specs:
-         - hdf5~mpi
          - hdf5+mpi
          - zlib@1.2.8
        concretizer:
-         unify: false
+         unify: true
 
-This mode of operation permits to deploy a full software stack where multiple configurations of the same package
-need to be installed alongside each other using the best possible selection of transitive dependencies. The downside
-is that redundancy of installations is disregarded completely, and thus environments might be more bloated than
-strictly needed. In the example above, for instance, if a version of ``zlib`` newer than ``1.2.8`` is known to Spack,
-then it will be used for both ``hdf5`` installations.
+This means that any package in the environment corresponds to a single concrete spec. In
+the above example, when ``hdf5`` depends down the line of ``zlib``, it is required to
+take ``zlib@1.2.8`` instead of a newer version. This mode of concretization is
+particularly useful when environment views are used: if every package occurs in
+only one flavor, it is usually possible to merge all install directories into a view.
 
-If redundancy of the environment is a concern, Spack provides a way to install it *together where possible*,
-i.e. trying to maximize reuse of dependencies across different specs:
+A downside of unified concretization is that it can be overly strict. For example, a
+concretization error would happen when both ``hdf5+mpi`` and ``hdf5~mpi`` are specified
+in an environment.
+
+The second mode is to *unify when possible*: this makes concretization of root specs
+more independendent. Instead of requiring reuse of dependencies across different root
+specs, it is only maximized:
 
 .. code-block:: yaml
 
@@ -552,26 +558,27 @@ i.e. trying to maximize reuse of dependencies across different specs:
        concretizer:
          unify: when_possible
 
-Also in this case Spack allows having multiple configurations of the same package, but privileges the reuse of
-specs over other factors. Going back to our example, this means that both ``hdf5`` installations will use
-``zlib@1.2.8`` as a dependency even if newer versions of that library are available.
-Central installations done at HPC centers by system administrators or user support groups are a common case
-that fits either of these two modes.
+This means that both ``hdf5`` installations will use ``zlib@1.2.8`` as a dependency even
+if newer versions of that library are available.
 
-Environments can also be configured to concretize all the root specs *together*, in a self-consistent way, to
-ensure that each package in the environment comes with a single configuration:
+The third mode of operation is to concretize root specs entirely independently by
+disabling unified concretization:
 
 .. code-block:: yaml
 
    spack:
        specs:
+         - hdf5~mpi
          - hdf5+mpi
          - zlib@1.2.8
        concretizer:
-         unify: true
+         unify: false
 
-This mode of operation is usually what is required by software developers that want to deploy their development
-environment and have a single view of it in the filesystem.
+In this example ``hdf5`` is concretized separately, and does not consider ``zlib@1.2.8``
+as a constraint or preference. Instead, it will take the latest possible version.
+
+The last two concretization options are typically useful for system administrators and
+user support groups providing a large software stack for their HPC center.
 
 .. note::
 
@@ -582,10 +589,10 @@ environment and have a single view of it in the filesystem.
 
 .. admonition:: Re-concretization of user specs
 
-   When concretizing specs *together* or *together where possible* the entire set of specs will be
+   When using *unified* concretization (when possible), the entire set of specs will be
    re-concretized after any addition of new user specs, to ensure that
-   the environment remains consistent / minimal. When instead the specs are concretized
-   separately only the new specs will be re-concretized after any addition.
+   the environment remains consistent / minimal. When instead unified concretization is
+   disabled, only the new specs will be concretized after any addition.
 
 ^^^^^^^^^^^^^
 Spec Matrices
@@ -987,7 +994,7 @@ A typical workflow is as follows:
    spack env create -d .
    spack -e . add perl
    spack -e . concretize
-   spack -e . env depfile > Makefile
+   spack -e . env depfile -o Makefile
    make -j64
 
 This generates a ``Makefile`` from a concretized environment in the
@@ -1000,7 +1007,6 @@ load, even when packages are built in parallel.
 By default the following phony convenience targets are available:
 
 - ``make all``: installs the environment (default target);
-- ``make fetch-all``: only fetch sources of all packages;
 - ``make clean``: cleans files used by make, but does not uninstall packages.
 
 .. tip::
@@ -1010,8 +1016,17 @@ By default the following phony convenience targets are available:
    printed orderly per package install. To get synchronized output with colors,
    use ``make -j<N> SPACK_COLOR=always --output-sync=recurse``.
 
-The following advanced example shows how generated targets can be used in a
-``Makefile``:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Specifying dependencies on generated ``make`` targets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An interesting question is how to include generated ``Makefile``\s in your own
+``Makefile``\s. This comes up when you want to install an environment that provides
+executables required in a command for a make target of your own.
+
+The example below shows how to accomplish this: the ``env`` target specifies
+the generated ``spack/env`` target as a prerequisite, meaning that the environment
+gets installed and is available for use in the ``env`` target.
 
 .. code:: Makefile
 
@@ -1037,11 +1052,10 @@ The following advanced example shows how generated targets can be used in a
    include env.mk
    endif
 
-When ``make`` is invoked, it first "remakes" the missing include ``env.mk``
-from its rule, which triggers concretization. When done, the generated target
-``spack/env`` is available. In the above example, the ``env`` target uses this generated
-target as a prerequisite, meaning that it can make use of the installed packages in
-its commands.
+This works as follows: when ``make`` is invoked, it first "remakes" the missing
+include ``env.mk`` as there is a target for it. This triggers concretization of
+the environment and makes spack output ``env.mk``. At that point the
+generated target ``spack/env`` becomes available through ``include env.mk``.
 
 As it is typically undesirable to remake ``env.mk`` as part of ``make clean``,
 the include is conditional.
@@ -1052,3 +1066,24 @@ the include is conditional.
    the ``--make-target-prefix`` flag and use the non-phony target
    ``<target-prefix>/env`` as prerequisite, instead of the phony target
    ``<target-prefix>/all``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Building a subset of the environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The generated ``Makefile``\s contain install targets for each spec. Given the hash
+of a particular spec, you can use the ``.install/<hash>`` target to install the
+spec with its dependencies. There is also ``.install-deps/<hash>`` to *only* install
+its dependencies. This can be useful when certain flags should only apply to
+dependencies. Below we show a use case where a spec is installed with verbose
+output (``spack install --verbose``) while its dependencies are installed silently:
+
+.. code:: console
+
+   $ spack env depfile -o Makefile --make-target-prefix my_env
+
+   # Install dependencies in parallel, only show a log on error.
+   $ make -j16 my_env/.install-deps/<hash> SPACK_INSTALL_FLAGS=--show-log-on-error
+
+   # Install the root spec with verbose output.
+   $ make -j16 my_env/.install/<hash> SPACK_INSTALL_FLAGS=--verbose
