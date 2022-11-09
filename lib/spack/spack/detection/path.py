@@ -93,13 +93,14 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
             DYLD_LIBRARY_PATH, and DYLD_FALLBACK_LIBRARY_PATH environment
             variables as well as the standard system library paths.
     """
-    path_hints = path_hints or spack.util.environment.get_path(
-        "LIBRARY_PATH"
-    ) + spack.util.environment.get_path("LD_LIBRARY_PATH") + spack.util.environment.get_path(
-        "DYLD_LIBRARY_PATH"
-    ) + spack.util.environment.get_path(
-        "DYLD_FALLBACK_LIBRARY_PATH"
-    ) + llnl.util.filesystem.system_library_search_locations
+    path_hints = (
+        path_hints
+        or spack.util.environment.get_path("LIBRARY_PATH")
+        + spack.util.environment.get_path("LD_LIBRARY_PATH")
+        + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
+        + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
+        + llnl.util.filesystem.system_library_search_locations
+    )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
     path_to_lib = {}
