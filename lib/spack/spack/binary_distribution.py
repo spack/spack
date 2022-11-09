@@ -400,19 +400,37 @@ class BinaryCacheIndex(object):
         # locally.
         for mirror_url in configured_mirror_urls:
             if mirror_url not in self._local_index_cache:
-                # Need to fetch the index and update the local caches
-                try:
-                    needs_regen = self._fetch_and_cache_index(mirror_url)
-                    self._last_fetch_times[mirror_url] = (now, True)
-                    all_methods_failed = False
-                except FetchCacheError as fetch_error:
-                    fetch_errors.extend(fetch_error.errors)
-                    needs_regen = False
-                    self._last_fetch_times[mirror_url] = (now, False)
-                # Generally speaking, a new mirror wouldn't imply the need to
-                # clear the spec cache, so leave it as is.
-                if needs_regen:
-                    spec_cache_regenerate_needed = True
+                # Only do a fetch if the last fetch was longer than TTL ago
+                if (
+                    with_cooldown
+                    and ttl > 0
+                    and mirror_url in self._last_fetch_times
+                    and now - self._last_fetch_times[mirror_url][0] < ttl
+                ):
+                    # We're in the cooldown period, don't try to fetch again.
+                    # Skipping the call to _fetch_and_cache_index is safe because if we got here,
+                    # we've attempted to add this mirror at least once before, and it either failed
+                    # or was a no-op (i.e. no index.json). Assuming the same will happen this time
+                    # will result in nothing of consequence happening, so we can avoid a fetch.
+
+                    # If the fetch succeeded last time, consider this update a success, otherwise
+                    # re-report the error here
+                    if self._last_fetch_times[mirror_url][1]:
+                        all_methods_failed = False
+                else:
+                    # Need to fetch the index and update the local caches
+                    try:
+                        needs_regen = self._fetch_and_cache_index(mirror_url)
+                        self._last_fetch_times[mirror_url] = (now, True)
+                        all_methods_failed = False
+                    except FetchCacheError as fetch_error:
+                        fetch_errors.extend(fetch_error.errors)
+                        needs_regen = False
+                        self._last_fetch_times[mirror_url] = (now, False)
+                    # Generally speaking, a new mirror wouldn't imply the need to
+                    # clear the spec cache, so leave it as is.
+                    if needs_regen:
+                        spec_cache_regenerate_needed = True
 
         self._write_local_index_cache()
 
