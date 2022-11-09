@@ -1,0 +1,76 @@
+diff --git a/install/configure b/install/configure_aocc
+index c8f62eb..bca4e4d 100755
+--- a/install/configure
++++ b/install/configure_aocc
+@@ -3183,6 +3183,7 @@ echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+ ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+ pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+ nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
++aoccflang_version=`$mpif90 -v 2>&1 | grep "AMD clang version"`
+ gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
+ nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
+ xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
+@@ -3203,6 +3204,12 @@ then
+ 	f90_minor_version=`echo $version | cut -d. -f2 | cut -d- -f1`
+         echo "${ECHO_T}nvfortran $version"
+         f90_in_mpif90="nvfortran"
++elif test "$aoccflang_version" != ""
++then
++        version=`echo $aoccflang_version | cut -d" " -f 5`
++        echo "${ECHO_T}mpif90 $version"
++        f90_in_mpif90="mpif90"
++        try_foxflags="-D__PGI"	
+ elif test "$pgf_version" != ""
+ then
+         version=`echo $pgf_version | cut -d ' ' -f2`
+@@ -3374,6 +3381,9 @@ ppc64-bg*:*xlf90_r )
+ ppc64-bg*:*xlf90 )
+         try_cc="bgxlc"
+         ;;
++*:mpif90 )
++        try_cc="mpicc $try_cc"
++        ;;	
+ ppc64:*xlf* | ppc64le:*xlf* )
+         try_cc="xlc_r $try_cc"
+         ;;
+@@ -3763,11 +3773,14 @@ ppc64-bg:* )
+ ppc64-bgq:* )
+         try_cflags="-O3"
+         ;;
++x86_64:* )
++        try_cflags="-Ofast -Mstack_arrays"
++        try_dflags="-D__OPENMP"
++        ;;
+ ppc64:xlc*)
+         try_cflags="-O3 -q64 -qthreaded"
+         c_ldflags="-q64"
+         ;;
+-
+ esac
+ if test "$cflags" = "" ; then cflags=$try_cflags ; fi
+ echo setting CFLAGS... $cflags
+@@ -3926,6 +3939,16 @@ x86_64:nagfor* )
+         try_dflags="$try_dflags -D__NAG"
+         have_cpp=0
+         ;;
++*:*mpif90 )
++        try_fflags="-Ofast -Mstack_arrays"
++        try_fflags_openmp="-fopenmp"
++        try_f90flags=" \$(FFLAGS) -cpp -Ofast -Mpreprocess -Mstack_arrays"
++        try_foxflags="-D__PGI"
++        try_fflags_noopt="-O0"
++        try_ldflags=""
++        try_ldflags_openmp="-fopenmp"
++        try_ldflags_static="-static"
++        ;;
+ craype*:cray* )
+         try_fflags_nomain=""
+         #NOTE: by default OpenMP is always ON (see crayftn man page)
+@@ -7392,6 +7415,7 @@ $as_echo "$as_me: WARNING: *** HDF5 version must be 1.8.16 or later" >&2;};
+                 hdf5_libs=$with_hdf5_libline
+              else
+                 hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}'`
++		hdf5_libs=`$with_hdf5_path/bin/h5pfc -show | awk -F'-L' '{$1=""; for (i=2; i<=NF;i++) $i="-L"$i; print $0}' | xargs`
+              fi
+          elif command -v h5pfc >/dev/null; then
+              if test $with_hdf5_libs -eq 1; then

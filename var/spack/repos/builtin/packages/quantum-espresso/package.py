@@ -368,6 +368,7 @@ class QuantumEspresso(CMakePackage, Package):
 
     # Configure updated to work with AOCC compilers
     patch("configure_aocc.patch", when="@6.7:7.0 %aocc")
+    patch("configure_qe-7.1_aocc.patch", when="@7.1: %aocc")
 
     # Configure updated to work with NVIDIA compilers
     patch("nvhpc.patch", when="@6.5 %nvhpc")
@@ -601,6 +602,9 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
             parallel_build_on = False
         else:
             parallel_build_on = True
+        # Parallel build fails with 7.1 
+        if spec.satisfies("@7.1"):
+            parallel_build_on = False    
 
         if "+epw" in spec:
             make("all", "epw", parallel=parallel_build_on)
