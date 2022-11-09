@@ -1945,3 +1945,19 @@ class TestConcretize(object):
 
         for s in spec.traverse():
             assert s.satisfies("target=%s" % spack.platforms.test.Test.front_end)
+
+    def test_external_python_extensions_have_dependency(self):
+        """Test that python extensions have access to a python dependency"""
+        external_conf = {
+            "py-extension1": {
+                "buildable": False,
+                "externals": [
+                    {"spec": "py-extension1@2.0", "prefix": "/fake"}
+                ]}
+        }
+        spack.config.set("packages", external_conf)
+
+        spec = Spec("py-extension2").concretized()
+
+        assert "python" in spec["py-extension1"]
+        assert spec["python"] == spec["py-extension1"]["python"]

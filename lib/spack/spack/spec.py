@@ -2751,6 +2751,11 @@ class Spec(object):
         # If any spec in the DAG is deprecated, throw an error
         Spec.ensure_no_deprecated(self)
 
+        # Update externals as needed
+        for dep in self.traverse():
+            if dep.external:
+                dep.update_external_dependencies()
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #
@@ -2936,6 +2941,21 @@ class Spec(object):
             self._new_concretize(tests)
         else:
             self._old_concretize(tests)
+
+    def update_external_dependencies(self):
+        from spack.build_systems.python import PythonPackage
+
+        assert self.external
+        if isinstance(self.package, PythonPackage) and "python" not in self:
+            if "python" in self.root:
+                python = self.root["python"]
+            else:
+                python = Spec("python")
+                repo = spack.repo.path.repo_for_pkg(python)
+                python.namespace = repo.namespace
+                python._mark_concrete()
+                python.external_path = self.prefix
+            self.add_dependency_edge(python, ("build", "link", "run"))
 
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
