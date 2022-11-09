@@ -11,12 +11,7 @@
 #
 
 QA_DIR="$(dirname ${BASH_SOURCE[0]})"
-if realpath $QA_DIR >& /dev/null ; then
-    REALPATH=realpath
-else
-    REALPATH="readlink -f --"
-fi
-export SPACK_ROOT=$($REALPATH "$QA_DIR/../../..")
+export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
@@ -33,7 +28,7 @@ if [[ "$COVERAGE" == "true" ]]; then
 
     # bash coverage depends on some other factors
     mkdir -p coverage
-    bashcov=$($REALPATH ${QA_DIR}/bashcov)
+    bashcov=$(realpath ${QA_DIR}/bashcov)
 
     # instrument scripts requiring shell coverage
     sed -i "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
