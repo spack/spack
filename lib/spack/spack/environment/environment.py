@@ -1039,9 +1039,19 @@ class Environment(object):
             [spack.config.first_existing(self.raw_yaml, spack.schema.env.keys)],
         )
 
+    def _check_disallowed_env_config_mods(scopes):
+        for scope in scopes:
+            with spack.config.override(scope):
+                if spack.config.get("config:environments_root"):
+                    raise SpackEnvironmentError("Need a good message")
+                else:
+                    spack.config.print_section("config")
+
     def config_scopes(self):
         """A list of all configuration scopes for this environment."""
-        return self.included_config_scopes() + [self.env_file_config_scope()]
+        return _check_disallowed_env_config_mods(
+            self.included_config_scopes() + [self.env_file_config_scope()]
+        )
 
     def destroy(self):
         """Remove this environment from Spack entirely."""
