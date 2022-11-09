@@ -652,8 +652,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     #: to build a custom test code.
     test_requires_compiler = False
 
-    #: List of test failures encountered during a smoke/install test run.
-    test_failures = None
+    #: Path to the test log file, which may be in the stage directory for
+    #: install-time tests or the test stage directory for stand-alone tests.
+    test_log_file = None
+
+    #: List of test failures encountered during install-time or smoke/install
+    #: test runs.
+    test_failures = []  # type: List[Tuple[Exception, str]]
 
     #: TestSuite instance used to manage smoke/install tests for one or more
     #: specs.
@@ -1851,6 +1856,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if dev_path_var:
             kwargs["keep_stage"] = True
 
+        # Ensure the test log file is available for install tests
+        if kwargs.get("tests", False) and not hasattr(self, "test_log_file"):
+            self.test_log_file = fsys.join_path(self.stage.path, _spack_install_test_log)
+
         builder = PackageInstaller([(self, kwargs)])
         builder.install()
 
@@ -1881,7 +1890,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @contextlib.contextmanager
     def _setup_test(self, verbose, externals):
-        self.test_failures = []
         if self.test_suite:
             self.test_log_file = self.test_suite.log_file_for_spec(self.spec)
             self.tested_file = self.test_suite.tested_file_for_spec(self.spec)
@@ -1998,6 +2006,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     print(line.rstrip("\n"))
 
                 if exc_type is spack.util.executable.ProcessError:
+                    if not self.test_log_file:
+                        self.test_log_file = fsys.join_path(
+                            self.stage.path, _spack_install_test_log
+                        )
                     out = io.StringIO()
                     spack.build_environment.write_log_summary(
                         out, "test", self.test_log_file, last=1
@@ -2460,7 +2472,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
                     fn()
                 except AttributeError as e:
-                    msg = ("RUN-TESTS: method not implemented [{0}]".format(name),)
+                    msg = (
+                        "RUN-TESTS: {0}: method not implemented [{1}]".format(type(builder), name),
+                    )
                     print_test_message(logger, msg, True)
 
                     builder.pkg.test_failures.append((e, msg))

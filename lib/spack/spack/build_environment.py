@@ -1084,10 +1084,13 @@ def _setup_pkg_and_run(
         package_context = get_package_context(tb)
 
         logfile = None
+        testlog = None
         if context == "build":
             try:
                 if hasattr(pkg, "log_path"):
                     logfile = pkg.log_path
+                if hasattr(pkg, "test_log_file"):
+                    testlog = pkg.test_log_file
             except NameError:
                 # 'pkg' is not defined yet
                 pass
@@ -1119,6 +1122,7 @@ def _setup_pkg_and_run(
             logfile,
             context,
             package_context,
+            testlog,
         )
         child_pipe.send(ce)
 
@@ -1340,7 +1344,17 @@ class ChildError(InstallError):
     # context instead of Python context.
     build_errors = [("spack.util.executable", "ProcessError")]
 
-    def __init__(self, msg, module, classname, traceback_string, log_name, log_type, context):
+    def __init__(
+        self,
+        msg,
+        module,
+        classname,
+        traceback_string,
+        log_name,
+        log_type,
+        context,
+        test_log_name=None,
+    ):
         super(ChildError, self).__init__(msg)
         self.module = module
         self.name = classname
@@ -1348,6 +1362,7 @@ class ChildError(InstallError):
         self.log_name = log_name
         self.log_type = log_type
         self.context = context
+        self.test_log_name = test_log_name
 
     @property
     def long_message(self):
@@ -1377,6 +1392,10 @@ class ChildError(InstallError):
             out.write("See {0} log for details:\n".format(self.log_type))
             out.write("  {0}\n".format(self.log_name))
 
+        if self.test_log_name and os.path.exists(self.test_log_name):
+            out.write("\nSee install test log for details:\n")
+            out.write("  {0}\n".format(self.test_log_name))
+
         return out.getvalue()
 
     def __str__(self):
@@ -1396,12 +1415,13 @@ class ChildError(InstallError):
             self.log_name,
             self.log_type,
             self.context,
+            self.test_log_name,
         )
 
 
-def _make_child_error(msg, module, name, traceback, log, log_type, context):
+def _make_child_error(msg, module, name, traceback, log, log_type, context, testlog=None):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, module, name, traceback, log, log_type, context)
+    return ChildError(msg, module, name, traceback, log, log_type, context, testlog)
 
 
 class StopPhase(spack.error.SpackError):
