@@ -41,7 +41,7 @@ import shutil
 import sys
 import traceback
 import types
-from typing import Set, Tuple
+from typing import List, Tuple
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -288,7 +288,7 @@ def clean_environment():
 def _add_werror_handling(keep_werror, env):
     keep_flags = set()
     # set of pairs
-    replace_flags = set()  # type: Set[Tuple[str,str]]
+    replace_flags = []  # type: List[Tuple[str,str]]
     if keep_werror == "all":
         keep_flags.add("-Werror*")
     else:
@@ -296,8 +296,8 @@ def _add_werror_handling(keep_werror, env):
             keep_flags.add("-Werror-*")
             keep_flags.add("-Werror=*")
         # This extra case is to handle -Werror-implicit-function-declaration
-        replace_flags.add(("-Werror-", "-Wno-error="))
-        replace_flags.add(("-Werror", "-Wno-error"))
+        replace_flags.append(("-Werror-", "-Wno-error="))
+        replace_flags.append(("-Werror", "-Wno-error"))
     env.set("SPACK_COMPILER_FLAGS_KEEP", "|".join(keep_flags))
     env.set("SPACK_COMPILER_FLAGS_REPLACE", " ".join(["|".join(item) for item in replace_flags]))
 

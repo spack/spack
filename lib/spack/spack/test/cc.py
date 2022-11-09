@@ -210,6 +210,7 @@ def check_args_contents(cc, args, must_contain, must_not_contain):
     """
     with set_env(SPACK_TEST_COMMAND="dump-args"):
         cc_modified_args = cc(*args, output=str).strip().split("\n")
+        print(cc_modified_args)
         for a in must_contain:
             assert a in cc_modified_args
         for a in must_not_contain:
@@ -752,7 +753,7 @@ def test_keep_and_replace(wrapper_environment):
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror=specific", "-bah"],
-            ["-bah"],
+            ["-bah", "-Wno-error", "-Wno-error=specific"],
             ["-Werror", "-Werror=specific"],
         ),
         # check non-standard -Werror opts like -Werror-implicit-function-declaration
@@ -765,13 +766,13 @@ def test_keep_and_replace(wrapper_environment):
         (
             "config:flags:keep_werror:specific",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-Werror-implicit-function-declaration", "-bah"],
+            ["-Werror-implicit-function-declaration", "-bah", "-Wno-error"],
             ["-Werror"],
         ),
         (
             "config:flags:keep_werror:none",
             ["-Werror", "-Werror-implicit-function-declaration", "-bah"],
-            ["-bah"],
+            ["-bah", "-Wno-error=implicit-function-declaration"],
             ["-Werror", "-Werror-implicit-function-declaration"],
         ),
     ],
@@ -784,7 +785,7 @@ def test_flag_modification(cfg_override, initial, expected, must_be_gone):
     keep_werror = spack.config.get("config:flags:keep_werror")
     spack.build_environment._add_werror_handling(keep_werror, env)
     env.apply_modifications()
-    check_args_contents(cc, test_args + initial, expected, must_be_gone)
+    check_args_contents(cc, test_args[:3] + initial, expected, must_be_gone)
 
 
 @pytest.mark.regression("9160")
