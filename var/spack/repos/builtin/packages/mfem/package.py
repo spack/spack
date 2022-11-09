@@ -440,6 +440,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     def setup_build_environment(self, env):
         env.unset("MFEM_DIR")
         env.unset("MFEM_BUILD_DIR")
+        # Workaround for changes made by the 'kokkos-nvcc-wrapper' package
+        # which can be a dependency e.g. through PETSc that uses Kokkos:
+        if "^kokkos-nvcc-wrapper" in self.spec:
+            env.set("MPICH_CXX", spack_cxx)
+            env.set("OMPI_CXX", spack_cxx)
+            env.set("MPICXX_CXX", spack_cxx)
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -866,15 +872,33 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             amdgpu_target = ",".join(spec.variants["amdgpu_target"].value)
             options += ["HIP_CXX=%s" % spec["hip"].hipcc, "HIP_ARCH=%s" % amdgpu_target]
+            hip_libs = LibraryList([])
+            # To use a C++ compiler that supports -xhip flag one can use
+            # something like this:
+            #   options += [
+            #       "HIP_CXX=%s" % (spec["mpi"].mpicxx if "+mpi" in spec else spack_cxx),
+            #       "HIP_FLAGS=-xhip --offload-arch=%s" % amdgpu_target,
+            #   ]
+            #   hip_libs += find_libraries("libamdhip64", spec["hip"].prefix.lib)
             if "^hipsparse" in spec:  # hipsparse is needed @4.4.0:+rocm
-                # Note: MFEM's defaults.mk want to find librocsparse.* in
-                # $(HIP_DIR)/lib, so we set HIP_DIR to be the prefix of
-                # rocsparse (which is a dependency of hipsparse).
-                options += [
-                    "HIP_DIR=%s" % spec["rocsparse"].prefix,
-                    "HIP_OPT=%s" % spec["hipsparse"].headers.cpp_flags,
-                    "HIP_LIB=%s" % ld_flags_from_library_list(spec["hipsparse"].libs),
-                ]
+                hipsparse = spec["hipsparse"]
+                options += ["HIP_OPT=%s" % hipsparse.headers.cpp_flags]
+                hip_libs += hipsparse.libs
+                # Note: MFEM's defaults.mk wants to find librocsparse.* in
+                # $(HIP_DIR)/lib, so we set HIP_DIR to be $ROCM_PATH when using
+                # external HIP, or the prefix of rocsparse (which is a
+                # dependency of hipsparse) when using Spack-built HIP.
+                if spec["hip"].external:
+                    options += ["HIP_DIR=%s" % env["ROCM_PATH"]]
+                else:
+                    options += ["HIP_DIR=%s" % hipsparse["rocsparse"].prefix]
+            if "%cce" in spec:
+                # We assume the proper Cray CCE module (cce) is loaded:
+                craylibs_path = env["CRAYLIBS_" + env["MACHTYPE"].capitalize()]
+                craylibs = ["libmodules", "libfi", "libcraymath", "libf", "libu", "libcsup"]
+                hip_libs += find_libraries(craylibs, craylibs_path)
+            if hip_libs:
+                options += ["HIP_LIB=%s" % ld_flags_from_library_list(hip_libs)]
 
         if "+occa" in spec:
             options += [
@@ -883,12 +907,18 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             ]
 
         if "+raja" in spec:
-            raja_opt = "-I%s" % spec["raja"].prefix.include
-            if spec["raja"].satisfies("^camp"):
-                raja_opt += " -I%s" % spec["camp"].prefix.include
+            raja = spec["raja"]
+            raja_opt = "-I%s" % raja.prefix.include
+            raja_lib = find_libraries(
+                "libRAJA", raja.prefix, shared=("+shared" in raja), recursive=True
+            )
+            if raja.satisfies("^camp"):
+                camp = raja["camp"]
+                raja_opt += " -I%s" % camp.prefix.include
+                raja_lib += find_optional_library("libcamp", camp.prefix)
             options += [
                 "RAJA_OPT=%s" % raja_opt,
-                "RAJA_LIB=%s" % ld_flags_from_dirs([spec["raja"].prefix.lib], ["RAJA"]),
+                "RAJA_LIB=%s" % ld_flags_from_library_list(raja_lib),
             ]
 
         if "+amgx" in spec:
@@ -975,10 +1005,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if "+hiop" in spec:
             hiop = spec["hiop"]
-            lapack_blas = spec["lapack"].libs + spec["blas"].libs
+            hiop_libs = hiop.libs
+            hiop_libs += spec["lapack"].libs + spec["blas"].libs
+            if "^magma" in hiop:
+                hiop_libs += hiop["magma"].libs
             options += [
                 "HIOP_OPT=-I%s" % hiop.prefix.include,
-                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop.libs + lapack_blas),
+                "HIOP_LIB=%s" % ld_flags_from_library_list(hiop_libs),
             ]
 
         make("config", *options, parallel=False)
@@ -996,6 +1029,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
         else:
+            # As of v4.5.0 and ROCm up to 5.2.3, the following miniapp crashes
+            # the HIP compiler, so it has to be disabled for testing with HIP:
+            # filter_file("PAR_MINIAPPS = hooke", "PAR_MINIAPPS =", "miniapps/hooke/makefile")
             make("all")
             make("test", parallel=False)
 
@@ -1013,7 +1049,11 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             with working_dir("config"):
                 os.rename("config.mk", "config.mk.orig")
                 copy(str(self.config_mk), "config.mk")
+                # Add '/mfem' to MFEM_INC_DIR for miniapps that include directly
+                # headers like "general/forall.hpp":
+                filter_file("(MFEM_INC_DIR.*)$", "\\1/mfem", "config.mk")
                 shutil.copystat("config.mk.orig", "config.mk")
+                # TODO: miniapps linking to libmfem-common.* will not work.
 
         prefix_share = join_path(prefix, "share", "mfem")
 
