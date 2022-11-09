@@ -205,13 +205,7 @@ class CachedCMakeBuilder(CMakeBuilder):
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR", cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER", cudacompiler))
-
-            if spec.satisfies("^mpi"):
-                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${MPI_CXX_COMPILER}"))
-            else:
-                entries.append(
-                    cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}")
-                )
+            entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER", "${CMAKE_CXX_COMPILER}"))
 
         return entries
 
