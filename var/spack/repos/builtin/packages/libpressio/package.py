@@ -346,7 +346,7 @@ class Libpressio(CMakePackage, CudaPackage):
 
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make("test")
 
     @run_after("build")
