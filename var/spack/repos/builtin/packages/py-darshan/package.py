@@ -20,13 +20,19 @@ class PyDarshan(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-importlib-resources", when="^python@3.6", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
+    # NOTE: SciPy is an indirect dependency needed for interpolate usage in pandas
+    #       It will be fixed in the next release
     depends_on("py-scipy", type=("build", "run"))
     depends_on("py-numpy@1.21:", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
+    # NOTE: matplotlib should be pinned until next release, for details:
+    #       https://github.com/darshan-hpc/darshan/issues/742
     depends_on("py-matplotlib@3.4", type=("build", "run"))
     depends_on("py-seaborn", type=("build", "run"))
     depends_on("py-mako", type=("build", "run"))
     depends_on("py-pytest", type=("build", "run"))
+    # NOTE: lxml is test-only indirect dependency via pandas
+    #       It will become optional in the next release 
     depends_on("py-lxml", type=("test"))
 
     depends_on("darshan-util", type=("build", "run"))
