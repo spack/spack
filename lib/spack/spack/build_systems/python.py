@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 import spack.builder
 import spack.multimethod
 import spack.package_base
+import spack.spec
 from spack.directives import build_system, depends_on, extends
 from spack.error import NoHeadersError, NoLibrariesError, SpecError
 from spack.version import Version
@@ -227,7 +228,7 @@ class PythonPackage(PythonExtension):
             if "python" in self.spec.root:
                 python = self.spec.root["python"]
             else:
-                python = Spec("python")
+                python = spack.spec.Spec("python")
                 repo = spack.repo.path.repo_for_pkg(python)
                 python.namespace = repo.namespace
                 python._mark_concrete()
