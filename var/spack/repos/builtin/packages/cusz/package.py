@@ -14,6 +14,7 @@ class Cusz(CMakePackage, CudaPackage):
     url = "https://github.com/szcompressor/cuSZ/archive/refs/tags/v0.3.tar.gz"
 
     maintainers = ["jtian0", "dingwentao"]
+    tags = ["e4s"]
 
     conflicts("~cuda")
     conflicts("cuda_arch=none", when="+cuda")

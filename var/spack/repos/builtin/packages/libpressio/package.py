@@ -14,6 +14,7 @@ class Libpressio(CMakePackage, CudaPackage):
     url = "https://github.com/robertu94/libpressio/archive/0.31.1.tar.gz"
     git = "https://github.com/robertu94/libpressio"
 
+    tags = ["e4s"]
     maintainers = ["robertu94"]
 
     tests_require_compiler = True
