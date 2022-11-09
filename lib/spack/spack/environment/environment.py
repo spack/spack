@@ -65,11 +65,6 @@ _active_environment = None
 #: default path where environments are stored in the spack tree
 default_env_path = os.path.join(spack.paths.var_path, "environments")
 
-# ensure that this base directory exists since we require the root directory to be created
-# in our checks
-if not os.path.isdir(default_env_path):
-    os.mkdir(default_env_path)
-
 
 #: Name of the input yaml file for an environment
 manifest_name = "spack.yaml"
@@ -85,9 +80,15 @@ env_subdir_name = ".spack-env"
 
 def env_root_path():
     """Override default root path if the user specified it"""
-    return spack.util.path.canonicalize_path(
-        spack.config.get("config:environments_root", default=default_env_path), allow_env=False
-    )
+    env_path = spack.config.get("config:environments_root", default=default_env_path)
+    canonical_path = spack.util.path.canonicalize_path(env_path, allow_env=False)
+    if env_path == default_env_path:
+        # create the default path if it is missing, if user paths are missing we errors
+        # and force them to create it themselves to keep spack from adding arbitrary directories
+        # and to help debug typos
+        if not os.path.isdir(canonical_path):
+            os.mkdir(canonical_path)
+    return canonical_path
 
 
 def check_disallowed_env_config_mods(scopes):
