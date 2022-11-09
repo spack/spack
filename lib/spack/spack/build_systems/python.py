@@ -222,6 +222,11 @@ class PythonPackage(PythonExtension):
     def update_external_dependencies(self):
         """
         Ensure all external python packages have a python dependency
+
+        If another package in the DAG depends on python, we use that
+        python for the dependency of the external. If not, we assume
+        that the external PythonPackage is installed into the same
+        directory as the python it depends on.
         """
         # TODO: Include this in the solve, rather than instantiating post-concretization
         if "python" not in self.spec:
