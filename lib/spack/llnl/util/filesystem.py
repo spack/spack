@@ -1000,45 +1000,16 @@ def hash_directory(directory, ignore=[]):
     return md5_hash.hexdigest()
 
 
-def _try_unlink(path):
-    try:
-        os.unlink(path)
-    except (IOError, OSError):
-        # But if that fails, that's OK.
-        pass
-
-
 @contextmanager
 @system_path_filter
-def write_tmp_and_move(path, mode="w"):
-    """Write to a temporary file in the same directory, then move into place."""
-    # Rely on NamedTemporaryFile to give a unique file without races
-    # in the directory of the target file.
-    file = tempfile.NamedTemporaryFile(
-        prefix="." + os.path.basename(path),
-        suffix=".tmp",
-        dir=os.path.dirname(path),
-        mode=mode,
-        delete=False,  # we delete it ourselves
-    )
-    tmp_path = file.name
-
-    try:
-        yield file
-    except BaseException:
-        # On any failure, try to remove the temporary file.
-        _try_unlink(tmp_path)
-        raise
-    finally:
-        # Always close the file decriptor
-        file.close()
-
-    # Atomically move into existence.
-    try:
-        os.rename(tmp_path, path)
-    except (IOError, OSError):
-        _try_unlink(tmp_path)
-        raise
+def write_tmp_and_move(filename):
+    """Write to a temporary file, then move into place."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    tmp = os.path.join(dirname, ".%s.tmp" % basename)
+    with open(tmp, "w") as f:
+        yield f
+    shutil.move(tmp, filename)
 
 
 @contextmanager
