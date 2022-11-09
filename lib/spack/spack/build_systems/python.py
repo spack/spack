@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import glob
 import inspect
 import os
 import re
@@ -223,8 +224,8 @@ class PythonPackage(PythonExtension):
         """Discover header files in platlib."""
 
         # Headers may be in either location
-        include = self.prefix.join(self.spec["python"].package.include)
-        platlib = self.prefix.join(self.spec["python"].package.platlib)
+        include = self.prefix.join(self.include)
+        platlib = self.prefix.join(self.platlib)
         headers = fs.find_all_headers(include) + fs.find_all_headers(platlib)
 
         if headers:
@@ -234,12 +235,28 @@ class PythonPackage(PythonExtension):
         raise NoHeadersError(msg.format(self.spec.name, include, platlib))
 
     @property
+    def include(self):
+        include = glob.glob(self.prefix.include.join("python*"))
+        if include:
+            return include[0]
+        return self.spec["python"].package.include
+
+    @property
+    def platlib(self):
+        for libname in ("lib", "lib64"):
+            platlib = glob.glob(self.prefix.join(libname).join("python*").join("site-packages"))
+            if platlib:
+                return platlib[0]
+
+        return self.spec["python"].package.platlib
+
+    @property
     def libs(self):
         """Discover libraries in platlib."""
 
         # Remove py- prefix in package name
         library = "lib" + self.spec.name[3:].replace("-", "?")
-        root = self.prefix.join(self.spec["python"].package.platlib)
+        root = self.prefix.join(self.platlib)
 
         for shared in [True, False]:
             libs = fs.find_libraries(library, root, shared=shared, recursive=True)
