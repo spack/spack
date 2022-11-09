@@ -110,7 +110,7 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         options = [
             define("CMAKE_INSTALL_PREFIX", self.prefix),
             define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib),
-            define("BLAS_LIBRARIES", [spec["blas"].libs]),
+            define("BLAS_LIBRARIES", spec["blas"].libs),
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
             # explicitly add blas to LAPACK_LIBRARIES.
