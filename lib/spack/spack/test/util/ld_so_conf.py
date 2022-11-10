@@ -46,3 +46,9 @@ def test_ld_so_conf_parsing(tmpdir):
 
     # Make sure globbing didn't change the working dir
     assert os.getcwd() == cwd
+
+
+def test_host_dynamic_linker_search_paths():
+    assert {"/usr/lib", "/usr/lib64", "/lib", "/lib64"}.issubset(
+        ld_so_conf.host_dynamic_linker_search_paths()
+    )
