@@ -287,7 +287,15 @@ chain-a
 
 
 def test_traverse_topo_order():
-    # Good old Wiki example
+    # All paths (5, 7 and 3 spawn the entire DAG)
+    # s05 -> s11 -> s02
+    #        s11 -> s09
+    #        s11 -> s10
+    # s07 -> s11
+    # s07 -> s08 -> s09
+    # s03 -> s08
+    # s03        -> s10
+
     s = [Spec("s{}".format(i)) for i in range(12)]
 
     for parent, child in (
@@ -303,15 +311,20 @@ def test_traverse_topo_order():
     ):
         s[parent].add_dependency_edge(s[child], "all")
 
-    def is_topo(ordered_specs):
+    def test_topo(roots, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
+        ordered_specs = traverse.traverse_nodes(roots, order="topo", direction=direction)
         specs = [s for s in ordered_specs]
+        reverse = "parents" if direction == "children" else "children"
         for i in range(len(specs)):
-            parents = specs[i].traverse(order="pre", direction="parents", root=False)
+            parents = specs[i].traverse(order="pre", direction=reverse, root=False)
             assert set(list(parents)).issubset(set(specs[:i]))
 
     # Using all *actual* root (no in-coming edge) of the DAG
-    is_topo(traverse.traverse_nodes([s[5], s[7], s[3]], order="topo"))
+    test_topo([s[5], s[7], s[3]], direction="children")
 
     # The same, but now also include some spec that *has* parents
-    is_topo(traverse.traverse_nodes([s[11], s[7], s[5], s[3]], order="topo"))
+    test_topo([s[11], s[7], s[5], s[3]], direction="children")
+
+    # Reverse mode: 2, 9, and 10 are the roots in the parents direction.
+    test_topo([s[2], s[9], s[10]], direction="parents")
