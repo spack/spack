@@ -69,6 +69,9 @@ def _process_ld_so_conf_queue(queue):
 
             # Finally handle includes.
             include_path = line[8:].strip()
+            if not include_path:
+                continue
+
             cwd = os.path.dirname(p)
             os.chdir(cwd)
             queue.extend(os.path.join(cwd, p) for p in glob.glob(include_path))
