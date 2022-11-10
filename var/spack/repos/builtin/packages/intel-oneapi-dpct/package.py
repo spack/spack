@@ -23,6 +23,12 @@ class IntelOneapiDpct(IntelOneApiPackage):
 
     if platform.system() == "Linux":
         version(
+            "2022.2.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18991/l_dpcpp-ct_p_2022.2.1.14994_offline.sh",
+            sha256="ea2fbe36de70eb3c78c97133f81e0b2a2fbcfc9525e77125a183d7af446ef3e6",
+            expand=False,
+        )
+        version(
             "2022.2.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18908/l_dpcpp-ct_p_2022.2.0.8701_offline.sh",
             sha256="ca79b89ba4b97accb868578a1b7ba0e38dc5e4457d45c6c2552ba33d71b52128",
