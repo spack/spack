@@ -14,8 +14,15 @@ class Libpressio(CMakePackage, CudaPackage):
     url = "https://github.com/robertu94/libpressio/archive/0.31.1.tar.gz"
     git = "https://github.com/robertu94/libpressio"
 
+    tags = ["e4s"]
+    maintainers = ["robertu94"]
+
+    tests_require_compiler = True
     version("master", branch="master")
     version("develop", branch="develop")
+    version("0.88.3", sha256="b2df2ed11f77eb2e07206f7bdfa4754017559017235c3324820021ef451fd48b")
+    version("0.88.2", sha256="f5de6aff5ff906b164d6b2199ada10a8e32fb1e2a6295da3f0b79d9626661a46")
+    version("0.88.1", sha256="d7fe73a6b2d8de6d19c85e87888dcf1a62956f56b4e6dfd23e26901740031e00")
     version("0.88.0", sha256="4358441f0d10559d571327162a216617d16d09569a80e13ad286e3b7c41c5b9b")
     version("0.87.0", sha256="2bea685e5ed3a1528ea68ba4a281902ff77c0bebd38ff212b6e8edbfa263b572")
     version("0.86.7", sha256="2a6319640a018c39aa93aaf0f027fd496d7ea7dc5ac95509313cf1b4b6b1fb00")
@@ -178,9 +185,16 @@ class Libpressio(CMakePackage, CudaPackage):
     variant("mgardx", default=False, description="build support for the MGARDx compressor")
     variant("bzip2", default=False, description="build support for the bzip2 compressor")
     variant("qoz", default=False, description="build support for the qoz compressor")
+    variant("core", default=True, description="build core builtin libraries")
     variant(
         "cusz", default=False, description="build support for the cusz compressor", when="@0.86.0:"
     )
+
+    # cufile was only added to the .run file installer for cuda in 11.7.1
+    # dispite being in the APT/RPM packages for much longer
+    # a external install the cufile libraries could use an earlier version
+    # which provides these libraries
+    depends_on("cuda@11.7.1:", when="+cuda")
 
     depends_on("boost", when="@:0.51.0+boost")
 
@@ -197,6 +211,10 @@ class Libpressio(CMakePackage, CudaPackage):
     depends_on("c-blosc", when="+blosc")
     depends_on("fpzip", when="+fpzip")
     depends_on("hdf5", when="+hdf5")
+    # this might seem excessive, but if HDF5 is external and parallel
+    # we might not get the MPI compiler flags we need, so depend on this
+    # explicitly
+    depends_on("mpi@2:", when="+hdf5 ^hdf5+mpi")
     depends_on("imagemagick", when="+magick")
     depends_on("mgard", when="+mgard")
     depends_on("python@3:", when="+python", type=("build", "link", "run"))
@@ -313,15 +331,23 @@ class Libpressio(CMakePackage, CudaPackage):
             args.append("-DLIBPRESSIO_HAS_QoZ=ON")
         if "+cusz" in self.spec:
             args.append("-DLIBPRESSIO_HAS_CUSZ=ON")
+        if "+core" in self.spec:
+            args.append("-DLIBPRESSIO_BUILD_MODE=FULL")
+        else:
+            args.append("-DLIBPRESSIO_BUILD_MODE=CORE")
         if self.run_tests:
             args.append("-DBUILD_TESTING=ON")
         else:
             args.append("-DBUILD_TESTING=OFF")
         return args
 
+    def setup_run_environment(self, env):
+        if "+hdf5" in self.spec and "+json" in self.spec:
+            env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
+
     @run_after("build")
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make("test")
 
     @run_after("build")
@@ -329,3 +355,33 @@ class Libpressio(CMakePackage, CudaPackage):
         if "+docs" in self.spec:
             with working_dir(self.build_directory):
                 make("docs")
+
+    @run_after("install")
+    def copy_test_sources(self):
+        if self.version < Version("0.88.3"):
+            return
+        srcs = [
+            join_path("test", "smoke_test", "smoke_test.cc"),
+            join_path("test", "smoke_test", "CMakeLists.txt"),
+        ]
+        self.cache_extra_test_sources(srcs)
+
+    def test(self):
+        if self.version < Version("0.88.3"):
+            return
+
+        args = self.cmake_args()
+        args.append(
+            "-S{}".format(join_path(self.test_suite.current_test_cache_dir, "test", "smoke_test"))
+        )
+        args.append(
+            "-DCMAKE_PREFIX_PATH={};{}".format(self.spec["libstdcompat"].prefix, self.prefix)
+        )
+
+        self.run_test("cmake", args, purpose="cmake configuration works")
+
+        # this works for cmake@3.14: which is required for this package
+        args = ["--build", "."]
+        self.run_test("cmake", args, purpose="cmake builds works")
+
+        self.run_test("./pressio_smoke_tests", expected="all passed")
