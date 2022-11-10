@@ -14,6 +14,7 @@ class RPhyloseq(RPackage):
 
     bioc = "phyloseq"
 
+    version("1.42.0", commit="de6be71fe9902bdfe7791163acb7b67d238424dc")
     version("1.40.0", commit="20bb27d5e6e0d4368978a15671b829990b1f4568")
     version("1.38.0", commit="1e2409a6ed3c23e308275098c2dc9fdba9d5e5f6")
     version("1.34.0", commit="cbed93ead5528fe9024d646c597dab9fc95952d3")
@@ -26,6 +27,7 @@ class RPhyloseq(RPackage):
     depends_on("r@3.3.0:", type=("build", "run"))
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.22.3")
     depends_on("r-ade4@1.7.4:", type=("build", "run"))
+    depends_on("r-ade4@1.7-4:", type=("build", "run"), when="@1.42.0:")
     depends_on("r-ape@3.4:", type=("build", "run"))
     depends_on("r-ape@5.0:", type=("build", "run"), when="@1.22.3:")
     depends_on("r-biobase", type=("build", "run"))
