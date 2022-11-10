@@ -46,8 +46,8 @@ class RedisPlusPlus(CMakePackage):
         args = [
             self.define("REDIS_PLUS_PLUS_CXX_STANDARD", cxxstd),
             self.define_from_variant("REDIS_PLUS_PLUS_BUILD_TEST", "test"),
-            self.define_from_variant("DREDIS_PLUS_PLUS_BUILD_STATIC", "static"),
-            self.define_from_variant("DREDIS_PLUS_PLUS_BUILD_SHARED", "shared"),
+            self.define_from_variant("REDIS_PLUS_PLUS_BUILD_STATIC", "static"),
+            self.define_from_variant("REDIS_PLUS_PLUS_BUILD_SHARED", "shared"),
             self.define("REDIS_PLUS_PLUS_BUILD_STATIC_WITH_PIC", use_fpic),
         ]
 
