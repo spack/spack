@@ -49,9 +49,9 @@ class RRhtslib(RPackage):
     # available
     depends_on("patchelf", type="build", when="@1.12:1.14")
 
-    patch("use_spack_Makeconf.patch", when="@1.12:")
+    patch("use_spack_Makeconf.patch", when="@1.12:1.28.0")
     patch("find_deps-1.12.patch", when="@1.12:1.14")
-    patch("find_deps-1.16.patch", when="@1.16:")
+    patch("find_deps-1.16.patch", when="@1.16:1.28.0")
 
     @when("@1.12:")
     def setup_build_environment(self, env):
