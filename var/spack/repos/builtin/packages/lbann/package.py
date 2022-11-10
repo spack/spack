@@ -428,7 +428,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                     "-DHIP_CXX_COMPILER={0}".format(self.spec["hip"].hipcc),
                 ]
             )
-            if "platform=cray" in spec:
+            if "%rocmcc" in spec:
                 args.extend(
                     [
                         "-DMPI_ASSUME_NO_BUILTIN_MPI=ON",
