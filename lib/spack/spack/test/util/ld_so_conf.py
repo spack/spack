@@ -13,7 +13,7 @@ def test_ld_so_conf_parsing(tmpdir):
     tmpdir.ensure("subdir", dir=True)
 
     # Entrypoint config file
-    with open(tmpdir.join("main.conf"), "wb") as f:
+    with open(str(tmpdir.join("main.conf")), "wb") as f:
         f.write(b"  \n")
         f.write(b"include subdir/*.conf\n")
         f.write(b"include non-existent/file\n")
@@ -26,15 +26,15 @@ def test_ld_so_conf_parsing(tmpdir):
         f.write(b"#/skip/me\n")
 
     # Should be parsed: subdir/first.conf
-    with open(tmpdir.join("subdir", "first.conf"), "wb") as f:
+    with open(str(tmpdir.join("subdir", "first.conf")), "wb") as f:
         f.write(b"/first.conf/lib")
 
     # Should be parsed: subdir/second.conf
-    with open(tmpdir.join("subdir", "second.conf"), "wb") as f:
+    with open(str(tmpdir.join("subdir", "second.conf")), "wb") as f:
         f.write(b"/second.conf/lib")
 
     # Not matching subdir/*.conf
-    with open(tmpdir.join("subdir", "third"), "wb") as f:
+    with open(str(tmpdir.join("subdir", "third")), "wb") as f:
         f.write(b"/third/lib")
 
     paths = ld_so_conf.parse_ld_so_conf(str(tmpdir.join("main.conf")))
