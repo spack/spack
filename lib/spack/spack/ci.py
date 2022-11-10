@@ -51,6 +51,7 @@ JOB_RETRY_CONDITIONS = [
 
 TEMP_STORAGE_MIRROR_NAME = "ci_temporary_mirror"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
+SHARED_PR_MIRROR_URL = "s3://spack-binaries-prs/testing/shared_pr_mirror"
 
 spack_gpg = spack.main.SpackCommand("gpg")
 spack_compiler = spack.main.SpackCommand("compiler")
@@ -731,6 +732,12 @@ def generate_gitlab_ci_yaml(
         # won't fetch its index and include in our local cache.
         spack.mirror.add("ci_pr_mirror", remote_mirror_override, cfg.default_modify_scope())
 
+    shared_pr_mirror = None
+    if spack_pipeline_type == "spack_pull_request":
+        stack_name = os.environ.get("SPACK_CI_STACK_NAME", "")
+        shared_pr_mirror = url_util.join(SHARED_PR_MIRROR_URL, stack_name)
+        spack.mirror.add("ci_shared_pr_mirror", shared_pr_mirror, cfg.default_modify_scope())
+
     pipeline_artifacts_dir = artifacts_root
     if not pipeline_artifacts_dir:
         proj_dir = os.environ.get("CI_PROJECT_DIR", os.getcwd())
@@ -805,6 +812,8 @@ def generate_gitlab_ci_yaml(
         # Clean up remote mirror override if enabled
         if remote_mirror_override:
             spack.mirror.remove("ci_pr_mirror", cfg.default_modify_scope())
+        if spack_pipeline_type == "spack_pull_request":
+            spack.mirror.remove("ci_shared_pr_mirror", cfg.default_modify_scope())
 
     all_job_names = []
     output_object = {}
@@ -1294,6 +1303,7 @@ def generate_gitlab_ci_yaml(
             "SPACK_LOCAL_MIRROR_DIR": rel_local_mirror_dir,
             "SPACK_PIPELINE_TYPE": str(spack_pipeline_type),
             "SPACK_CI_STACK_NAME": os.environ.get("SPACK_CI_STACK_NAME", "None"),
+            "SPACK_CI_SHARED_PR_MIRROR_URL": shared_pr_mirror or "None",
             "SPACK_REBUILD_CHECK_UP_TO_DATE": str(prune_dag),
             "SPACK_REBUILD_EVERYTHING": str(rebuild_everything),
         }
