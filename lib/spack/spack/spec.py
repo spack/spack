@@ -173,6 +173,14 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 3
 
 
+class InstallStatus():
+    installed = 0
+    upstream = 1
+    missing = 2
+    absent = 3
+    external = 4
+
+
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
     color_formats."""
@@ -4401,15 +4409,20 @@ class Spec(object):
     def install_status(self):
         """Helper for tree to print DB install status."""
         if not self.concrete:
-            return None
+            return InstallStatus.absent
 
         if self.external:
-            return "external"
-        try:
-            record = spack.store.db.get_record(self)
-            return record.installed
-        except KeyError:
-            return None
+            return InstallStatus.external
+
+        upstream, record = spack.store.db.query_by_spec_hash(self.dag_hash())
+        if not record:
+            return InstallStatus.absent
+        elif upstream and record.installed:
+            return InstallStatus.upstream
+        elif record.installed:
+            return InstallStatus.installed
+        else:
+            return InstallStatus.missing
 
     def _installed_explicitly(self):
         """Helper for tree to print DB install status."""
@@ -4455,16 +4468,20 @@ class Spec(object):
 
             if status_fn:
                 status = status_fn(node)
-                if status == "external":
-                    out += clr.colorize("@g{[<]}  ", color=color)  # external
-                elif node.installed_upstream:
+                if status == InstallStatus.external:
+                    out += clr.colorize("@g{[<]}  ", color=color)
+                elif status == InstallStatus.upstream:
                     out += clr.colorize("@g{[^]}  ", color=color)
-                elif status is None:
-                    out += clr.colorize("@K{ - }  ", color=color)  # !installed
-                elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)  # installed
+                elif status == InstallStatus.absent:
+                    out += clr.colorize("@K{ - }  ", color=color)
+                elif status == InstallStatus.installed:
+                    out += clr.colorize("@g{[+]}  ", color=color)
+                elif status == InstallStatus.missing:
+                    out += clr.colorize("@r{[-]}  ", color=color)
                 else:
-                    out += clr.colorize("@r{[-]}  ", color=color)  # missing
+                    raise ValueError(
+                        "Node %s status %s is not a valid install status" % (node, status)
+                    )
 
             if hashes:
                 out += clr.colorize("@K{%s}  ", color=color) % node.dag_hash(hlen)
