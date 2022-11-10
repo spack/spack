@@ -5,9 +5,9 @@
 
 .. _mesonpackage:
 
-------------
-MesonPackage
-------------
+-----
+Meson
+-----
 
 Much like Autotools and CMake, Meson is a build system.  But it is
 meant to be both fast and as user friendly as possible.  GNOME's goal
@@ -17,7 +17,7 @@ is to port modules to use the Meson build system.
 Phases
 ^^^^^^
 
-The ``MesonPackage`` base class comes with the following phases:
+The ``MesonBuilder`` and ``MesonPackage`` base classes come with the following phases:
 
 #. ``meson`` - generate ninja files
 #. ``build`` - build the project

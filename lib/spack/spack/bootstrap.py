@@ -91,6 +91,14 @@ def _try_import_from_store(module, query_spec, query_info=None):
             os.path.join(candidate_spec.prefix, pkg.platlib),
         ]  # type: list[str]
         path_before = list(sys.path)
+
+        # Python 3.8+ on Windows does not search dependent DLLs in PATH,
+        # so we need to manually add it using os.add_dll_directory
+        # https://docs.python.org/3/whatsnew/3.8.html#bpo-36085-whatsnew
+        if sys.version_info[:2] >= (3, 8) and sys.platform == "win32":
+            if os.path.isdir(candidate_spec.prefix.bin):
+                os.add_dll_directory(candidate_spec.prefix.bin)  # novermin
+
         # NOTE: try module_paths first and last, last allows an existing version in path
         # to be picked up and used, possibly depending on something in the store, first
         # allows the bootstrap version to work when an incompatible version is in
@@ -665,6 +673,11 @@ def _add_externals_if_missing():
 
 #: Reference counter for the bootstrapping configuration context manager
 _REF_COUNT = 0
+
+
+def is_bootstrapping():
+    global _REF_COUNT
+    return _REF_COUNT > 0
 
 
 @contextlib.contextmanager
