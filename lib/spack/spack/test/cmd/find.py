@@ -269,9 +269,9 @@ mpileaks-2.3
     callpath-1.0
         dyninst-8.2
             libdwarf-20130729
-                libelf-0.8.13
-        zmpi-1.0
-            fake-1.0
+            libelf-0.8.13
+    zmpi-1.0
+        fake-1.0
 
 """
     )
@@ -291,9 +291,9 @@ mpileaks-2.3                   {0}
     callpath-1.0               {1}
         dyninst-8.2            {2}
             libdwarf-20130729  {3}
-                libelf-0.8.13  {4}
-        zmpi-1.0               {5}
-            fake-1.0           {6}
+            libelf-0.8.13      {4}
+    zmpi-1.0                   {5}
+        fake-1.0               {6}
 
 """.format(
             *prefixes
