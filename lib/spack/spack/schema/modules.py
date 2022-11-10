@@ -26,9 +26,7 @@ spec_regex = (
 )
 
 #: Matches a valid name for a module set
-valid_module_set_name = (
-    r"^(?!arch_folder$|lmod$|roots$|enable$|prefix_inspections$|" r"tcl$|use_view$)\w[\w-]*$"
-)
+valid_module_set_name = r"^\w[\w-]*$"
 
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r"^[\^@%+~]"
@@ -187,13 +185,6 @@ properties = {
                 "additionalProperties": False,
                 "properties": module_config_properties,
             },
-            # Deprecated top-level keys (ignored in 0.18 with a warning)
-            "^(arch_folder|lmod|roots|enable|tcl|use_view)$": {},
-        },
-        "deprecatedProperties": {
-            "properties": ["arch_folder", "lmod", "roots", "enable", "tcl", "use_view"],
-            "message": deprecation_msg_default_module_set,
-            "error": False,
         },
     }
 }
@@ -249,39 +240,6 @@ def update_keys(data, key_translations):
     return changed
 
 
-def update_default_module_set(data):
-    """Update module configuration to move top-level keys inside default module set.
-
-    This change was introduced in v0.18 (see 99083f1706 or #28659).
-    """
-    changed = False
-
-    deprecated_top_level_keys = ("arch_folder", "lmod", "roots", "enable", "tcl", "use_view")
-
-    # Don't update when we already have a default module set
-    if "default" in data:
-        if any(key in data for key in deprecated_top_level_keys):
-            warnings.warn(
-                'Did not move top-level module properties into "default" '
-                'module set, because the "default" module set is already '
-                "defined"
-            )
-        return changed
-
-    default = {}
-
-    # Move deprecated top-level keys under "default" module set.
-    for key in deprecated_top_level_keys:
-        if key in data:
-            default[key] = data.pop(key)
-
-    if default:
-        changed = True
-        data["default"] = default
-
-    return changed
-
-
 def update(data):
     """Update the data in place to remove deprecated properties.
 
@@ -291,9 +249,6 @@ def update(data):
     Returns:
         True if data was changed, False otherwise
     """
-    # deprecated top-level module config (everything in default module set)
-    changed = update_default_module_set(data)
-
     # translate blacklist/whitelist to exclude/include
     changed |= update_keys(data, exclude_include_translations)
 
