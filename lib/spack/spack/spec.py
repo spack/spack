@@ -173,7 +173,7 @@ CLEARSIGN_FILE_REGEX = re.compile(
 SPECFILE_FORMAT_VERSION = 3
 
 
-class InstallStatus():
+class InstallStatus:
     installed = 0
     upstream = 1
     missing = 2
