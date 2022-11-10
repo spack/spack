@@ -8,8 +8,6 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
-import warnings
-
 import spack.schema.environment
 import spack.schema.projections
 
@@ -250,6 +248,4 @@ def update(data):
         True if data was changed, False otherwise
     """
     # translate blacklist/whitelist to exclude/include
-    changed |= update_keys(data, exclude_include_translations)
-
-    return changed
+    return update_keys(data, exclude_include_translations)
