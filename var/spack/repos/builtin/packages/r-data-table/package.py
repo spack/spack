@@ -16,6 +16,7 @@ class RDataTable(RPackage):
 
     cran = "data.table"
 
+    version("1.14.4", sha256="4862a7c26e8309108fd1f5296616407b9ff9e4e1be5cdedcb717f114c2e348f0")
     version("1.14.2", sha256="f741b951e5937440139514aedbae78dbd6862d825066848bdb006aa02c2f3d2b")
     version("1.13.6", sha256="d50cdd4c4f89cabf83baa9114e49a3b8179f403c499d6e0be7791a44ffcd3e9b")
     version("1.12.8", sha256="d3a75f3a355ff144cc20a476041617e21fcf2a9f79265fd9bbd4693f3671f9dc")

@@ -17,6 +17,7 @@ class RGstat(RPackage):
 
     cran = "gstat"
 
+    version("2.1-0", sha256="57a6eb46fa601f159ace1e56ebe8928d210a62d85552a4eb5a5ca4ada48f2d6f")
     version("2.0-9", sha256="122c032c2e15388496853597ebcb5664e76cda96b164e9917ee66d1c24fba4a6")
     version("2.0-8", sha256="57cb9e8235a39379a96af0a5651c82e02fdd608375917939948c3dbf170668e8")
     version("2.0-6", sha256="6711e68aa2444cf2927879a03a976d8caeca5eac98d806b19a6a7178b90bfcab")
@@ -26,5 +27,9 @@ class RGstat(RPackage):
     depends_on("r-lattice", type=("build", "run"))
     depends_on("r-sp@0.9-72:", type=("build", "run"))
     depends_on("r-zoo", type=("build", "run"))
+    depends_on("r-stars", type=("build", "run"), when="@2.1-0:")
+    depends_on("r-sftime", type=("build", "run"), when="@2.1-0:")
+    depends_on("r-sf@0.7-2:", type=("build", "run"), when="@2.1-0:")
     depends_on("r-spacetime@1.0-0:", type=("build", "run"))
+    depends_on("r-spacetime@1.2-8:", type=("build", "run"), when="@2.1-0:")
     depends_on("r-fnn", type=("build", "run"))

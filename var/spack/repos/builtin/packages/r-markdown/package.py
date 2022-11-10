@@ -17,6 +17,7 @@ class RMarkdown(RPackage):
 
     cran = "markdown"
 
+    version("1.3", sha256="b1773e94e7b927c3a8540c2704b06e0f7721a0e3538a93abd58fff420ecb30f1")
     version("1.1", sha256="8d8cd47472a37362e615dbb8865c3780d7b7db694d59050e19312f126e5efc1b")
     version("1.0", sha256="172d8072d1829644ee6cdf54282a55718e2cfe9c9915d3589ca5f9a016f8d9a6")
     version("0.9", sha256="3068c6a41ca7a76cbedeb93b7371798f4d8437eea69a23c0ed5204c716d1bf23")
@@ -24,5 +25,6 @@ class RMarkdown(RPackage):
     version("0.7.7", sha256="0b86c3a4e42bbc425be229f70a4a0efdca0522f48c6ea1bf0285c6b122854102")
 
     depends_on("r@2.11.1:", type=("build", "run"))
+    depends_on("r-commonmark", type=("build", "run"), when="@1.3:")
     depends_on("r-mime@0.3:", type=("build", "run"))
     depends_on("r-xfun", type=("build", "run"), when="@1.1:")

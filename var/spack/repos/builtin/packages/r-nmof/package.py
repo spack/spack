@@ -19,6 +19,7 @@ class RNmof(RPackage):
 
     cran = "NMOF"
 
+    version("2.7-1", sha256="b03e309df35b3fb0980c8a171e1cd1c69739fa6ab7a8992c043166fae4644e23")
     version("2.7-0", sha256="11eeda730262418f22d24d8f72d363a05ac4c3c1130b88f4eafb1b8d81c83160")
     version("2.5-1", sha256="0468ba72364cbdf90781824dfb1a60324203e2248d93cb6f1ffd6eb0d271f390")
     version("2.5-0", sha256="f44914c86d86c62f74cbc026179a694f0b3c2e3341b076acaf5de01de194a3c7")

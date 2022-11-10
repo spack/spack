@@ -16,6 +16,7 @@ class RLme4(RPackage):
 
     cran = "lme4"
 
+    version("1.1-31", sha256="5affd1e33d3fece5ec0a6c7663eb12328e64147f8aa92675ce6453c4fe72edfd")
     version("1.1-30", sha256="fdabdfc4b64cff05ae9506a766c948a953eeb6db71761f9401b36d6d9979300f")
     version("1.1-29", sha256="83d97de48cc4706a5a9615b126ba1a86f1a3009d3f38b8da3e57dd619519e826")
     version("1.1-27.1", sha256="25fa873e39b8192e48c15eec93db8c8bf6f03baf3bd8d5ca9188482ce8442ec5")
@@ -27,6 +28,7 @@ class RLme4(RPackage):
 
     depends_on("r@3.0.2:", type=("build", "run"))
     depends_on("r@3.2.0:", type=("build", "run"), when="@1.1-16:")
+    depends_on("r@3.5.0:", type=("build", "run"), when="@1.1-31:")
     depends_on("r-matrix@1.2-1:", type=("build", "run"))
     depends_on("r-mass", type=("build", "run"))
     depends_on("r-lattice", type=("build", "run"))

@@ -19,6 +19,7 @@ class REmmeans(RPackage):
 
     cran = "emmeans"
 
+    version("1.8.2", sha256="785973457d8a6547df489f87b62987d44a68c4b9018661d38ca11ee34e49d209")
     version("1.8.1-1", sha256="79fc5e44255427b038d0dbe2c9887d84984baacb11bb9a9078cd8d0dca2e6577")
     version("1.7.4-1", sha256="f7a33a2b54ad13d6e39ee6c58004f83a9edb06e8dc8282180440610eb18be721")
     version("1.7.2", sha256="d3e51c2a4b6c74dd9840efebe241a53072172f269f4324421f28f68db71721bc")

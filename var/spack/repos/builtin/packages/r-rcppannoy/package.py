@@ -20,6 +20,7 @@ class RRcppannoy(RPackage):
 
     cran = "RcppAnnoy"
 
+    version("0.0.20", sha256="dcc6c7e091154d0a5698472e0fc7ed77976941c7376d21e019c90c3efaeacf85")
     version("0.0.19", sha256="89b209900516f3096b53c90937081fb8965c605c867aa465f1b3b68092b7688a")
     version("0.0.18", sha256="e4e7ddf071109b47b4fdf285db6d2155618ed73da829c30d8e64fc778e63c858")
     version("0.0.12", sha256="8f736cbbb4a32c80cb08ba4e81df633846d725f27867e983af2012966eac0eac")

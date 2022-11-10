@@ -17,6 +17,7 @@ class RRecipes(RPackage):
 
     cran = "recipes"
 
+    version("1.0.2", sha256="1a7b5a9a2946fa34599935b6d93101ec559d8a901d49cc691972c75df8d5670e")
     version("1.0.1", sha256="9e3ae212413409bf41ec7d1a311586e12c0ca79943cef436707d041c57125bc9")
     version("0.2.0", sha256="3d0073e3eb98ac089a94bf8430f3c50915ff1f495d8e967c37baa6a0f6cea0a4")
     version("0.1.17", sha256="ed20ba0ea0165310e31864ed7d2e005a2a37b76c7913977fd124d8b567616d3d")
@@ -39,6 +40,7 @@ class RRecipes(RPackage):
     depends_on("r-ipred", type=("build", "run"))
     depends_on("r-ipred@0.9-12:", type=("build", "run"), when="@0.1.17:")
     depends_on("r-lifecycle", type=("build", "run"), when="@0.1.15:")
+    depends_on("r-lifecycle@1.0.3:", type=("build", "run"), when="@1.0.2:")
     depends_on("r-lubridate", type=("build", "run"))
     depends_on("r-lubridate@1.8.0:", type=("build", "run"), when="@1.0.1:")
     depends_on("r-magrittr", type=("build", "run"))
@@ -52,6 +54,7 @@ class RRecipes(RPackage):
     depends_on("r-tidyselect@0.2.5:", type=("build", "run"))
     depends_on("r-tidyselect@1.1.0:", type=("build", "run"), when="@0.1.15:")
     depends_on("r-tidyselect@1.1.2:", type=("build", "run"), when="@1.0.1:")
+    depends_on("r-tidyselect@1.2.0:", type=("build", "run"), when="@1.0.2:")
     depends_on("r-timedate", type=("build", "run"))
     depends_on("r-vctrs", type=("build", "run"), when="@0.1.17:")
     depends_on("r-withr", type=("build", "run"))

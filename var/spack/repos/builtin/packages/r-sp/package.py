@@ -16,6 +16,7 @@ class RSp(RPackage):
 
     cran = "sp"
 
+    version("1.5-1", sha256="69b9eab481d389bbb736d2adcf50c180aca248c3ffc4ebda8ffe2accc5f229df")
     version("1.5-0", sha256="939a06adf78ec8de7a663d6ca5bba426780852b357773446b00cc298200ff81c")
     version("1.4-7", sha256="01946953707363b78d3eb8dcf472ea8c6ea0097094aa0ca0b756ce5fac01b1ad")
     version("1.4-6", sha256="9aebb3ef2140e8984a67eb93d72f686b8707d48d82445db0c54ae895576ba226")

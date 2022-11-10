@@ -16,6 +16,7 @@ class RRagg(RPackage):
 
     cran = "ragg"
 
+    version("1.2.4", sha256="c547e5636a2eefaa0021a0d50fad1e813c2ce976ec0c9c3f796d38a110680dcd")
     version("1.2.3", sha256="976da0007ef0d4dbadda4734727b539671b65c1eff4ff392d734f4e2c846f2b2")
 
     depends_on("r-systemfonts@1.0.3:", type=("build", "run"))

@@ -19,6 +19,7 @@ class RAde4(RPackage):
 
     cran = "ade4"
 
+    version("1.7-20", sha256="ddc75788b55902f17dabda209eb67c378aa0233767697e00fa3f8fc85e4bad7b")
     version("1.7-19", sha256="c85111881ff93a261ca34a5b5ef313d1c0ff9b84f0b23596bc56cfa696f165ef")
     version("1.7-18", sha256="ecb6f4c42c60f39702aa96f454bb536a333049c9608ee2b6bdf8795e059cc525")
     version("1.7-16", sha256="9bd7a25ff4fe30a32fd8f6b71909f4c638a0e2f002fc8303c0a4795423385590")

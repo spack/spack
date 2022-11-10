@@ -21,6 +21,7 @@ class RInsight(RPackage):
 
     cran = "insight"
 
+    version("0.18.6", sha256="ab0dc3c8ec765f2e93f7bcc3a7abb05140f71db24d50bf8cdd595a5a4e771cae")
     version("0.18.4", sha256="6e3f378bc2eb30c0300103bdd8a3e74371199b36867b45978ec9690a6fda0c5f")
     version("0.17.1", sha256="653c5542a0c953ad4b75800e2ab52eed244e1e698aa5bc9fc64dc657a3cece35")
     version("0.16.0", sha256="7944d7a386c99ea06d9d9e2b5f4aeb98fded7ec90b1cb908d03e278480be9e3d")
