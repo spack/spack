@@ -303,13 +303,15 @@ def test_traverse_topo_order():
     ):
         s[parent].add_dependency_edge(s[child], "all")
 
-    # These are *actual* roots (all nodes with no incoming edges)
-    roots = [s[5], s[7], s[3]]
-    nodes = [x.spec for x in traverse.traverse_edges(roots, order="topo")]
+    def is_topo(ordered_specs):
+        # Ensure the invariant that all parents of specs[i] are in specs[0:i]
+        specs = [s for s in ordered_specs]
+        for i in range(len(specs)):
+            parents = specs[i].traverse(order="pre", direction="parents", root=False)
+            assert set(list(parents)).issubset(set(specs[:i]))
 
-    # Ensure the invariant that all parents of node[i] are in node[0:i]
-    # Since we have actual roots, we can just traverse in reverse with a different
-    # traversal method from the one we're testing.
-    for i in range(len(nodes)):
-        parents = list(nodes[i].traverse(order="pre", direction="parents", root=False))
-        assert set(parents).issubset(set(nodes[:i]))
+    # Using all *actual* root (no in-coming edge) of the DAG
+    is_topo(traverse.traverse_nodes([s[5], s[7], s[3]], order="topo"))
+
+    # The same, but now also include some spec that *has* parents
+    is_topo(traverse.traverse_nodes([s[11], s[7], s[5], s[3]], order="topo"))
