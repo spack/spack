@@ -284,3 +284,32 @@ chain-a
     ^chain-d
 """
     assert s.tree(depth_first=False, cover="edges", **args) == bfs_tree_edges
+
+
+def test_traverse_topo_order():
+    # Good old Wiki example
+    s = [Spec("s{}".format(i)) for i in range(12)]
+
+    for parent, child in (
+        (5, 11),
+        (7, 11),
+        (7, 8),
+        (3, 8),
+        (3, 10),
+        (11, 2),
+        (11, 9),
+        (11, 10),
+        (8, 9),
+    ):
+        s[parent].add_dependency_edge(s[child], "all")
+
+    # These are *actual* roots (all nodes with no incoming edges)
+    roots = [s[5], s[7], s[3]]
+    nodes = [x.spec for x in traverse.traverse_edges(roots, order="topo")]
+
+    # Ensure the invariant that all parents of node[i] are in node[0:i]
+    # Since we have actual roots, we can just traverse in reverse with a different
+    # traversal method from the one we're testing.
+    for i in range(len(nodes)):
+        parents = list(nodes[i].traverse(order="pre", direction="parents", root=False))
+        assert set(parents).issubset(set(nodes[:i]))
