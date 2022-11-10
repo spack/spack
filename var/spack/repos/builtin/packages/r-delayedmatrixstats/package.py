@@ -18,6 +18,7 @@ class RDelayedmatrixstats(RPackage):
 
     bioc = "DelayedMatrixStats"
 
+    version("1.20.0", commit="1ed14250e8731e60bccb44946cafad4c2b3ac5b0")
     version("1.18.1", commit="9c4658d11fc20b7d88e05b9c52140c2ca8a65768")
     version("1.18.0", commit="50c9aab259b6e8f68abf44b78122662a41c8bf47")
     version("1.16.0", commit="d44a3d765769cb022193428a77af25bf19916be7")
@@ -42,6 +43,7 @@ class RDelayedmatrixstats(RPackage):
     depends_on("r-sparsematrixstats", type=("build", "run"), when="@1.12.2:")
     depends_on("r-matrix", type=("build", "run"))
     depends_on("r-matrix@1.5.0:", type=("build", "run"), when="@1.18.1:")
+    depends_on("r-matrix@1.5-0:", type=("build", "run"), when="@1.20.0:")
     depends_on("r-s4vectors", type=("build", "run"))
     depends_on("r-s4vectors@0.17.5:", type=("build", "run"), when="@1.2.0:")
     depends_on("r-iranges", type=("build", "run"))
