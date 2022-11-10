@@ -167,6 +167,7 @@ class Libfabric(AutotoolsPackage):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
 
+
 # This code gets all the fabric names from the variants list
 # Idea taken from the AutotoolsPackage source.
 def get_options_from_variant(self, name):
