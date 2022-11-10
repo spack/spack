@@ -30,6 +30,7 @@ import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
+import spack.traverse as traverse
 import spack.user_environment as uenv
 import spack.util.spack_json as sjson
 import spack.util.string
@@ -464,11 +465,12 @@ def display_specs(specs, args=None, **kwargs):
         # create the final, formatted versions of all specs
         formatted = []
         for spec in specs:
-            formatted.append((fmt(spec), spec))
             if deps:
-                for depth, dep in spec.traverse(root=False, depth=True):
-                    formatted.append((fmt(dep, depth), dep))
+                for depth, dep in traverse.traverse_tree([spec], depth_first=False):
+                    formatted.append((fmt(dep.spec, depth), dep.spec))
                 formatted.append(("", None))  # mark newlines
+            else:
+                formatted.append((fmt(spec), spec))
 
         # unless any of these are set, we can just colify and be done.
         if not any((deps, paths)):
