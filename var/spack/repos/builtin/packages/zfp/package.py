@@ -145,7 +145,9 @@ class Zfp(CMakePackage, CudaPackage):
         ]
 
         if "round" in spec.variants:
-            args.append("ZFP_ROUNDING_MODE={0}".format(spec.variants["round"].value.upper()))
+            args.append(
+                "ZFP_ROUNDING_MODE=ZFP_ROUND_{0}".format(spec.variants["round"].value.upper())
+            )
 
         if "+cuda" in spec:
             args.append("-DCUDA_BIN_DIR={0}".format(spec["cuda"].prefix.bin))
