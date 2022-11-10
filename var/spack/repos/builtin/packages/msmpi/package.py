@@ -13,6 +13,8 @@ class Msmpi(Package):
 
     homepage = "https://www.microsoft.com/en-us/download/default.aspx"
     maintainers = ["jpopelar"]
+    
+    executable = ["mpiexec.exe"]
 
     version(
         "10.0",
@@ -30,6 +32,11 @@ class Msmpi(Package):
     def url_for_version(self, version):
         return "https://download.microsoft.com/download/A/E/0/AE002626-9D9D-448D-8197-1EA510E297CE/msmpisetup.exe"
 
+    def determine_version(self, exe):
+        output = Executable("mpiexec.exe")
+        ver_str = re.search("\[Version ([0-9.]+)\]", output)
+        return Version(ver_str.group(0)) if ver_str else None
+
     def install(self, spec, prefix):
         installer = Executable("msmpisetup.exe")
-        installer()
+        installer("-unattend", "-installroot", prefix)

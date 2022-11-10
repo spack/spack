@@ -196,13 +196,14 @@ class Hdf5(CMakePackage):
 
     depends_on("cmake@3.12:", type="build")
 
-    depends_on("mpi", when="+mpi")
+    # depends_on("mpi", when="+mpi")
+    depends_on("msmpi", when="+mpi platform=windows")
     depends_on("java", type=("build", "run"), when="+java")
     depends_on("szip", when="+szip")
     depends_on("zlib@1.1.2:")
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
-    depends_on("pkgconfig", type="run")
+    # depends_on("pkgconfig", type="run")
 
     conflicts("api=v114", when="@1.6:1.12", msg="v114 is not compatible with this release")
     conflicts("api=v112", when="@1.6:1.10", msg="v112 is not compatible with this release")
@@ -498,7 +499,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec:
+        if "+mpi" in spec and not "platform=windows" in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:
