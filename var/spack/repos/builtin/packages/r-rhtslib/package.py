@@ -27,6 +27,7 @@ class RRhtslib(RPackage):
     #             branches.
     #             Aborting
     # version("1.28.0", commit='214fde2218bdbca89f1e12a30d2e081e76915aef')
+    version("2.0.0", commit="1757333eb88625158505e5fa47840081110cf8a4")
     version("1.28.0", branch="RELEASE_3_15")
     version("1.26.0", commit="f5b20e97b283942877529f750b28398782552655")
     version("1.22.0", commit="899b79faa54d42c7c9b9a2bc49972109637d367f")
