@@ -365,6 +365,9 @@ class Cmake(Package):
             else:
                 args.append("-DCMAKE_USE_OPENSSL=ON")
 
+        if "+notevenpossible" in spec:
+            args.append("-DNON_EXISTENT_OPTION=OFF")
+
         args.append("-DBUILD_CursesDialog=%s" % str("+ncurses" in spec))
 
         # Make CMake find its own dependencies.
