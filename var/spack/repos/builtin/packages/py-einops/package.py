@@ -14,6 +14,7 @@ class PyEinops(PythonPackage):
     homepage = "https://github.com/arogozhnikov/einops"
     pypi = "einops/einops-0.3.2.tar.gz"
 
+    version("0.6.0", sha256="6f6c78739316a2e3ccbce8052310497e69da092935e4173f2e76ec4e3a336a35")
     version("0.5.0", sha256="8b7a83cffc1ea88e306df099b7cbb9c3ba5003bd84d05ae44be5655864abb8d3")
     version("0.3.2", sha256="5200e413539f0377f4177ef00dc019968f4177c49b1db3e836c7883df2a5fe2e")
 
