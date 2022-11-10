@@ -22,15 +22,20 @@ class PyPysam(PythonPackage):
     version("0.7.7", sha256="c9f3018482eec99ee199dda3fdef2aa7424dde6574672a4c0d209a10985755cc")
 
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.12:", when="@0.18:", type="build")
-    depends_on("py-cython@0.21:", when="@0.14:", type="build")
+    depends_on("py-cython@0.29.12:", type="build", when="@0.18:")
+    depends_on("py-cython@0.21:", type="build", when="@0.14:")
     depends_on("py-cython@0.17:", type="build")
     depends_on("curl")
     depends_on("bcftools")
+    depends_on("htslib@:1.6", when="@:0.13")
     depends_on("htslib")
     depends_on("samtools")
 
-    depends_on("htslib@:1.6", when="@:0.13")
-
     def setup_build_environment(self, env):
         env.set("LDFLAGS", self.spec["curl"].libs.search_flags)
+        # linking htslib, see:
+        # http://pysam.readthedocs.org/en/latest/installation.html#external
+        # https://github.com/pysam-developers/pysam/blob/v0.9.0/setup.py#L79
+        env.set("HTSLIB_MODE", "external")
+        env.set("HTSLIB_LIBRARY_DIR", self.spec["htslib"].prefix.lib)
+        env.set("HTSLIB_INCLUDE_DIR", self.spec["htslib"].prefix.include)
