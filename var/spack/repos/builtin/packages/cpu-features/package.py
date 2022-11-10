@@ -16,9 +16,12 @@ class CpuFeatures(CMakePackage):
     version("develop", branch="main", deprecated=True)
 
     version("0.7.0", tag="v0.7.0")
+    
+    variant("shared", description="Build shared libraries", default=False)
 
     depends_on("cmake@3.0.0:", type="build")
 
     def cmake_args(self):
         args = ["-DBUILD_TESTING:BOOL=OFF"]
+        args += self.enable_or_disable("BUILD_SHARED_LIBS", variant="shared")
         return args
