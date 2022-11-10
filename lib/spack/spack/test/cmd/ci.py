@@ -190,6 +190,12 @@ spack:
           tags:
             - donotcare
           image: donotcare
+      - match:
+          - arch=test-debian6-m1
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
     service-job-attributes:
       image: donotcare
       tags: [donotcare]
@@ -270,10 +276,10 @@ def test_ci_generate_bootstrap_gcc(
 spack:
   definitions:
     - bootstrap:
-      - gcc@3.0
-      - gcc@2.0
+      - gcc@9.5
+      - gcc@9.0
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
@@ -283,6 +289,11 @@ spack:
     mappings:
       - match:
           - arch=test-debian6-x86_64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-aarch64
         runner-attributes:
           tags:
             - donotcare
@@ -338,9 +349,9 @@ def test_ci_generate_bootstrap_artifacts_buildcache(
 spack:
   definitions:
     - bootstrap:
-      - gcc@3.0
+      - gcc@9.5
   specs:
-    - dyninst%gcc@3.0
+    - dyninst%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
@@ -350,6 +361,11 @@ spack:
     mappings:
       - match:
           - arch=test-debian6-x86_64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-aarch64
         runner-attributes:
           tags:
             - donotcare
@@ -995,7 +1011,6 @@ def test_ci_rebuild(
 
         assert "--keep-stage" in install_parts
         assert "--no-check-signature" not in install_parts
-        assert "--no-add" in install_parts
         assert "-f" in install_parts
         flag_index = install_parts.index("-f")
         assert "archive-files.json" in install_parts[flag_index + 1]
@@ -1245,7 +1260,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", json_path)
+            install_cmd("--add", "--keep-stage", json_path)
 
             # env, spec, json_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(env, json_path, mirror_url, True)
@@ -1524,12 +1539,12 @@ def test_ci_generate_with_workarounds(
             """\
 spack:
   specs:
-    - callpath%gcc@3.0
+    - callpath%gcc@9.5
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
     mappings:
-      - match: ['%gcc@3.0']
+      - match: ['%gcc@9.5']
         runner-attributes:
           tags:
             - donotcare
@@ -1607,7 +1622,7 @@ spack:
             with open(json_path, "w") as ypfd:
                 ypfd.write(spec_json)
 
-            install_cmd("--keep-stage", "-f", json_path)
+            install_cmd("--add", "--keep-stage", "-f", json_path)
             buildcache_cmd("create", "-u", "-a", "-f", "--mirror-url", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
@@ -1639,28 +1654,28 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = "file://{0}".format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd("gcc@10.1.0%gcc@4.5.0")
+    install_cmd("gcc@12.2.0%gcc@10.2.1")
 
     # Put installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@10.1.0%gcc@4.5.0")
+    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "gcc@12.2.0%gcc@10.2.1")
 
     # Now uninstall the compiler
-    uninstall_cmd("-y", "gcc@10.1.0%gcc@4.5.0")
+    uninstall_cmd("-y", "gcc@12.2.0%gcc@10.2.1")
 
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@10.1.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.2.0") not in compilers.all_compiler_specs()
 
     # Configure the mirror where we put that buildcache w/ the compiler
     mirror_cmd("add", "test-mirror", mirror_url)
 
-    install_cmd("--no-check-signature", "a%gcc@10.1.0")
+    install_cmd("--no-check-signature", "b%gcc@12.2.0")
 
     # Put spec built with installed compiler in the buildcache
-    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "a%gcc@10.1.0")
+    buildcache_cmd("create", "-u", "-a", "-f", "-d", mirror_dir.strpath, "b%gcc@12.2.0")
 
     # Now uninstall the spec
-    uninstall_cmd("-y", "a%gcc@10.1.0")
+    uninstall_cmd("-y", "b%gcc@12.2.0")
 
     filename = str(tmpdir.join("spack.yaml"))
     with open(filename, "w") as f:
@@ -1669,9 +1684,9 @@ def test_ci_generate_bootstrap_prune_dag(
 spack:
   definitions:
     - bootstrap:
-      - gcc@10.1.0%gcc@4.5.0
+      - gcc@12.2.0%gcc@10.2.1
   specs:
-    - a%gcc@10.1.0
+    - b%gcc@12.2.0
   mirrors:
     atestm: {0}
   gitlab-ci:
@@ -1686,6 +1701,16 @@ spack:
             - donotcare
       - match:
           - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - meh
+      - match:
+          - arch=test-debian6-aarch64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-m1
         runner-attributes:
           tags:
             - meh
@@ -1745,10 +1770,6 @@ spack:
                 "(bootstrap) gcc": [],
                 "(specs) b": [
                     "(bootstrap) gcc",
-                ],
-                "(specs) a": [
-                    "(bootstrap) gcc",
-                    "(specs) b",
                 ],
             }
 
@@ -1815,8 +1836,8 @@ spack:
             yaml_contents = syaml.load(contents)
 
             for ci_key in yaml_contents.keys():
-                if "archive-files" in ci_key or "mpich" in ci_key:
-                    print("Error: archive-files and mpich should have been pruned")
+                if "archive-files" in ci_key:
+                    print("Error: archive-files should have been pruned")
                     assert False
 
 
@@ -2152,7 +2173,10 @@ spack:
 
             ci_cmd("generate", "--output-file", pipeline_path, "--artifacts-root", artifacts_root)
 
-            job_name = ci.get_job_name("specs", False, job_spec, "test-debian6-core2", None)
+            target_name = spack.platforms.test.Test.default
+            job_name = ci.get_job_name(
+                "specs", False, job_spec, "test-debian6-%s" % target_name, None
+            )
 
             repro_file = os.path.join(working_dir.strpath, "repro.json")
             repro_details = {

@@ -15,6 +15,7 @@ class Tracy(MakefilePackage):
     maintainers = ["msimberg"]
 
     version("master", git="https://github.com/wolfpld/tracy.git", branch="master")
+    version("0.9", sha256="93a91544e3d88f3bc4c405bad3dbc916ba951cdaadd5fcec1139af6fa56e6bfc")
     version(
         "0.8.2",
         sha256="4784eddd89c17a5fa030d408392992b3da3c503c872800e9d3746d985cfcc92a",

@@ -23,6 +23,7 @@ class Openssh(AutotoolsPackage):
 
     tags = ["core-packages"]
 
+    version("9.1p1", sha256="19f85009c7e3e23787f0236fbb1578392ab4d4bf9f8ec5fe6bc1cd7e8bfdd288")
     version("9.0p1", sha256="03974302161e9ecce32153cfa10012f1e65c8f3750f573a73ab1befd5972a28a")
     version("8.9p1", sha256="fd497654b7ab1686dac672fb83dfb4ba4096e8b5ffcdaccd262380ae58bec5e7")
     version("8.8p1", sha256="4590890ea9bb9ace4f71ae331785a3a5823232435161960ed5fc86588f331fe9")

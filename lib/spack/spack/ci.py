@@ -515,38 +515,36 @@ def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
     return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
 
 
-def get_spec_filter_list(env, affected_pkgs, dependencies=True, dependents=True):
-    """Given a list of package names, and assuming an active and
-       concretized environment, return a set of concrete specs from
-       the environment corresponding to any of the affected pkgs (or
-       optionally to any of their dependencies/dependents).
+def get_spec_filter_list(env, affected_pkgs):
+    """Given a list of package names and an active/concretized
+       environment, return the set of all concrete specs from the
+       environment that could have been affected by changing the
+       list of packages.
 
     Arguments:
 
         env (spack.environment.Environment): Active concrete environment
         affected_pkgs (List[str]): Affected package names
-        dependencies (bool): Include dependencies of affected packages
-        dependents (bool): Include dependents of affected pacakges
 
     Returns:
 
-        A list of concrete specs from the active environment including
-        those associated with affected packages, and possible their
-        dependencies and dependents as well.
+        A set of concrete specs from the active environment including
+        those associated with affected packages, their dependencies and
+        dependents, as well as their dependents dependencies.
     """
     affected_specs = set()
     all_concrete_specs = env.all_specs()
     tty.debug("All concrete environment specs:")
     for s in all_concrete_specs:
         tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
-    for pkg in affected_pkgs:
-        env_matches = [s for s in all_concrete_specs if s.name == pkg]
-        for match in env_matches:
-            affected_specs.add(match)
-            if dependencies:
-                affected_specs.update(match.traverse(direction="children", root=False))
-            if dependents:
-                affected_specs.update(match.traverse(direction="parents", root=False))
+    env_matches = [s for s in all_concrete_specs if s.name in frozenset(affected_pkgs)]
+    visited = set()
+    dag_hash = lambda s: s.dag_hash()
+    for match in env_matches:
+        for parent in match.traverse(direction="parents", key=dag_hash):
+            affected_specs.update(
+                parent.traverse(direction="children", visited=visited, key=dag_hash)
+            )
     return affected_specs
 
 
@@ -625,7 +623,7 @@ def generate_gitlab_ci_yaml(
                 affected_specs = get_spec_filter_list(env, affected_pkgs)
                 tty.debug("all affected specs:")
                 for s in affected_specs:
-                    tty.debug("  {0}".format(s.name))
+                    tty.debug("  {0}/{1}".format(s.name, s.dag_hash()[:7]))
 
     # Allow overriding --prune-dag cli opt with environment variable
     prune_dag_override = os.environ.get("SPACK_PRUNE_UP_TO_DATE", None)
@@ -848,7 +846,11 @@ def generate_gitlab_ci_yaml(
 
                 if prune_untouched_packages:
                     if release_spec not in affected_specs:
-                        tty.debug("Pruning {0}, untouched by change.".format(release_spec.name))
+                        tty.debug(
+                            "Pruning {0}/{1}, untouched by change.".format(
+                                release_spec.name, release_spec.dag_hash()[:7]
+                            )
+                        )
                         spec_record["needs_rebuild"] = False
                         continue
 
@@ -1165,7 +1167,14 @@ def generate_gitlab_ci_yaml(
         "after_script",
     ]
 
-    service_job_retries = {"max": 2, "when": ["runner_system_failure", "stuck_or_timeout_failure"]}
+    service_job_retries = {
+        "max": 2,
+        "when": [
+            "runner_system_failure",
+            "stuck_or_timeout_failure",
+            "script_failure",
+        ],
+    }
 
     if job_id > 0:
         if temp_storage_url_prefix:
