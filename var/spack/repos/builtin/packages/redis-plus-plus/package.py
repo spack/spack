@@ -44,11 +44,11 @@ class RedisPlusPlus(CMakePackage):
         use_fpic = ("+static" in self.spec) and ("+fpic" in self.spec)
 
         args = [
-            "-DREDIS_PLUS_PLUS_CXX_STANDARD=%s" % cxxstd,
-            "-DREDIS_PLUS_PLUS_BUILD_TEST=%s" % ("+test" in self.spec),
-            "-DREDIS_PLUS_PLUS_BUILD_STATIC=%s" % ("+static" in self.spec),
-            "-DREDIS_PLUS_PLUS_BUILD_SHARED=%s" % ("+shared" in self.spec),
-            "-DREDIS_PLUS_PLUS_BUILD_STATIC_WITH_PIC=%s" % (use_fpic),
+            self.define("REDIS_PLUS_PLUS_CXX_STANDARD", cxxstd),
+            self.define_from_variant("REDIS_PLUS_PLUS_BUILD_TEST", "test"),
+            self.define_from_variant("DREDIS_PLUS_PLUS_BUILD_STATIC", "static"),
+            self.define_from_variant("DREDIS_PLUS_PLUS_BUILD_SHARED", "shared"),
+            self.define("REDIS_PLUS_PLUS_BUILD_STATIC_WITH_PIC", use_fpic),
         ]
 
         return args
