@@ -17,6 +17,7 @@ class PyMpi4py(PythonPackage):
     git = "https://github.com/mpi4py/mpi4py.git"
 
     version("master", branch="master")
+    version("3.1.4", sha256="17858f2ebc623220d0120d1fa8d428d033dde749c4bc35b33d81a66ad7f93480")
     version("3.1.3", sha256="f1e9fae1079f43eafdd9f817cdb3fd30d709edc093b5d5dada57a461b2db3008")
     version("3.1.2", sha256="40dd546bece8f63e1131c3ceaa7c18f8e8e93191a762cd446a8cfcf7f9cce770")
     version("3.1.1", sha256="e11f8587a3b93bb24c8526addec664b586b965d83c0882b884c14dc3fd6b9f5c")
