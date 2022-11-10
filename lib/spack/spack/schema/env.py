@@ -8,8 +8,6 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/env.py
    :lines: 36-
 """
-import warnings
-
 from llnl.util.lang import union_dicts
 
 import spack.schema.merged
