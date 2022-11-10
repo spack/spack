@@ -107,31 +107,34 @@ def host_dynamic_linker_search_paths():
     if not sys.platform.startswith("linux"):
         return default_paths
 
-    # Retrieve the dynamic linker path from the current Python interpreter
+    # If everything fails, try this standard glibc path.
+    conf_file = "/etc/ld.so.conf"
+
+    # Try to improve on the default conf path by retrieving the location of the
+    # dynamic linker from our current Python interpreter, and figure out the
+    # config file location from there.
     try:
         with open(sys.executable, "rb") as f:
             elf = elf_utils.parse_elf(f, dynamic_section=False, interpreter=True)
+
+        # If we have a dynamic linker, try to retrieve the config file relative
+        # to its prefix.
+        if elf.has_pt_interp:
+            dynamic_linker = elf.pt_interp_str.decode("utf-8")
+            dynamic_linker_name = os.path.basename(dynamic_linker)
+            conf_name = get_conf_file_from_dynamic_linker(dynamic_linker_name)
+
+            # Typically it is /lib/ld.so, but on Gentoo Prefix it is something
+            # like <long glibc prefix>/lib/ld.so. And on Debian /lib64 is actually
+            # a symlink to /usr/lib64. So, best effort attempt is to just strip
+            # two path components and join with etc/ld.so.conf.
+            possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
+            possible_conf = os.path.join(possible_prefix, "etc", conf_name)
+
+            if os.path.exists(possible_conf):
+                conf_file = possible_conf
     except (IOError, OSError, elf_utils.ElfParsingError):
-        return default_paths
+        pass
 
-    # If everything fails try a default config file
-    conf_file = "/etc/ld.so.conf"
-
-    # If we have a dynamic linker, try to retrieve the config file relative
-    # to its prefix.
-    if elf.has_pt_interp:
-        dynamic_linker = elf.pt_interp_str.decode("utf-8")
-        dynamic_linker_name = os.path.basename(dynamic_linker)
-        conf_name = get_conf_file_from_dynamic_linker(dynamic_linker_name)
-
-        # Typically it is /lib/ld.so, but on Gentoo Prefix it is something
-        # like <long glibc prefix>/lib/ld.so. And on Debian /lib64 is actually
-        # a symlink to /usr/lib64. So, best effort attempt is to just strip
-        # two path components and join with etc/ld.so.conf.
-        possible_prefix = os.path.dirname(os.path.dirname(dynamic_linker))
-        possible_conf = os.path.join(possible_prefix, "etc", conf_name)
-
-        if os.path.exists(possible_conf):
-            conf_file = possible_conf
-
+    # Note: ld_so_conf doesn't error if the file does not exist.
     return list(dedupe(parse_ld_so_conf(conf_file) + default_paths))
