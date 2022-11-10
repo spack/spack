@@ -53,13 +53,13 @@ class Zfp(CMakePackage, CudaPackage):
     variant("utilities", default=True, description="Build zfp utilities")
 
     # Language bindings
-    variant("c", default=False, description="Enable compressed array C bindings")
-    variant("python", default=False, description="Enable Python bindings")
-    variant("fortran", default=False, description="Enable Fortran bindings")
+    variant("c", default=False, when="@0.5.4:", description="Enable compressed array C bindings")
+    variant("python", default=False, when="@0.5.5:", description="Enable Python bindings")
+    variant("fortran", default=False, when="@0.5.5:", description="Enable Fortran bindings")
 
     # Execution policies
-    variant("openmp", default=False, description="Enable OpenMP execution")
-    variant("cuda", default=False, description="Enable CUDA execution")
+    variant("openmp", default=False, when="@0.5.3:", description="Enable OpenMP execution")
+    variant("cuda", default=False, when="@0.5.4:", description="Enable CUDA execution")
 
     # Advanced settings
     variant("aligned", default=False, description="Enable aligned memory allocation")
@@ -77,6 +77,7 @@ class Zfp(CMakePackage, CudaPackage):
     variant(
         "daz",
         default=False,
+        when="@1.0.0:",
         description="Denormals are zero: "
         "Treat denormal-only blocks as containing "
         "all zeroes",
@@ -85,10 +86,11 @@ class Zfp(CMakePackage, CudaPackage):
     variant(
         "fasthash",
         default=False,
+        when="@0.5.2:",
         description="Use a faster but more collision prone hash function",
     )
 
-    variant("profile", default=False, description="Count cache misses")
+    variant("profile", default=False, when="@0.5.2:", description="Count cache misses")
 
     variant(
         "round",
@@ -113,14 +115,6 @@ class Zfp(CMakePackage, CudaPackage):
     variant("twoway", default=False, description="Use two-way skew-associative cache")
 
     # Conflicts
-    conflicts("+c", when="@:0.5.3", msg="+c requires zfp 0.5.4 or later")
-    conflicts("+daz", when="@:0.5.5", msg="+daz requires zfp 1.0.0 or later")
-    conflicts("+python", when="@:0.5.4", msg="+python requires zfp 0.5.4 or later")
-    conflicts("+fortran", when="@:0.5.4", msg="+fortran requires zfp 0.5.4 or later")
-    conflicts("+openmp", when="@:0.5.2", msg="+openmp requires zfp 0.5.4 or later")
-    conflicts("+cuda", when="@:0.5.3", msg="+cuda requires zfp 0.5.4 or later")
-    conflicts("+fasthash", when="@:0.5.1", msg="+fasthash requires zfp 0.5.2 or later")
-    conflicts("+profile", when="@:0.5.1", msg="+profile requires zfp 0.5.2 or later")
     conflicts(
         "+tight-error",
         when="round=never",
