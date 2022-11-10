@@ -8,6 +8,7 @@ import platform
 
 from spack.package import *
 
+
 @IntelOneApiPackage.update_description
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI Math Kernel Library (Intel oneMKL; formerly Intel Math
