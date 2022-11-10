@@ -681,7 +681,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # concretization, so we'll stick to that. The other way around however can
         # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
         # is taken as a the target, which gcc@7 doesn't support.
-        if "+bootstrap %gcc" in self.spec:
+        # Note we're not adding this for aarch64 because of
+        if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
         if "+bootstrap" in self.spec:
