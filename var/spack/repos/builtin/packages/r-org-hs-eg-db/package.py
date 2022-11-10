@@ -13,8 +13,13 @@ class ROrgHsEgDb(RPackage):
     Gene identifiers."""
 
     bioc = "org.Hs.eg.db"
-    url = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/org.Hs.eg.db_3.4.1.tar.gz"
+    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/org.Hs.eg.db_3.4.1.tar.gz"
 
+    version(
+        "3.16.0",
+        sha256="2d2e6fdefa0dbb61c86d4736e5a0d430745ae733e310f240b97b2cb3703a2c0a",
+        url="https://www.bioconductor.org/packages/3.16/data/annotation/src/contrib/org.Hs.eg.db_3.16.0.tar.gz",
+    )
     version(
         "3.15.0",
         sha256="1dc9bb6019e0f0a222b9ec84a1c5870cdbca480f45d9ad08e35f77278baa3c5f",
