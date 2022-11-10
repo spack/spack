@@ -682,6 +682,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # result in compilation errors, when gcc@7 is built with gcc@11, and znver3
         # is taken as a the target, which gcc@7 doesn't support.
         # Note we're not adding this for aarch64 because of
+        # https://github.com/spack/spack/issues/31184
         if "+bootstrap %gcc" in self.spec and self.spec.target.family != "aarch64":
             flags += " " + self.get_common_target_flags(self.spec)
 
