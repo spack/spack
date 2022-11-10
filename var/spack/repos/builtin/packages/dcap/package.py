@@ -19,6 +19,12 @@ class Dcap(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
+    variant("plugins", default=True, description="Build plugins")
+
+    def patch(self):
+        if self.spec.satisfies("~plugins"):
+            filter_file("SUBDIRS = .*", "SUBDIRS = src", "Makefile.am")
+
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("./bootstrap.sh")
