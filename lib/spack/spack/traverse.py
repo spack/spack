@@ -110,6 +110,32 @@ class CoverEdgesVisitor(object):
         return self.visitor.neighbors(node)
 
 
+class TopoVisitor(object):
+    def __init__(self, visitor, key=id):
+        self.visited = set()
+        self.visitor = visitor
+        self.key = key
+        self.topo_order = []
+
+    def accept(self, node):
+        return self.key(node.edge.spec) not in self.visited
+
+    def pre(self, node):
+        # You could add a temporary marker for cycle detection
+        # that's cleared in `post`, but we assume no cycles.
+        pass
+
+    def post(self, node):
+        self.visited.add(self.key(node.edge.spec))
+        self.topo_order.append(node.edge)
+
+    def neighbors(self, node):
+        return self.visitor.neighbors(node)
+
+    def get_ordered_items(self):
+        return reversed(self.topo_order)
+
+
 def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visitor=None):
     """
     Create a visitor object from common keyword arguments.
@@ -217,6 +243,25 @@ def traverse_breadth_first_with_visitor(specs, visitor):
             queue.append(EdgeAndDepth(edge, node.depth + 1))
 
 
+def traverse_depth_first_with_visitor(nodes, visitor):
+    # This is a somewhat non-standard implementation, but the reason to start with
+    # edges is that we don't have to deal with an artificial root node when doing DFS
+    # on multiple (root) specs.
+    for node in nodes:
+        if not visitor.accept(node):
+            continue
+
+        visitor.pre(node)
+
+        neighbors = [
+            EdgeAndDepth(edge=edge, depth=node.depth + 1) for edge in visitor.neighbors(node)
+        ]
+
+        traverse_depth_first_with_visitor(neighbors, visitor)
+
+        visitor.post(node)
+
+
 # Helper functions for generating a tree using breadth-first traversal
 
 
@@ -275,6 +320,16 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
             yield item
 
 
+# Topologic order
+def traverse_edges_topo(specs, direction="children", deptype="all", key=id):
+    visitor = BaseVisitor(deptype)
+    if direction == "parents":
+        visitor = ReverseVisitor(visitor, deptype)
+    visitor = TopoVisitor(visitor, key=key)
+    traverse_depth_first_with_visitor(root_specs(specs), visitor)
+    return visitor.get_ordered_items()
+
+
 # High-level API: traverse_edges, traverse_nodes, traverse_tree.
 
 
@@ -298,6 +353,7 @@ def traverse_edges(
         root (bool): Yield the root nodes themselves
         order (str): What order of traversal to use in the DAG. For depth-first
             search this can be ``pre`` or ``post``. For BFS this should be ``breadth``.
+            For topological order use ``topo``
         cover (str): Determines how extensively to cover the dag.  Possible values:
             ``nodes`` -- Visit each unique node in the dag only once.
             ``edges`` -- If a node has been visited once but is reached along a
@@ -320,6 +376,11 @@ def traverse_edges(
         A generator that yields ``DependencySpec`` if depth is ``False``
         or a tuple of ``(depth, DependencySpec)`` if depth is ``True``.
     """
+
+    # TODO: cover=edges for order=topo? does visited make sense?
+    if order == "topo":
+        return traverse_edges_topo(specs, direction, deptype, key)
+
     root_edges = root_specs(specs)
     visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
 
