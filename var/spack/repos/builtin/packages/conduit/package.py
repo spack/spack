@@ -67,8 +67,10 @@ class Conduit(CMakePackage):
     # package variants
     ###########################################################################
 
+    variant("examples", default=True, description="Build Conduit examples")
     variant("shared", default=True, description="Build Conduit as shared libs")
     variant("test", default=True, description="Enable Conduit unit tests")
+    variant("utilities", default=True, description="Build Conduit utilities")
 
     # variants for python support
     variant("python", default=False, description="Build Conduit Python support")
@@ -374,6 +376,19 @@ class Conduit(CMakePackage):
             description = "Adds a missing libstdc++ rpath"
             if flags:
                 cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags, description))
+
+        #######################
+        # Examples/Utilities
+        #######################
+        if "+examples" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_EXAMPLES", "OFF"))
+
+        if "+utilities" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_UTILS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_UTILS", "OFF"))
 
         #######################
         # Unit Tests
