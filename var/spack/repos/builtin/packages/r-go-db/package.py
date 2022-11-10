@@ -16,6 +16,11 @@ class RGoDb(RPackage):
     url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
 
     version(
+        "3.16.0",
+        sha256="4652812d8ba380aeeb9b136efbc9365156397eec99c5ca36cfb8294139493b8e",
+        url="https://bioconductor.org/packages/3.16/data/annotation/src/contrib/GO.db_3.16.0.tar.gz",
+    )
+    version(
         "3.15.0",
         sha256="bac91d73c57f206fa5bc4a501a2aaf61b365cf411181ce44353370cdbc132d99",
         url="https://bioconductor.org/packages/3.15/data/annotation/src/contrib/GO.db_3.15.0.tar.gz",
