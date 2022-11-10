@@ -7,21 +7,41 @@ from spack.package import *
 
 
 class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-    DNA."""
+    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in DNA."""
 
     homepage = "https://www.cbcb.umd.edu/software/jellyfish/"
-    url = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "https://www.cbcb.umd.edu/software/jellyfish/"
+    url = "https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz"
+    list_url = "https://github.com/gmarcais/Jellyfish/releases"
 
-    version("2.2.7", sha256="d80420b4924aa0119353a5b704f923863abc802e94efeb531593147c13e631a8")
+    version("2.3.0", sha256="e195b7cf7ba42a90e5e112c0ed27894cd7ac864476dc5fb45ab169f5b930ea5a")
+    version(
+        "2.2.7",
+        sha256="d80420b4924aa0119353a5b704f923863abc802e94efeb531593147c13e631a8",
+        preferred=True,
+    )
     version(
         "1.1.11",
         sha256="496645d96b08ba35db1f856d857a159798c73cbc1eccb852ef1b253d1678c8e2",
         url="https://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz",
     )
 
-    depends_on("perl", type=("build", "run"))
-    depends_on("python", type=("build", "run"))
+    depends_on("perl", when="@2.2.7:", type=("build", "run"))
+    # Spack dropped support for python2 and CI no longer accepts depends on python2:
+    # The bindings would have to be updated/converted to python3 or use external python.
+    # For now this only adds --enable-python-binding and you have to provide python2:
+    variant("python", default=False, description="Enable python bindings")
+    variant("ruby", default=False, description="Enable ruby bindings")
+
+    extends("ruby@:2.6", when="+ruby")
 
     patch("dna_codes.patch", when="@1.1.11")
+
+    # v1.1.11 does not support language bindings
+    conflicts("+ruby", when="@1.1.11")
+
+    def configure_args(self):
+        if "+python" in self.spec:
+            return ["--enable-python-binding"]
+        if "+ruby" in self.spec:
+            return ["--enable-ruby-binding"]
+        return []
