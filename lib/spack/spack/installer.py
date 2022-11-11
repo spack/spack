@@ -42,6 +42,7 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
+from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 
@@ -111,14 +112,15 @@ def _check_last_phase(pkg):
     Raises:
         ``BadInstallPhase`` if stop_before or last phase is invalid
     """
-    if pkg.stop_before_phase and pkg.stop_before_phase not in pkg.phases:
+    phases = pkg.builder.phases
+    if pkg.stop_before_phase and pkg.stop_before_phase not in phases:
         raise BadInstallPhase(pkg.name, pkg.stop_before_phase)
 
-    if pkg.last_phase and pkg.last_phase not in pkg.phases:
+    if pkg.last_phase and pkg.last_phase not in phases:
         raise BadInstallPhase(pkg.name, pkg.last_phase)
 
     # If we got a last_phase, make sure it's not already last
-    if pkg.last_phase and pkg.last_phase == pkg.phases[-1]:
+    if pkg.last_phase and pkg.last_phase == phases[-1]:
         pkg.last_phase = None
 
 
@@ -128,7 +130,7 @@ def _handle_external_and_upstream(pkg, explicit):
     database if it is external package.
 
     Args:
-        pkg (spack.package_base.Package): the package whose installation is under
+        pkg (spack.package_base.PackageBase): the package whose installation is under
             consideration
         explicit (bool): the package was explicitly requested by the user
     Return:
@@ -558,7 +560,7 @@ def log(pkg):
     Copy provenance into the install directory on success
 
     Args:
-        pkg (spack.package_base.Package): the package that was built and installed
+        pkg (spack.package_base.PackageBase): the package that was built and installed
     """
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
@@ -595,7 +597,7 @@ def log(pkg):
         errors = six.StringIO()
         target_dir = os.path.join(spack.store.layout.metadata_path(pkg.spec), "archived-files")
 
-        for glob_expr in pkg.archive_files:
+        for glob_expr in pkg.builder.archive_files:
             # Check that we are trying to copy things that are
             # in the stage tree (not arbitrary files)
             abs_expr = os.path.realpath(glob_expr)
@@ -801,15 +803,41 @@ class PackageInstaller(object):
         """
         packages = _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs)
         for (comp_pkg, is_compiler) in packages:
-            if package_id(comp_pkg) not in self.build_tasks:
+            pkgid = package_id(comp_pkg)
+            if pkgid not in self.build_tasks:
                 self._add_init_task(comp_pkg, request, is_compiler, all_deps)
+            elif is_compiler:
+                # ensure it's queued as a compiler
+                self._modify_existing_task(pkgid, "compiler", True)
+
+    def _modify_existing_task(self, pkgid, attr, value):
+        """
+        Update a task in-place to modify its behavior.
+
+        Currently used to update the ``compiler`` field on tasks
+        that were originally created as a dependency of a compiler,
+        but are compilers in their own right.
+
+        For example, ``intel-oneapi-compilers-classic`` depends on
+        ``intel-oneapi-compilers``, which can cause the latter to be
+        queued first as a non-compiler, and only later as a compiler.
+        """
+        for i, tup in enumerate(self.build_pq):
+            key, task = tup
+            if task.pkg_id == pkgid:
+                tty.debug(
+                    "Modifying task for {0} to treat it as a compiler".format(pkgid),
+                    level=2,
+                )
+                setattr(task, attr, value)
+                self.build_pq[i] = (key, task)
 
     def _add_init_task(self, pkg, request, is_compiler, all_deps):
         """
         Creates and queus the initial build task for the package.
 
         Args:
-            pkg (spack.package_base.Package): the package to be built and installed
+            pkg (spack.package_base.PackageBase): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -1069,7 +1097,7 @@ class PackageInstaller(object):
 
         try:
             if lock is None:
-                tty.debug(msg.format("Acquiring", desc, pkg_id, timeout))
+                tty.debug(msg.format("Acquiring", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "acquire"
                 lock = spack.store.db.prefix_lock(pkg.spec, timeout)
                 if timeout != lock.default_timeout:
@@ -1088,14 +1116,18 @@ class PackageInstaller(object):
                 # must be downgraded to be a read lock
                 # Retain the original lock timeout, which is in the lock's
                 # default_timeout setting.
-                tty.debug(msg.format("Downgrading to", desc, pkg_id, lock.default_timeout))
+                tty.debug(
+                    msg.format(
+                        "Downgrading to", desc, pkg_id, pretty_seconds(lock.default_timeout or 0)
+                    )
+                )
                 op = "downgrade to"
                 lock.downgrade_write_to_read()
 
             else:  # read -> write
                 # Only get here if the current lock is a read lock, which
                 # must be upgraded to be a write lock
-                tty.debug(msg.format("Upgrading to", desc, pkg_id, timeout))
+                tty.debug(msg.format("Upgrading to", desc, pkg_id, pretty_seconds(timeout or 0)))
                 op = "upgrade to"
                 lock.upgrade_read_to_write(timeout)
             tty.debug("{0} is now {1} locked".format(pkg_id, lock_type))
@@ -1209,6 +1241,12 @@ class PackageInstaller(object):
         fail_fast = request.install_args.get("fail_fast")
         self.fail_fast = self.fail_fast or fail_fast
 
+    def _add_compiler_package_to_config(self, pkg):
+        compiler_search_prefix = getattr(pkg, "compiler_search_prefix", pkg.spec.prefix)
+        spack.compilers.add_compilers_to_config(
+            spack.compilers.find_compilers([compiler_search_prefix])
+        )
+
     def _install_task(self, task):
         """
         Perform the installation of the requested spec and/or dependency
@@ -1234,9 +1272,7 @@ class PackageInstaller(object):
         if use_cache and _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             if task.compiler:
-                spack.compilers.add_compilers_to_config(
-                    spack.compilers.find_compilers([pkg.spec.prefix])
-                )
+                self._add_compiler_package_to_config(pkg)
             return
 
         pkg.run_tests = tests is True or tests and pkg.name in tests
@@ -1264,9 +1300,7 @@ class PackageInstaller(object):
 
             # If a compiler, ensure it is added to the configuration
             if task.compiler:
-                spack.compilers.add_compilers_to_config(
-                    spack.compilers.find_compilers([pkg.spec.prefix])
-                )
+                self._add_compiler_package_to_config(pkg)
         except spack.build_environment.StopPhase as e:
             # A StopPhase exception means that do_install was asked to
             # stop early from clients, and is not an error at this point
@@ -1399,7 +1433,7 @@ class PackageInstaller(object):
         Write a small metadata file with the current spack environment.
 
         Args:
-            pkg (spack.package_base.Package): the package to be built and installed
+            pkg (spack.package_base.PackageBase): the package to be built and installed
         """
         if not os.path.exists(pkg.spec.prefix):
             path = spack.util.path.debug_padded_filter(pkg.spec.prefix)
@@ -1472,8 +1506,8 @@ class PackageInstaller(object):
         known dependents.
 
         Args:
-            pkg (spack.package_base.Package): Package that has been installed locally,
-                externally or upstream
+            pkg (spack.package_base.PackageBase): Package that has been installed
+                locally, externally or upstream
             dependent_ids (list or None): list of the package's
                 dependent ids, or None if the dependent ids are limited to
                 those maintained in the package (dependency DAG)
@@ -1557,11 +1591,7 @@ class PackageInstaller(object):
         return InstallAction.OVERWRITE
 
     def install(self):
-        """
-        Install the requested package(s) and or associated dependencies.
-
-        Args:
-            pkg (spack.package_base.Package): the package to be built and installed"""
+        """Install the requested package(s) and or associated dependencies."""
 
         self._init_queue()
         fail_fast_err = "Terminating after first install failure"
@@ -1689,9 +1719,7 @@ class PackageInstaller(object):
 
                     # It's an already installed compiler, add it to the config
                     if task.compiler:
-                        spack.compilers.add_compilers_to_config(
-                            spack.compilers.find_compilers([pkg.spec.prefix])
-                        )
+                        self._add_compiler_package_to_config(pkg)
 
                 else:
                     # At this point we've failed to get a write or a read
@@ -1744,6 +1772,16 @@ class PackageInstaller(object):
                 tty.error(err.format(pkg.name, exc.__class__.__name__, str(exc)))
                 spack.hooks.on_install_cancel(task.request.pkg.spec)
                 raise
+
+            except binary_distribution.NoChecksumException as exc:
+                if not task.cache_only:
+                    # Checking hash on downloaded binary failed.
+                    err = "Failed to install {0} from binary cache due to {1}:"
+                    err += " Requeueing to install from source."
+                    tty.error(err.format(pkg.name, str(exc)))
+                    task.use_cache = False
+                    self._requeue_task(task)
+                    continue
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
@@ -1946,6 +1984,8 @@ class BuildProcessInstaller(object):
         fs.install_tree(pkg.stage.source_path, src_target)
 
     def _real_install(self):
+        import spack.builder
+
         pkg = self.pkg
 
         # Do the real install in the source directory.
@@ -1976,13 +2016,11 @@ class BuildProcessInstaller(object):
 
             # Spawn a daemon that reads from a pipe and redirects
             # everything to log_path, and provide the phase for logging
-            for i, (phase_name, phase_attr) in enumerate(
-                zip(pkg.phases, pkg._InstallPhase_phases)
-            ):
-
+            builder = spack.builder.create(pkg)
+            for i, phase_fn in enumerate(builder):
                 # Keep a log file for each phase
                 log_dir = os.path.dirname(pkg.log_path)
-                log_file = "spack-build-%02d-%s-out.txt" % (i + 1, phase_name.lower())
+                log_file = "spack-build-%02d-%s-out.txt" % (i + 1, phase_fn.name.lower())
                 log_file = os.path.join(log_dir, log_file)
 
                 try:
@@ -2000,20 +2038,20 @@ class BuildProcessInstaller(object):
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
                             tty.set_debug(debug_level)
-                            tty.msg("{0} Executing phase: '{1}'".format(self.pre, phase_name))
+                            msg = "{0} Executing phase: '{1}'"
+                            tty.msg(msg.format(self.pre, phase_fn.name))
                             tty.set_debug(inner_debug_level)
 
                         # Redirect stdout and stderr to daemon pipe
-                        phase = getattr(pkg, phase_attr)
-                        self.timer.phase(phase_name)
+                        self.timer.phase(phase_fn.name)
 
                         # Catch any errors to report to logging
-                        phase(pkg.spec, pkg.prefix)
-                        spack.hooks.on_phase_success(pkg, phase_name, log_file)
+                        phase_fn.execute()
+                        spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                    spack.hooks.on_phase_error(pkg, phase_name, log_file)
+                    spack.hooks.on_phase_error(pkg, phase_fn.name, log_file)
 
                     # phase error indicates install error
                     spack.hooks.on_install_failure(pkg.spec)
@@ -2089,7 +2127,7 @@ class BuildTask(object):
         Instantiate a build task for a package.
 
         Args:
-            pkg (spack.package_base.Package): the package to be built and installed
+            pkg (spack.package_base.PackageBase): the package to be built and installed
             request (BuildRequest or None): the associated install request
                  where ``None`` can be used to indicate the package was
                  explicitly requested by the user
@@ -2305,7 +2343,7 @@ class BuildRequest(object):
         Instantiate a build request for a package.
 
         Args:
-            pkg (spack.package_base.Package): the package to be built and installed
+            pkg (spack.package_base.PackageBase): the package to be built and installed
             install_args (dict): the install arguments associated with ``pkg``
         """
         # Ensure dealing with a package that has a concrete spec

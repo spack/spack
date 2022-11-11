@@ -89,6 +89,9 @@ class Openblas(MakefilePackage):
     # https://github.com/xianyi/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
 
+    # https://github.com/xianyi/OpenBLAS/pull/3778
+    patch("fix-cray-fortran-detection-pr3778.patch", when="@0.3.21")
+
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
 
@@ -193,7 +196,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20 %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -379,8 +382,9 @@ class Openblas(MakefilePackage):
         if "+consistent_fpcsr" in self.spec:
             make_defs += ["CONSISTENT_FPCSR=1"]
 
-        # Flang/f18 does not provide ETIME as an intrinsic
-        if self.spec.satisfies("%clang"):
+        # Flang/f18 does not provide ETIME as an intrinsic.
+        # Do not set TIMER variable if fortran is disabled.
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions

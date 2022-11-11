@@ -16,6 +16,7 @@ class RDt(RPackage):
 
     cran = "DT"
 
+    version("0.26", sha256="c412932be126d44f415559258e1d65adc0e84c3dfb9a70ce3196a2f877f7030c")
     version("0.25", sha256="0dfc8713062e1fe4e0428936367f35a0a41616c27b6d9b002bdfda58091c442b")
     version("0.23", sha256="360ae2fcb1141125a1b16448570fc37d14c4dd3f78a872c26df4fda1787cdc70")
     version("0.20", sha256="c66d7f49ec101fdbb91c6d26c06fb1373f9ebdefe29fe99f2ae1a641220aba9f")

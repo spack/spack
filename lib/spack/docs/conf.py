@@ -32,6 +32,9 @@ from sphinx.parsers import RSTParser
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+link_name = os.path.abspath("_spack_root")
+if not os.path.exists(link_name):
+    os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/pytest-fallback"))
 
@@ -206,6 +209,7 @@ nitpick_ignore = [
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
+    ("py:class", "spack.build_systems._checks.BaseBuilder"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.VersionBase"),
 ]

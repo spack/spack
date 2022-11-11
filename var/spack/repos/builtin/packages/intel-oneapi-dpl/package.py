@@ -26,6 +26,12 @@ class IntelOneapiDpl(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2021.7.2",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19046/l_oneDPL_p_2021.7.2.15007_offline.sh",
+            sha256="84d60a6b1978ff45d2c416f18ca7df542eaa8c0b18dc3abf4bb0824a91b4fc44",
+            expand=False,
+        )
+        version(
             "2021.7.1",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18846/l_oneDPL_p_2021.7.1.8713_offline.sh",
             sha256="275c935427e3ad0eb995034b05ff2ffd13c55ee58069c3702aa383f68a1e5485",

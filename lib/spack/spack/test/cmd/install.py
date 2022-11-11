@@ -771,7 +771,7 @@ def test_install_only_dependencies_in_env(
         dep = Spec("dependency-install").concretized()
         root = Spec("dependent-install").concretized()
 
-        install("-v", "--only", "dependencies", "dependent-install")
+        install("-v", "--only", "dependencies", "--add", "dependent-install")
 
         assert os.path.exists(dep.prefix)
         assert not os.path.exists(root.prefix)
@@ -800,7 +800,7 @@ def test_install_only_dependencies_of_all_in_env(
 
 
 def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock_env_path):
-    # To test behavior of --no-add option, we create the following environment:
+    # To test behavior of --add option, we create the following environment:
     #
     #     mpileaks
     #         ^callpath
@@ -849,18 +849,19 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         # Assert using --no-add with a spec not in the env fails
         inst_out = install("--no-add", "boost", fail_on_error=False, output=str)
 
-        assert "no such spec exists in environment" in inst_out
+        assert "You can add it to the environment with 'spack add " in inst_out
 
-        # Ensure using --no-add with an ambiguous spec fails
+        # Without --add, ensure that install fails if the spec matches more
+        # than one root
         with pytest.raises(ev.SpackEnvironmentError) as err:
-            inst_out = install("--no-add", "a", output=str)
+            inst_out = install("a", output=str)
 
         assert "a matches multiple specs in the env" in str(err)
 
-        # With "--no-add", install an unambiguous dependency spec (that already
-        # exists as a dep in the environment) using --no-add and make sure it
-        # gets installed (w/ deps), but is not added to the environment.
-        install("--no-add", "dyninst")
+        # Install an unambiguous dependency spec (that already exists as a dep
+        # in the environment) and make sure it gets installed (w/ deps),
+        # but is not added to the environment.
+        install("dyninst")
 
         find_output = find("-l", output=str)
         assert "dyninst" in find_output
@@ -872,31 +873,30 @@ def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery, mutable_mock
         assert all([s in env_specs for s in post_install_specs])
 
         # Make sure we can install a concrete dependency spec from a spec.json
-        # file on disk, using the ``--no-add` option, and the spec is installed
-        # but not added as a root
+        # file on disk, and the spec is installed but not added as a root
         mpi_spec_json_path = tmpdir.join("{0}.json".format(mpi_spec.name))
         with open(mpi_spec_json_path.strpath, "w") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install("--no-add", "-f", mpi_spec_json_path.strpath)
+        install("-f", mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)
         assert mpi_spec.name in find_output
 
-        # Without "--no-add", install an unambiguous depependency spec (that
-        # already exists as a dep in the environment) without --no-add and make
-        # sure it is added as a root of the environment as well as installed.
+        # Install an unambiguous depependency spec (that already exists as a
+        # dep in the environment) with --add and make sure it is added as a
+        # root of the environment as well as installed.
         assert b_spec not in e.roots()
 
-        install("b")
+        install("--add", "b")
 
         assert b_spec in e.roots()
         assert b_spec not in e.uninstalled_specs()
 
-        # Without "--no-add", install a novel spec and make sure it is added
-        # as a root and installed.
-        install("bowtie")
+        # Install a novel spec with --add and make sure it is added  as a root
+        # and installed.
+        install("--add", "bowtie")
 
         assert any([s.name == "bowtie" for s in e.roots()])
         assert not any([s.name == "bowtie" for s in e.uninstalled_specs()])
@@ -935,7 +935,16 @@ def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
     with capfd.disabled():
         with tmpdir.as_cwd():
             # Test would fail if install raised an error.
-            install("--log-file=cdash_reports", "--log-format=cdash", "configure-warning")
+
+            # Ensure that even on non-x86_64 architectures, there are no
+            # dependencies installed
+            spec = spack.spec.Spec("configure-warning").concretized()
+            spec.clear_dependencies()
+            specfile = "./spec.json"
+            with open(specfile, "w") as f:
+                f.write(spec.to_json())
+
+            install("--log-file=cdash_reports", "--log-format=cdash", specfile)
             # Verify Configure.xml exists with expected contents.
             report_dir = tmpdir.join("cdash_reports")
             assert report_dir in tmpdir.listdir()
@@ -955,10 +964,10 @@ def test_compiler_bootstrap(
 ):
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("a%gcc@2.0")
+    install("a%gcc@12.0")
 
 
 def test_compiler_bootstrap_from_binary_mirror(
@@ -1013,11 +1022,11 @@ def test_compiler_bootstrap_already_installed(
     monkeypatch.setattr(spack.concretize.Concretizer, "check_for_compiler_existence", False)
     spack.config.set("config:install_missing_compilers", True)
 
-    assert CompilerSpec("gcc@2.0") not in compilers.all_compiler_specs()
+    assert CompilerSpec("gcc@12.0") not in compilers.all_compiler_specs()
 
     # Test succeeds if it does not raise an error
-    install("gcc@2.0")
-    install("a%gcc@2.0")
+    install("gcc@12.0")
+    install("a%gcc@12.0")
 
 
 def test_install_fails_no_args(tmpdir):
@@ -1087,7 +1096,7 @@ def test_install_empty_env(
         ("test-install-callbacks", "undefined-install-test"),
     ],
 )
-def test_install_callbacks_fail(install_mockery, mock_fetch, name, method):
+def test_installation_fail_tests(install_mockery, mock_fetch, name, method):
     output = install("--test=root", "--no-cache", name, fail_on_error=False)
 
     assert output.count(method) == 2

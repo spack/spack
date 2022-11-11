@@ -18,6 +18,38 @@ from spack.util.prefix import Prefix
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    "17.0.5_8": {
+        "Linux-x86_64": (
+            "482180725ceca472e12a8e6d1a4af23d608d78287a77d963335e2a0156a020af",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.5%2B8/OpenJDK17U-jdk_x64_linux_hotspot_17.0.5_8.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "1c26c0e09f1641a666d6740d802beb81e12180abaea07b47c409d30c7f368109",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.5%2B8/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.5_8.tar.gz",
+        ),
+    },
+    "17.0.4.1_1": {
+        "Linux-x86_64": (
+            "5fbf8b62c44f10be2efab97c5f5dbf15b74fae31e451ec10abbc74e54a04ff44",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%2B1/OpenJDK17U-jdk_x64_linux_hotspot_17.0.4.1_1.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "3c7460de77421284b38b4e57cb1bd584a6cef55c34fc51a12270620544de2b8a",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%2B1/OpenJDK17U-jdk_aarch64_linux_hotspot_17.0.4.1_1.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "cbedd0a1428b3058d156e99e8e9bc8769e0d633736d6776a4c4d9136648f2fd1",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%2B1/OpenJDK17U-jdk_ppc64le_linux_hotspot_17.0.4.1_1.tar.gz",
+        ),
+        "Darwin-x86_64": (
+            "ac21a5a87f7cfa00212ab7c41f7eb80ca33640d83b63ad850be811c24095d61a",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%2B1/OpenJDK17U-jdk_x64_mac_hotspot_17.0.4.1_1.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "3a976943a9e6a635e68e2b06bd093fc096aad9f5894acda673d3bea0cb3a6f38",
+            "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.4.1%2B1/OpenJDK17U-jdk_aarch64_mac_hotspot_17.0.4.1_1.tar.gz",
+        ),
+    },
     "17.0.3_7": {
         "Linux-x86_64": (
             "81f5bed21077f9fbb04909b50391620c78b9a3c376593c0992934719c0de6b73",
@@ -92,6 +124,46 @@ _versions = {
         "Linux-aarch64": (
             "1ffb9c7748334945d9056b3324de3f797d906fce4dad86beea955153aa1e28fe",
             "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-aarch64_bin.tar.gz",
+        ),
+    },
+    "11.0.17_8": {
+        "Linux-x86_64": (
+            "b8d46ed08ef4859476fe6421a7690d899ed83dce63f13fd894f994043177ef3c",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_x64_linux_hotspot_11.0.17_8.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "d18b5dd73fce9edd5c58f623a1173f9ee2d45023836b8753b96beae51673a432",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.17_8.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "18c636bd103e240d29cdb30d7867720ea9fb9ff7c645738bfb4d5b8027269263",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.17_8.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "79b18cbd398b67a52ebaf033dfca15c7af4c1a84ec5fa68a88f3bf742bb082f7",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.17%2B8/OpenJDK11U-jdk_aarch64_mac_hotspot_11.0.17_8.tar.gz",
+        ),
+    },
+    "11.0.16.1_1": {
+        "Linux-x86_64": (
+            "5f6b513757d386352cf91514ed5859d1ab59364b4453e1f1c57152ba2039b8e2",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.16.1%2B1/OpenJDK11U-jdk_x64_linux_hotspot_11.0.16.1_1.tar.gz",
+        ),
+        "Linux-aarch64": (
+            "2b89cabf0ce1c2cedadd92b798d6e9056bc27c71a06f5ba24ede5dc9c316e3e8",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.16.1%2B1/OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.16.1_1.tar.gz",
+        ),
+        "Linux-ppc64le": (
+            "b18877871eda801ccb99bb34c5d7d77fccf6adad02514110c21389632ec91024",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.16.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.16.1_1.tar.gz",
+        ),
+        "Darwin-x86_64": (
+            "723548e36e0b3e0a5a2f36a38b22ea825d3004e26054a0e254854adc57045352",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.16.1%2B1/OpenJDK11U-jdk_x64_mac_hotspot_11.0.16.1_1.tar.gz",
+        ),
+        "Darwin-aarch64": (
+            "1953f06702d45eb54bae3ccf453b57c33de827015f5623a2dfc16e1c83e6b0a1",
+            "https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.16.1%2B1/OpenJDK11U-jdk_aarch64_mac_hotspot_11.0.16.1_1.tar.gz",
         ),
     },
     "11.0.15_10": {
@@ -341,3 +413,8 @@ class Openjdk(Package):
             class_paths = find(dependent_spec.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
             env.prepend_path("CLASSPATH", classpath)
+
+    # Since we provide openjdk as a binary, we can't remove an obsolete glibc
+    # fix that prevents us from modifying the soname of libjvm.so. If we move
+    # to source builds this should be possible.
+    non_bindable_shared_objects = ["libjvm.so"]
