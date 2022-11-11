@@ -1,5 +1,10 @@
 SPACK ?= spack
 
+# Enable --output-sync=recurse by default
+ifeq (output-sync,$(findstring output-sync,$(.FEATURES)))
+MAKEFLAGS += --output-sync=recurse
+endif
+
 .PHONY: {{ all_target }} {{ clean_target }}
 
 {{ all_target }}: {{ env_target }}
