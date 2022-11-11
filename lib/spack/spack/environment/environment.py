@@ -34,6 +34,7 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.subprocess_context
+import spack.traverse
 import spack.user_environment as uenv
 import spack.util.cpus
 import spack.util.environment
@@ -785,17 +786,12 @@ class Environment(object):
             )
         else:
             self.views = {}
+
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
 
-        # Let `concretization` overrule `concretize:unify` config for now,
-        # but use a translation table to have internally a representation
-        # as if we were using the new configuration
-        translation = {"separately": False, "together": True}
-        try:
-            self.unify = translation[configuration["concretization"]]
-        except KeyError:
-            self.unify = spack.config.get("concretizer:unify", False)
+        # Retrieve unification scheme for the concretizer
+        self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get("develop", {})
@@ -1321,30 +1317,25 @@ class Environment(object):
         if user_specs_did_not_change:
             return []
 
-        # Check that user specs don't have duplicate packages
-        counter = collections.defaultdict(int)
-        for user_spec in self.user_specs:
-            counter[user_spec.name] += 1
-
-        duplicates = []
-        for name, count in counter.items():
-            if count > 1:
-                duplicates.append(name)
-
-        if duplicates:
-            msg = (
-                "environment that are configured to concretize specs"
-                " together cannot contain more than one spec for each"
-                " package [{0}]".format(", ".join(duplicates))
-            )
-            raise SpackEnvironmentError(msg)
-
         # Proceed with concretization
         self.concretized_user_specs = []
         self.concretized_order = []
         self.specs_by_hash = {}
 
-        concrete_specs = spack.concretize.concretize_specs_together(*self.user_specs, tests=tests)
+        try:
+            concrete_specs = spack.concretize.concretize_specs_together(
+                *self.user_specs, tests=tests
+            )
+        except spack.error.UnsatisfiableSpecError as e:
+            # "Enhance" the error message for multiple root specs, suggest a less strict
+            # form of concretization.
+            if len(self.user_specs) > 1:
+                e.message += (
+                    ". Consider setting `concretizer:unify` to `when_possible` "
+                    "or `false` to relax the concretizer strictness."
+                )
+            raise
+
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
@@ -1376,7 +1367,7 @@ class Environment(object):
                 arguments.append((uspec_constraints, tests))
 
         # Ensure we don't try to bootstrap clingo in parallel
-        if spack.config.get("config:concretizer") == "clingo":
+        if spack.config.get("config:concretizer", "clingo") == "clingo":
             with spack.bootstrap.ensure_bootstrap_configuration():
                 spack.bootstrap.ensure_clingo_importable_or_raise()
 
@@ -1760,22 +1751,14 @@ class Environment(object):
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
-        all_specs = set()
-        for h in self.concretized_order:
-            try:
-                spec = self.specs_by_hash[h]
-            except KeyError:
-                tty.warn(
-                    "Environment %s appears to be corrupt: missing spec " '"%s"' % (self.name, h)
-                )
-                continue
-            all_specs.update(spec.traverse())
-
-        return sorted(all_specs)
+        roots = [self.specs_by_hash[h] for h in self.concretized_order]
+        specs = [s for s in spack.traverse.traverse_nodes(roots, lambda s: s.dag_hash())]
+        specs.sort()
+        return specs
 
     def all_hashes(self):
         """Return hashes of all specs."""
-        return list(set(s.dag_hash() for s in self.all_specs()))
+        return [s.dag_hash() for s in self.all_specs()]
 
     def roots(self):
         """Specs explicitly requested by the user *in this environment*.
@@ -1812,12 +1795,19 @@ class Environment(object):
 
     def get_by_hash(self, dag_hash):
         matches = {}
-        for _, root in self.concretized_specs():
-            for spec in root.traverse(root=True):
-                dep_hash = spec.dag_hash()
-                if dep_hash.startswith(dag_hash):
-                    matches[dep_hash] = spec
+        roots = [self.specs_by_hash[h] for h in self.concretized_order]
+        for spec in spack.traverse.traverse_nodes(roots, key=lambda s: s.dag_hash()):
+            if spec.dag_hash().startswith(dag_hash):
+                matches[spec.dag_hash()] = spec
         return list(matches.values())
+
+    def get_one_by_hash(self, dag_hash):
+        """Returns the single spec from the environment which matches the
+        provided hash.  Raises an AssertionError if no specs match or if
+        more than one spec matches."""
+        hash_matches = self.get_by_hash(dag_hash)
+        assert len(hash_matches) == 1
+        return hash_matches[0]
 
     def matching_spec(self, spec):
         """
@@ -1910,28 +1900,27 @@ class Environment(object):
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
-        spec_list = list()
+        specs = [self.specs_by_hash[h] for h in self.concretized_order]
 
-        for spec_hash in self.concretized_order:
-            spec = self.specs_by_hash[spec_hash]
+        if recurse_dependencies:
+            specs.extend(
+                spack.traverse.traverse_nodes(
+                    specs, root=False, deptype=("link", "run"), key=lambda s: s.dag_hash()
+                )
+            )
 
-            specs = spec.traverse(deptype=("link", "run")) if recurse_dependencies else (spec,)
-
-            spec_list.extend(specs)
-
-        return spec_list
+        return specs
 
     def _to_lockfile_dict(self):
         """Create a dictionary to store a lockfile for this environment."""
         concrete_specs = {}
-        for spec in self.specs_by_hash.values():
-            for s in spec.traverse():
-                dag_hash = s.dag_hash()
-                if dag_hash not in concrete_specs:
-                    spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
-                    # Assumes no legacy formats, since this was just created.
-                    spec_dict[ht.dag_hash.name] = s.dag_hash()
-                    concrete_specs[dag_hash] = spec_dict
+        for s in spack.traverse.traverse_nodes(
+            self.specs_by_hash.values(), key=lambda s: s.dag_hash()
+        ):
+            spec_dict = s.node_dict_with_hashes(hash=ht.dag_hash)
+            # Assumes no legacy formats, since this was just created.
+            spec_dict[ht.dag_hash.name] = s.dag_hash()
+            concrete_specs[s.dag_hash()] = spec_dict
 
         hash_spec_list = zip(self.concretized_order, self.concretized_user_specs)
 
@@ -2042,19 +2031,16 @@ class Environment(object):
             # ensure the prefix/.env directory exists
             fs.mkdirp(self.env_subdir_path)
 
-            for spec in self.new_specs:
-                for dep in spec.traverse():
-                    if not dep.concrete:
-                        raise ValueError(
-                            "specs passed to environment.write() " "must be concrete!"
-                        )
+            for spec in spack.traverse.traverse_nodes(self.new_specs):
+                if not spec.concrete:
+                    raise ValueError("specs passed to environment.write() " "must be concrete!")
 
-                    root = os.path.join(self.repos_path, dep.namespace)
-                    repo = spack.repo.create_or_construct(root, dep.namespace)
-                    pkg_dir = repo.dirname_for_package_name(dep.name)
+                root = os.path.join(self.repos_path, spec.namespace)
+                repo = spack.repo.create_or_construct(root, spec.namespace)
+                pkg_dir = repo.dirname_for_package_name(spec.name)
 
-                    fs.mkdirp(pkg_dir)
-                    spack.repo.path.dump_provenance(dep, pkg_dir)
+                fs.mkdirp(pkg_dir)
+                spack.repo.path.dump_provenance(spec, pkg_dir)
 
             self._update_and_write_manifest(raw_yaml_dict, yaml_dict)
 
