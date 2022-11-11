@@ -899,7 +899,10 @@ class Lammps(CMakePackage, CudaPackage):
 
         if spec.satisfies("%aocc"):
             if spec.satisfies("+intel"):
-                cxx_flags = "-Ofast -fno-math-errno -fno-unroll-loops -fveclib=AMDLIBM -muse-unaligned-vector-move"
+                cxx_flags = (
+                    "-Ofast -fno-math-errno -fno-unroll-loops "
+                    "-fveclib=AMDLIBM -muse-unaligned-vector-move"
+                )
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
                     cxx_flags += " -fopenmp-simd"
@@ -976,7 +979,7 @@ class Lammps(CMakePackage, CudaPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies("+intel %aocc"):
-            env.append_flags("LDFLAGS", "-lalm -lm");
+            env.append_flags("LDFLAGS", "-lalm -lm")
 
     def setup_run_environment(self, env):
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
