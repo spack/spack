@@ -169,9 +169,6 @@ class RocmValidationSuite(CMakePackage):
             self.define("ROCBLAS_DIR", self.spec["rocblas"].prefix),
             self.define("YAML_INC_DIR", self.spec["yaml-cpp"].prefix.include),
             self.define("YAML_LIB_DIR", self.spec["yaml-cpp"].libs.directories[0]),
-            self.define(
-                "HIP_CXX_COMPILER", "{0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix)
-            ),
         ]
         if self.spec.satisfies("@4.5.0:"):
             args.append(self.define("UT_INC", self.spec["googletest"].prefix.include))

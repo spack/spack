@@ -178,7 +178,6 @@ class RoctracerDev(CMakePackage):
             "-DHIP_VDI=1",
             "-DCMAKE_MODULE_PATH={0}/cmake_modules".format(self.stage.source_path),
             "-DHSA_RUNTIME_HSA_INC_PATH={0}/include".format(self.spec["hsa-rocr-dev"].prefix),
-            "-DHIP_CXX_COMPILER={0}/bin/clang++".format(self.spec["llvm-amdgpu"].prefix),
             "-DROCPROFILER_PATH={0}".format(self.spec["rocprofiler-dev"].prefix),
         ]
         return args

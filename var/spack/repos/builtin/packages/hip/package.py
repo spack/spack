@@ -364,7 +364,6 @@ class Hip(CMakePackage):
 
         # bin directory where clang++ resides
         env.set("HIP_CLANG_PATH", paths["llvm-amdgpu"].bin)
-        env.set("HIP_CLANG_ROOT", paths["llvm-amdgpu"])
 
         # Path to hsa-rocr-dev prefix used by hipcc.
         env.set("HSA_PATH", paths["hsa-rocr-dev"])
@@ -431,6 +430,13 @@ class Hip(CMakePackage):
                 'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"',
                 'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
                 "hip-config.cmake.in",
+                string=True,
+            )
+        if self.spec.satisfies("@:5.3.0"):
+            filter_file(
+                '"${ROCM_PATH}/llvm"',
+                self.spec["llvm-amdgpu"].prefix,
+                "hipamd/hip-config.cmake.in",
                 string=True,
             )
 
