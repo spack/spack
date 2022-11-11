@@ -162,39 +162,12 @@ def check_spec_manifest(spec):
         results.add_error(prefix, "manifest corrupted")
         return results
 
-    # Get extensions active in spec
-    view = spack.filesystem_view.YamlFilesystemView(prefix, spack.store.layout)
-    active_exts = view.extensions_layout.extension_map(spec).values()
-    ext_file = ""
-    if active_exts:
-        # No point checking contents of this file as it is the only source of
-        # truth for that information.
-        ext_file = view.extensions_layout.extension_file_path(spec)
-
-    def is_extension_artifact(p):
-        if os.path.islink(p):
-            if any(os.readlink(p).startswith(e.prefix) for e in active_exts):
-                # This file is linked in by an extension. Belongs to extension
-                return True
-        elif os.path.isdir(p) and p not in manifest:
-            if all(is_extension_artifact(os.path.join(p, f)) for f in os.listdir(p)):
-                return True
-        return False
-
     for root, dirs, files in os.walk(prefix):
         for entry in list(dirs + files):
             path = os.path.join(root, entry)
 
-            # Do not check links from prefix to active extension
-            # TODO: make this stricter for non-linux systems that use symlink
-            # permissions
-            # Do not check directories that only exist for extensions
-            if is_extension_artifact(path):
-                continue
-
             # Do not check manifest file. Can't store your own hash
-            # Nothing to check for ext_file
-            if path == manifest_file or path == ext_file:
+            if path == manifest_file:
                 continue
 
             data = manifest.pop(path, {})
