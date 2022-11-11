@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class RHdoDb(RPackage):
-    """ A set of annotation maps describing the entire Human Disease Ontology.
+    """A set of annotation maps describing the entire Human Disease Ontology.
 
     A set of annotation maps describing the entire Human Disease Ontology
     assembled using data from DO.  Its annotation data comes from
