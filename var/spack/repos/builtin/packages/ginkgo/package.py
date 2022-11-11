@@ -54,6 +54,9 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hipsparse", when="+rocm")
     depends_on("hipblas", when="+rocm")
     depends_on("rocrand", when="+rocm")
+    # ROCPRIM is not a direct dependency, but until we have reviewed our CMake
+    # setup for rocthrust, this needs to also be added here.
+    depends_on("rocprim", when="+rocm")
     depends_on("hwloc@2.1:", when="+hwloc")
 
     depends_on("googletest", type="test")
@@ -73,6 +76,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^hipblas@4.1.0:", when="@:1.3.0")
     conflicts("^hipsparse@4.1.0:", when="@:1.3.0")
     conflicts("^rocthrust@4.1.0:", when="@:1.3.0")
+    conflicts("^rocprim@4.1.0:", when="@:1.3.0")
 
     # Skip smoke tests if compatible hardware isn't found
     patch("1.4.0_skip_invalid_smoke_tests.patch", when="@master")
@@ -148,7 +152,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             args.append("-DHIPBLAS_PATH={0}".format(spec["hipblas"].prefix))
             args.append("-DHIPRAND_PATH={0}/hiprand".format(spec["rocrand"].prefix))
             args.append("-DROCRAND_PATH={0}/rocrand".format(spec["rocrand"].prefix))
-            #args.append("-DROCPRIM_INCLUDE_PATH={0}".format(spec["rocprim"].prefix.include))
+            args.append("-DROCPRIM_INCLUDE_DIRS={0}".format(spec["rocprim"].prefix.include))
             archs = self.spec.variants["amdgpu_target"].value
             if archs != "none":
                 arch_str = ";".join(archs)
