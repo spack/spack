@@ -2,18 +2,25 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import spack.build_systems.generic
 from spack.package import *
 
 
-class Clara(CMakePackage):
+class Clara(CMakePackage, Package):
     """A simple to use, composable, command line parser for C++ 11
-    and beyond."""
+    and beyond.
+    """
 
     homepage = "https://github.com/catchorg/Clara"
     url = "https://github.com/catchorg/Clara/archive/v1.1.5.tar.gz"
 
     maintainers = ["bvanessen"]
+
+    build_system(
+        conditional("generic", when="+single_header"),
+        conditional("cmake", when="~single_header"),
+        default="generic",
+    )
 
     variant("single_header", default=True, description="Install a single header only.")
 
@@ -24,15 +31,8 @@ class Clara(CMakePackage):
     version("1.1.1", sha256="10915a49a94d371f05af360d40e9cc9615ab86f200d261edf196a8ddd7efa7f8")
     version("1.1.0", sha256="29ca29d843150aabad702356f79009f5b30dda05ac9674a064362b7edcba5477")
 
-    @when("+single_header")
-    def cmake(self, spec, prefix):
-        pass
 
-    @when("+single_header")
-    def build(self, spec, prefix):
-        pass
-
-    @when("+single_header")
-    def install(self, spec, prefix):
+class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+    def install(self, pkg, spec, prefix):
         mkdirp(prefix.include)
         install_tree("single_include", prefix.include)

@@ -31,6 +31,12 @@ class IntelOneapiItac(IntelOneApiPackage):
 
     if platform.system() == "Linux":
         version(
+            "2021.7.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19024/l_itac_oneapi_p_2021.7.1.15324_offline.sh",
+            sha256="fb26689efdb7369e211b5cf05f3e30d491a2787f24fef174b23241b997cc442f",
+            expand=False,
+        )
+        version(
             "2021.7.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18886/l_itac_oneapi_p_2021.7.0.8707_offline.sh",
             sha256="719faeccfb1478f28110b72b1558187590a6f44cce067158f407ab335a7395bd",

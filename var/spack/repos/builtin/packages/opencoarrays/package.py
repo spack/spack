@@ -35,7 +35,7 @@ class Opencoarrays(CMakePackage):
     depends_on("mpi")
     # This patch removes a bunch of checks for the version of MPI available on
     # the system. They make the Crays hang.
-    patch("CMakeLists.patch", when="platform=cray")
+    patch("CMakeLists.patch", when="^cray-mpich")
 
     def cmake_args(self):
         args = []
