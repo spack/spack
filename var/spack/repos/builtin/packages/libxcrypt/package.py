@@ -36,6 +36,10 @@ class Libxcrypt(AutotoolsPackage):
         args += self.enable_or_disable("obsolete-api", variant="obsolete_api")
         return args
 
+    @property
+    def libs(self):
+        return find_libraries("libcrypt", root=self.prefix, recursive=True)
+
     with when("@:4.4.17"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
