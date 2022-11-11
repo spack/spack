@@ -203,7 +203,7 @@ class Hdf5(CMakePackage):
 
     # The compiler wrappers (h5cc, h5fc, etc.) run 'pkg-config'.
     # Further, check for standard mpi in this same Windows-excluding loop
-    for plat in ['cray', 'darwin', 'linux']:
+    for plat in ["cray", "darwin", "linux"]:
         depends_on("pkgconfig", when="platform=%s" % plat, type="run")
         depends_on("mpi", when="+mpi, platform=%s" % plat)
 
