@@ -15,15 +15,51 @@ class WinWdk(Package):
 
     homepage = "https://learn.microsoft.com/en-us/windows-hardware/drivers/"
 
-    libraries = ["ntoskernal.lib"]
+    # The wdk has many libraries and executables. Record one for detection purposes
+    libraries = ["mmos.lib"]
 
-    version("10.0.19041", sha256="5f4ea0c55af099f97cb569a927c3a290c211f17edcfc65009f5b9253b9827925", url="https://go.microsoft.com/fwlink/?linkid=2128854", expand=False)
-    version("10.0.18362", sha256="c35057cb294096c63bbea093e5024a5fb4120103b20c13fa755c92f227b644e5", url="https://go.microsoft.com/fwlink/?linkid=2085767", expand=False)
-    version("10.0.17763", sha256="e6e5a57bf0a58242363cd6ca4762f44739f19351efc06cad382cca944b097235", url="https://go.microsoft.com/fwlink/?linkid=2026156", expand=False)
-    version("10.0.17134", sha256="48e636117bb7bfe66b1ade793cc8e885c42c880fadaee471782d31b5c4d13e9b", url="https://go.microsoft.com/fwlink/?linkid=873060", expand=False)
-    version("10.0.16299", sha256="14efbcc849e5977417e962f1cd68357d21abf27393110b9d95983ad03fc22ef4", url="https://go.microsoft.com/fwlink/p/?linkid=859232", expand=False)
-    version("10.0.15063", sha256="489b497111bc791d9021b3573bfd93086a28b598c7325ab255e81c6f5d80a820", url="https://go.microsoft.com/fwlink/p/?LinkID=845980", expand=False)
-    version("10.0.14393", sha256="0bfb2ac9db446e0d98c29ef7341a8c8e8e7aa24bc72b00c5704a88b13f48b3cb", url="https://go.microsoft.com/fwlink/p/?LinkId=526733", expand=False)
+    version(
+        "10.0.19041",
+        sha256="5f4ea0c55af099f97cb569a927c3a290c211f17edcfc65009f5b9253b9827925",
+        url="https://go.microsoft.com/fwlink/?linkid=2128854",
+        expand=False,
+    )
+    version(
+        "10.0.18362",
+        sha256="c35057cb294096c63bbea093e5024a5fb4120103b20c13fa755c92f227b644e5",
+        url="https://go.microsoft.com/fwlink/?linkid=2085767",
+        expand=False,
+    )
+    version(
+        "10.0.17763",
+        sha256="e6e5a57bf0a58242363cd6ca4762f44739f19351efc06cad382cca944b097235",
+        url="https://go.microsoft.com/fwlink/?linkid=2026156",
+        expand=False,
+    )
+    version(
+        "10.0.17134",
+        sha256="48e636117bb7bfe66b1ade793cc8e885c42c880fadaee471782d31b5c4d13e9b",
+        url="https://go.microsoft.com/fwlink/?linkid=873060",
+        expand=False,
+    )
+    version(
+        "10.0.16299",
+        sha256="14efbcc849e5977417e962f1cd68357d21abf27393110b9d95983ad03fc22ef4",
+        url="https://go.microsoft.com/fwlink/p/?linkid=859232",
+        expand=False,
+    )
+    version(
+        "10.0.15063",
+        sha256="489b497111bc791d9021b3573bfd93086a28b598c7325ab255e81c6f5d80a820",
+        url="https://go.microsoft.com/fwlink/p/?LinkID=845980",
+        expand=False,
+    )
+    version(
+        "10.0.14393",
+        sha256="0bfb2ac9db446e0d98c29ef7341a8c8e8e7aa24bc72b00c5704a88b13f48b3cb",
+        url="https://go.microsoft.com/fwlink/p/?LinkId=526733",
+        expand=False,
+    )
 
     # need one to one dep on SDK per https://github.com/MicrosoftDocs/windows-driver-docs/issues/1550
     # additionally, the WDK needs to be paired with a version of the Windows SDK
@@ -63,7 +99,10 @@ class WinWdk(Package):
         We rename so as to allow Windows to run the WGL installer"""
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
         if len(installer) > 1:
-            raise RuntimeError("Fetch has failed, unable to determine installer path")
+            raise RuntimeError(
+                "Fetch has failed, unable to determine installer path from:\n%s"
+                % "\n".join(installer)
+            )
         installer = installer[0]
         os.rename(installer, os.path.join(self.stage.source_path, "wdksetup.exe"))
 

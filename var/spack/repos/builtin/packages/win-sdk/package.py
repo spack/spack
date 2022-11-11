@@ -20,6 +20,9 @@ class WinSdk(Package):
     homepage = "https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/"
     has_code = False
 
+    # The sdk has many libraries and executables. Record one for detection purposes
+    libraries = ["rcdll.dll"]
+
     version("10.0.19041")
     version("10.0.18362")
     version("10.0.17763")
@@ -33,7 +36,7 @@ class WinSdk(Package):
     # WinSDK versions depend on compatible compilers
     # WDK versions do as well, but due to their one to one dep on the SDK
     # we can ensure that requirment here
-    depends_on("%msvc:", when="@10.")
+    # depends_on("%msvc:", when="@10.")
 
     # For now we don't support Windows development env
     # on other platforms
@@ -41,13 +44,15 @@ class WinSdk(Package):
         conflicts("platform=%s" % plat)
 
     @classmethod
-    def determine_version(cls, exe):
+    def determine_version(cls, lib):
         """
         WinSDK that we would like to
         be discoverable externally by Spack.
         """
+        # This version is found in the package's path
+        # not by calling an exe or a libraries name
         version_match_pat = re.compile(r"[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]")
-        ver_str = re.search(version_match_pat, exe)
+        ver_str = re.search(version_match_pat, lib)
         return ver_str if not ver_str else Version(ver_str.group())
 
     def install(self, spec, prefix):

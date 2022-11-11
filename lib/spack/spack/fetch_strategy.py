@@ -406,9 +406,7 @@ class URLFetchStrategy(FetchStrategy):
                 partial_file,
             ]  # use a .part file
         else:
-            # -J flag requires curl >= 7.21.2 ensures file will be named
-            # from redirect header if relevant
-            save_args = ["-O", "-J"]
+            save_args = ["-O"]
 
         timeout = 0
         cookie_args = []
