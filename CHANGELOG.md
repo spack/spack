@@ -15,9 +15,6 @@
    packages:
      libfabric:
        require: "@1.13.2"
-     openmpi:
-       require:
-       - any_of: ["~cuda", "%gcc"]
      mpich:
        require:
        - one_of: ["+cuda", "+rocm"]
