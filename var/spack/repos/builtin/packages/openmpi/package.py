@@ -40,11 +40,13 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     version("main", branch="main", submodules=True)
 
-    version("5.0.0rc9", branch="main", tag="5.0.0rc9", submodules=True)
+    version("5.0.0rc9", branch="v5.0.x", tag="5.0.0rc9", submodules=True)
 
     # Current
     version(
-        "4.1.4", sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d"
+        "4.1.4",
+        sha256="92912e175fd1234368c8730c03f4996fe5942e7479bb1d10059405e7f2b3930d",
+        preferred=True,
     )  # libmpi.so.40.30.4
 
     # Still supported
@@ -560,7 +562,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     # depends_on('pmix@3.2.3', when='@4.1.2')
     depends_on("pmix@1.0:1", when="@2.0:2")
     depends_on("pmix@3.2:", when="@4.0:4")
-    depends_on("pmix@4.2:", when="@5.0:5")
+    depends_on("pmix@4.2.2:", when="@5.0:5")
 
     # Libevent is required when *vendored* PMIx is used
     depends_on("libevent@2:", when="@main")
@@ -725,7 +727,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
             # pmi
             if version in spack.version.ver("1.5.5:4"):
-                if re.search(r"\bMCA (?:ess|prrte): pmi", output):
+                if re.search(r"\bMCA (?:ess|prRTE): PMI", output):
                     variants.append("+pmi")
                 else:
                     variants.append("~pmi")
