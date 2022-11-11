@@ -144,11 +144,11 @@ def test_download_and_extract_artifacts(tmpdir, monkeypatch, working_env):
         ci.download_and_extract_artifacts(url, working_dir)
 
 
-def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, mock_concretize, capfd):
+def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, default_mock_concretization, capfd):
     """The copy will fail because the spec is not concrete so does not have
     a package."""
     log_dir = tmpdir.join("log_dir")
-    concrete_spec = mock_concretize("printing-package")
+    concrete_spec = default_mock_concretization("printing-package")
     ci.copy_stage_logs_to_artifacts(concrete_spec, log_dir)
     _, err = capfd.readouterr()
     assert "Unable to copy files" in err
@@ -511,13 +511,15 @@ def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkey
     ci.create_buildcache(**args)
 
 
-def test_ci_run_standalone_tests_missing_requirements(tmpdir, working_env, mock_concretize, capfd):
+def test_ci_run_standalone_tests_missing_requirements(
+    tmpdir, working_env, default_mock_concretization, capfd
+):
     """This test case checks for failing prerequisite checks."""
     ci.run_standalone_tests()
     err = capfd.readouterr()[1]
     assert "Job spec is required" in err
 
-    args = {"job_spec": mock_concretize("printing-package")}
+    args = {"job_spec": default_mock_concretization("printing-package")}
     ci.run_standalone_tests(**args)
     err = capfd.readouterr()[1]
     assert "Reproduction directory is required" in err
@@ -527,12 +529,12 @@ def test_ci_run_standalone_tests_missing_requirements(tmpdir, working_env, mock_
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmpdir, working_env, mock_concretize, mock_test_stage, capfd
+    tmpdir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
     log_file = tmpdir.join("junit.xml").strpath
     args = {
         "log_file": log_file,
-        "job_spec": mock_concretize("printing-package"),
+        "job_spec": default_mock_concretization("printing-package"),
         "repro_dir": tmpdir.join("repro_dir").strpath,
         "fail_fast": True,
     }
@@ -548,13 +550,13 @@ def test_ci_run_standalone_tests_not_installed_junit(
     sys.platform == "win32", reason="Reliance on bash script not supported on Windows"
 )
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmpdir, working_env, mock_concretize, mock_test_stage, capfd
+    tmpdir, working_env, default_mock_concretization, mock_test_stage, capfd
 ):
     """Test run_standalone_tests with cdash and related options."""
     log_file = tmpdir.join("junit.xml").strpath
     args = {
         "log_file": log_file,
-        "job_spec": mock_concretize("printing-package"),
+        "job_spec": default_mock_concretization("printing-package"),
         "repro_dir": tmpdir.join("repro_dir").strpath,
     }
     os.makedirs(args["repro_dir"])

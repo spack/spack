@@ -1861,8 +1861,13 @@ def concretized_specs_cache():
 
 
 @pytest.fixture
-def mock_concretize(config, mock_packages, concretized_specs_cache):
-    """Return a concretized spec from immutable mock configuration."""
+def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+    """Return the default mock concretization of a spec literal, obtained using the mock
+    repository and the mock configuration.
+
+    This fixture is unsafe to call in a test when either the default configuration or mock
+    repository are not used or have been modified.
+    """
 
     def _func(spec_str, tests=False):
         key = spec_str, tests

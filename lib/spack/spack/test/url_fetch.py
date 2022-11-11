@@ -137,7 +137,12 @@ if sys.platform != "win32":
 @pytest.mark.parametrize("_fetch_method", ["curl", "urllib"])
 @pytest.mark.parametrize("mock_archive", files, indirect=True)
 def test_fetch(
-    mock_archive, secure, _fetch_method, checksum_type, mock_concretize, mutable_mock_repo
+    mock_archive,
+    secure,
+    _fetch_method,
+    checksum_type,
+    default_mock_concretization,
+    mutable_mock_repo,
 ):
     """Fetch an archive and make sure we can checksum it."""
     algo = crypto.hash_fun_for_algo(checksum_type)()
@@ -146,7 +151,7 @@ def test_fetch(
     checksum = algo.hexdigest()
 
     # Get a spec and tweak the test package with new checksum params
-    s = mock_concretize("url-test")
+    s = default_mock_concretization("url-test")
     s.package.url = mock_archive.url
     s.package.versions[ver("test")] = {checksum_type: checksum, "url": s.package.url}
 
