@@ -35,25 +35,18 @@ class Openvdb(CMakePackage):
     variant("vdb_render", default=False, description="Build the vdb_render tool.")
     variant("ax", default=False, description="Build the AX extension (untested).")
 
-
     depends_on("ilmbase", when="@8:9")
     depends_on("ilmbase@2.3:3.1", when="@10:")
-
     depends_on("openexr", when="@8:9")
     depends_on("openexr@2.3:3.1", when="@10:")
-
     depends_on("intel-tbb@:2020.1", when="@:8.1")
     depends_on("intel-tbb@2021", when="@8.2:")
-
     depends_on("zlib")
-
     depends_on("c-blosc@1.17.0")  # depends_on('c-blosc@1.5:')
-
-    extends("python", when="+python")
     depends_on("py-numpy", when="+python")
-
     depends_on("boost+iostreams+system+python+numpy", when="+python")
     depends_on("boost+iostreams+system", when="~python")
+    extends("python", when="+python")
 
     # AX requires quite a few things, and hasn't been properly released
     # yet. I've only managed to build llvm@8.0.1 under centos8. It
@@ -61,7 +54,6 @@ class Openvdb(CMakePackage):
     depends_on("llvm@8.0.1", when="+ax")
     depends_on("bison", when="+ax")
     depends_on("flex", when="+ax")
-
     depends_on("git", type="build", when="@develop")
 
     def cmake_args(self):
@@ -84,11 +76,8 @@ class Openvdb(CMakePackage):
     # lib64/ instead of lib/.
     @run_after("install")
     def post_install(self):
-
         spec = self.spec
-
         if "+python" in spec and spec.satisfies("@:8.0.1"):
-
             if sys.platform == "darwin":
                 pyso = "pyopenvdb.dylib"
             else:
