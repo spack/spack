@@ -13,7 +13,7 @@ class Msmpi(Package):
 
     homepage = "https://www.microsoft.com/en-us/download/default.aspx"
     maintainers = ["jpopelar"]
-    
+
     executable = ["mpiexec.exe"]
 
     version(
