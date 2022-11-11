@@ -7,8 +7,6 @@ import sys
 
 import pytest
 
-import llnl.util.tty as tty
-
 import spack.install_test
 import spack.spec
 
@@ -18,16 +16,6 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="Tests fail on W
 def _true(*args, **kwargs):
     """Generic monkeypatch function that always returns True."""
     return True
-
-
-@pytest.fixture
-def ensure_debug(monkeypatch):
-    current_debug_level = tty.debug_level()
-    tty.set_debug(1)
-
-    yield
-
-    tty.set_debug(current_debug_level)
 
 
 def ensure_results(filename, expected):

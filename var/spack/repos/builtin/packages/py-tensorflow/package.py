@@ -115,14 +115,46 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     version("1.1.0", sha256="aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027")
     version("1.0.1", sha256="deea3c65e0703da96d9c3f1162e464c51d37659dd129396af134e9e8f1ea8c05")
     version("1.0.0", sha256="db8b3b8f4134b7c9c1b4165492ad5d5bb78889fcd99ffdffc325e97da3e8c677")
-    version("0.12.0", sha256="13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9")
-    version("0.11.0", sha256="24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc")
-    version("0.10.0", sha256="f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680")
-    version("0.9.0", sha256="3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9")
-    version("0.8.0", sha256="f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e")
-    version("0.7.1", sha256="ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d")
-    version("0.7.0", sha256="43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce")
-    version("0.6.0", sha256="f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657")
+    version(
+        "0.12.0",
+        sha256="13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9",
+        deprecated=True,
+    )
+    version(
+        "0.11.0",
+        sha256="24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc",
+        deprecated=True,
+    )
+    version(
+        "0.10.0",
+        sha256="f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680",
+        deprecated=True,
+    )
+    version(
+        "0.9.0",
+        sha256="3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9",
+        deprecated=True,
+    )
+    version(
+        "0.8.0",
+        sha256="f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e",
+        deprecated=True,
+    )
+    version(
+        "0.7.1",
+        sha256="ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d",
+        deprecated=True,
+    )
+    version(
+        "0.7.0",
+        sha256="43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce",
+        deprecated=True,
+    )
+    version(
+        "0.6.0",
+        sha256="f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657",
+        deprecated=True,
+    )
 
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
@@ -440,8 +472,16 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     conflicts("~rocm", when="@2.7.4-rocm-enhanced")
     conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
-    # TODO: why is this needed?
+    # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
+    # old downloads are removed from that site immediately after a new release.
+    # If the tf mirrors don't work, make sure the fallback is to something existing.
     patch("url-zlib.patch", when="@0.10.0")
+    # bump to zlib 1.2.13
+    patch(
+        "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
+        sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
+        when="@2.9:2.10.0",
+    )
     # TODO: why is this needed?
     patch("crosstool.patch", when="@0.10.0+cuda")
     # Avoid build error: "no such package '@io_bazel_rules_docker..."

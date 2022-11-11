@@ -17,6 +17,7 @@ class RRcppcctz(RPackage):
 
     cran = "RcppCCTZ"
 
+    version("0.2.12", sha256="2a2087bdb7ab4b617487b87677a81ccd0c5529f776cfe90d2e23d5f5478424cb")
     version("0.2.11", sha256="5ca66403493fc3aa966eaa7897e18b988af7c5efd58ffa1b9b81dc103319ff6e")
     version("0.2.10", sha256="3a78188ec771270c87d5ccb8237506adac1827220c694df2f683f64002e2444a")
     version("0.2.9", sha256="723f45eca1be08903234e339523daca35748fe65c1a9d59afcb583d3a17bcaae")
