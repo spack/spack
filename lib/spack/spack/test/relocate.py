@@ -173,14 +173,6 @@ def test_ensure_binary_is_relocatable(source_file, is_relocatable):
     assert relocatable == is_relocatable
 
 
-@pytest.mark.requires_executables("patchelf", "strings", "file")
-@skip_unless_linux
-def test_patchelf_is_relocatable():
-    patchelf = os.path.realpath(spack.relocate._patchelf())
-    assert llnl.util.filesystem.is_exe(patchelf)
-    spack.relocate.ensure_binary_is_relocatable(patchelf)
-
-
 @skip_unless_linux
 def test_ensure_binary_is_relocatable_errors(tmpdir):
     # The file passed in as argument must exist...
