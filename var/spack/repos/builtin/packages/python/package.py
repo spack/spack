@@ -406,6 +406,9 @@ class Python(Package):
         depends_on("uuid", when="+uuid")
         depends_on("tix", when="+tix")
 
+        # crypt(3) interface. deprecated in 3.11, removed in 3.13
+        depends_on("libxcrypt", when="@:3.12")
+
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
     # https://bugs.python.org/issue1222585
