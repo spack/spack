@@ -101,9 +101,9 @@
          disabled variant that will be propagated to dependencies
    - `package ~variant`:
          disabled variant that will NOT be propagated to dependencies
-   - `package cflags==True`:
+   - `package cflags==-g`:
          `cflags` will be propagated to dependencies
-   - `package cflags=True`:
+   - `package cflags=-g`:
          `cflags` will NOT be propagated to dependencies
 
    Syntax for non-boolan variants is similar to compiler flags. More in the docs for
