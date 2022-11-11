@@ -24,10 +24,9 @@ import sys
 import llnl.util.tty
 
 import spack.config
+import spack.operating_systems.windows_os as winOs
 import spack.spec
 import spack.util.spack_yaml
-import spack.operating_systems.windows_os as winOs
-
 
 is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
@@ -105,6 +104,35 @@ def _spec_is_valid(spec):
         return False
 
     return True
+
+
+# def path_to_dict(search_paths):
+#     """Return dictionary[path]:file from list of paths"""
+#     lib_to_path = {}
+#     # Reverse order of search directories so that a lib in the first
+#     # entry overrides later entries
+#     for search_path in reversed(search_paths):
+#         for lib in os.listdir(search_path):
+#             lib_path = os.path.join(search_path, lib)
+#             if llnl.util.filesystem.is_readable_file(lib_path):
+#                 if lib_to_path[lib]:
+#                     lib_to_path[lib].add(lib_path)
+#                 else:
+#                     lib_to_path[lib_path] = set([lib])
+#     return lib_to_path
+
+
+def path_to_dict(search_paths):
+    """Return dictionary[path]:file from list of paths"""
+    path_to_lib = {}
+    # Reverse order of search directories so that a lib in the first
+    # entry overrides later entries
+    for search_path in reversed(search_paths):
+        for lib in os.listdir(search_path):
+            lib_path = os.path.join(search_path, lib)
+            if llnl.util.filesystem.is_readable_file(lib_path):
+                path_to_lib[lib_path] = lib
+    return path_to_lib
 
 
 def is_executable(file_path):
@@ -198,41 +226,86 @@ def update_configuration(detected_packages, scope=None, buildable=True):
     return all_new_specs
 
 
-def find_windows_compiler_root_paths():
-    """Helper for Windows compiler installation root discovery
-
-    At the moment simply returns location of VS install paths from VSWhere
-    But should be extended to include more information as relevant"""
-    return list(winOs.WindowsOs.vs_install_paths)
+def _windows_drive():
+    """Return Windows drive string"""
+    return os.environ["HOMEDRIVE"]
 
 
-def find_windows_compiler_cmake_paths():
-    """Semi hard-coded search path for cmake bundled with MSVC
-    """
-    return [ os.path.join(
-        path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
-    )
-    for path in find_windows_compiler_root_paths() ]
+class WindowsCompilerExternalPaths(object):
+    @staticmethod
+    def find_windows_compiler_root_paths():
+        """Helper for Windows compiler installation root discovery
+
+        At the moment simply returns location of VS install paths from VSWhere
+        But should be extended to include more information as relevant"""
+        return list(winOs.WindowsOs.vs_install_paths)
+
+    @staticmethod
+    def find_windows_compiler_cmake_paths():
+        """Semi hard-coded search path for cmake bundled with MSVC"""
+        return [
+            os.path.join(
+                path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin"
+            )
+            for path in WindowsCompilerExternalPaths.find_windows_compiler_root_paths()
+        ]
+
+    @staticmethod
+    def find_windows_compiler_ninja_paths():
+        """Semi hard-coded search heuristic for locating ninja bundled with MSVC"""
+        return [
+            os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
+            for path in WindowsCompilerExternalPaths.find_windows_compiler_root_paths()
+        ]
+
+    @staticmethod
+    def find_windows_compiler_bundled_packages():
+        """Return all MSVC compiler bundled packages"""
+        return (
+            WindowsCompilerExternalPaths.find_windows_compiler_cmake_paths()
+            + WindowsCompilerExternalPaths.find_windows_compiler_ninja_paths()
+        )
 
 
-def find_windows_compiler_ninja_paths():
-    """Semi hard-coded search heuristic for locating ninja bundled with MSVC
-    """
-    return [
-        os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
-        for path in find_windows_compiler_root_paths()
-    ]
+class WindowsKitExternalPaths(object):
+    @staticmethod
+    def find_windows_kit_roots():
+        """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
+        if not is_windows:
+            return []
+        program_files = os.environ["PROGRAMFILES(x86)"]
+        plat_major_ver = str(winOs.windows_version()[0])
+        kit_base = os.path.join(program_files, "Windows Kits", plat_major_ver)
+        return kit_base
 
+    @staticmethod
+    def find_windows_kit_bin_paths(kit_base=None):
+        """Returns Windows kit bin directory per version"""
+        kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
+        kit_bin = os.path.join(kit_base, "bin")
+        return glob.glob(os.path.join(kit_bin, "[0-9]*", "*\\"))
 
-def find_windows_compiler_bundled_packages():
-    return find_windows_compiler_cmake_paths() + find_windows_compiler_ninja_paths()
+    @staticmethod
+    def find_windows_kit_lib_paths(kit_base=None):
+        """Returns Windows kit lib directory per version"""
+        kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
+        kit_lib = os.path.join(kit_base, "Lib")
+        return glob.glob(os.path.join(kit_lib, "[0-9]*", "*", "*\\"))
+
+    @staticmethod
+    def find_windows_driver_development_kit_paths():
+        """Provides a list of all installation paths
+        for the WDK by version and architecture
+        """
+        wdk_content_root = os.getenv("WDKContentRoot")
+        return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_content_root)
 
 
 def find_win32_additional_install_paths():
     """Not all programs on Windows live on the PATH
     Return a list of other potential install locations.
     """
-    drive_letter = os.environ['HOMEDRIVE']
+    drive_letter = _windows_drive()
     windows_search_ext = []
     cuda_re = r"CUDA_PATH[a-zA-Z1-9_]*"
     # The list below should be expanded with other
@@ -267,44 +340,34 @@ def compute_windows_program_path_for_package(pkg):
         return []
     # note windows paths are fine here as this method should only ever be invoked
     # to interact with Windows
-    program_files = "{}:\\Program Files{}\\{}"
-    drive_letter = os.environ['WINDIR'][0]
+    program_files = "{}\\Program Files{}\\{}"
+    drive_letter = _windows_drive()
 
-    return[program_files.format(drive_letter, arch, name) for
-           arch, name in itertools.product(("", " (x86)"),
-           (pkg.name, pkg.name.capitalize()))]
-
-
-def find_windows_kit_roots():
-    if not is_windows:
-        return []
-    program_files = os.environ['HOMEDRIVE'] + '\\' + 'Program Files*'
-    plat_major_ver = str(winOs.windows_version()[0])
-    kit_base = os.path.join(program_files, 'Windows Kits', plat_major_ver)
-    return kit_base
+    return [
+        program_files.format(drive_letter, arch, name)
+        for arch, name in itertools.product(("", " (x86)"), (pkg.name, pkg.name.capitalize()))
+    ]
 
 
-def find_windows_driver_development_kit_paths():
-    """Provides a list of all installation paths
-    for the WDK by version and architecture
-    """
+def compute_windows_user_path_for_package(pkg):
+    """Given a package attempt to compute its user scoped
+    install location, return list of potential locations based
+    on common heuristics. For more info on Windows user specific
+    installs see:
+    https://learn.microsoft.com/en-us/dotnet/api/system.environment.specialfolder?view=netframework-4.8"""
     if not is_windows:
         return []
 
-    # WDK is installed by default into
-    # C:\\Program Files [(x86)]\\Windows Kits\\[10|11]\\bin
-    # however non standard installations can be denoted by $Env:WDKContentRoot
+    # Current user directory
+    user = os.environ["USERPROFILE"]
+    app_data = "AppData"
+    app_data_locations = ["Local", "Roaming"]
+    user_appdata_install_stubs = [os.path.join(app_data, x) for x in app_data_locations]
+    user_appdata_install_stubs.append("")
 
-    # Derive default installation glob
-    wdk_base = find_windows_kit_roots()
-    # Check for WDKContentRoot definition
-    wdk_content_root = os.getenv('WDKContentRoot')
-    # Select valid WDK root
-    wdk_base = wdk_base if not wdk_content_root else wdk_content_root
-
-    kit_bin = os.path.join(wdk_base, 'bin')
-    # Glob over versions and architectures
-    wdk_version_candidates = glob.glob(os.path.join(kit_bin, '*', '*'))
-    wdk_versions = [pth for pth in wdk_version_candidates if \
-        re.search(r'[0-9][0-9].[0-9]+.[0-9][0-9][0-9][0-9][0-9]', pth)]
-    return wdk_versions
+    return [
+        os.path.join(user, app_data, name)
+        for app_data, name in itertools.product(
+            user_appdata_install_stubs, (pkg.name, pkg.name.capitalize())
+        )
+    ]

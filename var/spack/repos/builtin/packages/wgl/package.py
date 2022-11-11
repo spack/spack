@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-import sys
 
 from spack.package import *
 
@@ -17,7 +16,8 @@ class Wgl(BundlePackage):
     # hard code the extension as shared lib
     libraries = ["OpenGL32.Lib"]
 
-    # versions here are in no way related to actual WGL versions (there is only one on a system at a time)
+    # versions here are in no way related to actual WGL versions
+    # (there is only one on a system at a time)
     # but instead reflects the Windows Kit version that a particular WGL library file is found in
     # Windows Kits are intended to be more or less contained environments so this allows us to
     # marshall our SDK and WDK to their respective WGLs. The purpose here is to better reflect
@@ -35,7 +35,8 @@ class Wgl(BundlePackage):
     # As per https://github.com/spack/spack/pull/31748 this provisory version represents
     # an arbitrary openGL version designed for maximum compatibility with calling packages
     # this current version simply reflects the latest OpenGL vesion available at the time of
-    # package creation and is set in a way that all specs currently depending on GL are satisfied appropriately
+    # package creation and is set in a way that all specs currently depending on GL are
+    # satisfied appropriately
     provides("gl@4.6")
 
     # WGL exists on all Windows systems post win 98, however the headers
