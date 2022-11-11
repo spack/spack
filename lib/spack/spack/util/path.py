@@ -39,6 +39,18 @@ def architecture():
     return spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
 
+def get_user():
+    # User pwd where available because it accounts for effective uids when using ksu and similar
+    try:
+        # user pwd for unix systems
+        import pwd
+
+        return pwd.getpwuid(os.geteuid()).pw_name
+    except ImportError:
+        # fallback on getpass
+        return getpass.getuser()
+
+
 # Substitutions to perform
 def replacements():
     # break circular import from spack.util.executable
@@ -48,7 +60,7 @@ def replacements():
 
     return {
         "spack": spack.paths.prefix,
-        "user": getpass.getuser(),
+        "user": get_user(),
         "tempdir": tempfile.gettempdir(),
         "user_cache_path": spack.paths.user_cache_path,
         "architecture": str(arch),

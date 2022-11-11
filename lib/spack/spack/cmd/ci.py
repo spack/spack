@@ -536,7 +536,6 @@ def ci_rebuild(args):
     slash_hash = "/{}".format(job_spec.dag_hash())
     deps_install_args = install_args
     root_install_args = install_args + [
-        "--no-add",
         "--keep-stage",
         "--only=package",
         "--use-buildcache=package:never,dependencies:only",
