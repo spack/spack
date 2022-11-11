@@ -15,9 +15,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://gitlab.pnnl.gov/exasgd/frameworks/exago.git"
     maintainers = ["ryandanehy", "CameronRutherford", "pelesh"]
 
-    version(
-        "1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True, preferred=True
-    )
+    version("1.5.0", commit="227f49573a28bdd234be5500b3733be78a958f15", submodules=True)
     version("1.4.1", commit="ea607c685444b5f345bfdc9a59c345f0f30adde2", submodules=True)
     version("1.4.0", commit="4f4c3fdb40b52ace2d6ba000e7f24b340ec8e886", submodules=True)
     version("1.3.0", commit="58b039d746a6eac8e84b0afc01354cd58caec485", submodules=True)
@@ -120,7 +118,7 @@ class Exago(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("hiop+mpi", when="+hiop+mpi")
 
     depends_on("petsc@3.13:3.14", when="@:1.2.99")
-    depends_on("petsc@3.16.0:3.16", when="@1.3.0:")
+    depends_on("petsc@3.16.0:3.16", when="@1.3.0:1.4")
     depends_on("petsc@3.18.0:3.18", when="@1.5.0:")
 
     depends_on("petsc~mpi", when="~mpi")
