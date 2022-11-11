@@ -114,12 +114,21 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 "--with-lapack=%s" % lapack.ld_flags,
                 "--with-gsl-prefix=%s" % spec["gsl"].prefix,
                 "--with-libxc-prefix=%s" % spec["libxc"].prefix,
-                "CC=%s" % spec["mpi"].mpicc,
-                "FC=%s" % spec["mpi"].mpifc,
-                "--enable-mpi",
                 "--enable-openmp",
             ]
         )
+        if '+mpi' in self.spec:  # we build with MPI
+            args.extend([
+                '--enable-mpi',
+                'CC=%s' % self.spec['mpi'].mpicc,
+                'FC=%s' % self.spec['mpi'].mpifc,
+            ])
+        else:
+            args.extend([
+                'CC=%s' % self.compiler.cc,
+                'FC=%s' % self.compiler.fc,
+            ])
+
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
         elif "^mkl" in spec:
