@@ -73,15 +73,15 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
-    with when('+mpi'): # list all the parallel dependencies
-        depends_on("fftw@3:+mpi+openmp", when="@8:9") # FFT library
+    with when("+mpi"):  # list all the parallel dependencies
+        depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
         depends_on("fftw-api@3:+mpi+openmp", when="@10:")
         depends_on("libvdwxc+mpi", when="+libvdwxc")
-    
-    with when('~mpi'): # list all the serial dependencies
-        depends_on('fftw@3:+openmp~mpi', when='@8:9')  # FFT library
-        depends_on('fftw-api@3:+openmp~mpi', when='@10:')
-        depends_on('libvdwxc~mpi', when='+libvdwxc')    
+
+    with when("~mpi"):  # list all the serial dependencies
+        depends_on("fftw@3:+openmp~mpi", when="@8:9")  # FFT library
+        depends_on("fftw-api@3:+openmp~mpi", when="@10:")
+        depends_on("libvdwxc~mpi", when="+libvdwxc")
 
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
@@ -101,7 +101,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
-
     def configure_args(self):
         spec = self.spec
         lapack = spec["lapack"].libs
@@ -117,17 +116,21 @@ class Octopus(AutotoolsPackage, CudaPackage):
                 "--enable-openmp",
             ]
         )
-        if '+mpi' in self.spec:  # we build with MPI
-            args.extend([
-                '--enable-mpi',
-                'CC=%s' % self.spec['mpi'].mpicc,
-                'FC=%s' % self.spec['mpi'].mpifc,
-            ])
+        if "+mpi" in self.spec:  # we build with MPI
+            args.extend(
+                [
+                    "--enable-mpi",
+                    "CC=%s" % self.spec["mpi"].mpicc,
+                    "FC=%s" % self.spec["mpi"].mpifc,
+                ]
+            )
         else:
-            args.extend([
-                'CC=%s' % self.compiler.cc,
-                'FC=%s' % self.compiler.fc,
-            ])
+            args.extend(
+                [
+                    "CC=%s" % self.compiler.cc,
+                    "FC=%s" % self.compiler.fc,
+                ]
+            )
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
