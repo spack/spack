@@ -38,6 +38,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     version("develop", branch="develop")
 
+    variant("mpi", default=True, description="Build with MPI support")
     variant("scalapack", default=False, description="Compile with Scalapack")
     variant("metis", default=False, description="Compile with METIS")
     variant("parmetis", default=False, description="Compile with ParMETIS")
@@ -60,6 +61,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("automake", type="build", when="@develop")
     depends_on("libtool", type="build", when="@develop")
     depends_on("m4", type="build", when="@develop")
+    depends_on("mpi", when="+mpi")
 
     depends_on("blas")
     depends_on("gsl@1.9:")
@@ -69,7 +71,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
-    depends_on("mpi")
     depends_on("fftw@3:+mpi+openmp", when="@8:9")
     depends_on("fftw-api@3:+mpi+openmp", when="@10:")
     depends_on("py-numpy", when="+python")
@@ -90,6 +91,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     # optional dependencies:
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
+
 
     def configure_args(self):
         spec = self.spec
