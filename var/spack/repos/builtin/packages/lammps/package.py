@@ -902,7 +902,7 @@ class Lammps(CMakePackage, CudaPackage):
                 cxx_flags = "-Ofast -fno-math-errno -fno-unroll-loops -fveclib=AMDLIBM -muse-unaligned-vector-move"
                 # add -fopenmp-simd if OpenMP not already turned on
                 if spec.satisfies("~openmp"):
-                    cxx_flags += "-fopenmp-simd"
+                    cxx_flags += " -fopenmp-simd"
                 cxx_flags += " -DLMP_SIMD_COMPILER -DUSE_OMP_SIMD -DLMP_INTEL_USELRT"
             else:
                 cxx_flags = "-Ofast -mfma -fvectorize -funroll-loops"
