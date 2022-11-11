@@ -14,7 +14,6 @@ import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
 import spack.store
-from spack.filesystem_view import YamlFilesystemView
 
 description = "list extensions for package"
 section = "extensions"
@@ -38,10 +37,9 @@ def setup_parser(subparser):
         "--show",
         action="store",
         default="all",
-        choices=("packages", "installed", "activated", "all"),
+        choices=("packages", "installed", "all"),
         help="show only part of output",
     )
-    subparser.add_argument("-v", "--view", metavar="VIEW", type=str, help="the view to operate on")
 
     subparser.add_argument(
         "spec",
@@ -91,13 +89,6 @@ def extensions(parser, args):
             tty.msg("%d extensions:" % len(extensions))
             colify(ext.name for ext in extensions)
 
-    if args.view:
-        target = args.view
-    else:
-        target = spec.prefix
-
-    view = YamlFilesystemView(target, spack.store.layout)
-
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
         installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
@@ -109,14 +100,3 @@ def extensions(parser, args):
         else:
             tty.msg("%d installed:" % len(installed))
             cmd.display_specs(installed, args)
-
-    if args.show in ("activated", "all"):
-        # List specs of activated extensions.
-        activated = view.extensions_layout.extension_map(spec)
-        if args.show == "all":
-            print
-        if not activated:
-            tty.msg("None activated.")
-        else:
-            tty.msg("%d activated:" % len(activated))
-            cmd.display_specs(activated.values(), args)
