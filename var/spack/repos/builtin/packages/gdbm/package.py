@@ -29,10 +29,11 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version("1.9.1", sha256="6025852637772b0699f2294b5f14fd4a084bca3c8161d29d64d1f30d6d1a9aed")
     version("1.9", sha256="f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57")
 
+    # Allows to disable NLS in gdbm (NLS is enabled in gettext configure by default):
     variant("nls", default=True, description="Use Native Language Support")
 
     depends_on("readline", when="@1.13:")
-    depends_on("gettext", when="+nls")
+    # Do not add gettext as an dependency for NLS, gettext is happy to use the gettext in glibc.
 
     patch("macOS.patch", when="@1.21 platform=darwin")
     patch("gdbm.patch", when="@1.11:1.18 %gcc@10:")
