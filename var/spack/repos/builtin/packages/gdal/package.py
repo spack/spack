@@ -478,6 +478,7 @@ class CMakeBuilder(CMakeBuilder):
             # Optional dependencies
             self.define_from_variant("GDAL_USE_ARMADILLO", "armadillo"),
             self.define_from_variant("GDAL_USE_ARROW", "arrow"),
+            self.define_from_variant("GDAL_USE_BASISU", "basisu"),
             self.define_from_variant("GDAL_USE_BLOSC", "blosc"),
             self.define_from_variant("GDAL_USE_BRUNSLI", "brunsli"),
             self.define_from_variant("GDAL_USE_CFITSIO", "cfitsio"),
