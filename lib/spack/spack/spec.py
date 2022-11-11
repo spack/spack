@@ -2754,6 +2754,11 @@ class Spec(object):
         # If any spec in the DAG is deprecated, throw an error
         Spec.ensure_no_deprecated(self)
 
+        # Update externals as needed
+        for dep in self.traverse():
+            if dep.external:
+                dep.package.update_external_dependencies()
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #

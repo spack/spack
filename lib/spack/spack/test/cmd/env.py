@@ -2476,30 +2476,6 @@ env:
     assert manifest == contents
 
 
-@pytest.mark.parametrize("concretization,unify", [("together", "true"), ("separately", "false")])
-def test_update_concretization_to_concretizer_unify(concretization, unify, tmpdir):
-    spack_yaml = """\
-spack:
-  concretization: {}
-""".format(
-        concretization
-    )
-    tmpdir.join("spack.yaml").write(spack_yaml)
-    # Update the environment
-    env("update", "-y", str(tmpdir))
-    with open(str(tmpdir.join("spack.yaml"))) as f:
-        assert (
-            f.read()
-            == """\
-spack:
-  concretizer:
-    unify: {}
-""".format(
-                unify
-            )
-        )
-
-
 @pytest.mark.regression("18147")
 def test_can_update_attributes_with_override(tmpdir):
     spack_yaml = """

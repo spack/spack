@@ -482,28 +482,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return match_predicate(ignore_arg, patterns)
 
-    def activate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).activate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        exts[ext_pkg.name] = ext_pkg.spec
-
-    def deactivate(self, ext_pkg, view, **args):
-        ignore = self.perl_ignore(ext_pkg, args)
-        args.update(ignore=ignore)
-
-        super(Perl, self).deactivate(ext_pkg, view, **args)
-
-        extensions_layout = view.extensions_layout
-        exts = extensions_layout.extension_map(self.spec)
-        # Make deactivate idempotent
-        if ext_pkg.name in exts:
-            del exts[ext_pkg.name]
-
     @property
     def command(self):
         """Returns the Perl command, which may vary depending on the version

@@ -2325,6 +2325,12 @@ class SpecBuilder(object):
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
 
+        # Add synthetic edges for externals that are extensions
+        for root in self._specs.values():
+            for dep in root.traverse():
+                if dep.external:
+                    dep.package.update_external_dependencies()
+
         return self._specs
 
 

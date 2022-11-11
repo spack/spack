@@ -15,6 +15,7 @@ class RGgrepel(RPackage):
 
     cran = "ggrepel"
 
+    version("0.9.2", sha256="0a3088c48177528e2a65defebbc4f09a744ebb44408588f688811f8d0d827488")
     version("0.9.1", sha256="29fb916d4799ba6503a5dd019717ffdf154d2aaae9ff1736f03e2be24af6bdfc")
     version("0.9.0", sha256="4f7ca3da7dc08902487c961c539ef43516263c30abcc4ce303ff3c5580f42fda")
     version("0.8.1", sha256="d5d03a77ab6d8c831934bc46e840cc4e3df487272ab591fa72767ad42bcb7283")
