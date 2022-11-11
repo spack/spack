@@ -210,12 +210,12 @@
 
 ## Removals and Deprecations
 
-* This is the last Spack release that will support Python 2 (#32615). Spack `v.0.19`
-  will emit a deprecation warning if you run it with Python 2, and Python 2 support will
-  be removed from Spack `develop` very soon.
+* Support for Python `3.5` is dropped (#31908). Only Python 2.7 and 3.6+ are officially
+  supported.
 
-* Support for Python `3.5` is also deprecated, and Spack now requires Python `3.6` or
-  higher to run (#31908)
+* This is the last Spack release that will support Python 2 (#32615). Spack `v0.19`
+  will emit a deprecation warning if you run it with Python 2, and Python 2 support will
+  soon be removed from the `develop` branch.
 
 * `LD_LIBRARY_PATH` is no longer set by default by `spack load` or module loads.
 
