@@ -53,6 +53,7 @@ test_args = [
     "-llib4",
     "arg5",
     "arg6",
+    "-DGCC_ARG_WITH_PERENS=(A B C)",
     '"-DDOUBLE_QUOTED_ARG"',
     "'-DSINGLE_QUOTED_ARG'",
 ]
@@ -104,6 +105,7 @@ test_args_without_paths = [
     "-llib4",
     "arg5",
     "arg6",
+    "-DGCC_ARG_WITH_PERENS=(A B C)",
     '"-DDOUBLE_QUOTED_ARG"',
     "'-DSINGLE_QUOTED_ARG'",
 ]

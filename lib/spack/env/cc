@@ -443,9 +443,9 @@ while [ $# -ne 0 ]; do
     if [ -n "${SPACK_COMPILER_FLAGS_KEEP}" ] ; then
         # NOTE: the eval is required to allow `|` alternatives inside the variable
         eval "\
-        case '$1' in
+        case \"\$1\" in
             $SPACK_COMPILER_FLAGS_KEEP)
-                append other_args_list '$1'
+                append other_args_list \"\$1\"
                 shift
                 continue
                 ;;
@@ -460,7 +460,7 @@ while [ $# -ne 0 ]; do
             before=${rep%|*}
             after=${rep#*|}
             eval "\
-            stripped=\${1##$before}
+            stripped=\"\${1##$before}\"
             "
             if [ "$stripped" = "$1" ] ; then
                 continue
