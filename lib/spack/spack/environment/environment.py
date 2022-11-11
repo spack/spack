@@ -786,17 +786,12 @@ class Environment(object):
             )
         else:
             self.views = {}
+
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
 
-        # Let `concretization` overrule `concretize:unify` config for now,
-        # but use a translation table to have internally a representation
-        # as if we were using the new configuration
-        translation = {"separately": False, "together": True}
-        try:
-            self.unify = translation[configuration["concretization"]]
-        except KeyError:
-            self.unify = spack.config.get("concretizer:unify", False)
+        # Retrieve unification scheme for the concretizer
+        self.unify = spack.config.get("concretizer:unify", False)
 
         # Retrieve dev-build packages:
         self.dev_specs = configuration.get("develop", {})
