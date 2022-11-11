@@ -66,13 +66,23 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("blas")
     depends_on("gsl@1.9:")
     depends_on("lapack")
+
+    # The library of exchange and correlation functionals.
     depends_on("libxc@2:2", when="@:5")
     depends_on("libxc@2:3", when="@6:7")
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:", when="@10:")
     depends_on("libxc@5.1.0:", when="@develop")
-    depends_on("fftw@3:+mpi+openmp", when="@8:9")
-    depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+    with when('+mpi'): # list all the parallel dependencies
+        depends_on("fftw@3:+mpi+openmp", when="@8:9") # FFT library
+        depends_on("fftw-api@3:+mpi+openmp", when="@10:")
+        depends_on("libvdwxc+mpi", when="+libvdwxc")
+    
+    with when('~mpi'): # list all the serial dependencies
+        depends_on('fftw@3:+openmp~mpi', when='@8:9')  # FFT library
+        depends_on('fftw-api@3:+openmp~mpi', when='@10:')
+        depends_on('libvdwxc~mpi', when='+libvdwxc')    
+
     depends_on("py-numpy", when="+python")
     depends_on("py-mpi4py", when="+python")
     depends_on("metis@5:+int64", when="+metis")
@@ -83,7 +93,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("cgal", when="+cgal")
     depends_on("pfft", when="+pfft")
     depends_on("likwid", when="+likwid")
-    depends_on("libvdwxc", when="+libvdwxc")
     depends_on("libyaml", when="+libyaml")
     depends_on("elpa", when="+elpa")
     depends_on("nlopt", when="+nlopt")
