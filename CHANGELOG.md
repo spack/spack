@@ -210,7 +210,7 @@
 
 ## Removals and Deprecations
 
-* Support for Python `3.5` is dropped (#31908). Only Python 2.7 and 3.6+ are officially
+* Support for Python 3.5 is dropped (#31908). Only Python 2.7 and 3.6+ are officially
   supported.
 
 * This is the last Spack release that will support Python 2 (#32615). Spack `v0.19`
