@@ -105,7 +105,7 @@ class TestConcretizePreferences(object):
 
     @pytest.mark.parametrize(
         "compiler_str,spec_str",
-        [("gcc@4.5.0", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@4.5.0", "openmpi")],
+        [("gcc@10.2.1", "mpileaks"), ("clang@12.0.0", "mpileaks"), ("gcc@10.2.1", "openmpi")],
     )
     def test_preferred_compilers(self, compiler_str, spec_str):
         """Test preferred compilers are applied correctly"""

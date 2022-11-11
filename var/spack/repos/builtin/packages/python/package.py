@@ -1604,11 +1604,11 @@ config.update(get_paths())
                     "sys.__egginsert = p+len(new)\n"
                 )
 
-    def activate(self, ext_pkg, view, **args):
+    def add_extension_to_view(self, ext_pkg, view, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Python, self).activate(ext_pkg, view, **args)
+        super(Python, self).add_extension_to_view(ext_pkg, view, **args)
 
         extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
@@ -1616,10 +1616,10 @@ config.update(get_paths())
 
         self.write_easy_install_pth(exts, prefix=view.get_projection_for_spec(self.spec))
 
-    def deactivate(self, ext_pkg, view, **args):
+    def remove_extension_from_view(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
 
-        super(Python, self).deactivate(ext_pkg, view, **args)
+        super(Python, self).remove_extension_from_view(ext_pkg, view, **args)
 
         extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)

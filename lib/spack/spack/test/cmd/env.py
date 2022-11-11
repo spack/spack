@@ -2076,7 +2076,7 @@ env:
     with tmpdir.as_cwd():
         env("create", "test", "./spack.yaml")
         with ev.read("test"):
-            install()
+            _install()
 
         test = ev.read("test")
         for spec in test._get_environment_specs():

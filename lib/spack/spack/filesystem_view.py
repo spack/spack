@@ -340,6 +340,10 @@ class YamlFilesystemView(FilesystemView):
         if all(map(self.add_standalone, standalones)):
             all(map(self.add_extension, extensions))
 
+    def extension_in_view(self, spec):
+        exts = self.extensions_layout.extension_map(spec.package.extendee_spec)
+        return spec.name in exts and exts[spec.name] == spec
+
     def add_extension(self, spec):
         if not spec.package.is_extension:
             tty.error(self._croot + "Package %s is not an extension." % spec.name)
@@ -349,8 +353,38 @@ class YamlFilesystemView(FilesystemView):
             tty.warn(self._croot + "Skipping external package: %s" % colorize_spec(spec))
             return True
 
-        if not spec.package.is_activated(self):
-            spec.package.do_activate(self, verbose=self.verbose, with_dependencies=False)
+        if self.extension_in_view(spec):
+            return
+
+        pkg = spec.package
+        extendee_spec = pkg.extendee_spec
+
+        if self.verbose:
+            tty.msg(
+                "Activating extension {0} for {1}".format(
+                    spec.cshort_spec, extendee_spec.cshort_spec
+                )
+            )
+
+        pkg.sanity_check_extension()
+
+        extensions_layout = self.extensions_layout
+        try:
+            extensions_layout.check_extension_conflict(extendee_spec, spec)
+        except spack.directory_layout.ExtensionAlreadyInstalledError as e:
+            # already installed, let caller know
+            tty.msg(e.message)
+            return
+
+        extendee_spec.package.add_extension_to_view(pkg, self, **pkg.extendee_args)
+        extensions_layout.add_extension(extendee_spec, spec)
+
+        if self.verbose:
+            tty.debug(
+                "Activated extension {0} for {1}".format(
+                    spec.cshort_spec, extendee_spec.cshort_spec
+                )
+            )
 
         # make sure the meta folder is linked as well (this is not done by the
         # extension-activation mechnism)
@@ -548,10 +582,52 @@ class YamlFilesystemView(FilesystemView):
             tty.warn(self._croot + "Skipping package not linked in view: %s" % spec.name)
             return
 
-        if spec.package.is_activated(self):
-            spec.package.do_deactivate(
-                self, verbose=self.verbose, remove_dependents=with_dependents
+        pkg = spec.package
+        extendee_spec = pkg.extendee_spec
+
+        if not self.extension_in_view(spec):
+            self.unlink_meta_folder(spec)
+            return
+
+        pkg.sanity_check_extension()
+
+        if self.verbose:
+            tty.msg(
+                "Deactivating extension {0} for {1}".format(
+                    spec.cshort_spec, extendee_spec.cshort_spec
             )
+        )
+
+        extensions_layout = self.extensions_layout
+        extensions_layout.check_activated(extendee_spec, spec)
+        activated = extensions_layout.extension_map(extendee_spec)
+
+        for name, aspec in activated.items():
+            if aspec == spec:
+                continue
+            for dep in aspec.traverse(deptype="run"):
+                if spec == dep:
+                    if with_dependents:
+                        self.remove_extension(aspec)
+                    else:
+                        msg = (
+                            "Cannot remove {0} because {1} is "
+                            "in the view and depends on it"
+                        )
+                        raise Exception(msg.format(spec.cshort_spec, aspec.cshort_spec))
+
+        extendee_spec.package.remove_extension_from_view(pkg, self, **pkg.extendee_args)
+
+        if self.extension_in_view(spec):
+            extensions_layout.remove_extension(extendee_spec, spec)
+
+        if self.verbose:
+            tty.debug(
+                "Deactivated extension {0} for {1}".format(
+                    spec.cshort_spec, extendee_spec.cshort_spec
+            )
+        )
+
         self.unlink_meta_folder(spec)
 
     def remove_standalone(self, spec):

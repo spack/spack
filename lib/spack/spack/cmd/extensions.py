@@ -91,13 +91,6 @@ def extensions(parser, args):
             tty.msg("%d extensions:" % len(extensions))
             colify(ext.name for ext in extensions)
 
-    if args.view:
-        target = args.view
-    else:
-        target = spec.prefix
-
-    view = YamlFilesystemView(target, spack.store.layout)
-
     if args.show in ("installed", "all"):
         # List specs of installed extensions.
         installed = [s.spec for s in spack.store.db.installed_extensions_for(spec)]
@@ -111,6 +104,12 @@ def extensions(parser, args):
             cmd.display_specs(installed, args)
 
     if args.show in ("activated", "all"):
+        if not args.view:
+           if args.show == "activated":
+               tty.die("`spack extensions` requires a view to show activated extensions")
+           else:
+               return
+        view = YamlFilesystemView(args.view, spack.store.layout)
         # List specs of activated extensions.
         activated = view.extensions_layout.extension_map(spec)
         if args.show == "all":
