@@ -468,14 +468,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 @directive(("extendees", "dependencies"))
 def extends(spec, type=("build", "run"), **kwargs):
-    """Same as depends_on, but allows symlinking into dependency's
-    prefix tree.
-
-    This is for Python and other language modules where the module
-    needs to be installed into the prefix of the Python installation.
-    Spack handles this by installing modules into their own prefix,
-    but allowing ONE module version to be symlinked into a parent
-    Python install at a time, using ``spack activate``.
+    """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
