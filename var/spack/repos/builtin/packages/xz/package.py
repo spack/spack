@@ -39,7 +39,9 @@ class Xz(AutotoolsPackage, SourceforgePackage):
         description="Build shared libs, static libs or both",
     )
 
-    conflicts("%intel", when="@5.2.7", msg="icc does not support attribute __symver__")
+    # xz-5.2.7/src/liblzma/common/common.h:56 uses attribute __symver__ instead of
+    # __asm__(.symver) for newer GCC releases.
+    conflicts("%intel", when="@5.2.7:", msg="icc does not support attribute __symver__")
 
     def configure_args(self):
         return self.enable_or_disable("libs")
