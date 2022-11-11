@@ -34,6 +34,11 @@ class Aocc(Package):
     maintainers = ["amd-toolchain-support"]
 
     version(
+        ver="4.0.0",
+        sha256="2729ec524cbc927618e479994330eeb72df5947e90cfcc49434009eee29bf7d4",
+        url="https://developer.amd.com/wordpress/media/files/aocc-compiler-4.0.0.tar",
+    )
+    version(
         ver="3.2.0",
         sha256="8493525b3df77f48ee16f3395a68ad4c42e18233a44b4d9282b25dbb95b113ec",
         url="https://developer.amd.com/wordpress/media/files/aocc-compiler-3.2.0.tar",
