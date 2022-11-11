@@ -1672,9 +1672,13 @@ own install prefix.  However, certain packages are typically installed
 `Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
-Spack has support for this type of installation as well.  In Spack,
-a package that can live inside the prefix of another package is called
-an *extension*.  Suppose you have Python installed like so:
+In Spack, installation prefixes are immutable, so this type of installation
+is not directly supported. However, it is possible to create views that
+allow you to merge install prefixes of multiple packages into a single new prefix.
+Views are a convenient way to get a more traditional filesystem structure.
+Using *extensions*, you can ensure that Python packages always share the
+same prefix in the view as Python itself. Suppose you have
+Python installed like so:
 
 .. code-block:: console
 
@@ -1712,8 +1716,6 @@ You can find extensions for your Python installation like this:
    py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
    py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
 
-   ==> None activated.
-
 The extensions are a subset of what's returned by ``spack list``, and
 they are packages like any other.  They are installed into their own
 prefixes, and you can see this with ``spack find --paths``:
@@ -1741,32 +1743,72 @@ directly when you run ``python``:
    ImportError: No module named numpy
    >>>
 
-^^^^^^^^^^^^^^^^
-Using Extensions
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using Extensions in Environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are multiple ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``load`` the extension,
-and it will be added to the ``PYTHONPATH`` in your current shell, and
-Python itself will be available in the ``PATH``:
+The recommended way of working with extensions such as ``py-numpy``
+above is through :ref:`Environments <environments>`. For example,
+the following creates an environment in the current working directory
+with a filesystem view in the ``./view`` directory:
+
+.. code-block:: console
+
+   $ spack env create --with-view view --dir .
+   $ spack -e . add py-numpy
+   $ spack -e . concretize
+   $ spack -e . install
+
+We recommend environments for two reasons. Firstly, environments
+can be activated (requires :ref:`shell-support`):
+
+.. code-block:: console
+
+   $ spack env activate .
+
+which sets all the right environment variables such as ``PATH`` and
+``PYTHONPATH``. This ensures that
+
+.. code-block:: console
+
+   $ python
+   >>> import numpy
+
+works. Secondly, even without shell support, the view ensures
+that Python can locate its extensions:
+
+.. code-block:: console
+
+   $ ./view/bin/python
+   >>> import numpy
+
+See :ref:`environments` for a more in-depth description of Spack
+environments and customizations to views.
+
+^^^^^^^^^^^^^^^^^^^^
+Using ``spack load``
+^^^^^^^^^^^^^^^^^^^^
+
+A more traditional way of using Spack and extensions is ``spack load``
+(requires :ref:`shell-support`). This will add the extension to ``PYTHONPATH``
+in your current shell, and Python itself will be available in the ``PATH``:
 
 .. code-block:: console
 
    $ spack load py-numpy
+   $ python
+   >>> import numpy
 
-Now ``import numpy`` will succeed for as long as you keep your current
-session open.
 The loaded packages can be checked using ``spack find --loaded``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Loading Extensions via Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Instead of using Spack's environment modification capabilities through
-the ``spack load`` command, you can load numpy through your
-environment modules (using ``environment-modules`` or ``lmod``). This
-will also add the extension to the ``PYTHONPATH`` in your current
-shell.
+Apart from ``spack env activate`` and ``spack load``, you can load numpy
+through your environment modules (using ``environment-modules`` or
+``lmod``). This will also add the extension to the ``PYTHONPATH`` in
+your current shell.
 
 .. code-block:: console
 
@@ -1775,15 +1817,6 @@ shell.
 If you do not know the name of the specific numpy module you wish to
 load, you can use the ``spack module tcl|lmod loads`` command to get
 the name of the module from the Spack spec.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Extensions in an Environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Another way to use extensions is to create a view, which merges the
-python installation along with the extensions into a single prefix.
-See :ref:`environments` for a more in-depth description
-of environment views.
 
 -----------------------
 Filesystem requirements
