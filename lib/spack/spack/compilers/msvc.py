@@ -9,6 +9,7 @@ import subprocess
 from distutils.version import StrictVersion
 from typing import Dict, List, Set  # novm
 
+import spack.compiler
 import spack.operating_systems.windows_os
 import spack.util.executable
 from spack.compiler import Compiler
@@ -90,9 +91,16 @@ class Msvc(Compiler):
 
     @property
     def msvc_version(self):
+        """This is the VCToolset version *NOT* the actual version of the cl compiler
+        For CL version, query `Msvc.cl_version`"""
         ver = re.search(Msvc.version_regex, self.cc).group(1)
         ver = "".join(ver.split(".")[:2])[:-1]
         return "MSVC" + ver
+
+    @property
+    def cc_version(self):
+        """Cl tool version"""
+        return spack.compiler.get_compiler_version_output(self.cc)
 
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
