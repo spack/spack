@@ -276,7 +276,7 @@ spack:
     after_script:
       - cat /proc/loadavg || true
 
-    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+    image: ecpe4s/ubuntu20.04-runner-x86_64:2022-11-11
     
     broken-tests-packages:
       - gptune
@@ -461,7 +461,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-10-01
+      image: ecpe4s/ubuntu20.04-runner-x86_64:2022-11-11
       tags: ["spack", "public", "x86_64"]
 
     signing-job-attributes:
