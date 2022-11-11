@@ -6,7 +6,6 @@ import collections
 import itertools
 import os
 import re
-import shutil
 from collections import OrderedDict
 
 import macholib.mach_o
