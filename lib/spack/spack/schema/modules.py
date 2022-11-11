@@ -24,7 +24,7 @@ spec_regex = (
 )
 
 #: Matches a valid name for a module set
-valid_module_set_name = r"^\w[\w-]*$"
+valid_module_set_name = r"^(?!prefix_inspections$)\w[\w-]*$"
 
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r"^[\^@%+~]"
@@ -150,15 +150,6 @@ module_config_properties = {
         },
     },
 }
-
-
-def deprecation_msg_default_module_set(instance, props):
-    return (
-        'Top-level properties "{0}" in module config are ignored as of Spack v0.18. '
-        'They should be set on the "default" module set. Run\n\n'
-        "\t$ spack config update modules\n\n"
-        "to update the file to the new format".format('", "'.join(instance))
-    )
 
 
 # Properties for inclusion into other schemas (requires definitions)
