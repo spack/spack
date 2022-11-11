@@ -1674,7 +1674,7 @@ own install prefix.  However, certain packages are typically installed
 
 In Spack, installation prefixes are immutable, so this type of installation
 is not directly supported. However, it is possible to create views that
-allow you to merge multiple packages install prefixes into a new prefix.
+allow you to merge install prefixes of multiple packages into a single new prefix.
 Views are a convenient way to get a more traditional filesystem structure.
 Using *extensions*, you can ensure that Python packages always share the
 same prefix in the view as Python itself. Suppose you have
