@@ -429,12 +429,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch("mfem-4.2-petsc-3.15.0.patch", when="@4.2.0+petsc ^petsc@3.15.0:")
     patch("mfem-4.3-hypre-2.23.0.patch", when="@4.3.0")
     patch("mfem-4.3-cusparse-11.4.patch", when="@4.3.0+cuda")
-
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
     # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
     # upstream.
     patch("mfem-4.0.0-makefile-syntax-fix.patch", when="@4.0.0")
+    patch("mfem-4.5.patch", when="@4.5.0")
+
     phases = ["configure", "build", "install"]
 
     def setup_build_environment(self, env):
@@ -1029,9 +1030,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
             # make('check', parallel=False)
         else:
-            # As of v4.5.0 and ROCm up to 5.2.3, the following miniapp crashes
-            # the HIP compiler, so it has to be disabled for testing with HIP:
-            # filter_file("PAR_MINIAPPS = hooke", "PAR_MINIAPPS =", "miniapps/hooke/makefile")
             make("all")
             make("test", parallel=False)
 
