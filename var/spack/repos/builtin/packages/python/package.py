@@ -509,9 +509,7 @@ class Python(Package):
         else:
             variants += "~pythoncmd"
 
-        for module in [
-            "readline", "sqlite3", "dbm", "nis", "zlib", "bz2", "ctypes", "uuid", "crypt"
-        ]:
+        for module in ["readline", "sqlite3", "dbm", "nis", "zlib", "bz2", "ctypes", "uuid"]:
             try:
                 python("-c", "import " + module, error=os.devnull)
                 variants += "+" + module
@@ -565,6 +563,14 @@ class Python(Package):
                 variants += "+tix"
             except ProcessError:
                 variants += "~tix"
+
+        # Some modules are platform-dependent
+        if not self.spec.satisfies("platform=windows"):
+            try:
+                python("-c", "import crypt", error=os.devnull)
+                variants += "+crypt"
+            except ProcessError:
+                variants += "~crypt"
 
         return variants
 
