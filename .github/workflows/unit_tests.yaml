@@ -144,6 +144,9 @@ jobs:
     - name: Run unit tests
       shell: runuser -u spack-test -- bash {0}
       run: |
+          /usr/libexec/platform-python -m venv platform-python
+          source platform-python/bin/activate
+          pip install -U pip setuptools six pytest 
           source share/spack/setup-env.sh
           spack -d bootstrap now --dev
           spack unit-test -k 'not cvs and not svn and not hg' -x --verbose
