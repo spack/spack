@@ -94,11 +94,11 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         "basisu", default=False, when="@3.6:", description="Required for BASISU and KTX2 drivers"
     )
     variant("blosc", default=False, when="@3.4:", description="Required for Zarr driver")
-    variant("brunsli", default=True, when="@3.4:", description="Required for MRF driver")
+    variant("brunsli", default=False, when="@3.4:", description="Required for MRF driver")
     variant("bsb", default=False, when="@:2", description="Required for BSB driver")
     variant("cfitsio", default=False, description="Required for FITS driver")
     variant("crnlib", default=False, description="Required for DDS driver")
-    variant("curl", default=False, description="Required for network access")
+    variant("curl", default=True, description="Required for network access")
     variant("cryptopp", default=False, when="@2.1:", description="Required for EEDAI driver")
     variant("deflate", default=False, when="@3.2:", description="Required for Deflate compression")
     variant("dods", default=False, when="@:3.4", description="Required for DODS driver")
@@ -128,7 +128,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
     variant("kea", default=False, description="Required for KEA driver")
-    variant("lerc", default=True, when="@2.4:", description="Required for LERC compression")
+    variant("lerc", default=False, when="@2.4:", description="Required for LERC compression")
     variant("libcsf", default=False, description="Required for PCRaster driver")
     variant("libkml", default=False, description="Required for LIBKML driver")
     variant("liblzma", default=False, description="Required for Zarr driver")
@@ -193,10 +193,10 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         default=False,
         description="Required for PostgreSQL and PostGISRaster drivers",
     )
-    variant("qb3", default=True, when="@3.6:", description="Required for MRF driver")
+    variant("qb3", default=False, when="@3.6:", description="Required for MRF driver")
     variant(
         "qhull",
-        default=True,
+        default=False,
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
