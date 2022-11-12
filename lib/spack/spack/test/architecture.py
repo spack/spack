@@ -17,7 +17,7 @@ import spack.spec
 import spack.target
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def current_host_platform():
     """Return the platform of the current host as detected by the
     'platform' stdlib package.
@@ -34,23 +34,23 @@ def current_host_platform():
 
 
 # Valid keywords for os=xxx or target=xxx
-valid_keywords = ["fe", "be", "frontend", "backend"]
+VALID_KEYWORDS = ["fe", "be", "frontend", "backend"]
+
+TEST_PLATFORM = spack.platforms.Test()
 
 
-@pytest.fixture(
-    params=([x for x in spack.platforms.Test().targets] + valid_keywords + ["default_target"])
-)
+@pytest.fixture(params=([str(x) for x in TEST_PLATFORM.targets] + VALID_KEYWORDS), scope="module")
 def target_str(request):
     """All the possible strings that can be used for targets"""
-    return str(request.param)
+    return request.param
 
 
 @pytest.fixture(
-    params=([x for x in spack.platforms.Test().operating_sys] + valid_keywords + ["default_os"])
+    params=([str(x) for x in TEST_PLATFORM.operating_sys] + VALID_KEYWORDS), scope="module"
 )
 def os_str(request):
     """All the possible strings that can be used for operating systems"""
-    return str(request.param)
+    return request.param
 
 
 def test_platform(current_host_platform):
@@ -64,16 +64,19 @@ def test_user_input_combination(config, target_str, os_str):
     """Test for all the valid user input combinations that both the target and
     the operating system match.
     """
-    platform = spack.platforms.Test()
-    spec_str = "libelf"
-    if os_str != "default_os":
-        spec_str += " os={0}".format(os_str)
-    if target_str != "default_target":
-        spec_str += " target={0}".format(target_str)
-    spec = spack.spec.Spec(spec_str).concretized()
+    spec_str = "libelf os={} target={}".format(os_str, target_str)
+    spec = spack.spec.Spec(spec_str)
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system(os_str))
+    assert spec.architecture.target == TEST_PLATFORM.target(target_str)
 
-    assert spec.architecture.os == str(platform.operating_system(os_str))
-    assert spec.architecture.target == platform.target(target_str)
+
+def test_default_os_and_target(config):
+    """Test that is we don't specify `os=` or `target=` we get the default values
+    after concretization.
+    """
+    spec = spack.spec.Spec("libelf").concretized()
+    assert spec.architecture.os == str(TEST_PLATFORM.operating_system("default_os"))
+    assert spec.architecture.target == TEST_PLATFORM.target("default_target")
 
 
 def test_operating_system_conversion_to_dict():
