@@ -11,6 +11,7 @@ import shutil
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack
 import spack.cmd.common.arguments as arguments
 import spack.config
 import spack.paths
@@ -24,7 +25,7 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v%s" % ".".join(spack.spack_version_info[:2])
+tutorial_branch = "releases/v%s" % ".".join(str(v) for v in spack.spack_version_info[:2])
 tutorial_mirror = "file:///mirror"
 tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
