@@ -24,7 +24,7 @@ level = "long"
 
 
 # tutorial configuration parameters
-tutorial_branch = "releases/v0.18"
+tutorial_branch = "releases/v0.19"
 tutorial_mirror = "file:///mirror"
 tutorial_key = os.path.join(spack.paths.share_path, "keys", "tutorial.pub")
 
