@@ -602,7 +602,7 @@ class PyclingoDriver(object):
             setup (SpackSolverSetup): An object to set up the ASP problem.
             specs (list): List of ``Spec`` objects to solve for.
             reuse (None or list): list of concrete specs that can be reused
-            namespace (boolean): enable node namespacing
+            namespace (bool): enable node namespacing
             output (None or OutputConfiguration): configuration object to set
                 the output of this solve.
             control (clingo.Control): configuration for the solver. If None,
@@ -1938,7 +1938,7 @@ class SpackSolverSetup(object):
             driver (PyclingoDriver): driver instance of this solve
             specs (list): list of Specs to solve
             reuse (None or list): list of concrete specs that can be reused
-            namespace (boolean): enable namespace matching in the solve
+            namespace (bool): enable namespace matching in the solve
         """
         self._condition_id_counter = itertools.count()
 
