@@ -12,6 +12,7 @@
 % Spec-related functions.
 % Used to build the result of the solve.
 #show node/1.
+#show node_namespace/2.
 #show hash/2.
 #show depends_on/3.
 #show version/2.
