@@ -8,7 +8,7 @@ import re
 from spack.package import *
 
 
-class Hipsparse(CMakePackage):
+class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     """hipSPARSE is a SPARSE marshalling library, with
     multiple supported backends"""
 
@@ -98,12 +98,18 @@ class Hipsparse(CMakePackage):
         deprecated=True,
     )
 
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
     variant(
         "build_type",
         default="Release",
         values=("Release", "Debug", "RelWithDebInfo"),
         description="CMake build type",
     )
+
+    depends_on("hip +cuda", when="+cuda")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("git", type="build")
@@ -132,30 +138,12 @@ class Hipsparse(CMakePackage):
         "5.3.3",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocsparse@" + ver, when="@" + ver)
-    for ver in [
-        "3.8.0",
-        "3.9.0",
-        "3.10.0",
-        "4.0.0",
-        "4.1.0",
-        "4.2.0",
-        "4.3.0",
-        "4.3.1",
-        "4.5.0",
-        "4.5.2",
-        "5.0.0",
-        "5.0.2",
-        "5.1.0",
-        "5.1.3",
-        "5.2.0",
-        "5.2.1",
-        "5.2.3",
-        "5.3.0",
-        "5.3.3",
-    ]:
-        depends_on("rocprim@" + ver, when="@" + ver)
+        depends_on("rocsparse@" + ver, when="+rocm @" + ver)
+
+    for tgt in ROCmPackage.amdgpu_targets:
+        depends_on(
+            "rocsparse amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
+        )
 
     patch("e79985dccde22d826aceb3badfc643a3227979d2.patch", when="@3.5.0")
     patch("530047af4a0f437dafc02f76b3a17e3b1536c7ec.patch", when="@3.5.0")
@@ -173,22 +161,26 @@ class Hipsparse(CMakePackage):
 
     def cmake_args(self):
         args = [
-            # Make sure find_package(HIP) finds the module.
             self.define("CMAKE_CXX_STANDARD", "14"),
             self.define("BUILD_CLIENTS_SAMPLES", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", "OFF"),
         ]
 
-        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
-            args.append(self.define("__skip_rocmclang", "ON"))
+        args.append(self.define_from_variant("BUILD_CUDA", "cuda"))
 
-        if self.spec.satisfies("@:5.1"):
-            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
-        elif self.spec.satisfies("@5.2.0:"):
+        # FindHIP.cmake was used for +rocm until 5.0.0 and is still used for +cuda
+        if self.spec.satisfies("@:4") or self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
+
+        if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
+
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
-        return args
 
-    def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
+        return args

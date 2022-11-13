@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Hipcub(CMakePackage):
+class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     """Radeon Open Compute Parallel Primitives Library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipCUB"
@@ -94,6 +94,10 @@ class Hipcub(CMakePackage):
         deprecated=True,
     )
 
+    variant("rocm", default=True, description="Enable ROCm support")
+    conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
+    conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
     variant(
         "build_type",
         default="Release",
@@ -103,7 +107,8 @@ class Hipcub(CMakePackage):
 
     depends_on("cmake@3.10.2:", type="build", when="@4.2.0:")
     depends_on("cmake@3.5.1:", type="build")
-    depends_on("numactl", type="link", when="@3.7.0:")
+
+    depends_on("hip +cuda", when="+cuda")
 
     for ver in [
         "3.5.0",
@@ -128,20 +133,28 @@ class Hipcub(CMakePackage):
         "5.3.0",
         "5.3.3",
     ]:
-        depends_on("hip@" + ver, when="@" + ver)
-        depends_on("rocprim@" + ver, when="@" + ver)
+        depends_on("rocprim@" + ver, when="+rocm @" + ver)
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
 
     def setup_build_environment(self, env):
-        env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+rocm"):
+            env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):
         args = []
 
-        if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
+        if self.spec.satisfies("+rocm ^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
-        if self.spec.satisfies("@:5.1"):
-            args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+
+        # FindHIP.cmake was used for +rocm until 3.7.0 and is still used for +cuda
+        if self.spec.satisfies("@:3.7.0") or self.spec.satisfies("+cuda"):
+            if self.spec["hip"].satisfies("@:5.1"):
+                args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.cmake))
+            else:
+                args.append(
+                    self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
+                )
+
         if self.spec.satisfies("@5.2.0:"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
