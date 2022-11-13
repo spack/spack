@@ -405,6 +405,7 @@ Spack understands several special variables. These are:
 * ``$user``: name of the current user
 * ``$user_cache_path``: user cache directory (``~/.spack`` unless
   :ref:`overridden <local-config-overrides>`)
+* ``$date``: the current date in the format YYYY-MM-DD
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
