@@ -405,6 +405,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+node_namespace(Package, Namespace)     :- attr("node_namespace", Package, Namespace).
 virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
@@ -427,6 +428,7 @@ node_flag_propagate(Package, FlagType)
   :- attr("node_flag_propagate", Package, FlagType).
 
 attr("node", Package)                          :- node(Package).
+attr("node_namespace", Package, Namespace)     :- node_namespace(Package, Namespace).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
@@ -464,6 +466,7 @@ attr("node_flag_propagate", Package, FlagType)
 #defined node_version_satisfies/2.
 #defined node_compiler_version_satisfies/3.
 #defined root/1.
+#defined node_namespace/2.
 
 %-----------------------------------------------------------------------------
 % External semantics

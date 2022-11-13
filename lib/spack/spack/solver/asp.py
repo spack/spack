@@ -1348,6 +1348,7 @@ class SpackSolverSetup(object):
         # TODO: do this with consistent suffixes.
         class Head(object):
             node = fn.node
+            node_namespace = fn.node_namespace
             virtual_node = fn.virtual_node
             node_platform = fn.node_platform_set
             node_os = fn.node_os_set
@@ -1361,6 +1362,7 @@ class SpackSolverSetup(object):
 
         class Body(object):
             node = fn.node
+            node_namespace = fn.node_namespace
             virtual_node = fn.virtual_node
             node_platform = fn.node_platform
             node_os = fn.node_os
@@ -1376,6 +1378,9 @@ class SpackSolverSetup(object):
 
         if spec.name:
             clauses.append(f.node(spec.name) if not spec.virtual else f.virtual_node(spec.name))
+
+        if spec.namespace:
+            clauses.append(f.node_namespace(spec.name, spec.namespace))
 
         clauses.extend(self.spec_versions(spec))
 
