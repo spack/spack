@@ -12,6 +12,7 @@ class PyFasteners(PythonPackage):
     homepage = "https://github.com/harlowja/fasteners"
     pypi = "fasteners/fasteners-0.14.1.tar.gz"
 
+    version("0.18", sha256="cb7c13ef91e0c7e4fe4af38ecaf6b904ec3f5ce0dda06d34924b6b74b869d953")
     version("0.17.3", sha256="a9a42a208573d4074c77d041447336cf4e3c1389a256fd3e113ef59cf29b7980")
     version("0.16.3", sha256="b1ab4e5adfbc28681ce44b3024421c4f567e705cc3963c732bf1cba3348307de")
     version("0.14.1", sha256="427c76773fe036ddfa41e57d89086ea03111bbac57c55fc55f3006d027107e18")

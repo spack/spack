@@ -18,6 +18,7 @@ import os.path
 import pstats
 import re
 import signal
+import subprocess as sp
 import sys
 import traceback
 import warnings
@@ -105,6 +106,9 @@ required_command_properties = ["level", "section", "description"]
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
 spack_ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
+
+#: Whether to print backtraces on error
+SHOW_BACKTRACE = False
 
 
 def set_working_dir():
@@ -339,17 +343,21 @@ class SpackArgumentParser(argparse.ArgumentParser):
                 self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar="COMMAND", dest="command")
 
-        # each command module implements a parser() function, to which we
-        # pass its subparser for setup.
-        module = spack.cmd.get_module(cmd_name)
+        if cmd_name not in self.subparsers._name_parser_map:
+            # each command module implements a parser() function, to which we
+            # pass its subparser for setup.
+            module = spack.cmd.get_module(cmd_name)
 
-        # build a list of aliases
-        alias_list = [k for k, v in aliases.items() if v == cmd_name]
+            # build a list of aliases
+            alias_list = [k for k, v in aliases.items() if v == cmd_name]
 
-        subparser = self.subparsers.add_parser(
-            cmd_name, aliases=alias_list, help=module.description, description=module.description
-        )
-        module.setup_parser(subparser)
+            subparser = self.subparsers.add_parser(
+                cmd_name,
+                aliases=alias_list,
+                help=module.description,
+                description=module.description,
+            )
+            module.setup_parser(subparser)
 
         # return the callable function for the command
         return spack.cmd.get_command(cmd_name)
@@ -527,6 +535,12 @@ def make_argument_parser(**kwargs):
         help="add stacktraces to all printed statements",
     )
     parser.add_argument(
+        "--backtrace",
+        action="store_true",
+        default="SPACK_BACKTRACE" in os.environ,
+        help="always show backtraces for exceptions",
+    )
+    parser.add_argument(
         "-V", "--version", action="store_true", help="show version number and exit"
     )
     parser.add_argument(
@@ -546,6 +560,12 @@ def setup_main_options(args):
     # Assign a custom function to show warnings
     warnings.showwarning = send_warning_to_tty
 
+    if sys.version_info[:2] == (2, 7):
+        warnings.warn(
+            "Python 2.7 support is deprecated and will be removed in Spack v0.20.\n"
+            "    Please move to Python 3.6 or higher."
+        )
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -554,8 +574,12 @@ def setup_main_options(args):
     # debug must be set first so that it can even affect behavior of
     # errors raised by spack.config.
 
+    if args.debug or args.backtrace:
+        spack.error.debug = True
+        global SHOW_BACKTRACE
+        SHOW_BACKTRACE = True
+
     if args.debug:
-        spack.error.debug = args.debug
         spack.util.debug.register_interrupt_handler()
         spack.config.set("config:debug", True, scope="command_line")
         spack.util.environment.tracing_enabled = True
@@ -570,7 +594,14 @@ def setup_main_options(args):
         spack.config.set("config:locks", args.locks, scope="command_line")
 
     if args.mock:
-        spack.repo.path = spack.repo.RepoPath(spack.paths.mock_packages_path)
+        import spack.util.spack_yaml as syaml
+
+        key = syaml.syaml_str("repos")
+        key.override = True
+        spack.config.config.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
+            [(key, [spack.paths.mock_packages_path])]
+        )
+        spack.repo.path = spack.repo.create(spack.config.config)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -623,15 +654,19 @@ class SpackCommand(object):
     their output.
     """
 
-    def __init__(self, command_name):
+    def __init__(self, command_name, subprocess=False):
         """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
             command_name (str): name of the command to invoke
+            subprocess (bool): whether to fork a subprocess or not. Currently not supported on
+                Windows, where it is always False.
         """
         self.parser = make_argument_parser()
         self.command = self.parser.add_command(command_name)
         self.command_name = command_name
+        # TODO: figure out how to support this on windows
+        self.subprocess = subprocess if sys.platform != "win32" else False
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -656,25 +691,36 @@ class SpackCommand(object):
         self.error = None
 
         prepend = kwargs["global_args"] if "global_args" in kwargs else []
-
-        args, unknown = self.parser.parse_known_args(prepend + [self.command_name] + list(argv))
-
         fail_on_error = kwargs.get("fail_on_error", True)
 
-        out = StringIO()
-        try:
-            with log_output(out):
-                self.returncode = _invoke_command(self.command, self.parser, args, unknown)
+        if self.subprocess:
+            p = sp.Popen(
+                [spack.paths.spack_script, self.command_name] + prepend + list(argv),
+                stdout=sp.PIPE,
+                stderr=sp.STDOUT,
+            )
+            out, self.returncode = p.communicate()
+            out = out.decode()
+        else:
+            args, unknown = self.parser.parse_known_args(
+                prepend + [self.command_name] + list(argv)
+            )
 
-        except SystemExit as e:
-            self.returncode = e.code
+            out = StringIO()
+            try:
+                with log_output(out):
+                    self.returncode = _invoke_command(self.command, self.parser, args, unknown)
 
-        except BaseException as e:
-            tty.debug(e)
-            self.error = e
-            if fail_on_error:
-                self._log_command_output(out)
-                raise
+            except SystemExit as e:
+                self.returncode = e.code
+
+            except BaseException as e:
+                tty.debug(e)
+                self.error = e
+                if fail_on_error:
+                    self._log_command_output(out)
+                    raise
+            out = out.getvalue()
 
         if fail_on_error and self.returncode not in (None, 0):
             self._log_command_output(out)
@@ -683,7 +729,7 @@ class SpackCommand(object):
                 % (self.returncode, self.command_name, ", ".join("'%s'" % a for a in argv))
             )
 
-        return out.getvalue()
+        return out
 
     def _log_command_output(self, out):
         if tty.is_verbose():
@@ -965,7 +1011,7 @@ def main(argv=None):
         e.die()  # gracefully die on any SpackErrors
 
     except KeyboardInterrupt:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         sys.stderr.write("\n")
         tty.error("Keyboard interrupt.")
@@ -975,12 +1021,12 @@ def main(argv=None):
             return signal.SIGINT
 
     except SystemExit as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             traceback.print_exc()
         return e.code
 
     except Exception as e:
-        if spack.config.get("config:debug"):
+        if spack.config.get("config:debug") or SHOW_BACKTRACE:
             raise
         tty.error(e)
         return 3

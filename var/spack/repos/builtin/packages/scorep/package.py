@@ -99,7 +99,8 @@ class Scorep(AutotoolsPackage):
         ]
 
         cname = spec.compiler.name
-        config_args.append("--with-nocross-compiler-suite={0}".format(cname))
+        if not spec.satisfies("platform=cray"):
+            config_args.append("--with-nocross-compiler-suite={0}".format(cname))
 
         if self.version >= Version("4.0"):
             config_args.append("--with-cubew=%s" % spec["cubew"].prefix.bin)
@@ -118,11 +119,16 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
 
         config_args += self.with_or_without("shmem")
-        config_args += self.with_or_without("mpi")
+        if not spec.satisfies("platform=cray"):
+            config_args += self.with_or_without("mpi")
 
         if spec.satisfies("^intel-mpi"):
             config_args.append("--with-mpi=intel3")
-        elif spec.satisfies("^mpich") or spec.satisfies("^mvapich2"):
+        elif (
+            spec.satisfies("^mpich")
+            or spec.satisfies("^mvapich2")
+            or spec.satisfies("^cray-mpich")
+        ):
             config_args.append("--with-mpi=mpich3")
         elif spec.satisfies("^openmpi"):
             config_args.append("--with-mpi=openmpi")

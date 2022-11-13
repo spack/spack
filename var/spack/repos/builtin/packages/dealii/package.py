@@ -106,8 +106,11 @@ class Dealii(CMakePackage, CudaPackage):
     # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
     # 1.68.0 has issues with serialization https://github.com/dealii/dealii/issues/7074
     # adopt https://github.com/boostorg/serialization/pull/105 as a fix
+    #
+    # dealii does not build with Boost 1.80.0
+    # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -115,7 +118,7 @@ class Dealii(CMakePackage, CudaPackage):
         when="~python",
     )
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams+python",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -247,6 +250,19 @@ class Dealii(CMakePackage, CudaPackage):
         "https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch?full_index=1",
         sha256="90ae9ddefe77fffd297bba6b070ab68d07306d4ef525ee994e8c49cef68f76f3",
         when="@9.2.0 ^boost@1.72.0:",
+    )
+
+    # Fix issues due to override of CMake FIND_PACKAGE macro
+    # https://github.com/dealii/dealii/pull/14158/files
+    patch(
+        "https://github.com/dealii/dealii/commit/06bb9dc07efb6fea9912ee0d66264af548c552c8.patch?full_index=1",
+        sha256="8a1f7b9a155c8c496ce08b2abb1ba5d329b3b29169f36c11678aa4e3cebf97a2",
+        when="@9.4.0 ^hdf5",
+    )
+    patch(
+        "https://github.com/dealii/dealii/commit/40076ac1a013cd7d221f9dda913b4d0e6452c21e.patch?full_index=1",
+        sha256="7869dfab1116b6e862279bb6642c2c8fe49d87c42cfc6f031e03330f9f26a6c3",
+        when="@9.4.0 ^python",
     )
 
     # Check for sufficiently modern versions
@@ -589,6 +605,11 @@ class Dealii(CMakePackage, CudaPackage):
             options.extend(
                 [
                     self.define("CMAKE_CXX_FLAGS_RELEASE", " ".join(cxx_flags_release)),
+                ]
+            )
+        if len(cxx_flags) > 0:
+            options.extend(
+                [
                     self.define("CMAKE_CXX_FLAGS", " ".join(cxx_flags)),
                 ]
             )

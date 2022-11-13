@@ -21,8 +21,14 @@ class AutoconfArchive(AutotoolsPackage, GNUMirrorPackage):
         "2019.01.06", sha256="17195c833098da79de5778ee90948f4c5d90ed1a0cf8391b4ab348e2ec511e3f"
     )
 
-    # https://github.com/autoconf-archive/autoconf-archive/pull/251
-    patch("2022.02.11-ax_cc_maxopt-nvhpc.patch", when="@2022.02.11")
+    patch(
+        "https://github.com/autoconf-archive/autoconf-archive/commit/510672bc200e869fb0ad4634407561be819cf093.patch?full_index=1",
+        sha256="139214f5104f699f868dc87a14378e1e694a3c2539efa0de6f878024f3d7c66d",
+        when="@2022.02.11",
+    )
+
+    # The package does not produce any libraries and does not use libtool:
+    patch_libtool = False
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""

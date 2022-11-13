@@ -22,7 +22,7 @@ from spack.spec import Spec
         ("platform=linux", "arch=linux-fedora31-x86_64", True),
         ("platform=linux os=fedora31", "platform=linux", True),
         ("platform=darwin", "arch=linux-fedora31-x86_64", False),
-        ("os=fedora31", "platform=linux", False),  # TODO should be true ?
+        ("os=fedora31", "platform=linux", True),
     ],
 )
 def test_architecture_compatibility(target, constraint, expected):

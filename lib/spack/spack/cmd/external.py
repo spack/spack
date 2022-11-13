@@ -219,7 +219,7 @@ def _collect_and_consume_cray_manifest_files(
         tty.debug("Reading manifest file: " + path)
         try:
             cray_manifest.read(path, not dry_run)
-        except (spack.compilers.UnknownCompilerError, spack.error.SpackError) as e:
+        except spack.error.SpackError as e:
             if fail_on_error:
                 raise
             else:

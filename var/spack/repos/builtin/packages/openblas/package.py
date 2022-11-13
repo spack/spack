@@ -20,6 +20,7 @@ class Openblas(MakefilePackage):
     libraries = ["libopenblas"]
 
     version("develop", branch="develop")
+    version("0.3.21", sha256="f36ba3d7a60e7c8bcc54cd9aaa9b1223dd42eaf02c811791c37e8ca707c241ca")
     version("0.3.20", sha256="8495c9affc536253648e942908e88e097f2ec7753ede55aca52e5dead3029e3c")
     version("0.3.19", sha256="947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562")
     version("0.3.18", sha256="1632c1e8cca62d8bed064b37747e331a1796fc46f688626337362bf0d16aeadb")
@@ -47,6 +48,13 @@ class Openblas(MakefilePackage):
     version("0.2.17", sha256="0fe836dfee219ff4cadcc3567fb2223d9e0da5f60c7382711fb9e2c35ecf0dbf")
     version("0.2.16", sha256="766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b")
     version("0.2.15", sha256="73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044")
+
+    variant(
+        "fortran",
+        default="True",
+        when="@0.3.21:",
+        description="w/o a Fortran compiler, OpenBLAS will build an f2c-converted LAPACK",
+    )
 
     variant("ilp64", default=False, description="Force 64-bit Fortran native integers")
     variant("pic", default=True, description="Build position independent code")
@@ -80,6 +88,9 @@ class Openblas(MakefilePackage):
 
     # https://github.com/xianyi/OpenBLAS/pull/3712
     patch("cce.patch", when="@0.3.20 %cce")
+
+    # https://github.com/xianyi/OpenBLAS/pull/3778
+    patch("fix-cray-fortran-detection-pr3778.patch", when="@0.3.21")
 
     # https://github.com/spack/spack/issues/31732
     patch("f_check-oneapi.patch", when="@0.3.20 %oneapi")
@@ -153,6 +164,10 @@ class Openblas(MakefilePackage):
     # Use /usr/bin/env perl in build scripts
     patch("0001-use-usr-bin-env-perl.patch", when="@:0.3.13")
 
+    # Declare external functions in linktest
+    # See <https://github.com/xianyi/OpenBLAS/issues/3760>
+    patch("linktest.patch", when="@0.3.20")
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts("%gcc@7.0.0:7.3,8.0.0:8.2", when="@0.3.11:")
 
@@ -181,7 +196,7 @@ class Openblas(MakefilePackage):
         spec = self.spec
         iflags = []
         if name == "cflags":
-            if spec.satisfies("@0.3.20 %oneapi"):
+            if spec.satisfies("@0.3.20: %oneapi"):
                 iflags.append("-Wno-error=implicit-function-declaration")
         return (iflags, None, None)
 
@@ -204,7 +219,10 @@ class Openblas(MakefilePackage):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
         # require both.
-        if self.compiler.fc is None:
+        # As of 08/2022 (0.3.21), we can build purely with a C compiler using
+        # a f2c translated LAPACK version
+        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
+        if self.compiler.fc is None and "~fortran" not in self.spec:
             raise InstallError("OpenBLAS requires both C and Fortran compilers!")
 
     @staticmethod
@@ -309,10 +327,9 @@ class Openblas(MakefilePackage):
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-        make_defs = [
-            "CC={0}".format(spack_cc),
-            "FC={0}".format(spack_fc),
-        ]
+        make_defs = ["CC={0}".format(spack_cc)]
+        if "~fortran" not in self.spec:
+            make_defs += ["FC={0}".format(spack_fc)]
 
         # force OpenBLAS to use externally defined parallel build
         if self.spec.version < Version("0.3"):
@@ -323,14 +340,15 @@ class Openblas(MakefilePackage):
         # Add target and architecture flags
         make_defs += self._microarch_target_args()
 
+        # Fortran-free compilation
+        if "~fortran" in self.spec:
+            make_defs += ["NOFORTRAN=1"]
+
         if "~shared" in self.spec:
             if "+pic" in self.spec:
-                make_defs.extend(
-                    [
-                        "CFLAGS={0}".format(self.compiler.cc_pic_flag),
-                        "FFLAGS={0}".format(self.compiler.f77_pic_flag),
-                    ]
-                )
+                make_defs.append("CFLAGS={0}".format(self.compiler.cc_pic_flag))
+                if "~fortran" not in self.spec:
+                    make_defs.append("FFLAGS={0}".format(self.compiler.f77_pic_flag))
             make_defs += ["NO_SHARED=1"]
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies("@0.2.16"):
@@ -364,8 +382,9 @@ class Openblas(MakefilePackage):
         if "+consistent_fpcsr" in self.spec:
             make_defs += ["CONSISTENT_FPCSR=1"]
 
-        # Flang/f18 does not provide ETIME as an intrinsic
-        if self.spec.satisfies("%clang"):
+        # Flang/f18 does not provide ETIME as an intrinsic.
+        # Do not set TIMER variable if fortran is disabled.
+        if self.spec.satisfies("+fortran%clang"):
             make_defs.append("TIMER=INT_CPU_TIME")
 
         # Prevent errors in `as` assembler from newer instructions

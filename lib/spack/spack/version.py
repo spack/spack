@@ -504,7 +504,7 @@ class GitVersion(VersionBase):
     1) GitVersions instantiated with an associated reference version (e.g. 'git.foo=1.2')
     2) GitVersions requiring commit lookups
 
-    Git ref versions that are not paried with a known version
+    Git ref versions that are not paired with a known version
     are handled separately from all other version comparisons.
     When Spack identifies a git ref version, it associates a
     ``CommitLookup`` object with the version. This object
@@ -599,15 +599,33 @@ class GitVersion(VersionBase):
         """A Version 'satisfies' another if it is at least as specific and has
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler.
+        a suitable compiler. In the case of two GitVersions we require the ref_versions
+        to satisfy one another and the versions to be an exact match.
         """
+
         self_cmp = self._cmp(other.ref_lookup)
         other_cmp = other._cmp(self.ref_lookup)
+
+        if other.is_ref:
+            # if other is a ref then satisfaction requires an exact version match
+            # i.e. the GitRef must match this.version for satisfaction
+            # this creates an asymmetric comparison:
+            #  - 'foo@main'.satisfies('foo@git.hash=main') == False
+            #  - 'foo@git.hash=main'.satisfies('foo@main') == True
+            version_match = self.version == other.version
+        elif self.is_ref:
+            # other is not a ref then it is a version base and we need to compare
+            # this.ref
+            version_match = self.ref_version == other.version
+        else:
+            # neither is a git ref.  We shouldn't ever be here, but if we are this variable
+            # is not meaningful and defaults to true
+            version_match = True
 
         # Do the final comparison
         nself = len(self_cmp)
         nother = len(other_cmp)
-        return nother <= nself and self_cmp[:nother] == other_cmp
+        return nother <= nself and self_cmp[:nother] == other_cmp and version_match
 
     def __repr__(self):
         return "GitVersion(" + repr(self.string) + ")"

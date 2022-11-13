@@ -17,6 +17,7 @@ definition to modify the package, for example:
 
 The available directives are:
 
+  * ``build_system``
   * ``conflicts``
   * ``depends_on``
   * ``extends``
@@ -59,13 +60,15 @@ __all__ = [
     "patch",
     "variant",
     "resource",
+    "build_system",
 ]
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ["patches", "dev_path"]
 
-#: Names of possible directives. This list is populated elsewhere in the file.
-directive_names = []
+#: Names of possible directives. This list is mostly populated using the @directive decorator.
+#: Some directives leverage others and in that case are not automatically added.
+directive_names = ["build_system"]
 
 _patch_order_index = 0
 
@@ -465,14 +468,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 @directive(("extendees", "dependencies"))
 def extends(spec, type=("build", "run"), **kwargs):
-    """Same as depends_on, but allows symlinking into dependency's
-    prefix tree.
-
-    This is for Python and other language modules where the module
-    needs to be installed into the prefix of the Python installation.
-    Spack handles this by installing modules into their own prefix,
-    but allowing ONE module version to be symlinked into a parent
-    Python install at a time, using ``spack activate``.
+    """Same as depends_on, but also adds this package to the extendee list.
 
     keyword arguments can be passed to extends() so that extension
     packages can pass parameters to the extendee's extension
@@ -756,6 +752,17 @@ def resource(**kwargs):
         resources.append(Resource(name, fetcher, destination, placement))
 
     return _execute_resource
+
+
+def build_system(*values, **kwargs):
+    default = kwargs.get("default", None) or values[0]
+    return variant(
+        "build_system",
+        values=tuple(values),
+        description="Build systems supported by the package",
+        default=default,
+        multi=False,
+    )
 
 
 class DirectiveError(spack.error.SpackError):

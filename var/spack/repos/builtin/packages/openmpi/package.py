@@ -390,9 +390,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("nag_pthread/2.0.0_2.1.1.patch", when="@2.0.0:2.1.1%nag")
     patch("nag_pthread/1.10.4_1.10.999.patch", when="@1.10.4:1.10%nag")
 
-    patch("nvhpc-libtool.patch", when="@main %nvhpc")
-    patch("nvhpc-configure.patch", when="%nvhpc")
-
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
     # support "IGNORE TKR" functionality (e.g. NAG).
     # The issue has been resolved upstream in two steps:
@@ -1056,8 +1053,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
         return config_args
 
-    @when("+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="+wrapper-rpath")
     def filter_rpaths(self):
         def filter_lang_rpaths(lang_tokens, rpath_arg):
             if self.compiler.cc_rpath_arg == rpath_arg:
@@ -1089,8 +1085,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         filter_lang_rpaths(["c++", "CC", "cxx"], self.compiler.cxx_rpath_arg)
         filter_lang_rpaths(["fort", "f77", "f90"], self.compiler.fc_rpath_arg)
 
-    @when("@:3.0.4+wrapper-rpath")
-    @run_after("install")
+    @run_after("install", when="@:3.0.4+wrapper-rpath")
     def filter_pc_files(self):
         files = find(self.spec.prefix.lib.pkgconfig, "*.pc")
         x = FileFilter(*[f for f in files if not os.path.islink(f)])

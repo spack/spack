@@ -12,6 +12,7 @@ class PySphinxRtdTheme(PythonPackage):
     homepage = "https://github.com/readthedocs/sphinx_rtd_theme"
     pypi = "sphinx-rtd-theme/sphinx_rtd_theme-0.5.1.tar.gz"
 
+    version("1.0.0", sha256="eec6d497e4c2195fa0e8b2016b337532b8a699a68bcb22a512870e16925c6a5c")
     version("0.5.2", sha256="32bd3b5d13dc8186d7a42fc816a23d32e83a4827d7d9882948e7b837c232da5a")
     version("0.5.1", sha256="eda689eda0c7301a80cf122dad28b1861e5605cbf455558f3775e1e8200e83a5")
     version("0.5.0", sha256="22c795ba2832a169ca301cd0a083f7a434e09c538c70beb42782c073651b707d")
@@ -19,7 +20,10 @@ class PySphinxRtdTheme(PythonPackage):
 
     depends_on("py-setuptools", type="build")
     depends_on("py-sphinx", when="@0.4.1:", type=("build", "run"))
-    depends_on("py-docutils@:0.16", when="@0.5.2:", type=("build", "run"))
+    depends_on("py-sphinx@1.6:", when="@1:", type=("build", "run"))
+    depends_on("python@2.7:2.8,3.4:", when="@1:", type=("build", "run"))
+    depends_on("py-docutils@:0.16", when="@0.5.2:0", type=("build", "run"))
+    depends_on("py-docutils@:0.17", when="@1:", type=("build", "run"))
 
     def setup_build_environment(self, env):
         # Hack to prevent usage of npm in 0.5+

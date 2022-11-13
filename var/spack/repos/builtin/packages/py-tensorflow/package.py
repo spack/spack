@@ -10,7 +10,7 @@ from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
 
-class PyTensorflow(Package, CudaPackage):
+class PyTensorflow(Package, CudaPackage, ROCmPackage):
     """An Open Source Machine Learning Framework for Everyone.
 
     TensorFlow is an end-to-end open source platform for machine learning. It has a
@@ -30,11 +30,20 @@ class PyTensorflow(Package, CudaPackage):
     maintainers = ["adamjstewart", "aweits"]
     import_modules = ["tensorflow"]
 
+    version("2.10.0", sha256="b5a1bb04c84b6fe1538377e5a1f649bb5d5f0b2e3625a3c526ff3a8af88633e8")
+    version("2.9.2", sha256="8cd7ed82b096dc349764c3369331751e870d39c86e73bbb5374e1664a59dcdf7")
     version("2.9.1", sha256="6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc")
     version("2.9.0", sha256="8087cb0c529f04a4bfe480e49925cd64a904ad16d8ec66b98e2aacdfd53c80ff")
+    version("2.8.3", sha256="4b7ecbe50b36887e1615bc2a582cb86df1250004d8bb540e18336d539803b5a7")
     version("2.8.2", sha256="b3f860c02c22a30e9787e2548ca252ab289a76b7778af6e9fa763d4aafd904c7")
     version("2.8.1", sha256="4b487a63d6f0c1ca46a2ac37ba4687eabdc3a260c222616fa414f6df73228cec")
     version("2.8.0", sha256="66b953ae7fba61fd78969a2e24e350b26ec116cf2e6a7eb93d02c63939c6f9f7")
+    version(
+        "2.7.4-rocm-enhanced",
+        sha256="45b79c125edfdc008274f1b150d8b5a53b3ff4713fd1ad1ff4738f515aad8191",
+        url="https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/archive/refs/tags/v2.7.4-rocm-enhanced.tar.gz",
+    )
+    version("2.7.4", sha256="75b2e40a9623df32da16d8e97528f5e02e4a958e23b1f2ee9637be8eec5d021b")
     version("2.7.3", sha256="b576c2e124cd6d4d04cbfe985430a0d955614e882172b2258217f0ec9b61f39b")
     version("2.7.2", sha256="b3c8577f3b7cc82368ff7f9315821d506abd2f716ea6692977d255b7d8bc54c0")
     version("2.7.1", sha256="abebe2cf5ca379e18071693ca5f45b88ade941b16258a21cc1f12d77d5387a21")
@@ -106,14 +115,46 @@ class PyTensorflow(Package, CudaPackage):
     version("1.1.0", sha256="aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027")
     version("1.0.1", sha256="deea3c65e0703da96d9c3f1162e464c51d37659dd129396af134e9e8f1ea8c05")
     version("1.0.0", sha256="db8b3b8f4134b7c9c1b4165492ad5d5bb78889fcd99ffdffc325e97da3e8c677")
-    version("0.12.0", sha256="13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9")
-    version("0.11.0", sha256="24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc")
-    version("0.10.0", sha256="f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680")
-    version("0.9.0", sha256="3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9")
-    version("0.8.0", sha256="f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e")
-    version("0.7.1", sha256="ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d")
-    version("0.7.0", sha256="43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce")
-    version("0.6.0", sha256="f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657")
+    version(
+        "0.12.0",
+        sha256="13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9",
+        deprecated=True,
+    )
+    version(
+        "0.11.0",
+        sha256="24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc",
+        deprecated=True,
+    )
+    version(
+        "0.10.0",
+        sha256="f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680",
+        deprecated=True,
+    )
+    version(
+        "0.9.0",
+        sha256="3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9",
+        deprecated=True,
+    )
+    version(
+        "0.8.0",
+        sha256="f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e",
+        deprecated=True,
+    )
+    version(
+        "0.7.1",
+        sha256="ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d",
+        deprecated=True,
+    )
+    version(
+        "0.7.0",
+        sha256="43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce",
+        deprecated=True,
+    )
+    version(
+        "0.6.0",
+        sha256="f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657",
+        deprecated=True,
+    )
 
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
@@ -128,7 +169,6 @@ class PyTensorflow(Package, CudaPackage):
     variant("ngraph", default=False, description="Build with Intel nGraph support")
     variant("opencl", default=False, description="Build with OpenCL SYCL support")
     variant("computecpp", default=False, description="Build with ComputeCPP support")
-    variant("rocm", default=False, description="Build with ROCm support")
     variant("tensorrt", default=False, description="Build with TensorRT support")
     variant("cuda", default=sys.platform != "darwin", description="Build with CUDA support")
     variant(
@@ -148,13 +188,10 @@ class PyTensorflow(Package, CudaPackage):
     # https://github.com/tensorflow/tensorflow/issues/33374
     depends_on("python@:3.7", type=("build", "run"), when="@:2.1")
 
-    # TODO: Older versions of TensorFlow don't list the viable version range,
-    # just the minimum version of bazel that will work. The latest version of
-    # bazel doesn't seem to work, so for now we force them to use min version.
-    # Need to investigate further.
-
+    # See .bazelversion
+    depends_on("bazel@5.1.1", type="build", when="@2.10:")
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9:")
+    depends_on("bazel@4.2.2:5.99.0", type="build", when="@2.9")
     depends_on("bazel@4.2.1:4.99.0", type="build", when="@2.8")
     depends_on("bazel@3.7.2:4.99.0", type="build", when="@2.7")
     depends_on("bazel@3.7.2:3.99.0", type="build", when="@2.5:2.6")
@@ -194,7 +231,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("py-astunparse@1.6:", type=("build", "run"), when="@2.7:")
     depends_on("py-astunparse@1.6.3:1.6", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-astunparse@1.6.3", type=("build", "run"), when="@2.2:2.3")
-    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9:")
+    depends_on("py-flatbuffers@2:", type=("build", "run"), when="@2.10:")
+    depends_on("py-flatbuffers@1.12:1", type=("build", "run"), when="@2.9")
     depends_on("py-flatbuffers@1.12:", type=("build", "run"), when="@2.8")
     depends_on("py-flatbuffers@1.12:2", type=("build", "run"), when="@2.7")
     depends_on("py-flatbuffers@1.12", type=("build", "run"), when="@2.4:2.6")
@@ -242,8 +280,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("py-numpy@1.11.0:1.14.5", type=("build", "run"), when="@0.11:1.3")
     depends_on("py-numpy@1.10.1:1.14.5", type=("build", "run"), when="@0.7.1:0.10 platform=darwin")
     depends_on("py-numpy@1.8.2:1.14.5", type=("build", "run"), when="@0.5:0.10")
-    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-opt-einsum@2.3.2:", type=("build", "run"), when="@1.15:2.3,2.7:")
+    depends_on("py-opt-einsum@3.3", type=("build", "run"), when="@2.4:2.6")
     depends_on("py-packaging", type=("build", "run"), when="@2.9:")
     depends_on("py-protobuf@3.9.2:", type=("build", "run"), when="@2.3:")
     depends_on("py-protobuf@3.8.0:", type=("build", "run"), when="@2.1:2.2")
@@ -279,6 +317,21 @@ class PyTensorflow(Package, CudaPackage):
     #            type=('build', 'run'), when='@2.8:')
     # depends_on('py-tensorflow-io-gcs-filesystem@0.21:',
     #            type=('build', 'run'), when='@2.7')
+    with when("+rocm"):
+        depends_on("hip")
+        depends_on("rocrand")
+        depends_on("rocblas")
+        depends_on("rocfft")
+        depends_on("hipfft")
+        depends_on("rccl", when="+nccl")
+        depends_on("hipsparse")
+        depends_on("hipcub")
+        depends_on("rocsolver")
+        depends_on("rocprim")
+        depends_on("miopen-hip")
+        depends_on("llvm-amdgpu")
+        depends_on("hsa-rocr-dev")
+        depends_on("rocminfo")
 
     if sys.byteorder == "little":
         # Only builds correctly on little-endian machines
@@ -288,11 +341,12 @@ class PyTensorflow(Package, CudaPackage):
         depends_on("py-grpcio@1.32", type=("build", "run"), when="@2.4")
         depends_on("py-grpcio@1.8.6:", type=("build", "run"), when="@1.6:2.3")
 
-    depends_on("py-tensorboard@2.9", type=("build", "run"), when="@2.9")
-    depends_on("py-tensorboard@2.8", type=("build", "run"), when="@2.8")
-    depends_on("py-tensorboard@2.7", type=("build", "run"), when="@2.7")
-    depends_on("py-tensorboard@2.6", type=("build", "run"), when="@2.6")
-    depends_on("py-tensorboard@2.5", type=("build", "run"), when="@2.5")
+    for minor_ver in range(5, 11):
+        depends_on(
+            "py-tensorboard@2.{}".format(minor_ver),
+            type=("build", "run"),
+            when="@2.{}".format(minor_ver),
+        )
     # TODO: is this still true? We now install tensorboard from wheel for all versions
     # depends_on('py-tensorboard', when='@:2.4')  # circular dep
     # depends_on('py-tensorflow-estimator')  # circular dep
@@ -326,7 +380,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on("cudnn@:6", when="@0.5:0.6 +cuda")
     depends_on("cudnn@:7", when="@0.7:2.2 +cuda")
     # depends_on('tensorrt', when='+tensorrt')
-    depends_on("nccl", when="+nccl")
+    depends_on("nccl", when="+nccl+cuda")
     depends_on("mpi", when="+mpi")
     # depends_on('android-ndk@10:18', when='+android')
     # depends_on('android-sdk', when='+android')
@@ -357,7 +411,6 @@ class PyTensorflow(Package, CudaPackage):
     conflicts("+opencl", when="@:0.11")
     conflicts("+computecpp", when="@:0.11")
     conflicts("+computecpp", when="~opencl")
-    conflicts("+rocm", when="@:1.11")
     conflicts("+cuda", when="platform=darwin", msg="There is no GPU support for macOS")
     conflicts(
         "cuda_arch=none",
@@ -397,7 +450,7 @@ class PyTensorflow(Package, CudaPackage):
         msg="Currently TensorRT is only supported on Linux platform",
     )
     conflicts("+nccl", when="@:1.7")
-    conflicts("+nccl", when="~cuda")
+    conflicts("+nccl", when="~cuda~rocm")
     conflicts(
         "+nccl", when="platform=darwin", msg="Currently NCCL is only supported on Linux platform"
     )
@@ -416,9 +469,19 @@ class PyTensorflow(Package, CudaPackage):
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225
     conflicts("target=aarch64:", when="@:2.2")
+    conflicts("~rocm", when="@2.7.4-rocm-enhanced")
+    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:")
 
-    # TODO: why is this needed?
+    # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
+    # old downloads are removed from that site immediately after a new release.
+    # If the tf mirrors don't work, make sure the fallback is to something existing.
     patch("url-zlib.patch", when="@0.10.0")
+    # bump to zlib 1.2.13
+    patch(
+        "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
+        sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
+        when="@2.9:2.10.0",
+    )
     # TODO: why is this needed?
     patch("crosstool.patch", when="@0.10.0+cuda")
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
@@ -720,6 +783,11 @@ class PyTensorflow(Package, CudaPackage):
             env.set("INCLUDEDIR", spec["protobuf"].prefix.include)
 
     def patch(self):
+        filter_file(
+            '"-U_FORTIFY_SOURCE",',
+            '"-U_FORTIFY_SOURCE", "-I%s",' % self.spec["protobuf"].prefix.include,
+            "third_party/gpus/crosstool/BUILD.rocm.tpl",
+        )
         if self.spec.satisfies("@2.3.0:"):
             filter_file(
                 "deps = protodeps + well_known_proto_libs(),",
@@ -975,6 +1043,9 @@ def protobuf_deps():
 
             if "+cuda" in spec:
                 args.append("--config=cuda")
+
+            if "+rocm" in spec:
+                args.append("--config=rocm")
 
             if "~aws" in spec:
                 args.append("--config=noaws")

@@ -18,7 +18,7 @@ class Hipsolver(CMakePackage):
 
     homepage = "https://github.com/ROCmSoftwarePlatform/hipSOLVER"
     git = "https://github.com/ROCmSoftwarePlatform/hipSOLVER.git"
-    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.2.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/hipSOLVER/archive/rocm-5.2.3.tar.gz"
     tags = ["rocm"]
 
     maintainers = ["cgmb", "srekolam", "renjithravindrankannath"]
@@ -26,6 +26,9 @@ class Hipsolver(CMakePackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+
+    version("5.2.3", sha256="a57d883fdd09c6c7f9856fcfcabee6fa7ff9beed33d2f1a465bf28d38ea6f364")
+    version("5.2.1", sha256="e000b08cf7bfb5f8f6d65d163ebeeb3274172b9f474228b810bde5e6f87f2b37")
     version("5.2.0", sha256="96927410e0a2cc0f50172604ef6437e15d2cf4b62d22b2035f13aae21f43dc82")
     version("5.1.3", sha256="96faa799a2db8078b72f9c3b5c199179875a7c20dc1064371b22a6a63397c145")
     version("5.1.0", sha256="697ba2b2814e7ac6f79680e6455b4b5e0def1bee2014b6940f47be7d13c0ae74")
@@ -51,7 +54,7 @@ class Hipsolver(CMakePackage):
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)
 
-    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0"]:
+    for ver in ["4.5.0", "4.5.2", "5.0.0", "5.0.2", "5.1.0", "5.1.3", "5.2.0", "5.2.1", "5.2.3"]:
         depends_on("hip@" + ver, when="@" + ver)
         depends_on("rocblas@" + ver, when="@" + ver)
         depends_on("rocsolver@" + ver, when="@" + ver)

@@ -31,7 +31,7 @@ class FujitsuFrontistr(FrontistrBase):
         return url.format(version)
 
     def cmake_args(self):
-        define = CMakePackage.define
+        define = self.define
         args = super(FujitsuFrontistr, self).cmake_args()
         if self.spec.satisfies("%fj"):
             args.extend(

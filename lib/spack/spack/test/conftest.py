@@ -26,7 +26,8 @@ import archspec.cpu.microarchitecture
 import archspec.cpu.schema
 
 import llnl.util.lang
-from llnl.util.filesystem import mkdirp, remove_linked_tree, working_dir
+import llnl.util.tty as tty
+from llnl.util.filesystem import copy_tree, mkdirp, remove_linked_tree, working_dir
 
 import spack.binary_distribution
 import spack.caches
@@ -47,10 +48,21 @@ import spack.test.cray_manifest
 import spack.util.executable
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
-from spack.fetch_strategy import FetchError, FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.util.pattern import Bunch
+from spack.util.web import FetchError
 
 is_windows = sys.platform == "win32"
+
+
+def ensure_configuration_fixture_run_before(request):
+    """Ensure that fixture mutating the configuration run before the one where
+    the function is called.
+    """
+    if "config" in request.fixturenames:
+        request.getfixturevalue("config")
+    if "mutable_config" in request.fixturenames:
+        request.getfixturevalue("mutable_config")
 
 
 #
@@ -85,7 +97,7 @@ def override_git_repos_cache_path(tmpdir):
 
 
 @pytest.fixture
-def mock_git_version_info(tmpdir, override_git_repos_cache_path, scope="function"):
+def mock_git_version_info(tmpdir, override_git_repos_cache_path):
     """Create a mock git repo with known structure
 
     The structure of commits in this repo is as follows::
@@ -116,7 +128,14 @@ def mock_git_version_info(tmpdir, override_git_repos_cache_path, scope="function
 
     def commit(message):
         global commit_counter
-        git("commit", "--date", "2020-01-%02d 12:0:00 +0300" % commit_counter, "-am", message)
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
         commit_counter += 1
 
     with working_dir(repo_path):
@@ -534,18 +553,28 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install):
+def mock_packages(mock_repo_path, mock_pkg_install, request):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
+    ensure_configuration_fixture_run_before(request)
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path):
+def mutable_mock_repo(mock_repo_path, request):
     """Function-scoped mock packages, for tests that need to modify them."""
+    ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
     with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
+
+
+@pytest.fixture()
+def mock_custom_repository(tmpdir, mutable_mock_repo):
+    """Create a custom repository with a single package "c" and return its path."""
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("myrepo"))
+    builder.add_package("c")
+    return builder.root
 
 
 @pytest.fixture(scope="session")
@@ -560,6 +589,16 @@ def linux_os():
         name, version = current_os.name, current_os.version
     LinuxOS = collections.namedtuple("LinuxOS", ["name", "version"])
     return LinuxOS(name=name, version=version)
+
+
+@pytest.fixture
+def ensure_debug(monkeypatch):
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
+
+    yield
+
+    tty.set_debug(current_debug_level)
 
 
 @pytest.fixture(autouse=is_windows, scope="session")
@@ -632,12 +671,11 @@ def configuration_dir(tmpdir_factory, linux_os):
 
     # Slightly modify config.yaml and compilers.yaml
     if is_windows:
-        solver = "original"
         locks = False
     else:
-        solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
         locks = True
 
+    solver = os.environ.get("SPACK_TEST_SOLVER", "clingo")
     config_yaml = test_config.join("config.yaml")
     modules_root = tmpdir_factory.mktemp("share")
     tcl_root = modules_root.ensure("modules", dir=True)
@@ -704,6 +742,20 @@ def mutable_empty_config(tmpdir_factory, configuration_dir):
 
     with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
+
+
+@pytest.fixture(scope="function")
+def concretize_scope(mutable_config, tmpdir):
+    """Adds a scope for concretization preferences"""
+    tmpdir.ensure_dir("concretize")
+    mutable_config.push_scope(
+        spack.config.ConfigScope("concretize", str(tmpdir.join("concretize")))
+    )
+
+    yield
+
+    mutable_config.pop_scope()
+    spack.repo.path._provider_index = None
 
 
 @pytest.fixture
@@ -787,7 +839,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes, _store
             with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
-        store_path.copy(store_cache, mode=True, stat=True)
+        copy_tree(str(store_path), str(store_cache))
 
     # Make the DB filesystem read-only to ensure we can't modify entries
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
@@ -828,7 +880,7 @@ def mutable_database(database_mutable_config, _store_dir_and_cache):
     # Restore the initial state by copying the content of the cache back into
     # the store and making the database read-only
     store_path.remove(rec=1)
-    store_cache.copy(store_path, mode=True, stat=True)
+    copy_tree(str(store_cache), str(store_path))
     store_path.join(".spack-db").chmod(mode=0o555, rec=1)
 
 
@@ -1591,7 +1643,7 @@ def mock_executable(tmpdir):
     """
     import jinja2
 
-    shebang = "#!/bin/bash\n" if not is_windows else "@ECHO OFF"
+    shebang = "#!/bin/sh\n" if not is_windows else "@ECHO OFF"
 
     def _factory(name, output, subdir=("bin",)):
         f = tmpdir.ensure(*subdir, dir=True).join(name)
@@ -1670,3 +1722,157 @@ def noncyclical_dir_structure(tmpdir):
         with open(j("file_3"), "wb"):
             pass
     yield d
+
+
+@pytest.fixture(scope="function")
+def mock_config_data():
+    config_data_dir = os.path.join(spack.paths.test_path, "data", "config")
+    return config_data_dir, os.listdir(config_data_dir)
+
+
+@pytest.fixture(scope="function")
+def mock_curl_configs(mock_config_data, monkeypatch):
+    """
+    Mock curl-based retrieval of configuration files from the web by grabbing
+    them from the test data configuration directory.
+
+    Fetches a single (configuration) file if the name matches one in the test
+    data directory.
+    """
+    config_data_dir, config_files = mock_config_data
+
+    class MockCurl(object):
+        def __init__(self):
+            self.returncode = None
+
+        def __call__(self, *args, **kwargs):
+            url = [a for a in args if a.startswith("http")][0]
+            basename = os.path.basename(url)
+            if os.path.splitext(url)[1]:
+                if basename in config_files:
+                    filename = os.path.join(config_data_dir, basename)
+
+                    with open(filename, "r") as f:
+                        lines = f.readlines()
+                        write_file(os.path.basename(filename), "".join(lines))
+
+                    self.returncode = 0
+                else:
+                    # This is a "404" and is technically only returned if -f
+                    # flag is provided to curl.
+                    tty.msg("curl: (22) The requested URL returned error: 404")
+                    self.returncode = 22
+
+    def mock_curl(*args):
+        return MockCurl()
+
+    monkeypatch.setattr(spack.util.web, "_curl", mock_curl)
+
+    yield
+
+
+@pytest.fixture(scope="function")
+def mock_spider_configs(mock_config_data, monkeypatch):
+    """
+    Mock retrieval of configuration file URLs from the web by grabbing
+    them from the test data configuration directory.
+    """
+    config_data_dir, config_files = mock_config_data
+
+    def _spider(*args, **kwargs):
+        root_urls = args[0]
+        if not root_urls:
+            return [], set()
+
+        root_urls = [root_urls] if isinstance(root_urls, str) else root_urls
+
+        # Any URL with an extension will be treated like a file; otherwise,
+        # it is considered a directory/folder and we'll grab all available
+        # files.
+        urls = []
+        for url in root_urls:
+            if os.path.splitext(url)[1]:
+                urls.append(url)
+            else:
+                urls.extend([os.path.join(url, f) for f in config_files])
+
+        return [], set(urls)
+
+    monkeypatch.setattr(spack.util.web, "spider", _spider)
+
+    yield
+
+
+@pytest.fixture(scope="function")
+def mock_tty_stdout(monkeypatch):
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+
+@pytest.fixture
+def prefix_like():
+    return "package-0.0.0.a1-hashhashhashhashhashhashhashhash"
+
+
+@pytest.fixture()
+def prefix_tmpdir(tmpdir, prefix_like):
+    return tmpdir.mkdir(prefix_like)
+
+
+@pytest.fixture()
+def binary_with_rpaths(prefix_tmpdir):
+    """Factory fixture that compiles an ELF binary setting its RPATH. Relative
+    paths are encoded with `$ORIGIN` prepended.
+    """
+
+    def _factory(rpaths, message="Hello world!"):
+        source = prefix_tmpdir.join("main.c")
+        source.write(
+            """
+        #include <stdio.h>
+        int main(){{
+            printf("{0}");
+        }}
+        """.format(
+                message
+            )
+        )
+        gcc = spack.util.executable.which("gcc")
+        executable = source.dirpath("main.x")
+        # Encode relative RPATHs using `$ORIGIN` as the root prefix
+        rpaths = [x if os.path.isabs(x) else os.path.join("$ORIGIN", x) for x in rpaths]
+        rpath_str = ":".join(rpaths)
+        opts = [
+            "-Wl,--disable-new-dtags",
+            "-Wl,-rpath={0}".format(rpath_str),
+            str(source),
+            "-o",
+            str(executable),
+        ]
+        gcc(*opts)
+        return executable
+
+    return _factory
+
+
+@pytest.fixture(scope="session")
+def concretized_specs_cache():
+    """Cache for mock concrete specs"""
+    return {}
+
+
+@pytest.fixture
+def default_mock_concretization(config, mock_packages, concretized_specs_cache):
+    """Return the default mock concretization of a spec literal, obtained using the mock
+    repository and the mock configuration.
+
+    This fixture is unsafe to call in a test when either the default configuration or mock
+    repository are not used or have been modified.
+    """
+
+    def _func(spec_str, tests=False):
+        key = spec_str, tests
+        if key not in concretized_specs_cache:
+            concretized_specs_cache[key] = spack.spec.Spec(spec_str).concretized(tests=tests)
+        return concretized_specs_cache[key].copy()
+
+    return _func

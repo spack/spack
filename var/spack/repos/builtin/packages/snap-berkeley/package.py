@@ -14,7 +14,9 @@ class SnapBerkeley(MakefilePackage):
 
     homepage = "https://snap.cs.berkeley.edu/"
     url = "https://github.com/amplab/snap/archive/v1.0beta.18.tar.gz"
+    maintainers = ["snehring"]
 
+    version("2.0.1", sha256="30f199c583e054c50ca6f3b61f27066640b7c829e5c5e8083841596a2869c064")
     version(
         "1.0beta.18", sha256="9e8a8dc3f17e3f533d34011afe98316c19cbd70cc8b4830375611e003697daee"
     )
@@ -26,15 +28,10 @@ class SnapBerkeley(MakefilePackage):
 
     depends_on("zlib")
 
-    conflicts("%gcc@6:")
-    conflicts("%cce")
-    conflicts("%apple-clang")
-    conflicts("%clang")
-    conflicts("%intel")
-    conflicts("%nag")
-    conflicts("%pgi")
-    conflicts("%xl")
-    conflicts("%xl_r")
+    conflicts("%gcc@6:", when="@:1.0beta.18")
+
+    def patch(self):
+        filter_file("CXX = g++", "", "Makefile", string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

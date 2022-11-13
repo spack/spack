@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from six import string_types, text_type
+from six.moves import shlex_quote
 
 import llnl.util.tty as tty
 
@@ -291,6 +292,13 @@ def which_string(*args, **kwargs):
             win_candidates = [name + ext for ext in [".exe", ".bat"]]
         candidate_names = [name] if not win_candidates else win_candidates
 
+        if sys.platform == "win32":
+            new_path = path[:]
+            for p in path:
+                if os.path.basename(p) == "bin":
+                    new_path.append(os.path.dirname(p))
+            path = new_path
+
         for candidate_name in candidate_names:
             if os.path.sep in candidate_name:
                 exe = os.path.abspath(candidate_name)
@@ -326,7 +334,7 @@ def which(*args, **kwargs):
         Executable: The first executable that is found in the path
     """
     exe = which_string(*args, **kwargs)
-    return Executable(exe) if exe else None
+    return Executable(shlex_quote(exe)) if exe else None
 
 
 class ProcessError(spack.error.SpackError):

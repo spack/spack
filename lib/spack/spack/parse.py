@@ -78,7 +78,9 @@ class Lexer(object):
                 break
 
         if remainder and not remainder_used:
-            raise LexError("Invalid character", word, word.index(remainder))
+            msg = "Invalid character, '{0}',".format(remainder[0])
+            msg += " in '{0}' at index {1}".format(word, word.index(remainder))
+            raise LexError(msg, word, word.index(remainder))
 
         return tokens
 

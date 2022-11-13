@@ -1,0 +1,8 @@
+--- a/clients/common/rocsparse_gentest.py
++++ b/clients/common/rocsparse_gentest.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python3
++#!/usr/bin/env python3
+ 
+ # ########################################################################
+ # Copyright (c) 2019-2021 Advanced Micro Devices, Inc.

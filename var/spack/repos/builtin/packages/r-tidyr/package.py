@@ -19,6 +19,7 @@ class RTidyr(RPackage):
 
     cran = "tidyr"
 
+    version("1.2.1", sha256="6971766d3663dc75c2328ab257816f4e42d9fdc05c2d87d171b8b9b5ecce61af")
     version("1.2.0", sha256="8cd01da9e97827521d01ea50b9225f2705c46b7538bbf74bec6249a04c1213a8")
     version("1.1.4", sha256="0b0c98be98a433e15a2550f60330b31a58529a9c58bc2abd7bff6462ab761241")
     version("1.1.2", sha256="08fccb67824515b33187886f3ca2cf2fe747a778514892dbbf5e565edf0dfd6c")

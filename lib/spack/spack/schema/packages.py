@@ -21,6 +21,29 @@ properties = {
                 "default": {},
                 "additionalProperties": False,
                 "properties": {
+                    "require": {
+                        "oneOf": [
+                            # 'require' can be a list of requirement_groups.
+                            # each requirement group is a list of one or more
+                            # specs. Either at least one or exactly one spec
+                            # in the group must be satisfied (depending on
+                            # whether you use "any_of" or "one_of",
+                            # repectively)
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "one_of": {"type": "array"},
+                                        "any_of": {"type": "array"},
+                                    },
+                                },
+                            },
+                            # Shorthand for a single requirement group with
+                            # one member
+                            {"type": "string"},
+                        ]
+                    },
                     "version": {
                         "type": "array",
                         "default": [],
@@ -57,6 +80,15 @@ properties = {
                             "group": {
                                 "type": "string",
                             },
+                        },
+                    },
+                    # If 'get_full_repo' is promoted to a Package-level
+                    # attribute, it could be useful to set it here
+                    "package_attributes": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "patternProperties": {
+                            r"\w+": {},
                         },
                     },
                     "providers": {

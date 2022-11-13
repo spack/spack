@@ -31,6 +31,18 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
 
     if platform.system() == "Linux":
         version(
+            "2021.7.1",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/19029/l_oneapi_ccl_p_2021.7.1.16948_offline.sh",
+            sha256="daab05a0779db343b600253df8fea93ab0ed20bd630d89883dd651b6b540b1b2",
+            expand=False,
+        )
+        version(
+            "2021.7.0",
+            url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18891/l_oneapi_ccl_p_2021.7.0.8733_offline.sh",
+            sha256="a0e64db03868081fe075afce8abf4cb94236effc6c52e5049118cfb2ef81a6c7",
+            expand=False,
+        )
+        version(
             "2021.6.0",
             url="https://registrationcenter-download.intel.com/akdlm/irc_nas/18697/l_oneapi_ccl_p_2021.6.0.568.sh",
             sha256="e3c50c9cbeb350e8f28488b2e8fee54156116548db8010bb2c2443048715d3ea",

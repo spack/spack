@@ -85,7 +85,7 @@
         "intel": [
           {
             "versions": ":",
-            "name": "x86-64",
+            "name": "pentium4",
             "flags": "-march={name} -mtune=generic"
           }
         ],
@@ -1099,8 +1099,7 @@
         "avx512cd",
         "avx512vbmi",
         "avx512ifma",
-        "sha",
-        "umip"
+        "sha"
       ],
       "compilers": {
         "gcc": [
@@ -1263,7 +1262,6 @@
         "avx512vbmi",
         "avx512ifma",
         "sha_ni",
-        "umip",
         "clwb",
         "rdpid",
         "gfni",
@@ -2095,8 +2093,163 @@
         ]
       }
     },
-    "thunderx2": {
+    "armv8.1a": {
       "from": ["aarch64"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "5:",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.1-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.2a": {
+      "from": ["armv8.1a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.2-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.3a": {
+      "from": ["armv8.2a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "6:",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.3-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.4a": {
+      "from": ["armv8.3a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8:",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "8:",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.4-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "armv8.5a": {
+      "from": ["armv8.4a"],
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "9:",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "11:",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "arm": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8.5-a -mtune=generic"
+          }
+        ]
+      }
+    },
+    "thunderx2": {
+      "from": ["armv8.1a"],
       "vendor": "Cavium",
       "features": [
         "fp",
@@ -2143,7 +2296,7 @@
       }
     },
     "a64fx": {
-      "from": ["aarch64"],
+      "from": ["armv8.2a"],
       "vendor": "Fujitsu",
       "features": [
         "fp",
@@ -2211,7 +2364,7 @@
         ]
       }
     },
-    "graviton": {
+    "cortex_a72": {
       "from": ["aarch64"],
       "vendor": "ARM",
       "features": [
@@ -2237,19 +2390,19 @@
               },
               {
                   "versions": "6:",
-                  "flags" : "-march=armv8-a+crc+crypto -mtune=cortex-a72"
+                  "flags" : "-mcpu=cortex-a72"
               }
           ],
           "clang" : [
               {
                   "versions": "3.9:",
-                  "flags" : "-march=armv8-a+crc+crypto"
+                  "flags" : "-mcpu=cortex-a72"
               }
           ]
       }
     },
-    "graviton2": {
-      "from": ["aarch64"],
+    "neoverse_n1": {
+      "from": ["cortex_a72", "armv8.2a"],
       "vendor": "ARM",
       "features": [
           "fp",
@@ -2298,7 +2451,7 @@
               },
               {
                   "versions": "9.0:",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto -mtune=neoverse-n1"
+                  "flags" : "-mcpu=neoverse-n1"
               }
           ],
           "clang" : [
@@ -2309,6 +2462,10 @@
               {
                   "versions": "5:",
                   "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              },
+              {
+                  "versions": "10:",
+                  "flags" : "-mcpu=neoverse-n1"
               }
           ],
           "arm" : [
@@ -2319,8 +2476,113 @@
           ]
       }
     },
+    "neoverse_v1": {
+      "from": ["neoverse_n1", "armv8.4a"],
+      "vendor": "ARM",
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "sm3",
+          "sm4",
+          "asimddp",
+          "sha512",
+          "sve",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "svei8mm",
+          "svebf16",
+          "i8mm",
+          "bf16",
+          "dgh",
+          "rng"
+      ],
+      "compilers" : {
+          "gcc": [
+              {
+                  "versions": "4.8:4.8.9",
+                  "flags": "-march=armv8-a"
+              },
+              {
+                  "versions": "4.9:5.9",
+                  "flags": "-march=armv8-a+crc+crypto"
+              },
+              {
+                  "versions": "6:6.9",
+                  "flags" : "-march=armv8.1-a"
+              },
+              {
+                  "versions": "7:7.9",
+                  "flags" : "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
+              },
+              {
+                  "versions": "8.0:8.9",
+                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+              },
+              {
+                  "versions": "9.0:9.9",
+                  "flags" : "-mcpu=neoverse-v1"
+              },
+	            {
+                  "versions": "10.0:",
+                  "flags" : "-mcpu=neoverse-v1"
+              }
+
+          ],
+          "clang" : [
+              {
+                  "versions": "3.9:4.9",
+                  "flags" : "-march=armv8.2-a+fp16+crc+crypto"
+              },
+              {
+                  "versions": "5:10",
+                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+              },
+              {
+                  "versions": "11:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
+              },
+              {
+                  "versions": "12:",
+                  "flags" : "-mcpu=neoverse-v1"
+              }
+          ],
+          "arm" : [
+              {
+                  "versions": "20:21.9",
+                  "flags" : "-march=armv8.2-a+sve+fp16+rcpc+dotprod+crypto"
+              },
+	            {
+                  "versions": "22:",
+                  "flags" : "-march=armv8.4-a+sve+ssbs+fp16+bf16+crypto+i8mm+rng"
+              }
+          ]
+      }
+    },
     "m1": {
-      "from": ["aarch64"],
+      "from": ["armv8.4a"],
       "vendor": "Apple",
       "features": [
           "fp",
@@ -2381,6 +2643,76 @@
           {
             "versions": "13.0:",
             "flags" : "-mcpu=apple-m1"
+          }
+        ]
+      }
+    },
+    "m2": {
+      "from": ["m1", "armv8.5a"],
+      "vendor": "Apple",
+      "features": [
+          "fp",
+          "asimd",
+          "evtstrm",
+          "aes",
+          "pmull",
+          "sha1",
+          "sha2",
+          "crc32",
+          "atomics",
+          "fphp",
+          "asimdhp",
+          "cpuid",
+          "asimdrdm",
+          "jscvt",
+          "fcma",
+          "lrcpc",
+          "dcpop",
+          "sha3",
+          "asimddp",
+          "sha512",
+          "asimdfhm",
+          "dit",
+          "uscat",
+          "ilrcpc",
+          "flagm",
+          "ssbs",
+          "sb",
+          "paca",
+          "pacg",
+          "dcpodp",
+          "flagm2",
+          "frint",
+          "ecv",
+          "bf16",
+          "i8mm",
+          "bti"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8.0:",
+            "flags" : "-march=armv8.5-a -mtune=generic"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "9.0:12.0",
+            "flags" : "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=apple-m1"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:12.5",
+            "flags" : "-march=armv8.5-a"
+          },
+          {
+            "versions": "13.0:",
+            "flags" : "-mcpu=vortex"
           }
         ]
       }

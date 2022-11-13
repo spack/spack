@@ -9,10 +9,10 @@ This test checks the binary packaging infrastructure
 import argparse
 import os
 import platform
-import re
 import shutil
 import stat
 import sys
+from collections import OrderedDict
 
 import pytest
 
@@ -28,7 +28,6 @@ import spack.util.gpg
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.paths import mock_gpg_keys_path
 from spack.relocate import (
-    _placeholder,
     file_is_relocatable,
     macho_find_paths,
     macho_make_paths_normal,
@@ -36,7 +35,7 @@ from spack.relocate import (
     needs_binary_relocation,
     needs_text_relocation,
     relocate_links,
-    relocate_text,
+    unsafe_relocate_text,
 )
 from spack.spec import Spec
 
@@ -190,7 +189,7 @@ echo $PATH"""
 
 
 @pytest.mark.usefixtures("install_mockery")
-def test_relocate_text(tmpdir):
+def test_unsafe_relocate_text(tmpdir):
     spec = Spec("trivial-install-test-package")
     spec.concretize()
     with tmpdir.as_cwd():
@@ -203,7 +202,7 @@ def test_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = "/opt/rh/devtoolset/"
         # Singleton dict doesn't matter if Ordered
-        relocate_text(filenames, {old_dir: new_dir})
+        unsafe_relocate_text(filenames, {old_dir: new_dir})
         with open(filename, "r") as script:
             for line in script:
                 assert new_dir in line
@@ -213,27 +212,42 @@ def test_relocate_text(tmpdir):
 
 
 def test_relocate_links(tmpdir):
-    with tmpdir.as_cwd():
-        old_layout_root = os.path.join("%s" % tmpdir, "home", "spack", "opt", "spack")
-        old_install_prefix = os.path.join("%s" % old_layout_root, "debian6", "test")
-        old_binname = os.path.join(old_install_prefix, "binfile")
-        placeholder = _placeholder(old_layout_root)
-        re.sub(old_layout_root, placeholder, old_binname)
-        filenames = ["link.ln", "outsideprefix.ln"]
-        new_layout_root = os.path.join("%s" % tmpdir, "opt", "rh", "devtoolset")
-        new_install_prefix = os.path.join("%s" % new_layout_root, "test", "debian6")
-        new_linkname = os.path.join(new_install_prefix, "link.ln")
-        new_linkname2 = os.path.join(new_install_prefix, "outsideprefix.ln")
-        new_binname = os.path.join(new_install_prefix, "binfile")
-        mkdirp(new_install_prefix)
-        with open(new_binname, "w") as f:
-            f.write("\n")
-        os.utime(new_binname, None)
-        symlink(old_binname, new_linkname)
-        symlink("/usr/lib/libc.so", new_linkname2)
-        relocate_links(filenames, old_layout_root, old_install_prefix, new_install_prefix)
-        assert os.readlink(new_linkname) == new_binname
-        assert os.readlink(new_linkname2) == "/usr/lib/libc.so"
+    tmpdir.ensure("new_prefix_a", dir=True)
+
+    own_prefix_path = str(tmpdir.join("prefix_a", "file"))
+    dep_prefix_path = str(tmpdir.join("prefix_b", "file"))
+    system_path = os.path.join(os.path.sep, "system", "path")
+
+    # Old prefixes to new prefixes
+    prefix_to_prefix = OrderedDict(
+        [
+            # map <tmpdir>/prefix_a -> <tmpdir>/new_prefix_a
+            (str(tmpdir.join("prefix_a")), str(tmpdir.join("new_prefix_a"))),
+            # map <tmpdir>/prefix_b -> <tmpdir>/new_prefix_b
+            (str(tmpdir.join("prefix_b")), str(tmpdir.join("new_prefix_b"))),
+            # map <tmpdir> -> /fallback/path -- this is just to see we respect order.
+            (str(tmpdir), os.path.join(os.path.sep, "fallback", "path")),
+        ]
+    )
+
+    with tmpdir.join("new_prefix_a").as_cwd():
+        # To be relocated
+        os.symlink(own_prefix_path, "to_self")
+        os.symlink(dep_prefix_path, "to_dependency")
+
+        # To be ignored
+        os.symlink(system_path, "to_system")
+        os.symlink("relative", "to_self_but_relative")
+
+        relocate_links(["to_self", "to_dependency", "to_system"], prefix_to_prefix)
+
+        # These two are relocated
+        assert os.readlink("to_self") == str(tmpdir.join("new_prefix_a", "file"))
+        assert os.readlink("to_dependency") == str(tmpdir.join("new_prefix_b", "file"))
+
+        # These two are not.
+        assert os.readlink("to_system") == system_path
+        assert os.readlink("to_self_but_relative") == "relative"
 
 
 def test_needs_relocation():
@@ -556,7 +570,9 @@ def mock_download():
     "manual,instr", [(False, False), (False, True), (True, False), (True, True)]
 )
 @pytest.mark.disable_clean_stage_check
-def test_manual_download(install_mockery, mock_download, monkeypatch, manual, instr):
+def test_manual_download(
+    install_mockery, mock_download, default_mock_concretization, monkeypatch, manual, instr
+):
     """
     Ensure expected fetcher fail message based on manual download and instr.
     """
@@ -565,7 +581,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual, in
     def _instr(pkg):
         return "Download instructions for {0}".format(pkg.spec.name)
 
-    spec = Spec("a").concretized()
+    spec = default_mock_concretization("a")
     pkg = spec.package
 
     pkg.manual_download = manual
@@ -573,7 +589,7 @@ def test_manual_download(install_mockery, mock_download, monkeypatch, manual, in
         monkeypatch.setattr(spack.package_base.PackageBase, "download_instr", _instr)
 
     expected = pkg.download_instr if manual else "All fetchers failed"
-    with pytest.raises(spack.fetch_strategy.FetchError, match=expected):
+    with pytest.raises(spack.util.web.FetchError, match=expected):
         pkg.do_fetch()
 
 
@@ -591,16 +607,20 @@ def fetching_not_allowed(monkeypatch):
     monkeypatch.setattr(spack.package_base.PackageBase, "fetcher", fetcher)
 
 
-def test_fetch_without_code_is_noop(install_mockery, fetching_not_allowed):
+def test_fetch_without_code_is_noop(
+    default_mock_concretization, install_mockery, fetching_not_allowed
+):
     """do_fetch for packages without code should be a no-op"""
-    pkg = Spec("a").concretized().package
+    pkg = default_mock_concretization("a").package
     pkg.has_code = False
     pkg.do_fetch()
 
 
-def test_fetch_external_package_is_noop(install_mockery, fetching_not_allowed):
+def test_fetch_external_package_is_noop(
+    default_mock_concretization, install_mockery, fetching_not_allowed
+):
     """do_fetch for packages without code should be a no-op"""
-    spec = Spec("a").concretized()
+    spec = default_mock_concretization("a")
     spec.external_path = "/some/where"
     assert spec.external
     spec.package.do_fetch()

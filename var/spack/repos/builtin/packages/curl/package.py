@@ -18,7 +18,9 @@ class Curl(AutotoolsPackage):
     url = "http://curl.haxx.se/download/curl-7.78.0.tar.bz2"
 
     executables = ["^curl$"]
+    tags = ["build-tools"]
 
+    version("7.85.0", sha256="21a7e83628ee96164ac2b36ff6bf99d467c7b0b621c1f7e317d8f0d96011539c")
     version("7.84.0", sha256="702fb26e73190a3bd77071aa146f507b9817cc4dfce218d2ab87f00cd3bc059d")
     version("7.83.0", sha256="247c7ec7521c4258e65634e529270d214fe32969971cccb72845e7aa46831f96")
     version("7.82.0", sha256="46d9a0400a33408fd992770b04a44a7434b3036f2e8089ac28b57573d59d371f")
@@ -127,7 +129,7 @@ class Curl(AutotoolsPackage):
         for exe in exes:
             variants = ""
             curl = Executable(exe)
-            output = curl("--version", output=str, error="str")
+            output = curl("--version", output=str, error=str)
             if "nghttp2" in output:
                 variants += "+nghttp2"
             protocols_match = re.search(r"Protocols: (.*)\n", output)

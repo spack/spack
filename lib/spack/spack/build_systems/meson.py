@@ -2,108 +2,131 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import inspect
 import os
 from typing import List  # novm
 
-from llnl.util.filesystem import working_dir
+import llnl.util.filesystem as fs
 
-from spack.directives import depends_on, variant
-from spack.package_base import PackageBase, run_after
+import spack.builder
+import spack.package_base
+from spack.directives import build_system, depends_on, variant
+from spack.multimethod import when
+
+from ._checks import BaseBuilder, execute_build_time_tests
 
 
-class MesonPackage(PackageBase):
-    """Specialized class for packages built using Meson
+class MesonPackage(spack.package_base.PackageBase):
+    """Specialized class for packages built using Meson. For more information
+    on the Meson build system, see https://mesonbuild.com/
+    """
 
-    For more information on the Meson build system, see:
-    https://mesonbuild.com/
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
+    build_system_class = "MesonPackage"
 
-    This class provides three phases that can be overridden:
+    #: Legacy buildsystem attribute used to deserialize and install old specs
+    legacy_buildsystem = "meson"
 
-        1. :py:meth:`~.MesonPackage.meson`
-        2. :py:meth:`~.MesonPackage.build`
-        3. :py:meth:`~.MesonPackage.install`
+    build_system("meson")
+
+    with when("build_system=meson"):
+        variant(
+            "buildtype",
+            default="debugoptimized",
+            description="Meson build type",
+            values=("plain", "debug", "debugoptimized", "release", "minsize"),
+        )
+        variant(
+            "default_library",
+            default="shared",
+            values=("shared", "static"),
+            multi=True,
+            description="Build shared libs, static libs or both",
+        )
+        variant("strip", default=False, description="Strip targets on install")
+        depends_on("meson", type="build")
+        depends_on("ninja", type="build")
+
+    def flags_to_build_system_args(self, flags):
+        """Produces a list of all command line arguments to pass the specified
+        compiler flags to meson."""
+        # Has to be dynamic attribute due to caching
+        setattr(self, "meson_flag_args", [])
+
+
+@spack.builder.builder("meson")
+class MesonBuilder(BaseBuilder):
+    """The Meson builder encodes the default way to build software with Meson.
+    The builder has three phases that can be overridden, if need be:
+
+            1. :py:meth:`~.MesonBuilder.meson`
+            2. :py:meth:`~.MesonBuilder.build`
+            3. :py:meth:`~.MesonBuilder.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override :py:meth:`~.MesonPackage.meson_args`.
+    necessary will be to override :py:meth:`~.MesonBuilder.meson_args`.
+
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.MesonPackage.root_mesonlists_dir` | Location of the    |
+        | :py:meth:`~.MesonBuilder.root_mesonlists_dir` | Location of the    |
         |                                               | root MesonLists.txt|
         +-----------------------------------------------+--------------------+
-        | :py:meth:`~.MesonPackage.build_directory`     | Directory where to |
+        | :py:meth:`~.MesonBuilder.build_directory`     | Directory where to |
         |                                               | build the package  |
         +-----------------------------------------------+--------------------+
-
-
     """
 
-    #: Phases of a Meson package
-    phases = ["meson", "build", "install"]
-    #: This attribute is used in UI queries that need to know the build
-    #: system base class
-    build_system_class = "MesonPackage"
+    phases = ("meson", "build", "install")
+
+    #: Names associated with package methods in the old build-system format
+    legacy_methods = ("meson_args", "check")
+
+    #: Names associated with package attributes in the old build-system format
+    legacy_attributes = (
+        "build_targets",
+        "install_targets",
+        "build_time_test_callbacks",
+        "root_mesonlists_dir",
+        "std_meson_args",
+        "build_directory",
+    )
 
     build_targets = []  # type: List[str]
     install_targets = ["install"]
 
     build_time_test_callbacks = ["check"]
 
-    variant(
-        "buildtype",
-        default="debugoptimized",
-        description="Meson build type",
-        values=("plain", "debug", "debugoptimized", "release", "minsize"),
-    )
-    variant(
-        "default_library",
-        default="shared",
-        values=("shared", "static"),
-        multi=True,
-        description="Build shared libs, static libs or both",
-    )
-    variant("strip", default=False, description="Strip targets on install")
-
-    depends_on("meson", type="build")
-    depends_on("ninja", type="build")
-
     @property
     def archive_files(self):
         """Files to archive for packages based on Meson"""
-        return [os.path.join(self.build_directory, "meson-logs/meson-log.txt")]
+        return [os.path.join(self.build_directory, "meson-logs", "meson-log.txt")]
 
     @property
     def root_mesonlists_dir(self):
-        """The relative path to the directory containing meson.build
+        """Relative path to the directory containing meson.build
 
         This path is relative to the root of the extracted tarball,
         not to the ``build_directory``. Defaults to the current directory.
-
-        :return: directory containing meson.build
         """
-        return self.stage.source_path
+        return self.pkg.stage.source_path
 
     @property
     def std_meson_args(self):
-        """Standard meson arguments provided as a property for
-        convenience of package writers
-
-        :return: standard meson arguments
+        """Standard meson arguments provided as a property for convenience
+        of package writers.
         """
         # standard Meson arguments
-        std_meson_args = MesonPackage._std_args(self)
+        std_meson_args = MesonBuilder.std_args(self.pkg)
         std_meson_args += getattr(self, "meson_flag_args", [])
         return std_meson_args
 
     @staticmethod
-    def _std_args(pkg):
-        """Computes the standard meson arguments for a generic package"""
-
+    def std_args(pkg):
+        """Standard meson arguments for a generic package."""
         try:
             build_type = pkg.spec.variants["buildtype"].value
         except KeyError:
@@ -119,36 +142,33 @@ class MesonPackage(PackageBase):
             default_library = "shared"
 
         args = [
-            "--prefix={0}".format(pkg.prefix),
+            "-Dprefix={0}".format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
             # like lib/x86_64-linux-gnu, which causes problems when trying to
             # find libraries and pkg-config files.
             # See https://github.com/mesonbuild/meson/issues/2197
-            "--libdir={0}".format(pkg.prefix.lib),
+            "-Dlibdir={0}".format(pkg.prefix.lib),
             "-Dbuildtype={0}".format(build_type),
             "-Dstrip={0}".format(strip),
             "-Ddefault_library={0}".format(default_library),
+            # Do not automatically download and install dependencies
+            "-Dwrap_mode=nodownload",
         ]
 
         return args
 
-    def flags_to_build_system_args(self, flags):
-        """Produces a list of all command line arguments to pass the specified
-        compiler flags to meson."""
-        # Has to be dynamic attribute due to caching
-        setattr(self, "meson_flag_args", [])
+    @property
+    def build_dirname(self):
+        """Returns the directory name to use when building the package."""
+        return "spack-build-{}".format(self.spec.dag_hash(7))
 
     @property
     def build_directory(self):
-        """Returns the directory to use when building the package
-
-        :return: directory where to build the package
-        """
-        return os.path.join(self.stage.source_path, "spack-build")
+        """Directory to use when building the package."""
+        return os.path.join(self.pkg.stage.path, self.build_dirname)
 
     def meson_args(self):
-        """Produces a list containing all the arguments that must be passed to
-        meson, except:
+        """List of arguments that must be passed to meson, except:
 
         * ``--prefix``
         * ``--libdir``
@@ -157,40 +177,33 @@ class MesonPackage(PackageBase):
         * ``--default_library``
 
         which will be set automatically.
-
-        :return: list of arguments for meson
         """
         return []
 
-    def meson(self, spec, prefix):
-        """Runs ``meson`` in the build directory"""
+    def meson(self, pkg, spec, prefix):
+        """Run ``meson`` in the build directory"""
         options = [os.path.abspath(self.root_mesonlists_dir)]
         options += self.std_meson_args
         options += self.meson_args()
-        with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).meson(*options)
+        with fs.working_dir(self.build_directory, create=True):
+            inspect.getmodule(self.pkg).meson(*options)
 
-    def build(self, spec, prefix):
+    def build(self, pkg, spec, prefix):
         """Make the build targets"""
         options = ["-v"]
         options += self.build_targets
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).ninja(*options)
+        with fs.working_dir(self.build_directory):
+            inspect.getmodule(self.pkg).ninja(*options)
 
-    def install(self, spec, prefix):
+    def install(self, pkg, spec, prefix):
         """Make the install targets"""
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).ninja(*self.install_targets)
+        with fs.working_dir(self.build_directory):
+            inspect.getmodule(self.pkg).ninja(*self.install_targets)
 
-    run_after("build")(PackageBase._run_default_build_time_test_callbacks)
+    spack.builder.run_after("build")(execute_build_time_tests)
 
     def check(self):
-        """Searches the Meson-generated file for the target ``test``
-        and runs it if found.
-        """
-        with working_dir(self.build_directory):
+        """Search Meson-generated files for the target ``test`` and run it if found."""
+        with fs.working_dir(self.build_directory):
             self._if_ninja_target_execute("test")
             self._if_ninja_target_execute("check")
-
-    # Check that self.prefix is there after installation
-    run_after("install")(PackageBase.sanity_check_prefix)

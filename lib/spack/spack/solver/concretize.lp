@@ -31,6 +31,7 @@ opt_criterion(300, "number of input specs not concretized").
 attr(Name, A1)         :- literal(LiteralID, Name, A1), literal_solved(LiteralID).
 attr(Name, A1, A2)     :- literal(LiteralID, Name, A1, A2), literal_solved(LiteralID).
 attr(Name, A1, A2, A3) :- literal(LiteralID, Name, A1, A2, A3), literal_solved(LiteralID).
+attr(Name, A1, A2, A3, A4) :- literal(LiteralID, Name, A1, A2, A3, A4), literal_solved(LiteralID).
 
 % For these two atoms we only need implications in one direction
 root(Package)         :- attr("root", Package).
@@ -43,6 +44,8 @@ node_flag_set(Package, Flag, Value)  :- attr("node_flag_set", Package, Flag, Val
 
 node_compiler_version_set(Package, Compiler, Version)
   :- attr("node_compiler_version_set", Package, Compiler, Version).
+node_compiler_set(Package, Compiler)
+  :- attr("node_compiler_set", Package, Compiler).
 
 variant_default_value_from_cli(Package, Variant, Value)
   :- attr("variant_default_value_from_cli", Package, Variant, Value).
@@ -52,6 +55,7 @@ variant_default_value_from_cli(Package, Variant, Value)
 #defined literal/3.
 #defined literal/4.
 #defined literal/5.
+#defined literal/6.
 
 %-----------------------------------------------------------------------------
 % Version semantics
@@ -71,7 +75,8 @@ version_declared(Package, Version, Weight) :- version_declared(Package, Version,
 :- version_declared(Package, Version, Weight, "installed"),
    version(Package, Version),
    version_weight(Package, Weight),
-   not hash(Package, _).
+   not hash(Package, _),
+   internal_error("Reuse version weight used for built package").
 
 % versions are declared w/priority -- declared with priority implies declared
 version_declared(Package, Version) :- version_declared(Package, Version, _).
@@ -117,19 +122,22 @@ possible_version_weight(Package, Weight)
 :- version(Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "external"),
-   not external(Package).
+   not external(Package),
+   internal_error("External weight used for built package").
 
 % we can't use a weight from an installed spec if we are building it
 % and vice-versa
 :- version(Package, Version),
    version_weight(Package, Weight),
    version_declared(Package, Version, Weight, "installed"),
-   build(Package).
+   build(Package),
+   internal_error("Reuse version weight used for build package").
 
 :- version(Package, Version),
    version_weight(Package, Weight),
    not version_declared(Package, Version, Weight, "installed"),
-   not build(Package).
+   not build(Package),
+   internal_error("Build version weight used for reused package").
 
 1 { version_weight(Package, Weight) : version_declared(Package, Version, Weight) } 1
   :- version(Package, Version),
@@ -175,36 +183,42 @@ node_version_satisfies(Package, Constraint)
 % corresponding spec attributes hold.
 condition_holds(ID) :-
   condition(ID, _);
-  attr(Name, A1)         : condition_requirement(ID, Name, A1);
-  attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
-  attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
+  attr(Name, A1)             : condition_requirement(ID, Name, A1);
+  attr(Name, A1, A2)         : condition_requirement(ID, Name, A1, A2);
+  attr(Name, A1, A2, A3)     : condition_requirement(ID, Name, A1, A2, A3);
+  attr(Name, A1, A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4).
 
 % condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
 % is derived. This allows imposed constraints to be canceled in special cases.
 impose(ID) :- condition_holds(ID), not do_not_impose(ID).
 
 % conditions that hold impose constraints on other specs
-attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
-attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
-attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1)             :- impose(ID), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)         :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3)     :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3, A4).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- node(Package), hash(Package, Hash),
    variant_value(Package, Variant, Value),
-   not imposed_constraint(Hash, "variant_value", Package, Variant, Value).
+   not imposed_constraint(Hash, "variant_value", Package, Variant, Value),
+   internal_error("imposed hash without imposing all variant values").
 
 % we cannot have additional flag values when we are working with concrete specs
 :- node(Package), hash(Package, Hash),
    node_flag(Package, FlagType, Flag),
-   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag).
+   not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
+   internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.
+#defined condition_requirement/6.
 #defined imposed_constraint/3.
 #defined imposed_constraint/4.
 #defined imposed_constraint/5.
+#defined imposed_constraint/6.
 
 %-----------------------------------------------------------------------------
 % Concrete specs
@@ -276,7 +290,8 @@ error(0, Msg) :- node(Package),
    conflict(Package, TriggerID, ConstraintID, Msg),
    condition_holds(TriggerID),
    condition_holds(ConstraintID),
-   not external(Package).  % ignore conflicts for externals
+   not external(Package),  % ignore conflicts for externals
+   not hash(Package, _).  % ignore conflicts for installed packages
 
 #defined conflict/4.
 
@@ -377,6 +392,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 #defined required_provider_condition/3.
 #defined required_provider_condition/4.
 #defined required_provider_condition/5.
+#defined required_provider_condition/6.
 
 %-----------------------------------------------------------------------------
 % Spec Attributes
@@ -399,6 +415,7 @@ node_target(Package, Target)           :- attr("node_target", Package, Target).
 node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
 variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
 variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
+variant_propagate(Package, Variant, Value, Source)    :- attr("variant_propagate", Package, Variant, Value, Source).
 node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
 node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
 depends_on(Package, Dependency, Type)  :- attr("depends_on", Package, Dependency, Type).
@@ -406,6 +423,8 @@ node_compiler_version(Package, Compiler, Version)
   :- attr("node_compiler_version", Package, Compiler, Version).
 node_compiler_version_satisfies(Package, Compiler, Version)
   :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
+node_flag_propagate(Package, FlagType)
+  :- attr("node_flag_propagate", Package, FlagType).
 
 attr("node", Package)                          :- node(Package).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
@@ -418,6 +437,7 @@ attr("node_target", Package, Target)           :- node_target(Package, Target).
 attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
 attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
 attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
+attr("variant_propagate", Package, Variant, Value, Source)    :- variant_propagate(Package, Variant, Value, Source).
 attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
 attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
 attr("depends_on", Package, Dependency, Type)  :- depends_on(Package, Dependency, Type).
@@ -425,6 +445,8 @@ attr("node_compiler_version", Package, Compiler, Version)
   :- node_compiler_version(Package, Compiler, Version).
 attr("node_compiler_version_satisfies", Package, Compiler, Version)
   :- node_compiler_version_satisfies(Package, Compiler, Version).
+attr("node_flag_propagate", Package, FlagType)
+  :- node_flag_propagate(Package, FlagType).
 
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
@@ -436,7 +458,7 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
 #defined external/1.
 #defined external_spec/2.
 #defined external_version_declared/4.
-#defined external_only/1.
+#defined buildable_false/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
 #defined node_version_satisfies/2.
@@ -463,8 +485,10 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 version_weight(Package, Weight) :- external_version(Package, Version, Weight).
 version(Package, Version) :- external_version(Package, Version, Weight).
 
-% if a package is not buildable (external_only), only externals are allowed
-external(Package) :- external_only(Package), node(Package).
+% if a package is not buildable, only externals or hashed specs are allowed
+external(Package) :- buildable_false(Package),
+                     node(Package),
+                     not hash(Package, _).
 
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
@@ -483,7 +507,8 @@ external(Package) :- external_spec_selected(Package, _).
 % determine if an external spec has been selected
 external_spec_selected(Package, LocalIndex) :-
     external_conditions_hold(Package, LocalIndex),
-    node(Package).
+    node(Package),
+    not hash(Package, _).
 
 external_conditions_hold(Package, LocalIndex) :-
     possible_external(ID, Package, LocalIndex), condition_holds(ID).
@@ -499,6 +524,54 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 #defined external_spec_condition/3.
 #defined external_spec_condition/4.
 #defined external_spec_condition/5.
+#defined external_spec_condition/6.
+
+%-----------------------------------------------------------------------------
+% Config required semantics
+%-----------------------------------------------------------------------------
+
+activate_requirement_rules(Package) :- node(Package).
+activate_requirement_rules(Package) :- virtual_node(Package).
+
+requirement_group_satisfied(Package, X) :-
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } 1,
+  activate_requirement_rules(Package),
+  requirement_policy(Package, X, "one_of"),
+  requirement_group(Package, X).
+
+requirement_weight(Package, W) :-
+  condition_holds(Y),
+  requirement_has_weight(Y, W),
+  requirement_group_member(Y, Package, X),
+  requirement_policy(Package, X, "one_of"),
+  requirement_group_satisfied(Package, X).
+
+requirement_group_satisfied(Package, X) :-
+  1 { condition_holds(Y) : requirement_group_member(Y, Package, X) } ,
+  activate_requirement_rules(Package),
+  requirement_policy(Package, X, "any_of"),
+  requirement_group(Package, X).
+
+requirement_weight(Package, W) :-
+  W = #min {
+    Z : requirement_has_weight(Y, Z), condition_holds(Y), requirement_group_member(Y, Package, X);
+    % We need this to avoid an annoying warning during the solve
+    %   concretize.lp:1151:5-11: info: tuple ignored:
+    %   #sup@73
+    10000
+  },
+  requirement_policy(Package, X, "any_of"),
+  requirement_group_satisfied(Package, X).
+
+error(2, "Cannot satisfy requirement group for package '{0}'", Package) :-
+  activate_requirement_rules(Package),
+  requirement_group(Package, X),
+  not requirement_group_satisfied(Package, X).
+
+#defined requirement_group/2.
+#defined requirement_group_member/3.
+#defined requirement_has_weight/2.
+#defined requirement_policy/3.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
@@ -507,6 +580,24 @@ error(2, "Attempted to use external for '{0}' which does not satisfy any configu
 % and that condition holds
 variant(Package, Variant) :- variant_condition(ID, Package, Variant),
                              condition_holds(ID).
+
+variant_propagate(Package, Variant, Value, Source) :-
+  node(Package),
+  depends_on(Parent, Package),
+  variant_propagate(Parent, Variant, Value, Source),
+  not variant_set(Package, Variant).
+
+variant_value(Package, Variant, Value) :-
+  node(Package),
+  variant(Package, Variant),
+  variant_propagate(Package, Variant, Value, _),
+  variant_possible_value(Package, Variant, Value).
+
+error(2, "{0} and {1} cannot both propagate variant '{2}' to package {3} with values '{4}' and '{5}'", Source1, Source2, Variant, Package, Value1, Value2) :-
+  variant_propagate(Package, Variant, Value1, Source1),
+  variant_propagate(Package, Variant, Value2, Source2),
+  variant(Package, Variant),
+  Value1 != Value2.
 
 % a variant cannot be set if it is not a variant on the package
 error(2, "Cannot set variant '{0}' for package '{1}' because the variant condition cannot be satisfied for the given spec", Variant, Package)
@@ -590,6 +681,8 @@ variant_not_default(Package, Variant, Value)
     not variant_default_value(Package, Variant, Value),
     % variants set explicitly on the CLI don't count as non-default
     not variant_set(Package, Variant, Value),
+    % variant values forced by propagation don't count as non-default
+    not variant_propagate(Package, Variant, Value, _),
     % variants set on externals that we could use don't count as non-default
     % this makes spack prefer to use an external over rebuilding with the
     % default configuration
@@ -652,6 +745,7 @@ variant_single_value(Package, "dev_path")
 % warnings like 'info: atom does not occur in any rule head'.
 #defined variant/2.
 #defined variant_sticky/2.
+#defined variant_propagate/4.
 #defined variant_set/3.
 #defined variant_condition/3.
 #defined variant_single_value/2.
@@ -749,7 +843,8 @@ os_compatible(OS1, OS3) :- os_compatible(OS1, OS2), os_compatible(OS2, OS3).
 % for which we can build software. We need a cardinality constraint
 % since we might have more than one "buildable_os(OS)" fact.
 :- not 1 { os_compatible(CurrentOS, ReusedOS) : buildable_os(CurrentOS) },
-   node_os(Package, ReusedOS).
+   node_os(Package, ReusedOS),
+   internal_error("Reused OS incompatible with build OS").
 
 % If an OS is set explicitly respect the value
 node_os(Package, OS) :- node_os_set(Package, OS), node(Package).
@@ -874,10 +969,15 @@ error(2, "'{0}' compiler constraints '%{1}@{2}' and '%{3}@{4}' are incompatible"
 node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
 
 % We can't have a compiler be enforced and select the version from another compiler
-:- node_compiler(Package, Compiler1),
-   node_compiler_version(Package, Compiler2, _),
-   Compiler1 != Compiler2,
-   internal_error("Mismatch between selected compiler and compiler version").
+error(2, "Cannot concretize {0} with two compilers {1}@{2} and {3}@{4}", Package, C1, V1, C2, V2)
+ :- node_compiler_version(Package, C1, V1),
+    node_compiler_version(Package, C2, V2),
+    (C1, V1) != (C2, V2).
+
+error(2, "Cannot concretize {0} with two compilers {1} and {2}@{3}", Package, Compiler1, Compiler2, Version)
+ :- node_compiler(Package, Compiler1),
+    node_compiler_version(Package, Compiler2, Version),
+    Compiler1 != Compiler2.
 
 % If the compiler of a node cannot be satisfied, raise
 error(1, "No valid compiler for {0} satisfies '%{1}'", Package, Compiler)
@@ -898,8 +998,7 @@ error(2, "No valid version for '{0}' compiler '{1}' satisfies '@{2}'", Package, 
 % the compiler associated with the node satisfy the same constraint
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
-     compiler_version_satisfies(Compiler, Constraint, Version),
-     build(Package).
+     compiler_version_satisfies(Compiler, Constraint, Version).
 
 #defined compiler_version_satisfies/3.
 
@@ -926,6 +1025,12 @@ compiler_match(Package, Dependency)
 
 compiler_mismatch(Package, Dependency)
   :- depends_on(Package, Dependency),
+     not node_compiler_set(Dependency, _),
+     not compiler_match(Package, Dependency).
+
+compiler_mismatch_required(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_set(Dependency, _),
      not compiler_match(Package, Dependency).
 
 #defined node_compiler_set/2.
@@ -947,7 +1052,8 @@ compiler_weight(Package, 100)
     not default_compiler_preference(Compiler, Version, _).
 
 % For the time being, be strict and reuse only if the compiler match one we have on the system
-:- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
+error(2, "Compiler {1}@{2} requested for {0} cannot be found. Set install_missing_compilers:true if intended.", Package, Compiler, Version)
+ :- node_compiler_version(Package, Compiler, Version), not compiler_version(Compiler, Version).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -955,37 +1061,48 @@ compiler_weight(Package, 100)
 %-----------------------------------------------------------------------------
 % Compiler flags
 %-----------------------------------------------------------------------------
-% propagate flags when compilers match
-inherit_flags(Package, Dependency)
+
+% propagate flags when compiler match
+can_inherit_flags(Package, Dependency, FlagType)
  :- depends_on(Package, Dependency),
     node_compiler(Package, Compiler),
     node_compiler(Dependency, Compiler),
+    not node_flag_set(Dependency, FlagType, _),
     compiler(Compiler), flag_type(FlagType).
-node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_set(Package, FlagType, Flag), inherit_flags(Package, Dependency).
-node_flag_inherited(Dependency, FlagType, Flag)
- :- node_flag_inherited(Package, FlagType, Flag),
-    inherit_flags(Package, Dependency).
 
-% node with flags set to anythingg is "set"
-node_flag_set(Package) :- node_flag_set(Package, _, _).
+node_flag_inherited(Dependency, FlagType, Flag)
+ :- node_flag_set(Package, FlagType, Flag), can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
+% Ensure propagation
+:- node_flag_inherited(Package, FlagType, Flag),
+    can_inherit_flags(Package, Dependency, FlagType),
+    node_flag_propagate(Package, FlagType).
+
+error(2, "{0} and {1} cannot both propagate compiler flags '{2}' to {3}", Source1, Source2, Package, FlagType) :-
+  depends_on(Source1, Package),
+  depends_on(Source2, Package),
+  node_flag_propagate(Source1, FlagType),
+  node_flag_propagate(Source2, FlagType),
+  can_inherit_flags(Source1, Package, FlagType),
+  can_inherit_flags(Source2, Package, FlagType),
+  Source1 != Source2.
 
 % remember where flags came from
-node_flag_source(Package, Package) :- node_flag_set(Package).
-node_flag_source(Dependency, Q)
- :- node_flag_source(Package, Q), inherit_flags(Package, Dependency).
+node_flag_source(Package, FlagType, Package) :- node_flag_set(Package, FlagType, _).
+node_flag_source(Dependency, FlagType, Q)
+ :- node_flag_source(Package, FlagType, Q), node_flag_inherited(Dependency, FlagType, _),
+    node_flag_propagate(Package, FlagType).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
 node_flag(Package, FlagType, Flag)
- :- not node_flag_set(Package),
-    compiler_version_flag(Compiler, Version, FlagType, Flag),
+ :- compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
     compiler_version(Compiler, Version).
 
 node_flag_compiler_default(Package)
- :- not node_flag_set(Package),
+ :- not node_flag_set(Package, FlagType, _),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
@@ -1004,6 +1121,7 @@ no_flags(Package, FlagType)
 #defined compiler_version_flag/4.
 #defined node_flag/3.
 #defined node_flag_set/3.
+#defined node_flag_propagate/2.
 
 
 %-----------------------------------------------------------------------------
@@ -1015,6 +1133,11 @@ no_flags(Package, FlagType)
 
 % you can't choose an installed hash for a dev spec
 :- hash(Package, Hash), variant_value(Package, "dev_path", _).
+
+% You can't install a hash, if it is not installed
+:- hash(Package, Hash), not installed_hash(Package, Hash).
+% This should be redundant given the constraint above
+:- hash(Package, Hash1), hash(Package, Hash2), Hash1 != Hash2.
 
 % if a hash is selected, we impose all the constraints that implies
 impose(Hash) :- hash(Package, Hash).
@@ -1092,12 +1215,24 @@ opt_criterion(100, "number of packages to build (vs. reuse)").
 #minimize { 1@100,Package : build(Package), optimize_for_reuse() }.
 #defined optimize_for_reuse/0.
 
+% A condition group specifies one or more specs that must be satisfied.
+% Specs declared first are preferred, so we assign increasing weights and
+% minimize the weights.
+opt_criterion(75, "requirement weight").
+#minimize{ 0@275: #true }.
+#minimize{ 0@75: #true }.
+#minimize {
+    Weight@75+Priority
+    : requirement_weight(Package, Weight),
+      build_priority(Package, Priority)
+}.
+
 % Minimize the number of deprecated versions being used
-opt_criterion(15, "deprecated versions used").
-#minimize{ 0@215: #true }.
-#minimize{ 0@15: #true }.
+opt_criterion(73, "deprecated versions used").
+#minimize{ 0@273: #true }.
+#minimize{ 0@73: #true }.
 #minimize{
-    1@15+Priority,Package
+    1@73+Priority,Package
     : deprecated(Package, _),
       build_priority(Package, Priority)
 }.
@@ -1106,51 +1241,51 @@ opt_criterion(15, "deprecated versions used").
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-opt_criterion(14, "version weight").
-#minimize{ 0@214: #true }.
-#minimize{ 0@14: #true }.
+opt_criterion(70, "version weight").
+#minimize{ 0@270: #true }.
+#minimize{ 0@70: #true }.
 #minimize {
-    Weight@14+Priority
+    Weight@70+Priority
     : root(Package),version_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(13, "number of non-default variants (roots)").
-#minimize{ 0@213: #true }.
-#minimize{ 0@13: #true }.
+opt_criterion(65, "number of non-default variants (roots)").
+#minimize{ 0@265: #true }.
+#minimize{ 0@65: #true }.
 #minimize {
-    1@13+Priority,Package,Variant,Value
+    1@65+Priority,Package,Variant,Value
     : variant_not_default(Package, Variant, Value),
       root(Package),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(12, "preferred providers for roots").
-#minimize{ 0@212 : #true }.
-#minimize{ 0@12: #true }.
+opt_criterion(60, "preferred providers for roots").
+#minimize{ 0@260: #true }.
+#minimize{ 0@60: #true }.
 #minimize{
-    Weight@12+Priority,Provider,Virtual
+    Weight@60+Priority,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight),
       root(Provider),
       build_priority(Provider, Priority)
 }.
 
-opt_criterion(11, "default values of variants not being used (roots)").
-#minimize{ 0@211: #true }.
-#minimize{ 0@11: #true }.
+opt_criterion(55, "default values of variants not being used (roots)").
+#minimize{ 0@255: #true }.
+#minimize{ 0@55: #true }.
 #minimize{
-    1@11+Priority,Package,Variant,Value
+    1@55+Priority,Package,Variant,Value
     : variant_default_not_used(Package, Variant, Value),
       root(Package),
       build_priority(Package, Priority)
 }.
 
 % Try to use default variants or variants that have been set
-opt_criterion(10, "number of non-default variants (non-roots)").
-#minimize{ 0@210: #true }.
-#minimize{ 0@10: #true }.
+opt_criterion(50, "number of non-default variants (non-roots)").
+#minimize{ 0@250: #true }.
+#minimize{ 0@50: #true }.
 #minimize {
-    1@10+Priority,Package,Variant,Value
+    1@50+Priority,Package,Variant,Value
     : variant_not_default(Package, Variant, Value),
       not root(Package),
       build_priority(Package, Priority)
@@ -1158,91 +1293,100 @@ opt_criterion(10, "number of non-default variants (non-roots)").
 
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
-opt_criterion(9, "preferred providers (non-roots)").
-#minimize{ 0@209: #true }.
-#minimize{ 0@9: #true }.
+opt_criterion(45, "preferred providers (non-roots)").
+#minimize{ 0@245: #true }.
+#minimize{ 0@45: #true }.
 #minimize{
-    Weight@9+Priority,Provider,Virtual
+    Weight@45+Priority,Provider,Virtual
     : provider_weight(Provider, Virtual, Weight), not root(Provider),
       build_priority(Provider, Priority)
 }.
 
 % Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(8, "compiler mismatches").
-#minimize{ 0@208: #true }.
-#minimize{ 0@8: #true }.
+opt_criterion(40, "compiler mismatches that are not from CLI").
+#minimize{ 0@240: #true }.
+#minimize{ 0@40: #true }.
 #minimize{
-    1@8+Priority,Package,Dependency
+    1@40+Priority,Package,Dependency
     : compiler_mismatch(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
-% Try to minimize the number of compiler mismatches in the DAG.
-opt_criterion(7, "OS mismatches").
-#minimize{ 0@207: #true }.
-#minimize{ 0@7: #true }.
+opt_criterion(39, "compiler mismatches that are not from CLI").
+#minimize{ 0@239: #true }.
+#minimize{ 0@39: #true }.
 #minimize{
-    1@7+Priority,Package,Dependency
+    1@39+Priority,Package,Dependency
+    : compiler_mismatch_required(Package, Dependency),
+      build_priority(Package, Priority)
+}.
+
+% Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(35, "OS mismatches").
+#minimize{ 0@235: #true }.
+#minimize{ 0@35: #true }.
+#minimize{
+    1@35+Priority,Package,Dependency
     : node_os_mismatch(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(6, "non-preferred OS's").
-#minimize{ 0@206: #true }.
-#minimize{ 0@6: #true }.
+opt_criterion(30, "non-preferred OS's").
+#minimize{ 0@230: #true }.
+#minimize{ 0@30: #true }.
 #minimize{
-    Weight@6+Priority,Package
+    Weight@30+Priority,Package
     : node_os_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
 % Choose more recent versions for nodes
-opt_criterion(5, "version badness").
-#minimize{ 0@205: #true }.
-#minimize{ 0@5: #true }.
+opt_criterion(25, "version badness").
+#minimize{ 0@225: #true }.
+#minimize{ 0@25: #true }.
 #minimize{
-    Weight@5+Priority,Package
+    Weight@25+Priority,Package
     : version_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
 % Try to use all the default values of variants
-opt_criterion(4, "default values of variants not being used (non-roots)").
-#minimize{ 0@204: #true }.
-#minimize{ 0@4: #true }.
+opt_criterion(20, "default values of variants not being used (non-roots)").
+#minimize{ 0@220: #true }.
+#minimize{ 0@20: #true }.
 #minimize{
-    1@4+Priority,Package,Variant,Value
+    1@20+Priority,Package,Variant,Value
     : variant_default_not_used(Package, Variant, Value),
       not root(Package),
       build_priority(Package, Priority)
 }.
 
 % Try to use preferred compilers
-opt_criterion(3, "non-preferred compilers").
-#minimize{ 0@203: #true }.
-#minimize{ 0@3: #true }.
+opt_criterion(15, "non-preferred compilers").
+#minimize{ 0@215: #true }.
+#minimize{ 0@15: #true }.
 #minimize{
-    Weight@3+Priority,Package
+    Weight@15+Priority,Package
     : compiler_weight(Package, Weight),
       build_priority(Package, Priority)
 }.
 
 % Minimize the number of mismatches for targets in the DAG, try
 % to select the preferred target.
-opt_criterion(2, "target mismatches").
-#minimize{ 0@202: #true }.
-#minimize{ 0@2: #true }.
+opt_criterion(10, "target mismatches").
+#minimize{ 0@210: #true }.
+#minimize{ 0@10: #true }.
 #minimize{
-    1@2+Priority,Package,Dependency
+    1@10+Priority,Package,Dependency
     : node_target_mismatch(Package, Dependency),
       build_priority(Package, Priority)
 }.
 
-opt_criterion(1, "non-preferred targets").
-#minimize{ 0@201: #true }.
-#minimize{ 0@1: #true }.
+opt_criterion(5, "non-preferred targets").
+#minimize{ 0@205: #true }.
+#minimize{ 0@5: #true }.
 #minimize{
-    Weight@1+Priority,Package
+    Weight@5+Priority,Package
     : node_target_weight(Package, Weight),
       build_priority(Package, Priority)
 }.

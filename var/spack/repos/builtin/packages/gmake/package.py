@@ -5,6 +5,7 @@
 
 import re
 
+from spack.build_environment import MakeExecutable
 from spack.package import *
 
 
@@ -14,10 +15,31 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/make/"
     gnu_mirror_path = "make/make-4.2.1.tar.gz"
+    maintainers = ["haampie"]
 
-    version("4.3", sha256="e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19")
-    version("4.2.1", sha256="e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7")
-    version("4.0", sha256="fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69")
+    # Alpha releases
+    version(
+        "4.3.90",
+        url="http://alpha.gnu.org/gnu/make/make-4.3.90.tar.gz",
+        sha256="b85021da86c3ceaa104151ac1f4af3c811f5f2f61cd383f0de739aa5b2f98c7d",
+    )
+
+    # Stable releases
+    version(
+        "4.3",
+        sha256="e05fdde47c5f7ca45cb697e973894ff4f5d79e13b750ed57d7b66d8defc78e19",
+        preferred=True,
+    )
+    version(
+        "4.2.1",
+        sha256="e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7",
+        preferred=True,
+    )
+    version(
+        "4.0",
+        sha256="fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69",
+        preferred=True,
+    )
 
     variant("guile", default=False, description="Support GNU Guile for embedded scripting")
     variant("nls", default=True, description="Enable Native Language Support")
@@ -42,6 +64,9 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
         when="@:4.2.1",
     )
 
+    # See https://savannah.gnu.org/bugs/?57962
+    patch("findprog-in-ignore-directories.patch", when="@4.3")
+
     tags = ["build-tools"]
 
     executables = ["^g?make$"]
@@ -54,20 +79,15 @@ class Gmake(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         args = []
-
-        if "+guile" in self.spec:
-            args.append("--with-guile")
-        else:
-            args.append("--without-guile")
-
-        if "+nls" in self.spec:
-            args.append("--enable-nls")
-        else:
-            args.append("--disable-nls")
-
+        args.extend(self.with_or_without("guile"))
+        args.extend(self.with_or_without("nls"))
         return args
 
     @run_after("install")
     def symlink_gmake(self):
         with working_dir(self.prefix.bin):
             symlink("make", "gmake")
+
+    def setup_dependent_package(self, module, dspec):
+        module.make = MakeExecutable(self.spec.prefix.bin.make, make_jobs)
+        module.gmake = MakeExecutable(self.spec.prefix.bin.gmake, make_jobs)

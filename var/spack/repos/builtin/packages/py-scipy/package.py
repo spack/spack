@@ -112,6 +112,22 @@ class PyScipy(PythonPackage):
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.set_blas_lapack()
 
+    @run_before("install")
+    def set_fortran_compiler(self):
+        if self.spec.satisfies("%fj"):
+            with open("setup.cfg", "w") as f:
+                f.write("[config_fc]\n")
+                f.write("fcompiler = fujitsu\n")
+        elif self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
+            if self.spec.satisfies("target=x86:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intel\n")
+            elif self.spec.satisfies("target=x86_64:"):
+                with open("setup.cfg", "w") as f:
+                    f.write("[config_fc]\n")
+                    f.write("fcompiler = intelem\n")
+
     def setup_build_environment(self, env):
         # https://github.com/scipy/scipy/issues/9080
         env.set("F90", spack_fc)
@@ -122,14 +138,13 @@ class PyScipy(PythonPackage):
             if self.spec.satisfies("^py-numpy@1.16:1.17"):
                 env.set("NPY_DISTUTILS_APPEND_FLAGS", "1")
 
+        # https://github.com/scipy/scipy/issues/14935
+        if self.spec.satisfies("%intel ^py-pythran") or self.spec.satisfies("%oneapi ^py-pythran"):
+            if self.spec["py-pythran"].version < Version("0.12"):
+                env.set("SCIPY_USE_PYTHRAN", "0")
+
         # Pick up Blas/Lapack from numpy
         self.spec["py-numpy"].package.setup_build_environment(env)
-
-    def install_options(self, spec, prefix):
-        args = []
-        if spec.satisfies("%fj"):
-            args.extend(["config_fc", "--fcompiler=fujitsu"])
-        return args
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

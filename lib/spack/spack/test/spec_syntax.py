@@ -31,62 +31,96 @@ from spack.spec import (
 )
 from spack.variant import DuplicateVariantError
 
-# Sample output for a complex lexing.
-complex_lex = [
+# Building blocks for complex lexing.
+complex_root = [
     Token(sp.ID, "mvapich_foo"),
-    Token(sp.DEP),
-    Token(sp.ID, "_openmpi"),
-    Token(sp.AT),
-    Token(sp.ID, "1.2"),
-    Token(sp.COLON),
-    Token(sp.ID, "1.4"),
-    Token(sp.COMMA),
-    Token(sp.ID, "1.6"),
-    Token(sp.PCT),
-    Token(sp.ID, "intel"),
-    Token(sp.AT),
-    Token(sp.ID, "12.1"),
-    Token(sp.COLON),
-    Token(sp.ID, "12.6"),
-    Token(sp.ON),
-    Token(sp.ID, "debug"),
-    Token(sp.OFF),
-    Token(sp.ID, "qt_4"),
-    Token(sp.DEP),
-    Token(sp.ID, "stackwalker"),
-    Token(sp.AT),
-    Token(sp.ID, "8.1_1e"),
 ]
 
-# Another sample lexer output with a kv pair.
-kv_lex = [
+kv_root = [
     Token(sp.ID, "mvapich_foo"),
     Token(sp.ID, "debug"),
     Token(sp.EQ),
     Token(sp.VAL, "4"),
+]
+
+complex_compiler = [
+    Token(sp.PCT),
+    Token(sp.ID, "intel"),
+]
+
+complex_compiler_v = [
+    Token(sp.VER, "@12.1"),
+    Token(sp.COLON),
+    Token(sp.ID, "12.6"),
+]
+
+complex_compiler_v_space = [
+    Token(sp.VER, "@"),
+    Token(sp.ID, "12.1"),
+    Token(sp.COLON),
+    Token(sp.ID, "12.6"),
+]
+
+complex_dep1 = [
     Token(sp.DEP),
     Token(sp.ID, "_openmpi"),
-    Token(sp.AT),
+    Token(sp.VER, "@1.2"),
+    Token(sp.COLON),
+    Token(sp.ID, "1.4"),
+    Token(sp.COMMA),
+    Token(sp.ID, "1.6"),
+]
+
+complex_dep1_space = [
+    Token(sp.DEP),
+    Token(sp.ID, "_openmpi"),
+    Token(sp.VER, "@"),
     Token(sp.ID, "1.2"),
     Token(sp.COLON),
     Token(sp.ID, "1.4"),
     Token(sp.COMMA),
     Token(sp.ID, "1.6"),
-    Token(sp.PCT),
-    Token(sp.ID, "intel"),
-    Token(sp.AT),
-    Token(sp.ID, "12.1"),
-    Token(sp.COLON),
-    Token(sp.ID, "12.6"),
+]
+
+complex_dep1_var = [
     Token(sp.ON),
     Token(sp.ID, "debug"),
     Token(sp.OFF),
     Token(sp.ID, "qt_4"),
+]
+
+complex_dep2 = [
     Token(sp.DEP),
     Token(sp.ID, "stackwalker"),
-    Token(sp.AT),
+    Token(sp.VER, "@8.1_1e"),
+]
+
+complex_dep2_space = [
+    Token(sp.DEP),
+    Token(sp.ID, "stackwalker"),
+    Token(sp.VER, "@"),
     Token(sp.ID, "8.1_1e"),
 ]
+
+# Sample output from complex lexing
+complex_lex = (
+    complex_root
+    + complex_dep1
+    + complex_compiler
+    + complex_compiler_v
+    + complex_dep1_var
+    + complex_dep2
+)
+
+# Another sample lexer output with a kv pair.
+kv_lex = (
+    kv_root
+    + complex_dep1
+    + complex_compiler
+    + complex_compiler_v_space
+    + complex_dep1_var
+    + complex_dep2_space
+)
 
 
 class TestSpecSyntax(object):
@@ -120,7 +154,7 @@ class TestSpecSyntax(object):
         lex_output = sp.SpecLexer().lex(spec)
         assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
-            if tok.type == sp.ID or tok.type == sp.VAL:
+            if tok.type in (sp.ID, sp.VAL, sp.VER):
                 assert tok == spec_tok
             else:
                 # Only check the type for non-identifiers.
@@ -243,17 +277,27 @@ class TestSpecSyntax(object):
             "x ^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f", "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1"
         )
 
+        default_target = spack.platforms.test.Test.default
         self.check_parse(
-            "x arch=test-redhat6-None" " ^y arch=test-None-core2" " ^z arch=linux-None-None",
+            "x arch=test-redhat6-None"
+            + (" ^y arch=test-None-%s" % default_target)
+            + " ^z arch=linux-None-None",
             "x os=fe " "^y target=be " "^z platform=linux",
         )
 
         self.check_parse(
-            "x arch=test-debian6-core2" " ^y arch=test-debian6-core2",
+            ("x arch=test-debian6-%s" % default_target)
+            + (" ^y arch=test-debian6-%s" % default_target),
             "x os=default_os target=default_target" " ^y os=default_os target=default_target",
         )
 
         self.check_parse("x ^y", "x@: ^y@:")
+
+    def test_parse_redundant_deps(self):
+        self.check_parse("x ^y@foo", "x ^y@foo ^y@foo")
+        self.check_parse("x ^y@foo+bar", "x ^y@foo ^y+bar")
+        self.check_parse("x ^y@foo+bar", "x ^y@foo+bar ^y")
+        self.check_parse("x ^y@foo+bar", "x ^y ^y@foo+bar")
 
     def test_parse_errors(self):
         errors = ["x@@1.2", "x ^y@@1.2", "x@1.2::", "x::"]
@@ -443,7 +487,7 @@ class TestSpecSyntax(object):
         self._check_raises(MultipleVersionError, multiples)
 
     def test_duplicate_dependency(self):
-        self._check_raises(DuplicateDependencyError, ["x ^y ^y"])
+        self._check_raises(DuplicateDependencyError, ["x ^y@1 ^y@2"])
 
     def test_duplicate_compiler(self):
         duplicates = [
@@ -501,6 +545,7 @@ class TestSpecSyntax(object):
     @pytest.mark.usefixtures("config")
     def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
         """Ensure that libelf.yaml parses as a spec, NOT a file."""
+        # TODO: This test is brittle, as it should cover also the JSON case now.
         s = Spec("libelf")
         s.concretize()
 
@@ -525,7 +570,7 @@ class TestSpecSyntax(object):
 
         # check that if we concretize this spec, we get a good error
         # message that mentions we might've meant a file.
-        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+        with pytest.raises(spack.repo.UnknownEntityError) as exc_info:
             spec.concretize()
         assert exc_info.value.long_message
         assert (
@@ -716,14 +761,22 @@ class TestSpecSyntax(object):
         )
 
     def test_spaces_between_dependences(self):
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
             "^stackwalker @ 8.1_1e",
         )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
             "^stackwalker @ 8.1_1e",
@@ -738,14 +791,30 @@ class TestSpecSyntax(object):
         )
 
     def test_way_too_many_spaces(self):
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v_space
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e",
         )
+        lex_key = (
+            complex_root
+            + complex_dep1
+            + complex_compiler
+            + complex_compiler_v_space
+            + complex_dep1_var
+            + complex_dep2_space
+        )
         self.check_lex(
-            complex_lex,
+            lex_key,
             "mvapich_foo "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug ~ qt_4 "
             "^ stackwalker @ 8.1_1e",
@@ -837,3 +906,25 @@ class TestSpecSyntax(object):
         for a, b in itertools.product(specs, repeat=2):
             # Check that we can compare without raising an error
             assert a <= b or b < a
+
+    def test_git_ref_specs_with_variants(self):
+        spec_str = "develop-branch-version@git.{h}=develop+var1+var2".format(h="a" * 40)
+        self.check_parse(spec_str)
+
+    def test_git_ref_spec_equivalences(self, mock_packages, mock_stage):
+        s1 = sp.Spec("develop-branch-version@git.{hash}=develop".format(hash="a" * 40))
+        s2 = sp.Spec("develop-branch-version@git.{hash}=develop".format(hash="b" * 40))
+        s3 = sp.Spec("develop-branch-version@git.0.2.15=develop")
+        s_no_git = sp.Spec("develop-branch-version@develop")
+
+        assert s1.satisfies(s_no_git)
+        assert s2.satisfies(s_no_git)
+        assert not s_no_git.satisfies(s1)
+        assert not s2.satisfies(s1)
+        assert not s3.satisfies(s1)
+
+    @pytest.mark.regression("32471")
+    @pytest.mark.parametrize("spec_str", ["target=x86_64", "os=redhat6", "target=x86_64:"])
+    def test_platform_is_none_if_not_present(self, spec_str):
+        s = sp.Spec(spec_str)
+        assert s.architecture.platform is None, s

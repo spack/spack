@@ -28,11 +28,10 @@ class Libproxy(CMakePackage):
     depends_on("python@:3.6", type=("build", "run"), when="@:0.4.15 +python")
 
     def cmake_args(self):
-        from_variant = self.define_from_variant
         return [
-            from_variant("WITH_PERL", "perl"),
-            from_variant("WITH_PYTHON3", "python"),
-            CMakePackage.define("WITH_DOTNET", False),
-            CMakePackage.define("WITH_PYTHON2", False),
-            CMakePackage.define("WITH_VALA", False),
+            self.define_from_variant("WITH_PERL", "perl"),
+            self.define_from_variant("WITH_PYTHON3", "python"),
+            self.define("WITH_DOTNET", False),
+            self.define("WITH_PYTHON2", False),
+            self.define("WITH_VALA", False),
         ]
