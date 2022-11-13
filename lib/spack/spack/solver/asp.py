@@ -2088,7 +2088,7 @@ class SpecBuilder(object):
         if pkg not in self._specs:
             self._specs[pkg] = spack.spec.Spec(pkg)
 
-    def node_namespace(self, pkg, namepace):
+    def node_namespace(self, pkg, namespace):
         self._specs[pkg].namespace = namespace
 
     def _arch(self, pkg):
