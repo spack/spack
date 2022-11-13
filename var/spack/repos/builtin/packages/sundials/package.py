@@ -452,9 +452,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+magma" in spec:
             args.extend([define("ENABLE_MAGMA", True), define("MAGMA_DIR", spec["magma"].prefix)])
             if "+cuda" in spec:
-                define("SUNDIALS_MAGMA_BACKENDS", "CUDA")
+                args.extend([define("SUNDIALS_MAGMA_BACKENDS", "CUDA")])
             if "+rocm" in spec:
-                define("SUNDIALS_MAGMA_BACKENDS", "HIP")
+                args.extend([define("SUNDIALS_MAGMA_BACKENDS", "HIP")])
 
         # Building with PETSc
         if "+petsc" in spec:

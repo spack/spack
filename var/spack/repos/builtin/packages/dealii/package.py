@@ -591,6 +591,9 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define("SCALAPACK_FOUND", True),
                     self.define("SCALAPACK_INCLUDE_DIRS", spec["scalapack"].prefix.include),
                     self.define("SCALAPACK_LIBRARIES", scalapack_libs.joined(";")),
+                    # If SCALAPACK_LIBRARY is not set, deal.II still searches
+                    # for SCALAPACK despite the above settings:
+                    self.define("SCALAPACK_LIBRARY", scalapack_libs.joined(";")),
                 ]
             )
 
