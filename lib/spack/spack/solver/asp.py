@@ -1991,15 +1991,15 @@ class SpackSolverSetup(object):
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
 
+        self.namespace = namespace
+        if namespace:
+            self.gen.fact(fn.enable_node_namespace())
+
         if reuse:
             self.gen.h1("Reusable specs")
             self.gen.fact(fn.optimize_for_reuse())
             for reusable_spec in reuse:
                 self._facts_from_concrete_spec(reusable_spec, possible)
-
-        self.namespace = namespace
-        if namespace:
-            self.gen.fact(fn.enable_node_namespace())
 
         self.gen.h1("General Constraints")
         self.available_compilers()
