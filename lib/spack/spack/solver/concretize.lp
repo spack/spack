@@ -214,7 +214,8 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
 :- node(Package),
    node_namespace(Package, Namespace1),
    node_namespace(Package, Namespace2),
-   Namespace1 < Namespace2.
+   Namespace1 < Namespace2,
+   enable_node_namespace().
 
 #defined condition/2.
 #defined condition_requirement/3.
