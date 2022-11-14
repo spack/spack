@@ -127,6 +127,7 @@ class Glib(Package):
     depends_on("uuid", when="+libmount")
     depends_on("util-linux", when="+libmount")
     depends_on("iconv")
+    depends_on("elf")  # bin/gresource
 
     # The following patch is needed for gcc-6.1
     patch("g_date_strftime.patch", when="@2.42.1")
