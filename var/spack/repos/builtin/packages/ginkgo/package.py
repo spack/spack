@@ -129,6 +129,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
             "-DGINKGO_BUILD_BENCHMARKS=OFF",
             "-DGINKGO_BUILD_DOC=OFF",
             "-DGINKGO_BUILD_EXAMPLES=OFF",
+            "-DGINKGO_WITH_CCACHE=OFF",
             self.define("GINKGO_BUILD_TESTS", self.run_tests),
             # Let spack handle the RPATH
             "-DGINKGO_INSTALL_RPATH=OFF",
