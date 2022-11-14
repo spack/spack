@@ -11,6 +11,7 @@ where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
 import collections
+import collections.abc
 import operator
 import os
 import os.path
@@ -21,7 +22,6 @@ import ruamel.yaml.error as yaml_error
 import six
 
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import mkdirp
 
 import spack.config
@@ -228,7 +228,7 @@ class Mirror(object):
             self._push_url = None
 
 
-class MirrorCollection(Mapping):
+class MirrorCollection(collections.abc.Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):

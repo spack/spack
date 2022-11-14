@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 import pytest
 
 import spack.directives
@@ -894,7 +892,6 @@ class TestSpecSematics(object):
         with pytest.raises(spack.variant.InvalidVariantValueCombinationError):
             Spec("multivalue-variant foo=*,bar")
 
-    @pytest.mark.skipif(sys.version_info[0] == 2, reason="__wrapped__ requires python 3")
     def test_errors_in_variant_directive(self):
         variant = spack.directives.variant.__wrapped__
 

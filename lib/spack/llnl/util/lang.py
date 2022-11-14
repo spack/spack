@@ -5,9 +5,11 @@
 
 from __future__ import division
 
+import collections.abc
 import contextlib
 import functools
 import inspect
+import itertools
 import os
 import re
 import sys
@@ -17,8 +19,6 @@ from typing import Any, Callable, Iterable, List, Tuple
 
 import six
 from six import string_types
-
-from llnl.util.compat import MutableMapping, MutableSequence, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
@@ -312,7 +312,7 @@ def lazy_eq(lseq, rseq):
     # zip_longest is implemented in native code, so use it for speed.
     # use zip_longest instead of zip because it allows us to tell
     # which iterator was longer.
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return False
 
@@ -332,7 +332,7 @@ def lazy_lt(lseq, rseq):
     liter = lseq()
     riter = rseq()
 
-    for left, right in zip_longest(liter, riter, fillvalue=done):
+    for left, right in itertools.zip_longest(liter, riter, fillvalue=done):
         if (left is done) or (right is done):
             return left is done  # left was shorter than right
 
@@ -482,7 +482,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
 
 @lazy_lexicographic_ordering
-class HashableMap(MutableMapping):
+class HashableMap(collections.abc.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
@@ -887,32 +887,28 @@ def load_module_from_file(module_name, module_path):
         ImportError: when the module can't be loaded
         FileNotFoundError: when module_path doesn't exist
     """
+    import importlib.util
+
     if module_name in sys.modules:
         return sys.modules[module_name]
 
     # This recipe is adapted from https://stackoverflow.com/a/67692/771663
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
-        module = importlib.util.module_from_spec(spec)  # novm
-        # The module object needs to exist in sys.modules before the
-        # loader executes the module code.
-        #
-        # See https://docs.python.org/3/reference/import.html#loading
-        sys.modules[spec.name] = module
+    spec = importlib.util.spec_from_file_location(module_name, module_path)  # novm
+    module = importlib.util.module_from_spec(spec)  # novm
+    # The module object needs to exist in sys.modules before the
+    # loader executes the module code.
+    #
+    # See https://docs.python.org/3/reference/import.html#loading
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
         try:
-            spec.loader.exec_module(module)
-        except BaseException:
-            try:
-                del sys.modules[spec.name]
-            except KeyError:
-                pass
-            raise
-    elif sys.version_info[0] == 2:
-        import imp
-
-        module = imp.load_source(module_name, module_path)
+            del sys.modules[spec.name]
+        except KeyError:
+            pass
+        raise
     return module
 
 
@@ -1030,7 +1026,7 @@ def ensure_last(lst, *elements):
         lst.append(lst.pop(lst.index(elt)))
 
 
-class TypedMutableSequence(MutableSequence):
+class TypedMutableSequence(collections.abc.MutableSequence):
     """Base class that behaves like a list, just with a different type.
 
     Client code can inherit from this base class:
