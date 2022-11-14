@@ -27,7 +27,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     variant("mfem", default=True, description="Build MFEM, Laghos and Remhos")
     variant("nek", default=True, description="Build Nek5000, GSLIB, Nekbone, and NekCEM")
     variant("occa", default=True, description="Enable OCCA support")
-    variant("petsc", default=True, description="Build PETSc and HPGMG")
+    variant("petsc", default=True, description="Build PETSc and HPGMG", when="@2:")
     variant("pumi", default=True, description="Build PUMI")
     variant("omega-h", default=True, description="Build Omega_h")
     variant(
@@ -202,11 +202,6 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     depends_on("petsc@3.11.1+mpi+hypre+suite-sparse+mumps+double~int64", when="@2.0.0+petsc+mfem")
     depends_on("hpgmg@0.4+fe", when="@2.0.0+petsc")
     # ceed-1.0
-    # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
-    # Ideally, these can be turned into recommendations to Spack for
-    # concretizing the PETSc spec, if Spack ever supports recommendations.
-    depends_on("petsc@3.8.3~hdf5~superlu-dist", when="@1.0.0+petsc+quickbuild")
-    depends_on("petsc@3.8.3+mpi+double~int64", when="@1.0.0+petsc~mfem")
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
     depends_on("petsc@3.8.3+mpi+hypre+suite-sparse+mumps+double~int64", when="@1.0.0+petsc+mfem")

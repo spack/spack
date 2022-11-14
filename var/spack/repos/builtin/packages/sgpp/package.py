@@ -22,8 +22,6 @@ class Sgpp(SConsPackage):
     version("3.4.0", sha256="450d4002850b0a48c561abe221b634261ca44eee111ca605c3e80797182f40b3")
     version("3.3.0", sha256="ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4")
     version("3.2.0", sha256="dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d")
-    version("3.1.0", sha256="6b46bc5b3966e92567d6754130666bdffb7be1d1d2c1b427d7ce964b8eaab526")
-    version("3.0.0", sha256="4dd9049e664abd7db78c355fea5e192167812f443115d4bf686a51bb1e9bda9c")
 
     # Patches with bugfixes that are necessary to build old SGpp versions
     # with spack. Patches are submitted upstream, but need to applied
@@ -66,7 +64,6 @@ class Sgpp(SConsPackage):
 
     # Mandatory dependencies
     depends_on("scons", type=("build"))
-    depends_on("scons@2.5.1", when="@1.0.0:3.1.0", type=("build"))
     depends_on("scons@3:", when="@3.2.0:", type=("build"))
     depends_on("zlib", type=("link"))
     # Python dependencies

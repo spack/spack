@@ -142,7 +142,7 @@ class Eccodes(CMakePackage):
                 name=center,
                 destination="spack-definitions",
                 placement="definitions.{0}".format(center),
-                **kwargs
+                **kwargs,
             )
 
     # Enforce linking against the specified JPEG2000 backend, see also
@@ -229,13 +229,13 @@ class Eccodes(CMakePackage):
             r"(^\s*kind_of_double\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(real\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
         filter_file(
             r"(^\s*kind_of_\w+\s*=\s*)(\d{1,2})(\s*$)",
             "\\1kind(x\\2)\\3",
             "fortran/grib_types.f90",
-            **kwargs
+            **kwargs,
         )
 
         # Replace integer kinds:
@@ -244,7 +244,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*integer\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_int_kind({0})\\2".format(r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Replace real kinds:
@@ -253,7 +253,7 @@ class Eccodes(CMakePackage):
                 r"(^\s*real\((?:kind=)?){0}(\).*)".format(size),
                 "\\1selected_real_kind({0}, {1})\\2".format(p, r),
                 *patch_kind_files,
-                **kwargs
+                **kwargs,
             )
 
         # Enable getarg and exit subroutines:
@@ -261,7 +261,7 @@ class Eccodes(CMakePackage):
             r"(^\s*program\s+\w+)(\s*$)",
             "\\1; use f90_unix_env; use f90_unix_proc\\2",
             *patch_unix_ext_files,
-            **kwargs
+            **kwargs,
         )
 
     @property

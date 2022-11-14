@@ -94,9 +94,7 @@ class Catalyst(CMakePackage):
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
         python_path = os.path.realpath(
-            self.spec["python"].command.path
-            if "+python" in self.spec
-            else sys.executable
+            self.spec["python"].command.path if "+python" in self.spec else sys.executable
         )
 
         command = [
