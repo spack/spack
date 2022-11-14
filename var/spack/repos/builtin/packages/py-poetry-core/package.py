@@ -19,9 +19,7 @@ class PyPoetryCore(PythonPackage):
 
     depends_on("python@2.7,3.5:3", type=("build", "run"))
     depends_on("python@3.7:3", when="@1.1.0:", type=("build", "run"))
-    depends_on(
-        "py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7", type=("build", "run")
-    )
+    depends_on("py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@1.7:", when="@1.1: ^python@:3.7", type=("build", "run"))
 
     # https://github.com/python-poetry/poetry/issues/5547

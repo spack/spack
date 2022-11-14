@@ -37,9 +37,7 @@ class PyRequests(PythonPackage):
     depends_on("py-chardet@3.0.2:4", type=("build", "run"), when="@2.25.1:2.25")
     depends_on("py-chardet@3.0.2:3", type=("build", "run"), when="@2.23.0:2.25.0")
     depends_on("py-chardet@3.0.2:3.0", type=("build", "run"), when="@2.16.0:2.22")
-    depends_on(
-        "py-charset-normalizer@2.0.0:2.0", type=("build", "run"), when="@2.26.0:"
-    )
+    depends_on("py-charset-normalizer@2.0.0:2.0", type=("build", "run"), when="@2.26.0:")
     depends_on("py-idna@2.5:3", type=("build", "run"), when="@2.26.0:")
     depends_on("py-idna@2.5:2", type=("build", "run"), when="@2.23:2.25")
     depends_on("py-idna@2.5:2.8", type=("build", "run"), when="@2.16.0:2.22")
