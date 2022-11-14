@@ -6,7 +6,7 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
-
+import collections.abc
 import functools
 import inspect
 import itertools
@@ -17,7 +17,6 @@ from six import StringIO
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.directives
 import spack.error as error
@@ -712,7 +711,7 @@ def substitute_abstract_variants(spec):
 
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
-class DisjointSetsOfValues(Sequence):
+class DisjointSetsOfValues(collections.abc.Sequence):
     """Allows combinations from one of many mutually exclusive sets.
 
     The value ``('none',)`` is reserved to denote the empty set

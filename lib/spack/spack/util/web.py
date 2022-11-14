@@ -15,6 +15,7 @@ import shutil
 import ssl
 import sys
 import traceback
+from html.parser import HTMLParser
 
 import six
 from six.moves.urllib.error import URLError
@@ -39,16 +40,10 @@ from spack.util.path import convert_to_posix_path
 #: User-Agent used in Request objects
 SPACK_USER_AGENT = "Spackbot/{0}".format(spack.spack_version)
 
-if sys.version_info < (3, 0):
-    # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParseError, HTMLParser  # novm
-else:
-    # In Python 3, things moved to html.parser
-    from html.parser import HTMLParser
 
-    # Also, HTMLParseError is deprecated and never raised.
-    class HTMLParseError(Exception):
-        pass
+# Also, HTMLParseError is deprecated and never raised.
+class HTMLParseError(Exception):
+    pass
 
 
 class LinkParser(HTMLParser):
@@ -676,11 +671,6 @@ def spider(root_urls, depth=0, concurrency=32):
         except HTMLParseError as e:
             # This error indicates that Python's HTML parser sucks.
             msg = "Got an error parsing HTML."
-
-            # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-            if sys.version_info[:3] < (2, 7, 3):
-                msg += " Use Python 2.7.3 or newer for better HTML parsing."
-
             tty.warn(msg, url, "HTMLParseError: " + str(e))
 
         except Exception as e:

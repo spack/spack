@@ -7,13 +7,6 @@
 package.
 """
 import os
-import sys
-from typing import Callable, DefaultDict, List  # novm
-
-if sys.version_info >= (3, 5):
-    CallbackDict = DefaultDict[str, List[Callable]]
-else:
-    CallbackDict = None
 
 import llnl.util.filesystem
 
