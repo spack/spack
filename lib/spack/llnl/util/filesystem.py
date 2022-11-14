@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import collections.abc
 import errno
 import glob
 import hashlib
@@ -20,7 +21,6 @@ from sys import platform as _platform
 import six
 
 from llnl.util import tty
-from llnl.util.compat import Sequence
 from llnl.util.lang import dedupe, memoized
 from llnl.util.symlink import islink, symlink
 
@@ -290,9 +290,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         shutil.copy(filename, tmp_filename)
 
         try:
-            extra_kwargs = {}
-            if sys.version_info > (3, 0):
-                extra_kwargs = {"errors": "surrogateescape"}
+            extra_kwargs = {"errors": "surrogateescape"}
 
             # Open as a text file and filter until the end of the file is
             # reached or we found a marker in the line if it was specified
@@ -1309,46 +1307,34 @@ def visit_directory_tree(root, visitor, rel_path="", depth=0):
         depth (str): current depth from the root
     """
     dir = os.path.join(root, rel_path)
-
-    if sys.version_info >= (3, 5, 0):
-        dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)  # novermin
-    else:
-        dir_entries = os.listdir(dir)
-        dir_entries.sort()
+    dir_entries = sorted(os.scandir(dir), key=lambda d: d.name)
 
     for f in dir_entries:
-        if sys.version_info >= (3, 5, 0):
-            rel_child = os.path.join(rel_path, f.name)
-            islink = f.is_symlink()
-            # On Windows, symlinks to directories are distinct from
-            # symlinks to files, and it is possible to create a
-            # broken symlink to a directory (e.g. using os.symlink
-            # without `target_is_directory=True`), invoking `isdir`
-            # on a symlink on Windows that is broken in this manner
-            # will result in an error. In this case we can work around
-            # the issue by reading the target and resolving the
-            # directory ourselves
-            try:
-                isdir = f.is_dir()
-            except OSError as e:
-                if is_windows and hasattr(e, "winerror") and e.winerror == 5 and islink:
-                    # if path is a symlink, determine destination and
-                    # evaluate file vs directory
-                    link_target = resolve_link_target_relative_to_the_link(f)
-                    # link_target might be relative but
-                    # resolve_link_target_relative_to_the_link
-                    # will ensure that if so, that it is relative
-                    # to the CWD and therefore
-                    # makes sense
-                    isdir = os.path.isdir(link_target)
-                else:
-                    raise e
-
-        else:
-            rel_child = os.path.join(rel_path, f)
-            lexists, islink, isdir = lexists_islink_isdir(os.path.join(dir, f))
-            if not lexists:
-                continue
+        rel_child = os.path.join(rel_path, f.name)
+        islink = f.is_symlink()
+        # On Windows, symlinks to directories are distinct from
+        # symlinks to files, and it is possible to create a
+        # broken symlink to a directory (e.g. using os.symlink
+        # without `target_is_directory=True`), invoking `isdir`
+        # on a symlink on Windows that is broken in this manner
+        # will result in an error. In this case we can work around
+        # the issue by reading the target and resolving the
+        # directory ourselves
+        try:
+            isdir = f.is_dir()
+        except OSError as e:
+            if is_windows and hasattr(e, "winerror") and e.winerror == 5 and islink:
+                # if path is a symlink, determine destination and
+                # evaluate file vs directory
+                link_target = resolve_link_target_relative_to_the_link(f)
+                # link_target might be relative but
+                # resolve_link_target_relative_to_the_link
+                # will ensure that if so, that it is relative
+                # to the CWD and therefore
+                # makes sense
+                isdir = os.path.isdir(link_target)
+            else:
+                raise e
 
         if not isdir and not islink:
             # handle non-symlink files
@@ -1609,7 +1595,7 @@ def find(root, files, recursive=True):
 
     Parameters:
         root (str): The root directory to start searching from
-        files (str or Sequence): Library name(s) to search for
+        files (str or collections.abc.Sequence): Library name(s) to search for
         recursive (bool): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
 
@@ -1673,7 +1659,7 @@ def _find_non_recursive(root, search_files):
 # Utilities for libraries and headers
 
 
-class FileList(Sequence):
+class FileList(collections.abc.Sequence):
     """Sequence of absolute paths to files.
 
     Provides a few convenience methods to manipulate file paths.
@@ -1914,7 +1900,7 @@ def find_headers(headers, root, recursive=False):
     """
     if isinstance(headers, six.string_types):
         headers = [headers]
-    elif not isinstance(headers, Sequence):
+    elif not isinstance(headers, collections.abc.Sequence):
         message = "{0} expects a string or sequence of strings as the "
         message += "first argument [got {1} instead]"
         message = message.format(find_headers.__name__, type(headers))
@@ -2080,7 +2066,7 @@ def find_system_libraries(libraries, shared=True):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, Sequence):
+    elif not isinstance(libraries, collections.abc.Sequence):
         message = "{0} expects a string or sequence of strings as the "
         message += "first argument [got {1} instead]"
         message = message.format(find_system_libraries.__name__, type(libraries))
@@ -2137,7 +2123,7 @@ def find_libraries(libraries, root, shared=True, recursive=False, runtime=True):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, Sequence):
+    elif not isinstance(libraries, collections.abc.Sequence):
         message = "{0} expects a string or sequence of strings as the "
         message += "first argument [got {1} instead]"
         message = message.format(find_libraries.__name__, type(libraries))

@@ -6,7 +6,6 @@
 import bisect
 import re
 import struct
-import sys
 from collections import namedtuple
 from struct import calcsize, unpack, unpack_from
 
@@ -92,12 +91,6 @@ class ELF_CONSTANTS:
     DT_RPATH = 15
     DT_RUNPATH = 29
     SHT_STRTAB = 3
-
-
-def get_byte_at(byte_array, idx):
-    if sys.version_info[0] < 3:
-        return ord(byte_array[idx])
-    return byte_array[idx]
 
 
 class ElfFile(object):
@@ -381,7 +374,7 @@ def parse_header(f, elf):
         raise ElfParsingError("Not an ELF file")
 
     # Defensively require a valid class and data.
-    e_ident_class, e_ident_data = get_byte_at(e_ident, 4), get_byte_at(e_ident, 5)
+    e_ident_class, e_ident_data = e_ident[4], e_ident[5]
 
     if e_ident_class not in (ELF_CONSTANTS.CLASS32, ELF_CONSTANTS.CLASS64):
         raise ElfParsingError("Invalid class found")
@@ -453,8 +446,7 @@ def get_rpaths(path):
 
     # If it does, split the string in components
     rpath = elf.dt_rpath_str
-    if sys.version_info[0] >= 3:
-        rpath = rpath.decode("utf-8")
+    rpath = rpath.decode("utf-8")
     return rpath.split(":")
 
 
