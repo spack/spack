@@ -14,8 +14,6 @@ import re
 import types
 import warnings
 
-from six import string_types
-
 import archspec.cpu
 
 try:
@@ -213,7 +211,7 @@ def build_criteria_names(costs, tuples):
 
 
 def issequence(obj):
-    if isinstance(obj, string_types):
+    if isinstance(obj, str):
         return False
     return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
 
@@ -225,7 +223,7 @@ def listify(args):
 
 
 def packagize(pkg):
-    if isinstance(pkg, string_types):
+    if isinstance(pkg, str):
         return spack.repo.path.get_pkg_class(pkg)
     else:
         return pkg
@@ -949,7 +947,7 @@ class SpackSolverSetup(object):
         """Manipulate requirements from packages.yaml, and return a list of tuples
         with a uniform structure (name, policy, requirements).
         """
-        if isinstance(requirements, string_types):
+        if isinstance(requirements, str):
             rules = [(pkg_name, "one_of", [requirements])]
         else:
             rules = []

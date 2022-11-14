@@ -6,6 +6,7 @@
 from __future__ import unicode_literals
 
 import contextlib
+import io
 import os
 import struct
 import sys
@@ -13,10 +14,6 @@ import textwrap
 import traceback
 from datetime import datetime
 from sys import platform as _platform
-
-import six
-from six import StringIO
-from six.moves import input
 
 if _platform != "win32":
     import fcntl
@@ -183,7 +180,7 @@ def msg(message, *args, **kwargs):
     else:
         cwrite("@*b{%s==>} %s%s" % (st_text, get_timestamp(), cescape(_output_filter(message))))
     for arg in args:
-        print(indent + _output_filter(six.text_type(arg)))
+        print(indent + _output_filter(str(arg)))
 
 
 def info(message, *args, **kwargs):
@@ -201,13 +198,13 @@ def info(message, *args, **kwargs):
         st_text = process_stacktrace(st_countback)
     cprint(
         "@%s{%s==>} %s%s"
-        % (format, st_text, get_timestamp(), cescape(_output_filter(six.text_type(message)))),
+        % (format, st_text, get_timestamp(), cescape(_output_filter(str(message)))),
         stream=stream,
     )
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                _output_filter(six.text_type(arg)),
+                _output_filter(str(arg)),
                 initial_indent=indent,
                 subsequent_indent=indent,
                 break_long_words=break_long_words,
@@ -215,7 +212,7 @@ def info(message, *args, **kwargs):
             for line in lines:
                 stream.write(line + "\n")
         else:
-            stream.write(indent + _output_filter(six.text_type(arg)) + "\n")
+            stream.write(indent + _output_filter(str(arg)) + "\n")
 
 
 def verbose(message, *args, **kwargs):
@@ -238,7 +235,7 @@ def error(message, *args, **kwargs):
 
     kwargs.setdefault("format", "*r")
     kwargs.setdefault("stream", sys.stderr)
-    info("Error: " + six.text_type(message), *args, **kwargs)
+    info("Error: " + str(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
@@ -247,7 +244,7 @@ def warn(message, *args, **kwargs):
 
     kwargs.setdefault("format", "*Y")
     kwargs.setdefault("stream", sys.stderr)
-    info("Warning: " + six.text_type(message), *args, **kwargs)
+    info("Warning: " + str(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
@@ -271,7 +268,7 @@ def get_number(prompt, **kwargs):
     while number is None:
         msg(prompt, newline=False)
         ans = input()
-        if ans == six.text_type(abort):
+        if ans == str(abort):
             return None
 
         if ans:
@@ -336,11 +333,11 @@ def hline(label=None, **kwargs):
         cols -= 2
     cols = min(max_width, cols)
 
-    label = six.text_type(label)
+    label = str(label)
     prefix = char * 2 + " "
     suffix = " " + (cols - len(prefix) - clen(label)) * char
 
-    out = StringIO()
+    out = io.StringIO()
     out.write(prefix)
     out.write(label)
     out.write(suffix)

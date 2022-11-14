@@ -81,6 +81,7 @@ expansion when it is the first character in an id typed on the command line.
 """
 import collections
 import collections.abc
+import io
 import itertools
 import os
 import re
@@ -88,7 +89,6 @@ import sys
 import warnings
 
 import ruamel.yaml as yaml
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang as lang
@@ -274,11 +274,11 @@ class ArchSpec(object):
             other = spec_or_platform_tuple
             platform_tuple = other.platform, other.os, other.target
 
-        elif isinstance(spec_or_platform_tuple, (six.string_types, tuple)):
+        elif isinstance(spec_or_platform_tuple, (str, tuple)):
             spec_fields = spec_or_platform_tuple
 
             # Normalize the string to a tuple
-            if isinstance(spec_or_platform_tuple, six.string_types):
+            if isinstance(spec_or_platform_tuple, str):
                 spec_fields = spec_or_platform_tuple.split("-")
                 if len(spec_fields) != 3:
                     msg = "cannot construct an ArchSpec from {0!s}"
@@ -534,7 +534,6 @@ class ArchSpec(object):
     @property
     def concrete(self):
         """True if the spec is concrete, False otherwise"""
-        # return all(v for k, v in six.iteritems(self.to_cmp_dict()))
         return self.platform and self.os and self.target and self.target_concrete
 
     @property
@@ -584,7 +583,7 @@ class CompilerSpec(object):
             arg = args[0]
             # If there is one argument, it's either another CompilerSpec
             # to copy or a string to parse
-            if isinstance(arg, six.string_types):
+            if isinstance(arg, str):
                 c = SpecParser().parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
@@ -1335,7 +1334,7 @@ class Spec(object):
         # Build spec should be the actual build spec unless marked dirty.
         self._build_spec = None
 
-        if isinstance(spec_like, six.string_types):
+        if isinstance(spec_like, str):
             spec_list = SpecParser(self).parse(spec_like)
             if len(spec_list) > 1:
                 raise ValueError("More than one spec in string: " + spec_like)
@@ -1538,7 +1537,7 @@ class Spec(object):
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
             self.architecture = ArchSpec(new_vals)
         else:
-            new_attrvals = [(a, v) for a, v in six.iteritems(kwargs) if a in arch_attrs]
+            new_attrvals = [(a, v) for a, v in kwargs.items() if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
                     raise DuplicateArchitectureError(
@@ -1932,9 +1931,7 @@ class Spec(object):
             package_hash = self._package_hash
 
             # Full hashes are in bytes
-            if not isinstance(package_hash, six.text_type) and isinstance(
-                package_hash, six.binary_type
-            ):
+            if not isinstance(package_hash, str) and isinstance(package_hash, bytes):
                 package_hash = package_hash.decode("utf-8")
             d["package_hash"] = package_hash
 
@@ -2204,7 +2201,7 @@ class Spec(object):
             else:
                 elt = dep
                 dep_name = dep["name"]
-            if isinstance(elt, six.string_types):
+            if isinstance(elt, str):
                 # original format, elt is just the dependency hash.
                 dep_hash, deptypes = elt, ["build", "link"]
             elif isinstance(elt, tuple):
@@ -2390,7 +2387,7 @@ class Spec(object):
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
 
-                if isinstance(s, six.string_types):
+                if isinstance(s, str):
                     dag_node, dependency_types = name_and_dependency_types(s)
                 else:
                     dag_node, dependency_types = spec_and_dependency_types(s)
@@ -2469,10 +2466,7 @@ class Spec(object):
             data = yaml.load(stream)
             return Spec.from_dict(data)
         except yaml.error.MarkedYAMLError as e:
-            raise six.raise_from(
-                syaml.SpackYAMLError("error parsing YAML spec:", str(e)),
-                e,
-            )
+            raise syaml.SpackYAMLError("error parsing YAML spec:", str(e)) from e
 
     @staticmethod
     def from_json(stream):
@@ -2485,10 +2479,7 @@ class Spec(object):
             data = sjson.load(stream)
             return Spec.from_dict(data)
         except Exception as e:
-            raise six.raise_from(
-                sjson.SpackJSONError("error parsing JSON spec:", str(e)),
-                e,
-            )
+            raise sjson.SpackJSONError("error parsing JSON spec:", str(e)) from e
 
     @staticmethod
     def extract_json_from_clearsig(data):
@@ -3112,10 +3103,7 @@ class Spec(object):
             # with inconsistent constraints.  Users cannot produce
             # inconsistent specs like this on the command line: the
             # parser doesn't allow it. Spack must be broken!
-            raise six.raise_from(
-                InconsistentSpecError("Invalid Spec DAG: %s" % e.message),
-                e,
-            )
+            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message) from e
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this
@@ -4214,7 +4202,7 @@ class Spec(object):
         color = kwargs.get("color", False)
         transform = kwargs.get("transform", {})
 
-        out = six.StringIO()
+        out = io.StringIO()
 
         def write(s, c=None):
             f = clr.cescape(s)
@@ -4437,7 +4425,7 @@ class Spec(object):
         token_transforms = dict((k.upper(), v) for k, v in kwargs.get("transform", {}).items())
 
         length = len(format_string)
-        out = six.StringIO()
+        out = io.StringIO()
         named = escape = compiler = False
         named_str = fmt = ""
 
@@ -5153,7 +5141,7 @@ class SpecParser(spack.parse.Parser):
                         self.unexpected_token()
 
         except spack.parse.ParseError as e:
-            raise six.raise_from(SpecParseError(e), e)
+            raise SpecParseError(e) from e
 
         # Generate lookups for git-commit-based versions
         for spec in specs:

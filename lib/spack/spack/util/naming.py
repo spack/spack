@@ -6,11 +6,10 @@
 # Need this because of spack.util.string
 from __future__ import absolute_import
 
+import io
 import itertools
 import re
 import string
-
-from six import StringIO
 
 import spack.error
 
@@ -261,6 +260,6 @@ class NamespaceTrie(object):
             stream.write(self._subspaces[name]._str_helper(stream, level + 1))
 
     def __str__(self):
-        stream = StringIO()
+        stream = io.StringIO()
         self._str_helper(stream)
         return stream.getvalue()
