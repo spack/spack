@@ -17,6 +17,7 @@ import llnl.util.tty
 
 import spack.operating_systems.windows_os as winOs
 import spack.util.environment
+import spack.util.ld_so_conf
 
 from .common import (
     DetectedPackage,
@@ -95,11 +96,10 @@ def libraries_in_ld_and_system_library_path(path_hints=None):
     """
     path_hints = (
         path_hints
-        or spack.util.environment.get_path("LIBRARY_PATH")
-        + spack.util.environment.get_path("LD_LIBRARY_PATH")
+        or spack.util.environment.get_path("LD_LIBRARY_PATH")
         + spack.util.environment.get_path("DYLD_LIBRARY_PATH")
         + spack.util.environment.get_path("DYLD_FALLBACK_LIBRARY_PATH")
-        + llnl.util.filesystem.system_library_search_locations
+        + spack.util.ld_so_conf.host_dynamic_linker_search_paths()
     )
     search_paths = llnl.util.filesystem.search_paths_for_libraries(*path_hints)
 
