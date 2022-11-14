@@ -432,7 +432,7 @@ class Hip(CMakePackage):
                 "hip-config.cmake.in",
                 string=True,
             )
-        if self.spec.satisfies("@:5.2.0"):
+            if self.spec.satisfies("@5.2:"):
             filter_file(
                 '"${ROCM_PATH}/llvm"',
                 self.spec["llvm-amdgpu"].prefix,
