@@ -2047,17 +2047,6 @@ class LibraryList(FileList):
         return self.search_flags + " " + self.link_flags
 
 
-# Usual system library locations for libraries
-system_library_search_locations = [
-    "/lib64",
-    "/lib",
-    "/usr/lib64",
-    "/usr/lib",
-    "/usr/local/lib64",
-    "/usr/local/lib",
-]
-
-
 def find_system_libraries(libraries, shared=True):
     """Searches the usual system library locations for ``libraries``.
 
@@ -2098,9 +2087,17 @@ def find_system_libraries(libraries, shared=True):
         raise TypeError(message)
 
     libraries_found = []
+    search_locations = [
+        "/lib64",
+        "/lib",
+        "/usr/lib64",
+        "/usr/lib",
+        "/usr/local/lib64",
+        "/usr/local/lib",
+    ]
 
     for library in libraries:
-        for root in system_library_search_locations:
+        for root in search_locations:
             result = find_libraries(library, root, shared, recursive=True)
             if result:
                 libraries_found += result
