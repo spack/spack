@@ -16,6 +16,7 @@ class SingularityBase(MakefilePackage):
     variant("network", default=True, description="install network plugins")
 
     depends_on("pkgconfig", type="build")
+    depends_on("glib")
     depends_on("go@1.16:")
     depends_on("uuid")
     depends_on("libgpg-error")
