@@ -19,6 +19,7 @@ class Libxcrypt(AutotoolsPackage):
             version, version
         )
 
+    version("4.4.31", sha256="c0181b6a8eea83850cfe7783119bf71fddbde69adddda1d15747ba433d5c57ba")
     version("4.4.30", sha256="b3667f0ba85daad6af246ba4090fbe53163ad93c8b6a2a1257d22a78bb7ceeba")
     version("4.4.17", sha256="7665168d0409574a03f7b484682e68334764c29c21ca5df438955a381384ca07")
     version("4.4.16", sha256="a98f65b8baffa2b5ba68ee53c10c0a328166ef4116bce3baece190c8ce01f375")
