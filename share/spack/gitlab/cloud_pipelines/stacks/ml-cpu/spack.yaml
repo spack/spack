@@ -133,8 +133,13 @@ spack:
 
     service-job-attributes:
       before_script:
+        - uname -a || true
+        - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+        - nproc
         - . "./share/spack/setup-env.sh"
         - spack --version
+      after_script:
+        - cat /proc/loadavg || true
       image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2022-03-21", "entrypoint": [""] }
       tags: ["spack", "public", "x86_64_v4"]
 

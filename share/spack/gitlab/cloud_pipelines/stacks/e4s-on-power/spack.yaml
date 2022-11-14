@@ -255,8 +255,13 @@ spack:
     broken-specs-url: "s3://spack-binaries-develop/broken-specs"
     service-job-attributes:
       before_script:
+        - uname -a || true
+        - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
+        - nproc
         - . "./share/spack/setup-env.sh"
         - spack --version
+      after_script:
+        - cat /proc/loadavg || true
       image: { "name": "ghcr.io/spack/e4s-ubuntu-20.04:v2021-10-18", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "ppc64le"]
 
