@@ -239,6 +239,7 @@ def by_executable(packages_to_check, path_hints=None):
                 exe_pattern_to_pkgs[exe].append(pkg)
         # Add Windows specific, package related paths to the search paths
         path_hints.extend(compute_windows_program_path_for_package(pkg))
+
     path_to_exe_name = executables_in_path(path_hints=path_hints)
     pkg_to_found_exes = collections.defaultdict(set)
     for exe_pattern, pkgs in exe_pattern_to_pkgs.items():

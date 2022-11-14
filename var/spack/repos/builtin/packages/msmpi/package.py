@@ -39,4 +39,4 @@ class Msmpi(Package):
 
     def install(self, spec, prefix):
         installer = Executable("msmpisetup.exe")
-        installer("-unattend", "-installroot", prefix)
+        installer("-unattend")
