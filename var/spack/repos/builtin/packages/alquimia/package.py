@@ -41,7 +41,8 @@ class Alquimia(CMakePackage):
     @when("@1.0.10")
     def patch(self):
         filter_file(
-            "use iso_[cC]_binding", "use, intrinsic :: iso_c_binding",
+            "use iso_[cC]_binding",
+            "use, intrinsic :: iso_c_binding",
             "alquimia/c_f_interface_module.F90",
             "alquimia/alquimia_fortran_interface_mod.F90",
         )
