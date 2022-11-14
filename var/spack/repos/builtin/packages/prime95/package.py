@@ -9,10 +9,10 @@ from spack.package import *
 class Prime95(AutotoolsPackage):
     """
     Prime95, also distributed as the command-line utility mprime for FreeBSD
-    and Linux, is a freeware application. 
+    and Linux, is a freeware application.
 
     Prime95 is a CPU stress testing program. It tests your computer for
-    stability issues by stressing your CPU to its maximum limit. 
+    stability issues by stressing your CPU to its maximum limit.
     Prime95 runs indefinitely and only terminates a stress test when it
     encounters an error and informs the user that the system may be unstable.
     """
