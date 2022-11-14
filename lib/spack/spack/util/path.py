@@ -14,6 +14,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import date
 
 from six.moves.urllib.parse import urlparse
 
@@ -70,6 +71,7 @@ def replacements():
         "os": str(arch.os),
         "target": str(arch.target),
         "target_family": str(arch.target.microarchitecture.family),
+        "date": date.today().strftime("%Y-%m-%d"),
     }
 
 
@@ -285,6 +287,7 @@ def substitute_config_variables(path):
     - $operating_system  The OS of the current system
     - $target            The ISA target detected for the system
     - $target_family     The family of the target detected for the system
+    - $date              The current date (YYYY-MM-DD)
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
