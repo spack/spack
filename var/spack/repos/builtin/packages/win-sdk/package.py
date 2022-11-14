@@ -22,6 +22,7 @@ class WinSdk(Package):
     # The sdk has many libraries and executables. Record one for detection purposes
     libraries = ["rcdll.dll"]
 
+    version("10.0.22621")
     version("10.0.19041")
     version("10.0.18362")
     version("10.0.17763")
@@ -35,7 +36,16 @@ class WinSdk(Package):
     # WinSDK versions depend on compatible compilers
     # WDK versions do as well, but due to their one to one dep on the SDK
     # we can ensure that requirment here
-    # depends_on("%msvc:", when="@10.")
+    # WinSDK is very backwards compatible, however older
+    # MSVC editions may have problems with newer SDKs
+    conflicts("%msvc@:19.16.00000", when="@10.0.19041")
+    conflicts("%msvc@:19.16.00000", when="@10.0.18362")
+    conflicts("%msvc@:19.15.00000", when="@10.0.17763")
+    conflicts("%msvc@:19.14.00000", when="@10.0.17134")
+    conflicts("%msvc@:19.11.00000", when="@10.0.16299")
+    conflicts("%msvc@:19.10.00000", when="@10.0.15063")
+    conflicts("%msvc@:19.10.00000", when="@10.0.14393")
+    conflicts("%msvc@:19.00.00000", when="@10.0.10586")
 
     # For now we don't support Windows development env
     # on other platforms
