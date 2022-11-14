@@ -200,6 +200,7 @@ class Glib(Package):
         else:
             args.append("-Dselinux=false")
         args.append("-Dgtk_doc=false")
+        args.append("-Dlibelf=enabled")
         return args
 
     def install(self, spec, prefix):
