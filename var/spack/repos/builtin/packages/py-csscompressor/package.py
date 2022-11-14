@@ -14,4 +14,7 @@ class PyCsscompressor(PythonPackage):
     #maintainers = ["wscullin"]
 
     version("0.9.5", sha256="afa22badbcf3120a4f392e4d22f9fff485c044a1feda4a950ecc5eba9dd31a05")
+    
+    depends_on("py-setuptools", type="build")
 
+    depends_on("py-argparse", when="^python@:2.6,3.0:3.1", type=("build", "run"))

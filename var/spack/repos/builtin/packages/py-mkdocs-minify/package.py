@@ -15,6 +15,7 @@ class PyMkdocsMinify(PythonPackage):
 
     version("0.6.1", sha256="29e14e4ab2d436cb05f56333c9bfbff561fc89402e04d0f1ccfe23a3e7070ba2")
 
+    depends_on("py-setuptools", type="build")
     depends_on('python@3.7:', type=('build', 'run'))
 
     depends_on('py-mkdocs@1.4.1:', type=('build', 'run'))
