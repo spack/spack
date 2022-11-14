@@ -28,7 +28,7 @@ def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
         assert len(hash_str) == hash_length
 
 
-@pytest.mark.use_fixtures("mock_packages")
+@pytest.mark.usefixtures("mock_packages")
 def test_set_install_hash_length_upper_case(mutable_config, tmpdir):
     mutable_config.set("config:install_hash_length", 5)
     mutable_config.set(
