@@ -13,8 +13,7 @@ class Sperr(CMakePackage):
     homepage = "https://github.com/NCAR/SPERR"
     git = homepage
 
-    version("2022.07.18", commit="640305d049db9e9651ebdd773e6936e2c028ff3a")
-    version("2022.05.26", commit="7894a5fe1b5ca5a4aaa952d1779dfc31fd741243")
+    version("2022.07.18", commit="0819c98e143e003fd9a12bce6df054827bfa8136")
 
     depends_on("git", type="build")
     depends_on("zstd", type=("build", "link"), when="+zstd")
