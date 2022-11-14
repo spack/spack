@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
@@ -56,9 +55,6 @@ def test_repo_unknown_pkg(mutable_mock_repo):
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(
-    sys.version_info < (3, 5), reason="Test started failing spuriously on Python 2.7"
-)
 def test_repo_last_mtime():
     latest_mtime = max(
         os.path.getmtime(p.module.__file__) for p in spack.repo.path.all_package_classes()
@@ -113,14 +109,14 @@ def test_absolute_import_spack_packages_as_python_modules(mock_packages):
     assert hasattr(spack.pkg.builtin.mock, "mpileaks")
     assert hasattr(spack.pkg.builtin.mock.mpileaks, "Mpileaks")
     assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.Package)
+    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
     from spack.pkg.builtin.mock.mpileaks import Mpileaks
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(Mpileaks, spack.package_base.Package)
+    assert issubclass(Mpileaks, spack.package_base.PackageBase)
 
 
 def test_all_virtual_packages_have_default_providers():

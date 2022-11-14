@@ -16,6 +16,7 @@ class RRaster(RPackage):
 
     cran = "raster"
 
+    version("3.6-3", sha256="9f06e0f7c36258790a97421b3a26d98c9b6a2cb702f941e58ab0b18f21b0c3c6")
     version("3.5-15", sha256="29c7d3c5d34284f8b5a2ddc9989fbcf092ce209d5eb5310ebc772b5ebdfdd685")
     version("3.5-11", sha256="e6c4823925260c65fe98585d7a0d47778616ae2e4eb1a1782b219580a9db61a3")
     version("3.4-5", sha256="c6620d790b3aba1b64aec31325f726e63f26a14a1b48c1a0f9167a0b1a64e4a5")
@@ -26,8 +27,9 @@ class RRaster(RPackage):
     depends_on("r@3.0.0:", type=("build", "run"))
     depends_on("r@3.5.0:", type=("build", "run"), when="@3.4-5:")
     depends_on("r-sp@1.2-0:", type=("build", "run"))
-    depends_on("r-sp@1.4.1:", type=("build", "run"), when="@3.4-5:")
-    depends_on("r-sp@1.4.5:", type=("build", "run"), when="@3.5-11:")
+    depends_on("r-sp@1.4-1:", type=("build", "run"), when="@3.4-5:")
+    depends_on("r-sp@1.4-5:", type=("build", "run"), when="@3.5-11:")
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-terra@1.4-11:", type=("build", "run"), when="@3.5-11:")
     depends_on("r-terra@1.5-12:", type=("build", "run"), when="@3.5-15:")
+    depends_on("r-terra@1.6-16:", type=("build", "run"), when="@3.6-3:")

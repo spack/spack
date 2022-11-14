@@ -17,6 +17,7 @@ class Neovim(CMakePackage):
 
     version("master", branch="master")
     version("stable", tag="stable")
+    version("0.8.0", sha256="505e3dfb71e2f73495c737c034a416911c260c0ba9fd2092c6be296655be4d18")
     version("0.7.2", sha256="ccab8ca02a0c292de9ea14b39f84f90b635a69282de38a6b4ccc8565bc65d096")
     version("0.7.0", sha256="792a9c55d5d5f4a5148d475847267df309d65fb20f05523f21c1319ea8a6c7df")
     version(
@@ -117,7 +118,7 @@ class Neovim(CMakePackage):
         depends_on("libvterm@0.1:")
         depends_on("unibilium@2.0:")
         depends_on("msgpack-c@1.0.0:")
-    with when("@0.5:,stable,master"):
+    with when("@0.5:"):
         depends_on("libuv@1.42:")
         depends_on("tree-sitter")
     with when("@0.6:"):
@@ -127,11 +128,13 @@ class Neovim(CMakePackage):
         depends_on("libtermkey@0.22:")
         depends_on("libvterm@0.1.4:")
         depends_on("msgpack-c@3.0.0:")
-    with when("@0.6:,master"):
+    with when("@0.7:"):
         depends_on("gettext@0.20.1:")
         depends_on("libluv@1.43.0:")
         depends_on("libuv@1.44.1:")
         depends_on("tree-sitter@0.20.6:")
+    with when("@0.8:"):
+        depends_on("libvterm@0.3:")
 
     @when("^lua")
     def cmake_args(self):

@@ -16,6 +16,7 @@ class RMatrix(RPackage):
 
     cran = "Matrix"
 
+    version("1.5-1", sha256="557dba0358172d67dc63eb5db90841915bb5ce1528f941a8005ae808d635575d")
     version("1.4-1", sha256="42b24f1d1e94482b0ff0ef1292e2df29f69694bdbee47b3d6bfeec46fafb2f7e")
     version("1.4-0", sha256="c2b463702e4051b621f5e2b091a33f883f1caa97703d65f7a52b78caf81206f6")
     version("1.3-4", sha256="ab42179d44545e99bbdf44bb6d04cab051dd2aba552b1f6edd51ed71b55f6c39")
