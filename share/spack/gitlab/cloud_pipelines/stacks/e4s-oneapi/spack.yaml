@@ -468,13 +468,8 @@ spack:
 
     service-job-attributes:
       before_script:
-        - uname -a || true
-        - grep -E 'vendor|model name' /proc/cpuinfo 2>/dev/null | sort -u || head -n10 /proc/cpuinfo 2>/dev/null || true
-        - nproc
         - . "./share/spack/setup-env.sh"
         - spack --version
-      after_script:
-        - cat /proc/loadavg || true
       image: ecpe4s/ubuntu20.04-runner-x86_64-oneapi:2022-07-01
       tags: ["spack", "public", "x86_64"]
 
