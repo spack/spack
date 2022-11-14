@@ -19,6 +19,6 @@ class PyMkdocsMinify(PythonPackage):
     depends_on('python@3.7:', type=('build', 'run'))
 
     depends_on('py-mkdocs@1.4.1:', type=('build', 'run'))
-    depends_on('py-htmlmin', type=('build', 'run'))
+    depends_on('py-htmlmin@0.1.12:', type=('build', 'run'))
     depends_on('py-jsmin@3.0.1:', type=('build', 'run'))
-    depends_on('py-csscompressor', type=('build', 'run'))
+    depends_on('py-csscompressor@0.9.5:', type=('build', 'run'))
