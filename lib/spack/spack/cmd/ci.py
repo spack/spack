@@ -6,7 +6,6 @@
 import json
 import os
 import shutil
-import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
