@@ -13,6 +13,7 @@ import spack.builder
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
+from spack.util.executable import *
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
@@ -157,7 +158,8 @@ class SIPBuilder(BaseBuilder):
             ]
         )
 
-        self.python(configure, *args)
+        python = Executable(spec["python"].prefix.bin.python)
+        python(configure, *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""
