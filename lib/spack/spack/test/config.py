@@ -8,6 +8,7 @@ import getpass
 import os
 import sys
 import tempfile
+from datetime import date
 
 import pytest
 from six import StringIO
@@ -441,6 +442,13 @@ def test_substitute_tempdir(mock_low_high_config):
     assert tempdir + os.sep + os.path.join("foo", "bar", "baz") == spack_path.canonicalize_path(
         os.path.join("$tempdir", "foo", "bar", "baz")
     )
+
+
+def test_substitute_date(mock_low_high_config):
+    test_path = os.path.join("hello", "world", "on", "$date")
+    new_path = spack_path.canonicalize_path(test_path)
+    assert "$date" in test_path
+    assert date.today().strftime("%Y-%m-%d") in new_path
 
 
 PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
