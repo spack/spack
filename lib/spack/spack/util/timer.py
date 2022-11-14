@@ -14,48 +14,55 @@ import time
 
 import spack.util.spack_json as sjson
 
+from collections import namedtuple
+from contextlib import contextmanager
+from collections import OrderedDict
+
+Interval = namedtuple("Interval", ("start", "end"))
+
 
 class Timer(object):
-    """
-    Simple timer for timing phases of a solve or install
-    """
+    """Simple interval timer"""
 
-    def __init__(self):
-        self.start = time.time()
-        self.last = self.start
-        self.phases = {}
-        self.end = None
+    def __init__(self, now=time.time):
+        self.phases = OrderedDict()  # type: OrderedDict[str,Interval]
+        self._now = now
+        self._total = Interval(self._now(), end=None)
 
+    def start(self, name=None):
+        interval = Interval(self._now(), None)
+        if name is None:
+            self._total = interval
+        else:
+            self.phases[name] = interval
+
+    def stop(self, name=None):
+        if name is None:
+            self._total = Interval(self._total.start, self._now())
+        else:
+            self.phases[name] = Interval(self.phases[name].start, self._now())
+
+    def duration(self, name=None):
+        interval = self._total if name is None else self.phases[name]
+        end = self._now() if interval.end is None else interval.end
+        return end - interval.start
+
+    @contextmanager
     def phase(self, name):
-        last = self.last
-        now = time.time()
-        self.phases[name] = now - last
-        self.last = now
-
-    @property
-    def total(self):
-        """Return the total time"""
-        if self.end:
-            return self.end - self.start
-        return time.time() - self.start
-
-    def stop(self):
-        """
-        Stop the timer to record a total time, if desired.
-        """
-        self.end = time.time()
+        start = self._now()
+        yield
+        self.phases[name] = Interval(start, self._now())
 
     def write_json(self, out=sys.stdout):
         """
         Write a json object with times to file
         """
-        phases = [{"name": p, "seconds": s} for p, s in self.phases.items()]
-        times = {"phases": phases, "total": {"seconds": self.total}}
+        phases = [{"name": p, "seconds": self.duration(p)} for p in self.phases.keys()]
+        times = {"phases": phases, "total": {"seconds": self.duration()}}
         out.write(sjson.dump(times))
 
     def write_tty(self, out=sys.stdout):
-        now = time.time()
         out.write("Time:\n")
-        for phase, t in self.phases.items():
-            out.write("    %-15s%.4f\n" % (phase + ":", t))
-        out.write("Total: %.4f\n" % (now - self.start))
+        for p in self.phases.keys():
+            out.write("    %-15s%.4f\n" % (p + ":", self.duration(p)))
+        out.write("Total: %.4f\n" % self.duration())
