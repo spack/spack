@@ -34,7 +34,17 @@ class PyOpenmc(PythonPackage):
     variant("mpi", default=False, description="Enable MPI support")
 
     # keep py-openmc and openmc at the same version
-    for ver in ["develop", "master", "0.13.2", "0.13.1", "0.13.0", "0.12.2", "0.12.1", "0.12.0", "0.11.0"]:
+    for ver in [
+        "develop",
+        "master",
+        "0.13.2",
+        "0.13.1",
+        "0.13.0",
+        "0.12.2",
+        "0.12.1",
+        "0.12.0",
+        "0.11.0",
+    ]:
         depends_on(
             "openmc+mpi@{0}".format(ver), when="@{0}+mpi".format(ver), type=("build", "run")
         )
