@@ -16,5 +16,3 @@ class PyPypinyin(PythonPackage):
 
     depends_on("python@2.6:2,3.3:3", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-argparse", type=("build", "run"), when="^python@:2.6")
-    depends_on("py-typing", type=("build", "run"), when="^python@:3.4")

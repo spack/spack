@@ -35,5 +35,3 @@ class PyAzureCliCore(PythonPackage):
     depends_on("py-pkginfo@1.5.0.1:", type=("build", "run"))
     depends_on("py-azure-mgmt-resource@10.0.0", type=("build", "run"))
     depends_on("py-azure-mgmt-core@1.0.0", type=("build", "run"))
-    depends_on("py-ndg-httpsclient", when="^python@:2.7.8", type=("build", "run"))
-    depends_on("py-pyasn1", when="^python@:2.7.8", type=("build", "run"))

@@ -19,7 +19,3 @@ class PyAzureStorageBlob(PythonPackage):
     depends_on("py-azure-core@1.10:1", type=("build", "run"))
     depends_on("py-msrest@0.6.21:", type=("build", "run"))
     depends_on("py-cryptography@2.1.4:", type=("build", "run"))
-
-    depends_on("py-azure-storage-nspkg@3", type=("build", "run"), when="^python@:2")
-
-    depends_on("py-typing", type=("build", "run"), when=("^python@:3.4"))

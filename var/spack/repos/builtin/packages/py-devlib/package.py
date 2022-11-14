@@ -28,6 +28,3 @@ class PyDevlib(PythonPackage):
     depends_on("py-wrapt", type=("build", "run"))
     depends_on("py-future", type=("build", "run"))
     depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-contextlib2", type=("build", "run"), when="^python@:2")
-    depends_on("py-numpy@:1.16.4", type=("build", "run"), when="^python@:2")
-    depends_on("py-numpy", type=("build", "run"), when="^python@:3.0")

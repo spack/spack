@@ -29,7 +29,6 @@ class PyCorrectionlib(PythonPackage):
     depends_on("py-make", type="build")
     depends_on("py-pybind11@2.6.1:", type="build")
     depends_on("py-numpy@1.13.3:", type=("build", "run"))
-    depends_on("py-typing", type=("build", "run"), when="^python@:3.4")
     depends_on("py-typing-extensions", type=("build", "run"), when="^python@:3.7")
     depends_on("py-pydantic@1.7.3:", type=("build", "run"))
     depends_on("py-rich", type=("build", "run"))

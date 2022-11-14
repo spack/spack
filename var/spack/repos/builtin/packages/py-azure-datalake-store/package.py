@@ -19,5 +19,3 @@ class PyAzureDatalakeStore(PythonPackage):
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-adal@0.4.2:", type=("build", "run"))
     depends_on("py-requests@2.20.0:", type=("build", "run"))
-    depends_on("py-pathlib2", when="^python@:3.3", type=("build", "run"))
-    depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))

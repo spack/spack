@@ -18,5 +18,3 @@ class PyAzureKeyvaultSecrets(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-azure-core@1.2.1:1", type=("build", "run"))
     depends_on("py-msrest@0.6.0:", type=("build", "run"))
-    depends_on("py-azure-keyvault-nspkg", when="^python@:2", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

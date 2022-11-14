@@ -136,12 +136,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:", type=("build", "run"))
     depends_on("py-future", when="@1.5:", type=("build", "run"))
-    depends_on("py-future", when="@1.1: ^python@:2", type=("build", "run"))
     depends_on("py-six", when="@1.13:", type=("build", "run"))
     depends_on("py-requests", when="@1.13:", type=("build", "run"))
 
     # Undocumented dependencies
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))
     depends_on("py-tqdm", type="run")
     depends_on("blas")
     depends_on("lapack")

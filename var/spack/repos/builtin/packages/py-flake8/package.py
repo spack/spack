@@ -87,9 +87,6 @@ class PyFlake8(PythonPackage):
     depends_on("py-importlib-metadata", when="@3.8:3.9.2 ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@:4.2", when="@4: ^python@:3.7", type=("build", "run"))
     depends_on("py-importlib-metadata@1.1:4.2", when="@5.0.4: ^python@:3.7", type=("build", "run"))
-    depends_on("py-typing", when="@3.7: ^python@:3.4", type=("build", "run"))
-    depends_on("py-configparser", when="@3: ^python@:3.1", type=("build", "run"))
-    depends_on("py-functools32", when="@3.7.4: ^python@:3.1", type=("build", "run"))
 
     @when("@:3.5")
     def patch(self):

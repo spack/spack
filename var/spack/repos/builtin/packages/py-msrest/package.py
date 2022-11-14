@@ -21,4 +21,3 @@ class PyMsrest(PythonPackage):
     depends_on("py-requests-oauthlib@0.5.0:", type=("build", "run"))
     depends_on("py-isodate@0.6.0:", type=("build", "run"))
     depends_on("py-certifi@2017.4.17:", type=("build", "run"))
-    depends_on("py-typing", when="^python@:3.4", type=("build", "run"))
