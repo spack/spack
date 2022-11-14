@@ -2,11 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import collections.abc
 import functools
 import inspect
-
-from llnl.util.compat import MutableSequence
 
 
 class Delegate(object):
@@ -38,7 +36,7 @@ def composite(interface=None, method_list=None, container=list):
             non-special methods will be taken into account
         method_list (list): names of methods that should be part
             of the composite
-        container (MutableSequence): container for the composite object
+        container (collections.abc.MutableSequence): container for the composite object
             (default = list).  Must fulfill the MutableSequence
             contract. The composite class will expose the container API
             to manage object composition
@@ -52,7 +50,7 @@ def composite(interface=None, method_list=None, container=list):
     # exception if it doesn't. The patched class returned by the decorator will
     # inherit from the container class to expose the interface needed to manage
     # objects composition
-    if not issubclass(container, MutableSequence):
+    if not issubclass(container, collections.abc.MutableSequence):
         raise TypeError("Container must fulfill the MutableSequence contract")
 
     # Check if at least one of the 'interface' or the 'method_list' arguments

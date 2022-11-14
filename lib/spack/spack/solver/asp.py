@@ -5,6 +5,7 @@
 from __future__ import division, print_function
 
 import collections
+import collections.abc
 import copy
 import itertools
 import os
@@ -16,8 +17,6 @@ import warnings
 from six import string_types
 
 import archspec.cpu
-
-from llnl.util.compat import Sequence
 
 try:
     import clingo  # type: ignore[import]
@@ -102,7 +101,15 @@ ast_type = ast_getter("ast_type", "type")
 ast_sym = ast_getter("symbol", "term")
 
 #: Order of precedence for version origins. Topmost types are preferred.
-version_origin_fields = ["spec", "external", "packages_yaml", "package_py", "installed"]
+version_origin_fields = [
+    "spec",
+    "dev_spec",
+    "external",
+    "packages_yaml",
+    "package_py",
+    "installed",
+]
+
 #: Look up version precedence strings by enum id
 version_origin_str = {i: name for i, name in enumerate(version_origin_fields)}
 
@@ -208,7 +215,7 @@ def build_criteria_names(costs, tuples):
 def issequence(obj):
     if isinstance(obj, string_types):
         return False
-    return isinstance(obj, (Sequence, types.GeneratorType))
+    return isinstance(obj, (collections.abc.Sequence, types.GeneratorType))
 
 
 def listify(args):
@@ -300,18 +307,6 @@ def extend_flag_list(flag_list, new_flags):
         if flag in flag_list:
             flag_list.remove(flag)
         flag_list.append(flag)
-
-
-def check_same_flags(flag_dict_1, flag_dict_2):
-    """Return True if flag dicts contain the same flags regardless of order."""
-    types = set(flag_dict_1.keys()).union(set(flag_dict_2.keys()))
-    for t in types:
-        values1 = set(flag_dict_1.get(t, []))
-        values2 = set(flag_dict_2.get(t, []))
-        error_msg = "Internal Error: A mismatch in flags has occurred:"
-        error_msg += "\n\tvalues1: {v1}\n\tvalues2: {v2}".format(v1=values1, v2=values2)
-        error_msg += "\n Please report this as an issue to the spack maintainers"
-        assert values1 == values2, error_msg
 
 
 def check_packages_exist(specs):
@@ -723,6 +718,7 @@ class PyclingoDriver(object):
         if output.timers:
             timer.write_tty()
             print()
+
         if output.stats:
             print("Statistics:")
             pprint.pprint(self.control.statistics)
@@ -1359,6 +1355,8 @@ class SpackSolverSetup(object):
             node_compiler = fn.node_compiler_set
             node_compiler_version = fn.node_compiler_version_set
             node_flag = fn.node_flag_set
+            node_flag_propagate = fn.node_flag_propagate
+            variant_propagate = fn.variant_propagate
 
         class Body(object):
             node = fn.node
@@ -1370,6 +1368,8 @@ class SpackSolverSetup(object):
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
             node_flag = fn.node_flag
+            node_flag_propagate = fn.node_flag_propagate
+            variant_propagate = fn.variant_propagate
 
         f = Body if body else Head
 
@@ -1417,6 +1417,9 @@ class SpackSolverSetup(object):
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 
+                if variant.propagate:
+                    clauses.append(f.variant_propagate(spec.name, vname, value, spec.name))
+
                 # Tell the concretizer that this is a possible value for the
                 # variant, to account for things like int/str values where we
                 # can't enumerate the valid values
@@ -1443,6 +1446,8 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
+                if not spec.concrete and flag.propagate is True:
+                    clauses.append(f.node_flag_propagate(spec.name, flag_type))
 
         # dependencies
         if spec.concrete:
@@ -1465,6 +1470,12 @@ class SpackSolverSetup(object):
                         if concrete_build_deps or dtype != "build":
                             clauses.append(fn.depends_on(spec.name, dep.name, dtype))
 
+                            # Ensure Spack will not coconcretize this with another provider
+                            # for the same virtual
+                            for virtual in dep.package.virtuals_provided:
+                                clauses.append(fn.virtual_node(virtual.name))
+                                clauses.append(fn.provider(dep.name, virtual.name))
+
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.deptypes != ("build",):
@@ -1485,7 +1496,7 @@ class SpackSolverSetup(object):
 
         return clauses
 
-    def build_version_dict(self, possible_pkgs, specs):
+    def build_version_dict(self, possible_pkgs):
         """Declare any versions in specs not declared in packages."""
         self.declared_versions = collections.defaultdict(list)
         self.possible_versions = collections.defaultdict(set)
@@ -1526,6 +1537,8 @@ class SpackSolverSetup(object):
                     DeclaredVersion(version=ver, idx=idx, origin=version_provenance.packages_yaml)
                 )
 
+    def add_concrete_versions_from_specs(self, specs, origin):
+        """Add concrete versions to possible versions from lists of CLI/dev specs."""
         for spec in specs:
             for dep in spec.traverse():
                 if not dep.versions.concrete:
@@ -1549,7 +1562,7 @@ class SpackSolverSetup(object):
                 # about*, add it to the known versions. Use idx=0, which is the
                 # best possible, so they're guaranteed to be used preferentially.
                 self.declared_versions[dep.name].append(
-                    DeclaredVersion(version=dep.version, idx=0, origin=version_provenance.spec)
+                    DeclaredVersion(version=dep.version, idx=0, origin=origin)
                 )
                 self.possible_versions[dep.name].add(dep.version)
 
@@ -1940,11 +1953,28 @@ class SpackSolverSetup(object):
         # rules to generate an ASP program.
         self.gen = driver
 
+        # Calculate develop specs
+        # they will be used in addition to command line specs
+        # in determining known versions/targets/os
+        dev_specs = ()
+        env = ev.active_environment()
+        if env:
+            dev_specs = tuple(
+                spack.spec.Spec(info["spec"]).constrained(
+                    "dev_path=%s"
+                    % spack.util.path.canonicalize_path(info["path"], default_wd=env.path)
+                )
+                for name, info in env.dev_specs.items()
+            )
+        specs = tuple(specs)  # ensure compatible types to add
+
         # get possible compilers
         self.possible_compilers = self.generate_possible_compilers(specs)
 
         # traverse all specs and packages to build dict of possible versions
-        self.build_version_dict(possible, specs)
+        self.build_version_dict(possible)
+        self.add_concrete_versions_from_specs(specs, version_provenance.spec)
+        self.add_concrete_versions_from_specs(dev_specs, version_provenance.dev_spec)
 
         self.gen.h1("Concrete input spec definitions")
         self.define_concrete_input_specs(specs, possible)
@@ -1962,8 +1992,8 @@ class SpackSolverSetup(object):
 
         # architecture defaults
         self.platform_defaults()
-        self.os_defaults(specs)
-        self.target_defaults(specs)
+        self.os_defaults(specs + dev_specs)
+        self.target_defaults(specs + dev_specs)
 
         self.virtual_providers()
         self.provider_defaults()
@@ -1980,11 +2010,8 @@ class SpackSolverSetup(object):
             self.target_preferences(pkg)
 
         # Inject dev_path from environment
-        env = ev.active_environment()
-        if env:
-            for spec in sorted(specs):
-                for dep in spec.traverse():
-                    _develop_specs_from_env(dep, env)
+        for ds in dev_specs:
+            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
 
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
@@ -2101,10 +2128,10 @@ class SpecBuilder(object):
         self._flag_compiler_defaults.add(pkg)
 
     def node_flag(self, pkg, flag_type, flag):
-        self._specs[pkg].compiler_flags.setdefault(flag_type, []).append(flag)
+        self._specs[pkg].compiler_flags.add_flag(flag_type, flag, False)
 
-    def node_flag_source(self, pkg, source):
-        self._flag_sources[pkg].add(source)
+    def node_flag_source(self, pkg, flag_type, source):
+        self._flag_sources[(pkg, flag_type)].add(source)
 
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
@@ -2151,15 +2178,24 @@ class SpecBuilder(object):
         for pkg in self._flag_compiler_defaults:
             spec = self._specs[pkg]
             compiler_flags = compilers[spec.compiler].flags
-            check_same_flags(spec.compiler_flags, compiler_flags)
-            spec.compiler_flags.update(compiler_flags)
+            for key in spec.compiler_flags:
+                spec_compiler_flags_set = set(spec.compiler_flags.get(key, []))
+                compiler_flags_set = set(compiler_flags.get(key, []))
 
+                assert spec_compiler_flags_set == compiler_flags_set, "%s does not equal %s" % (
+                    spec_compiler_flags_set,
+                    compiler_flags_set,
+                )
+
+                spec.compiler_flags[key] = compiler_flags.get(key, [])
         # index of all specs (and deps) from the command line by name
         cmd_specs = dict((s.name, s) for spec in self._command_line_specs for s in spec.traverse())
 
         # iterate through specs with specified flags
-        for pkg, sources in self._flag_sources.items():
+        for key, sources in self._flag_sources.items():
+            pkg, flag_type = key
             spec = self._specs[pkg]
+            compiler_flags = spec.compiler_flags.get(flag_type, [])
 
             # order is determined by the DAG.  A spec's flags come after
             # any from its ancestors on the compile line.
@@ -2169,14 +2205,16 @@ class SpecBuilder(object):
             sorted_sources = sorted(sources, key=lambda s: order.index(s))
 
             # add flags from each source, lowest to highest precedence
-            flags = collections.defaultdict(lambda: [])
+            flags = []
             for source_name in sorted_sources:
                 source = cmd_specs[source_name]
-                for name, flag_list in source.compiler_flags.items():
-                    extend_flag_list(flags[name], flag_list)
+                extend_flag_list(flags, source.compiler_flags.get(flag_type, []))
 
-            check_same_flags(spec.compiler_flags, flags)
-            spec.compiler_flags.update(flags)
+            assert set(compiler_flags) == set(flags), "%s does not equal %s" % (
+                set(compiler_flags),
+                set(flags),
+            )
+            spec.compiler_flags.update({flag_type: source.compiler_flags[flag_type]})
 
     def deprecated(self, pkg, version):
         msg = 'using "{0}@{1}" which is a deprecated version'
@@ -2187,12 +2225,14 @@ class SpecBuilder(object):
         name = function_tuple[0]
         if name == "error":
             priority = function_tuple[1][0]
-            return (-4, priority)
+            return (-5, priority)
         elif name == "hash":
-            return (-3, 0)
+            return (-4, 0)
         elif name == "node":
-            return (-2, 0)
+            return (-3, 0)
         elif name == "node_compiler":
+            return (-2, 0)
+        elif name == "node_flag":
             return (-1, 0)
         else:
             return (0, 0)
@@ -2279,6 +2319,12 @@ class SpecBuilder(object):
                 if isinstance(spec.version, spack.version.GitVersion):
                     spec.version.generate_git_lookup(spec.fullname)
 
+        # Add synthetic edges for externals that are extensions
+        for root in self._specs.values():
+            for dep in root.traverse():
+                if dep.external:
+                    dep.package.update_external_dependencies()
+
         return self._specs
 
 
@@ -2294,8 +2340,7 @@ def _develop_specs_from_env(spec, env):
             "Internal Error: The dev_path for spec {name} is not connected to a valid environment"
             "path. Please note that develop specs can only be used inside an environment"
             "These paths should be the same:\n\tdev_path:{dev_path}\n\tenv_based_path:{env_path}"
-        )
-        error_msg.format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
+        ).format(name=spec.name, dev_path=spec.variants["dev_path"], env_path=path)
 
         assert spec.variants["dev_path"].value == path, error_msg
     else:

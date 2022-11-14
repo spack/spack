@@ -6,7 +6,7 @@
 """The variant module contains data structures that are needed to manage
 variants both in packages and in specs.
 """
-
+import collections.abc
 import functools
 import inspect
 import itertools
@@ -17,7 +17,6 @@ from six import StringIO
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.directives
 import spack.error as error
@@ -245,8 +244,9 @@ class AbstractVariant(object):
     values.
     """
 
-    def __init__(self, name, value):
+    def __init__(self, name, value, propagate=False):
         self.name = name
+        self.propagate = propagate
 
         # Stores 'value' after a bit of massaging
         # done by the property setter
@@ -334,7 +334,7 @@ class AbstractVariant(object):
         >>> assert a == b
         >>> assert a is not b
         """
-        return type(self)(self.name, self._original_value)
+        return type(self)(self.name, self._original_value, self.propagate)
 
     @implicit_variant_conversion
     def satisfies(self, other):
@@ -401,6 +401,8 @@ class AbstractVariant(object):
         return "{0.__name__}({1}, {2})".format(cls, repr(self.name), repr(self._original_value))
 
     def __str__(self):
+        if self.propagate:
+            return "{0}=={1}".format(self.name, ",".join(str(x) for x in self.value))
         return "{0}={1}".format(self.name, ",".join(str(x) for x in self.value))
 
 
@@ -444,6 +446,9 @@ class MultiValuedVariant(AbstractVariant):
             values_str = ",".join(x[:7] for x in self.value)
         else:
             values_str = ",".join(str(x) for x in self.value)
+
+        if self.propagate:
+            return "{0}=={1}".format(self.name, values_str)
         return "{0}={1}".format(self.name, values_str)
 
 
@@ -460,6 +465,8 @@ class SingleValuedVariant(AbstractVariant):
         self._value = str(self._value[0])
 
     def __str__(self):
+        if self.propagate:
+            return "{0}=={1}".format(self.name, self.value)
         return "{0}={1}".format(self.name, self.value)
 
     @implicit_variant_conversion
@@ -523,6 +530,8 @@ class BoolValuedVariant(SingleValuedVariant):
         return item is self.value
 
     def __str__(self):
+        if self.propagate:
+            return "{0}{1}".format("++" if self.value else "~~", self.name)
         return "{0}{1}".format("+" if self.value else "~", self.name)
 
 
@@ -702,7 +711,7 @@ def substitute_abstract_variants(spec):
 
 # The class below inherit from Sequence to disguise as a tuple and comply
 # with the semantic expected by the 'values' argument of the variant directive
-class DisjointSetsOfValues(Sequence):
+class DisjointSetsOfValues(collections.abc.Sequence):
     """Allows combinations from one of many mutually exclusive sets.
 
     The value ``('none',)`` is reserved to denote the empty set

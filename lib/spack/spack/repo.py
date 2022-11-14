@@ -4,10 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
+import collections.abc
 import contextlib
 import errno
 import functools
 import importlib
+import importlib.machinery  # novm
+import importlib.util
 import inspect
 import itertools
 import os
@@ -18,7 +21,6 @@ import shutil
 import stat
 import string
 import sys
-import tempfile
 import traceback
 import types
 import uuid
@@ -30,7 +32,6 @@ import six
 import llnl.util.filesystem as fs
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.compat import Mapping
 from llnl.util.filesystem import working_dir
 
 import spack.caches
@@ -79,125 +80,23 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
-# The code below is needed to have a uniform Loader interface that could cover both
-# Python 2.7 and Python 3.X when we load Spack packages as Python modules, e.g. when
-# we do "import spack.pkg.builtin.mpich" in package recipes.
-if sys.version_info[0] == 2:
-    import imp
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
+    def __init__(self, fullname, path, prepend=None):
+        super(_PrependFileLoader, self).__init__(fullname, path)
+        self.prepend = prepend
 
-    @contextlib.contextmanager
-    def import_lock():
-        try:
-            imp.acquire_lock()
-            yield
-        finally:
-            imp.release_lock()
+    def path_stats(self, path):
+        stats = super(_PrependFileLoader, self).path_stats(path)
+        if self.prepend:
+            stats["size"] += len(self.prepend) + 1
+        return stats
 
-    def load_source(fullname, path, prepend=None):
-        """Import a Python module from source.
-
-        Load the source file and add it to ``sys.modules``.
-
-        Args:
-            fullname (str): full name of the module to be loaded
-            path (str): path to the file that should be loaded
-            prepend (str or None): some optional code to prepend to the
-                loaded module; e.g., can be used to inject import statements
-
-        Returns:
-            the loaded module
-        """
-        with import_lock():
-            with prepend_open(path, text=prepend) as f:
-                return imp.load_source(fullname, path, f)
-
-    @contextlib.contextmanager
-    def prepend_open(f, *args, **kwargs):
-        """Open a file for reading, but prepend with some text prepended
-
-        Arguments are same as for ``open()``, with one keyword argument,
-        ``text``, specifying the text to prepend.
-
-        We have to write and read a tempfile for the ``imp``-based importer,
-        as the ``file`` argument to ``imp.load_source()`` requires a
-        low-level file handle.
-
-        See the ``importlib``-based importer for a faster way to do this in
-        later versions of python.
-        """
-        text = kwargs.get("text", None)
-
-        with open(f, *args) as f:
-            with tempfile.NamedTemporaryFile(mode="w+") as tf:
-                if text:
-                    tf.write(text + "\n")
-                tf.write(f.read())
-                tf.seek(0)
-                yield tf.file
-
-    class _PrependFileLoader(object):
-        def __init__(self, fullname, path, prepend=None):
-            # Done to have a compatible interface with Python 3
-            #
-            # All the object attributes used in this method must be defined
-            # by a derived class
-            pass
-
-        def package_module(self):
-            try:
-                module = load_source(self.fullname, self.package_py, prepend=self._package_prepend)
-            except SyntaxError as e:
-                # SyntaxError strips the path from the filename, so we need to
-                # manually construct the error message in order to give the
-                # user the correct package.py where the syntax error is located
-                msg = "invalid syntax in {0:}, line {1:}"
-                raise SyntaxError(msg.format(self.package_py, e.lineno))
-
-            module.__package__ = self.repo.full_namespace
-            module.__loader__ = self
-            return module
-
-        def load_module(self, fullname):
-            # Compatibility method to support Python 2.7
-            if fullname in sys.modules:
-                return sys.modules[fullname]
-
-            namespace, dot, module_name = fullname.rpartition(".")
-
-            try:
-                module = self.package_module()
-            except Exception as e:
-                raise ImportError(str(e))
-
-            module.__loader__ = self
-            sys.modules[fullname] = module
-            if namespace != fullname:
-                parent = sys.modules[namespace]
-                if not hasattr(parent, module_name):
-                    setattr(parent, module_name, module)
-
-            return module
-
-else:
-    import importlib.machinery  # novm
-
-    class _PrependFileLoader(importlib.machinery.SourceFileLoader):  # novm
-        def __init__(self, fullname, path, prepend=None):
-            super(_PrependFileLoader, self).__init__(fullname, path)
-            self.prepend = prepend
-
-        def path_stats(self, path):
-            stats = super(_PrependFileLoader, self).path_stats(path)
-            if self.prepend:
-                stats["size"] += len(self.prepend) + 1
-            return stats
-
-        def get_data(self, path):
-            data = super(_PrependFileLoader, self).get_data(path)
-            if path != self.path or self.prepend is None:
-                return data
-            else:
-                return self.prepend.encode() + b"\n" + data
+    def get_data(self, path):
+        data = super(_PrependFileLoader, self).get_data(path)
+        if path != self.path or self.prepend is None:
+            return data
+        else:
+            return self.prepend.encode() + b"\n" + data
 
 
 class RepoLoader(_PrependFileLoader):
@@ -227,22 +126,6 @@ class SpackNamespaceLoader(object):
     def exec_module(self, module):
         module.__loader__ = self
 
-    def load_module(self, fullname):
-        # Compatibility method to support Python 2.7
-        if fullname in sys.modules:
-            return sys.modules[fullname]
-        module = SpackNamespace(fullname)
-        self.exec_module(module)
-
-        namespace, dot, module_name = fullname.rpartition(".")
-        sys.modules[fullname] = module
-        if namespace != fullname:
-            parent = sys.modules[namespace]
-            if not hasattr(parent, module_name):
-                setattr(parent, module_name, module)
-
-        return module
-
 
 class ReposFinder(object):
     """MetaPathFinder class that loads a Python module corresponding to a Spack package
@@ -251,9 +134,6 @@ class ReposFinder(object):
     """
 
     def find_spec(self, fullname, python_path, target=None):
-        # This function is Python 3 only and will not be called by Python 2.7
-        import importlib.util
-
         # "target" is not None only when calling importlib.reload()
         if target is not None:
             raise RuntimeError('cannot reload module "{0}"'.format(fullname))
@@ -291,12 +171,6 @@ class ReposFinder(object):
             return SpackNamespaceLoader()
 
         return None
-
-    def find_module(self, fullname, python_path=None):
-        # Compatibility method to support Python 2.7
-        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
-            return None
-        return self.compute_loader(fullname)
 
 
 #
@@ -483,7 +357,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(Mapping):
+class FastPackageChecker(collections.abc.Mapping):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -1361,6 +1235,41 @@ class Repo(object):
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
+
+        new_cfg_settings = (
+            spack.config.get("packages").get(pkg_name, {}).get("package_attributes", {})
+        )
+
+        overridden_attrs = getattr(cls, "overridden_attrs", {})
+        attrs_exclusively_from_config = getattr(cls, "attrs_exclusively_from_config", [])
+        # Clear any prior changes to class attributes in case the config has
+        # since changed
+        for key, val in overridden_attrs.items():
+            setattr(cls, key, val)
+        for key in attrs_exclusively_from_config:
+            delattr(cls, key)
+
+        # Keep track of every class attribute that is overridden by the config:
+        # if the config changes between calls to this method, we make sure to
+        # restore the original config values (in case the new config no longer
+        # sets attributes that it used to)
+        new_overridden_attrs = {}
+        new_attrs_exclusively_from_config = set()
+        for key, val in new_cfg_settings.items():
+            if hasattr(cls, key):
+                new_overridden_attrs[key] = getattr(cls, key)
+            else:
+                new_attrs_exclusively_from_config.add(key)
+
+            setattr(cls, key, val)
+        if new_overridden_attrs:
+            setattr(cls, "overridden_attrs", dict(new_overridden_attrs))
+        elif hasattr(cls, "overridden_attrs"):
+            delattr(cls, "overridden_attrs")
+        if new_attrs_exclusively_from_config:
+            setattr(cls, "attrs_exclusively_from_config", new_attrs_exclusively_from_config)
+        elif hasattr(cls, "attrs_exclusively_from_config"):
+            delattr(cls, "attrs_exclusively_from_config")
 
         return cls
 

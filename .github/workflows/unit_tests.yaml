@@ -14,15 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: 2.7
-          concretizer: original
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
-        - python-version: '3.10'
+        - python-version: '3.11'
           concretizer: original
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
@@ -33,6 +30,9 @@ jobs:
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.9'
+          concretizer: 'clingo'
+          on_develop: false
+        - python-version: '3.10'
           concretizer: 'clingo'
           on_develop: false
 
@@ -63,10 +63,6 @@ jobs:
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
               pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click==8.0.4" "black<=21.12b0"
           fi
-    - name: Pin pathlib for Python 2.7
-      if: ${{ matrix.python-version == 2.7 }}
-      run: |
-          pip install -U pathlib2==2.3.6 toml
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -86,11 +82,9 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
-          UNIT_TEST_COVERAGE: ${{ (matrix.python-version == '3.10') }}
+          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine -a
-          coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
@@ -103,7 +97,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -111,7 +105,7 @@ jobs:
           sudo apt-get install -y coreutils kcov csh zsh tcsh fish dash bash
     - name: Install Python packages
       run: |
-          pip install --upgrade pip six setuptools pytest codecov coverage[toml]==6.2 pytest-xdist
+          pip install --upgrade pip six setuptools pytest codecov coverage[toml] pytest-xdist
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -160,7 +154,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # @v2
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     - name: Install System packages
       run: |
           sudo apt-get -y update
@@ -182,8 +176,6 @@ jobs:
           SPACK_TEST_SOLVER: clingo
       run: |
           share/spack/qa/run-unit-tests
-          coverage combine -a
-          coverage xml
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # @v2.1.0
       with:
         flags: unittests,linux,clingo
@@ -218,9 +210,7 @@ jobs:
         $(which spack) bootstrap disable spack-install
         $(which spack) solve zlib
         common_args=(--dist loadfile --tx '4*popen//python=./bin/spack-tmpconfig python -u ./bin/spack python' -x)
-        $(which spack) unit-test --cov --cov-config=pyproject.toml "${common_args[@]}"
-        coverage combine -a
-        coverage xml
+        $(which spack) unit-test --cov --cov-config=pyproject.toml --cov-report=xml:coverage.xml "${common_args[@]}"
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
       with:
         flags: unittests,macos
