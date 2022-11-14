@@ -282,7 +282,7 @@ class Glib(Package):
         filter_file(
             "^#!/usr/bin/env @PYTHON@",
             "#!/usr/bin/env {0}".format(os.path.basename(self.spec["python"].command.path)),
-            *files
+            *files,
         )
 
     @run_before("install")
