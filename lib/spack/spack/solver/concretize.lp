@@ -210,6 +210,14 @@ attr(Name, A1, A2, A3, A4) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A
    not imposed_constraint(Hash, "node_flag", Package, FlagType, Flag),
    internal_error("imposed hash without imposing all flag values").
 
+% cannot have multiple namespaces for a package
+:- node(Package),
+   node_namespace(Package, Namespace1),
+   node_namespace(Package, Namespace2),
+   Namespace1 < Namespace2,
+   enable_node_namespace().
+
+#defined enable_node_namespace/0.
 #defined condition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
@@ -405,6 +413,7 @@ possible_provider_weight(Dependency, Virtual, 100, "fallback") :- provider(Depen
 % These allow us to easily define conditional dependency and conflict rules
 % without enumerating all spec attributes every time.
 node(Package)                          :- attr("node", Package).
+node_namespace(Package, Namespace)     :- attr("node_namespace", Package, Namespace).
 virtual_node(Virtual)                  :- attr("virtual_node", Virtual).
 hash(Package, Hash)                    :- attr("hash", Package, Hash).
 version(Package, Version)              :- attr("version", Package, Version).
@@ -427,6 +436,7 @@ node_flag_propagate(Package, FlagType)
   :- attr("node_flag_propagate", Package, FlagType).
 
 attr("node", Package)                          :- node(Package).
+attr("node_namespace", Package, Namespace)     :- node_namespace(Package, Namespace).
 attr("virtual_node", Virtual)                  :- virtual_node(Virtual).
 attr("hash", Package, Hash)                    :- hash(Package, Hash).
 attr("version", Package, Version)              :- version(Package, Version).
@@ -464,6 +474,7 @@ attr("node_flag_propagate", Package, FlagType)
 #defined node_version_satisfies/2.
 #defined node_compiler_version_satisfies/3.
 #defined root/1.
+#defined node_namespace/2.
 
 %-----------------------------------------------------------------------------
 % External semantics
