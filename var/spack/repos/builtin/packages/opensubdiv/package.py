@@ -28,13 +28,8 @@ class Opensubdiv(CMakePackage, CudaPackage):
 
     variant("tbb", default=False, description="Builds with Intel TBB support")
     variant("openmp", default=False, description="Builds with OpenMP support")
-    variant("doc", default=False, description="Builds documentation. Requires Python 2")
 
     depends_on("cmake@2.8.6:", type="build")
-    depends_on("graphviz", type="build", when="+doc")
-    depends_on("doxygen", type="build", when="+doc")
-    depends_on("py-docutils", type="build", when="+doc")
-    depends_on("python@2.6:2", type="build", when="+doc")
     depends_on("gl")
     depends_on("glew@1.9.0:")
     depends_on("glfw@3.0.0:")
@@ -77,11 +72,6 @@ class Opensubdiv(CMakePackage, CudaPackage):
             args.append("-DNO_TBB=0")
         else:
             args.append("-DNO_TBB=1")
-
-        if "+doc" in spec:
-            args.append("-DNO_DOC=0")
-        else:
-            args.append("-DNO_DOC=1")
 
         if "+openmp" in spec:
             args.append("-DNO_OMP=0")

@@ -18,12 +18,10 @@ class Sgpp(SConsPackage):
 
     maintainers = ["G-071", "leiterrl", "pfluegdk"]
 
-    # Versions with Python 3 bindings:
     version("master", branch="master")
     version("3.4.0", sha256="450d4002850b0a48c561abe221b634261ca44eee111ca605c3e80797182f40b3")
     version("3.3.0", sha256="ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4")
     version("3.2.0", sha256="dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d")
-    # Versions with Python 2 bindings:
     version("3.1.0", sha256="6b46bc5b3966e92567d6754130666bdffb7be1d1d2c1b427d7ce964b8eaab526")
     version("3.0.0", sha256="4dd9049e664abd7db78c355fea5e192167812f443115d4bf686a51bb1e9bda9c")
 
@@ -47,7 +45,7 @@ class Sgpp(SConsPackage):
     # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/229
     patch("avx512_datadriven_compilation.patch", when="@:3.3.0+datadriven")
 
-    variant("python", default=True, description="Provide Python bindings for SGpp")
+    variant("python", default=True, description="Provide Python bindings for SGpp", when="@3.2:")
     variant("optimization", default=True, description="Builds the optimization module of SGpp")
     variant("pde", default=True, description="Builds the datadriven module of SGpp")
     variant("quadrature", default=True, description="Builds the datadriven module of SGpp")
@@ -76,17 +74,10 @@ class Sgpp(SConsPackage):
     depends_on("py-pip", when="+python", type="build")
     depends_on("py-wheel", when="+python", type="build")
     depends_on("py-setuptools", when="+python", type=("build"))
-    # Python 3 support was added in version 3.2.0
-    depends_on("python@2.7:2.8", when="@1.0.0:3.1.0+python", type=("build", "run"))
-    depends_on("python@3.7:", when="@3.2.0:+python", type=("build", "run"))
+    depends_on("python@3.7:", when="+python", type=("build", "run"))
     depends_on("swig@3:", when="+python", type=("build"))
-    # Python libraries (version depends on whether we use Python 2 or 3)
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    depends_on("py-numpy@:1.16", when="@1.0.0:3.1.0+python", type=("build", "run"))
-    depends_on("py-numpy@1.17:", when="@3.2.0:+python", type=("build", "run"))
-    depends_on("py-scipy", when="+python", type=("build", "run"))
-    depends_on("py-scipy@:1.2.3", when="@1.0.0:3.1.0+python", type=("build", "run"))
-    depends_on("py-scipy@1.3.0:", when="@3.2.0:+python", type=("build", "run"))
+    depends_on("py-numpy@1.17:", when="+python", type=("build", "run"))
+    depends_on("py-scipy@1.3:", when="+python", type=("build", "run"))
     # OpenCL dependency
     depends_on("opencl@1.1:", when="+opencl", type=("build", "run"))
     # MPI dependency

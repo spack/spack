@@ -77,7 +77,6 @@ class Eccodes(CMakePackage):
     variant(
         "memfs", default=False, description="Enable memory based access to definitions/samples"
     )
-    variant("python", default=False, description="Enable the Python 2 interface")
     variant("fortran", default=False, description="Enable the Fortran support")
     variant("shared", default=True, description="Build shared versions of the libraries")
 
@@ -114,12 +113,6 @@ class Eccodes(CMakePackage):
     depends_on("libaec", when="+aec")
     # Can be built with Python 2 or Python 3.
     depends_on("python", when="+memfs", type="build")
-    # The interface is available only for Python 2.
-    # Python 3 interface is available as a separate packages:
-    # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on("python@2.6:2", when="+python", type=("build", "link", "run"))
-    depends_on("py-numpy", when="+python", type=("build", "run"))
-    extends("python", when="+python")
 
     depends_on("cmake@3.6:", type="build")
     depends_on("cmake@3.12:", when="@2.19:", type="build")
@@ -332,9 +325,6 @@ class Eccodes(CMakePackage):
             self.define_from_variant("ENABLE_ECCODES_THREADS", "pthreads"),
             self.define_from_variant("ENABLE_ECCODES_OMP_THREADS", "openmp"),
             self.define_from_variant("ENABLE_MEMFS", "memfs"),
-            self.define_from_variant(
-                "ENABLE_PYTHON{0}".format("2" if self.spec.satisfies("@2.20.0:") else ""), "python"
-            ),
             self.define_from_variant("ENABLE_FORTRAN", "fortran"),
             self.define("BUILD_SHARED_LIBS", "BOTH" if "+shared" in self.spec else "OFF"),
             self.define("ENABLE_TESTS", self.run_tests),

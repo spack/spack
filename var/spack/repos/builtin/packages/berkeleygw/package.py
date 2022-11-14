@@ -37,7 +37,6 @@ class Berkeleygw(MakefilePackage):
 
     variant("mpi", default=True, description="Builds with MPI support")
     variant("elpa", default=True, description="Build with ELPA support")
-    variant("python", default=False, description="Build with Python support")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("scalapack", default=True, description="Build with ScaLAPACK support")
     variant("hdf5", default=True, description="Builds with HDF5 support")
@@ -55,11 +54,6 @@ class Berkeleygw(MakefilePackage):
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("fftw-api@3+openmp", when="+openmp")
     depends_on("fftw-api@3~openmp", when="~openmp")
-
-    depends_on("python@:2", type=("build", "run"), when="+python")
-    depends_on("py-numpy@:1.16", type=("build", "run"), when="+python")
-    depends_on("py-setuptools@:44", type=("build", "run"), when="+python")
-    depends_on("py-h5py@:2", type=("build", "run"), when="+hdf5+python")
 
     depends_on("perl", type="test")
 

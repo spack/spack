@@ -258,7 +258,16 @@ class Python(Package):
             variants += "~pythoncmd"
 
         for module in [
-            "readline", "sqlite3", "dbm", "nis", "zlib", "bz2", "lzma", "ctypes", "tkinter", "uuid"
+            "readline",
+            "sqlite3",
+            "dbm",
+            "nis",
+            "zlib",
+            "bz2",
+            "lzma",
+            "ctypes",
+            "tkinter",
+            "uuid",
         ]:
             try:
                 python("-c", "import " + module, error=os.devnull)
