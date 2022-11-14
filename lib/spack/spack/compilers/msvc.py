@@ -11,6 +11,7 @@ from typing import Dict, List, Set  # novm
 
 import spack.compiler
 import spack.operating_systems.windows_os
+import spack.platforms
 import spack.util.executable
 from spack.compiler import Compiler
 from spack.error import SpackError
@@ -92,14 +93,20 @@ class Msvc(Compiler):
     @property
     def msvc_version(self):
         """This is the VCToolset version *NOT* the actual version of the cl compiler
-        For CL version, query `Msvc.cl_version`"""
-        ver = re.search(Msvc.version_regex, self.cc).group(1)
+        For CL version, query `Msvc.cc_version`"""
+        return re.search(Msvc.version_regex, self.cc).group(1)
+
+    @property
+    def short_msvc_version(self):
+        """This is the shorthand VCToolset version of form MSVC<short-ver> *NOT* the full version, for that see
+        Msvc.msvc_version"""
+        ver = self.msvc_version
         ver = "".join(ver.split(".")[:2])[:-1]
         return "MSVC" + ver
 
     @property
     def cc_version(self):
-        """Cl tool version"""
+        """Cl toolset version"""
         return spack.compiler.get_compiler_version_output(self.cc)
 
     def setup_custom_environment(self, pkg, env):
@@ -111,11 +118,21 @@ class Msvc(Compiler):
         # once the process terminates. So go the long way around: examine
         # output, sort into dictionary, use that to make the build
         # environment.
+
+        # get current platform architecture and format for vcvars argument
+        arch = spack.platforms.real_host().default.lower()
+        arch = arch.replace("-", "_")
+        # vcvars can target specific sdk versions, force it to pick up concretized sdk
+        # version, if needed by spec
+        sdk_ver = "" if not "win-sdk" in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
+        # provide vcvars with msvc version selected by concretization, not whatever it happens to
+        # pick up on the system (highest available version)
         out = subprocess.check_output(  # novermin
-            'cmd /u /c "{}" {} && set'.format(self.setvarsfile, "amd64"),
+            'cmd /u /c "{}" {} {} {}&& set'.format(self.setvarsfile, arch, sdk_ver, "-vcvars_ver=%s" %self.msvc_version),
             stderr=subprocess.STDOUT,
         )
-        out = out.decode("utf-16le", errors="replace")  # novermin
+        if sys.version_info[0] >= 3:
+            out = out.decode("utf-16le", errors="replace")  # novermin
 
         int_env = dict(
             (key.lower(), value)
