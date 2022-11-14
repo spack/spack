@@ -43,7 +43,8 @@ class Sz3(CMakePackage):
         ]
 
     def test(self):
-        if self.version < Version("3.1.7"):
+        if self.spec.satisifes("@3.1.7:"):
+            print("smoke tests are only supported on 3.1.7 and later, skipping")
             return
 
         self.run_test(self.prefix.bin.sz3_smoke_test, purpose="sz3 works")
