@@ -2035,6 +2035,7 @@ class BuildProcessInstaller(object):
                     )
 
                     with log_contextmanager as logger:
+                        # Redirect stdout and stderr to daemon pipe
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
                             tty.set_debug(debug_level)
@@ -2042,12 +2043,10 @@ class BuildProcessInstaller(object):
                             tty.msg(msg.format(self.pre, phase_fn.name))
                             tty.set_debug(inner_debug_level)
 
-                        # Redirect stdout and stderr to daemon pipe
-                        self.timer.phase(phase_fn.name)
-
                         # Catch any errors to report to logging
                         phase_fn.execute()
                         spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
+                        self.timer.phase(phase_fn.name)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
