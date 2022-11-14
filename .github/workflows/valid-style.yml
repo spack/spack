@@ -28,9 +28,9 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: vermin (Spack's Core)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport argparse --violations --backport typing -t=2.7- -t=3.6- -vvv var/spack/repos
+      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
   # Run style checks on the files that have been changed
   style:
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         cache: 'pip'
     - name: Install Python packages
       run: |
-        python3 -m pip install --upgrade pip six setuptools types-six click==8.0.2 'black==21.12b0' mypy isort clingo flake8
+        python3 -m pip install --upgrade pip six setuptools types-six black mypy isort clingo flake8
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.

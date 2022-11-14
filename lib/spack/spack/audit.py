@@ -37,6 +37,7 @@ as input.
 """
 import ast
 import collections
+import collections.abc
 import inspect
 import itertools
 import pickle
@@ -45,7 +46,6 @@ import re
 from six.moves.urllib.request import urlopen
 
 import llnl.util.lang
-from llnl.util.compat import Sequence
 
 import spack.config
 import spack.patch
@@ -81,7 +81,7 @@ class Error(object):
         return hash(value)
 
 
-class AuditClass(Sequence):
+class AuditClass(collections.abc.Sequence):
     def __init__(self, group, tag, description, kwargs):
         """Return an object that acts as a decorator to register functions
         associated with a specific class of sanity checks.

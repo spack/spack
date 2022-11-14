@@ -28,6 +28,7 @@ The available directives are:
   * ``version``
 
 """
+import collections.abc
 import functools
 import os.path
 import re
@@ -37,7 +38,6 @@ import six
 
 import llnl.util.lang
 import llnl.util.tty.color
-from llnl.util.compat import Sequence
 
 import spack.error
 import spack.patch
@@ -237,7 +237,7 @@ class DirectiveMeta(type):
         if isinstance(dicts, six.string_types):
             dicts = (dicts,)
 
-        if not isinstance(dicts, Sequence):
+        if not isinstance(dicts, collections.abc.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
 
@@ -300,7 +300,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, Sequence):
+                if not isinstance(values, collections.abc.Sequence):
                     values = (values,)
 
                 DirectiveMeta._directives_to_be_executed.extend(values)

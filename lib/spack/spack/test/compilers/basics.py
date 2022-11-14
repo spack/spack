@@ -84,7 +84,6 @@ def test_all_compilers(config):
     assert len(filtered) == 1
 
 
-@pytest.mark.skipif(sys.version_info[0] == 2, reason="make_args_for_version requires python 3")
 @pytest.mark.parametrize(
     "input_version,expected_version,expected_error",
     [(None, None, "Couldn't get version for compiler /usr/bin/gcc"), ("4.9", "4.9", None)],

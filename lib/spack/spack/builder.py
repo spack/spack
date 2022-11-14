@@ -3,14 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
+import collections.abc
 import copy
 import functools
 import inspect
 from typing import List, Optional, Tuple
 
 import six
-
-import llnl.util.compat
 
 import spack.build_environment
 
@@ -280,7 +279,7 @@ class PhaseCallbacksMeta(type):
         return _decorator
 
 
-class BuilderMeta(PhaseCallbacksMeta, type(llnl.util.compat.Sequence)):  # type: ignore
+class BuilderMeta(PhaseCallbacksMeta, type(collections.abc.Sequence)):  # type: ignore
     pass
 
 
@@ -457,7 +456,7 @@ class InstallationPhase(object):
         return copy.deepcopy(self)
 
 
-class Builder(six.with_metaclass(BuilderMeta, llnl.util.compat.Sequence)):
+class Builder(six.with_metaclass(BuilderMeta, collections.abc.Sequence)):
     """A builder is a class that, given a package object (i.e. associated with
     concrete spec), knows how to install it.
 

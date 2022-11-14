@@ -12,12 +12,11 @@ from __future__ import print_function
 
 import ast
 import collections
+import collections.abc
 import inspect
 import os
 
 import pytest
-
-from llnl.util.compat import Iterable, Mapping
 
 import spack.hash_types as ht
 import spack.paths
@@ -148,12 +147,12 @@ def test_using_ordered_dict(mock_packages):
     """
 
     def descend_and_check(iterable, level=0):
-        if isinstance(iterable, Mapping):
+        if isinstance(iterable, collections.abc.Mapping):
             assert isinstance(iterable, syaml_dict)
             return descend_and_check(iterable.values(), level=level + 1)
         max_level = level
         for value in iterable:
-            if isinstance(value, Iterable) and not isinstance(value, str):
+            if isinstance(value, collections.abc.Iterable) and not isinstance(value, str):
                 nlevel = descend_and_check(value, level=level + 1)
                 if nlevel > max_level:
                     max_level = nlevel

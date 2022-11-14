@@ -6,7 +6,6 @@
 import os
 import re
 import subprocess
-import sys
 from distutils.version import StrictVersion
 from typing import Dict, List, Set  # novm
 
@@ -98,38 +97,33 @@ class Msvc(Compiler):
     def setup_custom_environment(self, pkg, env):
         """Set environment variables for MSVC using the
         Microsoft-provided script."""
-        if sys.version_info[:2] > (2, 6):
-            # Set the build environment variables for spack. Just using
-            # subprocess.call() doesn't work since that operates in its own
-            # environment which is destroyed (along with the adjusted variables)
-            # once the process terminates. So go the long way around: examine
-            # output, sort into dictionary, use that to make the build
-            # environment.
-            out = subprocess.check_output(  # novermin
-                'cmd /u /c "{}" {} && set'.format(self.setvarsfile, "amd64"),
-                stderr=subprocess.STDOUT,
-            )
-            if sys.version_info[0] >= 3:
-                out = out.decode("utf-16le", errors="replace")  # novermin
+        # Set the build environment variables for spack. Just using
+        # subprocess.call() doesn't work since that operates in its own
+        # environment which is destroyed (along with the adjusted variables)
+        # once the process terminates. So go the long way around: examine
+        # output, sort into dictionary, use that to make the build
+        # environment.
+        out = subprocess.check_output(  # novermin
+            'cmd /u /c "{}" {} && set'.format(self.setvarsfile, "amd64"),
+            stderr=subprocess.STDOUT,
+        )
+        out = out.decode("utf-16le", errors="replace")  # novermin
 
-            int_env = dict(
-                (key.lower(), value)
-                for key, _, value in (line.partition("=") for line in out.splitlines())
-                if key and value
-            )
+        int_env = dict(
+            (key.lower(), value)
+            for key, _, value in (line.partition("=") for line in out.splitlines())
+            if key and value
+        )
 
-            if "path" in int_env:
-                env.set_path("PATH", int_env["path"].split(";"))
-            env.set_path("INCLUDE", int_env.get("include", "").split(";"))
-            env.set_path("LIB", int_env.get("lib", "").split(";"))
+        if "path" in int_env:
+            env.set_path("PATH", int_env["path"].split(";"))
+        env.set_path("INCLUDE", int_env.get("include", "").split(";"))
+        env.set_path("LIB", int_env.get("lib", "").split(";"))
 
-            env.set("CC", self.cc)
-            env.set("CXX", self.cxx)
-            env.set("FC", self.fc)
-            env.set("F77", self.f77)
-        else:
-            # Should not this be an exception?
-            print("Cannot pull msvc compiler information in Python 2.6 or below")
+        env.set("CC", self.cc)
+        env.set("CXX", self.cxx)
+        env.set("FC", self.fc)
+        env.set("F77", self.f77)
 
     @classmethod
     def fc_version(cls, fc):

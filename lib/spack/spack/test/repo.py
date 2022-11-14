@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import sys
 
 import pytest
 
@@ -56,9 +55,6 @@ def test_repo_unknown_pkg(mutable_mock_repo):
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(
-    sys.version_info < (3, 5), reason="Test started failing spuriously on Python 2.7"
-)
 def test_repo_last_mtime():
     latest_mtime = max(
         os.path.getmtime(p.module.__file__) for p in spack.repo.path.all_package_classes()

@@ -12,7 +12,6 @@ import shutil
 import sys
 
 from llnl.util import tty
-from llnl.util.compat import filter, map, zip
 from llnl.util.filesystem import (
     mkdirp,
     remove_dead_links,

@@ -13,6 +13,7 @@
 
 """
 import collections
+import collections.abc
 import ctypes
 import re
 from typing import List  # novm
@@ -21,7 +22,6 @@ import ruamel.yaml as yaml
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
 from six import StringIO, string_types
 
-from llnl.util.compat import Mapping
 from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
@@ -352,7 +352,7 @@ def sorted_dict(dict_like):
     """
     result = syaml_dict(sorted(dict_like.items()))
     for key, value in result.items():
-        if isinstance(value, Mapping):
+        if isinstance(value, collections.abc.Mapping):
             result[key] = sorted_dict(value)
     return result
 

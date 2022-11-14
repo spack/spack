@@ -31,10 +31,6 @@ def test_read_unicode(tmpdir, working_env):
             f.write(
                 """#!{0}
 from __future__ import print_function
-import sys
-if sys.version_info < (3, 0, 0):
-    reload(sys)
-    sys.setdefaultencoding('utf8')
 print(u'\\xc3')
 """.format(
                     sys.executable
@@ -45,7 +41,7 @@ print(u'\\xc3')
         fs.set_executable(script_name)
         filter_shebangs_in_directory(".", [script_name])
 
-        assert u"\xc3" == script(output=str).strip()
+        assert "\xc3" == script(output=str).strip()
 
 
 def test_which_relative_path_with_slash(tmpdir, working_env):

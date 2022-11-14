@@ -7,7 +7,6 @@ import hashlib
 import os
 import re
 import shutil
-import sys
 
 import six
 
@@ -163,8 +162,7 @@ class TestSuite(object):
             json_text = sjson.dump(self.to_dict())
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
-            if sys.version_info[0] >= 3:
-                b32_hash = b32_hash.decode("utf-8")
+            b32_hash = b32_hash.decode("utf-8")
             self._hash = b32_hash
         return self._hash
 

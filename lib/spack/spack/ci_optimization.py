@@ -2,23 +2,21 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import collections
+import collections.abc
 import copy
 import hashlib
-from collections import defaultdict
-
-from llnl.util.compat import Mapping, Sequence
 
 import spack.util.spack_yaml as syaml
 
 
 def sort_yaml_obj(obj):
-    if isinstance(obj, Mapping):
+    if isinstance(obj, collections.abc.Mapping):
         return syaml.syaml_dict(
             (k, sort_yaml_obj(v)) for k, v in sorted(obj.items(), key=(lambda item: str(item[0])))
         )
 
-    if isinstance(obj, Sequence) and not isinstance(obj, str):
+    if isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
         return syaml.syaml_list(sort_yaml_obj(x) for x in obj)
 
     return obj
@@ -38,15 +36,15 @@ def matches(obj, proto):
 
     Precondition: proto must not have any reference cycles
     """
-    if isinstance(obj, Mapping):
-        if not isinstance(proto, Mapping):
+    if isinstance(obj, collections.abc.Mapping):
+        if not isinstance(proto, collections.abc.Mapping):
             return False
 
         return all((key in obj and matches(obj[key], val)) for key, val in proto.items())
 
-    if isinstance(obj, Sequence) and not isinstance(obj, str):
+    if isinstance(obj, collections.abc.Sequence) and not isinstance(obj, str):
 
-        if not (isinstance(proto, Sequence) and not isinstance(proto, str)):
+        if not (isinstance(proto, collections.abc.Sequence) and not isinstance(proto, str)):
             return False
 
         if len(obj) != len(proto):
@@ -76,7 +74,9 @@ def subkeys(obj, proto):
 
     Otherwise, obj is returned.
     """
-    if not (isinstance(obj, Mapping) and isinstance(proto, Mapping)):
+    if not (
+        isinstance(obj, collections.abc.Mapping) and isinstance(proto, collections.abc.Mapping)
+    ):
         return obj
 
     new_obj = {}
@@ -88,7 +88,7 @@ def subkeys(obj, proto):
         if matches(value, proto[key]) and matches(proto[key], value):
             continue
 
-        if isinstance(value, Mapping):
+        if isinstance(value, collections.abc.Mapping):
             new_obj[key] = subkeys(value, proto[key])
             continue
 
@@ -116,7 +116,7 @@ def add_extends(yaml, key):
     has_key = "extends" in yaml
     extends = yaml.get("extends")
 
-    if has_key and not isinstance(extends, (str, Sequence)):
+    if has_key and not isinstance(extends, (str, collections.abc.Sequence)):
         return
 
     if extends is None:
@@ -261,7 +261,7 @@ def build_histogram(iterator, key):
     The list is sorted in descending order by count, yielding the most
     frequently occuring hashes first.
     """
-    buckets = defaultdict(int)
+    buckets = collections.defaultdict(int)
     values = {}
 
     num_objects = 0

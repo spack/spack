@@ -22,9 +22,6 @@ parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] == (2, 7), reason="Fails as the output contains a warning on Python 2.7"
-)
 def test_names():
     """Test default output of spack commands."""
     out1 = commands().strip().split("\n")

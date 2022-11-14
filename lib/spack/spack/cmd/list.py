@@ -12,6 +12,7 @@ import math
 import os
 import re
 import sys
+from html import escape
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -20,11 +21,6 @@ import spack.cmd.common.arguments as arguments
 import spack.dependency
 import spack.repo
 from spack.version import VersionList
-
-if sys.version_info > (3, 1):
-    from html import escape  # novm
-else:
-    from cgi import escape
 
 description = "list and search available packages"
 section = "basic"

@@ -31,13 +31,11 @@ import os
 import os.path
 import sys
 
-min_python3 = (3, 5)
+min_python3 = (3, 6)
 
-if sys.version_info[:2] < (2, 7) or (
-    sys.version_info[:2] >= (3, 0) and sys.version_info[:2] < min_python3
-):
+if sys.version_info[:2] < min_python3:
     v_info = sys.version_info[:3]
-    msg = "Spack requires Python 2.7 or %d.%d or higher " % min_python3
+    msg = "Spack requires Python %d.%d or higher " % min_python3
     msg += "You are running spack with Python %d.%d.%d." % v_info
     sys.exit(msg)
 
