@@ -38,6 +38,14 @@ class Alquimia(CMakePackage):
     depends_on("petsc@3.8.0:3.8", when="@xsdk-0.3.0")
     depends_on("petsc@3.10:", when="@develop")
 
+    @when("@1.0.10")
+    def patch(self):
+        filter_file(
+            "use iso_[cC]_binding", "use, intrinsic :: iso_c_binding",
+            "alquimia/c_f_interface_module.F90",
+            "alquimia/alquimia_fortran_interface_mod.F90",
+        )
+
     def cmake_args(self):
         spec = self.spec
 
