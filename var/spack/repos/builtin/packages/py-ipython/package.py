@@ -81,9 +81,6 @@ class PyIpython(PythonPackage):
     depends_on("py-traitlets@4.2:", when="@5:", type=("build", "run"))
     depends_on("py-traitlets", when="@4:", type=("build", "run"))
 
-    depends_on(
-        "py-backports-shutil-get-terminal-size", when="@4.2: ^python@:3.2", type=("build", "run")
-    )
     depends_on("py-black", when="@8.0", type=("build", "run"))
     depends_on("py-pathlib2", when="@5: ^python@:3.3", type=("build", "run"))
     depends_on("py-simplegeneric@0.8:", when="@4:7.0.0", type=("build", "run"))

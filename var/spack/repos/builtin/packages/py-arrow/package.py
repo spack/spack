@@ -27,9 +27,6 @@ class PyArrow(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@1.2.1:")
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@:0.16.0")
     depends_on("py-setuptools", type="build")
-    depends_on(
-        "py-backports-functools-lru-cache@1.2.1:", type=("build", "run"), when="^python@2.7:2.8"
-    )
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-typing-extensions", type=("build", "run"), when="@1.2.1: ^python@:3.7")
     depends_on("py-python-dateutil@2.7.0:", type=("build", "run"), when="@1.2.1:")
