@@ -31,6 +31,7 @@ class Neuron(CMakePackage):
     patch("patch-v800-cmake-nvhpc.patch", when="@8.0.0%nvhpc^cmake@3.20:")
 
     version("develop", branch="master")
+    version("8.2.2a", commit="eb19ae0")
     version("8.2.1", tag="8.2.1")
     version("8.2.0", tag="8.2.0")
     version("8.1.0", tag="8.1.0")
