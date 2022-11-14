@@ -233,8 +233,8 @@ packages will be listed as roots of the Environment.
 
 All of the Spack commands that act on the list of installed specs are
 Environment-sensitive in this way, including ``install``,
-``uninstall``, ``activate``, ``deactivate``, ``find``, ``extensions``,
-and more. In the :ref:`environment-configuration` section we will discuss
+``uninstall``, ``find``, ``extensions``, and more. In the
+:ref:`environment-configuration` section we will discuss
 Environment-sensitive commands further.
 
 ^^^^^^^^^^^^^^^^^^^^^

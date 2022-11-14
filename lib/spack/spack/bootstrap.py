@@ -476,21 +476,14 @@ def source_is_enabled_or_raise(conf):
 
 def spec_for_current_python():
     """For bootstrapping purposes we are just interested in the Python
-    minor version (all patches are ABI compatible with the same minor)
-    and on whether ucs4 support has been enabled for Python 2.7
+    minor version (all patches are ABI compatible with the same minor).
 
     See:
       https://www.python.org/dev/peps/pep-0513/
       https://stackoverflow.com/a/35801395/771663
     """
     version_str = ".".join(str(x) for x in sys.version_info[:2])
-    variant_str = ""
-    if sys.version_info[0] == 2 and sys.version_info[1] == 7:
-        unicode_size = sysconfig.get_config_var("Py_UNICODE_SIZE")
-        variant_str = "+ucs4" if unicode_size == 4 else "~ucs4"
-
-    spec_fmt = "python@{0} {1}"
-    return spec_fmt.format(version_str, variant_str)
+    return "python@{0}".format(version_str)
 
 
 @contextlib.contextmanager
@@ -873,9 +866,7 @@ def ensure_mypy_in_path_or_raise():
 
 
 def black_root_spec():
-    # black v21 is the last version to support Python 2.7.
-    # Upgrade when we no longer support Python 2.7
-    return _root_spec("py-black@:21")
+    return _root_spec("py-black")
 
 
 def ensure_black_in_path_or_raise():

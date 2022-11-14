@@ -24,14 +24,16 @@ class Global(Package):
     depends_on("exuberant-ctags", type=("build", "run"))
     depends_on("ncurses")
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix={0}".format(prefix)]
+    patch("global-ncurse.patch")
 
-        config_args.append(
+    def install(self, spec, prefix):
+        config_args = [
+            "--prefix={0}".format(prefix),
             "--with-exuberant-ctags={0}".format(
                 os.path.join(spec["exuberant-ctags"].prefix.bin, "ctags")
-            )
-        )
+            ),
+            "--with-ncurses={0}".format(spec["ncurses"].prefix),
+        ]
 
         configure(*config_args)
 

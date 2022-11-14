@@ -79,7 +79,6 @@ def test_dynamic_dot_graph_mpileaks(mock_packages, config):
         assert '  "{0}" -> "{1}"\n'.format(hashes[parent], hashes[child]) in dot
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6), reason="Ordering might not be consistent")
 def test_ascii_graph_mpileaks(config, mock_packages, monkeypatch):
     monkeypatch.setattr(spack.graph.AsciiGraph, "_node_label", lambda self, node: node.name)
     s = spack.spec.Spec("mpileaks").concretized()

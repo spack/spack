@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections.abc
 import inspect
 import os
 import platform
@@ -12,7 +13,6 @@ from typing import List, Tuple
 import six
 
 import llnl.util.filesystem as fs
-from llnl.util.compat import Sequence
 
 import spack.build_environment
 import spack.builder
@@ -302,7 +302,9 @@ class CMakeBuilder(BaseBuilder):
             value = "ON" if value else "OFF"
         else:
             kind = "STRING"
-            if isinstance(value, Sequence) and not isinstance(value, six.string_types):
+            if isinstance(value, collections.abc.Sequence) and not isinstance(
+                value, six.string_types
+            ):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)
