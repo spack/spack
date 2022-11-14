@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import sys
 
 import jsonschema
 import jsonschema.exceptions
@@ -163,11 +162,7 @@ def entries_to_specs(entries):
 
 
 def read(path, apply_updates):
-    if sys.version_info >= (3, 0):
-        decode_exception_type = json.decoder.JSONDecodeError
-    else:
-        decode_exception_type = ValueError
-
+    decode_exception_type = json.decoder.JSONDecodeError
     try:
         with open(path, "r") as json_file:
             json_data = json.load(json_file)
