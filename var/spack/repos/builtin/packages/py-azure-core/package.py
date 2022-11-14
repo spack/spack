@@ -22,5 +22,4 @@ class PyAzureCore(PythonPackage):
     depends_on("py-six@1.6:", when="@:1.21", type=("build", "run"))
     depends_on("py-six@1.11:", when="@1.21:", type=("build", "run"))
     depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))
-    depends_on("py-enum34@1.0.4:", when="^python@:3.3", type=("build", "run"))
     depends_on("py-typing", when="^python@:3.4", type=("build", "run"))

@@ -22,5 +22,4 @@ class PyAzureMultiapiStorage(PythonPackage):
     depends_on("py-python-dateutil", type=("build", "run"))
     depends_on("py-requests", type=("build", "run"))
     depends_on("py-azure-core", type=("build", "run"))
-    depends_on("py-futures", when="^python@:2", type=("build", "run"))
     depends_on("py-azure-nspkg", when="^python@:2", type=("build", "run"))

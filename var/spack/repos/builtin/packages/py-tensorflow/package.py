@@ -308,8 +308,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage):
     depends_on("py-astor@0.6:", type=("build", "run"), when="@1.6:2.1")
     depends_on("py-backports-weakref@1.0:", type=("build", "run"), when="@1.3: ^python@:3.3")
     depends_on("py-backports-weakref@1.0rc1", type=("build", "run"), when="@1.2")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.5: ^python@:3.3")
-    depends_on("py-enum34@1.1.6:", type=("build", "run"), when="@1.4.0:1.4.1")
     depends_on("py-keras-applications@1.0.8:", type=("build", "run"), when="@1.15:2.1")
     depends_on("py-keras-applications@1.0.6:", type=("build", "run"), when="@1.12:1.14")
     depends_on("py-keras-applications@1.0.5:", type=("build", "run"), when="@1.11")

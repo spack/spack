@@ -32,7 +32,6 @@ class PyChalice(PythonPackage):
     depends_on("py-six@1.10.0:2.0.0", type=("build", "run"))
     depends_on("py-pip@9:20.0", type=("build", "run"))
     depends_on("py-attrs@19.3.0:20.0.0", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="@1.5:^python@:3.3")
     depends_on("py-jmespath@0.9.3:1.0.0", type=("build", "run"))
     depends_on("py-pyyaml@5.3.1:6.0.0", type=("build", "run"))
     depends_on("py-wheel", type=("build", "run"))

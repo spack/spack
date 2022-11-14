@@ -66,7 +66,6 @@ class PyPoetry(PythonPackage):
     depends_on("py-dulwich@0.20.46:0.20", when="@1.2.1:")
     depends_on("py-typing@3.6:3", when="^python@2.7", type=("build", "run"))
     depends_on("py-pathlib2@2.3:2", when="^python@2.7", type=("build", "run"))
-    depends_on("py-futures@3.3:3", when="^python@2.7", type=("build", "run"))
     depends_on("py-glob2@0.6.0:0.6", when="^python@2.7", type=("build", "run"))
     depends_on("py-functools32@3.2.3:3", when="^python@2.7", type=("build", "run"))
     depends_on("py-subprocess32@3.5:3", when="^python@2.7", type=("build", "run"))

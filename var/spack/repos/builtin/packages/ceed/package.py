@@ -204,7 +204,6 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     # ceed-1.0
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
-    depends_on("petsc@3.8.3+mpi+hypre+suite-sparse+mumps+double~int64", when="@1.0.0+petsc+mfem")
     depends_on("hpgmg@a0a5510df23b+fe", when="@1.0.0+petsc")
 
     # MAGMA

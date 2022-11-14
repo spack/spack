@@ -79,7 +79,6 @@ class PyDistributed(PythonPackage):
     depends_on("py-tornado@6.0.3:6.1", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-zict@0.1.3:", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run"))
-    depends_on("py-futures", when="@:1 ^python@2.7:2.8", type=("build", "run"))
     depends_on("py-singledispatch", when="@:1 ^python@2.7:2.8", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
 

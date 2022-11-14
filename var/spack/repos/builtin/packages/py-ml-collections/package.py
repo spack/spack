@@ -22,5 +22,4 @@ class PyMlCollections(PythonPackage):
     depends_on("py-absl-py", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
     depends_on("py-contextlib2", type=("build", "run"))
-    depends_on("py-dataclasses", type=("build", "run"), when="^python@:3.6")
     depends_on("py-typing", type=("build", "run"), when="^python@:3.4")

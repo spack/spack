@@ -82,11 +82,6 @@ class AwsParallelcluster(PythonPackage):
 
     depends_on("py-setuptools", type=("build", "run"))
 
-    depends_on("py-enum34@1.1.6:", when="^python@:3.3", type=("build", "run"))
-
-    # https://github.com/aws/aws-parallelcluster/pull/1633
-    patch("enum34.patch", when="@:2.5.1")
-
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):

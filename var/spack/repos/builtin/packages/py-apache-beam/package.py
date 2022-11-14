@@ -25,7 +25,6 @@ class PyApacheBeam(PythonPackage):
     depends_on("py-fastavro@0.21.4:0.23", type=("build", "run"))
     depends_on("py-funcsigs@1.0.2:1", type=("build", "run"), when="^python@:2")
     depends_on("py-future@0.18.2:0", type=("build", "run"))
-    depends_on("py-futures@3.2:3", type=("build", "run"), when="^python@:2")
     depends_on("py-grpcio@1.29:1", type=("build", "run"))
     depends_on("py-hdfs@2.1:2", type=("build", "run"))
     depends_on("py-httplib2@0.8:0.17", type=("build", "run"))

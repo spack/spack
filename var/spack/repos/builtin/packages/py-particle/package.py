@@ -32,5 +32,4 @@ class PyParticle(PythonPackage):
     depends_on("py-hepunits@2.0.0:", when="@0.13:", type=("build", "run"))
     depends_on("py-importlib-resources@1.0:", when="^python@:3.6", type=("build", "run"))
 
-    depends_on("py-enum34@1.1:", when="^python@:3.3", type=("build", "run"))
     depends_on("py-typing@3.7:", when="^python@:3.4", type=("build", "run"))

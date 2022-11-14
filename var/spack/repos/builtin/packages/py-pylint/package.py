@@ -70,7 +70,6 @@ class PyPylint(PythonPackage):
     depends_on("py-tomlkit@0.10.1:", when="@2.14.0:", type=("build", "run"))
     depends_on("py-colorama@0.4.5:", when="platform=windows", type=("build", "run"))
     depends_on("py-typing-extensions@3.10.0:", when="@2.11.1: ^python@:3.9", type=("build", "run"))
-    depends_on("py-backports-functools-lru-cache", when="^python@:2.8", type=("build", "run"))
     depends_on("py-configparser", when="^python@:2.8", type=("build", "run"))
     depends_on("py-editdistance", when="@:1.7", type=("build", "run"))
     depends_on("py-singledispatch", when="^python@:3.3", type=("build", "run"))

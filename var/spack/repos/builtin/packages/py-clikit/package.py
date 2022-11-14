@@ -22,4 +22,3 @@ class PyClikit(PythonPackage):
     depends_on("py-crashtest@0.3.0:0.3", when="^python@3.6:3", type=("build", "run"))
     depends_on("py-typing@3.6:3", when="^python@2.7,3.4", type=("build", "run"))
     depends_on("py-typing-extensions@3.6:3", when="^python@3.5.0:3.5.3", type=("build", "run"))
-    depends_on("py-enum34@1.1:1", when="^python@2.7", type=("build", "run"))

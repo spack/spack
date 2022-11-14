@@ -29,4 +29,3 @@ class PyGoogleAuth(PythonPackage):
     depends_on("py-cachetools@2.0.0:", type=("build", "run"))
     depends_on("py-cachetools@2.0.0:4", when="@2.3.2:2.3", type=("build", "run"))
     depends_on("py-cachetools@2.0.0:5", when="@2.11.0:", type=("build", "run"))
-    depends_on("py-enum34@1.1.10:", when="@2.3.2: ^python@:3.3", type=("build", "run"))

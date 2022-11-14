@@ -49,8 +49,6 @@ class PyMaestrowf(PythonPackage):
     depends_on("py-cryptography@:2", type=("build"))
     depends_on("py-pyyaml@4.2:", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
-    depends_on("py-enum34", type=("build", "run"), when="^python@:3.3")
-    depends_on("py-enum34", type=("build", "run"), when="@:1.1.3")
     depends_on("py-tabulate", type=("build", "run"), when="@1.1.0:")
     depends_on("py-filelock", type=("build", "run"), when="@1.1.0:")
     depends_on("py-coloredlogs", type=("build", "run"), when="@1.1.7:")
