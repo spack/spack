@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.util.timer as timer
-from io import StringIO
 import json
+from io import StringIO
+
+import spack.util.timer as timer
 
 
 class Tick:
