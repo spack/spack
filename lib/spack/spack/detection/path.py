@@ -38,6 +38,8 @@ def common_windows_package_paths():
     paths = WindowsCompilerExternalPaths.find_windows_compiler_bundled_packages()
     paths.extend(find_win32_additional_install_paths())
     paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
+    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
+    paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
     return paths
 
 
@@ -99,6 +101,8 @@ def libraries_in_windows_paths(path_hints=None):
     search_paths.extend(llnl.util.filesystem.search_paths_for_executables(*path_hints))
     search_paths.extend(WindowsKitExternalPaths.find_windows_kit_lib_paths())
     search_paths.extend(WindowsKitExternalPaths.find_windows_kit_bin_paths())
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_installed_roots_paths())
+    search_paths.extend(WindowsKitExternalPaths.find_windows_kit_reg_sdk_paths())
     # SDK and WGL should be handled by above, however on occasion the WDK is in an atypical
     # location, so we handle that case specifically.
     search_paths.extend(WindowsKitExternalPaths.find_windows_driver_development_kit_paths())

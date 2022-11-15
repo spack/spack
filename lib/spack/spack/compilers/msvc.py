@@ -98,8 +98,11 @@ class Msvc(Compiler):
 
     @property
     def short_msvc_version(self):
-        """This is the shorthand VCToolset version of form MSVC<short-ver> *NOT* the full version, for that see
-        Msvc.msvc_version"""
+        """
+        This is the shorthand VCToolset version of form
+        MSVC<short-ver> *NOT* the full version, for that see
+        Msvc.msvc_version
+        """
         ver = self.msvc_version
         ver = "".join(ver.split(".")[:2])[:-1]
         return "MSVC" + ver
@@ -124,11 +127,15 @@ class Msvc(Compiler):
         arch = arch.replace("-", "_")
         # vcvars can target specific sdk versions, force it to pick up concretized sdk
         # version, if needed by spec
-        sdk_ver = "" if not "win-sdk" in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
-        # provide vcvars with msvc version selected by concretization, not whatever it happens to
-        # pick up on the system (highest available version)
+        sdk_ver = (
+            "" if "win-sdk" not in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
+        )
+        # provide vcvars with msvc version selected by concretization,
+        # not whatever it happens to pick up on the system (highest available version)
         out = subprocess.check_output(  # novermin
-            'cmd /u /c "{}" {} {} {}&& set'.format(self.setvarsfile, arch, sdk_ver, "-vcvars_ver=%s" %self.msvc_version),
+            'cmd /u /c "{}" {} {} {}&& set'.format(
+                self.setvarsfile, arch, sdk_ver, "-vcvars_ver=%s" % self.msvc_version
+            ),
             stderr=subprocess.STDOUT,
         )
         if sys.version_info[0] >= 3:

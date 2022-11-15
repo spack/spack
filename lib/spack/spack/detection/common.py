@@ -27,6 +27,7 @@ import spack.config
 import spack.operating_systems.windows_os as winOs
 import spack.spec
 import spack.util.spack_yaml
+import spack.util.windows_registry
 
 is_windows = sys.platform == "win32"
 #: Information on a package that has been detected
@@ -104,22 +105,6 @@ def _spec_is_valid(spec):
         return False
 
     return True
-
-
-# def path_to_dict(search_paths):
-#     """Return dictionary[path]:file from list of paths"""
-#     lib_to_path = {}
-#     # Reverse order of search directories so that a lib in the first
-#     # entry overrides later entries
-#     for search_path in reversed(search_paths):
-#         for lib in os.listdir(search_path):
-#             lib_path = os.path.join(search_path, lib)
-#             if llnl.util.filesystem.is_readable_file(lib_path):
-#                 if lib_to_path[lib]:
-#                     lib_to_path[lib].add(lib_path)
-#                 else:
-#                     lib_to_path[lib_path] = set([lib])
-#     return lib_to_path
 
 
 def path_to_dict(search_paths):
@@ -268,14 +253,17 @@ class WindowsCompilerExternalPaths(object):
 
 
 class WindowsKitExternalPaths(object):
+    plat_major_ver = str(winOs.windows_version()[0])
+
     @staticmethod
     def find_windows_kit_roots():
         """Return Windows kit root, typically %programfiles%\\Windows Kits\\10|11\\"""
         if not is_windows:
             return []
         program_files = os.environ["PROGRAMFILES(x86)"]
-        plat_major_ver = str(winOs.windows_version()[0])
-        kit_base = os.path.join(program_files, "Windows Kits", plat_major_ver)
+        kit_base = os.path.join(
+            program_files, "Windows Kits", WindowsKitExternalPaths.plat_major_ver
+        )
         return kit_base
 
     @staticmethod
@@ -299,6 +287,33 @@ class WindowsKitExternalPaths(object):
         """
         wdk_content_root = os.getenv("WDKContentRoot")
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(wdk_content_root)
+
+    @staticmethod
+    def find_windows_kit_reg_installed_roots_paths():
+        reg = spack.util.windows_registry.WindowsRegistry(
+            "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+            root_string=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+        )
+        if not reg.reg:
+            # couldn't find key, return empty list
+            return []
+        return WindowsKitExternalPaths.find_windows_kit_lib_paths(
+            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver)
+        )
+
+    @staticmethod
+    def find_windows_kit_reg_sdk_paths():
+        reg = spack.util.windows_registry.WindowsRegistry(
+            "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v%s.0"
+            % WindowsKitExternalPaths.plat_major_ver,
+            root_string=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+        )
+        if not reg.reg:
+            # couldn't find key, return empty list
+            return []
+        return WindowsKitExternalPaths.find_windows_kit_lib_paths(
+            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver)
+        )
 
 
 def find_win32_additional_install_paths():
