@@ -32,8 +32,7 @@ def run():
     with spack.store.db.read_transaction():
         for requested, spec in env.concretized_specs():
             stringified = "/{0} {1}".format(spec.dag_hash(7), requested)
-            package = spack.repo.get(spec)
-            if package.installed:
+            if spec.installed:
                 if "%" in str(requested):
                     staged.append(stringified)
                 else:
