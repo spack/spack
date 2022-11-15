@@ -13,9 +13,4 @@
 # Per-user settings (overrides default and site settings):
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
-modules:
-  prefix_inspections:
-    lib:
-      - LD_LIBRARY_PATH
-    lib64:
-      - LD_LIBRARY_PATH
+modules: {}

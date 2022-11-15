@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Xmore(AutotoolsPackage, XorgPackage):
@@ -12,10 +12,10 @@ class Xmore(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xmore"
     xorg_mirror_path = "app/xmore-1.0.2.tar.gz"
 
-    version('1.0.2', sha256='7371631d05986f1111f2026a77e43e048519738cfcc493c6222b66e7b0f309c0')
+    version("1.0.2", sha256="7371631d05986f1111f2026a77e43e048519738cfcc493c6222b66e7b0f309c0")
 
-    depends_on('libxaw')
-    depends_on('libxt')
+    depends_on("libxaw")
+    depends_on("libxt")
 
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

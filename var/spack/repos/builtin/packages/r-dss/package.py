@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RDss(RPackage):
-    """Dispersion shrinkage for sequencing data
+    """Dispersion shrinkage for sequencing data.
 
     DSS is an R library performing differntial analysis for count-based
     sequencing data. It detectes differentially expressed genes (DEGs) from
@@ -16,16 +16,20 @@ class RDss(RPackage):
     shrinkage method for estimating the dispersion parameter from Gamma-Poisson
     or Beta-Binomial distributions."""
 
-    homepage = "https://bioconductor.org/packages/DSS/"
-    git      = "https://git.bioconductor.org/packages/DSS"
+    bioc = "DSS"
 
-    version('2.38.0', commit='82e65b92e6e227f1f99620362db8b03059e07e98')
-    version('2.36.0', commit='841c7ed')
-    version('2.34.0', commit='f9819c7')
-    version('2.32.0', commit='ffb502d')
+    version("2.44.0", commit="b9f44106f139c93564dfb4afab50555d24a657ba")
+    version("2.42.0", commit="33e87450fbb64bb3e321688ff613e83cd40efe48")
+    version("2.38.0", commit="82e65b92e6e227f1f99620362db8b03059e07e98")
+    version("2.36.0", commit="841c7ed")
+    version("2.34.0", commit="f9819c7")
+    version("2.32.0", commit="ffb502d")
 
-    depends_on('r@3.3:', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-biocparallel', when='@2.36.0:', type=('build', 'run'))
-    depends_on('r-bsseq', type=('build', 'run'))
-    depends_on('r-delayedarray', when='@2.36.0:', type=('build', 'run'))
+    depends_on("r@3.3:", type=("build", "run"))
+    depends_on("r@3.5.0:", type=("build", "run"), when="@2.44.0:")
+    depends_on("r-biobase", type=("build", "run"))
+    depends_on("r-biocparallel", type=("build", "run"), when="@2.36.0:")
+    depends_on("r-bsseq", type=("build", "run"))
+    depends_on("r-matrixstats", type=("build", "run"), when="@2.44.0:")
+
+    depends_on("r-delayedarray", type=("build", "run"), when="@2.36.0:2.42.0")

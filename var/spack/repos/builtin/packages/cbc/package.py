@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Cbc(AutotoolsPackage):
@@ -12,12 +12,12 @@ class Cbc(AutotoolsPackage):
     callable library or using a stand-alone executable."""
 
     homepage = "https://projects.coin-or.org/Cbc"
-    url      = "https://github.com/coin-or/Cbc/archive/releases/2.10.5.tar.gz"
+    url = "https://github.com/coin-or/Cbc/archive/releases/2.10.5.tar.gz"
 
-    depends_on('coinutils')
-    depends_on('osi')
-    depends_on('cgl')
+    depends_on("coinutils")
+    depends_on("osi")
+    depends_on("cgl")
 
-    version('2.10.5', sha256='cc44c1950ff4615e7791d7e03ea34318ca001d3cac6dc3f7f5ee392459ce6719')
+    version("2.10.5", sha256="cc44c1950ff4615e7791d7e03ea34318ca001d3cac6dc3f7f5ee392459ce6719")
 
-    build_directory = 'spack-build'
+    build_directory = "spack-build"

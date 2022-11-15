@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ new Spack packages for.
 Phases
 ^^^^^^
 
-The ``RPackage`` base class has a single phase:
+The ``RBuilder`` and ``RPackage`` base classes have a single phase:
 
 #. ``install`` - install the package
 
@@ -193,10 +193,10 @@ Build system dependencies
 
 As an extension of the R ecosystem, your package will obviously depend
 on R to build and run. Normally, we would use ``depends_on`` to express
-this, but for R packages, we use ``extends``. ``extends`` is similar to
-``depends_on``, but adds an additional feature: the ability to "activate"
-the package by symlinking it to the R installation directory. Since
-every R package needs this, the ``RPackage`` base class contains:
+this, but for R packages, we use ``extends``. This implies a special
+dependency on R, which is used to set environment variables such as
+``R_LIBS`` uniformly. Since every R package needs this, the ``RPackage``
+base class contains:
 
 .. code-block:: python
 

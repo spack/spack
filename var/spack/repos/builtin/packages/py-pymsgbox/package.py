@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class PyPymsgbox(PythonPackage):
@@ -11,8 +11,8 @@ class PyPymsgbox(PythonPackage):
     JavaScript-like message boxes."""
 
     homepage = "https://github.com/asweigart/pymsgbox"
-    pypi     = "PyMsgBox/PyMsgBox-1.0.9.tar.gz"
+    pypi = "PyMsgBox/PyMsgBox-1.0.9.tar.gz"
 
-    version('1.0.9', sha256='2194227de8bff7a3d6da541848705a155dcbb2a06ee120d9f280a1d7f51263ff')
+    version("1.0.9", sha256="2194227de8bff7a3d6da541848705a155dcbb2a06ee120d9f280a1d7f51263ff")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

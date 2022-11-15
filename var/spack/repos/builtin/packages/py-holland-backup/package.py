@@ -1,8 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
+from spack.package import *
 
 
 class PyHollandBackup(PythonPackage):
@@ -15,9 +15,9 @@ class PyHollandBackup(PythonPackage):
     you want by whatever means you want."""
 
     homepage = "https://hollandbackup.org/"
-    url      = "https://github.com/holland-backup/holland/archive/1.2.2.tar.gz"
+    url = "https://github.com/holland-backup/holland/archive/1.2.2.tar.gz"
 
-    version('1.2.2', sha256='836337c243b2dff5ff6a3ce0b647f123ab24697a5de8ac8ae8b7839aa23dff68')
+    version("1.2.2", sha256="836337c243b2dff5ff6a3ce0b647f123ab24697a5de8ac8ae8b7839aa23dff68")
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-configobj@4.6.0:', type=('build', 'run'))
+    depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-configobj@4.6.0:", type=("build", "run"))

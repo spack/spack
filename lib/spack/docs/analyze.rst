@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -59,7 +59,7 @@ are available:
     install_files            : install file listing read from install_manifest.json
     environment_variables    : environment variables parsed from spack-build-env.txt
     config_args              : config args loaded from spack-configure-args.txt
-    abigail                  : Application Binary Interface (ABI) features for objects
+    libabigail               : Application Binary Interface (ABI) features for objects
 
 
 In the above, the first three are fairly simple - parsing metadata files from

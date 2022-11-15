@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _qmakepackage:
 
-------------
-QMakePackage
-------------
+-----
+QMake
+-----
 
 Much like Autotools and CMake, QMake is a build-script generator
 designed by the developers of Qt. In its simplest form, Spack's
@@ -29,7 +29,7 @@ variables or edit ``*.pro`` files to get things working properly.
 Phases
 ^^^^^^
 
-The ``QMakePackage`` base class comes with the following phases:
+The ``QMakeBuilder`` and ``QMakePackage`` base classes come with the following phases:
 
 #. ``qmake`` - generate Makefiles
 #. ``build`` - build the project

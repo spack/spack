@@ -1,0 +1,58 @@
+# If you are referencing Spack in a publication, please cite the SC'15 paper
+# described here.
+#
+# Here's the raw citation:
+#
+#   Todd Gamblin, Matthew P. LeGendre, Michael R. Collette, Gregory L. Lee,
+#   Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
+#   The Spack Package Manager: Bringing Order to HPC Software Chaos.
+#   In Supercomputing 2015 (SC’15), Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
+#
+# Or, in BibTeX:
+#
+# @inproceedings{Gamblin_The_Spack_Package_2015,
+#     address = {Austin, Texas, USA},
+#     author = {Gamblin, Todd and LeGendre, Matthew and
+#               Collette, Michael R. and Lee, Gregory L. and
+#               Moody, Adam and de Supinski, Bronis R. and Futral, Scott},
+#     doi = {10.1145/2807591.2807623},
+#     month = {November 15-20},
+#     note = {LLNL-CONF-669890},
+#     series = {Supercomputing 2015 (SC’15)},
+#     title = {{The Spack Package Manager: Bringing Order to HPC Software Chaos}},
+#     url = {https://github.com/spack/spack},
+#     year = {2015}
+# }
+#
+# And here's the CITATION.cff format:
+#
+cff-version: 1.2.0
+message: "If you are referencing Spack in a publication, please cite the paper below."
+preferred-citation:
+  type: conference-paper
+  doi: "10.1145/2807591.2807623"
+  url: "https://github.com/spack/spack"
+  authors:
+  - family-names: "Gamblin"
+    given-names: "Todd"
+  - family-names: "LeGendre"
+    given-names: "Matthew"
+  - family-names: "Collette"
+    given-names: "Michael R."
+  - family-names: "Lee"
+    given-names: "Gregory L."
+  - family-names: "Moody"
+    given-names: "Adam"
+  - family-names: "de Supinski"
+    given-names: "Bronis R."
+  - family-names: "Futral"
+    given-names: "Scott"
+  title: "The Spack Package Manager: Bringing Order to HPC Software Chaos"
+  conference:
+    name: "Supercomputing 2015 (SC’15)"
+    city: "Austin"
+    region: "Texas"
+    country: "USA"
+  month: November 15-20
+  year: 2015
+  notes: LLNL-CONF-669890

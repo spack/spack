@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Gengeo(AutotoolsPackage):
@@ -15,31 +15,31 @@ class Gengeo(AutotoolsPackage):
     provided by ESyS-Particle itself."""
 
     homepage = "https://launchpad.net/esys-particle/gengeo"
-    url      = "https://launchpad.net/esys-particle/trunk/3.0-alpha/+download/gengeo-163.tar.gz"
+    url = "https://launchpad.net/esys-particle/trunk/3.0-alpha/+download/gengeo-163.tar.gz"
 
-    maintainers = ['dorton21']
+    maintainers = ["dorton21"]
 
-    version('163', sha256='9c896d430d8f315a45379d2b82e7d374f36259af66a745bfdee4c022a080d34d')
+    version("163", sha256="9c896d430d8f315a45379d2b82e7d374f36259af66a745bfdee4c022a080d34d")
 
-    extends('python')
+    extends("python")
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on("autoconf", type="build")
+    depends_on("automake", type="build")
+    depends_on("libtool", type="build")
+    depends_on("m4", type="build")
 
-    depends_on('boost+python')
-    depends_on('openmpi')
+    depends_on("boost+python")
+    depends_on("openmpi")
 
     def autoreconf(self, spec, prefix):
-        autogen = Executable('./autogen.sh')
+        autogen = Executable("./autogen.sh")
         autogen()
 
     def configure_args(self):
         args = [
-            '--verbose',
-            '--with-boost=' + self.spec['boost'].prefix,
-            'CCFLAGS=-fpermissive',
-            'CXXFLAGS=-fpermissive',
+            "--verbose",
+            "--with-boost=" + self.spec["boost"].prefix,
+            "CCFLAGS=-fpermissive",
+            "CXXFLAGS=-fpermissive",
         ]
         return args

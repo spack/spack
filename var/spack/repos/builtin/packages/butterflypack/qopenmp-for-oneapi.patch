@@ -1,0 +1,12 @@
+diff -ruN spack-src/CMakeLists.txt spack-src-patched/CMakeLists.txt
+--- spack-src/CMakeLists.txt	2022-03-04 09:05:03.000000000 -0800
++++ spack-src-patched/CMakeLists.txt	2022-08-01 13:04:11.771748644 -0700
+@@ -99,7 +99,7 @@
+ set(CMAKE_Fortran_FLAGS "-fno-range-check -fbacktrace -fbounds-check -Wconversion ${CMAKE_Fortran_FLAGS}")
+ endif()
+ endif()
+-check_fortran_compiler_flag("-no-prec-div" COMPILER_Intel)
++check_fortran_compiler_flag("-qopenmp" COMPILER_Intel)
+ if (COMPILER_Intel)
+ set(CMAKE_Fortran_FLAGS "-cpp -DIntel ${CMAKE_Fortran_FLAGS}")
+ if(CMAKE_BUILD_TYPE STREQUAL "Debug")

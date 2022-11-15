@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This file has been modeled after the examples at this url:
+
+    https://www.paraview.org/Wiki/CDash:XML
+-->
+<Site BuildName="{{ buildname }}"
+      BuildStamp="{{ buildstamp }}"
+      Name="{{ site }}"
+      Generator="{{ generator }}"
+      Hostname="{{ hostname }}"
+      OSName="{{ osname }}"
+      OSRelease="{{ osrelease }}"
+      VendorString="{{ target }}"
+>
+  <Testing>
+    <StartTestTime>{{ testing.starttime }}</StartTestTime>
+{% for part in testing.parts %}
+    <Test Status="{{ part.status }}">
+      <Name>{{ part.name }}</Name>
+      <FullCommandLine>{{ part.command }}</FullCommandLine>
+      <Results>
+        <NamedMeasurement type="numeric/double" name="Execution Time">
+          <Value>{{ part.elapsed }}</Value>
+        </NamedMeasurement>
+{% if part.desc %}
+        <NamedMeasurement type="text/string" name="Description">
+          <Value>{{ part.desc }}</Value>
+        </NamedMeasurement>
+{% endif %}
+        <NamedMeasurement type="text/string" name="Completion Status">
+          <Value>{{ part.completed }}</Value>
+        </NamedMeasurement>
+{% if part.output %}
+        <Measurement>
+          <Value>{{ part.output }}</Value>
+        </Measurement>
+{% endif %}
+      </Results>
+    </Test>
+{% endfor %}
+    <EndTestTime>{{ testing.endtime }}</EndTestTime>
+  </Testing>
+</Site>

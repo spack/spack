@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+from spack.package import *
 
 
 class PyRuamelOrdereddict(PythonPackage):
@@ -14,6 +17,6 @@ class PyRuamelOrdereddict(PythonPackage):
     homepage = "https://sourceforge.net/projects/ruamel-ordereddict/"
     pypi = "ruamel.ordereddict/ruamel.ordereddict-0.4.14.tar.gz"
 
-    version('0.4.14', sha256='281051d26eb2b18ef3d920e1e260716a52bd058a6b1a2f324102fc6a15cb8d4a')
+    version("0.4.14", sha256="281051d26eb2b18ef3d920e1e260716a52bd058a6b1a2f324102fc6a15cb8d4a")
 
-    depends_on('py-setuptools', type='build')
+    depends_on("py-setuptools", type="build")

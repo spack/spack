@@ -37,6 +37,9 @@ config:
   template_dirs:
     - $spack/share/spack/templates
 
+  # Directory where licenses should be located
+  license_dir: $spack/etc/spack/licenses
+
   # Temporary locations Spack can try to use for builds.
   #
   # Recommended options are given below.
@@ -165,14 +168,17 @@ config:
 
   # The concretization algorithm to use in Spack. Options are:
   #
-  #   'original': Spack's original greedy, fixed-point concretizer. This
-  #       algorithm can make decisions too early and will not backtrack
-  #       sufficiently for many specs.
-  #
   #   'clingo': Uses a logic solver under the hood to solve DAGs with full
   #       backtracking and optimization for user preferences. Spack will
   #       try to bootstrap the logic solver, if not already available.
   #
+  #   'original': Spack's original greedy, fixed-point concretizer. This
+  #       algorithm can make decisions too early and will not backtrack
+  #       sufficiently for many specs. This will soon be deprecated in
+  #       favor of clingo.
+  #
+  # See `concretizer.yaml` for more settings you can fine-tune when
+  # using clingo.
   concretizer: clingo
 
 
@@ -191,10 +197,20 @@ config:
   package_lock_timeout: null
 
 
-  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
-  # Has no effect on macOS. DO NOT MIX these within the same install tree.
-  # See the Spack documentation for details.
-  shared_linking: 'rpath'
+  # Control how shared libraries are located at runtime on Linux. See the
+  # the Spack documentation for details.
+  shared_linking:
+    # Spack automatically embeds runtime search paths in ELF binaries for their
+    # dependencies. Their type can either be "rpath" or "runpath". For glibc, rpath is
+    # inherited and has precedence over LD_LIBRARY_PATH; runpath is not inherited
+    # and of lower precedence. DO NOT MIX these within the same install tree.
+    type: rpath
+
+
+    # (Experimental) Embed absolute paths of dependent libraries directly in ELF
+    # binaries to avoid runtime search. This can improve startup time of
+    # executables with many dependencies, in particular on slow filesystems.
+    bind: false
 
 
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit
@@ -205,3 +221,7 @@ config:
   # building and installing packages. This gives information about Spack's
   # current progress as well as the current and total number of packages.
   terminal_title: false
+
+  # Number of seconds a buildcache's index.json is cached locally before probing
+  # for updates, within a single Spack invocation. Defaults to 10 minutes.
+  binary_index_ttl: 600

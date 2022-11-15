@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,6 +69,16 @@ _test_debug_functions() {
     if [ -n "${ZSH_VERSION:-}" ]; then
         emulate -L sh
     fi
+
+    # Test whether `spack install --verb[] spec` completes to `spack install --verbose spec`
+    COMP_LINE='spack install --verb spec'
+    COMP_POINT=20
+    COMP_WORDS=(spack install --verb spec)
+    COMP_CWORD=2
+    COMP_KEY=9
+    COMP_TYPE=64
+    _bash_completion_spack
+    contains "--verbose" echo "${COMPREPLY[@]}"
 
     # This is a particularly tricky case that involves the following situation:
     #     `spack -d [] install `

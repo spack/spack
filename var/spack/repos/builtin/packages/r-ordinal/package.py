@@ -1,13 +1,13 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class ROrdinal(RPackage):
-    """Regression Models for Ordinal Data
+    """Regression Models for Ordinal Data.
 
     Implementation of cumulative link (mixed) models also known as ordered
     regression models, proportional odds models, proportional hazards models
@@ -21,15 +21,15 @@ class ROrdinal(RPackage):
     addition to profile methods and slice methods for visualizing the
     likelihood function and checking convergence."""
 
-    homepage = "https://github.com/runehaubo/ordinal"
-    url      = "https://cloud.r-project.org/src/contrib/ordinal_2019.4-25.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ordinal"
+    cran = "ordinal"
 
-    version('2019.12-10', sha256='7a41e7b7e852a8fa3e911f8859d36e5709ccec5ca42ee3de14a813b7aaac7725')
-    version('2019.4-25', sha256='2812ad7a123cae5dbe053d1fe5f2d9935afc799314077eac185c844e3c9d79df')
+    version(
+        "2019.12-10", sha256="7a41e7b7e852a8fa3e911f8859d36e5709ccec5ca42ee3de14a813b7aaac7725"
+    )
+    version("2019.4-25", sha256="2812ad7a123cae5dbe053d1fe5f2d9935afc799314077eac185c844e3c9d79df")
 
-    depends_on('r@2.13.0:', type=('build', 'run'))
-    depends_on('r-ucminf', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-numderiv', type=('build', 'run'))
+    depends_on("r@2.13.0:", type=("build", "run"))
+    depends_on("r-ucminf", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-matrix", type=("build", "run"))
+    depends_on("r-numderiv", type=("build", "run"))

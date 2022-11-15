@@ -1,0 +1,11 @@
+--- a/cmake/gmxDetectSimd.cmake
++++ b/cmake/gmxDetectSimd.cmake
+@@ -77,7 +77,7 @@ function(gmx_suggest_simd _suggested_simd)
+     else()
+         set(GMX_TARGET_X86_VALUE 0)
+     endif()
+-    set(_compile_definitions "${GCC_INLINE_ASM_DEFINE} -I${CMAKE_SOURCE_DIR}/src -DGMX_CPUINFO_STANDALONE ${GMX_STDLIB_CXX_FLAGS} -DGMX_TARGET_X86=${GMX_TARGET_X86_VALUE}")
++    set(_compile_definitions ${GCC_INLINE_ASM_DEFINE} -I${CMAKE_SOURCE_DIR}/src -DGMX_CPUINFO_STANDALONE ${GMX_STDLIB_CXX_FLAGS} -DGMX_TARGET_X86=${GMX_TARGET_X86_VALUE})
+ 
+     # Prepare a default suggestion
+     set(OUTPUT_SIMD "None")

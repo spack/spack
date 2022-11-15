@@ -1,0 +1,133 @@
+From fc930b3010bd0de899a3da3209eab20664ddb703 Mon Sep 17 00:00:00 2001
+From: Patrick Palka <ppalka@redhat.com>
+Date: Fri, 4 Jun 2021 13:46:53 -0400
+Subject: [PATCH] c++: tsubst_function_decl and excess arg levels [PR100102]
+
+Here, when instantiating the dependent alias template
+duration::__is_harmonic with args={{T,U},{int}}, we find ourselves
+substituting the function decl _S_gcd.  Since we have more arg levels
+than _S_gcd has parm levels, an old special case in tsubst_function_decl
+causes us to unwantedly reduce args to its innermost level, yielding
+args={int}, which leads to a nonsensical substitution into the decl
+context and eventually a crash.
+
+The comment for this special case refers to three examples for which we
+ought to see more arg levels than parm levels here, but none of the
+examples actually demonstrate this.  In the first example, when
+defining S<int>::f(U) parms_depth is 2 and args_depth is 1, and
+later when instantiating say S<int>::f<char> both depths are 2.  In the
+second example, when substituting the template friend declaration
+parms_depth is 2 and args_depth is 1, and later when instantiating f
+both depths are 1.  Finally, the third example is invalid since we can't
+specialize a member template of an unspecialized class template like
+that.
+
+Given that this reduction code seems no longer relevant for its
+documented purpose and that it causes problems as in the PR, this patch
+just removes it.  Note that as far as bootstrap/regtest is concerned,
+this code is dead; the below two tests would be the first to reach it.
+
+	PR c++/100102
+
+gcc/cp/ChangeLog:
+
+	* pt.c (tsubst_function_decl): Remove old code for reducing
+	args when it has excess levels.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/cpp0x/alias-decl-72.C: New test.
+	* g++.dg/cpp0x/alias-decl-72a.C: New test.
+
+(cherry picked from commit 5357ab75dedef403b0eebf9277d61d1cbeb5898f)
+---
+ gcc/cp/pt.c                                 | 39 ---------------------
+ gcc/testsuite/g++.dg/cpp0x/alias-decl-72.C  |  9 +++++
+ gcc/testsuite/g++.dg/cpp0x/alias-decl-72a.C |  9 +++++
+ 3 files changed, 18 insertions(+), 39 deletions(-)
+ create mode 100644 gcc/testsuite/g++.dg/cpp0x/alias-decl-72.C
+ create mode 100644 gcc/testsuite/g++.dg/cpp0x/alias-decl-72a.C
+
+diff --git a/gcc/cp/pt.c b/gcc/cp/pt.c
+index 5a957141ba3..7ce9ac234f8 100644
+--- a/gcc/cp/pt.c
++++ b/gcc/cp/pt.c
+@@ -13811,45 +13811,6 @@ tsubst_function_decl (tree t, tree args, tsubst_flags_t complain,
+ 	  if (tree spec = retrieve_specialization (gen_tmpl, argvec, hash))
+ 	    return spec;
+ 	}
+-
+-      /* We can see more levels of arguments than parameters if
+-	 there was a specialization of a member template, like
+-	 this:
+-
+-	 template <class T> struct S { template <class U> void f(); }
+-	 template <> template <class U> void S<int>::f(U);
+-
+-	 Here, we'll be substituting into the specialization,
+-	 because that's where we can find the code we actually
+-	 want to generate, but we'll have enough arguments for
+-	 the most general template.
+-
+-	 We also deal with the peculiar case:
+-
+-	 template <class T> struct S {
+-	   template <class U> friend void f();
+-	 };
+-	 template <class U> void f() {}
+-	 template S<int>;
+-	 template void f<double>();
+-
+-	 Here, the ARGS for the instantiation of will be {int,
+-	 double}.  But, we only need as many ARGS as there are
+-	 levels of template parameters in CODE_PATTERN.  We are
+-	 careful not to get fooled into reducing the ARGS in
+-	 situations like:
+-
+-	 template <class T> struct S { template <class U> void f(U); }
+-	 template <class T> template <> void S<T>::f(int) {}
+-
+-	 which we can spot because the pattern will be a
+-	 specialization in this case.  */
+-      int args_depth = TMPL_ARGS_DEPTH (args);
+-      int parms_depth =
+-	TMPL_PARMS_DEPTH (DECL_TEMPLATE_PARMS (DECL_TI_TEMPLATE (t)));
+-
+-      if (args_depth > parms_depth && !DECL_TEMPLATE_SPECIALIZATION (t))
+-	args = get_innermost_template_args (args, parms_depth);
+     }
+   else
+     {
+diff --git a/gcc/testsuite/g++.dg/cpp0x/alias-decl-72.C b/gcc/testsuite/g++.dg/cpp0x/alias-decl-72.C
+new file mode 100644
+index 00000000000..8009756dcba
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/cpp0x/alias-decl-72.C
+@@ -0,0 +1,9 @@
++// PR c++/100102
++// { dg-do compile { target c++11 } }
++
++template<int()> struct ratio;
++template<class T, class U> struct duration {
++  static constexpr int _S_gcd();
++  template<class> using __is_harmonic = ratio<_S_gcd>;
++  using type = __is_harmonic<int>;
++};
+diff --git a/gcc/testsuite/g++.dg/cpp0x/alias-decl-72a.C b/gcc/testsuite/g++.dg/cpp0x/alias-decl-72a.C
+new file mode 100644
+index 00000000000..a4443e18f9d
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/cpp0x/alias-decl-72a.C
+@@ -0,0 +1,9 @@
++// PR c++/100102
++// { dg-do compile { target c++11 } }
++
++template<int> struct ratio;
++template<class T> struct duration {
++  static constexpr int _S_gcd();
++  template<class> using __is_harmonic = ratio<(duration::_S_gcd)()>;
++  using type = __is_harmonic<int>;
++};
+-- 
+2.31.1
+

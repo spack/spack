@@ -1,0 +1,5 @@
+# Fix missing std:size_t in 'llvm@4:5' for build with '%clang@7:'
+--- a/compiler-rt/lib/xray/xray_buffer_queue.h
++++ b/compiler-rt/lib/xray/xray_buffer_queue.h
+@@ -18,0 +18,1 @@
++#include <cstddef>

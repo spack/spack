@@ -1,10 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import filecmp
-import grp
 import os
 import re
 import shutil
@@ -15,6 +14,7 @@ import tempfile
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.error
 import spack.package_prefs
 import spack.paths
 import spack.spec
@@ -23,15 +23,21 @@ import spack.store
 #: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
 #: Different Linux distributions have different limits, but 127 is the
 #: smallest among all modern versions.
-if sys.platform == 'darwin':
+if sys.platform == "darwin":
     system_shebang_limit = 511
 else:
     system_shebang_limit = 127
 
+#: Groupdb does not exist on Windows, prevent imports
+#: on supported systems
+is_windows = sys.platform == "win32"
+if not is_windows:
+    import grp
+
 #: Spack itself also limits the shebang line to at most 4KB, which should be plenty.
 spack_shebang_limit = 4096
 
-interpreter_regex = re.compile(b'#![ \t]*?([^ \t\0\n]+)')
+interpreter_regex = re.compile(b"#![ \t]*?([^ \t\0\n]+)")
 
 
 def sbang_install_path():
@@ -40,8 +46,10 @@ def sbang_install_path():
     install_path = os.path.join(sbang_root, "bin", "sbang")
     path_length = len(install_path)
     if path_length > system_shebang_limit:
-        msg = ('Install tree root is too long. Spack cannot patch shebang lines'
-               ' when script path length ({0}) exceeds limit ({1}).\n  {2}')
+        msg = (
+            "Install tree root is too long. Spack cannot patch shebang lines"
+            " when script path length ({0}) exceeds limit ({1}).\n  {2}"
+        )
         msg = msg.format(path_length, system_shebang_limit, install_path)
         raise SbangPathError(msg)
     return install_path
@@ -56,7 +64,7 @@ def sbang_shebang_line():
     This should be the only place in Spack that knows about what
     interpreter we use for ``sbang``.
     """
-    return '#!/bin/sh %s' % sbang_install_path()
+    return "#!/bin/sh %s" % sbang_install_path()
 
 
 def get_interpreter(binary_string):
@@ -73,10 +81,10 @@ def filter_shebang(path):
     file must occur before ``spack_shebang_limit`` bytes. If not, the file is not
     patched.
     """
-    with open(path, 'rb') as original:
+    with open(path, "rb") as original:
         # If there is no shebang, we shouldn't replace anything.
         old_shebang_line = original.read(2)
-        if old_shebang_line != b'#!':
+        if old_shebang_line != b"#!":
             return False
 
         # Stop reading after b'\n'. Note that old_shebang_line includes the first b'\n'.
@@ -91,14 +99,11 @@ def filter_shebang(path):
         # only the arguments are truncated, but note that for PHP we need the full line
         # since we have to append `?>` to it. Since our shebang limit is already very
         # generous, it's unlikely to happen, and it should be fine to ignore.
-        if (
-            len(old_shebang_line) == spack_shebang_limit and
-            old_shebang_line[-1] != b'\n'
-        ):
+        if len(old_shebang_line) == spack_shebang_limit and old_shebang_line[-1] != b"\n":
             return False
 
         # This line will be prepended to file
-        new_sbang_line = (sbang_shebang_line() + '\n').encode('utf-8')
+        new_sbang_line = (sbang_shebang_line() + "\n").encode("utf-8")
 
         # Skip files that are already using sbang.
         if old_shebang_line == new_sbang_line:
@@ -118,7 +123,7 @@ def filter_shebang(path):
             os.chmod(path, saved_mode | stat.S_IWUSR)
 
         # No need to delete since we'll move it and overwrite the original.
-        patched = tempfile.NamedTemporaryFile('wb', delete=False)
+        patched = tempfile.NamedTemporaryFile("wb", delete=False)
         patched.write(new_sbang_line)
 
         # Note that in Python this does not go out of bounds even if interpreter is a
@@ -127,15 +132,15 @@ def filter_shebang(path):
         # been a \0 byte between all characters of lua, node, php; meaning that it would
         # lead to truncation of the interpreter. So we don't have to worry about weird
         # encodings here, and just looking at bytes is justified.
-        if interpreter[-4:] == b'/lua' or interpreter[-7:] == b'/luajit':
+        if interpreter[-4:] == b"/lua" or interpreter[-7:] == b"/luajit":
             # Use --! instead of #! on second line for lua.
-            patched.write(b'--!' + old_shebang_line[2:])
-        elif interpreter[-5:] == b'/node':
+            patched.write(b"--!" + old_shebang_line[2:])
+        elif interpreter[-5:] == b"/node":
             # Use //! instead of #! on second line for node.js.
-            patched.write(b'//!' + old_shebang_line[2:])
-        elif interpreter[-4:] == b'/php':
+            patched.write(b"//!" + old_shebang_line[2:])
+        elif interpreter[-4:] == b"/php":
             # Use <?php #!... ?> instead of #!... on second line for php.
-            patched.write(b'<?php ' + old_shebang_line + b' ?>')
+            patched.write(b"<?php " + old_shebang_line + b" ?>")
         else:
             patched.write(old_shebang_line)
 
@@ -154,23 +159,20 @@ def filter_shebang(path):
 def filter_shebangs_in_directory(directory, filenames=None):
     if filenames is None:
         filenames = os.listdir(directory)
+
+    is_exe = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+
     for file in filenames:
         path = os.path.join(directory, file)
 
-        # only handle files
-        if not os.path.isfile(path):
+        # Only look at executable, non-symlink files.
+        try:
+            st = os.lstat(path)
+        except (IOError, OSError):
             continue
 
-        # only handle executable files
-        st = os.stat(path)
-        if not st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH):
+        if stat.S_ISLNK(st.st_mode) or stat.S_ISDIR(st.st_mode) or not st.st_mode & is_exe:
             continue
-
-        # only handle links that resolve within THIS package's prefix.
-        if os.path.islink(path):
-            real_path = os.path.realpath(path)
-            if not real_path.startswith(directory + os.sep):
-                continue
 
         # test the file for a long shebang, and filter
         if filter_shebang(path):
@@ -186,8 +188,7 @@ def install_sbang():
     """
     # copy in a new version of sbang if it differs from what's in spack
     sbang_path = sbang_install_path()
-    if os.path.exists(sbang_path) and filecmp.cmp(
-            spack.paths.sbang_script, sbang_path):
+    if os.path.exists(sbang_path) and filecmp.cmp(spack.paths.sbang_script, sbang_path):
         return
 
     # make $install_tree/bin
@@ -196,22 +197,18 @@ def install_sbang():
 
     # get permissions for bin dir from configuration files
     group_name = spack.package_prefs.get_package_group(spack.spec.Spec("all"))
-    config_mode = spack.package_prefs.get_package_dir_permissions(
-        spack.spec.Spec("all")
-    )
+    config_mode = spack.package_prefs.get_package_dir_permissions(spack.spec.Spec("all"))
 
     if group_name:
-        os.chmod(sbang_bin_dir, config_mode)   # Use package directory permissions
+        os.chmod(sbang_bin_dir, config_mode)  # Use package directory permissions
     else:
         fs.set_install_permissions(sbang_bin_dir)
 
     # set group on sbang_bin_dir if not already set (only if set in configuration)
-    if group_name and grp.getgrgid(os.stat(sbang_bin_dir).st_gid).gr_name != group_name:
-        os.chown(
-            sbang_bin_dir,
-            os.stat(sbang_bin_dir).st_uid,
-            grp.getgrnam(group_name).gr_gid
-        )
+    # TODO: after we drop python2 support, use shutil.chown to avoid gid lookups that
+    # can fail for remote groups
+    if group_name and os.stat(sbang_bin_dir).st_gid != grp.getgrnam(group_name).gr_gid:
+        os.chown(sbang_bin_dir, os.stat(sbang_bin_dir).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # copy over the fresh copy of `sbang`
     sbang_tmp_path = os.path.join(
@@ -223,11 +220,7 @@ def install_sbang():
     # set permissions on `sbang` (including group if set in configuration)
     os.chmod(sbang_tmp_path, config_mode)
     if group_name:
-        os.chown(
-            sbang_tmp_path,
-            os.stat(sbang_tmp_path).st_uid,
-            grp.getgrnam(group_name).gr_gid
-        )
+        os.chown(sbang_tmp_path, os.stat(sbang_tmp_path).st_uid, grp.getgrnam(group_name).gr_gid)
 
     # Finally, move the new `sbang` into place atomically
     os.rename(sbang_tmp_path, sbang_path)
@@ -239,7 +232,7 @@ def post_install(spec):
     shebang limit.
     """
     if spec.external:
-        tty.debug('SKIP: shebang filtering [external package]')
+        tty.debug("SKIP: shebang filtering [external package]")
         return
 
     install_sbang()

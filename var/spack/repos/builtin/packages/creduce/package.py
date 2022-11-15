@@ -1,8 +1,8 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack import *
+from spack.package import *
 
 
 class Creduce(CMakePackage):
@@ -13,20 +13,20 @@ class Creduce(CMakePackage):
     other tools that process source code."""
 
     homepage = "https://embed.cs.utah.edu/creduce/"
-    url      = "https://github.com/csmith-project/creduce"
-    git      = "https://github.com/csmith-project/creduce"
-    maintainers = ['olupton']
+    url = "https://github.com/csmith-project/creduce"
+    git = "https://github.com/csmith-project/creduce"
+    maintainers = ["olupton"]
 
-    version('develop', branch='master')
-    version('2.10.0', tag='creduce-2.10.0')
+    version("develop", branch="master")
+    version("2.10.0", tag="creduce-2.10.0")
 
-    depends_on('flex')
-    depends_on('libxml2')
-    depends_on('llvm@8.0.0', when='@:2.10')
-    depends_on('perl')
-    depends_on('perl-exporter-lite')
-    depends_on('perl-file-which')
-    depends_on('perl-getopt-tabular')
-    depends_on('perl-regexp-common')
-    depends_on('perl-termreadkey')
-    depends_on('zlib')
+    depends_on("flex")
+    depends_on("libxml2")
+    depends_on("llvm@8.0.0", when="@:2.10")
+    depends_on("perl")
+    depends_on("perl-exporter-lite")
+    depends_on("perl-file-which")
+    depends_on("perl-getopt-tabular")
+    depends_on("perl-regexp-common")
+    depends_on("perl-termreadkey")
+    depends_on("zlib")

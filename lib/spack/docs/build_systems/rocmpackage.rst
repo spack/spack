@@ -1,4 +1,4 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,7 +95,7 @@ class of your package.  For example, you can add it to your
                 # Set up the hip macros needed by the build
                 args.extend([
                     '-DENABLE_HIP=ON',
-                    '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix])
+                    '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
                 rocm_archs = spec.variants['amdgpu_target'].value
                 if 'none' not in rocm_archs:
                     args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'

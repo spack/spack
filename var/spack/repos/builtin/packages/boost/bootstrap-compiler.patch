@@ -1,0 +1,13 @@
+diff --git a/bootstrap.sh b/bootstrap.sh
+index 654801e21f..3331483aa5 100755
+--- a/bootstrap.sh
++++ b/bootstrap.sh
+@@ -226,7 +226,7 @@ rm -f config.log
+ if test "x$BJAM" = x; then
+   $ECHO "Building B2 engine.."
+   pwd=`pwd`
+-  CXX= CXXFLAGS= "$my_dir/tools/build/src/engine/build.sh" ${TOOLSET}
++  CXXFLAGS= "$my_dir/tools/build/src/engine/build.sh" ${TOOLSET} --cxx="$CXX"
+   if [ $? -ne 0 ]; then
+       echo
+       echo "Failed to build B2 build engine"

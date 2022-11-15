@@ -1,7 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.package import *
+
 
 class Irep(CMakePackage):
     """IREP is a tool that enables mixed-language simulation codes to use a
@@ -9,10 +12,10 @@ class Irep(CMakePackage):
     format is a set of tables -- Lua's one (and only?) data structure."""
 
     homepage = "https://irep.readthedocs.io/"
-    url      = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
+    url = "https://github.com/LLNL/irep/archive/refs/tags/v1.0.0.tar.gz"
 
-    maintainers = ['tomstitt', 'kennyweiss']
+    maintainers = ["tomstitt", "kennyweiss"]
 
-    version('1.0.0', 'b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4')
+    version("1.0.0", "b84203ac92de824dbdc672de45cfdb9609373791c4ee84a5201fa6e4ccecc1a4")
 
-    depends_on('lua-lang')
+    depends_on("lua-lang")

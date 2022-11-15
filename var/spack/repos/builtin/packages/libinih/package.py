@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libinih(MesonPackage):
@@ -12,7 +12,7 @@ class Libinih(MesonPackage):
     """
 
     homepage = "https://github.com/benhoyt/inih"
-    url      = "https://github.com/benhoyt/inih/archive/refs/tags/r53.tar.gz"
-    git      = "https://github.com/benhoyt/inih.git"
+    url = "https://github.com/benhoyt/inih/archive/refs/tags/r53.tar.gz"
+    git = "https://github.com/benhoyt/inih.git"
 
-    version('master', branch="master")
+    version("master", branch="master")

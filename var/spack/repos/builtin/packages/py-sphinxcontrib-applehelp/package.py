@@ -1,9 +1,10 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import List
 
-from spack import *
+from spack.package import *
 
 
 class PySphinxcontribApplehelp(PythonPackage):
@@ -16,9 +17,9 @@ class PySphinxcontribApplehelp(PythonPackage):
     # 'sphinx' requires 'sphinxcontrib-applehelp' at build-time, but
     # 'sphinxcontrib-applehelp' requires 'sphinx' at run-time. Don't bother trying to
     # import any modules for this package.
-    import_modules = []
+    import_modules = []  # type: List[str]
 
-    version('1.0.1', sha256='edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897')
+    version("1.0.1", sha256="edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897")
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on("python@3.5:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")

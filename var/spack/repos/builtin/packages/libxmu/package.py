@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Libxmu(AutotoolsPackage, XorgPackage):
@@ -15,12 +15,12 @@ class Libxmu(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXmu"
     xorg_mirror_path = "lib/libXmu-1.1.2.tar.gz"
 
-    version('1.1.2', sha256='e5fd4bacef068f9509b8226017205040e38d3fba8d2de55037200e7176c13dba')
+    version("1.1.2", sha256="e5fd4bacef068f9509b8226017205040e38d3fba8d2de55037200e7176c13dba")
 
-    depends_on('libxt')
-    depends_on('libxext')
-    depends_on('libx11')
+    depends_on("libxt")
+    depends_on("libxext")
+    depends_on("libx11")
 
-    depends_on('xextproto')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xextproto")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

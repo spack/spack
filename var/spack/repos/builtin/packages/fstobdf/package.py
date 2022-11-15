@@ -1,9 +1,9 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class Fstobdf(AutotoolsPackage, XorgPackage):
@@ -15,11 +15,11 @@ class Fstobdf(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/fstobdf"
     xorg_mirror_path = "app/fstobdf-1.0.6.tar.gz"
 
-    version('1.0.6', sha256='bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d')
+    version("1.0.6", sha256="bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d")
 
-    depends_on('libx11')
-    depends_on('libfs')
+    depends_on("libx11")
+    depends_on("libfs")
 
-    depends_on('xproto@7.0.25:')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("xproto@7.0.25:")
+    depends_on("pkgconfig", type="build")
+    depends_on("util-macros", type="build")

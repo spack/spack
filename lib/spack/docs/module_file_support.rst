@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _modules:
 
-=======
-Modules
-=======
+======================
+Modules (modules.yaml)
+======================
 
 The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by
@@ -77,7 +77,7 @@ installation of a package.
 
    Spack only generates modulefiles when a package is installed. If
    you attempt to install a package and it is already installed, Spack
-   will not regenerate modulefiles for the package. This may to
+   will not regenerate modulefiles for the package. This may lead to
    inconsistent modulefiles if the Spack module configuration has
    changed since the package was installed, either by editing a file
    or changing scopes or environments.
@@ -113,6 +113,8 @@ from language interpreters into their extensions. The latter two instead permit 
 fine tune the filesystem layout, content and creation of module files to meet
 site specific conventions.
 
+.. _overide-api-calls-in-package-py:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Override API calls in ``package.py``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -134,7 +136,7 @@ The second method:
        pass
 
 can instead inject run-time environment modifications in the module files of packages
-that depend on it. In both cases you need to fill ``run_env`` with the desired
+that depend on it. In both cases you need to fill ``env`` with the desired
 list of environment modifications.
 
 .. admonition:: The ``r`` package and callback APIs
@@ -181,10 +183,7 @@ to the environment variables listed below the folder name.
 Spack modules can be configured for multiple module sets. The default
 module set is named ``default``. All Spack commands which operate on
 modules default to apply the ``default`` module set, but can be
-applied to any module set in the configuration. Settings applied at
-the root of the configuration (e.g. ``modules:enable`` rather than
-``modules:default:enable``) are applied to the default module set for
-backwards compatibility.
+applied to any module set in the configuration.
 
 """""""""""""""""""""""""
 Changing the modules root
@@ -273,29 +272,30 @@ of the installed software. For instance, in the snippet below:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       # The keyword `all` selects every package
-       all:
-         environment:
-           set:
-             BAR: 'bar'
-       # This anonymous spec selects any package that
-       # depends on openmpi. The double colon at the
-       # end clears the set of rules that matched so far.
-       ^openmpi::
-         environment:
-           set:
-             BAR: 'baz'
-       # Selects any zlib package
-       zlib:
-         environment:
-           prepend_path:
-             LD_LIBRARY_PATH: 'foo'
-       # Selects zlib compiled with gcc@4.8
-       zlib%gcc@4.8:
-         environment:
-           unset:
-           - FOOBAR
+     default:
+       tcl:
+         # The keyword `all` selects every package
+         all:
+           environment:
+             set:
+               BAR: 'bar'
+         # This anonymous spec selects any package that
+         # depends on openmpi. The double colon at the
+         # end clears the set of rules that matched so far.
+         ^openmpi::
+           environment:
+             set:
+               BAR: 'baz'
+         # Selects any zlib package
+         zlib:
+           environment:
+             prepend_path:
+               LD_LIBRARY_PATH: 'foo'
+         # Selects zlib compiled with gcc@4.8
+         zlib%gcc@4.8:
+           environment:
+             unset:
+             - FOOBAR
 
 you are instructing Spack to set the environment variable ``BAR=bar`` for every module,
 unless the associated spec satisfies ``^openmpi`` in which case ``BAR=baz``.
@@ -310,7 +310,7 @@ the variable ``FOOBAR`` will be unset.
      spec constraints are instead evaluated top to bottom.
 
 """"""""""""""""""""""""""""""""""""""""""""
-Blacklist or whitelist specific module files
+Exclude or include specific module files
 """"""""""""""""""""""""""""""""""""""""""""
 
 You can use anonymous specs also to prevent module files from being written or
@@ -322,9 +322,10 @@ your system. If you write a configuration file like:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       whitelist: ['gcc', 'llvm']  # Whitelist will have precedence over blacklist
-       blacklist: ['%gcc@4.4.7']   # Assuming gcc@4.4.7 is the system compiler
+     default:
+       tcl:
+         include: ['gcc', 'llvm']  # include will have precedence over exclude
+         exclude: ['%gcc@4.4.7']   # Assuming gcc@4.4.7 is the system compiler
 
 you will prevent the generation of module files for any package that
 is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc``
@@ -349,8 +350,9 @@ shows how to set hash length in the module file names:
 .. code-block:: yaml
 
    modules:
-     tcl:
-       hash_length: 7
+     default:
+       tcl:
+         hash_length: 7
 
 To help make module names more readable, and to help alleviate name conflicts
 with a short hash, one can use the ``suffixes`` option in the modules
@@ -360,11 +362,12 @@ For instance, the following config options,
 .. code-block:: yaml
 
    modules:
-     tcl:
-       all:
-         suffixes:
-           ^python@2.7.12: 'python-2.7.12'
-           ^openblas: 'openblas'
+     default:
+       tcl:
+         all:
+           suffixes:
+             ^python@2.7.12: 'python-2.7.12'
+             ^openblas: 'openblas'
 
 will add a ``python-2.7.12`` version string to any packages compiled with
 python matching the spec, ``python@2.7.12``. This is useful to know which
@@ -374,15 +377,16 @@ most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
 naming convention for module files. This uses the projections format
-covered in :ref:`adding_projections_to_views`.
+covered in :ref:`view_projections`.
 
 .. code-block:: yaml
 
   modules:
-    tcl:
-      projections:
-        all: '{name}/{version}-{compiler.name}-{compiler.version}-module'
-        ^mpi: '{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module'
+    default:
+      tcl:
+        projections:
+          all: '{name}/{version}-{compiler.name}-{compiler.version}-module'
+          ^mpi: '{name}/{version}-{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}-module'
 
 will create module files that are nested in directories by package
 name, contain the version and compiler name and version, and have the
@@ -403,15 +407,16 @@ that are already in the LMod hierarchy.
      .. code-block:: yaml
 
         modules:
-          enable:
-            - tcl
-          tcl:
-            projections:
-              all: '{name}/{version}-{compiler.name}-{compiler.version}'
-            all:
-              conflict:
-                - '{name}'
-                - 'intel/14.0.1'
+          default:
+            enable:
+              - tcl
+            tcl:
+              projections:
+                all: '{name}/{version}-{compiler.name}-{compiler.version}'
+              all:
+                conflict:
+                  - '{name}'
+                  - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
      base directory of the same module, effectively preventing the possibility to
@@ -431,16 +436,17 @@ that are already in the LMod hierarchy.
      .. code-block:: yaml
 
        modules:
-         enable:
-           - lmod
-         lmod:
-           core_compilers:
-             - 'gcc@4.8'
-           core_specs:
-             - 'python'
-           hierarchy:
-             - 'mpi'
-             - 'lapack'
+         default:
+           enable:
+             - lmod
+           lmod:
+             core_compilers:
+               - 'gcc@4.8'
+             core_specs:
+               - 'python'
+             hierarchy:
+               - 'mpi'
+               - 'lapack'
 
      that will generate a hierarchy in which the ``lapack`` and ``mpi`` layer can be switched
      independently. This allows a site to build the same libraries or applications against different
@@ -486,7 +492,7 @@ satisfies a default, Spack will generate the module file in the
 appropriate path, and will generate a default symlink to the module
 file as well.
 
-.. warning:: 
+.. warning::
   If Spack is configured to generate multiple default packages in the
   same directory, the last modulefile to be generated will be the
   default module.
@@ -514,18 +520,33 @@ inspections and customize them per-module-set.
     prefix_inspections:
       bin:
         - PATH
-      lib:
-        - LIBRARY_PATH
+      man:
+        - MANPATH
       '':
         - CMAKE_PREFIX_PATH
 
 Prefix inspections are only applied if the relative path inside the
 installation prefix exists. In this case, for a Spack package ``foo``
 installed to ``/spack/prefix/foo``, if ``foo`` installs executables to
-``bin`` but no libraries in ``lib``, the generated module file for
+``bin`` but no manpages in ``man``, the generated module file for
 ``foo`` would update ``PATH`` to contain ``/spack/prefix/foo/bin`` and
 ``CMAKE_PREFIX_PATH`` to contain ``/spack/prefix/foo``, but would not
-update ``LIBRARY_PATH``.
+update ``MANPATH``.
+
+The default list of environment variables in this config section
+inludes ``PATH``, ``MANPATH``, ``ACLOCAL_PATH``, ``PKG_CONFIG_PATH``
+and ``CMAKE_PREFIX_PATH``, as well as ``DYLD_FALLBACK_LIBRARY_PATH``
+on macOS. On Linux however, the corresponding ``LD_LIBRARY_PATH``
+variable is *not* set, because it affects the behavior of
+system executables too.
+
+.. note::
+
+   In general, the ``LD_LIBRARY_PATH`` variable is not required
+   when using packages built with Spack, thanks to the use of RPATH.
+   Some packages may still need the variable, which is best handled
+   on a per-package basis instead of globally, as explained in
+   :ref:`overide-api-calls-in-package-py`.
 
 There is a special case for prefix inspections relative to environment
 views. If all of the following conditions hold for a module set
@@ -533,8 +554,7 @@ configuration:
 
 #. The configuration is for an :ref:`environment <environments>` and
    will never be applied outside the environment,
-#. The environment in question is configured to use a :ref:`view
-   <filesystem-views>`,
+#. The environment in question is configured to use a view,
 #. The :ref:`environment view is configured
    <configuring_environment_views>` with a projection that ensures
    every package is linked to a unique directory,
@@ -586,16 +606,17 @@ Filter out environment modifications
 Modifications to certain environment variables in module files are there by
 default, for instance because they are generated by prefix inspections.
 If you want to prevent modifications to some environment variables, you can
-do so by using the environment blacklist:
+do so by using the ``exclude_env_vars``:
 
 .. code-block:: yaml
 
    modules:
-     tcl:
-       all:
-         filter:
-           # Exclude changes to any of these variables
-           environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+     default:
+       tcl:
+         all:
+           filter:
+             # Exclude changes to any of these variables
+             exclude_env_vars: ['CPATH', 'LIBRARY_PATH']
 
 The configuration above will generate module files that will not contain
 modifications to either ``CPATH`` or ``LIBRARY_PATH``.
@@ -607,42 +628,39 @@ modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 Autoload dependencies
 """""""""""""""""""""
 
-In some cases it can be useful to have module files that automatically load
-their dependencies.  This may be the case for Python extensions, if not
-activated using ``spack activate``:
+Often it is required for a module to have its (transient) dependencies loaded as well.
+One example where this is useful is when one package needs to use executables provided
+by its dependency; when the dependency is autoloaded, the executable will be in the
+PATH. Similarly for scripting languages such as Python, packages and their dependencies
+have to be loaded together.
+
+Autoloading is enabled by default for LMod, as it has great builtin support for through
+the ``depends_on`` function. For Environment Modules it is disabled by default.
+
+Autoloading can also be enabled conditionally:
 
 .. code-block:: yaml
 
-   modules:
-     tcl:
-       ^python:
-         autoload: 'direct'
+    modules:
+      default:
+        tcl:
+          all:
+            autoload: none
+          ^python:
+            autoload: direct
 
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.  The default is ``none``.
-
-.. tip::
-  Building external software
-     Setting ``autoload`` to ``direct`` for all packages can be useful
-     when building software outside of a Spack installation that depends on
-     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
-     as appropriate):
-
-  .. code-block:: yaml
-
-     modules:
-       lmod:
-         all:
-           autoload: 'direct'
+``direct`` or ``all``.
 
 .. note::
   TCL prerequisites
      In the ``tcl`` section of the configuration file it is possible to use
      the ``prerequisites`` directive that accepts the same values as
      ``autoload``. It will produce module files that have a ``prereq``
-     statement instead of automatically loading other modules.
+     statement, which can be used to autoload dependencies in some versions
+     of Environment Modules.
 
 ------------------------
 Maintaining Module Files

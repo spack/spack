@@ -1,0 +1,9 @@
+# ipc_perm.mode is not used and has changed from short to int over architecures
+# and versions. The last change was in glibc-2.31.
+# LLVM upstream decided to not check ipc_perm.mode below glibc-2.31,
+# because it is not actually used in the sanitizer:
+# github.com/llvm/llvm-project/commit/947f9692440836dcb8d88b74b69dd379d85974ce
+--- a/compiler-rt/lib/sanitizer_common/sanitizer_platform_limits_posix.cc
++++ b/compiler-rt/lib/sanitizer_common/sanitizer_platform_limits_posix.cc
+@@ -1143,1 +1143,0 @@
+-CHECK_SIZE_AND_OFFSET(ipc_perm, mode);

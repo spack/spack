@@ -8,8 +8,8 @@
 -LIBS    = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdf
 -LIBFFS  = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
 +FFLAGS  =  $(FCFLAGS) -I$(NETCDFFPATH)/include -I../ioapi_share
-+LIBS    = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdf
-+LIBFFS  = $(LIB_LOCAL) -L$(NETCDFFPATH)/lib -lnetcdff -lnetcdf $(NETCDF4_DEP_LIB)
++LIBS    = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdf
++LIBFFS  = $(LIB_LOCAL) -L$(NETCDFPATH)/lib -lnetcdff -L$(NETCDFFPATH)/lib -lnetcdf $(NETCDF4_DEP_LIB)
  CPP1    = $(CPP) -P $(TRADFLAG)
  M4      = m4 -Uinclude -Uindex -Ulen
  AR      = ar

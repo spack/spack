@@ -1,13 +1,13 @@
-.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 .. _wafpackage:
 
-----------
-WafPackage
-----------
+---
+Waf
+---
 
 Like SCons, Waf is a general-purpose build system that does not rely
 on Makefiles to build software.
@@ -16,7 +16,7 @@ on Makefiles to build software.
 Phases
 ^^^^^^
 
-The ``WafPackage`` base class comes with the following phases:
+The ``WafBuilder`` and ``WafPackage`` base classes come with the following phases:
 
 #. ``configure`` - configure the project
 #. ``build`` - build the project

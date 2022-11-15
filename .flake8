@@ -18,7 +18,7 @@
 #
 [flake8]
 #ignore = E129,,W503,W504,F999,N801,N813,N814,F403,F405,E203
-extend-ignore = E731,E203,F403,F405
+extend-ignore = E731,E203
 max-line-length = 99
 
 # F4: Import
@@ -29,6 +29,7 @@ max-line-length = 99
 #
 per-file-ignores =
   var/spack/repos/*/package.py:F403,F405,F821
+  *-ci-package.py:F403,F405,F821
 
 # exclude things we usually do not want linting for.
 # These still get linted when passed explicitly, as when spack flake8 passes

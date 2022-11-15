@@ -1,0 +1,62 @@
+name: "\U0001F4A5 Tests error"
+description: Some package in Spack had stand-alone tests that didn't pass
+title: "Testing issue: "
+labels: [test-error]
+body:
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce the failure(s) or link(s) to test output(s)
+      description: |
+        Fill in the test output from the exact spec that is having stand-alone test failures. Links to test outputs (e.g., CDash) can also be provided.
+      value: |
+        ```console
+        $ spack spec -I <spec>
+        ...
+        ```
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message
+      description: |
+        Please post the error message from spack inside the `<details>` tag below:
+      value: |
+        <details><summary>Error message</summary><pre>
+        ...
+        </pre></details>
+    validations:
+      required: true
+  - type: textarea
+    id: information
+    attributes:
+      label: Information on your system or the test runner
+      description: Please include the output of `spack debug report` for your system.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        If you have any relevant configuration detail (custom `packages.yaml` or `modules.yaml`, etc.) you can add that here as well.
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional information
+      description: |
+        Please upload test logs or any additional information about the problem.
+  - type: markdown
+    attributes:
+      value: |
+        Some packages have maintainers who have volunteered to debug build failures. Run `spack maintainers <name-of-the-package>` and **@mention** them here if they exist.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: General information
+      options:
+        - label: I have reported the version of Spack/Python/Platform/Runner
+          required: true
+        - label: I have run `spack maintainers <name-of-the-package>` and **@mentioned** any maintainers
+          required: true
+        - label: I have uploaded any available logs
+          required: true
+        - label: I have searched the issues of this repo and believe this is not a duplicate
+          required: true

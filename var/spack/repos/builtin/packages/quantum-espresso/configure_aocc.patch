@@ -2,14 +2,14 @@ diff --git a/install/configure b/install/configure_aocc
 index 66337d1..d2c04af 100755
 --- a/install/configure
 +++ b/install/configure_aocc
-@@ -3203,6 +3203,7 @@ case "$arch" in
+@@ -3199,6 +3199,7 @@
+         ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+         pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+         nvfortran_version=`$mpif90 -V 2>&1 | grep "^nvfortran"`
++        aoccflang_version=`$mpif90 -v 2>&1 | grep "AMD clang version"`
+         gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
          nagfor_version=`$mpif90 -v 2>&1 | grep "NAG Fortran"`
          xlf_version=`$mpif90 -v 2>&1 | grep "xlf"`
-         armflang_version=`$mpif90 -v 2>&1 | grep "Arm C/C++/Fortran Compiler version"`
-+        aoccflang_version=`$mpif90 -v 2>&1 | grep "AMD clang version"`
-         #
-         if test "$ifort_version" != ""
-         then
 @@ -3215,6 +3216,12 @@ case "$arch" in
                  version=`echo $nvfortran_version | cut -d ' ' -f2`
                  echo "${ECHO_T}nvfortran $version"

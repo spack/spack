@@ -1,13 +1,15 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.package import *
 
 
 class RKlar(RPackage):
-    """Miscellaneous functions for classification and visualization, e.g.
+    """Classification and Visualization.
+
+    Miscellaneous functions for classification and visualization, e.g.
     regularized discriminant analysis, sknn() kernel-density naive Bayes, an
     interface to 'svmlight' and stepclass() wrapper variable selection for
     supervised classification, partimat() visualization of classification rules
@@ -16,13 +18,17 @@ class RKlar(RPackage):
     different variable clustering models and weight of evidence
     preprocessing."""
 
-    homepage = "https://cloud.r-project.org/package=klaR"
-    url      = "https://cloud.r-project.org/src/contrib/klaR_0.6-15.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/klaR"
+    cran = "klaR"
 
-    version('0.6-15', sha256='5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae')
+    version("1.7-1", sha256="0354bafb1a202bc439660ecfcfe78359bc2881a69d15ff64afa049e4eb171d25")
+    version("1.7-0", sha256="b4795250ef19fd1b5e1b9a59343fd01159a33dbdbb504a06258220e37a718198")
+    version("0.6-15", sha256="5bfe5bc643f8a64b222317732c26e9f93be297cdc318a869f15cc9ab0d9e0fae")
 
-    depends_on('r@2.10.0:',    type=('build', 'run'))
-    depends_on('r-mass',       type=('build', 'run'))
-    depends_on('r-combinat',  type=('build', 'run'))
-    depends_on('r-questionr', type=('build', 'run'))
+    depends_on("r@2.10.0:", type=("build", "run"))
+    depends_on("r-mass", type=("build", "run"))
+    depends_on("r-combinat", type=("build", "run"))
+    depends_on("r-questionr", type=("build", "run"))
+
+    # NOTE: The svmlight interface is not built. The external svmlight package
+    # dates back to 2008, and does not build with modern compilers. In
+    # addition, the tarfile is unversioned and its distribution is restricted.
