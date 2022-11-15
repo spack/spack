@@ -14,17 +14,44 @@ is_windows = sys.platform == "win32"
 if is_windows:
     import winreg
 
-    # we alias all the HKEY constants to avoid needing to import winreg
-    # where we use this registry interface as importing winreg involves the
-    # messy import we see above.
-    # any references to these constants should be made only after confirming
-    # the codeblock will ONLY be run on Windows
-    HKEY_CLASSES_ROOT = winreg.HKEY_CLASSES_ROOT
-    HKEY_CURRENT_USER = winreg.HKEY_CURRENT_USER
-    HKEY_USERS = winreg.HKEY_USERS
-    HKEY_LOCAL_MACHINE = winreg.HKEY_LOCAL_MACHINE
-    HKEY_CURRENT_CONFIG = winreg.HKEY_CURRENT_CONFIG
-    HKEY_PERFORMANCE_DATA = winreg.HKEY_PERFORMANCE_DATA
+
+
+class HKEY_CONSTANT(object):
+    def __init__(self, hkey_constant):
+        self._hkey = hkey_constant
+
+    def __str__(self):
+        """Return string used to construct HKEY"""
+        return self._hkey
+
+    @property
+    def hkey(self):
+        """Return actual HKEY constant registry key associated with string
+        used to construct class"""
+        if is_windows:
+            hkey_dict = {
+                "HKEY_CLASSES_ROOT": winreg.HKEY_CLASSES_ROOT,
+                "HKEY_CURRENT_USER": winreg.HKEY_CURRENT_USER,
+                "HKEY_USERS": winreg.HKEY_USERS,
+                "HKEY_LOCAL_MACHINE": winreg.HKEY_LOCAL_MACHINE,
+                "HKEY_CURRENT_CONFIG": winreg.HKEY_CURRENT_CONFIG,
+                "HKEY_PERFORMANCE_DATA": winreg.HKEY_PERFORMANCE_DATA
+            }
+            return hkey_dict[self._hkey]
+        raise RuntimeError("HKEY Constants are for Windows registry use and should not be reference by other platforms")
+
+# we alias all the HKEY constants to avoid needing to import winreg
+# where we use this registry interface as importing winreg involves the
+# messy import we see above.
+# any references to these constants should be made only after confirming
+# the codeblock will ONLY be run on Windows
+# otherwise a RuntimeError may be raised
+HKEY_CLASSES_ROOT = HKEY_CONSTANT("HKEY_CLASSES_ROOT")
+HKEY_CURRENT_USER = HKEY_CONSTANT("HKEY_CURRENT_USER")
+HKEY_USERS = HKEY_CONSTANT("HKEY_USERS")
+HKEY_LOCAL_MACHINE = HKEY_CONSTANT("HKEY_LOCAL_MACHINE")
+HKEY_CURRENT_CONFIG = HKEY_CONSTANT("HKEY_CURRENT_CONFIG")
+HKEY_PERFORMANCE_DATA = HKEY_CONSTANT("HKEY_PERFORMANCE_DATA")
 
 
 class RegistryValue(object):
@@ -92,7 +119,7 @@ class RegistryKey(object):
 
     def get_value(self, val_name):
         """Returns value associated with this key in RegistryValue object"""
-        return RegistryValue(val_name, winreg.QueryValue(self.handle, val_name), self.handle)
+        return RegistryValue(val_name, winreg.QueryValueEx(self.handle, val_name)[0], self.handle)
 
 
 class WindowsRegistry(object):
@@ -104,7 +131,7 @@ class WindowsRegistry(object):
     the root key used to instantiate this class.
     """
 
-    def __init__(self, key, root_string=winreg.HKEY_CLASSES_ROOT):
+    def __init__(self, key, root_key=HKEY_CONSTANT("HKEY_CURRENT_USER")):
         """Constructs a Windows Registry entrypoint to key provided
         root_string should be an already open root key or an hkey constant if provided
 
@@ -120,11 +147,11 @@ class WindowsRegistry(object):
                 "Cannot instantiate Windows Registry class on non Windows platforms"
             )
         self.key = key
-        self.root = root_string
+        self.root = root_key
         try:
             self.reg = RegistryKey(
-                os.path.join(self.root, self.key),
-                winreg.OpenKeyEx(self.root_string, self.key, access=winreg.KEY_READ),
+                os.path.join(str(self.root), self.key),
+                winreg.OpenKeyEx(self.root.hkey, self.key, access=winreg.KEY_READ),
             )
         except FileNotFoundError as e:
             if e.winerror == 2:
@@ -208,7 +235,11 @@ def open_key(root, subkey):
     root can be either a WindowsRegistry or RegistryKey object, or an existing
     PyHKEY object. If it is the former, a RegistryKey is returned, otherwise,
     another PyHKEY.
+
+    Note: If called on non Windows platforms, will raise RuntimeError
     """
+    if not is_windows:
+        raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
     if type(root) == WindowsRegistry or type(root) == RegistryKey:
         return root.get_subkey(subkey)
     return winreg.OpenKeyEx(root, subkey, access=winreg.KEY_READ)
@@ -218,7 +249,11 @@ def get_value(root, value):
     """
     Returns registry value of name `value` associated with the key `root`
     `root` must be an already open RegistryKey object or PyHKEY object
+
+    Note: If called on non Windows platforms, will raise RuntimeError
     """
+    if not is_windows:
+        raise RuntimeError("Cannot invoke Windows registry methods on non Windows platform")
     if type(root) == WindowsRegistry or type(root) == RegistryKey:
         return root.get_value(value)
-    return winreg.QueryValue(root, value)
+    return winreg.QueryValueEx(root, value)[0]
