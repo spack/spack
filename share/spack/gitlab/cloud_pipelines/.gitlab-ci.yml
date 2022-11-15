@@ -91,6 +91,9 @@ protected-publish:
   extends: [ ".protected" ]
   image: "ghcr.io/spack/python-aws-bash:0.0.1"
   tags: ["spack", "public", "medium", "aws", "x86_64"]
+  retry:
+    max: 2
+    when: ["runner_system_failure", "stuck_or_timeout_failure"]
   variables:
     AWS_ACCESS_KEY_ID: ${PROTECTED_MIRRORS_AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${PROTECTED_MIRRORS_AWS_SECRET_ACCESS_KEY}

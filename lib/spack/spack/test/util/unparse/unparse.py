@@ -178,8 +178,69 @@ async def f():
 """
 
 
-def assertASTEqual(ast1, ast2):
-    ast.dump(ast1) == ast.dump(ast2)
+match_literal = """\
+match status:
+    case 400:
+        return "Bad request"
+    case 404 | 418:
+        return "Not found"
+    case _:
+        return "Something's wrong with the internet"
+"""
+
+match_with_noop = """\
+match status:
+    case 400:
+        return "Bad request"
+"""
+
+match_literal_and_variable = """\
+match point:
+    case (0, 0):
+        print("Origin")
+    case (0, y):
+        print(f"Y={y}")
+    case (x, 0):
+        print(f"X={x}")
+    case (x, y):
+        print(f"X={x}, Y={y}")
+    case _:
+        raise ValueError("Not a point")
+"""
+
+
+match_classes = """\
+class Point:
+    x: int
+    y: int
+
+def location(point):
+    match point:
+        case Point(x=0, y=0):
+            print("Origin is the point's location.")
+        case Point(x=0, y=y):
+            print(f"Y={y} and the point is on the y-axis.")
+        case Point(x=x, y=0):
+            print(f"X={x} and the point is on the x-axis.")
+        case Point():
+            print("The point is located somewhere else on the plane.")
+        case _:
+            print("Not a point")
+"""
+
+match_nested = """\
+match points:
+    case []:
+        print("No points in the list.")
+    case [Point(0, 0)]:
+        print("The origin is the only point in the list.")
+    case [Point(x, y)]:
+        print(f"A single point {x}, {y} is in the list.")
+    case [Point(0, y1), Point(0, y2)]:
+        print(f"Two points on the Y axis at {y1}, {y2} are in the list.")
+    case _:
+        print("Something else is found in the list.")
+"""
 
 
 def check_ast_roundtrip(code1, filename="internal", mode="exec"):
@@ -187,7 +248,9 @@ def check_ast_roundtrip(code1, filename="internal", mode="exec"):
     code2 = spack.util.unparse.unparse(ast1)
 
     ast2 = compile(code2, filename, mode, ast.PyCF_ONLY_AST)
-    assertASTEqual(ast1, ast2)
+
+    error_msg = "Failed to roundtrip {} [mode={}]".format(filename, mode)
+    assert ast.dump(ast1) == ast.dump(ast2), error_msg
 
 
 def test_core_lib_files():
@@ -514,3 +577,12 @@ def test_async_with():
 @pytest.mark.skipif(sys.version_info < (3, 5), reason="Not supported < 3.5")
 def test_async_with_as():
     check_ast_roundtrip(async_with_as)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Not supported < 3.10")
+@pytest.mark.parametrize(
+    "literal",
+    [match_literal, match_with_noop, match_literal_and_variable, match_classes, match_nested],
+)
+def test_match_literal(literal):
+    check_ast_roundtrip(literal)

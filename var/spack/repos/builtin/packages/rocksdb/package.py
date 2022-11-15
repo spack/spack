@@ -14,6 +14,7 @@ class Rocksdb(MakefilePackage):
     git = "https://github.com/facebook/rocksdb.git"
 
     version("master", git=git, branch="master", submodules=True)
+    version("7.7.3", sha256="b8ac9784a342b2e314c821f6d701148912215666ac5e9bdbccd93cf3767cb611")
     version("7.2.2", sha256="c4ea6bd2e3ffe3f0f8921c699234d59108c9122d61b0ba2aa78358642a7b614e")
     version("6.20.3", sha256="c6502c7aae641b7e20fafa6c2b92273d935d2b7b2707135ebd9a67b092169dca")
     version("6.19.3", sha256="5c19ffefea2bbe4c275d0c60194220865f508f371c64f42e802b4a85f065af5b")

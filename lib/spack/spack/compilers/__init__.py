@@ -49,12 +49,26 @@ _compiler_to_pkg = {
     "clang": "llvm+clang",
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
+    "intel@2020:": "intel-oneapi-compilers-classic",
+}
+
+# TODO: generating this from the previous dict causes docs errors
+package_name_to_compiler_name = {
+    "llvm": "clang",
+    "intel-oneapi-compilers": "oneapi",
+    "llvm-amdgpu": "rocmcc",
+    "intel-oneapi-compilers-classic": "intel",
 }
 
 
 def pkg_spec_for_compiler(cspec):
     """Return the spec of the package that provides the compiler."""
-    spec_str = "%s@%s" % (_compiler_to_pkg.get(cspec.name, cspec.name), cspec.versions)
+    for spec, package in _compiler_to_pkg.items():
+        if cspec.satisfies(spec):
+            spec_str = "%s@%s" % (package, cspec.versions)
+            break
+    else:
+        spec_str = str(cspec)
     return spack.spec.Spec(spec_str)
 
 
@@ -344,6 +358,10 @@ def compilers_for_spec(
 def compilers_for_arch(arch_spec, scope=None):
     config = all_compilers_config(scope)
     return list(get_compilers(config, arch_spec=arch_spec))
+
+
+def compiler_specs_for_arch(arch_spec, scope=None):
+    return [c.spec for c in compilers_for_arch(arch_spec, scope)]
 
 
 class CacheReference(object):

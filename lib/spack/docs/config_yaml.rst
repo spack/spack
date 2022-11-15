@@ -224,9 +224,9 @@ them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
 
-------------------
-``shared_linking``
-------------------
+-----------------------
+``shared_linking:type``
+-----------------------
 
 Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
 so that they can find their dependencies. Has no effect on macOS.
@@ -244,6 +244,52 @@ and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
 the loading object.
 
 DO NOT MIX the two options within the same install tree.
+
+-----------------------
+``shared_linking:bind``
+-----------------------
+
+This is an *experimental option* that controls whether Spack embeds absolute paths
+to needed shared libraries in ELF executables and shared libraries on Linux. Setting
+this option to ``true`` has two advantages:
+
+1. **Improved startup time**: when running an executable, the dynamic loader does not
+   have to perform a search for needed libraries, they are loaded directly.
+2. **Reliability**: libraries loaded at runtime are those that were linked to. This
+   minimizes the risk of accidentally picking up system libraries.
+
+In the current implementation, Spack sets the soname (shared object name) of
+libraries to their install path upon installation. This has two implications:
+
+1. binding does not apply to libraries installed *before* the option was enabled;
+2. toggling the option off does *not* prevent binding of libraries installed when
+   the option was still enabled.
+
+It is also worth noting that:
+
+1. Applications relying on ``dlopen(3)`` will continue to work, even when they open
+   a library by name. This is because ``RPATH``\s are retained in binaries also
+   when ``bind`` is enabled.
+2. ``LD_PRELOAD`` continues to work for the typical use case of overriding
+   symbols, such as preloading a library with a more efficient ``malloc``.
+   However, the preloaded library will be loaded *additionally to*, instead of
+   *in place of* another library with the same name --- this can be problematic
+   in very rare cases where libraries rely on a particular ``init`` or ``fini``
+   order.
+
+.. note::
+
+   In some cases packages provide *stub libraries* that only contain an interface
+   for linking, but lack an implementation for runtime. An example of this is
+   ``libcuda.so``, provided by the CUDA toolkit; it can be used to link against,
+   but the library needed at runtime is the one installed with the CUDA driver.
+   To avoid binding those libraries, they can be marked as non-bindable using
+   a property in the package:
+
+   .. code-block:: python
+
+      class Example(Package):
+         non_bindable_shared_objects = ["libinterface.so"]
 
 ----------------------
 ``terminal_title``

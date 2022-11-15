@@ -85,7 +85,7 @@ All packages whose names or descriptions contain documentation:
 To get more information on a particular package from `spack list`, use
 `spack info`.  Just supply the name of a package:
 
-.. command-output:: spack info mpich
+.. command-output:: spack info --all mpich
 
 Most of the information is self-explanatory.  The *safe versions* are
 versions that Spack knows the checksum for, and it will use the
@@ -998,11 +998,15 @@ More formally, a spec consists of the following pieces:
 * ``%`` Optional compiler specifier, with an optional compiler version
   (``gcc`` or ``gcc@4.7.3``)
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
-  ``-qt``, or ``~qt``) for boolean variants
+  ``-qt``, or ``~qt``) for boolean variants. Use ``++`` or ``--`` or
+  ``~~`` to propagate variants through the dependencies (``++debug``,
+  ``--qt``, or ``~~qt``).
 * ``name=<value>`` Optional variant specifiers that are not restricted to
-  boolean variants
+  boolean variants. Use ``name==<value>`` to propagate variant through the
+  dependencies.
 * ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
   ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+  Use ``name==<value>`` to propagate compiler flags through the dependencies.
 * ``target=<value> os=<value>`` Optional architecture specifier
   (``target=haswell os=CNL10``)
 * ``^`` Dependency specs (``^callpath@1.1``)
@@ -1110,21 +1114,21 @@ set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
 or ``1.7``).  When you supply such a specifier to ``spack install``,
 it constrains the set of versions that Spack will install.
 
-For packages with a ``git`` attribute, ``git`` references 
-may be specified instead of a numerical version i.e. branches, tags 
-and commits. Spack will stage and build based off the ``git`` 
+For packages with a ``git`` attribute, ``git`` references
+may be specified instead of a numerical version i.e. branches, tags
+and commits. Spack will stage and build based off the ``git``
 reference provided.  Acceptable syntaxes for this are:
 
 .. code-block:: sh
-   
+
     # branches and tags
    foo@git.develop # use the develop branch
    foo@git.0.19 # use the 0.19 tag
-   
+
     # commit hashes
    foo@abcdef1234abcdef1234abcdef1234abcdef1234    # 40 character hashes are automatically treated as git commits
    foo@git.abcdef1234abcdef1234abcdef1234abcdef1234
-   
+
 Spack versions from git reference either have an associated version supplied by the user,
 or infer a relationship to known versions from the structure of the git repository. If an
 associated version is supplied by the user, Spack treats the git version as equivalent to that
@@ -1226,6 +1230,23 @@ variants using the backwards compatibility syntax and uses only ``~``
 for disabled boolean variants.  The ``-`` and spaces on the command
 line are provided for convenience and legibility.
 
+Spack allows variants to propagate their value to the package's
+dependency by using ``++``, ``--``, and ``~~`` for boolean variants.
+For example, for a ``debug`` variant:
+
+.. code-block:: sh
+
+    mpileaks ++debug   # enabled debug will be propagated to dependencies
+    mpileaks +debug    # only mpileaks will have debug enabled
+
+To propagate the value of non-boolean variants Spack uses ``name==value``.
+For example, for the ``stackstart`` variant:
+
+.. code-block:: sh
+
+    mpileaks stackstart=4    # variant will be propagated to dependencies
+    mpileaks stackstart==4   # only mpileaks will have this variant value
+
 ^^^^^^^^^^^^^^
 Compiler Flags
 ^^^^^^^^^^^^^^
@@ -1233,10 +1254,15 @@ Compiler Flags
 Compiler flags are specified using the same syntax as non-boolean variants,
 but fulfill a different purpose. While the function of a variant is set by
 the package, compiler flags are used by the compiler wrappers to inject
-flags into the compile line of the build. Additionally, compiler flags are
-inherited by dependencies. ``spack install libdwarf cppflags="-g"`` will
-install both libdwarf and libelf with the ``-g`` flag injected into their
-compile line.
+flags into the compile line of the build. Additionally, compiler flags can
+be inherited by dependencies by using ``==``.
+``spack install libdwarf cppflags=="-g"`` will install both libdwarf and
+libelf with the ``-g`` flag injected into their compile line.
+
+.. note::
+
+   versions of spack prior to 0.19.0 will propagate compiler flags using
+   the ``=`` syntax.
 
 Notice that the value of the compiler flags must be quoted if it
 contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
@@ -1438,7 +1464,7 @@ built.
 You can see what virtual packages a particular package provides by
 getting info on it:
 
-.. command-output:: spack info mpich
+.. command-output:: spack info --virtuals mpich
 
 Spack is unique in that its virtual packages can be versioned, just
 like regular packages.  A particular version of a package may provide
@@ -1646,9 +1672,13 @@ own install prefix.  However, certain packages are typically installed
 `Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
-Spack has support for this type of installation as well.  In Spack,
-a package that can live inside the prefix of another package is called
-an *extension*.  Suppose you have Python installed like so:
+In Spack, installation prefixes are immutable, so this type of installation
+is not directly supported. However, it is possible to create views that
+allow you to merge install prefixes of multiple packages into a single new prefix.
+Views are a convenient way to get a more traditional filesystem structure.
+Using *extensions*, you can ensure that Python packages always share the
+same prefix in the view as Python itself. Suppose you have
+Python installed like so:
 
 .. code-block:: console
 
@@ -1686,8 +1716,6 @@ You can find extensions for your Python installation like this:
    py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
    py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
 
-   ==> None activated.
-
 The extensions are a subset of what's returned by ``spack list``, and
 they are packages like any other.  They are installed into their own
 prefixes, and you can see this with ``spack find --paths``:
@@ -1715,32 +1743,72 @@ directly when you run ``python``:
    ImportError: No module named numpy
    >>>
 
-^^^^^^^^^^^^^^^^
-Using Extensions
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using Extensions in Environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are four ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``load`` the extension,
-and it will be added to the ``PYTHONPATH`` in your current shell:
+The recommended way of working with extensions such as ``py-numpy``
+above is through :ref:`Environments <environments>`. For example,
+the following creates an environment in the current working directory
+with a filesystem view in the ``./view`` directory:
 
 .. code-block:: console
 
-   $ spack load python
-   $ spack load py-numpy
+   $ spack env create --with-view view --dir .
+   $ spack -e . add py-numpy
+   $ spack -e . concretize
+   $ spack -e . install
 
-Now ``import numpy`` will succeed for as long as you keep your current
-session open.
+We recommend environments for two reasons. Firstly, environments
+can be activated (requires :ref:`shell-support`):
+
+.. code-block:: console
+
+   $ spack env activate .
+
+which sets all the right environment variables such as ``PATH`` and
+``PYTHONPATH``. This ensures that
+
+.. code-block:: console
+
+   $ python
+   >>> import numpy
+
+works. Secondly, even without shell support, the view ensures
+that Python can locate its extensions:
+
+.. code-block:: console
+
+   $ ./view/bin/python
+   >>> import numpy
+
+See :ref:`environments` for a more in-depth description of Spack
+environments and customizations to views.
+
+^^^^^^^^^^^^^^^^^^^^
+Using ``spack load``
+^^^^^^^^^^^^^^^^^^^^
+
+A more traditional way of using Spack and extensions is ``spack load``
+(requires :ref:`shell-support`). This will add the extension to ``PYTHONPATH``
+in your current shell, and Python itself will be available in the ``PATH``:
+
+.. code-block:: console
+
+   $ spack load py-numpy
+   $ python
+   >>> import numpy
+
 The loaded packages can be checked using ``spack find --loaded``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Loading Extensions via Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Instead of using Spack's environment modification capabilities through
-the ``spack load`` command, you can load numpy through your
-environment modules (using ``environment-modules`` or ``lmod``). This
-will also add the extension to the ``PYTHONPATH`` in your current
-shell.
+Apart from ``spack env activate`` and ``spack load``, you can load numpy
+through your environment modules (using ``environment-modules`` or
+``lmod``). This will also add the extension to the ``PYTHONPATH`` in
+your current shell.
 
 .. code-block:: console
 
@@ -1749,130 +1817,6 @@ shell.
 If you do not know the name of the specific numpy module you wish to
 load, you can use the ``spack module tcl|lmod loads`` command to get
 the name of the module from the Spack spec.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Activating Extensions in a View
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Another way to use extensions is to create a view, which merges the
-python installation along with the extensions into a single prefix.
-See :ref:`configuring_environment_views` for a more in-depth description
-of views.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Activating Extensions Globally
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As an alternative to creating a merged prefix with Python and its extensions,
-and prior to support for views, Spack has provided a means to install the
-extension into the Spack installation prefix for the extendee. This has
-typically been useful since extendable packages typically search their own
-installation path for addons by default.
-
-Global activations are performed with the ``spack activate`` command:
-
-.. _cmd-spack-activate:
-
-^^^^^^^^^^^^^^^^^^
-``spack activate``
-^^^^^^^^^^^^^^^^^^
-
-.. code-block:: console
-
-   $ spack activate py-numpy
-   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7 arch=linux-debian7-x86_64-3c74eb69 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-nose@1.3.4%gcc@4.4.7 arch=linux-debian7-x86_64-5f70f816 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
-
-Several things have happened here.  The user requested that
-``py-numpy`` be activated in the ``python`` installation it was built
-with.  Spack knows that ``py-numpy`` depends on ``py-nose`` and
-``py-setuptools``, so it activated those packages first.  Finally,
-once all dependencies were activated in the ``python`` installation,
-``py-numpy`` was activated as well.
-
-If we run ``spack extensions`` again, we now see the three new
-packages listed as activated:
-
-.. code-block:: console
-
-   $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7  arch=linux-debian7-x86_64-703c7a96
-   ==> 36 extensions:
-   geos          py-ipython     py-pexpect    py-pyside            py-sip
-   py-basemap    py-libxml2     py-pil        py-pytz              py-six
-   py-biopython  py-mako        py-pmw        py-rpy2              py-sympy
-   py-cython     py-matplotlib  py-pychecker  py-scientificpython  py-virtualenv
-   py-dateutil   py-mpi4py      py-pygments   py-scikit-learn
-   py-epydoc     py-mx          py-pylint     py-scipy
-   py-gnuplot    py-nose        py-pyparsing  py-setuptools
-   py-h5py       py-numpy       py-pyqt       py-shiboken
-
-   ==> 12 installed:
-   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-   py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
-   py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
-   py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
-   py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
-
-   ==> 3 currently activated:
-   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
-   py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
-
-Now, when a user runs python, ``numpy`` will be available for import
-*without* the user having to explicitly load it.  ``python@2.7.8`` now
-acts like a system Python installation with ``numpy`` installed inside
-of it.
-
-Spack accomplishes this by symbolically linking the *entire* prefix of
-the ``py-numpy`` package into the prefix of the ``python`` package.  To the
-python interpreter, it looks like ``numpy`` is installed in the
-``site-packages`` directory.
-
-The only limitation of global activation is that you can only have a *single*
-version of an extension activated at a time.  This is because multiple
-versions of the same extension would conflict if symbolically linked
-into the same prefix.  Users who want a different version of a package
-can still get it by using environment modules or views, but they will have to
-explicitly load their preferred version.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-``spack activate --force``
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If, for some reason, you want to activate a package *without* its
-dependencies, you can use ``spack activate --force``:
-
-.. code-block:: console
-
-   $ spack activate --force py-numpy
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
-
-.. _cmd-spack-deactivate:
-
-^^^^^^^^^^^^^^^^^^^^
-``spack deactivate``
-^^^^^^^^^^^^^^^^^^^^
-
-We've seen how activating an extension can be used to set up a default
-version of a Python module.  Obviously, you may want to change that at
-some point.  ``spack deactivate`` is the command for this.  There are
-several variants:
-
-* ``spack deactivate <extension>`` will deactivate a single
-  extension.  If another activated extension depends on this one,
-  Spack will warn you and exit with an error.
-* ``spack deactivate --force <extension>`` deactivates an extension
-  regardless of packages that depend on it.
-* ``spack deactivate --all <extension>`` deactivates an extension and
-  all of its dependencies.  Use ``--force`` to disregard dependents.
-* ``spack deactivate --all <extendee>`` deactivates *all* activated
-  extensions of a package.  For example, to deactivate *all* python
-  extensions, use:
-
-  .. code-block:: console
-
-     $ spack deactivate --all python
 
 -----------------------
 Filesystem requirements

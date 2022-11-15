@@ -98,6 +98,12 @@ class Rocrand(CMakePackage):
 
     depends_on("googletest@1.10.0:", type="test")
 
+    # This patch ensures that libhiprand.so searches for librocrand.so in its
+    # own directory first thanks to the $ORIGIN RPATH setting. Otherwise,
+    # libhiprand.so cannot find dependency librocrand.so despite being in the
+    # same directory.
+    patch("hiprand_prefer_samedir_rocrand.patch", working_dir="hiprand", when="@5.2.0:")
+
     resource(
         name="hipRAND",
         git="https://github.com/ROCmSoftwarePlatform/hipRAND.git",
@@ -159,7 +165,7 @@ class Rocrand(CMakePackage):
                 for lib in rocrand_libs:
                     os.symlink(join_path(rocrand_lib_path, lib), join_path(self.prefix.lib, lib))
             """Fix the rocRAND and hipRAND include path"""
-            # rocRAND installs irocrand*.h* and hiprand*.h* rocrand/include and
+            # rocRAND installs rocrand*.h* and hiprand*.h* rocrand/include and
             # hiprand/include, respectively. This confuses spack's RPATH management. We
             # fix it by adding a symlink to the header files.
             hiprand_include_path = join_path(self.prefix, "hiprand", "include")

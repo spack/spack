@@ -415,3 +415,6 @@ class Nvhpc(Package):
             libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)
+
+    # Avoid binding stub libraries by absolute path
+    non_bindable_shared_objects = ["stubs"]

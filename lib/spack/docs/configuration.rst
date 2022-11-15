@@ -405,6 +405,19 @@ Spack understands several special variables. These are:
 * ``$user``: name of the current user
 * ``$user_cache_path``: user cache directory (``~/.spack`` unless
   :ref:`overridden <local-config-overrides>`)
+* ``$architecture``: the architecture triple of the current host, as
+  detected by Spack.
+* ``$arch``: alias for ``$architecture``.
+* ``$platform``: the platform of the current host, as detected by Spack.
+* ``$operating_system``: the operating system of the current host, as
+  detected by the ``distro`` python module.
+* ``$os``: alias for ``$operating_system``.
+* ``$target``: the ISA target for the current host, as detected by
+  ArchSpec. E.g. ``skylake`` or ``neoverse-n1``.
+* ``$target_family``. The target family for the current host, as
+  detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
+* ``$date``: the current date in the format YYYY-MM-DD
+
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
@@ -549,7 +562,7 @@ down the problem:
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
 built in and are not overridden by a configuration file. The
-``verify_ssl`` setting comes from the ``--insceure`` option on the
+``verify_ssl`` setting comes from the ``--insecure`` option on the
 command line. ``dirty`` and ``install_tree`` come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.
