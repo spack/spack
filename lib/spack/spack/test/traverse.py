@@ -289,7 +289,7 @@ chain-a
 @pytest.fixture()
 def abstract_specs_toposort():
     # Create a graph that both BFS and DFS would not traverse in topo order, assuming
-    # edges are traversed by target node name. Roots are {A, E} in forward order and
+    # edges are ordered by target node name. Roots are {A, E} in forward order and
     # {F, G} in backward order.
     # forward: DFS([A, E]) traverses [A, B, F, G, C, D, E] (not topo since C < B)
     # forward: BFS([A, E]) traverses [A, E, B, C, D, F, G] (not topo since C < B)
