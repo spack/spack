@@ -20,6 +20,41 @@ import spack.util.spack_json as sjson
 
 Interval = namedtuple("Interval", ("begin", "end"))
 
+#: name for the global timer (used in start(), stop(), duration() without arguments)
+global_timer_name = "_global"
+
+
+class NullTimer(object):
+    """Timer interface that does nothing, useful in for "tell
+    don't ask" style code when timers are optional."""
+
+    def start(self, name=global_timer_name):
+        pass
+
+    def stop(self, name=global_timer_name):
+        pass
+
+    def duration(self, name=global_timer_name):
+        return 0.0
+
+    @contextmanager
+    def measure(self, name):
+        yield
+
+    @property
+    def phases(self):
+        return []
+
+    def write_json(self, out=sys.stdout):
+        pass
+
+    def write_tty(self, out=sys.stdout):
+        pass
+
+
+#: instance of a do-nothing timer
+NULL_TIMER = NullTimer()
+
 
 class Timer(object):
     """Simple interval timer"""
@@ -33,9 +68,9 @@ class Timer(object):
         self._timers = OrderedDict()  # type: OrderedDict[str,Interval]
 
         # _global is the overal timer since the instance was created
-        self._timers["_global"] = Interval(self._now(), end=None)
+        self._timers[global_timer_name] = Interval(self._now(), end=None)
 
-    def start(self, name="_global"):
+    def start(self, name=global_timer_name):
         """
         Start/Restart a named timer, or the global timer when no name is given.
         Arguments:
@@ -44,7 +79,7 @@ class Timer(object):
         """
         self._timers[name] = Interval(self._now(), None)
 
-    def stop(self, name="_global"):
+    def stop(self, name=global_timer_name):
         """
         Stop a named timer, or all timers when no name is given. Stopping a
         timer that has not started has no effect.
@@ -57,7 +92,7 @@ class Timer(object):
             return
         self._timers[name] = Interval(interval.begin, self._now())
 
-    def duration(self, name="_global"):
+    def duration(self, name=global_timer_name):
         """
         Get the time in seconds of a named timer, or the total time if no
         name is passed. The duration is always 0 for timers that have not been
@@ -74,7 +109,7 @@ class Timer(object):
         except KeyError:
             return 0.0
         # Take either the interval end, the global timer, or now.
-        end = interval.end or self._timers["_global"].end or self._now()
+        end = interval.end or self._timers[global_timer_name].end or self._now()
         return end - interval.begin
 
     @contextmanager
@@ -92,7 +127,7 @@ class Timer(object):
     @property
     def phases(self):
         """Get all named timers (excluding the global/total timer)"""
-        return [k for k in self._timers.keys() if k != "_global"]
+        return [k for k in self._timers.keys() if k != global_timer_name]
 
     def write_json(self, out=sys.stdout):
         """Write a json object with times to file"""

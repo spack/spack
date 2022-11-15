@@ -129,3 +129,21 @@ def test_timer_write():
         "phases": [{"name": "timer", "seconds": 1.0}],
         "total": {"seconds": 3.0},
     }
+
+
+def test_null_timer():
+    # Just ensure that the interface of the noop-timer doesn't break at some point
+    buffer = StringIO()
+    t = timer.NullTimer()
+    t.start()
+    t.start("first")
+    t.stop("first")
+    with t.measure("second"):
+        pass
+    t.stop()
+    assert t.duration("first") == 0.0
+    assert t.duration() == 0.0
+    assert not t.phases
+    t.write_json(buffer)
+    t.write_tty(buffer)
+    assert not buffer.getvalue()
