@@ -33,6 +33,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
+import io
 import multiprocessing
 import os
 import re
@@ -40,8 +41,6 @@ import shutil
 import sys
 import traceback
 import types
-
-from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import install, install_tree, mkdirp
@@ -1352,7 +1351,7 @@ class ChildError(InstallError):
 
     @property
     def long_message(self):
-        out = StringIO()
+        out = io.StringIO()
         out.write(self._long_message if self._long_message else "")
 
         have_log = self.log_name and os.path.exists(self.log_name)

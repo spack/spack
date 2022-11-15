@@ -9,8 +9,6 @@ import functools
 import inspect
 from typing import List, Optional, Tuple
 
-import six
-
 import spack.build_environment
 
 #: Builder classes, as registered by the "builder" decorator
@@ -167,7 +165,7 @@ def _create(pkg):
             property(forward_property_to_getattr(attribute_name)),
         )
 
-    class Adapter(six.with_metaclass(_PackageAdapterMeta, base_cls)):
+    class Adapter(base_cls, metaclass=_PackageAdapterMeta):
         def __init__(self, pkg):
             # Deal with custom phases in packages here
             if hasattr(pkg, "phases"):
@@ -456,7 +454,7 @@ class InstallationPhase(object):
         return copy.deepcopy(self)
 
 
-class Builder(six.with_metaclass(BuilderMeta, collections.abc.Sequence)):
+class Builder(collections.abc.Sequence, metaclass=BuilderMeta):
     """A builder is a class that, given a package object (i.e. associated with
     concrete spec), knows how to install it.
 

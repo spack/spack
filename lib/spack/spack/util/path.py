@@ -15,8 +15,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import date
-
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import memoized

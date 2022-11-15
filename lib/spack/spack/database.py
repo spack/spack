@@ -28,8 +28,6 @@ import sys
 import time
 from typing import Dict  # novm
 
-import six
-
 try:
     import uuid
 
@@ -770,10 +768,7 @@ class Database(object):
             with open(filename, "r") as f:
                 fdata = sjson.load(f)
         except Exception as e:
-            raise six.raise_from(
-                CorruptDatabaseError("error parsing database:", str(e)),
-                e,
-            )
+            raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
         if fdata is None:
             return

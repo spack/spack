@@ -17,9 +17,6 @@ import traceback
 from datetime import datetime, timedelta
 from typing import Any, Callable, Iterable, List, Tuple
 
-import six
-from six import string_types
-
 # Ignore emacs backups when listing modules
 ignore_modules = [r"^\.#", "~$"]
 
@@ -200,14 +197,9 @@ def memoized(func):
             return ret
         except TypeError as e:
             # TypeError is raised when indexing into a dict if the key is unhashable.
-            raise six.raise_from(
-                UnhashableArguments(
-                    "args + kwargs '{}' was not hashable for function '{}'".format(
-                        key, func.__name__
-                    ),
-                ),
-                e,
-            )
+            raise UnhashableArguments(
+                "args + kwargs '{}' was not hashable for function '{}'".format(key, func.__name__),
+            ) from e
 
     return _memoized_function
 
@@ -574,7 +566,7 @@ def match_predicate(*args):
 
     def match(string):
         for arg in args:
-            if isinstance(arg, string_types):
+            if isinstance(arg, str):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):
