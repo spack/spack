@@ -67,12 +67,13 @@ class Meson(PythonPackage):
     patch("rpath-0.49.patch", when="@0.49:0.53")
     patch("rpath-0.54.patch", when="@0.54:0.55")
     patch("rpath-0.56.patch", when="@0.56:0.57")
-    patch("rpath-0.58.patch", when="@0.58:")
+    patch("rpath-0.58.patch", when="@0.58:0.63")
+    patch("rpath-0.64.patch", when="@0.64:")
 
     # Intel OneAPI compiler support
     # https://github.com/mesonbuild/meson/pull/10909
     # https://github.com/mesonbuild/meson/pull/9850
-    patch("oneapi.patch", when="@0.62: %oneapi")
+    patch("oneapi.patch", when="@0.62:0.63 %oneapi")
 
     executables = ["^meson$"]
 
