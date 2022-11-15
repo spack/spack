@@ -6,6 +6,7 @@
 import os
 import re
 import subprocess
+import sys
 from distutils.version import StrictVersion
 from typing import Dict, List, Set  # novm
 
