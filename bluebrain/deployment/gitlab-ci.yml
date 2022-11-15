@@ -123,29 +123,6 @@ github_information:
     -     mkdir spack_config
     - fi
     - ln -sf "${PWD}/spack_config" "${HOME}/.spack"
-    # Configure installation directories et al based on the job's stage:
-    # this keeps environment files simpler
-    - |
-      DEPLOYMENT_SUFFIX=""
-      if [[ "$CI_JOB_STAGE" != "$CI_JOB_NAME" ]]; then
-          DEPLOYMENT_SUFFIX="_$CI_JOB_NAME"
-      fi
-      # config:install_tree:projections:all needs to match, see
-      # 'configure-spack-config'
-      cat <<EOF > "spack_config/config.yaml"
-      config:
-        install_tree:
-          root: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}
-          projections:
-            all: install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hash:6}
-        source_cache: $DEPLOYMENT_ROOT/cache
-      EOF
-      cat <<EOF > "spack_config/modules.yaml"
-      modules:
-        default:
-          roots:
-            tcl: $DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX
-      EOF
     # Create an empty database if not present yet (ensures this can be used
     # as an "upstream" later)
     - |
@@ -172,14 +149,26 @@ github_information:
     -     module use "$DEPLOYMENT_ROOT/stage_compilers/modules_tcl/linux-"*
     -     module use "$DEPLOYMENT_ROOT/stage_externals/modules_tcl/linux-"*
     - fi
+    # Configure installation directories et al based on the job's stage:
+    # this keeps environment files simpler
+    - |
+      DEPLOYMENT_SUFFIX=""
+      if [[ "$CI_JOB_STAGE" != "$CI_JOB_NAME" ]]; then
+          DEPLOYMENT_SUFFIX="_$CI_JOB_NAME"
+      fi
+    # config:install_tree:projections:all needs to match, see
+    # 'configure-spack-config'
+    - spack config add "config:install_tree:root:$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}"
+    - spack config add "config:install_tree:projections:all:'install_{compiler.name}-{compiler.version}-{target}/{name}-{version}-{hashCOLON6}'"
+    - sed -i 's/COLON/:/' "spack_config/config.yaml"
+    - spack config add "config:source_cache:$DEPLOYMENT_ROOT/cache"
+    - spack config add "modules:default:roots:tcl:$DEPLOYMENT_ROOT/stage_${CI_JOB_STAGE}/modules_tcl$DEPLOYMENT_SUFFIX"
   script:
     # A more modern git is required for some Spack checkouts… this may fail
     # for the compilers stage, but the module command always exits with
     # status 0…
     - module load git
     - module list
-    - echo $GIT_SSH_COMMAND
-    - export GIT_SSH_COMMAND="ssh -i $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY -o ProxyCommand='/usr/bin/socat - PROXY:bbpproxy.epfl.ch:%h:%p'"
     # Spack's install procedure will generate a bunch of JUnit test XMl,
     # prepare for that
     - if [[ ! -d "spack_tests/$CI_JOB_STAGE" ]]; then mkdir -p "spack_tests/$CI_JOB_STAGE"; fi
@@ -206,7 +195,6 @@ github_information:
     # Allow to cross-check what the CI sees
     - spack config blame compilers
     - spack config blame config
-    - cat spack_config/modules.yaml
     - spack config blame modules
     - spack config blame packages
     - spack config blame upstreams
