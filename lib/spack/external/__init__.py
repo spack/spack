@@ -20,17 +20,6 @@ archspec
 * Usage: Labeling, comparison and detection of microarchitectures
 * Version: 0.2.0 (commit 77640e572725ad97f18e63a04857155752ace045)
 
-argparse
---------
-
-* Homepage: https://pypi.python.org/pypi/argparse
-* Usage: We include our own version to be Python 3.X compatible.
-* Version: 1.4.0
-* Note: This package has been slightly modified to improve
-  error message formatting. See the following commit if the
-  vendored copy ever needs to be updated again:
-  https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
-
 astunparse
 ----------------
 
@@ -67,8 +56,7 @@ distro
 
 * Homepage: https://pypi.python.org/pypi/distro
 * Usage: Provides a more stable linux distribution detection.
-* Version: 1.6.0 (64946a1e2a9ff529047070657728600e006c99ff)
-* Note: Last version supporting Python 2.7
+* Version: 1.8.0
 
 functools32
 -----------
