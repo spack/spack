@@ -18,7 +18,7 @@ class PyDarshan(PythonPackage):
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-importlib-resources", when="^python@3.8", type=("build", "run"))
+    depends_on("py-importlib-resources", when="^python@:3.8", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
     # NOTE: SciPy is an indirect dependency needed for interpolate usage in pandas
     #       It will be fixed in the next release
