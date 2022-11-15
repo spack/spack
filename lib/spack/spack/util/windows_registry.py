@@ -15,7 +15,6 @@ if is_windows:
     import winreg
 
 
-
 class HKEY_CONSTANT(object):
     def __init__(self, hkey_constant):
         self._hkey = hkey_constant
@@ -35,10 +34,14 @@ class HKEY_CONSTANT(object):
                 "HKEY_USERS": winreg.HKEY_USERS,
                 "HKEY_LOCAL_MACHINE": winreg.HKEY_LOCAL_MACHINE,
                 "HKEY_CURRENT_CONFIG": winreg.HKEY_CURRENT_CONFIG,
-                "HKEY_PERFORMANCE_DATA": winreg.HKEY_PERFORMANCE_DATA
+                "HKEY_PERFORMANCE_DATA": winreg.HKEY_PERFORMANCE_DATA,
             }
             return hkey_dict[self._hkey]
-        raise RuntimeError("HKEY Constants are for Windows registry use and should not be reference by other platforms")
+        raise RuntimeError(
+            "HKEY Constants are for Windows registry use"
+            "and should not be reference by other platforms"
+        )
+
 
 # we alias all the HKEY constants to avoid needing to import winreg
 # where we use this registry interface as importing winreg involves the

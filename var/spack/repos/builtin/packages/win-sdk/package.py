@@ -34,14 +34,7 @@ class WinSdk(Package):
     version("10.0.10586")
     version("10.0.26639")
 
-
-    variant('plat', values=(
-        "x64",
-        "x86",
-        "arm",
-        "arm64"
-    ),
-    default="x64")
+    variant("plat", values=("x64", "x86", "arm", "arm64"), default="x64")
 
     # WinSDK versions depend on compatible compilers
     # WDK versions do as well, but due to their one to one dep on the SDK

@@ -41,13 +41,7 @@ class Wgl(BundlePackage):
     # satisfied appropriately
     provides("gl@4.6")
 
-    variant('plat', values=(
-        "x64",
-        "x86",
-        "arm",
-        "arm64"
-    ),
-    default="x64")
+    variant("plat", values=("x64", "x86", "arm", "arm64"), default="x64")
 
     # WGL exists on all Windows systems post win 98, however the headers
     # needed to use OpenGL are found in the SDK (GL/gl.h)

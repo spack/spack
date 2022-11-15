@@ -128,9 +128,7 @@ class Msvc(Compiler):
         arch = arch.replace("-", "_")
         # vcvars can target specific sdk versions, force it to pick up concretized sdk
         # version, if needed by spec
-        sdk_ver = (
-            "" if "win-sdk" not in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
-        )
+        sdk_ver = "" if "win-sdk" not in pkg.spec else pkg.spec["win-sdk"].version.string + ".0"
         # provide vcvars with msvc version selected by concretization,
         # not whatever it happens to pick up on the system (highest available version)
         out = subprocess.check_output(  # novermin

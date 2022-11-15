@@ -61,13 +61,7 @@ class WinWdk(Package):
         expand=False,
     )
 
-    variant('plat', values=(
-        "x64",
-        "x86",
-        "arm",
-        "arm64"
-    ),
-    default="x64")
+    variant("plat", values=("x64", "x86", "arm", "arm64"), default="x64")
 
     # need one to one dep on SDK per https://github.com/MicrosoftDocs/windows-driver-docs/issues/1550
     # additionally, the WDK needs to be paired with a version of the Windows SDK
@@ -115,7 +109,9 @@ class WinWdk(Package):
         """WGL download is named by fetch based on name derived from Link redirection
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
         if len(installer) > 1:
             raise RuntimeError(

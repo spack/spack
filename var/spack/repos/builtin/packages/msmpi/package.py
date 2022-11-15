@@ -48,7 +48,7 @@ class GenericBuilder(GenericBuilder):
         args = ["-noLogo"]
         # The argument may say gfortran, but spack patches MSMPI to be compatible with IFortran
         # however that variable name proved difficult to patch, so it remians the same
-        args.append("/p:GFORTRAN_BIN=%sbin\%s" % (os.environ["IFORT_COMPILER21"], arch))
+        args.append("/p:GFORTRAN_BIN=%sbin\\%s" % (os.environ["IFORT_COMPILER21"], arch))
         args.append("/p:VCToolsVersion=%s" % self.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.spec["wdk"].version))
         args.append("/p:PlatformToolset=%s" % self.compiler.cc_version)
