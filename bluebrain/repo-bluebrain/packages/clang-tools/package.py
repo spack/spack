@@ -6,7 +6,7 @@ from llnl.util.filesystem import install, mkdirp
 
 from spack.directives import depends_on, version
 from spack.package import Package
-from spack.pkg.patches.llvm import Llvm as LLVM
+from spack.pkg.builtin.llvm import Llvm as LLVM
 from spack.version import Version
 
 
