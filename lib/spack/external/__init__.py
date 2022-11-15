@@ -81,7 +81,7 @@ jinja2
 
 * Homepage: https://pypi.python.org/pypi/Jinja2
 * Usage: A modern and designer-friendly templating language for Python.
-* Version: 2.11.3 (last version supporting Python 2.7)
+* Version: 3.0.3 (last version supporting Python 3.6)
 
 jsonschema
 ----------
@@ -103,7 +103,7 @@ markupsafe
 
 * Homepage: https://pypi.python.org/pypi/MarkupSafe
 * Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
-* Version: 1.1.1 (last version supporting Python 2.7)
+* Version: 2.0.1 (last version supporting Python 3.6)
 
 py
 --
