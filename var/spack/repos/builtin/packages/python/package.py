@@ -370,6 +370,9 @@ class Python(Package):
     variant("tkinter", default=False, description="Build tkinter module")
     variant("uuid", default=True, description="Build uuid module")
     variant("tix", default=False, description="Build Tix module")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
+    variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=cray")
 
     if not is_windows:
         depends_on("pkgconfig@0.9.0:", type="build")
@@ -405,6 +408,7 @@ class Python(Package):
         depends_on("tcl", when="+tkinter")
         depends_on("uuid", when="+uuid")
         depends_on("tix", when="+tix")
+        depends_on("libxcrypt", when="+crypt")
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -559,6 +563,14 @@ class Python(Package):
                 variants += "+tix"
             except ProcessError:
                 variants += "~tix"
+
+        # Some modules are platform-dependent
+        if not self.spec.satisfies("platform=windows"):
+            try:
+                python("-c", "import crypt", error=os.devnull)
+                variants += "+crypt"
+            except ProcessError:
+                variants += "~crypt"
 
         return variants
 
@@ -1016,6 +1028,10 @@ class Python(Package):
                     self.command("-c", "import tkinter.tix")
                 else:
                     self.command("-c", "import Tix")
+
+            # Ensure that crypt module works
+            if "+crypt" in spec:
+                self.command("-c", "import crypt")
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.
