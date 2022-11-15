@@ -422,9 +422,10 @@ class CMakeBuilder(BaseBuilder):
         and runs them if found.
         """
         with fs.working_dir(self.build_directory):
-            if self.generator == "Unix Makefiles":
+            primary_generator = _extract_primary_generator(self.generator)
+            if primary_generator == "Unix Makefiles":
                 self.pkg._if_make_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
                 self.pkg._if_make_target_execute("check")
-            elif self.generator == "Ninja":
+            elif primary_generator == "Ninja":
                 self.pkg._if_ninja_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
                 self.pkg._if_ninja_target_execute("check")
