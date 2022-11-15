@@ -56,8 +56,7 @@ def symlink(real_path, link_path):
             link_path = os.path.abspath(link_path)
         # os.symlink will fail if link exists, emulate the behavior here
         if exists(link_path):
-            raise OSError(errno.EEXIST, "Link exists: %s"
-                % (link_path))
+            raise OSError(errno.EEXIST, "Link exists: %s" % (link_path))
         else:
             mkNonsymbolicLink(real_path, link_path)
             if not os.path.exists(link_path):
@@ -167,4 +166,3 @@ def isjunction(path):
     FILE_ATTRIBUTE_REPARSE_POINT = 0x400
     res = GetFileAttributes(path)
     return res != INVALID_FILE_ATTRIBUTES and bool(res & FILE_ATTRIBUTE_REPARSE_POINT)
-
