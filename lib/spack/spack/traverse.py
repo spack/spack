@@ -29,10 +29,10 @@ class BaseVisitor(object):
     def __init__(self, deptype="all"):
         self.deptype = deptype
 
-    def accept(self, node):
+    def accept(self, item):
         """
         Arguments:
-            node (EdgeAndDepth): Provides the depth and the edge through which the
+            item (EdgeAndDepth): Provides the depth and the edge through which the
                 node was discovered
 
         Returns:
@@ -42,8 +42,8 @@ class BaseVisitor(object):
         """
         return True
 
-    def neighbors(self, node):
-        return sort_edges(node.edge.spec.edges_to_dependencies(deptype=self.deptype))
+    def neighbors(self, item):
+        return sort_edges(item.edge.spec.edges_to_dependencies(deptype=self.deptype))
 
 
 class ReverseVisitor(object):
@@ -53,13 +53,13 @@ class ReverseVisitor(object):
         self.visitor = visitor
         self.deptype = deptype
 
-    def accept(self, node):
-        return self.visitor.accept(node)
+    def accept(self, item):
+        return self.visitor.accept(item)
 
-    def neighbors(self, node):
+    def neighbors(self, item):
         """Return dependents, note that we actually flip the edge direction to allow
         generic programming"""
-        spec = node.edge.spec
+        spec = item.edge.spec
         return sort_edges(
             [edge.flip() for edge in spec.edges_from_dependents(deptype=self.deptype)]
         )
@@ -73,19 +73,19 @@ class CoverNodesVisitor(object):
         self.key = key
         self.visited = set() if visited is None else visited
 
-    def accept(self, node):
+    def accept(self, item):
         # Covering nodes means: visit nodes once and only once.
-        key = self.key(node.edge.spec)
+        key = self.key(item.edge.spec)
 
         if key in self.visited:
             return False
 
-        accept = self.visitor.accept(node)
+        accept = self.visitor.accept(item)
         self.visited.add(key)
         return accept
 
-    def neighbors(self, node):
-        return self.visitor.neighbors(node)
+    def neighbors(self, item):
+        return self.visitor.neighbors(item)
 
 
 class CoverEdgesVisitor(object):
@@ -96,44 +96,64 @@ class CoverEdgesVisitor(object):
         self.visited = set() if visited is None else visited
         self.key = key
 
-    def accept(self, node):
-        return self.visitor.accept(node)
+    def accept(self, item):
+        return self.visitor.accept(item)
 
-    def neighbors(self, node):
+    def neighbors(self, item):
         # Covering edges means: drop dependencies of visited nodes.
-        key = self.key(node.edge.spec)
+        key = self.key(item.edge.spec)
 
         if key in self.visited:
             return []
 
         self.visited.add(key)
-        return self.visitor.neighbors(node)
+        return self.visitor.neighbors(item)
 
 
 class TopoVisitor(object):
+    """Visitor that can be used in depth-first search to generate
+    a topological ordered list of vertices (we keep track of edges).
+
+    Algorithm based on "Section 22.4: Topological sort", Introduction to Algorithms
+    (2001, 2nd edition) by Cormen, Thomas H.; Leiserson, Charles E.; Rivest, Ronald L.;
+    Stein, Clifford.
+
+    The algorithm in plain English: realize that (1) we only append a vertex A before
+    traversing all possible paths to any descendant B (that means A is always appended
+    to reverse_order after all its descendents) and (2) while following paths from
+    A -> B, we push B to reverse_order the first time it is reached, and guarantee its
+    ancestors are always appended and its descendants are not (on the first path
+    this is thanks to backtracking, on any other path we do not follow B as its
+    already seen.)
+
+    The neat thing about this algorithm is that it can operate on an immutable DAG,
+    it doesn't require marking or popping edges, and it works in linear time (in
+    vertices and edges).
+    """
+
     def __init__(self, visitor, key=id):
         self.visited = set()
         self.visitor = visitor
         self.key = key
-        self.topo_order = []
+        self.reverse_order = []
 
-    def accept(self, node):
-        return self.key(node.edge.spec) not in self.visited
+    def accept(self, item):
+        return self.key(item.edge.spec) not in self.visited
 
-    def pre(self, node):
+    def pre(self, item):
         # You could add a temporary marker for cycle detection
         # that's cleared in `post`, but we assume no cycles.
         pass
 
-    def post(self, node):
-        self.visited.add(self.key(node.edge.spec))
-        self.topo_order.append(node.edge)
+    def post(self, item):
+        self.visited.add(self.key(item.edge.spec))
+        self.reverse_order.append(item.edge)
 
-    def neighbors(self, node):
-        return self.visitor.neighbors(node)
+    def neighbors(self, item):
+        return self.visitor.neighbors(item)
 
     def get_ordered_items(self):
-        return reversed(self.topo_order)
+        return list(reversed(self.reverse_order))
 
 
 def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visitor=None):
@@ -170,7 +190,7 @@ def get_visitor_from_args(cover, direction, deptype, key=id, visited=None, visit
     return visitor
 
 
-def root_specs(specs):
+def with_artificial_edges(specs):
     """Initialize a list of edges from an imaginary root node to the root specs."""
     return [
         EdgeAndDepth(edge=spack.spec.DependencySpec(parent=None, spec=s, deptypes=()), depth=0)
@@ -178,23 +198,31 @@ def root_specs(specs):
     ]
 
 
-def traverse_depth_first_edges_generator(nodes, visitor, post_order=False, root=True, depth=False):
-    # This is a somewhat non-standard implementation, but the reason to start with
-    # edges is that we don't have to deal with an artificial root node when doing DFS
-    # on multiple (root) specs.
-    for node in nodes:
-        if not visitor.accept(node):
+def traverse_depth_first_edges_generator(edges, visitor, post_order=False, root=True, depth=False):
+    """Generator that takes explores a DAG in depth-first fashion starting from
+    a list of edges. Note that typically DFS would take a vertex not a list of edges,
+    but the API is like this so we don't have to create an artificial root node when
+    traversing from multiple roots in a DAG.
+
+    Arguments:
+        edges (list): List of EdgeAndDepth instances
+        visitor: class instance implementing accept() and neigbors()
+        post_order (bool): Whether to yield nodes when backtracking
+        root (bool): whether to yield at depth 0
+        depth (bool): when ``True`` yield a tuple of depth and edge, otherwise only the
+            edge.
+    """
+    for edge in edges:
+        if not visitor.accept(edge):
             continue
 
-        yield_me = root or node.depth > 0
+        yield_me = root or edge.depth > 0
 
         # Pre
         if yield_me and not post_order:
-            yield (node.depth, node.edge) if depth else node.edge
+            yield (edge.depth, edge.edge) if depth else edge.edge
 
-        neighbors = [
-            EdgeAndDepth(edge=edge, depth=node.depth + 1) for edge in visitor.neighbors(node)
-        ]
+        neighbors = [EdgeAndDepth(edge=n, depth=edge.depth + 1) for n in visitor.neighbors(edge)]
 
         # This extra branch is just for efficiency.
         if len(neighbors) >= 0:
@@ -205,22 +233,22 @@ def traverse_depth_first_edges_generator(nodes, visitor, post_order=False, root=
 
         # Post
         if yield_me and post_order:
-            yield (node.depth, node.edge) if depth else node.edge
+            yield (edge.depth, edge.edge) if depth else edge.edge
 
 
 def traverse_breadth_first_edges_generator(queue, visitor, root=True, depth=False):
     while len(queue) > 0:
-        node = queue.pop(0)
+        edge = queue.pop(0)
 
         # If the visitor doesn't accept the node, we don't yield it nor follow its edges.
-        if not visitor.accept(node):
+        if not visitor.accept(edge):
             continue
 
-        if root or node.depth > 0:
-            yield (node.depth, node.edge) if depth else node.edge
+        if root or edge.depth > 0:
+            yield (edge.depth, edge.edge) if depth else edge.edge
 
-        for edge in visitor.neighbors(node):
-            queue.append(EdgeAndDepth(edge, node.depth + 1))
+        for edge in visitor.neighbors(edge):
+            queue.append(EdgeAndDepth(edge, edge.depth + 1))
 
 
 def traverse_breadth_first_with_visitor(specs, visitor):
@@ -231,35 +259,41 @@ def traverse_breadth_first_with_visitor(specs, visitor):
         visitor: object that implements accept and neighbors interface, see
             for example BaseVisitor.
     """
-    queue = root_specs(specs)
+    queue = with_artificial_edges(specs)
     while len(queue) > 0:
-        node = queue.pop(0)
+        edge = queue.pop(0)
 
         # If the visitor doesn't accept the node, we don't traverse it further.
-        if not visitor.accept(node):
+        if not visitor.accept(edge):
             continue
 
-        for edge in visitor.neighbors(node):
-            queue.append(EdgeAndDepth(edge, node.depth + 1))
+        for edge in visitor.neighbors(edge):
+            queue.append(EdgeAndDepth(edge, edge.depth + 1))
 
 
-def traverse_depth_first_with_visitor(nodes, visitor):
-    # This is a somewhat non-standard implementation, but the reason to start with
-    # edges is that we don't have to deal with an artificial root node when doing DFS
-    # on multiple (root) specs.
-    for node in nodes:
-        if not visitor.accept(node):
+def traverse_depth_first_with_visitor(edges, visitor):
+    """Traverse a DAG in depth-first fashion using a visitor, starting from
+    a list of edges. Note that typically DFS would take a vertex not a list of edges,
+    but the API is like this so we don't have to create an artificial root node when
+    traversing from multiple roots in a DAG.
+
+    Arguments:
+        edges (list): List of EdgeAndDepth instances
+        visitor: class instance implementing accept(), pre() and neigbors()
+    """
+    for edge in edges:
+        if not visitor.accept(edges):
             continue
 
-        visitor.pre(node)
+        visitor.pre(edge)
 
         neighbors = [
-            EdgeAndDepth(edge=edge, depth=node.depth + 1) for edge in visitor.neighbors(node)
+            EdgeAndDepth(edge=edge, depth=edge.depth + 1) for edge in visitor.neighbors(edge)
         ]
 
         traverse_depth_first_with_visitor(neighbors, visitor)
 
-        visitor.post(node)
+        visitor.post(edge)
 
 
 # Helper functions for generating a tree using breadth-first traversal
@@ -326,7 +360,7 @@ def traverse_edges_topo(specs, direction="children", deptype="all", key=id):
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
     visitor = TopoVisitor(visitor, key=key)
-    traverse_depth_first_with_visitor(root_specs(specs), visitor)
+    traverse_depth_first_with_visitor(with_artificial_edges(specs), visitor)
     return visitor.get_ordered_items()
 
 
@@ -377,11 +411,20 @@ def traverse_edges(
         or a tuple of ``(depth, DependencySpec)`` if depth is ``True``.
     """
 
-    # TODO: cover=edges for order=topo? does visited make sense?
     if order == "topo":
+        # For cover=edges we could ensure the order (s -> t) < (u -> v)
+        # iff (t, s) < (v, u) lexicographically where element-wise < is topo order,
+        # but right now we only generates vertices in topo order.
+        if cover != "edges":
+            raise ValueError("cover=edges is not implemented for order=topo")
+        # For topo order it's somewhat unclear how to handle a pre-existing visited
+        # set. Exclude them? But what if excludes vertices have edges to non-excluded
+        # ones? Not following would violate topo order.
+        if visited is not None:
+            raise ValueError("visited set not implemented for order=topo")
         return traverse_edges_topo(specs, direction, deptype, key)
 
-    root_edges = root_specs(specs)
+    root_edges = with_artificial_edges(specs)
     visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
 
     # Depth-first
