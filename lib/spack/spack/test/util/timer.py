@@ -33,16 +33,21 @@ def test_timer():
     t.stop("second")
     assert t.duration("second") == 1.0
 
-    # tick 2-7
-    t.stop("wrapped")
-    assert t.duration("wrapped") == 5.0
+    # tick 7-8
+    with t.measure("third"):
+        pass
+    assert t.duration("third") == 1.0
 
-    # tick 8-11
+    # tick 2-9
+    t.stop("wrapped")
+    assert t.duration("wrapped") == 7.0
+
+    # tick 10-13
     t.start("not-stopped")
     assert t.duration("not-stopped") == 1.0
     assert t.duration("not-stopped") == 2.0
     assert t.duration("not-stopped") == 3.0
 
-    # tick 1-12
-    assert t.duration() == 11.0
+    # tick 1-14
+    assert t.duration() == 13.0
     t.stop()
