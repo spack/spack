@@ -69,6 +69,7 @@ from spack.util.cpus import cpus_available
 SECTION_SCHEMAS = {
     "compilers": spack.schema.compilers.schema,
     "concretizer": spack.schema.concretizer.schema,
+    "definitions": spack.schema.definitions.schema,
     "mirrors": spack.schema.mirrors.schema,
     "repos": spack.schema.repos.schema,
     "packages": spack.schema.packages.schema,
@@ -994,6 +995,7 @@ def read_config_file(filename, schema=None):
                 key = next(iter(data))
                 schema = _ALL_SCHEMAS[key]
             validate(data, schema)
+
         return data
 
     except StopIteration:

@@ -31,6 +31,7 @@ import spack.util.spack_json as sjson
 from spack.cmd.env import _env_create
 from spack.main import SpackCommand, SpackCommandError
 from spack.spec import Spec
+from spack.spec_list import UndefinedReferenceError
 from spack.stage import stage_prefix
 from spack.util.executable import Executable
 from spack.util.path import substitute_path_variables
@@ -3474,3 +3475,58 @@ def test_environment_created_from_lockfile_has_view(mock_packages, tmpdir):
     # Make sure the view was created
     with ev.Environment(env_b) as e:
         assert os.path.isdir(e.view_path_default)
+
+
+_test_included_defs = """\
+definitions:
+- core_specs: [libdwarf, libelf]
+- compilers: ['%gcc']
+"""
+
+_test_include_manifest = """\
+spack:
+  include:
+  - ./{0}
+
+  definitions:
+  - my_packages: [zlib]
+
+  specs:
+  - matrix:
+    - [$core_specs]
+    - [$compilers]
+  - $my_packages
+"""
+
+
+def test_env_with_include_defs(tmp_path, mock_packages, config, mutable_mock_env_path):
+    filename = "definitions.yaml"
+    defs_file = tmp_path / filename
+    defs_file.write_text(_test_included_defs)
+
+    manifest_file = tmp_path / ev.manifest_name
+    manifest_file.write_text(_test_include_manifest.format(filename))
+
+    env = ev.Environment(tmp_path)
+    ev.activate(env)
+    env.concretize()
+
+
+_test_included_defs = """\
+definitions:
+- core_specs: [libdwarf, libelf]
+"""
+
+
+def test_env_with_include_defs_missing(tmp_path, mock_packages, config, mutable_mock_env_path):
+    filename = "definitions.yaml"
+    defs_file = tmp_path / filename
+    defs_file.write_text(_test_included_defs)
+
+    manifest_file = tmp_path / ev.manifest_name
+    manifest_file.write_text(_test_include_manifest.format(filename))
+
+    env = ev.Environment(tmp_path)
+    ev.activate(env)
+    with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
+        env.concretize()

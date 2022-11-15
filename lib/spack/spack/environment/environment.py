@@ -784,6 +784,9 @@ class Environment:
         self._read()
 
     def _read(self):
+        # TODO: This must be done before constructing the state BUT is this
+        #    the right place?
+        prepare_config_scope(self)
         self._construct_state_from_manifest()
 
         if os.path.exists(self.lock_path):
@@ -798,21 +801,31 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
+    def _process_definition(self, item):
+        """Process a single spec definition item."""
+        entry = copy.deepcopy(item)
+        when = _eval_conditional(entry.pop("when", "True"))
+        assert len(entry) == 1
+        if when:
+            name, spec_list = next(iter(entry.items()))
+            user_specs = SpecList(name, spec_list, self.spec_lists.copy())
+            if name in self.spec_lists:
+                self.spec_lists[name].extend(user_specs)
+            else:
+                self.spec_lists[name] = user_specs
+
     def _construct_state_from_manifest(self):
         """Read manifest file and set up user specs."""
         self.spec_lists = collections.OrderedDict()
+
+        definitions = spack.config.get("definitions", [])
+        for item in definitions:
+            self._process_definition(item)
+
         env_configuration = self.manifest[TOP_LEVEL_KEY]
+        definitions = env_configuration.get("definitions", [])
         for item in env_configuration.get("definitions", []):
-            entry = copy.deepcopy(item)
-            when = _eval_conditional(entry.pop("when", "True"))
-            assert len(entry) == 1
-            if when:
-                name, spec_list = next(iter(entry.items()))
-                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-                if name in self.spec_lists:
-                    self.spec_lists[name].extend(user_specs)
-                else:
-                    self.spec_lists[name] = user_specs
+            self._process_definition(item)
 
         spec_list = env_configuration.get(user_speclist_name, [])
         user_specs = SpecList(
@@ -1006,7 +1019,9 @@ class Environment:
 
             elif include_url.scheme:
                 raise ValueError(
-                    "Unsupported URL scheme for environment include: {}".format(config_path)
+                    "Unsupported URL scheme ({}) for environment include: {}".format(
+                        include_url.scheme, config_path
+                    )
                 )
 
             # treat relative paths as relative to the environment
@@ -2722,7 +2737,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
-        """Appends a user spec to the first active definition mathing the name passed as argument.
+        """Appends a user spec to the first active definition matching the name passed as argument.
 
         Args:
             user_spec: user spec to be appended
