@@ -428,9 +428,6 @@ def traverse_edges(
     """
 
     if order == "topo":
-        # For cover=edges we could ensure the order (s -> t) < (u -> v)
-        # iff (t, s) < (v, u) lexicographically where element-wise < is topo order,
-        # but right now we only generates vertices in topo order.
         if cover == "paths":
             raise ValueError("cover=paths not supported for order=topo")
         # For topo order it's somewhat unclear how to handle a pre-existing visited
