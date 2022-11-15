@@ -6,7 +6,6 @@
 import json
 import os
 import shutil
-import sys
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -285,6 +284,7 @@ def ci_rebuild(args):
     remote_mirror_override = get_env_var("SPACK_REMOTE_MIRROR_OVERRIDE")
     remote_mirror_url = get_env_var("SPACK_REMOTE_MIRROR_URL")
     spack_ci_stack_name = get_env_var("SPACK_CI_STACK_NAME")
+    shared_pr_mirror_url = get_env_var("SPACK_CI_SHARED_PR_MIRROR_URL")
     rebuild_everything = get_env_var("SPACK_REBUILD_EVERYTHING")
 
     # Construct absolute paths relative to current $CI_PROJECT_DIR
@@ -472,6 +472,10 @@ def ci_rebuild(args):
             spack.mirror.add("mirror_override", remote_mirror_override, cfg.default_modify_scope())
         pipeline_mirrors.append(remote_mirror_override)
 
+    if spack_pipeline_type == "spack_pull_request":
+        if shared_pr_mirror_url != "None":
+            pipeline_mirrors.append(shared_pr_mirror_url)
+
     matches = (
         None
         if full_rebuild
@@ -498,7 +502,7 @@ def ci_rebuild(args):
             bindist.download_single_spec(job_spec, build_cache_dir, mirror_url=matching_mirror)
 
         # Now we are done and successful
-        sys.exit(0)
+        return 0
 
     # Before beginning the install, if this is a "rebuild everything" pipeline, we
     # only want to keep the mirror being used by the current pipeline as it's binary
