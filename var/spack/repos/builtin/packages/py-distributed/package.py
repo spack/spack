@@ -30,6 +30,7 @@ class PyDistributed(PythonPackage):
         "distributed.diagnostics",
     ]
 
+    version("2022.10.2", sha256="53f0a5bf6efab9a5ab3345cd913f6d3f3d4ea444ee2edbea331c7fef96fd67d0")
     version("2022.2.1", sha256="fb62a75af8ef33bbe1aa80a68c01a33a93c1cd5a332dd017ab44955bf7ecf65b")
     version("2021.6.2", sha256="d7d112a86ab049dcefa3b21fd1baea4212a2c03d22c24bd55ad38d21a7f5d148")
     version("2021.4.1", sha256="4c1b189ec5aeaf770c473f730f4a3660dc655601abd22899e8a0662303662168")
@@ -59,6 +60,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2.11.0:")
     depends_on("py-toolz@0.7.4:", type=("build", "run"), when="@:2.12.0")
     depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@2.13.0:")
+    depends_on("py-toolz@0.10.0:", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-tornado@5:", type=("build", "run"), when="^python@:3.7")
     depends_on("py-tornado@6.0.3:", type=("build", "run"), when="^python@3.8:")
     depends_on("py-zict@0.1.3:", type=("build", "run"))
