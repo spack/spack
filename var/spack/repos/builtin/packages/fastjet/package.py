@@ -75,7 +75,7 @@ class Fastjet(AutotoolsPackage):
     variant("auto-ptr", default=False, description="Use auto_ptr")  
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
-        variant(
+    variant(
 	"plugins",
         values=disjoint_sets(("all",), ("allcxx",), plugins_)
         .prohibit_empty_set()
