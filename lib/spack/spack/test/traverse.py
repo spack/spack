@@ -286,45 +286,52 @@ chain-a
     assert s.tree(depth_first=False, cover="edges", **args) == bfs_tree_edges
 
 
-def test_traverse_topo_order():
-    # All paths (5, 7 and 3 spawn the entire DAG)
-    # s05 -> s11 -> s02
-    #        s11 -> s09
-    #        s11 -> s10
-    # s07 -> s11
-    # s07 -> s08 -> s09
-    # s03 -> s08
-    # s03        -> s10
+@pytest.fixture()
+def abstract_specs_toposort():
+    # Create a graph that both BFS and DFS would not traverse in topo order, assuming
+    # edges are traversed by target node name. Roots are {A, E} in forward order and
+    # {F, G} in backward order.
+    # forward: DFS([A, E]) traverses [A, B, F, G, C, D, E] (not topo since C < B)
+    # forward: BFS([A, E]) traverses [A, E, B, C, D, F, G] (not topo since C < B)
+    # reverse: DFS([F, G]) traverses [F, B, A, D, C, E, G] (not topo since D < A)
+    # reverse: BFS([F, G]) traverses [F, G, B, A, D, C, E] (not topo since D < A)
+    # E
+    # | A
+    # | | \
+    # | C |
+    # \ | |
+    #   D |
+    #   | /
+    #   B
+    #  / \
+    # F   G
+    return create_dag(
+        nodes=["A", "B", "C", "D", "E", "F", "G"],
+        edges=(
+            ("A", "B", "all"),
+            ("A", "C", "all"),
+            ("B", "F", "all"),
+            ("B", "G", "all"),
+            ("C", "D", "all"),
+            ("D", "B", "all"),
+            ("E", "D", "all"),
+        ),
+    )
 
-    s = [Spec("s{}".format(i)) for i in range(12)]
 
-    for parent, child in (
-        (5, 11),
-        (7, 11),
-        (7, 8),
-        (3, 8),
-        (3, 10),
-        (11, 2),
-        (11, 9),
-        (11, 10),
-        (8, 9),
-    ):
-        s[parent].add_dependency_edge(s[child], "all")
+def test_traverse_topo_order(abstract_specs_toposort):
+    nodes = abstract_specs_toposort
 
     def test_topo(roots, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
-        ordered_specs = traverse.traverse_nodes(roots, order="topo", direction=direction)
-        specs = [s for s in ordered_specs]
+        ordered = list(traverse.traverse_nodes(roots, order="topo", direction=direction))
         reverse = "parents" if direction == "children" else "children"
-        for i in range(len(specs)):
-            parents = specs[i].traverse(order="pre", direction=reverse, root=False)
-            assert set(list(parents)).issubset(set(specs[:i]))
+        for i in range(len(ordered)):
+            parents = ordered[i].traverse(order="pre", direction=reverse, root=False)
+            assert set(list(parents)).issubset(set(ordered[:i]))
 
-    # Using all *actual* root (no in-coming edge) of the DAG
-    test_topo([s[5], s[7], s[3]], direction="children")
+    # Traverse forward from roots A and E and a non-root D
+    test_topo([nodes["D"], nodes["E"], nodes["A"]], direction="children")
 
-    # The same, but now also include some spec that *has* parents
-    test_topo([s[11], s[7], s[5], s[3]], direction="children")
-
-    # Reverse mode: 2, 9, and 10 are the roots in the parents direction.
-    test_topo([s[2], s[9], s[10]], direction="parents")
+    # Traverse reverse from leafs F and G and non-leaf D
+    test_topo([nodes["F"], nodes["D"], nodes["G"]], direction="parents")
