@@ -260,7 +260,8 @@ class WindowsCompilerExternalPaths(object):
 
 
 class WindowsKitExternalPaths(object):
-    plat_major_ver = str(winOs.windows_version()[0])
+    if is_windows:
+        plat_major_ver = str(winOs.windows_version()[0])
 
     @staticmethod
     def find_windows_kit_roots():
