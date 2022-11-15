@@ -31,9 +31,6 @@ _valid_module_re = r'^\w[\w-]*$'
 # Valid module names can contain '-' but can't start with it.
 _valid_fully_qualified_module_re = r'^(\w[\w-]*)(\.\w[\w-]*)*$'
 
-# Avoid excessive string operations
-_mod_to_class_cache = {}  # type: ignore
-
 
 def mod_to_class(mod_name):
     """Convert a name from module style to class name style.  Spack mostly
@@ -54,8 +51,6 @@ def mod_to_class(mod_name):
        the class name returned will be prepended with '_' to make a
        valid Python identifier.
     """
-    if mod_name in _mod_to_class_cache:
-        return _mod_to_class_cache[mod_name]
     validate_module_name(mod_name)
 
     class_name = re.sub(r'[-_]+', '-', mod_name)
@@ -67,7 +62,6 @@ def mod_to_class(mod_name):
     if re.match(r'^[0-9]', class_name):
         class_name = "_%s" % class_name
 
-    _mod_to_class_cache[mod_name] = class_name
     return class_name
 
 

@@ -151,7 +151,14 @@ if they are already in the concretized environment""")
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
     testing = subparser.add_mutually_exclusive_group()
-    arguments.add_common_arguments(testing, ['test'])
+    testing.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages."""
+    )
     testing.add_argument(
         '--run-tests', action='store_true',
         help='run package tests during installation (same as --test=all)'

@@ -63,8 +63,6 @@ mock_packages_path    = os.path.join(repos_path, "builtin.mock")
 #
 # fetch cache for downloaded files
 default_fetch_cache_path = os.path.join(var_path, "cache")
-# conventional environment locations
-default_environments_path = os.path.join(var_path, "environments")
 
 # GPG paths.
 gpg_keys_path      = os.path.join(var_path, "gpg")

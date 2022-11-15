@@ -54,7 +54,7 @@ def test_install_package_and_dependency(
     assert filename in files
 
     content = filename.open().read()
-    assert 'tests="4"' in content
+    assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
@@ -510,7 +510,6 @@ def test_extra_files_are_archived(mock_packages, mock_archive, mock_fetch,
 @pytest.mark.disable_clean_stage_check
 def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
                                            capfd, conflict_spec):
-    return
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -537,7 +536,6 @@ def test_cdash_report_concretization_error(tmpdir, mock_fetch, install_mockery,
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
                                   capfd):
-    return
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -557,7 +555,6 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
-    return
     # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -576,7 +573,6 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
-    return
     # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -599,7 +595,6 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
-    return
     # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -624,7 +619,6 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
                                       config):
-    return
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -882,7 +876,6 @@ def test_install_help_does_not_show_cdash_options(capsys):
     """
     Make sure `spack install --help` does not describe CDash arguments
     """
-    return
     with pytest.raises(SystemExit):
         install('--help')
         captured = capsys.readouterr()
@@ -891,7 +884,6 @@ def test_install_help_does_not_show_cdash_options(capsys):
 
 def test_install_help_cdash(capsys):
     """Make sure `spack install --help-cdash` describes CDash arguments"""
-    return
     install_cmd = SpackCommand('install')
     out = install_cmd('--help-cdash')
     assert 'CDash URL' in out
@@ -899,7 +891,6 @@ def test_install_help_cdash(capsys):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
-    return
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
         with capfd.disabled():
@@ -914,7 +905,6 @@ def test_cdash_auth_token(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
-    return
     # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():

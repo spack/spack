@@ -19,9 +19,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(
-        subparser,
-        ['jobs', 'test', 'overwrite', 'yes_to_all'])
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -41,6 +39,13 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--drop-in', type=str, dest='shell', default=None,
         help="drop into a build environment in a new shell, e.g. bash, zsh")
+    subparser.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages.""")
     arguments.add_common_arguments(subparser, ['spec'])
 
     stop_group = subparser.add_mutually_exclusive_group()
@@ -84,13 +89,13 @@ def dev_build(self, args):
     spec.concretize()
     package = spack.repo.get(spec)
 
-    if package.installed and not args.overwrite:
+    if package.installed:
         tty.error("Already installed in %s" % package.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
 
     # disable checksumming if requested
-    if args.no_checksum or args.yes_to_all:
+    if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
     if args.deprecated:
@@ -105,7 +110,6 @@ def dev_build(self, args):
     package.do_install(
         tests=tests,
         make_jobs=args.jobs,
-        overwrite=[spec.dag_hash()] if args.overwrite else [],
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,

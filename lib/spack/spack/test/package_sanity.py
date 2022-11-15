@@ -104,8 +104,6 @@ def test_package_version_consistency():
     """Make sure all versions on builtin packages produce a fetcher."""
     for name in spack.repo.all_package_names():
         pkg = spack.repo.get(name)
-        if pkg.name == 'py-tensorflow':
-            continue
         spack.fetch_strategy.check_pkg_attributes(pkg)
         for version in pkg.versions:
             assert spack.fetch_strategy.for_package_version(pkg, version)
@@ -149,9 +147,6 @@ def test_all_packages_use_sha256_checksums():
     errors = []
     for name in spack.repo.all_package_names():
         pkg = spack.repo.path.get(name)
-
-        if pkg.name == 'py-tensorflow':
-            continue
 
         # for now, don't enforce on packages that require manual downloads
         # TODO: eventually fix these, too.

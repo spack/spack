@@ -617,11 +617,6 @@ class EnvironmentModifications(object):
 
         new_env = env.copy()
 
-        if env is None:
-            env = os.environ
-
-        new_env = env.copy()
-
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute(new_env)

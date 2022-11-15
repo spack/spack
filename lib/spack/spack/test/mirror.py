@@ -111,7 +111,6 @@ def test_url_mirror(mock_archive):
     not which('git'), reason='requires git to be installed')
 def test_git_mirror(mock_git_repository):
     set_up_package('git-test', mock_git_repository, 'git')
-    set_up_package('git-test-full', mock_git_repository, 'git')
     check_mirror()
     repos.clear()
 

@@ -266,23 +266,6 @@ def no_checksum():
 
 
 @arg
-def test():
-    return Args(
-        '--test', default=None, choices=['root', 'all'],
-        help="If 'root' is chosen, run package tests during installation for "
-        "top-level packages (but skip tests for dependencies).  if 'all' "
-        "is chosen, run package tests during installation for all packages. "
-        "If neither are chosen, don't run tests for any packages.")
-
-
-@arg
-def overwrite():
-    return Args(
-        '--overwrite', action='store_true',
-        help="reinstall an existing spec, even if it has dependents")
-
-
-@arg
 def deprecated():
     return Args(
         '--deprecated', action='store_true', default=False,

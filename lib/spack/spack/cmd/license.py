@@ -102,7 +102,7 @@ def list_files(args):
 # bool(value) evaluates to True
 OLD_LICENSE, SPDX_MISMATCH, GENERAL_MISMATCH = range(1, 4)
 
-strict_date = r'Copyright 2013-2022'
+strict_date = r'Copyright 2013-2021'
 
 
 class LicenseError(object):
@@ -129,7 +129,7 @@ class LicenseError(object):
 
 def _check_license(lines, path):
     license_lines = [
-        r'Copyright 2013-(?:202[012]) Lawrence Livermore National Security, LLC and other',  # noqa: E501
+        r'Copyright 2013-(?:202[01]) Lawrence Livermore National Security, LLC and other',  # noqa: E501
         r'Spack Project Developers\. See the top-level COPYRIGHT file for details.',  # noqa: E501
         r'SPDX-License-Identifier: \(Apache-2\.0 OR MIT\)'
     ]

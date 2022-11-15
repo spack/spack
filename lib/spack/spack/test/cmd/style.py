@@ -15,6 +15,7 @@ from llnl.util.filesystem import FileFilter
 import spack.main
 import spack.paths
 import spack.repo
+from spack.cmd.style import changed_files
 from spack.util.executable import which
 
 #: directory with sample style files
@@ -69,17 +70,71 @@ def flake8_package_with_errors(scope="function"):
     filename = repo.filename_for_package_name("flake8")
     tmp = filename + ".tmp"
 
-    shutil.copy(filename, tmp)
-    package = FileFilter(tmp)
+    try:
+        shutil.copy(filename, tmp)
+        package = FileFilter(filename)
+        package.filter("state = 'unmodified'", "state    =    'modified'", string=True)
+        package.filter(
+            "from spack import *", "from spack import *\nimport os", string=True
+        )
+        yield filename
+    finally:
+        shutil.move(tmp, filename)
 
-    # this is a black error (quote style and spacing before/after operator)
-    package.filter('state = "unmodified"', "state    =    'modified'", string=True)
 
-    # this is an isort error (orderign) and a flake8 error (unused import)
-    package.filter(
-        "from spack.package import *", "from spack.package import *\nimport os", string=True
-    )
-    yield tmp
+def test_changed_files(flake8_package):
+    # changed_files returns file paths relative to the root
+    # directory of Spack. Convert to absolute file paths.
+    files = [os.path.join(spack.paths.prefix, path) for path in changed_files()]
+
+    # There will likely be other files that have changed
+    # when these tests are run
+    assert flake8_package in files
+
+
+def test_changed_no_base(tmpdir, capfd):
+    """Ensure that we fail gracefully with no base branch."""
+    tmpdir.join("bin").ensure("spack")
+    git = which("git", required=True)
+    with tmpdir.as_cwd():
+        git("init")
+        git("config", "user.name", "test user")
+        git("config", "user.email", "test@user.com")
+        git("add", ".")
+        git("commit", "-m", "initial commit")
+
+        with pytest.raises(SystemExit):
+            changed_files(base="foobar")
+
+        out, err = capfd.readouterr()
+        assert "This repository does not have a 'foobar' branch." in err
+
+
+def test_changed_files_all_files(flake8_package):
+    # it's hard to guarantee "all files", so do some sanity checks.
+    files = set([
+        os.path.join(spack.paths.prefix, path)
+        for path in changed_files(all_files=True)
+    ])
+
+    # spack has a lot of files -- check that we're in the right ballpark
+    assert len(files) > 6000
+
+    # a builtin package
+    zlib = spack.repo.path.get_pkg_class("zlib")
+    assert zlib.module.__file__ in files
+
+    # a core spack file
+    assert os.path.join(spack.paths.module_path, "spec.py") in files
+
+    # a mock package
+    assert flake8_package in files
+
+    # this test
+    assert __file__ in files
+
+    # ensure externals are excluded
+    assert not any(f.startswith(spack.paths.external_path) for f in files)
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 6), reason="doesn't apply to newer python")
@@ -213,6 +268,38 @@ def test_external_root(external_style_root):
 
     # flake8 error
     assert "lib/spack/spack/dummy.py:7: [F401] 'os' imported but unused" in output
+
+
+@skip_old_python
+@pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
+def test_style(flake8_package, tmpdir):
+    root_relative = os.path.relpath(flake8_package, spack.paths.prefix)
+
+    # use a working directory to test cwd-relative paths, as tests run in
+    # the spack prefix by default
+    with tmpdir.as_cwd():
+        relative = os.path.relpath(flake8_package)
+
+        # no args
+        output = style()
+        assert relative in output
+        assert "spack style checks were clean" in output
+
+        # one specific arg
+        output = style(flake8_package)
+        assert relative in output
+        assert "spack style checks were clean" in output
+
+        # specific file that isn't changed
+        output = style(__file__)
+        assert relative not in output
+        assert __file__ in output
+        assert "spack style checks were clean" in output
+
+    # root-relative paths
+    output = style("--root-relative", flake8_package)
+    assert root_relative in output
+    assert "spack style checks were clean" in output
 
 
 @skip_old_python

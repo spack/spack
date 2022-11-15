@@ -76,34 +76,7 @@ class _IndexBase(object):
                     result.update(spec_set)
 
         # Return providers in order. Defensively copy.
-        #
-        # Some BlueBrain additions here:
-        #
-        # Sometimes the provider index contains seemingly unconcretized
-        # specs, and the sorting crashes with
-        #
-        # unorderable types: str() < NoneType()
-        #
-        # Here we go through the provided "specs" and weed out everything
-        # that has a None value in the comparison key to prevent this.
-        # Debug output shows that this seems to happen for "elfutils" and
-        # that there are normally two unconcretized entries, and two
-        # concretized ones.
-        try:
-            return sorted(s.copy() for s in result)
-        except TypeError:
-            import llnl.util.tty as tty
-            tty.warn(
-                'detected "weird" specs for provider of {0}'
-                .format(virtual_spec.name)
-            )
-            duplicates = []
-            for s in result:
-                duplicate = s.copy()
-                spec_key, _ = duplicate._cmp_key()
-                if spec_key[1] is not None:
-                    duplicates.append(duplicate)
-            return sorted(duplicates)
+        return sorted(s.copy() for s in result)
 
     def __contains__(self, name):
         return name in self.providers
