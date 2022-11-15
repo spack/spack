@@ -1,27 +1,28 @@
 spack:
   view: false
   modules:
-    tcl:
-      whitelist:
-        - py-amici  # BSD-276
-        - py-atlalign
-        - py-atlannot
-        - py-atldld
-        - py-atlinter
-        - py-bba-datafetch
-        - py-bba-webexporter
-        - py-bglibpy
-        - py-bluepyefe
-        - py-bluepyemodel
-        - py-bluepymm
-        - py-bluepyopt
-        - py-bluepyparallel
-        - py-data-integrity-check
-        - py-efel
-        - py-nexusforge
-        - py-nexus-sdk
-        - py-token-fetch
-        - py-visual-cortex-analysis
+    default:
+      tcl:
+        include:
+          - py-amici  # BSD-276
+          - py-atlalign
+          - py-atlannot
+          - py-atldld
+          - py-atlinter
+          - py-bba-datafetch
+          - py-bba-webexporter
+          - py-bglibpy
+          - py-bluepyefe
+          - py-bluepyemodel
+          - py-bluepymm
+          - py-bluepyopt
+          - py-bluepyparallel
+          - py-data-integrity-check
+          - py-efel
+          - py-nexusforge
+          - py-nexus-sdk
+          - py-token-fetch
+          - py-visual-cortex-analysis
   packages:
     hdf5:
       variants: ~mpi+hl

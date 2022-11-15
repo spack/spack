@@ -1,34 +1,35 @@
 spack:
   view: false
   modules:
-    tcl:
-      whitelist:
-        - asciitoh5
-        - model-neocortex
-        - nest
-        - neurodamus-core
-        - neurodamus-hippocampus
-        - neurodamus-neocortex
-        - neurodamus-thalamus
-        - neurodamus-mousify
-        - parquet-converters
-        - py-basalt
-        - 'py-mvdtool%gcc'
-        - 'py-neurodamus+all_deps'
-        - py-pytouchreader
-        - reportinglib
-        - spatial-index
-        - spykfunc
-        - steps
-        - 'synapsetool%gcc'
-        - touchdetector
-        - unit-test-translator
-      projections:
-        all: '{name}/{version}'
-        ^coreneuron+knl: '{name}-knl/{version}'
-        +common: '{name}/{version}-commonmods'
-        +plasticity: '{name}-plasticity/{version}'
-        +ngv+metabolism: '{name}-multiscale/{version}'
+    default:
+      tcl:
+        include:
+          - asciitoh5
+          - model-neocortex
+          - nest
+          - neurodamus-core
+          - neurodamus-hippocampus
+          - neurodamus-neocortex
+          - neurodamus-thalamus
+          - neurodamus-mousify
+          - parquet-converters
+          - py-basalt
+          - 'py-mvdtool%gcc'
+          - 'py-neurodamus+all_deps'
+          - py-pytouchreader
+          - reportinglib
+          - spatial-index
+          - spykfunc
+          - steps
+          - 'synapsetool%gcc'
+          - touchdetector
+          - unit-test-translator
+        projections:
+          all: '{name}/{version}'
+          ^coreneuron+knl: '{name}-knl/{version}'
+          +common: '{name}/{version}-commonmods'
+          +plasticity: '{name}-plasticity/{version}'
+          +ngv+metabolism: '{name}-multiscale/{version}'
   specs:
     - asciitoh5@1.0
     - coreneuron%intel+tests

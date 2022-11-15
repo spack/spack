@@ -1,53 +1,54 @@
 spack:
   view: false
   modules:
-    tcl:
-      whitelist:
-        - arm-forge
-        - apptainer
-        - bison
-        - blender
-        - ccache
-        - clang-tools
-        - cli-tools
-        - cmake
-        - cuda
-        - cudnn
-        - darshan-runtime
-        - darshan-util
-        - doxygen
-        - environment-modules
-        - flex
-        - ffmpeg
-        - gdb
-        - git
-        - git-lfs
-        - graphviz
-        - hpctoolkit
-        - hpcviewer
-        - hpe-mpi
-        - intel-mpi
-        - intel-oneapi-mkl
-        - ispc
-        - julia
-        - likwid
-        - llvm
-        - mvapich2
-        - ninja
-        - node-js
-        - nvhpc
-        - pgi
-        - python
-        - singularityce
-        - snakemake
-        - stat
-        - totalview
-        - valgrind
-        - virtualgl
-        - freeimage
-        - ilmbase
-        - openblas
-        - openexr
+    default:
+      tcl:
+        include:
+          - arm-forge
+          - apptainer
+          - bison
+          - blender
+          - ccache
+          - clang-tools
+          - cli-tools
+          - cmake
+          - cuda
+          - cudnn
+          - darshan-runtime
+          - darshan-util
+          - doxygen
+          - environment-modules
+          - flex
+          - ffmpeg
+          - gdb
+          - git
+          - git-lfs
+          - graphviz
+          - hpctoolkit
+          - hpcviewer
+          - hpe-mpi
+          - intel-mpi
+          - intel-oneapi-mkl
+          - ispc
+          - julia
+          - likwid
+          - llvm
+          - mvapich2
+          - ninja
+          - node-js
+          - nvhpc
+          - pgi
+          - python
+          - singularityce
+          - snakemake
+          - stat
+          - totalview
+          - valgrind
+          - virtualgl
+          - freeimage
+          - ilmbase
+          - openblas
+          - openexr
   packages:
     all:
       providers:

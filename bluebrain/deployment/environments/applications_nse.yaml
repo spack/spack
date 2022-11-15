@@ -1,31 +1,32 @@
 spack:
   view: false
   modules:
-    tcl:
-      whitelist:
-        - brainbuilder
-        - circuit-analysis
-        - circuit-build
-        - connectome-tools
-        - emsim
-        - gene-expression-volume
-        - placement-algorithm
-        - psp-validation
-        - py-archngv
-        - py-atlas-building-tools
-        - py-bbp-analysis-framework
-        - py-bbp-workflow
-        - py-bluepy
-        - py-bluepysnap
-        - py-currentscape
-        - py-entity-management
-        - py-minis-validation
-        - py-morphio
-        - py-morph-tool
-        - py-morphology-repair-workflow
-        - py-region-grower
-        - py-sonata-network-reduction
-        - regiodesics
+    default:
+      tcl:
+        include:
+          - brainbuilder
+          - circuit-analysis
+          - circuit-build
+          - connectome-tools
+          - emsim
+          - gene-expression-volume
+          - placement-algorithm
+          - psp-validation
+          - py-archngv
+          - py-atlas-building-tools
+          - py-bbp-analysis-framework
+          - py-bbp-workflow
+          - py-bluepy
+          - py-bluepysnap
+          - py-currentscape
+          - py-entity-management
+          - py-minis-validation
+          - py-morphio
+          - py-morph-tool
+          - py-morphology-repair-workflow
+          - py-region-grower
+          - py-sonata-network-reduction
+          - regiodesics
   packages:
     hdf5:
       variants: ~mpi+hl

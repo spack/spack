@@ -1,34 +1,35 @@
 spack:
   view: false
   modules:
-    tcl:
-      whitelist:
-        - boost
-        - caliper
-        - gmsh
-        - hdf5+mpi
-        - highfive+mpi
-        - neuron+mpi~debug%intel
-        - omega-h
-        - petsc+int64+mpi
-        - py-cgal-pybind
-        - py-dask-mpi
-        - py-flake8
-        - py-h5py+mpi
-        - py-libsonata
-        - py-mpi4py
-        - py-notebook
-        - py-numpy
-        - py-poisson-recon-pybind
-        - py-rtree
-        - py-scikit-learn
-        - py-scipy
-        - py-tensorflow
-        - python-dev
-        - py-virtualenv
-      projections:
-        all: '{name}/{version}'
-        'omega-h+gmsh': '{name}/{version}-gmsh'
+    default:
+      tcl:
+        include:
+          - boost
+          - caliper
+          - gmsh
+          - hdf5+mpi
+          - highfive+mpi
+          - neuron+mpi~debug%intel
+          - omega-h
+          - petsc+int64+mpi
+          - py-cgal-pybind
+          - py-dask-mpi
+          - py-flake8
+          - py-h5py+mpi
+          - py-libsonata
+          - py-mpi4py
+          - py-notebook
+          - py-numpy
+          - py-poisson-recon-pybind
+          - py-rtree
+          - py-scikit-learn
+          - py-scipy
+          - py-tensorflow
+          - python-dev
+          - py-virtualenv
+        projections:
+          all: '{name}/{version}'
+          'omega-h+gmsh': '{name}/{version}-gmsh'
   specs:
     - boost+python
     - caliper+cuda cuda_arch=70
