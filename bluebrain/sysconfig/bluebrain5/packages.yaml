@@ -17,6 +17,8 @@ packages:
     variants: +pic
   cmake:
     version: [3.21.4]
+  coreneuron:
+    require: "%intel"
   cuda:
     # Should match what is provided by NVHPC, too
     version: [11.6.1]
@@ -59,6 +61,8 @@ packages:
     externals:
     - spec: m4@1.4.16
       prefix: /usr
+  neuron:
+    require: "%intel"
   omega-h:
     variants: +trilinos
   opencv:
@@ -74,6 +78,8 @@ packages:
     externals:
     - spec: opengl@4.5
       prefix: /usr
+  ospray:
+    require: "%intel target=x86_64"
   perl:
     version: [5.16.3]
     externals:
@@ -101,6 +107,8 @@ packages:
     variants: ~ssl~sql~tools
   range-v3:
     variants: ~doc
+  reportinglib:
+    require: "%intel"
   slurm:
     buildable: false
     version: [21.08.3]
@@ -121,6 +129,7 @@ packages:
   trilinos:
     variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
   all:
+    require: "%gcc"
     compiler: [gcc@11.2.0]
     target: [skylake]
     providers:

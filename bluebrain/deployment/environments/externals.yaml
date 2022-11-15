@@ -121,7 +121,7 @@ spack:
     - ispc
     - julia
     - libxslt
-    - libzmq+libsodium%intel
+    - libzmq+libsodium
     - likwid
     - mvapich2@2.3.7
     - ncurses

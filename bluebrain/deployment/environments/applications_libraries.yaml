@@ -9,7 +9,7 @@ spack:
           - gmsh
           - hdf5+mpi
           - highfive+mpi
-          - neuron+mpi~debug%intel
+          - neuron+mpi~debug
           - omega-h
           - petsc+int64+mpi
           - py-cgal-pybind
@@ -38,7 +38,7 @@ spack:
     - highfive+mpi
     - hypre+int64+mpi
     - metis+int64
-    - neuron+mpi~debug%intel
+    - neuron+mpi~debug
     - omega-h+trilinos
     - omega-h+gmsh+trilinos
     - petsc~int64+mpi

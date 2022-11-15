@@ -51,7 +51,7 @@ spack:
     - emsim
     - gene-expression-volume
     - placement-algorithm
-    - psp-validation%gcc ^neuron%intel
+    - psp-validation
     - py-archngv
     - py-atlas-building-tools
     - py-bbp-analysis-framework
@@ -60,10 +60,10 @@ spack:
     - py-bluepysnap
     - py-currentscape
     - py-entity-management
-    - py-minis-validation%gcc ^neuron%intel
+    - py-minis-validation
     - py-morphio
     - py-morphology-repair-workflow
-    - py-morph-tool%gcc ^neuron%intel
+    - py-morph-tool
     - py-region-grower
-    - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
+    - py-sonata-network-reduction
     - regiodesics

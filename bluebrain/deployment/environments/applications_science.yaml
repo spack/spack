@@ -48,11 +48,11 @@ spack:
     - py-atlinter
     - py-bba-datafetch
     - py-bba-webexporter
-    - py-bglibpy%gcc ^py-bluepy%gcc ^neuron%intel
+    - py-bglibpy
     - py-bluepyefe
     - py-bluepyemodel
-    - py-bluepymm%gcc ^neuron%intel
-    - py-bluepyopt%gcc ^neuron%intel
+    - py-bluepymm
+    - py-bluepyopt
     - py-bluepyparallel
     - py-data-integrity-check
     - py-efel
