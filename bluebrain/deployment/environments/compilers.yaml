@@ -1,6 +1,5 @@
 spack:
   view: false
-  concretization: separately
   modules:
     tcl:
       all:
