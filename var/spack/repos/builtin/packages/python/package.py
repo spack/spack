@@ -777,9 +777,6 @@ print(json.dumps(config))
                 "INCLUDEPY": self.prefix.include.join("python{}").format(version),
                 "LIBDEST": self.prefix.lib.join("python{}").format(version),
                 "LIBDIR": self.prefix.lib,
-                "LIBPL": self.prefix.lib.join("python{0}")
-                .join("config-{0}-{1}")
-                .format(version, sys.platform),
                 "LDLIBRARY": "{}python{}.{}".format(lib_prefix, version, dso_suffix),
                 "LIBRARY": "{}python{}.{}".format(lib_prefix, version, stat_suffix),
                 "LDSHARED": "cc",
@@ -866,7 +863,6 @@ print(json.dumps(config))
 
         directories = [
             libdir,
-            libpl,
             frameworkprefix,
             macos_developerdir,
             win_bin_dir,
