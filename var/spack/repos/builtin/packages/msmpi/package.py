@@ -39,13 +39,13 @@ class Msmpi(Package):
     def build_command_line(self):
         arch = "intel64" if self.is_64() else "ia32"
         args = []
-        ver_str = os.environ["VCToolsInstallDir"]
-        ver = re.search(r"[0-9][0-9].[0-9][0-9].[0-9][0-9][0-9][0-9][0-9]", ver_str)
-        ver = "" if not ver else ver.group()
+        # The name may say gfortran, but spack patches MSMPI to be compatible with IFortran
+        # however that variable name proved difficult to patch, so it is the same
         args.append("/p:GFORTRAN_BIN=%sbin\%s" % (os.environ["IFORT_COMPILER21"], arch))
-        args.append("/p:VCToolsVersion=%s" % ver)
+        args.append("/p:VCToolsVersion=%s" % self.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.spec["wdk"].version))
+        args.append("/p:PlatformToolset=%s" % self.compiler.cc_version)
 
     def install(self):
         with working_dir(self.stage.build_directory, create=True):
-            msbuild()
+            msbuild(*self.build_command_line())
