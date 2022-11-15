@@ -207,7 +207,7 @@ github_information:
     # Activate if checksums fail
     # - spack clean -a
     # Concretize and pre-fetch, afterwards build the environment
-    - spack --show-cores=full concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
+    - spack concretize -f|tee "concretization_${DEPLOY_ENV}.txt"
     - installed-hashes -m|tee missing.txt
     - if [[ -n "$(<missing.txt)" ]]; then
     -     spack fetch -m
