@@ -39,7 +39,7 @@ def test_view_link_type(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_link_cmd = cmd in ("symlink", "add")
-    assert symlink.path.islink(package_prefix) == is_link_cmd
+    assert symlink.islink(package_prefix) == is_link_cmd
 
 
 @pytest.mark.parametrize("add_cmd", ["hardlink", "symlink", "hard", "add", "copy", "relocate"])
@@ -72,7 +72,7 @@ def test_view_projections(
 
     # Check that we use symlinks for and only for the appropriate subcommands
     is_symlink_cmd = cmd in ("symlink", "add")
-    assert symlink.path.islink(package_prefix) == is_symlink_cmd
+    assert symlink.islink(package_prefix) == is_symlink_cmd
 
 
 def test_view_multiple_projections(
