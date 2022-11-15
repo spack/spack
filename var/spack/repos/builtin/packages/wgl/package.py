@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import re
 
 from spack.package import *
@@ -40,6 +41,14 @@ class Wgl(BundlePackage):
     # satisfied appropriately
     provides("gl@4.6")
 
+    variant('plat', values=(
+        "x64",
+        "x86",
+        "arm",
+        "arm64"
+    ),
+    default="x64")
+
     # WGL exists on all Windows systems post win 98, however the headers
     # needed to use OpenGL are found in the SDK (GL/gl.h)
     # Dep is needed to consolidate sdk version to locate header files for
@@ -63,13 +72,21 @@ class Wgl(BundlePackage):
         ver_str = re.search(version_match_pat, lib)
         return ver_str if not ver_str else Version(ver_str.group())
 
+    @classmethod
+    def determine_variants(cls, libs, ver_str):
+        """Allow for determination of toolchain arch for detected WGL"""
+        variants = []
+        for lib in libs:
+            base, lib_name = os.path.split(lib)
+            _, arch = os.path.split(base)
+            variants.append("plat=%s" % arch)
+        return variants
+
     # As noted above, the headers neccesary to include
     @property
     def headers(self):
         return find_headers("GL/gl.h", root=self.spec["win-sdk"].prefix.includes, recursive=True)
 
-    # We use the dll to determine existence, but on Windows we link against the .lib
-    # associated with the .dll
     @property
     def libs(self):
         return find_libraries("opengl32", shared=False, root=self.prefix, recursive=True)

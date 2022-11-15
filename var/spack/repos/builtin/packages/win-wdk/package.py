@@ -61,6 +61,14 @@ class WinWdk(Package):
         expand=False,
     )
 
+    variant('plat', values=(
+        "x64",
+        "x86",
+        "arm",
+        "arm64"
+    ),
+    default="x64")
+
     # need one to one dep on SDK per https://github.com/MicrosoftDocs/windows-driver-docs/issues/1550
     # additionally, the WDK needs to be paired with a version of the Windows SDK
     # as per https://learn.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk#download-icon-step-2-install-windows-11-version-22h2-sdk
@@ -87,6 +95,16 @@ class WinWdk(Package):
         ver_str = re.search(version_match_pat, lib)
         return ver_str if not ver_str else Version(ver_str.group())
 
+    @classmethod
+    def determine_variants(cls, libs, ver_str):
+        """Allow for determination of toolchain arch for detected WGL"""
+        variants = []
+        for lib in libs:
+            base, lib_name = os.path.split(lib)
+            _, arch = os.path.split(base)
+            variants.append("plat=%s" % arch)
+        return variants
+
     def setup_dependent_environment(self):
         # This points to all core build extensions needed to build
         # drivers on Windows
@@ -97,6 +115,7 @@ class WinWdk(Package):
         """WGL download is named by fetch based on name derived from Link redirection
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
+        import pdb; pdb.set_trace()
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
         if len(installer) > 1:
             raise RuntimeError(
