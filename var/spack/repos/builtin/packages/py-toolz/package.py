@@ -16,3 +16,5 @@ class PyToolz(PythonPackage):
     version("0.9.0", sha256="929f0a7ea7f61c178bd951bdae93920515d3fbdbafc8e6caf82d752b9b3b31c9")
 
     depends_on("py-setuptools", type="build")
+    depends_on("python", type=("build", "run"))
+    depends_on("python@3.5:", type=("build", "run"), when="@0.11.0:")

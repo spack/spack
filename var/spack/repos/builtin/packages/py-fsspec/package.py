@@ -26,6 +26,7 @@ class PyFsspec(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@0.6.3:")
+    depends_on("python@3.7:", type=("build", "run"), when="@2022.11.0:")
     depends_on("py-setuptools", type="build")
     depends_on("py-requests", type=("build", "run"), when="+http")
     depends_on("py-aiohttp", type=("build", "run"), when="+http")
