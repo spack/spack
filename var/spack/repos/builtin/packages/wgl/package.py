@@ -47,13 +47,13 @@ class Wgl(BundlePackage):
     # needed to use OpenGL are found in the SDK (GL/gl.h)
     # Dep is needed to consolidate sdk version to locate header files for
     # version of SDK being used
-    depends_on("win-sdk@10.0.19041.0", when="@10.0.19041")
-    depends_on("win-sdk@10.0.18362.0", when="@10.0.18362")
-    depends_on("win-sdk@10.0.17763.0", when="@10.0.17763")
-    depends_on("win-sdk@10.0.17134.0", when="@10.0.17134")
-    depends_on("win-sdk@10.0.16299.0", when="@10.0.16299")
-    depends_on("win-sdk@10.0.15063.0", when="@10.0.15063")
-    depends_on("win-sdk@10.0.14393.0", when="@10.0.14393")
+    depends_on("win-sdk@10.0.19041", when="@10.0.19041")
+    depends_on("win-sdk@10.0.18362", when="@10.0.18362")
+    depends_on("win-sdk@10.0.17763", when="@10.0.17763")
+    depends_on("win-sdk@10.0.17134", when="@10.0.17134")
+    depends_on("win-sdk@10.0.16299", when="@10.0.16299")
+    depends_on("win-sdk@10.0.15063", when="@10.0.15063")
+    depends_on("win-sdk@10.0.14393", when="@10.0.14393")
 
     # WGL has no meaning on other platforms, should not be able to spec
     for plat in ["linux", "darwin", "cray"]:
