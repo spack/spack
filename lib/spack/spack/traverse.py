@@ -120,7 +120,7 @@ class TopoVisitor(object):
 
     The algorithm in plain English: realize that (1) we only append a vertex A before
     traversing all possible paths to any descendant B (that means A is always appended
-    to reverse_order after all its descendents) and (2) while following paths from
+    to reverse_order after all its descendants) and (2) while following paths from
     A -> B, we push B to reverse_order the first time it is reached, and guarantee its
     ancestors are always appended and its descendants are not (on the first path
     this is thanks to backtracking, on any other path we do not follow B as its
