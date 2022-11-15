@@ -7,15 +7,21 @@ from spack.package import *
 
 
 class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+    """The basic matrix library (bml) is an implementation of various matrix data
+    formats (dense and sparse) and their associated algorithms for basic
+    matrix operations used in electronic structure solvers."""
 
     homepage = "https://lanl.github.io/bml/"
-    url = "https://github.com/lanl/bml/tarball/v1.2.2"
+    url = "https://github.com/lanl/bml/tarball/v2.2.0"
     git = "https://github.com/lanl/bml.git"
 
     version("develop", branch="master")
+    version("2.2.0", sha256="80d66a200fe05f3de9d531dda719ac9aafa446d5")
+    version("2.1.2", sha256="ebe1c3840c4321991cb93d16ad28c4d5e3b66653")
+    version("2.1.1", sha256="7c4e692b0a1d435eb6bfd65f9b5433ec369de102")
+    version("2.1.0", sha256="782f514488cff1f305c6e66896d5fd4b9db39c8b")
+    version("2.0.1", sha256="6ec98946846837a7639a09ba3a54a92f4212efdc")
+    version("2.0.0", sha256="190ee052638e9253f2627b03cd8732dcb5c583cb")
     version("1.3.1", sha256="17145eda96aa5e550dcbff1ee7ce62b45723af8210b1ab70c5975ec792fa3d13")
     version("1.3.0", sha256="d9465079fe77210eb2af2dcf8ed96802edf5bb76bfbfdbcc97e206c8cd460b07")
     version("1.2.3", sha256="9a2ee6c47d2445bfdb34495497ea338a047e9e4767802af47614d9ff94b0c523")
