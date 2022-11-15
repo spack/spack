@@ -57,6 +57,7 @@ class Openssh(AutotoolsPackage):
     depends_on("ncurses")
     depends_on("zlib")
     depends_on("py-twisted", type="test")
+    depends_on("libxcrypt", type="link")
 
     maintainers = ["bernhardkaindl"]
     executables = [
