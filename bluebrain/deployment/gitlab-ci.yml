@@ -9,26 +9,6 @@ default:
   tags: [bb5_map]  # Will use a special deployment user with write permissions to `bsd`
   timeout: 3 day   # Building takes a while
 
-# This is a blatant copy of the documentation deployment setup from `nse/ci`
-# IMPORTANT the last line setting the git ssh command, otherwise it will not
-# see the "redirected" HOME
-# FIXME purge this once the move to GitLab is complete
-# FIXME we still need the identity for Github's BlueBrain/Ultraliser
-.spack_setup_gerrit_ssh:
-  # - SSH_CONFIG=$HOME/.ssh/config
-  # - if [[ -f $SSH_CONFIG ]]; then echo "SSH config file $SSH_CONFIG already exists, exiting"; exit 1; fi
-  - if [[ -z $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY ]]; then echo 'Please set the $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY variable'; exit 1; fi
-  # - |
-  #   mkdir -p $(dirname $SSH_CONFIG) && cat > $SSH_CONFIG <<EOF
-  #   User $(whoami)
-  #   IdentityFile ${BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY}
-  #   StrictHostKeyChecking no
-  #   IdentitiesOnly yes
-  #   EOF
-  - chmod 600 $SSH_CONFIG $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY
-  # - export GIT_SSH_COMMAND="ssh -F $HOME/.ssh/config"
-  - export GIT_SSH_COMMAND="ssh -i $BBPCIHPCDEPLOY_GERRIT_PRIVATE_KEY -o ProxyCommand='/usr/bin/socat - PROXY:bbpproxy.epfl.ch:%h:%p'"
-
 .spack_basic_job:
   variables:
     # Max out duration to install stuff
@@ -55,6 +35,7 @@ default:
         insteadOf = ssh://bbpcode.epfl.ch/sim/
       EOF
     - cat "${XDG_CONFIG_HOME}/git/config"
+    - source /etc/profile.d/modules.sh
 
 setup_spack:
   extends: .spack_basic_job
@@ -131,7 +112,6 @@ github_information:
   needs: [setup_spack]
   resource_group: BlueBrain.GPFS.build.$GITHUB_PULL_REQUEST_ID
   before_script:
-    - !reference [.spack_setup_gerrit_ssh]
     - !reference [.spack_basic_job, before_script]
     # Supplementary scripts
     - export PATH="${DEPLOYMENT_ROOT}/spack/bluebrain/deployment/bin:${PATH}"
