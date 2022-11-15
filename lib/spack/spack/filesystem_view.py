@@ -12,7 +12,6 @@ import shutil
 import sys
 
 from llnl.util import tty
-from llnl.util.compat import filter, map, zip
 from llnl.util.filesystem import (
     mkdirp,
     remove_dead_links,
@@ -493,9 +492,14 @@ class YamlFilesystemView(FilesystemView):
         Relies on the ordering of projections to avoid ambiguity.
         """
         spec = spack.spec.Spec(spec)
-        proj = spack.projections.get_projection(self.projections, spec)
+        locator_spec = spec
+
+        if spec.package.extendee_spec:
+            locator_spec = spec.package.extendee_spec
+
+        proj = spack.projections.get_projection(self.projections, locator_spec)
         if proj:
-            return os.path.join(self._root, spec.format(proj))
+            return os.path.join(self._root, locator_spec.format(proj))
         return self._root
 
     def get_all_specs(self):
@@ -743,6 +747,10 @@ class SimpleFilesystemView(FilesystemView):
         Relies on the ordering of projections to avoid ambiguity.
         """
         spec = spack.spec.Spec(spec)
+
+        if spec.package.extendee_spec:
+            spec = spec.package.extendee_spec
+
         proj = spack.projections.get_projection(self.projections, spec)
         if proj:
             return os.path.join(self._root, spec.format(proj))

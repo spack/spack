@@ -14,14 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.6.15', '3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
-        - python-version: 2.7
-          concretizer: original
-          on_develop: ${{ github.ref == 'refs/heads/develop' }}
         - python-version: '3.11'
           concretizer: original
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
@@ -66,10 +63,6 @@ jobs:
           if python -c 'import sys; sys.exit(not sys.version_info >= (3, 6))'; then
               pip install --upgrade flake8 "isort>=4.3.5" "mypy>=0.900" "click==8.0.4" "black<=21.12b0"
           fi
-    - name: Pin pathlib for Python 2.7
-      if: ${{ matrix.python-version == 2.7 }}
-      run: |
-          pip install -U pathlib2==2.3.6 toml
     - name: Setup git configuration
       run: |
           # Need this for the git tests to succeed.
@@ -89,7 +82,7 @@ jobs:
           SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
           SPACK_TEST_PARALLEL: 2
           COVERAGE: true
-          UNIT_TEST_COVERAGE: ${{ (matrix.python-version == '3.11') }}
+          UNIT_TEST_COVERAGE: ${{ matrix.python-version == '3.11' }}
       run: |
           share/spack/qa/run-unit-tests
     - uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70
