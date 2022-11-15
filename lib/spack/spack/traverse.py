@@ -282,7 +282,7 @@ def traverse_depth_first_with_visitor(edges, visitor):
         visitor: class instance implementing accept(), pre() and neigbors()
     """
     for edge in edges:
-        if not visitor.accept(edges):
+        if not visitor.accept(edge):
             continue
 
         visitor.pre(edge)
@@ -415,8 +415,8 @@ def traverse_edges(
         # For cover=edges we could ensure the order (s -> t) < (u -> v)
         # iff (t, s) < (v, u) lexicographically where element-wise < is topo order,
         # but right now we only generates vertices in topo order.
-        if cover != "edges":
-            raise ValueError("cover=edges is not implemented for order=topo")
+        if cover != "nodes":
+            raise ValueError("cover=nodes is only supported for order=topo")
         # For topo order it's somewhat unclear how to handle a pre-existing visited
         # set. Exclude them? But what if excludes vertices have edges to non-excluded
         # ones? Not following would violate topo order.
