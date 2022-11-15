@@ -14,6 +14,8 @@ class Bml(CMakePackage):
     homepage = "https://lanl.github.io/bml/"
     url = "https://github.com/lanl/bml/tarball/v2.2.0"
     git = "https://github.com/lanl/bml.git"
+    
+    maintainers = ["jeanlucf22"]
 
     version("develop", branch="master")
     version("2.2.0", sha256="80d66a200fe05f3de9d531dda719ac9aafa446d5")
