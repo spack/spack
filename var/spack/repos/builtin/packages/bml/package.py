@@ -18,17 +18,14 @@ class Bml(CMakePackage):
     maintainers = ["jeanlucf22"]
 
     version("develop", branch="master")
-    version("2.2.0", sha256="80d66a200fe05f3de9d531dda719ac9aafa446d5")
-    version("2.1.2", sha256="ebe1c3840c4321991cb93d16ad28c4d5e3b66653")
-    version("2.1.1", sha256="7c4e692b0a1d435eb6bfd65f9b5433ec369de102")
-    version("2.1.0", sha256="782f514488cff1f305c6e66896d5fd4b9db39c8b")
-    version("2.0.1", sha256="6ec98946846837a7639a09ba3a54a92f4212efdc")
-    version("2.0.0", sha256="190ee052638e9253f2627b03cd8732dcb5c583cb")
+    version("2.2.0", sha256="9a975072263e7f7b0189c2544dc824f936dd736c16760a5b5d2de6a638da854f")
+    version("2.1.2", sha256="efbaa2ae4b555380e989049fb79ddc991bb1a1a1dec310d0332db143445baaec")
+    version("2.1.1", sha256="03fa886a10a8c0f5dbab337717c03bf4f006523dfcad7263f44aeb4187e13a9d")
+    version("2.1.0", sha256="ce0e2a52215b71bddcc919274d05a5cec5033e4a231acc33babbd656ee24cb48")
+    version("2.0.1", sha256="a9f22725ad54af9c2f2241b079d1c6f3ed3dab710129209342bf86f54aa798fc")
+    version("2.0.0", sha256="1ed2b9e9925b20989d3257da00440ded61dd8d9a5ee2e0802772bf08703f3a5c")
     version("1.3.1", sha256="17145eda96aa5e550dcbff1ee7ce62b45723af8210b1ab70c5975ec792fa3d13")
     version("1.3.0", sha256="d9465079fe77210eb2af2dcf8ed96802edf5bb76bfbfdbcc97e206c8cd460b07")
-    version("1.2.3", sha256="9a2ee6c47d2445bfdb34495497ea338a047e9e4767802af47614d9ff94b0c523")
-    version("1.2.2", sha256="89ab78f9fe8395fe019cc0495a1d7b69875b5708069faeb831ddb9a6a9280a8a")
-    version("1.1.0", sha256="29162f1f7355ad28b44d3358206ccd3c7ac7794ee13788483abcbd2f8063e7fc")
 
     variant("shared", default=True, description="Build shared libs")
     variant("mpi", default=True, description="Build with MPI Support")
