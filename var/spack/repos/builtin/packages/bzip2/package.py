@@ -96,13 +96,13 @@ class Bzip2(Package, SourcewarePackage):
                     "$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib "
                     "-current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)"
                 ).format(v1, v2, v3, v3),
-                **kwargs
+                **kwargs,
             )
 
             mf.filter(
                 "$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}".format(v3),
                 "$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib".format(v3),
-                **kwargs
+                **kwargs,
             )
             mf.filter(
                 "rm -f libbz2.so.{0}".format(v2), "rm -f libbz2.{0}.dylib".format(v2), **kwargs
@@ -110,7 +110,7 @@ class Bzip2(Package, SourcewarePackage):
             mf.filter(
                 "ln -s libbz2.so.{0} libbz2.so.{1}".format(v3, v2),
                 "ln -s libbz2.{0}.dylib libbz2.{1}.dylib".format(v3, v2),
-                **kwargs
+                **kwargs,
             )
 
     def install(self, spec, prefix):

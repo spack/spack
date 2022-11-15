@@ -570,7 +570,7 @@ class Hdf5(CMakePackage):
             r"(Requires(?:\.private)?:.*)(hdf5[^\s,]*)(?:-[^\s,]*)(.*)",
             r"\1\2\3",
             *pc_files,
-            backup=False
+            backup=False,
         )
 
         # Create non-versioned symlinks to the versioned pkg-config files:
