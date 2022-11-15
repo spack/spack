@@ -77,7 +77,13 @@ class Thepeg(AutotoolsPackage):
 
     variant("hepmc", default="2", values=("2", "3"), description="HepMC interface to build ")
     variant("rivet", default=True, description="Add rivet integration")
-    variant("libs", default="shared", values=("shared", "static"), multi=True, description="Build shared libs, static libs or both")
+    variant(
+        "libs",
+        default="shared",
+        values=("shared", "static"),
+        multi=True,
+        description="Build shared libs, static libs or both",
+    )
 
     install_targets = ["install-strip"]
 
