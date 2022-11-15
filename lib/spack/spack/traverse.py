@@ -287,9 +287,7 @@ def traverse_depth_first_with_visitor(edges, visitor):
 
         visitor.pre(edge)
 
-        neighbors = [
-            EdgeAndDepth(edge=e, depth=edge.depth + 1) for e in visitor.neighbors(edge)
-        ]
+        neighbors = [EdgeAndDepth(edge=e, depth=edge.depth + 1) for e in visitor.neighbors(edge)]
 
         traverse_depth_first_with_visitor(neighbors, visitor)
 
