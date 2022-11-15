@@ -11,58 +11,60 @@ a stack trace and drops the user into an interpreter.
 """
 import sys
 import time
+from collections import OrderedDict, namedtuple
+from contextlib import contextmanager
+
+from llnl.util.lang import pretty_seconds
 
 import spack.util.spack_json as sjson
 
-from collections import namedtuple
-from contextlib import contextmanager
-from collections import OrderedDict
-
-Interval = namedtuple("Interval", ("start", "end"))
+Interval = namedtuple("Interval", ("begin", "end"))
 
 
 class Timer(object):
     """Simple interval timer"""
 
     def __init__(self, now=time.time):
-        self.phases = OrderedDict()  # type: OrderedDict[str,Interval]
         self._now = now
-        self._total = Interval(self._now(), end=None)
+        self._timers = OrderedDict()  # type: OrderedDict[str,Interval]
+        self._timers["_global"] = Interval(self._now(), end=None)
 
-    def start(self, name=None):
-        interval = Interval(self._now(), None)
-        if name is None:
-            self._total = interval
-        else:
-            self.phases[name] = interval
+    def start(self, name="_global"):
+        self._timers[name] = Interval(self._now(), None)
 
-    def stop(self, name=None):
-        if name is None:
-            self._total = Interval(self._total.start, self._now())
-        else:
-            self.phases[name] = Interval(self.phases[name].start, self._now())
+    def stop(self, name="_global"):
+        interval = self._timers.get(name, None)
+        if not interval:
+            return
+        self._timers[name] = Interval(interval.begin, self._now())
 
-    def duration(self, name=None):
-        interval = self._total if name is None else self.phases[name]
+    def duration(self, name="_global"):
+        try:
+            interval = self._timers[name]
+        except KeyError:
+            return 0.0
         end = self._now() if interval.end is None else interval.end
-        return end - interval.start
+        return end - interval.begin
 
     @contextmanager
-    def phase(self, name):
-        start = self._now()
+    def measure(self, name):
+        begin = self._now()
         yield
-        self.phases[name] = Interval(start, self._now())
+        self._timers[name] = Interval(begin, self._now())
+
+    @property
+    def phases(self):
+        return [k for k in self._timers.keys() if k != "_global"]
 
     def write_json(self, out=sys.stdout):
         """
         Write a json object with times to file
         """
-        phases = [{"name": p, "seconds": self.duration(p)} for p in self.phases.keys()]
+        phases = [{"name": p, "seconds": self.duration(p)} for p in self.phases]
         times = {"phases": phases, "total": {"seconds": self.duration()}}
         out.write(sjson.dump(times))
 
     def write_tty(self, out=sys.stdout):
-        out.write("Time:\n")
-        for p in self.phases.keys():
-            out.write("    %-15s%.4f\n" % (p + ":", self.duration(p)))
-        out.write("Total: %.4f\n" % self.duration())
+        for p in self.phases:
+            out.write("    {:10s} {:>10s}\n".format(p, pretty_seconds(self.duration(p))))
+        out.write("    {:10s} {:>10s}\n".format("total", pretty_seconds(self.duration())))

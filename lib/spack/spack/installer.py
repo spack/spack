@@ -321,9 +321,9 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     _print_timer(
         pre=_log_prefix(pkg.name),
         pkg_id=pkg_id,
-        fetch=timer.phases.get("search", 0) + timer.phases.get("fetch", 0),
-        build=timer.phases.get("install", 0),
-        total=timer.total,
+        fetch=timer.duration("search") + timer.duration("fetch"),
+        build=timer.duration("install"),
+        total=timer.duration(),
     )
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
@@ -391,11 +391,11 @@ def _process_binary_cache_tarball(
         bool: ``True`` if the package was extracted from binary cache,
             else ``False``
     """
+    timer and timer.start("fetch")
     download_result = binary_distribution.download_tarball(
         binary_spec, unsigned, mirrors_for_spec=mirrors_for_spec
     )
-    if timer:
-        timer.phase("fetch")
+    timer and timer.stop("fetch")
     # see #10063 : install from source if tarball doesn't exist
     if download_result is None:
         tty.msg("{0} exists in binary cache but with different hash".format(pkg.name))
@@ -405,6 +405,7 @@ def _process_binary_cache_tarball(
     tty.msg("Extracting {0} from binary cache".format(pkg_id))
 
     # don't print long padded paths while extracting/relocating binaries
+    timer and timer.start("install")
     with spack.util.path.filter_padding():
         binary_distribution.extract_tarball(
             binary_spec, download_result, allow_root=False, unsigned=unsigned, force=False
@@ -412,8 +413,7 @@ def _process_binary_cache_tarball(
 
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
-    if timer:
-        timer.phase("install")
+    timer and timer.stop("install")
     return True
 
 
@@ -430,10 +430,10 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False, timer=None):
     """
     pkg_id = package_id(pkg)
     tty.debug("Searching for binary cache of {0}".format(pkg_id))
-    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
 
-    if timer:
-        timer.phase("search")
+    timer and timer.start("search")
+    matches = binary_distribution.get_mirrors_for_spec(pkg.spec)
+    timer and timer.stop("search")
 
     if not matches:
         return False
@@ -1961,8 +1961,8 @@ class BuildProcessInstaller(object):
             pre=self.pre,
             pkg_id=self.pkg_id,
             fetch=self.pkg._fetch_time,
-            build=self.timer.total - self.pkg._fetch_time,
-            total=self.timer.total,
+            build=self.timer.duration() - self.pkg._fetch_time,
+            total=self.timer.duration(),
         )
         _print_installed_pkg(self.pkg.prefix)
 
@@ -2045,8 +2045,10 @@ class BuildProcessInstaller(object):
 
                         # Catch any errors to report to logging
                         phase_fn.execute()
+
+                        self.timer.start(phase_fn.name)
                         spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
-                        self.timer.phase(phase_fn.name)
+                        self.timer.stop(phase_fn.name)
 
                 except BaseException:
                     combine_phase_logs(pkg.phase_log_files, pkg.log_path)
