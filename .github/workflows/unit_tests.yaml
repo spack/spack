@@ -11,28 +11,38 @@ concurrency:
 jobs:
   # Run unit tests with different configurations on linux
   ubuntu:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.6.15', '3.7', '3.8', '3.9', '3.10', '3.11']
+        os: [ubuntu-latest]
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         concretizer: ['clingo']
         on_develop:
         - ${{ github.ref == 'refs/heads/develop' }}
         include:
         - python-version: '3.11'
+          os: ubuntu-latest
           concretizer: original
+          on_develop: ${{ github.ref == 'refs/heads/develop' }}
+        - python-version: '3.6'
+          os: ubuntu-20.04
+          concretizer: clingo
           on_develop: ${{ github.ref == 'refs/heads/develop' }}
         exclude:
         - python-version: '3.7'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.8'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.9'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
         - python-version: '3.10'
+          os: ubuntu-latest
           concretizer: 'clingo'
           on_develop: false
 
