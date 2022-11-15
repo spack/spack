@@ -174,11 +174,18 @@ def library_prefix(library_dir):
     assert os.path.isdir(library_dir)
 
     components = library_dir.split(os.sep)
-    if "lib64" in components:
-        idx = components.index("lib64")
+    # remove incidences where capital lib/bin dirs throw off prefix
+    # computation, retain original components to preserve
+    # true path
+    lowered_components = library_dir.lower().split(os.sep)
+    if "lib64" in lowered_components:
+        idx = lowered_components.index("lib64")
         return os.sep.join(components[:idx])
-    elif "lib" in components:
-        idx = components.index("lib")
+    elif "lib" in lowered_components:
+        idx = lowered_components.index("lib")
+        return os.sep.join(components[:idx])
+    elif is_windows and "bin" in lowered_components:
+        idx = lowered_components.index("bin")
         return os.sep.join(components[:idx])
     else:
         return library_dir
@@ -292,13 +299,13 @@ class WindowsKitExternalPaths(object):
     def find_windows_kit_reg_installed_roots_paths():
         reg = spack.util.windows_registry.WindowsRegistry(
             "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-            root_string=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
         )
         if not reg.reg:
             # couldn't find key, return empty list
             return []
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(
-            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver)
+            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver).value
         )
 
     @staticmethod
@@ -306,13 +313,13 @@ class WindowsKitExternalPaths(object):
         reg = spack.util.windows_registry.WindowsRegistry(
             "SOFTWARE\\WOW6432Node\\Microsoft\\Microsoft SDKs\\Windows\\v%s.0"
             % WindowsKitExternalPaths.plat_major_ver,
-            root_string=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
+            root_key=spack.util.windows_registry.HKEY_LOCAL_MACHINE,
         )
         if not reg.reg:
             # couldn't find key, return empty list
             return []
         return WindowsKitExternalPaths.find_windows_kit_lib_paths(
-            reg.get_value("KitsRoot%s" % WindowsKitExternalPaths.plat_major_ver)
+            reg.get_value("InstallationFolder").value
         )
 
 
