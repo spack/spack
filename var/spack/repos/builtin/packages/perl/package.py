@@ -110,7 +110,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         depends_on("zlib")
         # :5.24.1 needs zlib@:1.2.8: https://rt.cpan.org/Public/Bug/Display.html?id=120134
         depends_on("zlib@:1.2.8", when="@5.20.3:5.24.1")
-        depends_on("libxcrypt")  # libcrypt.so.1
 
     conflicts("@5.34.1:", when="%msvc@:19.29.30136")
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
