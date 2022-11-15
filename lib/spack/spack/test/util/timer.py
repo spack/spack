@@ -9,7 +9,7 @@ from io import StringIO
 import spack.util.timer as timer
 
 
-class Tick:
+class Tick(object):
     """Timer that increments the seconds passed by 1
     everytime tick is called."""
 
