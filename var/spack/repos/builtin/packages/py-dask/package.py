@@ -117,7 +117,7 @@ class PyDask(PythonPackage):
     depends_on("py-pandas@0.23.0:", type=("build", "run"), when="@2.11.0: +dataframe")
     depends_on("py-pandas@0.25.0:", type=("build", "run"), when="@2020.12.0: +dataframe")
     depends_on("py-pandas@1.0:", type=("build", "run"), when="@2022.10.2: +dataframe")
-    
+
     depends_on("py-toolz", type=("build", "run"), when="@:0.6.1 +dataframe")
     depends_on("py-toolz@0.7.2:", type=("build", "run"), when="@0.7.0: +dataframe")
     depends_on("py-toolz@0.7.3:", type=("build", "run"), when="@0.14.1: +dataframe")
