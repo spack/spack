@@ -7,6 +7,7 @@ import os
 import platform
 import re
 
+from spack.build_systems.generic import GenericBuilder
 from spack.package import *
 
 
@@ -25,7 +26,10 @@ class Msmpi(Package):
 
     provides("mpi")
 
-    depends_on("wdk")
+    depends_on("win-wdk")
+
+    patch("ifort_compat.patch")
+
 
     @classmethod
     def determine_version(cls, exe):
@@ -33,19 +37,23 @@ class Msmpi(Package):
         ver_str = re.search("[Version ([0-9.]+)]", output)
         return Version(ver_str.group(0)) if ver_str else None
 
+
+
+class GenericBuilder(GenericBuilder):
     def is_64bit(self):
         return platform.machine().endswith("64")
 
     def build_command_line(self):
         arch = "intel64" if self.is_64() else "ia32"
-        args = []
-        # The name may say gfortran, but spack patches MSMPI to be compatible with IFortran
-        # however that variable name proved difficult to patch, so it is the same
+        args = ["-noLogo"]
+        # The argument may say gfortran, but spack patches MSMPI to be compatible with IFortran
+        # however that variable name proved difficult to patch, so it remians the same
         args.append("/p:GFORTRAN_BIN=%sbin\%s" % (os.environ["IFORT_COMPILER21"], arch))
         args.append("/p:VCToolsVersion=%s" % self.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.spec["wdk"].version))
         args.append("/p:PlatformToolset=%s" % self.compiler.cc_version)
+        return args
 
-    def install(self):
+    def install(self, spec, prefix):
         with working_dir(self.stage.build_directory, create=True):
             msbuild(*self.build_command_line())
