@@ -501,7 +501,7 @@ class Hdf5(CMakePackage):
         if api != "default":
             args.append(self.define("DEFAULT_API_VERSION", api))
 
-        if "+mpi" in spec and not "platform=windows" in spec:
+        if "+mpi" in spec and "platform=windows" not in spec:
             args.append(self.define("CMAKE_C_COMPILER", spec["mpi"].mpicc))
 
             if "+cxx" in self.spec:

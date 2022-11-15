@@ -34,7 +34,7 @@ class Msmpi(Package):
 
     def determine_version(self, exe):
         output = Executable("mpiexec.exe")
-        ver_str = re.search("\[Version ([0-9.]+)\]", output)
+        ver_str = re.search("[Version ([0-9.]+)]", output)
         return Version(ver_str.group(0)) if ver_str else None
 
     def install(self, spec, prefix):
