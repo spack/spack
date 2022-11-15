@@ -54,7 +54,7 @@ class Sensei(CMakePackage):
     # version 3, SENSEI supports Python 3.
     depends_on("paraview+mpi", when="+catalyst")
     depends_on("paraview+hdf5", when="+catalyst+hdf5")
-    depends_on("paraview+python", when="@:2 +catalyst+python")
+    depends_on("paraview+python", when="+catalyst+python")
 
     depends_on("paraview@5.5.0:5.5.2", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7", when="@3:3.2.1 +catalyst")
