@@ -72,7 +72,8 @@ class Timer(object):
 
     def start(self, name=global_timer_name):
         """
-        Start/Restart a named timer, or the global timer when no name is given.
+        Start or restart a named timer, or the global timer when no name is given.
+
         Arguments:
             name (str): Optional name of the timer. When no name is passed, the
                 global timer is started.
@@ -83,6 +84,7 @@ class Timer(object):
         """
         Stop a named timer, or all timers when no name is given. Stopping a
         timer that has not started has no effect.
+
         Arguments:
             name (str): Optional name of the timer. When no name is passed, all
                 timers are stopped.
