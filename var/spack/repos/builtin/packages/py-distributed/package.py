@@ -44,7 +44,8 @@ class PyDistributed(PythonPackage):
     depends_on("python@3.8:", when="@2022.2.1:", type=("build", "run"))
     depends_on("py-setuptools", type=("build", "run"))
 
-    # In Spack py-dask+distributed depends on py-distributed, not the other way around. Hence, no need for depends_on("py-dask", ...)
+    # In Spack py-dask+distributed depends on py-distributed, not the other way around.
+    # Hence, no need for depends_on("py-dask", ...)
     depends_on("py-click@6.6:", type=("build", "run"))
     depends_on("py-cloudpickle@0.2.2:", type=("build", "run"), when="@:2.16.0")
     depends_on("py-cloudpickle@1.3.0:", type=("build", "run"), when="@2.17.0:2.20.0")
@@ -58,7 +59,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-psutil@5.0:", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:1")
     depends_on("py-sortedcontainers@:1,2.0.2:", type=("build", "run"))
-    conflicts_with("py-sortedcontainers@2.0.0,2.0.1", when="@2022.10.2:")
+    conflicts("py-sortedcontainers@2.0.0,2.0.1", when="@2022.10.2:")
     depends_on("py-tblib", type=("build", "run"), when="@:2.10.0")
     depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2.11.0:")
