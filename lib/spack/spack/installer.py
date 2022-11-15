@@ -2042,9 +2042,8 @@ class BuildProcessInstaller(object):
                             tty.set_debug(inner_debug_level)
 
                         # Catch any errors to report to logging
-                        phase_fn.execute()
-
                         self.timer.start(phase_fn.name)
+                        phase_fn.execute()
                         spack.hooks.on_phase_success(pkg, phase_fn.name, log_file)
                         self.timer.stop(phase_fn.name)
 
