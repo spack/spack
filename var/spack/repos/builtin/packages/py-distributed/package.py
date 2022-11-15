@@ -59,9 +59,7 @@ class PyDistributed(PythonPackage):
     depends_on("py-psutil@5.0:", type=("build", "run"))
     depends_on("py-six", type=("build", "run"), when="@:1")
     depends_on("py-sortedcontainers@:1,2.0.2:", type=("build", "run"))
-    conflicts("py-sortedcontainers@2.0.0,2.0.1", when="@2022.10.2:")
     depends_on("py-tblib", type=("build", "run"), when="@:2.10.0")
-    depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-tblib@1.6.0:", type=("build", "run"), when="@2.11.0:")
     depends_on("py-toolz@0.7.4:", type=("build", "run"), when="@:2.12.0")
     depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@2.13.0:")
@@ -76,8 +74,6 @@ class PyDistributed(PythonPackage):
     depends_on("py-futures", when="@:1 ^python@2.7:2.8", type=("build", "run"))
     depends_on("py-singledispatch", when="@:1 ^python@2.7:2.8", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
-    depends_on("py-zict@0.1.3:", type=("build", "run"), when="@2022.10.2:")
-    depends_on("py-pyyaml", type=("build", "run"), when="@2022.10.2:")
 
     def patch(self):
         filter_file("^dask .*", "", "requirements.txt")

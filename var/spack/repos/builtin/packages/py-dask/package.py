@@ -48,11 +48,13 @@ class PyDask(PythonPackage):
     depends_on("python@3.5:", type=("build", "run"), when="@2.0.0:")
     depends_on("python@3.6:", type=("build", "run"), when="@2.7.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@2021.3.1:")
+    depends_on("python@3.8:", type=("build", "run"), when="@2022.10.2:")
 
     depends_on("py-setuptools", type="build")
 
     # Common requirements
     depends_on("py-pyyaml", type=("build", "run"), when="@2.17.1:")
+    depends_on("py-pyyaml@5.3.1:", type=("build", "run"), when="@2022.10.2:")
     depends_on("py-cloudpickle@1.1.1:", type=("build", "run"), when="@2021.3.1:")
     depends_on("py-fsspec@0.6.0:", type=("build", "run"), when="@2021.3.1:")
     depends_on("py-toolz@0.8.2:", type=("build", "run"), when="@2021.3.1:")
@@ -156,12 +158,14 @@ class PyDask(PythonPackage):
     depends_on(
         "py-distributed@2020.12.0:2021.8.0", type=("build", "run"), when="@2020.12.0: +distributed"
     )
-    depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2 +distributed")
-    depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2 +distributed")
+    depends_on("py-distributed@2021.6.2", type=("build", "run"), when="@2021.6.2: +distributed")
+    depends_on("py-distributed@2022.10.2", type=("build", "run"), when="@2022.10.2: +distributed")
 
     # Requirements for dask.diagnostics
     depends_on("py-bokeh@1.0.0:", type=("build", "run"), when="@2.0.0: +diagnostics")
     depends_on("py-bokeh@1.0.0:1,2.0.1:", type=("build", "run"), when="@2.26.0: +diagnostics")
+    depends_on("py-bokeh@2.4.2:2", type=("build", "run"), when="@2022.10.2: +diagnostics")
+    depends_on("py-jinja2", type=("build", "run"), when="@2022.10.2: +diagnostics")
 
     # Requirements for dask.delayed
     depends_on("py-cloudpickle@0.2.1:", type=("build", "run"), when="@2.7.0: +delayed")

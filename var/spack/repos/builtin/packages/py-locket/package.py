@@ -17,5 +17,3 @@ class PyLocket(PythonPackage):
 
     # pip silently replaces distutils with setuptools
     depends_on("py-setuptools", type="build")
-    depends_on("python@2.7:", type="test", when="@1:")
-    conflicts("python@3:3.3", when="@1:")
