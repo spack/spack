@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import glob
+import io
 import os
 import shutil
 import sys
 from argparse import Namespace
 
 import pytest
-from six import StringIO
 
 import llnl.util.filesystem as fs
 import llnl.util.link_tree
@@ -507,7 +507,7 @@ def test_env_repo():
 
 def test_user_removed_spec():
     """Ensure a user can remove from any position in the spack.yaml file."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -545,7 +545,7 @@ env:
 
 def test_init_from_lockfile(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -573,7 +573,7 @@ env:
 
 def test_init_from_yaml(tmpdir):
     """Test that an environment can be instantiated from a lockfile."""
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -602,7 +602,7 @@ def test_env_view_external_prefix(tmpdir_factory, mutable_database, mock_package
     fake_bin = fake_prefix.join("bin")
     fake_bin.ensure(dir=True)
 
-    initial_yaml = StringIO(
+    initial_yaml = io.StringIO(
         """\
 env:
   specs:
@@ -611,7 +611,7 @@ env:
 """
     )
 
-    external_config = StringIO(
+    external_config = io.StringIO(
         """\
 packages:
   a:
@@ -682,7 +682,7 @@ env:
     mpileaks:
       version: [2.2]
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     e = ev.read("test")
     with e:
@@ -699,7 +699,7 @@ spack:
   - /no/such/directory
   - no/such/file.yaml
 """
-    _env_create(env_name, StringIO(test_config))
+    _env_create(env_name, io.StringIO(test_config))
 
     e = ev.read(env_name)
     with pytest.raises(spack.config.ConfigFileError) as exc:
@@ -723,7 +723,7 @@ def test_env_with_include_config_files_same_basename():
                 [libelf, mpileaks]
             """
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     fs.mkdirp(os.path.join(e.path, "path", "to"))
@@ -788,7 +788,7 @@ def test_env_with_included_config_file(packages_file):
     include_filename = "included-config.yaml"
     test_config = mpileaks_env_config(os.path.join(".", include_filename))
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     included_path = os.path.join(e.path, include_filename)
@@ -842,7 +842,7 @@ def test_env_with_included_config_scope(tmpdir, packages_file):
     test_config = mpileaks_env_config(config_scope_path)
 
     # Create the environment
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     e = ev.read("test")
 
@@ -868,7 +868,7 @@ def test_env_with_included_config_var_path(packages_file):
     config_var_path = os.path.join("$tempdir", "included-config.yaml")
     test_config = mpileaks_env_config(config_var_path)
 
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     config_real_path = substitute_path_variables(config_var_path)
@@ -893,7 +893,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     with open(os.path.join(e.path, "included-config.yaml"), "w") as f:
@@ -926,7 +926,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
     e = ev.read("test")
 
     with open(os.path.join(e.path, "high-config.yaml"), "w") as f:
@@ -1263,7 +1263,7 @@ env:
   specs:
   - mpileaks
 """
-    _env_create("test", StringIO(test_config))
+    _env_create("test", io.StringIO(test_config))
 
     with ev.read("test"):
         install("--fake")
@@ -2672,7 +2672,7 @@ spack:
       roots:
         tcl: modules
 """
-    _env_create("test", StringIO(spack_yaml))
+    _env_create("test", io.StringIO(spack_yaml))
 
     with ev.read("test") as e:
         install()
@@ -2707,7 +2707,7 @@ spack:
       roots:
         tcl: full_modules
 """
-    _env_create("test", StringIO(spack_yaml))
+    _env_create("test", io.StringIO(spack_yaml))
 
     with ev.read("test") as e:
         install()
@@ -3116,7 +3116,7 @@ def test_environment_depfile_makefile(depfile_flags, expected_installs, tmpdir, 
             makefile,
             "--make-disable-jobserver",
             "--make-target-prefix=prefix",
-            *depfile_flags
+            *depfile_flags,
         )
 
     # Do make dry run.

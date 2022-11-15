@@ -24,8 +24,6 @@ from threading import Thread
 from types import ModuleType  # novm
 from typing import Optional  # novm
 
-from six import StringIO, string_types
-
 import llnl.util.tty as tty
 
 termios = None  # type: Optional[ModuleType]
@@ -308,7 +306,7 @@ class FileWrapper(object):
 
         self.file_like = file_like
 
-        if isinstance(file_like, string_types):
+        if isinstance(file_like, str):
             self.open = True
         elif _file_descriptors_work(file_like):
             self.open = False
@@ -324,7 +322,7 @@ class FileWrapper(object):
             if self.file_like:
                 self.file = open(self.file_like, "w", encoding="utf-8")
             else:
-                self.file = StringIO()
+                self.file = io.StringIO()
             return self.file
         else:
             # We were handed an already-open file object. In this case we also
@@ -787,7 +785,7 @@ class winlog(object):
             raise RuntimeError("file argument must be set by __init__ ")
 
         # Open both write and reading on logfile
-        if type(self.logfile) == StringIO:
+        if type(self.logfile) == io.StringIO:
             self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
             sys.stdout = self.logfile
@@ -1013,7 +1011,7 @@ def _writer_daemon(
 
     finally:
         # send written data back to parent if we used a StringIO
-        if isinstance(log_file, StringIO):
+        if isinstance(log_file, io.StringIO):
             control_pipe.send(log_file.getvalue())
         log_file_wrapper.close()
         close_connection_and_file(read_multiprocess_fd, in_pipe)

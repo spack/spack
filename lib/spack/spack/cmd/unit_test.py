@@ -7,6 +7,7 @@ from __future__ import division, print_function
 
 import argparse
 import collections
+import io
 import os.path
 import re
 import sys
@@ -15,8 +16,6 @@ try:
     import pytest
 except ImportError:
     pytest = None  # type: ignore
-
-from six import StringIO
 
 import llnl.util.filesystem
 import llnl.util.tty.color as color
@@ -126,7 +125,7 @@ def do_list(args, extra_args):
 
     old_output = sys.stdout
     try:
-        sys.stdout = output = StringIO()
+        sys.stdout = output = io.StringIO()
         pytest.main(["--collect-only"] + extra_args)
     finally:
         sys.stdout = old_output

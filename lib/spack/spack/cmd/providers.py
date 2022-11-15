@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import io
 import sys
-
-import six
 
 import llnl.util.tty.colify as colify
 
@@ -29,7 +28,7 @@ def setup_parser(subparser):
 def providers(parser, args):
     valid_virtuals = sorted(spack.repo.path.provider_index.providers.keys())
 
-    buffer = six.StringIO()
+    buffer = io.StringIO()
     isatty = sys.stdout.isatty()
     if isatty:
         buffer.write("Virtual packages:\n")

@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import stat
 
-from six import string_types
-
 import spack.error
 import spack.repo
 from spack.config import ConfigError
@@ -144,7 +142,7 @@ class PackagePrefs(object):
                 break
 
         # allow variants to be list or string
-        if not isinstance(variants, string_types):
+        if not isinstance(variants, str):
             variants = " ".join(variants)
 
         # Only return variants that are actually supported by the package

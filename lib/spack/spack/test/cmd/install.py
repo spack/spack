@@ -2,8 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import argparse
+import builtins
 import filecmp
 import itertools
 import os
@@ -12,7 +12,6 @@ import sys
 import time
 
 import pytest
-from six.moves import builtins
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty

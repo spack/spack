@@ -2,10 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import sys
 
 import pytest
-import six
 
 import spack.graph
 import spack.repo
@@ -25,7 +25,7 @@ def test_static_graph_mpileaks(config, mock_packages):
     """Test a static spack graph for a simple package."""
     s = spack.spec.Spec("mpileaks").normalized()
 
-    stream = six.StringIO()
+    stream = io.StringIO()
     spack.graph.graph_dot([s], static=True, out=stream)
 
     dot = stream.getvalue()
@@ -52,7 +52,7 @@ def test_static_graph_mpileaks(config, mock_packages):
 def test_dynamic_dot_graph_mpileaks(mock_packages, config):
     """Test dynamically graphing the mpileaks package."""
     s = spack.spec.Spec("mpileaks").concretized()
-    stream = six.StringIO()
+    stream = io.StringIO()
     spack.graph.graph_dot([s], static=False, out=stream)
     dot = stream.getvalue()
 
@@ -83,7 +83,7 @@ def test_ascii_graph_mpileaks(config, mock_packages, monkeypatch):
     monkeypatch.setattr(spack.graph.AsciiGraph, "_node_label", lambda self, node: node.name)
     s = spack.spec.Spec("mpileaks").concretized()
 
-    stream = six.StringIO()
+    stream = io.StringIO()
     graph = spack.graph.AsciiGraph()
     graph.write(s, out=stream, color=False)
     graph_str = stream.getvalue()

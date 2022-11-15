@@ -71,13 +71,12 @@ from __future__ import division
 import re
 import math
 import multiprocessing
+import io
 import sys
 import threading
 import time
 from contextlib import contextmanager
 
-from six import StringIO
-from six import string_types
 
 _error_matches = [
     "^FAIL: ",
@@ -246,7 +245,7 @@ class LogEvent(object):
 
     def __str__(self):
         """Returns event lines and context."""
-        out = StringIO()
+        out = io.StringIO()
         for i in range(self.start, self.end):
             if i == self.line_no:
                 out.write('  >> %-6d%s' % (i, self[i]))
@@ -386,7 +385,7 @@ class CTestLogParser(object):
             (tuple): two lists containing ``BuildError`` and
                 ``BuildWarning`` objects.
         """
-        if isinstance(stream, string_types):
+        if isinstance(stream, str):
             with open(stream) as f:
                 return self.parse(f, context, jobs)
 

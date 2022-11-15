@@ -17,9 +17,9 @@ import time
 import traceback
 import warnings
 from contextlib import closing
+from urllib.error import HTTPError, URLError
 
 import ruamel.yaml as yaml
-from six.moves.urllib.error import HTTPError, URLError
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang

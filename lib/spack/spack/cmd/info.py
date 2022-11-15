@@ -7,8 +7,7 @@ from __future__ import print_function
 
 import inspect
 import textwrap
-
-from six.moves import zip_longest
+from itertools import zip_longest
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color

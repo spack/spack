@@ -6,8 +6,6 @@ import itertools
 import textwrap
 from typing import List  # novm
 
-import six
-
 import llnl.util.lang
 
 import spack.config
@@ -57,7 +55,7 @@ class ContextMeta(type):
 context_property = ContextMeta.context_property
 
 
-class Context(six.with_metaclass(ContextMeta, object)):
+class Context(metaclass=ContextMeta):
     """Base class for context classes that are used with the template
     engine.
     """

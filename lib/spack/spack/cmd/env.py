@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+import io
 import os
 import shutil
 import sys
 import tempfile
-
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -737,7 +736,7 @@ def env_depfile(args):
         [get_install_deps_target(h) for h, _, _, _ in make_targets.adjacency_list]
     )
 
-    buf = six.StringIO()
+    buf = io.StringIO()
 
     template = spack.tengine.make_environment().get_template(os.path.join("depfile", "Makefile"))
 

@@ -12,6 +12,7 @@ from __future__ import print_function
 
 import argparse
 import inspect
+import io
 import operator
 import os
 import os.path
@@ -22,8 +23,6 @@ import subprocess as sp
 import sys
 import traceback
 import warnings
-
-from six import StringIO
 
 import archspec.cpu
 
@@ -700,7 +699,7 @@ class SpackCommand(object):
                 prepend + [self.command_name] + list(argv)
             )
 
-            out = StringIO()
+            out = io.StringIO()
             try:
                 with log_output(out):
                     self.returncode = _invoke_command(self.command, self.parser, args, unknown)

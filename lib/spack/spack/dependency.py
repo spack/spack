@@ -2,11 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-"""Data structures that represent Spack's dependency relationships.
-"""
-from six import string_types
-
+"""Data structures that represent Spack's dependency relationships."""
 import spack.spec
 
 #: The types of dependency relationships that Spack understands.
@@ -48,7 +44,7 @@ def canonical_deptype(deptype):
     if deptype in ("all", all):
         return all_deptypes
 
-    elif isinstance(deptype, string_types):
+    elif isinstance(deptype, str):
         if deptype not in all_deptypes:
             raise ValueError("Invalid dependency type: %s" % deptype)
         return (deptype,)

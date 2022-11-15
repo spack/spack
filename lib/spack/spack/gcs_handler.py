@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import six.moves.urllib.response as urllib_response
+import urllib.response
 
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -21,4 +20,4 @@ def gcs_open(req, *args, **kwargs):
     stream = gcsblob.get_blob_byte_stream()
     headers = gcsblob.get_blob_headers()
 
-    return urllib_response.addinfourl(stream, headers, url)
+    return urllib.response.addinfourl(stream, headers, url)

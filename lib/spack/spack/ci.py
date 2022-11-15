@@ -16,11 +16,9 @@ import sys
 import tempfile
 import time
 import zipfile
-
-from six import iteritems, string_types
-from six.moves.urllib.error import HTTPError, URLError
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import HTTPHandler, Request, build_opener
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import HTTPHandler, Request, build_opener
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -216,7 +214,7 @@ def stage_spec_jobs(specs, check_index_only=False, mirrors_to_check=None):
     def _remove_satisfied_deps(deps, satisfied_list):
         new_deps = {}
 
-        for key, value in iteritems(deps):
+        for key, value in deps.items():
             new_value = set([v for v in value if v not in satisfied_list])
             if new_value:
                 new_deps[key] = new_value
@@ -1970,7 +1968,7 @@ def process_command(name, commands, repro_dir):
     """
     tty.debug("spack {0} arguments: {1}".format(name, commands))
 
-    if len(commands) == 0 or isinstance(commands[0], string_types):
+    if len(commands) == 0 or isinstance(commands[0], str):
         commands = [commands]
 
     # Create a string [command 1] && [command 2] && ... && [command n] with commands

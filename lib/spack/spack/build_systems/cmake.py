@@ -10,8 +10,6 @@ import re
 import sys
 from typing import List, Tuple
 
-import six
-
 import llnl.util.filesystem as fs
 
 import spack.build_environment
@@ -302,9 +300,7 @@ class CMakeBuilder(BaseBuilder):
             value = "ON" if value else "OFF"
         else:
             kind = "STRING"
-            if isinstance(value, collections.abc.Sequence) and not isinstance(
-                value, six.string_types
-            ):
+            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
                 value = ";".join(str(v) for v in value)
             else:
                 value = str(value)

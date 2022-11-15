@@ -27,7 +27,6 @@ import uuid
 from typing import Dict  # novm
 
 import ruamel.yaml as yaml
-import six
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -450,8 +449,7 @@ class FastPackageChecker(collections.abc.Mapping):
         return len(self._packages_to_stats)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Indexer(object):
+class Indexer(metaclass=abc.ABCMeta):
     """Adaptor for indexes that need to be generated when repos are updated."""
 
     def __init__(self, repository):
@@ -678,7 +676,7 @@ class RepoPath(object):
         # Add each repo to this path.
         for repo in repos:
             try:
-                if isinstance(repo, six.string_types):
+                if isinstance(repo, str):
                     repo = Repo(repo, cache=cache)
                 self.put_last(repo)
             except RepoError as e:

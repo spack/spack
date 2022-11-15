@@ -21,8 +21,6 @@ import contextlib
 import os
 import re
 
-import six
-
 import llnl.util.lang
 import llnl.util.tty as tty
 
@@ -69,7 +67,7 @@ def parse_install_tree(config_dict):
     install_tree = config_dict.get("install_tree", {})
 
     padded_length = False
-    if isinstance(install_tree, six.string_types):
+    if isinstance(install_tree, str):
         tty.warn("Using deprecated format for configuring install_tree")
         unpadded_root = install_tree
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
@@ -309,7 +307,7 @@ def find(constraints, multiple=False, query_fn=None, **kwargs):
         List of matching specs
     """
     # Normalize input to list of specs
-    if isinstance(constraints, six.string_types):
+    if isinstance(constraints, str):
         constraints = [spack.spec.Spec(constraints)]
 
     matching_specs, errors = [], []

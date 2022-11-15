@@ -9,11 +9,9 @@ variants both in packages and in specs.
 import collections.abc
 import functools
 import inspect
+import io
 import itertools
 import re
-
-import six
-from six import StringIO
 
 import llnl.util.lang as lang
 import llnl.util.tty.color
@@ -665,7 +663,7 @@ class VariantMap(lang.HashableMap):
             bool_keys.append(key) if isinstance(self[key].value, bool) else kv_keys.append(key)
 
         # add spaces before and after key/value variants.
-        string = StringIO()
+        string = io.StringIO()
 
         for key in bool_keys:
             string.write(str(self[key]))
@@ -895,12 +893,12 @@ class Value(object):
         return hash(self.value)
 
     def __eq__(self, other):
-        if isinstance(other, (six.string_types, bool)):
+        if isinstance(other, (str, bool)):
             return self.value == other
         return self.value == other.value
 
     def __lt__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             return self.value < other
         return self.value < other.value
 

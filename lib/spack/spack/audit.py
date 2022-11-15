@@ -42,8 +42,7 @@ import inspect
 import itertools
 import pickle
 import re
-
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 
 import llnl.util.lang
 
