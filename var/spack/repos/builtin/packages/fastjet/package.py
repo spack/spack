@@ -55,7 +55,7 @@ class Fastjet(AutotoolsPackage):
     version("2.3.1", sha256="16c32b420e1aa7d0b6fecddd980ea0f2b7e3c2c66585e06f0eb3142677ab6ccf")
     version("2.3.0", sha256="e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53")
     # older version use .tar instead of .tar.gz extension, to be added
-    
+
     plugins_ = (
         "SISCone",
         "CDFCones",
@@ -70,13 +70,13 @@ class Fastjet(AutotoolsPackage):
         "D0RunICone",
         "GridJet",
     )
-        
+
     variant("shared", default=True, description="Builds a shared version of the library")
-    variant("auto-ptr", default=False, description="Use auto_ptr")  
+    variant("auto-ptr", default=False, description="Use auto_ptr")
     variant("atlas", default=False, description="Patch to make random generator thread_local")
 
     variant(
-	"plugins",
+        "plugins",
         values=disjoint_sets(("all",), ("allcxx",), plugins_)
         .prohibit_empty_set()
         .with_default("all"),
@@ -85,17 +85,17 @@ class Fastjet(AutotoolsPackage):
 
     variant("python", default=False, description="Enable the python interface")
     variant(
-	"monolithic",
+        "monolithic",
         default=True,
         description="Build all the (compiled) plugins in a single lib",
     )
     variant(
-	"thread-safety",
+        "thread-safety",
         default="no",
         values=("full", "limited", "no"),
         description="Enable thread safety. Full thread safety causes noticable "
         + "performance penalty.",
-        when="@3.4.0:"
+        when="@3.4.0:",
     )
 
     patch("atlas.patch", when="+atlas", level=0)
