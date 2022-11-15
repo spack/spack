@@ -319,15 +319,19 @@ def abstract_specs_toposort():
     )
 
 
-def test_traverse_topo_order(abstract_specs_toposort):
+def test_traverse_topo_nodes(abstract_specs_toposort):
     nodes = abstract_specs_toposort
 
     def test_topo(roots, direction="children"):
         # Ensure the invariant that all parents of specs[i] are in specs[0:i]
-        ordered = list(traverse.traverse_nodes(roots, order="topo", direction=direction))
+        ordered = list(
+            traverse.traverse_nodes(roots, order="topo", cover="nodes", direction=direction)
+        )
         reverse = "parents" if direction == "children" else "children"
         for i in range(len(ordered)):
-            parents = ordered[i].traverse(order="pre", direction=reverse, root=False)
+            parents = ordered[i].traverse(
+                order="pre", cover="nodes", direction=reverse, root=False
+            )
             assert set(list(parents)).issubset(set(ordered[:i]))
 
     # Traverse forward from roots A and E and a non-root D
@@ -335,3 +339,34 @@ def test_traverse_topo_order(abstract_specs_toposort):
 
     # Traverse reverse from leafs F and G and non-leaf D
     test_topo([nodes["F"], nodes["D"], nodes["G"]], direction="parents")
+
+
+def test_traverse_topo_edges(abstract_specs_toposort):
+    nodes = abstract_specs_toposort
+    roots = [nodes["E"], nodes["A"]]
+
+    # Collect pairs of (parent spec name, child spec name)
+    edges = [
+        (e.parent.name, e.spec.name)
+        for e in traverse.traverse_edges(roots, order="topo", cover="edges", root=False)
+    ]
+
+    # See figure above, we have 7 edges (excluding artifical ones to the root)
+    assert set(edges) == set(
+        [
+            ("A", "B"),
+            ("A", "C"),
+            ("B", "F"),
+            ("B", "G"),
+            ("C", "D"),
+            ("D", "B"),
+            ("E", "D"),
+        ]
+    )
+
+    # Verify that all in-edges precede all out-edges
+    for node in nodes.keys():
+        in_edge_indices = [i for (i, (parent, child)) in enumerate(edges) if node == child]
+        out_edge_indices = [i for (i, (parent, child)) in enumerate(edges) if node == parent]
+        if in_edge_indices and out_edge_indices:
+            assert max(in_edge_indices) < min(out_edge_indices)

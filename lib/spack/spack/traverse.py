@@ -131,14 +131,29 @@ class TopoVisitor(object):
     vertices and edges).
     """
 
-    def __init__(self, visitor, key=id):
+    def __init__(self, visitor, key=id, root=True, all_edges=False):
+        """
+        Arguments:
+            visitor: visitor that implements accept(), pre(), post() and neighbors()
+            key: uniqueness key for nodes
+            root (bool): Whether to include the root node.
+            all_edges (bool): when False, list ever node once in topo order.
+                when True, list every edge once in topo order (incoming edges before
+                outgoing edges).
+        """
         self.visited = set()
         self.visitor = visitor
         self.key = key
+        self.root = root
         self.reverse_order = []
+        self.all_edges = all_edges
 
     def accept(self, item):
-        return self.key(item.edge.spec) not in self.visited
+        if self.key(item.edge.spec) not in self.visited:
+            return True
+        if self.all_edges and (self.root or item.depth > 0):
+            self.reverse_order.append(item.edge)
+        return False
 
     def pre(self, item):
         # You could add a temporary marker for cycle detection
@@ -147,7 +162,8 @@ class TopoVisitor(object):
 
     def post(self, item):
         self.visited.add(self.key(item.edge.spec))
-        self.reverse_order.append(item.edge)
+        if self.root or item.depth > 0:
+            self.reverse_order.append(item.edge)
 
     def neighbors(self, item):
         return self.visitor.neighbors(item)
@@ -353,11 +369,13 @@ def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):
 
 
 # Topologic order
-def traverse_edges_topo(specs, direction="children", deptype="all", key=id):
+def traverse_edges_topo(
+    specs, direction="children", deptype="all", key=id, root=True, all_edges=False
+):
     visitor = BaseVisitor(deptype)
     if direction == "parents":
         visitor = ReverseVisitor(visitor, deptype)
-    visitor = TopoVisitor(visitor, key=key)
+    visitor = TopoVisitor(visitor, key=key, root=root, all_edges=all_edges)
     traverse_depth_first_with_visitor(with_artificial_edges(specs), visitor)
     return visitor.get_ordered_items()
 
@@ -413,14 +431,16 @@ def traverse_edges(
         # For cover=edges we could ensure the order (s -> t) < (u -> v)
         # iff (t, s) < (v, u) lexicographically where element-wise < is topo order,
         # but right now we only generates vertices in topo order.
-        if cover != "nodes":
-            raise ValueError("cover=nodes is only supported for order=topo")
+        if cover == "paths":
+            raise ValueError("cover=paths not supported for order=topo")
         # For topo order it's somewhat unclear how to handle a pre-existing visited
         # set. Exclude them? But what if excludes vertices have edges to non-excluded
         # ones? Not following would violate topo order.
         if visited is not None:
             raise ValueError("visited set not implemented for order=topo")
-        return traverse_edges_topo(specs, direction, deptype, key)
+        return traverse_edges_topo(
+            specs, direction, deptype, key, root, all_edges=cover == "edges"
+        )
 
     root_edges = with_artificial_edges(specs)
     visitor = get_visitor_from_args(cover, direction, deptype, key, visited)
