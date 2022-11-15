@@ -4,9 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.util.timer as timer
+from io import StringIO
+import json
 
 
 class Tick:
+    """Timer that increments the seconds passed by 1
+    everytime tick is called."""
+
     def __init__(self):
         self.time = 0.0
 
@@ -16,29 +21,35 @@ class Tick:
 
 
 def test_timer():
-    # Every call to now is +1 second.
+    # 0
     t = timer.Timer(now=Tick().tick)
 
-    # tick 1
+    # 1 (restart)
     t.start()
+
+    # 2
     t.start("wrapped")
 
-    # tick 3-4
+    # 3
     t.start("first")
+
+    # 4
     t.stop("first")
     assert t.duration("first") == 1.0
 
-    # tick 5-6
+    # 5
     t.start("second")
+
+    # 6
     t.stop("second")
     assert t.duration("second") == 1.0
 
-    # tick 7-8
+    # 7-8
     with t.measure("third"):
         pass
     assert t.duration("third") == 1.0
 
-    # tick 2-9
+    # 9
     t.stop("wrapped")
     assert t.duration("wrapped") == 7.0
 
@@ -48,6 +59,72 @@ def test_timer():
     assert t.duration("not-stopped") == 2.0
     assert t.duration("not-stopped") == 3.0
 
-    # tick 1-14
+    # 14
     assert t.duration() == 13.0
+
+    # 15
     t.stop()
+    assert t.duration() == 14.0
+
+
+def test_timer_stop_stops_all():
+    # Ensure that timer.stop() effectively stops all timers.
+
+    # 0
+    t = timer.Timer(now=Tick().tick)
+
+    # 1
+    t.start("first")
+
+    # 2
+    t.start("second")
+
+    # 3
+    t.start("third")
+
+    # 4
+    t.stop()
+
+    assert t.duration("first") == 3.0
+    assert t.duration("second") == 2.0
+    assert t.duration("third") == 1.0
+    assert t.duration() == 4.0
+
+
+def test_stopping_unstarted_timer_is_no_error():
+    t = timer.Timer(now=Tick().tick)
+    assert t.duration("hello") == 0.0
+    t.stop("hello")
+    assert t.duration("hello") == 0.0
+
+
+def test_timer_write():
+    text_buffer = StringIO()
+    json_buffer = StringIO()
+
+    # 0
+    t = timer.Timer(now=Tick().tick)
+
+    # 1
+    t.start("timer")
+
+    # 2
+    t.stop("timer")
+
+    # 3
+    t.stop()
+
+    t.write_tty(text_buffer)
+    t.write_json(json_buffer)
+
+    output = text_buffer.getvalue().splitlines()
+    assert "timer" in output[0]
+    assert "1.000s" in output[0]
+    assert "total" in output[1]
+    assert "3.000s" in output[1]
+
+    deserialized = json.loads(json_buffer.getvalue())
+    assert deserialized == {
+        "phases": [{"name": "timer", "seconds": 1.0}],
+        "total": {"seconds": 3.0},
+    }
