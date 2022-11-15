@@ -13,7 +13,7 @@ import spack.builder
 import spack.package_base
 from spack.directives import build_system, depends_on, extends
 from spack.multimethod import when
-from spack.util.executable import *
+from spack.util.executable import Executable
 
 from ._checks import BaseBuilder, execute_install_time_tests
 
